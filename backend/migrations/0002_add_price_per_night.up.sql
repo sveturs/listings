@@ -1,0 +1,1 @@
+ALTER TABLE rooms ADD COLUMN price_per_night NUMERIC(10, 2) NOT NULL DEFAULT 0;

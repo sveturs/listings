@@ -1,0 +1,90 @@
+Executing: curl -X POST http://localhost:3000/users -H "Content-Type: application/json" -d '{"name":"Иван", "email":"ivan@example.com"}'
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    84  100    37  100    47  23979  30460 --:--:-- --:--:-- --:--:-- 84000
+Email уже используется---------------------------------------
+Executing: curl -X POST http://localhost:3000/users -H "Content-Type: application/json" -d '{"name":"Анна", "email":"anna@example.com"}'
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    84  100    37  100    47  34839  44256 --:--:-- --:--:-- --:--:-- 84000
+Email уже используется---------------------------------------
+Executing: curl -X POST http://localhost:3000/rooms -H "Content-Type: application/json" -d '{"name":"Luxury Suite", "capacity":2, "price_per_night":150}'
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   108  100    48  100    60   7368   9210 --:--:-- --:--:-- --:--:-- 18000
+Комната добавлена успешно---------------------------------------
+Executing: curl -X POST http://localhost:3000/rooms -H "Content-Type: application/json" -d '{"name":"Economy Room", "capacity":4, "price_per_night":100}'
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   108  100    48  100    60   8069  10087 --:--:-- --:--:-- --:--:-- 21600
+Комната добавлена успешно---------------------------------------
+Executing: curl -X POST http://localhost:3000/rooms -H "Content-Type: application/json" -d '{"name":"Standard Room", "capacity":3, "price_per_night":120}'
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   109  100    48  100    61   4730   6012 --:--:-- --:--:-- --:--:-- 10900
+Комната добавлена успешно---------------------------------------
+Executing: curl -X POST http://localhost:3000/bookings -H "Content-Type: application/json" -d '{"user_id":1, "room_id":1, "start_date":"2024-11-20", "end_date":"2024-11-25"}'
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   146  100    68  100    78  57046  65436 --:--:-- --:--:-- --:--:--  142k
+Комната не найдена или цена не задана---------------------------------------
+Executing: curl -X POST http://localhost:3000/bookings -H "Content-Type: application/json" -d '{"user_id":2, "room_id":2, "start_date":"2024-11-22", "end_date":"2024-11-27"}'
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   146  100    68  100    78  58169  66723 --:--:-- --:--:-- --:--:--  142k
+Комната не найдена или цена не задана---------------------------------------
+Executing: curl "http://localhost:3000/rooms?capacity=2"
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   305  100   305    0     0   301k      0 --:--:-- --:--:-- --:--:--  297k
+[{"capacity":2,"created_at":"2024-11-18 16:31:54","id":4,"name":"Luxury Suite","price_per_night":150},{"capacity":4,"created_at":"2024-11-18 16:31:54","id":5,"name":"Economy Room","price_per_night":100},{"capacity":3,"created_at":"2024-11-18 16:31:54","id":6,"name":"Standard Room","price_per_night":120}]---------------------------------------
+Executing: curl "http://localhost:3000/rooms?min_price=100&max_price=150"
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   305  100   305    0     0   243k      0 --:--:-- --:--:-- --:--:--  297k
+[{"capacity":2,"created_at":"2024-11-18 16:31:54","id":4,"name":"Luxury Suite","price_per_night":150},{"capacity":4,"created_at":"2024-11-18 16:31:54","id":5,"name":"Economy Room","price_per_night":100},{"capacity":3,"created_at":"2024-11-18 16:31:54","id":6,"name":"Standard Room","price_per_night":120}]---------------------------------------
+Executing: curl "http://localhost:3000/rooms?start_date=2024-11-21&end_date=2024-11-23"
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   305  100   305    0     0   274k      0 --:--:-- --:--:-- --:--:--  297k
+[{"capacity":2,"created_at":"2024-11-18 16:31:54","id":4,"name":"Luxury Suite","price_per_night":150},{"capacity":4,"created_at":"2024-11-18 16:31:54","id":5,"name":"Economy Room","price_per_night":100},{"capacity":3,"created_at":"2024-11-18 16:31:54","id":6,"name":"Standard Room","price_per_night":120}]---------------------------------------
+Executing: curl "http://localhost:3000/rooms?capacity=4&min_price=100&max_price=200&start_date=2024-11-21&end_date=2024-11-23"
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   102  100   102    0     0  92643      0 --:--:-- --:--:-- --:--:--   99k
+[{"capacity":4,"created_at":"2024-11-18 16:31:54","id":5,"name":"Economy Room","price_per_night":100}]---------------------------------------
+Executing: curl -X DELETE http://localhost:3000/bookings/1
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    44  100    44    0     0  44806      0 --:--:-- --:--:-- --:--:-- 44000
+Бронирование не найдено---------------------------------------
+Executing: curl -X DELETE http://localhost:3000/bookings/2
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    44  100    44    0     0  29100      0 --:--:-- --:--:-- --:--:-- 44000
+Бронирование не найдено---------------------------------------
+Executing: curl -X DELETE http://localhost:3000/rooms/1
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    34  100    34    0     0  35978      0 --:--:-- --:--:-- --:--:-- 34000
+Комната не найдена---------------------------------------
+Executing: curl -X DELETE http://localhost:3000/rooms/2
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    34  100    34    0     0  35827      0 --:--:-- --:--:-- --:--:-- 34000
+Комната не найдена---------------------------------------
+Executing: curl -X DELETE http://localhost:3000/rooms/3
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    34  100    34    0     0  32755      0 --:--:-- --:--:-- --:--:-- 34000
+Комната не найдена---------------------------------------
+Executing: curl http://localhost:3000/rooms
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   305  100   305    0     0   304k      0 --:--:-- --:--:-- --:--:--  297k
+[{"capacity":2,"created_at":"2024-11-18 16:31:54","id":4,"name":"Luxury Suite","price_per_night":150},{"capacity":4,"created_at":"2024-11-18 16:31:54","id":5,"name":"Economy Room","price_per_night":100},{"capacity":3,"created_at":"2024-11-18 16:31:54","id":6,"name":"Standard Room","price_per_night":120}]---------------------------------------
+Executing: curl http://localhost:3000/bookings
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    18  100    18    0     0  21028      0 --:--:-- --:--:-- --:--:-- 18000
+Method Not Allowed---------------------------------------
