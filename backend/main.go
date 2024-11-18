@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gofiber/fiber/v2"
+		"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"os"
@@ -13,7 +14,10 @@ import (
 
 func main() {
 	app := fiber.New()
-
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3001", // Укажите фронтенд URL
+		AllowMethods: "GET,POST,DELETE,PUT",
+	}))
 	// Подключение к базе данных
 	dbURL := os.Getenv("DATABASE_URL")
 	pool, err := pgxpool.New(context.Background(), dbURL)
