@@ -6,6 +6,7 @@ import AddUserPage from "./pages/AddUserPage";
 import BookRoomPage from "./pages/BookRoomPage";
 import AdminPanelPage from "./pages/AdminPanelPage";
 import RoomList from "./components/RoomList";
+import AddBookingPage from "./pages/AddBookingPage";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/add-user" element={<AddUserPage />} />
         <Route path="/book-room" element={<BookRoomPage />} />
         <Route path="/admin" element={<AdminPanelPage />} />
+        <Route path="/add-booking" element={<AddBookingPage />} />
       </Routes>
     </Router>
   );
