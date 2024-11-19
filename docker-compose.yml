@@ -22,7 +22,11 @@ services:
       - ./backend/.env
     depends_on:
       - db
-
+    volumes:
+      - ./backend/uploads:/app/uploads
+    environment:
+      - UPLOAD_DIR=/app/uploads
+      
   migrate:
     image: migrate/migrate
     volumes:

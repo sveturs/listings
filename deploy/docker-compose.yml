@@ -20,8 +20,12 @@ services:
     depends_on:
       - db
 
-  frontend:
-    build:
-      context: ../frontend
-    ports:
-      - "3001:3000"
+      
+frontend:
+  build:
+    context: ../frontend/hostel-frontend
+  ports:
+    - "3001:3000"
+  environment:
+    - REACT_APP_API_URL=http://localhost:3000
+
