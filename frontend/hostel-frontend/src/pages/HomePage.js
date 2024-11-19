@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/pages/HomePage.js
 import React from "react";
 import { Link } from "react-router-dom";
 import { AppBar, Toolbar, Typography, Button, Container } from "@mui/material";
@@ -10,14 +11,14 @@ const HomePage = () => (
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Hostel Booking System
         </Typography>
+        <Button color="inherit" component={Link} to="/bookings">
+          Бронирования
+        </Button>
         <Button color="inherit" component={Link} to="/add-room">
           Добавить комнату
         </Button>
         <Button color="inherit" component={Link} to="/add-user">
           Добавить пользователя
-        </Button>
-        <Button color="inherit" component={Link} to="/admin">
-          Админская панель
         </Button>
       </Toolbar>
     </AppBar>

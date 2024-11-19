@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import axios from "../api/axios";
-import { 
-    TextField, Button, Container, Typography, 
+import {
+    TextField, Button, Container, Typography,
     Box, Alert, Grid, IconButton,
     FormControl, InputLabel, Select, MenuItem,
-    FormControlLabel, Switch 
+    FormControlLabel, Switch
 } from "@mui/material";
 
 const AddRoom = () => {
     const [room, setRoom] = useState({
         name: "",
-        accommodation_type: "room", // Добавляем тип размещения
+        accommodation_type: "room",
         capacity: 0,
         price_per_night: 0,
         address_street: "",
@@ -19,10 +19,10 @@ const AddRoom = () => {
         address_state: "",
         address_country: "",
         address_postal_code: "",
-        is_shared: false,         // Общее помещение
-        total_beds: null,         // Всего кроватей (для типа bed)
-        available_beds: null,     // Доступно кроватей (для типа bed)
-        has_private_bathroom: true // Наличие отдельной ванной
+        is_shared: false,
+        total_beds: null,
+        available_beds: null,
+        has_private_bathroom: true
     });
     const [beds, setBeds] = useState([
         { bed_number: "1", price_per_night: 0 }
@@ -58,7 +58,7 @@ const AddRoom = () => {
             return;
         }
         setImages(prev => [...prev, ...validFiles]);
-        
+
         // Создаем превью
         validFiles.forEach(file => {
             const reader = new FileReader();
@@ -82,7 +82,7 @@ const AddRoom = () => {
         e.preventDefault();
         setError("");
         setSuccess(false);
-    
+
         try {
             // Валидация в зависимости от типа размещения
             if (room.accommodation_type === 'bed') {
@@ -91,7 +91,7 @@ const AddRoom = () => {
                     return;
                 }
             }
-    
+
             // Подготовка данных комнаты
             const roomData = {
                 ...room,
@@ -101,12 +101,12 @@ const AddRoom = () => {
                 // Цена за ночь будет общей для комнаты/квартиры, для койко-мест - отдельно
                 price_per_night: room.accommodation_type === 'bed' ? 0 : room.price_per_night
             };
-    
+
             // Создаем комнату
             console.log('Отправляемые данные комнаты:', roomData);
             const roomResponse = await axios.post("/rooms", roomData);
             const roomId = roomResponse.data.id;
-    
+
             // Если тип размещения - койко-места, создаем кровати
             if (room.accommodation_type === 'bed' && beds.length > 0) {
                 console.log('Добавление кроватей для комнаты:', roomId);
@@ -126,21 +126,21 @@ const AddRoom = () => {
                     })
                 );
             }
-    
+
             // Загружаем изображения
             if (images.length > 0) {
                 const formData = new FormData();
                 images.forEach(image => {
                     formData.append('images', image);
                 });
-    
+
                 await axios.post(`/rooms/${roomId}/images`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
             }
-    
+
             setSuccess(true);
             // Очистка формы
             setRoom({
@@ -170,23 +170,14 @@ const AddRoom = () => {
     return (
         <Container>
             <Typography variant="h4" gutterBottom>
-                Добавить комнату
+                Добавить объект размещения
             </Typography>
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
-            {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                    Комната успешно добавлена!
-                </Alert>
-            )}
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
+                    {/* Базовая информация */}
                     <Grid item xs={12}>
                         <TextField
-                            label="Название комнаты"
+                            label="Название"
                             fullWidth
                             required
                             value={room.name}
@@ -194,20 +185,33 @@ const AddRoom = () => {
                         />
                     </Grid>
 
+                    {/* Тип размещения */}
                     <Grid item xs={12}>
-    <FormControl fullWidth>
-        <InputLabel>Тип размещения</InputLabel>
-        <Select
-            value={room.accommodation_type}
-            onChange={(e) => setRoom({ ...room, accommodation_type: e.target.value })}
-        >
-            <MenuItem value="bed">Койко-место</MenuItem>
-            <MenuItem value="room">Комната</MenuItem>
-            <MenuItem value="apartment">Квартира</MenuItem>
-        </Select>
-    </FormControl>
-</Grid>
+                        <FormControl fullWidth>
+                            <InputLabel>Тип размещения</InputLabel>
+                            <Select
+                                value={room.accommodation_type}
+                                onChange={(e) => {
+                                    const newType = e.target.value;
+                                    setRoom(prev => ({
+                                        ...prev,
+                                        accommodation_type: newType,
+                                        // Сбрасываем специфичные поля при смене типа
+                                        total_beds: newType === 'bed' ? prev.total_beds : null,
+                                        available_beds: newType === 'bed' ? prev.available_beds : null,
+                                        is_shared: newType === 'bed' ? true : false,
+                                    }));
+                                }}
+                            >
+                                <MenuItem value="bed">Койко-место</MenuItem>
+                                <MenuItem value="room">Комната</MenuItem>
+                                <MenuItem value="apartment">Квартира</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
 
+                    {/* Показываем поля в зависимости от типа размещения */}
+{/* Показываем поля в зависимости от типа размещения */}
 {room.accommodation_type === 'bed' ? (
     <>
         <Grid item xs={12} md={6}>
@@ -267,7 +271,7 @@ const AddRoom = () => {
             </Button>
         </Grid>
     </>
-) : (
+) : ( // Закрыта фигурная скобка перед else
     <Grid item xs={12} md={6}>
         <TextField
             label="Вместимость"
@@ -281,29 +285,29 @@ const AddRoom = () => {
     </Grid>
 )}
 
-<Grid item xs={12}>
-    <FormControlLabel
-        control={
-            <Switch
-                checked={room.is_shared}
-                onChange={(e) => setRoom({ ...room, is_shared: e.target.checked })}
-            />
-        }
-        label="Общее помещение"
-    />
-</Grid>
+                    <Grid item xs={12}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={room.is_shared}
+                                    onChange={(e) => setRoom({ ...room, is_shared: e.target.checked })}
+                                />
+                            }
+                            label="Общее помещение"
+                        />
+                    </Grid>
 
-<Grid item xs={12}>
-    <FormControlLabel
-        control={
-            <Switch
-                checked={room.has_private_bathroom}
-                onChange={(e) => setRoom({ ...room, has_private_bathroom: e.target.checked })}
-            />
-        }
-        label="Отдельная ванная комната"
-    />
-</Grid>
+                    <Grid item xs={12}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={room.has_private_bathroom}
+                                    onChange={(e) => setRoom({ ...room, has_private_bathroom: e.target.checked })}
+                                />
+                            }
+                            label="Отдельная ванная комната"
+                        />
+                    </Grid>
 
                     <Grid item xs={12} md={6}>
                         <TextField
@@ -384,42 +388,42 @@ const AddRoom = () => {
                             Фотографии комнаты
                         </Typography>
                     </Grid>
-            <Grid item xs={12}>
-                <Box sx={{ mt: 1, mb: 2 }}>
-                    <Button
-                        variant="contained"
-                        component="label"
-                        startIcon={<CloudUploadIcon />}
-                    >
-                        Загрузить изображения
-                        <input
-                            type="file"
-                            hidden
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            onClick={(e) => e.target.value = null} // Сброс значения input
-                        />
-                    </Button>
-                </Box>
-                {/* Добавим информацию о загруженных файлах */}
-                {images.length > 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Выбрано файлов: {images.length}
-                    </Typography>
-                )}
-            </Grid>
+                    <Grid item xs={12}>
+                        <Box sx={{ mt: 1, mb: 2 }}>
+                            <Button
+                                variant="contained"
+                                component="label"
+                                startIcon={<CloudUploadIcon />}
+                            >
+                                Загрузить изображения
+                                <input
+                                    type="file"
+                                    hidden
+                                    multiple
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    onClick={(e) => e.target.value = null} // Сброс значения input
+                                />
+                            </Button>
+                        </Box>
+                        {/* Добавим информацию о загруженных файлах */}
+                        {images.length > 0 && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                Выбрано файлов: {images.length}
+                            </Typography>
+                        )}
+                    </Grid>
                 </Grid>
 
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                     {previewUrls.map((url, index) => (
                         <Grid item xs={12} sm={6} md={4} key={index}>
                             <Box sx={{ position: 'relative' }}>
-                                <img 
-                                    src={url} 
-                                    alt={`Preview ${index}`} 
-                                    style={{ 
-                                        width: '100%', 
+                                <img
+                                    src={url}
+                                    alt={`Preview ${index}`}
+                                    style={{
+                                        width: '100%',
                                         height: '200px',
                                         objectFit: 'cover',
                                         borderRadius: '4px'
@@ -445,14 +449,14 @@ const AddRoom = () => {
                 </Grid>
 
                 <Box sx={{ mt: 3 }}>
-                    <Button 
-                        type="submit" 
-                        variant="contained" 
+                    <Button
+                        type="submit"
+                        variant="contained"
                         color="primary"
                         fullWidth
                         size="large"
-                        disabled={!room.name || !room.capacity || !room.price_per_night || 
-                                !room.address_street || !room.address_city || !room.address_country}
+                        disabled={!room.name || !room.capacity || !room.price_per_night ||
+                            !room.address_street || !room.address_city || !room.address_country}
                     >
                         Добавить комнату
                     </Button>

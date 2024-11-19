@@ -3,43 +3,46 @@
 package main
 
 import (
-    "context"
-    "fmt"
-    "github.com/gofiber/fiber/v2"
-    "github.com/gofiber/fiber/v2/middleware/cors"
-    "github.com/jackc/pgx/v5/pgxpool"
-    "github.com/disintegration/imaging"
-    "log"
-    "mime/multipart"
-    "os"
-    "path/filepath"
-    "strconv"
-    "strings"
-    "time"
+	"context"
+	"fmt"
+	"log"
+	"mime/multipart"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/disintegration/imaging"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
+
 type RoomImage struct {
-    ID          int    `json:"id"`
-    RoomID      int    `json:"room_id"`
-    FilePath    string `json:"file_path"`
-    FileName    string `json:"file_name"`
-    FileSize    int    `json:"file_size"`
-    ContentType string `json:"content_type"`
-    IsMain      bool   `json:"is_main"`
-    CreatedAt   time.Time `json:"created_at"` // Изменено с string на time.Time
+	ID          int       `json:"id"`
+	RoomID      int       `json:"room_id"`
+	FilePath    string    `json:"file_path"`
+	FileName    string    `json:"file_name"`
+	FileSize    int       `json:"file_size"`
+	ContentType string    `json:"content_type"`
+	IsMain      bool      `json:"is_main"`
+	CreatedAt   time.Time `json:"created_at"` // Изменено с string на time.Time
 }
+
 func main() {
 	app := fiber.New()
 
 	// Настройка CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3001,http://localhost:3000",
-		AllowMethods: "GET,POST,DELETE,PUT",
-		AllowHeaders: "Origin, Content-Type, Accept",
-		ExposeHeaders: "Content-Length",
+		AllowOrigins:     "http://localhost:3001,http://localhost:3000",
+		AllowMethods:     "GET,POST,DELETE,PUT",
+		AllowHeaders:     "Origin, Content-Type, Accept",
+		ExposeHeaders:    "Content-Length",
 		AllowCredentials: true,
 	}))
 
-    os.MkdirAll("./uploads", os.ModePerm)
+	os.MkdirAll("./uploads", os.ModePerm)
 	// Подключение к базе данных
 	dbURL := os.Getenv("DATABASE_URL")
 	pool, err := pgxpool.New(context.Background(), dbURL)
@@ -47,116 +50,116 @@ func main() {
 		log.Fatalf("Ошибка подключения к базе данных: %v", err)
 	}
 	defer pool.Close()
-    processImage := func(file *multipart.FileHeader) (string, error) {
-        src, err := file.Open()
-        if err != nil {
-            return "", err
-        }
-        defer src.Close()
+	processImage := func(file *multipart.FileHeader) (string, error) {
+		src, err := file.Open()
+		if err != nil {
+			return "", err
+		}
+		defer src.Close()
 
-        // Генерируем уникальное имя файла
-        ext := filepath.Ext(file.Filename)
-        fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
-        filePath := filepath.Join("uploads", fileName)
+		// Генерируем уникальное имя файла
+		ext := filepath.Ext(file.Filename)
+		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+		filePath := filepath.Join("uploads", fileName)
 
-        // Создаем файл для сохранения
-        dst, err := os.Create(filePath)
-        if err != nil {
-            return "", err
-        }
-        defer dst.Close()
+		// Создаем файл для сохранения
+		dst, err := os.Create(filePath)
+		if err != nil {
+			return "", err
+		}
+		defer dst.Close()
 
-        // Открываем изображение для обработки
-        img, err := imaging.Decode(src)
-        if err != nil {
-            return "", err
-        }
+		// Открываем изображение для обработки
+		img, err := imaging.Decode(src)
+		if err != nil {
+			return "", err
+		}
 
-        // Изменяем размер изображения (например, максимальная ширина 1200px)
-        resized := imaging.Resize(img, 1200, 0, imaging.Lanczos)
+		// Изменяем размер изображения (например, максимальная ширина 1200px)
+		resized := imaging.Resize(img, 1200, 0, imaging.Lanczos)
 
-        // Сохраняем обработанное изображение
-        err = imaging.Save(resized, filePath)
-        if err != nil {
-            return "", err
-        }
+		// Сохраняем обработанное изображение
+		err = imaging.Save(resized, filePath)
+		if err != nil {
+			return "", err
+		}
 
-        return fileName, nil
-    }
+		return fileName, nil
+	}
 
-    // Добавляем эндпоинт для загрузки изображений
-    app.Post("/rooms/:id/images", func(c *fiber.Ctx) error {
+	// Добавляем эндпоинт для загрузки изображений
+	app.Post("/rooms/:id/images", func(c *fiber.Ctx) error {
 		log.Printf("Начало загрузки изображений")
 		roomID, err := strconv.Atoi(c.Params("id"))
 		if err != nil {
 			log.Printf("Ошибка преобразования ID комнаты: %v", err)
 			return c.Status(400).SendString("Неверный ID комнаты")
 		}
-	
+
 		form, err := c.MultipartForm()
 		if err != nil {
 			log.Printf("Ошибка получения формы: %v", err)
 			return c.Status(400).SendString("Ошибка получения файлов")
 		}
-	
+
 		files := form.File["images"]
 		log.Printf("Получено %d файлов", len(files))
 
-        isMain := len(files) > 0 // Первое изображение будет главным
+		isMain := len(files) > 0 // Первое изображение будет главным
 
-        var uploadedImages []RoomImage
-        for _, file := range files {
-            // Проверяем тип файла
-            if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
-                return c.Status(400).SendString("Допустимы только изображения")
-            }
+		var uploadedImages []RoomImage
+		for _, file := range files {
+			// Проверяем тип файла
+			if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
+				return c.Status(400).SendString("Допустимы только изображения")
+			}
 
-            // Проверяем размер файла (например, максимум 5MB)
-            if file.Size > 5*1024*1024 {
-                return c.Status(400).SendString("Размер файла не должен превышать 5MB")
-            }
+			// Проверяем размер файла (например, максимум 5MB)
+			if file.Size > 5*1024*1024 {
+				return c.Status(400).SendString("Размер файла не должен превышать 5MB")
+			}
 
-            // Обрабатываем и сохраняем изображение
-            fileName, err := processImage(file)
-            if err != nil {
-                log.Printf("Ошибка обработки изображения: %v", err)
-                return c.Status(500).SendString("Ошибка обработки изображения")
-            }
+			// Обрабатываем и сохраняем изображение
+			fileName, err := processImage(file)
+			if err != nil {
+				log.Printf("Ошибка обработки изображения: %v", err)
+				return c.Status(500).SendString("Ошибка обработки изображения")
+			}
 
-            // Сохраняем информацию в базу данных
-            var imageID int
-            err = pool.QueryRow(context.Background(), `
+			// Сохраняем информацию в базу данных
+			var imageID int
+			err = pool.QueryRow(context.Background(), `
                 INSERT INTO room_images (room_id, file_path, file_name, file_size, content_type, is_main)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING id
             `, roomID, fileName, file.Filename, file.Size, file.Header.Get("Content-Type"), isMain).Scan(&imageID)
 
-            if err != nil {
-                log.Printf("Ошибка сохранения информации об изображении: %v", err)
-                return c.Status(500).SendString("Ошибка сохранения информации об изображении")
-            }
+			if err != nil {
+				log.Printf("Ошибка сохранения информации об изображении: %v", err)
+				return c.Status(500).SendString("Ошибка сохранения информации об изображении")
+			}
 
-            uploadedImages = append(uploadedImages, RoomImage{
-                ID:          imageID,
-                RoomID:      roomID,
-                FilePath:    fileName,
-                FileName:    file.Filename,
-                FileSize:    int(file.Size),
-                ContentType: file.Header.Get("Content-Type"),
-                IsMain:     isMain,
-            })
+			uploadedImages = append(uploadedImages, RoomImage{
+				ID:          imageID,
+				RoomID:      roomID,
+				FilePath:    fileName,
+				FileName:    file.Filename,
+				FileSize:    int(file.Size),
+				ContentType: file.Header.Get("Content-Type"),
+				IsMain:      isMain,
+			})
 
-            isMain = false // Только первое изображение главное
-        }
+			isMain = false // Только первое изображение главное
+		}
 
-        return c.JSON(uploadedImages)
-    })
+		return c.JSON(uploadedImages)
+	})
 
-    // Получение изображений комнаты
-    app.Get("/rooms/:id/images", func(c *fiber.Ctx) error {
+	// Получение изображений комнаты
+	app.Get("/rooms/:id/images", func(c *fiber.Ctx) error {
 		roomID := c.Params("id")
 		log.Printf("Получение изображений для комнаты: %s", roomID)
-		
+
 		rows, err := pool.Query(context.Background(), `
 			SELECT id, room_id, file_path, file_name, file_size, content_type, is_main, created_at
 			FROM room_images
@@ -168,7 +171,7 @@ func main() {
 			return c.Status(500).SendString("Ошибка получения изображений")
 		}
 		defer rows.Close()
-	
+
 		var images []RoomImage
 		for rows.Next() {
 			var img RoomImage
@@ -188,39 +191,39 @@ func main() {
 			}
 			images = append(images, img)
 		}
-	
+
 		if len(images) == 0 {
 			log.Printf("Изображения не найдены для комнаты: %s", roomID)
 		} else {
 			log.Printf("Найдено %d изображений для комнаты: %s", len(images), roomID)
 		}
-	
+
 		return c.JSON(images)
 	})
 
-    // Удаление изображения
-    app.Delete("/rooms/:roomId/images/:imageId", func(c *fiber.Ctx) error {
-        imageID := c.Params("imageId")
-        var filePath string
-        err := pool.QueryRow(context.Background(), "SELECT file_path FROM room_images WHERE id = $1", imageID).Scan(&filePath)
-        if err != nil {
-            return c.Status(404).SendString("Изображение не найдено")
-        }
+	// Удаление изображения
+	app.Delete("/rooms/:roomId/images/:imageId", func(c *fiber.Ctx) error {
+		imageID := c.Params("imageId")
+		var filePath string
+		err := pool.QueryRow(context.Background(), "SELECT file_path FROM room_images WHERE id = $1", imageID).Scan(&filePath)
+		if err != nil {
+			return c.Status(404).SendString("Изображение не найдено")
+		}
 
-        // Удаляем файл
-        os.Remove(filepath.Join("uploads", filePath))
+		// Удаляем файл
+		os.Remove(filepath.Join("uploads", filePath))
 
-        // Удаляем запись из базы
-        _, err = pool.Exec(context.Background(), "DELETE FROM room_images WHERE id = $1", imageID)
-        if err != nil {
-            return c.Status(500).SendString("Ошибка удаления изображения")
-        }
+		// Удаляем запись из базы
+		_, err = pool.Exec(context.Background(), "DELETE FROM room_images WHERE id = $1", imageID)
+		if err != nil {
+			return c.Status(500).SendString("Ошибка удаления изображения")
+		}
 
-        return c.SendString("Изображение удалено")
-    })
+		return c.SendString("Изображение удалено")
+	})
 
-    // Статическая раздача изображений
-    app.Static("/uploads", "./uploads")
+	// Статическая раздача изображений
+	app.Static("/uploads", "./uploads")
 
 	// Главный маршрут
 	app.Get("/", func(c *fiber.Ctx) error {
@@ -233,12 +236,12 @@ func main() {
 			Name  string `json:"name"`
 			Email string `json:"email"`
 		}
-	
+
 		var user User
 		if err := c.BodyParser(&user); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
-	
+
 		_, err := pool.Exec(context.Background(), "INSERT INTO users (name, email) VALUES ($1, $2)", user.Name, user.Email)
 		if err != nil {
 			if strings.Contains(err.Error(), "unique constraint") {
@@ -247,49 +250,49 @@ func main() {
 			log.Printf("Ошибка добавления пользователя: %v", err)
 			return c.Status(500).SendString("Ошибка добавления пользователя")
 		}
-	
+
 		return c.SendString("Пользователь добавлен успешно")
 	})
-	
-type Room struct {
-    Name              string  `json:"name"`
-    Capacity          int     `json:"capacity"`
-    PricePerNight     *float64 `json:"price_per_night"`
-    AddressStreet     string  `json:"address_street"`
-    AddressCity       string  `json:"address_city"`
-    AddressState      string  `json:"address_state"`
-    AddressCountry    string  `json:"address_country"`
-    AddressPostalCode string  `json:"address_postal_code"`
-    AccommodationType string  `json:"accommodation_type"`
-    IsShared          bool    `json:"is_shared"`
-    TotalBeds         *int     `json:"total_beds,omitempty"`
-    AvailableBeds     *int     `json:"available_beds,omitempty"`
-    HasPrivateBathroom bool   `json:"has_private_bathroom"`
-}
 
-type Bed struct {
-    ID            int     `json:"id"`
-    RoomID        int     `json:"room_id"`
-    BedNumber     string  `json:"bed_number"`  // изменено с int на string
-    IsAvailable   bool    `json:"is_available"`
-    PricePerNight float64 `json:"price_per_night"`
-}
+	type Room struct {
+		Name               string   `json:"name"`
+		Capacity           int      `json:"capacity"`
+		PricePerNight      *float64 `json:"price_per_night"`
+		AddressStreet      string   `json:"address_street"`
+		AddressCity        string   `json:"address_city"`
+		AddressState       string   `json:"address_state"`
+		AddressCountry     string   `json:"address_country"`
+		AddressPostalCode  string   `json:"address_postal_code"`
+		AccommodationType  string   `json:"accommodation_type"`
+		IsShared           bool     `json:"is_shared"`
+		TotalBeds          *int     `json:"total_beds,omitempty"`
+		AvailableBeds      *int     `json:"available_beds,omitempty"`
+		HasPrivateBathroom bool     `json:"has_private_bathroom"`
+	}
 
-type BedBooking struct {
-    ID        int       `json:"id"`
-    BedID     int       `json:"bed_id"`
-    UserID    int       `json:"user_id"`
-    StartDate string    `json:"start_date"`
-    EndDate   string    `json:"end_date"`
-}
-app.Post("/rooms", func(c *fiber.Ctx) error {
-    var room Room
-    if err := c.BodyParser(&room); err != nil {
-        return c.Status(400).SendString("Неверный формат данных")
-    }
+	type Bed struct {
+		ID            int     `json:"id"`
+		RoomID        int     `json:"room_id"`
+		BedNumber     string  `json:"bed_number"` // изменено с int на string
+		IsAvailable   bool    `json:"is_available"`
+		PricePerNight float64 `json:"price_per_night"`
+	}
 
-    var roomId int
-    err := pool.QueryRow(context.Background(), `
+	type BedBooking struct {
+		ID        int    `json:"id"`
+		BedID     int    `json:"bed_id"`
+		UserID    int    `json:"user_id"`
+		StartDate string `json:"start_date"`
+		EndDate   string `json:"end_date"`
+	}
+	app.Post("/rooms", func(c *fiber.Ctx) error {
+		var room Room
+		if err := c.BodyParser(&room); err != nil {
+			return c.Status(400).SendString("Неверный формат данных")
+		}
+
+		var roomId int
+		err := pool.QueryRow(context.Background(), `
         INSERT INTO rooms (
             name, capacity, price_per_night,
             address_street, address_city, address_state,
@@ -298,108 +301,141 @@ app.Post("/rooms", func(c *fiber.Ctx) error {
             total_beds, available_beds, has_private_bathroom
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING id`,
-        room.Name, room.Capacity, room.PricePerNight,
-        room.AddressStreet, room.AddressCity, room.AddressState,
-        room.AddressCountry, room.AddressPostalCode,
-        room.AccommodationType, room.IsShared,
-        room.TotalBeds, room.AvailableBeds, room.HasPrivateBathroom,
-    ).Scan(&roomId)
+			room.Name, room.Capacity, room.PricePerNight,
+			room.AddressStreet, room.AddressCity, room.AddressState,
+			room.AddressCountry, room.AddressPostalCode,
+			room.AccommodationType, room.IsShared,
+			room.TotalBeds, room.AvailableBeds, room.HasPrivateBathroom,
+		).Scan(&roomId)
 
-    if err != nil {
-        if strings.Contains(err.Error(), "unique constraint") {
-            return c.Status(400).SendString("Комната с таким названием уже существует")
-        }
-        log.Printf("Ошибка добавления комнаты: %v", err)
-        return c.Status(500).SendString("Ошибка добавления комнаты")
-    }
+		if err != nil {
+			if strings.Contains(err.Error(), "unique constraint") {
+				return c.Status(400).SendString("Комната с таким названием уже существует")
+			}
+			log.Printf("Ошибка добавления комнаты: %v", err)
+			return c.Status(500).SendString("Ошибка добавления комнаты")
+		}
 
-    return c.JSON(fiber.Map{"id": roomId})
-})
+		return c.JSON(fiber.Map{"id": roomId})
+	})
 	// Добавление кровати
-// Обработчик создания кровати
-app.Post("/rooms/:id/beds", func(c *fiber.Ctx) error {
-    type BedRequest struct {
-        BedNumber    string  `json:"bed_number"`
-        PricePerNight float64 `json:"price_per_night"`
-    }
+	// Обработчик создания кровати
+	app.Post("/rooms/:id/beds", func(c *fiber.Ctx) error {
+		type BedRequest struct {
+			BedNumber     string  `json:"bed_number"`
+			PricePerNight float64 `json:"price_per_night"`
+		}
 
-    roomID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return c.Status(400).SendString("Неверный ID комнаты")
-    }
+		roomID, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.Status(400).SendString("Неверный ID комнаты")
+		}
 
-    var bedReq BedRequest
-    if err := c.BodyParser(&bedReq); err != nil {
-        log.Printf("Ошибка парсинга данных: %v", err)
-        return c.Status(400).SendString("Неверный формат данных")
-    }
+		var bedReq BedRequest
+		if err := c.BodyParser(&bedReq); err != nil {
+			log.Printf("Ошибка парсинга данных: %v", err)
+			return c.Status(400).SendString("Неверный формат данных")
+		}
 
-    // Проверяем, существует ли комната
-    var roomExists bool
-    err = pool.QueryRow(context.Background(), 
-        "SELECT EXISTS(SELECT 1 FROM rooms WHERE id = $1)", 
-        roomID).Scan(&roomExists)
-    if err != nil || !roomExists {
-        return c.Status(404).SendString("Комната не найдена")
-    }
+		// Проверяем, существует ли комната
+		var roomExists bool
+		err = pool.QueryRow(context.Background(),
+			"SELECT EXISTS(SELECT 1 FROM rooms WHERE id = $1)",
+			roomID).Scan(&roomExists)
+		if err != nil || !roomExists {
+			return c.Status(404).SendString("Комната не найдена")
+		}
 
-    // Добавляем кровать
-    var bedID int
-    err = pool.QueryRow(context.Background(), `
+		// Добавляем кровать
+		var bedID int
+		err = pool.QueryRow(context.Background(), `
         INSERT INTO beds (room_id, bed_number, price_per_night, is_available) 
         VALUES ($1, $2, $3, true)
         RETURNING id`,
-        roomID, bedReq.BedNumber, bedReq.PricePerNight).Scan(&bedID)
+			roomID, bedReq.BedNumber, bedReq.PricePerNight).Scan(&bedID)
 
-    if err != nil {
-        log.Printf("Ошибка добавления кровати: %v", err)
-        return c.Status(500).SendString("Ошибка добавления кровати")
-    }
+		if err != nil {
+			log.Printf("Ошибка добавления кровати: %v", err)
+			return c.Status(500).SendString("Ошибка добавления кровати")
+		}
 
-    return c.JSON(fiber.Map{
-        "id": bedID,
-        "room_id": roomID,
-        "bed_number": bedReq.BedNumber,
-        "price_per_night": bedReq.PricePerNight,
-        "is_available": true    })
-})
+		return c.JSON(fiber.Map{
+			"id":              bedID,
+			"room_id":         roomID,
+			"bed_number":      bedReq.BedNumber,
+			"price_per_night": bedReq.PricePerNight,
+			"is_available":    true})
+	})
 
-// Получение доступных кроватей
-app.Get("/rooms/:id/available-beds", func(c *fiber.Ctx) error {
-    roomID := c.Params("id")
-    startDate := c.Query("start_date")
-    endDate := c.Query("end_date")
+	// Получение доступных кроватей
+	app.Get("/rooms/:id/available-beds", func(c *fiber.Ctx) error {
+		roomID := c.Params("id")
+		startDate := c.Query("start_date")
+		endDate := c.Query("end_date")
 
-    query := `
-        SELECT b.id, b.bed_number, b.price_per_night
-        FROM beds b
-        WHERE b.room_id = $1
-        AND b.is_available = true
-        AND b.id NOT IN (
-            SELECT bed_id
-            FROM bed_bookings
-            WHERE $2 < end_date AND $3 > start_date
-            AND status != 'cancelled'
-        )
-    `
+		// Проверяем корректность дат
+		if startDate == "" || endDate == "" {
+			return c.Status(400).SendString("Необходимо указать даты")
+		}
 
-    rows, err := pool.Query(context.Background(), query, roomID, startDate, endDate)
-    if err != nil {
-        return c.Status(500).SendString("Ошибка получения списка кроватей")
-    }
-    defer rows.Close()
+		// Получаем все кровати комнаты и их бронирования в указанный период
+		query := `
+			SELECT b.id, b.bed_number, b.price_per_night
+			FROM beds b
+			WHERE b.room_id = $1
+			AND b.is_available = true
+			AND b.id NOT IN (
+				SELECT bb.bed_id
+				FROM bed_bookings bb
+				WHERE bb.status = 'confirmed'
+				AND (
+					(bb.start_date <= $2 AND bb.end_date >= $2) OR  -- проверяем начальную дату
+					(bb.start_date <= $3 AND bb.end_date >= $3) OR  -- проверяем конечную дату
+					(bb.start_date >= $2 AND bb.end_date <= $3)     -- проверяем период между датами
+				)
+			)
+			ORDER BY b.bed_number
+		`
 
-    var beds []Bed
-    for rows.Next() {
-        var bed Bed
-        if err := rows.Scan(&bed.ID, &bed.BedNumber, &bed.PricePerNight); err != nil {
-            continue
-        }
-        beds = append(beds, bed)
-    }
+		rows, err := pool.Query(context.Background(), query, roomID, startDate, endDate)
+		if err != nil {
+			log.Printf("Ошибка запроса доступных кроватей: %v", err)
+			return c.Status(500).SendString("Ошибка получения списка кроватей")
+		}
+		defer rows.Close()
 
-    return c.JSON(beds)
-})
+		var beds []Bed
+		for rows.Next() {
+			var bed Bed
+			if err := rows.Scan(&bed.ID, &bed.BedNumber, &bed.PricePerNight); err != nil {
+				log.Printf("Ошибка сканирования кровати: %v", err)
+				continue
+			}
+			bed.RoomID, _ = strconv.Atoi(roomID)
+			bed.IsAvailable = true
+			beds = append(beds, bed)
+		}
+
+		if err := rows.Err(); err != nil {
+			log.Printf("Ошибка при итерации по кроватям: %v", err)
+			return c.Status(500).SendString("Ошибка обработки данных")
+		}
+
+		// Обновляем количество доступных кроватей в комнате
+		_, err = pool.Exec(context.Background(), `
+			UPDATE rooms 
+			SET available_beds = $1
+			WHERE id = $2
+		`, len(beds), roomID)
+
+		if err != nil {
+			log.Printf("Ошибка обновления количества доступных кроватей: %v", err)
+			// Не возвращаем ошибку, так как это некритичное обновление
+		}
+
+		return c.JSON(beds)
+	})
+
 	// В endpoint получения списка комнат обновляем запрос
 	app.Get("/rooms", func(c *fiber.Ctx) error {
 		capacity := c.Query("capacity")
@@ -407,221 +443,410 @@ app.Get("/rooms/:id/available-beds", func(c *fiber.Ctx) error {
 		endDate := c.Query("end_date")
 		minPrice := c.Query("min_price")
 		maxPrice := c.Query("max_price")
-		city := c.Query("city")      // Добавляем параметр города
-		country := c.Query("country") // Добавляем параметр страны
-	
-		query := `
-        SELECT id, name, capacity, price_per_night, address_street, address_city, 
-       		address_state, address_country, address_postal_code,
-       		accommodation_type, is_shared, COALESCE(total_beds, 0) AS total_beds, 
-       		COALESCE(available_beds, 0) AS available_beds, 
-       		has_private_bathroom, created_at 
-		FROM rooms`
-		args := []interface{}{}
-		conditions := []string{}
-	
+		city := c.Query("city")
+		country := c.Query("country")
+
+		baseQuery := `
+		WITH room_availability AS (
+			SELECT 
+				r.id,
+				COALESCE(r.total_beds, 0) as total_beds,
+				CASE 
+					WHEN r.accommodation_type = 'bed' THEN
+						(
+							SELECT COUNT(*)
+							FROM beds b2
+							WHERE b2.room_id = r.id
+							AND b2.is_available = true
+							AND b2.id NOT IN (
+								SELECT bb.bed_id
+								FROM bed_bookings bb
+								WHERE bb.status = 'confirmed'
+								AND CASE 
+									WHEN $1::TEXT = '' OR $2::TEXT = '' THEN
+										bb.start_date <= CURRENT_DATE AND bb.end_date >= CURRENT_DATE
+									ELSE
+										bb.start_date <= $2::DATE AND bb.end_date >= $1::DATE
+								END
+							)
+						)
+					ELSE COALESCE(r.total_beds, 0)
+				END as current_available_beds
+			FROM rooms r
+		)
+		SELECT 
+			r.id, 
+			r.name, 
+			r.capacity, 
+			CASE
+				WHEN r.accommodation_type = 'bed' THEN
+					COALESCE((
+						SELECT MIN(b.price_per_night)
+						FROM beds b
+						WHERE b.room_id = r.id
+						AND b.is_available = true
+					), r.price_per_night)
+				ELSE r.price_per_night
+			END as price_per_night,
+			r.address_street, 
+			r.address_city, 
+			r.address_state,
+			r.address_country, 
+			r.address_postal_code,
+			r.accommodation_type, 
+			r.is_shared, 
+			COALESCE(r.total_beds, 0) as total_beds,
+			COALESCE(ra.current_available_beds, 0) as available_beds,
+			r.has_private_bathroom, 
+			r.created_at 
+		FROM rooms r
+		LEFT JOIN room_availability ra ON r.id = ra.id`
+
+		var conditions []string
+		args := []interface{}{startDate, endDate}
+
 		// Фильтр по вместимости
 		if capacity != "" {
-			conditions = append(conditions, "capacity >= $"+strconv.Itoa(len(args)+1))
+			conditions = append(conditions, fmt.Sprintf("r.capacity >= $%d", len(args)+1))
 			args = append(args, capacity)
 		}
-	
+
 		// Фильтр по минимальной цене
 		if minPrice != "" {
 			minPriceFloat, err := strconv.ParseFloat(minPrice, 64)
-			if err != nil {
-				return c.Status(400).SendString("Некорректное значение минимальной цены")
+			if err == nil {
+				conditions = append(conditions, fmt.Sprintf("r.price_per_night >= $%d", len(args)+1))
+				args = append(args, minPriceFloat)
 			}
-			conditions = append(conditions, "price_per_night >= $"+strconv.Itoa(len(args)+1))
-			args = append(args, minPriceFloat)
 		}
-	
+
 		// Фильтр по максимальной цене
 		if maxPrice != "" {
 			maxPriceFloat, err := strconv.ParseFloat(maxPrice, 64)
-			if err != nil {
-				return c.Status(400).SendString("Некорректное значение максимальной цены")
-			}
-			conditions = append(conditions, "price_per_night <= $"+strconv.Itoa(len(args)+1))
-			args = append(args, maxPriceFloat)
-		}
-	
-		// Проверка корректности диапазона цен
-		if minPrice != "" && maxPrice != "" {
-			minPriceFloat, _ := strconv.ParseFloat(minPrice, 64)
-			maxPriceFloat, _ := strconv.ParseFloat(maxPrice, 64)
-			if minPriceFloat > maxPriceFloat {
-				return c.Status(400).SendString("Минимальная цена не может быть больше максимальной")
+			if err == nil {
+				conditions = append(conditions, fmt.Sprintf("r.price_per_night <= $%d", len(args)+1))
+				args = append(args, maxPriceFloat)
 			}
 		}
-	
+
 		// Фильтр по доступности дат
 		if startDate != "" && endDate != "" {
-			conditions = append(conditions, `
-				id NOT IN (
-					SELECT room_id FROM bookings 
-					WHERE $`+strconv.Itoa(len(args)+1)+` < end_date 
-					  AND $`+strconv.Itoa(len(args)+2)+` > start_date
-				)
-			`)
+			conditions = append(conditions, fmt.Sprintf(`
+				r.id NOT IN (
+					SELECT room_id 
+					FROM bookings 
+					WHERE $%d < end_date 
+					AND $%d > start_date
+				)`, len(args)+1, len(args)+2))
 			args = append(args, startDate, endDate)
 		}
-	    if city != "" {
-			conditions = append(conditions, "address_city ILIKE $"+strconv.Itoa(len(args)+1))
+
+		// Фильтры по городу и стране
+		if city != "" {
+			conditions = append(conditions, fmt.Sprintf("r.address_city ILIKE $%d", len(args)+1))
 			args = append(args, "%"+city+"%")
 		}
 		if country != "" {
-			conditions = append(conditions, "address_country ILIKE $"+strconv.Itoa(len(args)+1))
+			conditions = append(conditions, fmt.Sprintf("r.address_country ILIKE $%d", len(args)+1))
 			args = append(args, "%"+country+"%")
 		}
 
-
-
-
-		// Добавление условий в запрос
+		// Добавляем условия WHERE, если они есть
 		if len(conditions) > 0 {
-			query += " WHERE " + strings.Join(conditions, " AND ")
+			baseQuery += " WHERE " + strings.Join(conditions, " AND ")
 		}
-	
+
 		// Логирование запроса
-		log.Printf("SQL Query: %s, Args: %v", query, args)
-	
+		log.Printf("SQL Query: %s, Args: %v", baseQuery, args)
+
 		// Выполнение запроса
-		rows, err := pool.Query(context.Background(), query, args...)
+		rows, err := pool.Query(context.Background(), baseQuery, args...)
+
 		if err != nil {
 			log.Printf("Ошибка выполнения запроса: %v", err)
 			return c.Status(500).SendString("Ошибка получения списка комнат")
 		}
 		defer rows.Close()
-	
-		// Обработка результатов
-    var rooms []map[string]interface{}
-    for rows.Next() {
-        var id, capacity, totalBeds, availableBeds int
-        var name, addressStreet, addressCity, addressState, 
-            addressCountry, addressPostalCode, accommodationType string
-        var pricePerNight float64
-        var isShared, hasPrivateBathroom bool
-        var createdAt time.Time
-        
-        if err := rows.Scan(
-            &id, &name, &capacity, &pricePerNight,
-            &addressStreet, &addressCity, &addressState,
-            &addressCountry, &addressPostalCode,
-            &accommodationType, &isShared,
-            &totalBeds, &availableBeds, &hasPrivateBathroom,
-            &createdAt,
-        ); err != nil {
-            log.Printf("Ошибка сканирования строки: %v", err)
-            return c.Status(500).SendString("Ошибка обработки данных")
-        }
-        
-        rooms = append(rooms, map[string]interface{}{
-            "id":                 id,
-            "name":               name,
-            "capacity":           capacity,
-            "price_per_night":    pricePerNight,
-            "address_street":     addressStreet,
-            "address_city":       addressCity,
-            "address_state":      addressState,
-            "address_country":    addressCountry,
-            "address_postal_code": addressPostalCode,
-            "accommodation_type":  accommodationType,
-            "is_shared":          isShared,
-            "total_beds":         totalBeds,
-            "available_beds":     availableBeds,
-            "has_private_bathroom": hasPrivateBathroom,
-            "created_at":         createdAt.Format("2006-01-02 15:04:05"),
-        })
-    }
 
-    return c.JSON(rooms)
-})
-	
-	
+		// Обработка результатов
+		var rooms []map[string]interface{}
+		for rows.Next() {
+			var id, capacity int
+			var totalBeds, availableBeds int // теперь уже не указатели
+			var name, addressStreet, addressCity, addressState,
+				addressCountry, addressPostalCode, accommodationType string
+			var pricePerNight float64
+			var isShared, hasPrivateBathroom bool
+			var createdAt time.Time
+
+			if err := rows.Scan(
+				&id, &name, &capacity, &pricePerNight,
+				&addressStreet, &addressCity, &addressState,
+				&addressCountry, &addressPostalCode,
+				&accommodationType, &isShared,
+				&totalBeds, &availableBeds, &hasPrivateBathroom,
+				&createdAt,
+			); err != nil {
+				log.Printf("Ошибка сканирования строки: %v", err)
+				continue // Используем continue вместо return, чтобы пропустить проблемную запись
+			}
+
+			rooms = append(rooms, map[string]interface{}{
+				"id":                   id,
+				"name":                 name,
+				"capacity":             capacity,
+				"price_per_night":      pricePerNight,
+				"address_street":       addressStreet,
+				"address_city":         addressCity,
+				"address_state":        addressState,
+				"address_country":      addressCountry,
+				"address_postal_code":  addressPostalCode,
+				"accommodation_type":   accommodationType,
+				"is_shared":            isShared,
+				"total_beds":           totalBeds,
+				"available_beds":       availableBeds,
+				"has_private_bathroom": hasPrivateBathroom,
+				"created_at":           createdAt.Format("2006-01-02 15:04:05"),
+			})
+		}
+		return c.JSON(rooms)
+	})
+
 	// Добавление бронирования
 	app.Post("/bookings", func(c *fiber.Ctx) error {
-		type Booking struct {
+		type BookingRequest struct {
 			UserID    int    `json:"user_id"`
 			RoomID    int    `json:"room_id"`
+			BedID     *int   `json:"bed_id,omitempty"`
 			StartDate string `json:"start_date"`
 			EndDate   string `json:"end_date"`
 		}
-	
-		var booking Booking
+
+		var booking BookingRequest
 		if err := c.BodyParser(&booking); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
-	
-		// Проверяем, существует ли пользователь
-		var userCount int
-		if err := pool.QueryRow(context.Background(), "SELECT COUNT(*) FROM users WHERE id = $1", booking.UserID).Scan(&userCount); err != nil || userCount == 0 {
+
+		// Начинаем транзакцию
+		tx, err := pool.Begin(context.Background())
+		if err != nil {
+			return c.Status(500).SendString("Ошибка начала транзакции")
+		}
+		defer tx.Rollback(context.Background())
+
+		// Проверяем существование пользователя
+		var userExists bool
+		err = tx.QueryRow(context.Background(),
+			"SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)",
+			booking.UserID).Scan(&userExists)
+		if err != nil || !userExists {
 			return c.Status(400).SendString("Пользователь не найден")
 		}
-	
-		// Проверяем, существует ли комната
-		var roomCount int
-		if err := pool.QueryRow(context.Background(), "SELECT COUNT(*) FROM rooms WHERE id = $1", booking.RoomID).Scan(&roomCount); err != nil || roomCount == 0 {
-			return c.Status(400).SendString("Комната не найдена")
-		}
-	
-		// Проверяем доступность комнаты
-		var count int
-		err := pool.QueryRow(context.Background(), `
-			SELECT COUNT(*) FROM bookings 
-			WHERE room_id = $1 AND $2 < end_date AND $3 > start_date
-		`, booking.RoomID, booking.StartDate, booking.EndDate).Scan(&count)
+
+		// Получаем информацию о комнате
+		var roomType string
+		var isShared bool
+		err = tx.QueryRow(context.Background(), `
+            SELECT accommodation_type, is_shared 
+            FROM rooms 
+            WHERE id = $1`,
+			booking.RoomID).Scan(&roomType, &isShared)
 		if err != nil {
-			log.Printf("Ошибка проверки доступности комнаты: %v", err)
-			return c.Status(500).SendString("Ошибка проверки доступности комнаты")
+			return c.Status(500).SendString("Ошибка получения информации о комнате")
 		}
-		if count > 0 {
-			return c.Status(400).SendString("Комната занята на указанные даты")
+
+		if roomType == "bed" {
+			if booking.BedID == nil {
+				return c.Status(400).SendString("Для койко-места необходимо указать ID кровати")
+			}
+
+			// Проверяем доступность койко-места
+			var isAvailable bool
+			err = tx.QueryRow(context.Background(), `
+                SELECT is_available 
+                FROM beds 
+                WHERE id = $1 AND room_id = $2`,
+				*booking.BedID, booking.RoomID).Scan(&isAvailable)
+			if err != nil || !isAvailable {
+				return c.Status(400).SendString("Койко-место недоступно")
+			}
+
+			// Проверяем, не забронировано ли койко-место на эти даты
+			var conflictCount int
+			err = tx.QueryRow(context.Background(), `
+				SELECT COUNT(*) 
+				FROM bed_bookings 
+				WHERE bed_id = $1 
+				AND status = 'confirmed'
+				AND (
+					(start_date <= $2 AND end_date >= $2) OR
+					(start_date <= $3 AND end_date >= $3) OR
+					(start_date >= $2 AND end_date <= $3)
+				)`,
+				*booking.BedID, booking.StartDate, booking.EndDate).Scan(&conflictCount)
+
+			if err != nil || conflictCount > 0 {
+				return c.Status(400).SendString("Койко-место уже забронировано на эти даты")
+			}
+
+			// Создаем бронирование койко-места
+			_, err = tx.Exec(context.Background(), `
+                INSERT INTO bed_bookings (bed_id, user_id, start_date, end_date, status)
+                VALUES ($1, $2, $3, $4, 'confirmed')`,
+				*booking.BedID, booking.UserID, booking.StartDate, booking.EndDate)
+
+			// Обновляем количество доступных мест в комнате
+			_, err = tx.Exec(context.Background(), `
+                UPDATE rooms 
+                SET available_beds = available_beds - 1
+                WHERE id = $1`,
+				booking.RoomID)
+		} else {
+			// Для комнат и квартир проверяем общую доступность
+			var count int
+			err = tx.QueryRow(context.Background(), `
+                SELECT COUNT(*) 
+                FROM bookings 
+                WHERE room_id = $1 
+                    AND start_date <= $3 
+                    AND end_date >= $2
+                    AND status = 'confirmed'`,
+				booking.RoomID, booking.StartDate, booking.EndDate).Scan(&count)
+			if err != nil || count > 0 {
+				return c.Status(400).SendString("Помещение занято на указанные даты")
+			}
+
+			// Создаем обычное бронирование
+			_, err = tx.Exec(context.Background(), `
+                INSERT INTO bookings (user_id, room_id, start_date, end_date, status)
+                VALUES ($1, $2, $3, $4, 'confirmed')`,
+				booking.UserID, booking.RoomID, booking.StartDate, booking.EndDate)
 		}
-	
-		_, err = pool.Exec(context.Background(), `
-			INSERT INTO bookings (user_id, room_id, start_date, end_date) 
-			VALUES ($1, $2, $3, $4)
-		`, booking.UserID, booking.RoomID, booking.StartDate, booking.EndDate)
+
 		if err != nil {
-			log.Printf("Ошибка добавления бронирования: %v", err)
-			return c.Status(500).SendString("Ошибка добавления бронирования")
+			log.Printf("Ошибка создания бронирования: %v", err)
+			return c.Status(500).SendString("Ошибка создания бронирования")
 		}
-	
-		return c.SendString("Бронирование добавлено успешно")
+
+		// Фиксируем транзакцию
+		if err = tx.Commit(context.Background()); err != nil {
+			return c.Status(500).SendString("Ошибка фиксации транзакции")
+		}
+
+		return c.SendString("Бронирование создано успешно")
 	})
-	
 
 	// Получение списка всех бронирований
 	app.Get("/bookings", func(c *fiber.Ctx) error {
-		query := "SELECT id, user_id, room_id, start_date, end_date FROM bookings"
-		rows, err := pool.Query(context.Background(), query)
+		// Получаем бронирования комнат
+		roomBookingsQuery := `
+            SELECT b.id, b.user_id, b.room_id, NULL as bed_id, 
+                   b.start_date, b.end_date, b.status,
+                   r.name as room_name, r.accommodation_type,
+                   u.name as user_name, u.email as user_email
+            FROM bookings b
+            JOIN rooms r ON b.room_id = r.id
+            JOIN users u ON b.user_id = u.id
+        `
+		roomRows, err := pool.Query(context.Background(), roomBookingsQuery)
 		if err != nil {
-			log.Printf("Ошибка выполнения запроса: %v", err)
+			log.Printf("Ошибка получения бронирований комнат: %v", err)
 			return c.Status(500).SendString("Ошибка получения списка бронирований")
 		}
-		defer rows.Close()
-	
+		defer roomRows.Close()
+
+		// Получаем бронирования койко-мест
+		bedBookingsQuery := `
+            SELECT bb.id, bb.user_id, b.room_id, bb.bed_id,
+                   bb.start_date, bb.end_date, bb.status,
+                   r.name as room_name, r.accommodation_type,
+                   u.name as user_name, u.email as user_email
+            FROM bed_bookings bb
+            JOIN beds b ON bb.bed_id = b.id
+            JOIN rooms r ON b.room_id = r.id
+            JOIN users u ON bb.user_id = u.id
+        `
+		bedRows, err := pool.Query(context.Background(), bedBookingsQuery)
+		if err != nil {
+			log.Printf("Ошибка получения бронирований койко-мест: %v", err)
+			return c.Status(500).SendString("Ошибка получения списка бронирований")
+		}
+		defer bedRows.Close()
+
 		var bookings []map[string]interface{}
-		for rows.Next() {
-			var id, userID, roomID int
-			var startDate, endDate time.Time
-			if err := rows.Scan(&id, &userID, &roomID, &startDate, &endDate); err != nil {
-				log.Printf("Ошибка сканирования строки: %v", err)
-				return c.Status(500).SendString("Ошибка обработки данных бронирования")
+
+		// Обработка бронирований комнат
+		for roomRows.Next() {
+			var (
+				id, userID, roomID  int
+				bedID               *int
+				startDate, endDate  time.Time
+				status, roomName    string
+				accommodationType   string
+				userName, userEmail string
+			)
+
+			if err := roomRows.Scan(
+				&id, &userID, &roomID, &bedID, &startDate, &endDate, &status,
+				&roomName, &accommodationType, &userName, &userEmail,
+			); err != nil {
+				log.Printf("Ошибка сканирования бронирования комнаты: %v", err)
+				continue
 			}
+
 			bookings = append(bookings, map[string]interface{}{
-				"id":         id,
-				"user_id":    userID,
-				"room_id":    roomID,
-				"start_date": startDate.Format("2006-01-02"),
-				"end_date":   endDate.Format("2006-01-02"),
+				"id":           id,
+				"user_id":      userID,
+				"room_id":      roomID,
+				"bed_id":       bedID,
+				"start_date":   startDate.Format("2006-01-02"),
+				"end_date":     endDate.Format("2006-01-02"),
+				"status":       status,
+				"room_name":    roomName,
+				"type":         accommodationType,
+				"user_name":    userName,
+				"user_email":   userEmail,
+				"booking_type": "room",
 			})
 		}
-	
+
+		// Обработка бронирований койко-мест
+		for bedRows.Next() {
+			var (
+				id, userID, roomID  int
+				bedID               int
+				startDate, endDate  time.Time
+				status, roomName    string
+				accommodationType   string
+				userName, userEmail string
+			)
+
+			if err := bedRows.Scan(
+				&id, &userID, &roomID, &bedID, &startDate, &endDate, &status,
+				&roomName, &accommodationType, &userName, &userEmail,
+			); err != nil {
+				log.Printf("Ошибка сканирования бронирования койко-места: %v", err)
+				continue
+			}
+
+			bookings = append(bookings, map[string]interface{}{
+				"id":           id,
+				"user_id":      userID,
+				"room_id":      roomID,
+				"bed_id":       bedID,
+				"start_date":   startDate.Format("2006-01-02"),
+				"end_date":     endDate.Format("2006-01-02"),
+				"status":       status,
+				"room_name":    roomName,
+				"type":         accommodationType,
+				"user_name":    userName,
+				"user_email":   userEmail,
+				"booking_type": "bed",
+			})
+		}
+
 		return c.JSON(bookings)
 	})
-	
 
 	// Удаление комнаты
 	app.Delete("/rooms/:id", func(c *fiber.Ctx) error {
@@ -719,6 +944,98 @@ CREATE INDEX idx_users_email ON users(email);
 -- Добавить составной индекс для фильтрации комнат
 CREATE INDEX idx_rooms_capacity_price ON rooms(capacity, price_per_night);
 
+--- Содержимое файла: backend/migrations/0015_fix_available_beds.up.sql ---
+
+-- Удаляем старый триггер и функцию
+DROP TRIGGER IF EXISTS bed_bookings_update_trigger ON bed_bookings;
+DROP FUNCTION IF EXISTS update_available_beds();
+
+-- Создаем улучшенную функцию обновления доступных мест
+CREATE OR REPLACE FUNCTION update_available_beds()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Обновляем количество доступных мест для комнаты, связанной с бронированием
+    WITH bed_count AS (
+        SELECT b.room_id,
+               COUNT(DISTINCT bb.bed_id) as booked_beds
+        FROM beds b
+        LEFT JOIN bed_bookings bb ON b.id = bb.bed_id
+        WHERE bb.status = 'confirmed'
+        AND bb.start_date <= CURRENT_DATE 
+        AND bb.end_date >= CURRENT_DATE
+        GROUP BY b.room_id
+    )
+    UPDATE rooms r
+    SET available_beds = r.total_beds - COALESCE(bc.booked_beds, 0)
+    FROM bed_count bc
+    WHERE r.id = bc.room_id
+    AND r.accommodation_type = 'bed';
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Создаем новый триггер
+CREATE TRIGGER bed_bookings_update_trigger
+AFTER INSERT OR UPDATE OR DELETE ON bed_bookings
+FOR EACH ROW
+EXECUTE FUNCTION update_available_beds();
+
+-- Создаем функцию для получения количества доступных мест на конкретные даты
+CREATE OR REPLACE FUNCTION get_available_beds(
+    room_id_param INTEGER,
+    start_date_param DATE,
+    end_date_param DATE
+)
+RETURNS INTEGER AS $$
+DECLARE
+    total_beds INTEGER;
+    booked_beds INTEGER;
+BEGIN
+    -- Получаем общее количество кроватей
+    SELECT total_beds INTO total_beds
+    FROM rooms
+    WHERE id = room_id_param;
+
+    -- Считаем количество забронированных кроватей на указанные даты
+    SELECT COUNT(DISTINCT bb.bed_id) INTO booked_beds
+    FROM bed_bookings bb
+    JOIN beds b ON bb.bed_id = b.id
+    WHERE b.room_id = room_id_param
+    AND bb.status = 'confirmed'
+    AND bb.start_date <= end_date_param
+    AND bb.end_date >= start_date_param;
+
+    -- Возвращаем разницу
+    RETURN total_beds - COALESCE(booked_beds, 0);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Функция инициализации доступных мест
+CREATE OR REPLACE FUNCTION initialize_available_beds()
+RETURNS void AS $$
+BEGIN
+    WITH bed_count AS (
+        SELECT b.room_id,
+               COUNT(DISTINCT bb.bed_id) as booked_beds
+        FROM beds b
+        LEFT JOIN bed_bookings bb ON b.id = bb.bed_id
+        WHERE bb.status = 'confirmed'
+        AND bb.start_date <= CURRENT_DATE 
+        AND bb.end_date >= CURRENT_DATE
+        GROUP BY b.room_id
+    )
+    UPDATE rooms r
+    SET available_beds = r.total_beds - COALESCE(bc.booked_beds, 0)
+    FROM bed_count bc
+    WHERE r.id = bc.room_id
+    AND r.accommodation_type = 'bed';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Выполняем начальную инициализацию
+SELECT initialize_available_beds();
+
 --- Содержимое файла: backend/migrations/0006_add_room_address.down.sql ---
 
 -- 0006_add_room_address.down.sql
@@ -731,6 +1048,46 @@ ALTER TABLE rooms
     DROP COLUMN address_state,
     DROP COLUMN address_country,
     DROP COLUMN address_postal_code;
+
+--- Содержимое файла: backend/migrations/0014_add_beds_trigger.down.sql ---
+
+-- Удаляем триггер
+DROP TRIGGER IF EXISTS bed_bookings_update_trigger ON bed_bookings;
+
+-- Удаляем функцию
+DROP FUNCTION IF EXISTS update_available_beds();
+
+--- Содержимое файла: backend/migrations/0014_add_beds_trigger.up.sql ---
+
+-- Создаем функцию для подсчета доступных кроватей
+CREATE OR REPLACE FUNCTION update_available_beds()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE rooms
+    SET available_beds = (
+        SELECT COUNT(*)
+        FROM beds b
+        WHERE b.room_id = NEW.room_id
+        AND b.is_available = true
+        AND b.id NOT IN (
+            SELECT bed_id
+            FROM bed_bookings
+            WHERE status = 'confirmed'
+            AND (
+                (start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE)
+            )
+        )
+    )
+    WHERE id = NEW.room_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Создаем триггер для таблицы bed_bookings
+CREATE TRIGGER bed_bookings_update_trigger
+AFTER INSERT OR UPDATE OR DELETE ON bed_bookings
+FOR EACH ROW
+EXECUTE FUNCTION update_available_beds();
 
 --- Содержимое файла: backend/migrations/0005_add_status_and_indexes.down.sql ---
 
@@ -785,6 +1142,12 @@ ALTER TABLE bookings
 
 CREATE INDEX idx_bookings_status ON bookings(status);
 CREATE INDEX idx_bookings_dates ON bookings(start_date, end_date);
+
+--- Содержимое файла: backend/migrations/0013_update_bed_bookings.down.sql ---
+
+-- 0013_update_bed_bookings.down.sql
+DROP INDEX IF EXISTS idx_bed_bookings_dates_status;
+ALTER TABLE bed_bookings DROP COLUMN IF EXISTS status;
 
 --- Содержимое файла: backend/migrations/0012_add_accommodation_types.down.sql ---
 
@@ -860,6 +1223,17 @@ ALTER TABLE bookings
     ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed'));
 
+--- Содержимое файла: backend/migrations/0013_update_bed_bookings.up.sql ---
+
+-- 0013_update_bed_bookings.up.sql
+ALTER TABLE bed_bookings
+ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed'));
+
+-- Создаем индекс для оптимизации поиска
+CREATE INDEX IF NOT EXISTS idx_bed_bookings_dates_status 
+ON bed_bookings(start_date, end_date, status);
+
 --- Содержимое файла: backend/migrations/0003_add_constraints_and_indexes.down.sql ---
 
 
@@ -894,6 +1268,43 @@ CREATE TABLE room_images (
 );
 
 CREATE INDEX idx_room_images_room_id ON room_images(room_id);
+
+--- Содержимое файла: backend/migrations/0015_fix_available_beds.down.sql ---
+
+-- Удаляем созданные функции и триггеры
+DROP TRIGGER IF EXISTS bed_bookings_update_trigger ON bed_bookings;
+DROP FUNCTION IF EXISTS update_available_beds();
+DROP FUNCTION IF EXISTS get_available_beds(INTEGER, DATE, DATE);
+DROP FUNCTION IF EXISTS initialize_available_beds();
+
+-- Возвращаем простой триггер для обновления available_beds
+CREATE OR REPLACE FUNCTION update_available_beds()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE rooms
+    SET available_beds = (
+        SELECT COUNT(*)
+        FROM beds b
+        WHERE b.room_id = NEW.room_id
+        AND b.is_available = true
+        AND b.id NOT IN (
+            SELECT bed_id
+            FROM bed_bookings
+            WHERE status = 'confirmed'
+            AND (
+                (start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE)
+            )
+        )
+    )
+    WHERE id = NEW.room_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER bed_bookings_update_trigger
+AFTER INSERT OR UPDATE OR DELETE ON bed_bookings
+FOR EACH ROW
+EXECUTE FUNCTION update_available_beds();
 
 --- Содержимое файла: backend/migrations/0011_extend_room_types.down.sql ---
 
@@ -1112,7 +1523,7 @@ export default AddBooking;
 
 --- Содержимое файла: frontend/hostel-frontend/src/components/BookingDialog.js ---
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -1122,31 +1533,93 @@ import {
   TextField,
   Box,
   Typography,
-  Alert
+  Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import axios from "../api/axios";
 
 const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
-  const [userId, setUserId] = React.useState('');
-  const [error, setError] = React.useState('');
-  const [success, setSuccess] = React.useState(false);
+  const [userId, setUserId] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [selectedBed, setSelectedBed] = useState(null);
+  const [availableBeds, setAvailableBeds] = useState([]);
+
+  useEffect(() => {
+    if (open && room && room.accommodation_type === 'bed') {
+      // Загружаем доступные койко-места при открытии диалога
+      axios.get(`/rooms/${room.id}/available-beds`, {
+        params: {
+          start_date: startDate,
+          end_date: endDate
+        }
+      })
+      .then(response => {
+        setAvailableBeds(response.data);
+        setSelectedBed(null); // Сбрасываем выбор при каждом открытии
+      })
+      .catch(err => {
+        console.error('Ошибка загрузки доступных койко-мест:', err);
+        setError('Не удалось загрузить список доступных койко-мест');
+      });
+    }
+  }, [open, room, startDate, endDate]);
+
+  const calculateTotalPrice = () => {
+    const daysCount = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+    let pricePerNight;
+
+    if (room.accommodation_type === 'bed' && selectedBed) {
+      const selectedBedData = availableBeds.find(bed => bed.id === selectedBed);
+      pricePerNight = selectedBedData ? selectedBedData.price_per_night : 0;
+    } else {
+      pricePerNight = room.price_per_night;
+    }
+
+    return pricePerNight * daysCount;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
 
+    if (!userId) {
+      setError('Введите ID пользователя');
+      return;
+    }
+
+    if (room.accommodation_type === 'bed' && !selectedBed) {
+      setError('Выберите койко-место');
+      return;
+    }
+
     try {
-      await axios.post('/bookings', {
+      const bookingData = {
         user_id: parseInt(userId),
         room_id: room.id,
         start_date: startDate,
         end_date: endDate
-      });
+      };
+
+      // Добавляем ID койко-места, если бронируется койко-место
+      if (room.accommodation_type === 'bed') {
+        bookingData.bed_id = selectedBed;
+      }
+
+      await axios.post('/bookings', bookingData);
       setSuccess(true);
+      
+      // Закрываем диалог через 2 секунды после успешного бронирования
       setTimeout(() => {
         onClose();
+        // Сбрасываем состояния
         setUserId('');
+        setSelectedBed(null);
+        setError('');
         setSuccess(false);
       }, 2000);
     } catch (error) {
@@ -1154,9 +1627,20 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
     }
   };
 
+  const getDialogTitle = () => {
+    switch (room?.accommodation_type) {
+      case 'bed':
+        return 'Бронирование койко-места';
+      case 'apartment':
+        return 'Бронирование квартиры';
+      default:
+        return 'Бронирование комнаты';
+    }
+  };
+
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Бронирование комнаты</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>{getDialogTitle()}</DialogTitle>
       <DialogContent>
         {success && (
           <Alert severity="success" sx={{ mt: 2 }}>
@@ -1174,31 +1658,52 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
             <Typography variant="body2" color="text.secondary">
               {room.address_street}, {room.address_city}
             </Typography>
-            <Typography sx={{ mt: 1 }}>
-              Даты: {startDate} - {endDate}
+            <Typography sx={{ mt: 2 }}>
+              Период проживания: {startDate} - {endDate}
             </Typography>
-            <Typography sx={{ mt: 1 }}>
-              Общая стоимость: {room.price_per_night * 
-                (Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))} руб.
+
+            {room.accommodation_type === 'bed' && (
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel>Выберите койко-место</InputLabel>
+                <Select
+                  value={selectedBed || ''}
+                  onChange={(e) => setSelectedBed(e.target.value)}
+                >
+                  {availableBeds.map(bed => (
+                    <MenuItem key={bed.id} value={bed.id}>
+                      Место {bed.bed_number} - {bed.price_per_night} руб./ночь
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+
+            <TextField
+              margin="dense"
+              label="ID пользователя"
+              type="number"
+              fullWidth
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              sx={{ mt: 2 }}
+            />
+
+            <Typography variant="h6" sx={{ mt: 2 }}>
+              Итого к оплате: {calculateTotalPrice()} руб.
             </Typography>
           </Box>
         )}
-        <TextField
-          autoFocus
-          margin="dense"
-          label="ID пользователя"
-          type="number"
-          fullWidth
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          sx={{ mt: 2 }}
-        />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="inherit">
           Отмена
         </Button>
-        <Button onClick={handleSubmit} color="primary" variant="contained">
+        <Button 
+          onClick={handleSubmit} 
+          color="primary" 
+          variant="contained"
+          disabled={!userId || (room?.accommodation_type === 'bed' && !selectedBed)}
+        >
           Забронировать
         </Button>
       </DialogActions>
@@ -1265,13 +1770,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from "../api/axios";
 import { Chip } from '@mui/material';
 import {
-  Grid, Card, CardContent, Typography, TextField, 
-  Button, Divider, Box, Dialog, DialogContent, IconButton,
-  MobileStepper, CardMedia
+    Grid, Card, CardContent, Typography, TextField,
+    Button, Divider, Box, Dialog, DialogContent, IconButton,
+    MobileStepper, CardMedia
 } from "@mui/material";
 import {
-  KeyboardArrowLeft, KeyboardArrowRight,
-  Close as CloseIcon
+    KeyboardArrowLeft, KeyboardArrowRight,
+    Close as CloseIcon
 } from '@mui/icons-material';
 import BookingDialog from "./BookingDialog";
 import {
@@ -1279,7 +1784,7 @@ import {
     Hotel as HotelIcon,
     Apartment as ApartmentIcon,
     Home as HomeIcon
-  } from '@mui/icons-material';
+} from '@mui/icons-material';
 
 
 const BACKEND_URL = 'http://localhost:3000';
@@ -1287,528 +1792,528 @@ const BACKEND_URL = 'http://localhost:3000';
 const ImageGallery = ({ images, open, onClose }) => {
     const [activeStep, setActiveStep] = useState(0);
     const maxSteps = images.length;
-  
+
     const handleNext = () => {
-      setActiveStep((prevStep) => (prevStep + 1) % maxSteps);
+        setActiveStep((prevStep) => (prevStep + 1) % maxSteps);
     };
-  
+
     const handleBack = () => {
-      setActiveStep((prevStep) => (prevStep - 1 + maxSteps) % maxSteps);
+        setActiveStep((prevStep) => (prevStep - 1 + maxSteps) % maxSteps);
     };
-  
+
     if (!images.length) return null;
-  
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogContent sx={{ position: 'relative', p: 0 }}>
-          <IconButton
-            onClick={onClose}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: 'white',
-              bgcolor: 'rgba(0, 0, 0, 0.5)',
-              '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.7)',
-              },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-          <Box sx={{ height: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <img
-            src={`${BACKEND_URL}/uploads/${images[activeStep].file_path}`} // Исправлено здесь
-            alt={images[activeStep].file_name}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-            }}
-          />
-            <MobileStepper
-              steps={maxSteps}
-              position="static"
-              activeStep={activeStep}
-              sx={{
-                bgcolor: 'background.default',
-                position: 'absolute',
-                bottom: 0,
-                width: '100%',
-              }}
-              nextButton={
-                <Button size="small" onClick={handleNext}>
-                  Следующее
-                  <KeyboardArrowRight />
-                </Button>
-              }
-              backButton={
-                <Button size="small" onClick={handleBack}>
-                  <KeyboardArrowLeft />
-                  Предыдущее
-                </Button>
-              }
-            />
-          </Box>
-        </DialogContent>
-      </Dialog>
+            <DialogContent sx={{ position: 'relative', p: 0 }}>
+                <IconButton
+                    onClick={onClose}
+                    sx={{
+                        position: 'absolute',
+                        right: 8,
+                        top: 8,
+                        color: 'white',
+                        bgcolor: 'rgba(0, 0, 0, 0.5)',
+                        '&:hover': {
+                            bgcolor: 'rgba(0, 0, 0, 0.7)',
+                        },
+                    }}
+                >
+                    <CloseIcon />
+                </IconButton>
+                <Box sx={{ height: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <img
+                        src={`${BACKEND_URL}/uploads/${images[activeStep].file_path}`} // Исправлено здесь
+                        alt={images[activeStep].file_name}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                        }}
+                    />
+                    <MobileStepper
+                        steps={maxSteps}
+                        position="static"
+                        activeStep={activeStep}
+                        sx={{
+                            bgcolor: 'background.default',
+                            position: 'absolute',
+                            bottom: 0,
+                            width: '100%',
+                        }}
+                        nextButton={
+                            <Button size="small" onClick={handleNext}>
+                                Следующее
+                                <KeyboardArrowRight />
+                            </Button>
+                        }
+                        backButton={
+                            <Button size="small" onClick={handleBack}>
+                                <KeyboardArrowLeft />
+                                Предыдущее
+                            </Button>
+                        }
+                    />
+                </Box>
+            </DialogContent>
+        </Dialog>
     );
-  };
+};
 
-  const RoomList = () => {
+const RoomList = () => {
     const [rooms, setRooms] = useState([]);
     const [filters, setFilters] = useState({
-      capacity: "",
-      min_price: "",
-      max_price: "",
-      city: "",
-      country: "",
-      start_date: "",
-      end_date: ""
+        capacity: "",
+        min_price: "",
+        max_price: "",
+        city: "",
+        country: "",
+        start_date: "",
+        end_date: ""
     });
-  
+
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [galleryOpen, setGalleryOpen] = useState(false);
     const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
-  
+
     const fetchRooms = useCallback(async () => {
-      try {
-        const params = new URLSearchParams();
-        if (filters.capacity) params.append('capacity', filters.capacity);
-        if (filters.min_price) params.append('min_price', filters.min_price);
-        if (filters.max_price) params.append('max_price', filters.max_price);
-        if (filters.city) params.append('city', filters.city);
-        if (filters.country) params.append('country', filters.country);
-        if (filters.start_date && filters.end_date) {
-          params.append('start_date', filters.start_date);
-          params.append('end_date', filters.end_date);
+        try {
+            const params = new URLSearchParams();
+            if (filters.capacity) params.append('capacity', filters.capacity);
+            if (filters.min_price) params.append('min_price', filters.min_price);
+            if (filters.max_price) params.append('max_price', filters.max_price);
+            if (filters.city) params.append('city', filters.city);
+            if (filters.country) params.append('country', filters.country);
+            if (filters.start_date && filters.end_date) {
+                params.append('start_date', filters.start_date);
+                params.append('end_date', filters.end_date);
+            }
+
+            const response = await axios.get(`/rooms?${params.toString()}`);
+            const roomsData = response.data || [];
+
+            // Получаем изображения для каждой комнаты
+            const roomsWithImages = await Promise.all(
+                roomsData.map(async (room) => {
+                    const imagesResponse = await axios.get(`/rooms/${room.id}/images`);
+                    return {
+                        ...room,
+                        images: imagesResponse.data || []
+                    };
+                })
+            );
+
+            setRooms(roomsWithImages);
+        } catch (error) {
+            console.error("Ошибка при получении списка комнат:", error);
         }
-        
-        const response = await axios.get(`/rooms?${params.toString()}`);
-        const roomsData = response.data || [];
-        
-        // Получаем изображения для каждой комнаты
-        const roomsWithImages = await Promise.all(
-          roomsData.map(async (room) => {
-            const imagesResponse = await axios.get(`/rooms/${room.id}/images`);
-            return {
-              ...room,
-              images: imagesResponse.data || []
-            };
-          })
-        );
-        
-        setRooms(roomsWithImages);
-      } catch (error) {
-        console.error("Ошибка при получении списка комнат:", error);
-      }
     }, [filters]);
-  
+
     const handleDateChange = (field, value) => {
-      setFilters(prev => {
-        const newFilters = { ...prev, [field]: value };
-        
-        if (field === 'end_date' && newFilters.start_date && value < newFilters.start_date) {
-          return prev;
-        }
-        
-        if (field === 'start_date' && newFilters.end_date && value > newFilters.end_date) {
-          return prev;
-        }
-        
-        return newFilters;
-      });
+        setFilters(prev => {
+            const newFilters = { ...prev, [field]: value };
+
+            if (field === 'end_date' && newFilters.start_date && value < newFilters.start_date) {
+                return prev;
+            }
+
+            if (field === 'start_date' && newFilters.end_date && value > newFilters.end_date) {
+                return prev;
+            }
+
+            return newFilters;
+        });
     };
-  
+
     const handleBooking = (room) => {
         if (!filters.start_date || !filters.end_date) {
-          alert('Пожалуйста, выберите даты заезда и выезда');
-          return;
+            alert('Пожалуйста, выберите даты заезда и выезда');
+            return;
         }
         setSelectedRoom(room);
-        setBookingOptionsOpen(true); // Сначала показываем опции бронирования
-      };
-      
-      const handleBookingTypeSelect = (bookingType) => {
+        setBookingDialogOpen(true);
+    };
+
+    const handleBookingTypeSelect = (bookingType) => {
         setBookingOptionsOpen(false);
         setSelectedBookingType(bookingType);
         setBookingDialogOpen(true);
-      };
-  
+    };
+
     useEffect(() => {
-      fetchRooms();
+        fetchRooms();
     }, [fetchRooms]);
-  
+
     const AccommodationInfo = ({ room }) => {
         const getAccommodationInfo = () => {
-          switch (room.accommodation_type) {
-            case 'bed':
-              return {
-                title: 'Койко-место',
-                details: `Доступно ${room.available_beds} из ${room.total_beds} мест`,
-                icon: <SingleBedIcon />,
-                shared: true
-              };
-            case 'room':
-              return {
-                title: room.is_shared ? 'Общая комната' : 'Отдельная комната',
-                details: `Вместимость: ${room.capacity} чел.`,
-                icon: <HotelIcon />,
-                shared: room.is_shared
-              };
-            case 'apartment':
-              return {
-                title: 'Квартира',
-                details: `${room.capacity} комнат`,
-                icon: <ApartmentIcon />,
-                shared: false
-              };
-            default:
-              return {
-                title: 'Помещение',
-                details: `Вместимость: ${room.capacity} чел.`,
-                icon: <HomeIcon />,
-                shared: false
-              };
-          }
+            switch (room.accommodation_type) {
+                case 'bed':
+                    return {
+                        title: 'Койко-место',
+                        details: `Доступно ${room.available_beds} из ${room.total_beds} мест`,
+                        icon: <SingleBedIcon />,
+                        shared: true
+                    };
+                case 'room':
+                    return {
+                        title: room.is_shared ? 'Общая комната' : 'Отдельная комната',
+                        details: `Вместимость: ${room.capacity} чел.`,
+                        icon: <HotelIcon />,
+                        shared: room.is_shared
+                    };
+                case 'apartment':
+                    return {
+                        title: 'Квартира',
+                        details: `${room.capacity} комнат`,
+                        icon: <ApartmentIcon />,
+                        shared: false
+                    };
+                default:
+                    return {
+                        title: 'Помещение',
+                        details: `Вместимость: ${room.capacity} чел.`,
+                        icon: <HomeIcon />,
+                        shared: false
+                    };
+            }
         };
-      
-        const info = getAccommodationInfo();
-      
-        return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            {info.icon}
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
-                {info.title}
-                {info.shared && (
-                  <Chip
-                    size="small"
-                    label="Общее помещение"
-                    color="secondary"
-                    sx={{ ml: 1 }}
-                  />
-                )}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {info.details}
-              </Typography>
-            </Box>
-          </Box>
-        );
-      };
 
-      const BookingOptions = ({ room, onBookingTypeSelect }) => {
-        const getAvailableOptions = () => {
-          const options = [];
-          
-          if (room.accommodation_type === 'bed') {
-            options.push({
-              type: 'single_bed',
-              title: 'Забронировать койко-место',
-              price: room.price_per_night
-            });
-            
-            if (room.available_beds > 1) {
-              options.push({
-                type: 'multiple_beds',
-                title: 'Забронировать несколько мест',
-                price: room.price_per_night,
-                maxCount: room.available_beds
-              });
-            }
-          } else if (room.accommodation_type === 'room') {
-            if (room.is_shared) {
-              options.push({
-                type: 'shared_room',
-                title: 'Забронировать место в комнате',
-                price: room.price_per_night / room.capacity
-              });
-            }
-            options.push({
-              type: 'whole_room',
-              title: 'Забронировать всю комнату',
-              price: room.price_per_night
-            });
-          } else if (room.accommodation_type === 'apartment') {
-            options.push({
-              type: 'apartment',
-              title: 'Забронировать квартиру',
-              price: room.price_per_night
-            });
-          }
-          
-          return options;
-        };
-      
+        const info = getAccommodationInfo();
+
         return (
-          <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Выберите тип бронирования</DialogTitle>
-            <DialogContent>
-              <Stack spacing={2}>
-                {getAvailableOptions().map((option) => (
-                  <Button
-                    key={option.type}
-                    variant="outlined"
-                    onClick={() => onBookingTypeSelect(option)}
-                  >
-                    {option.title}
-                    <Typography variant="caption" display="block">
-                      {option.price} руб./ночь
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                {info.icon}
+                <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
+                        {info.title}
+                        {info.shared && (
+                            <Chip
+                                size="small"
+                                label="Общее помещение"
+                                color="secondary"
+                                sx={{ ml: 1 }}
+                            />
+                        )}
                     </Typography>
-                  </Button>
-                ))}
-              </Stack>
-            </DialogContent>
-          </Dialog>
+                    <Typography variant="body2" color="text.secondary">
+                        {info.details}
+                    </Typography>
+                </Box>
+            </Box>
         );
-      };
+    };
+
+    const BookingOptions = ({ room, onBookingTypeSelect }) => {
+        const getAvailableOptions = () => {
+            const options = [];
+
+            if (room.accommodation_type === 'bed') {
+                options.push({
+                    type: 'single_bed',
+                    title: 'Забронировать койко-место',
+                    price: room.price_per_night
+                });
+
+                if (room.available_beds > 1) {
+                    options.push({
+                        type: 'multiple_beds',
+                        title: 'Забронировать несколько мест',
+                        price: room.price_per_night,
+                        maxCount: room.available_beds
+                    });
+                }
+            } else if (room.accommodation_type === 'room') {
+                if (room.is_shared) {
+                    options.push({
+                        type: 'shared_room',
+                        title: 'Забронировать место в комнате',
+                        price: room.price_per_night / room.capacity
+                    });
+                }
+                options.push({
+                    type: 'whole_room',
+                    title: 'Забронировать всю комнату',
+                    price: room.price_per_night
+                });
+            } else if (room.accommodation_type === 'apartment') {
+                options.push({
+                    type: 'apartment',
+                    title: 'Забронировать квартиру',
+                    price: room.price_per_night
+                });
+            }
+
+            return options;
+        };
+
+        return (
+            <Dialog open={open} onClose={onClose}>
+                <DialogTitle>Выберите тип бронирования</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2}>
+                        {getAvailableOptions().map((option) => (
+                            <Button
+                                key={option.type}
+                                variant="outlined"
+                                onClick={() => onBookingTypeSelect(option)}
+                            >
+                                {option.title}
+                                <Typography variant="caption" display="block">
+                                    {option.price} руб./ночь
+                                </Typography>
+                            </Button>
+                        ))}
+                    </Stack>
+                </DialogContent>
+            </Dialog>
+        );
+    };
 
 
     const today = new Date().toISOString().split('T')[0];
-  
+
     return (
-      <div>
+        <div>
 
-      <Grid container spacing={2} sx={{ marginBottom: 4 }}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Дата заезда"
-            type="date"
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            value={filters.start_date}
-            onChange={(e) => handleDateChange('start_date', e.target.value)}
-            inputProps={{ min: today }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Дата выезда"
-            type="date"
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            value={filters.end_date}
-            onChange={(e) => handleDateChange('end_date', e.target.value)}
-            inputProps={{ min: filters.start_date || today }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Вместимость"
-            type="number"
-            fullWidth
-            value={filters.capacity}
-            onChange={(e) => setFilters({ ...filters, capacity: e.target.value })}
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Мин. цена"
-            type="number"
-            fullWidth
-            value={filters.min_price}
-            onChange={(e) => setFilters({ ...filters, min_price: e.target.value })}
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Макс. цена"
-            type="number"
-            fullWidth
-            value={filters.max_price}
-            onChange={(e) => setFilters({ ...filters, max_price: e.target.value })}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Город"
-            fullWidth
-            value={filters.city}
-            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Страна"
-            fullWidth
-            value={filters.country}
-            onChange={(e) => setFilters({ ...filters, country: e.target.value })}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <Button variant="contained" color="primary" onClick={fetchRooms}>
-            Фильтровать
-          </Button>
-        </Grid>
-      </Grid>
+            <Grid container spacing={2} sx={{ marginBottom: 4 }}>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        label="Дата заезда"
+                        type="date"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                        value={filters.start_date}
+                        onChange={(e) => handleDateChange('start_date', e.target.value)}
+                        inputProps={{ min: today }}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        label="Дата выезда"
+                        type="date"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                        value={filters.end_date}
+                        onChange={(e) => handleDateChange('end_date', e.target.value)}
+                        inputProps={{ min: filters.start_date || today }}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <TextField
+                        label="Вместимость"
+                        type="number"
+                        fullWidth
+                        value={filters.capacity}
+                        onChange={(e) => setFilters({ ...filters, capacity: e.target.value })}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <TextField
+                        label="Мин. цена"
+                        type="number"
+                        fullWidth
+                        value={filters.min_price}
+                        onChange={(e) => setFilters({ ...filters, min_price: e.target.value })}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <TextField
+                        label="Макс. цена"
+                        type="number"
+                        fullWidth
+                        value={filters.max_price}
+                        onChange={(e) => setFilters({ ...filters, max_price: e.target.value })}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        label="Город"
+                        fullWidth
+                        value={filters.city}
+                        onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        label="Страна"
+                        fullWidth
+                        value={filters.country}
+                        onChange={(e) => setFilters({ ...filters, country: e.target.value })}
+                    />
+                </Grid>
+                <Grid item xs={12}>
+                    <Button variant="contained" color="primary" onClick={fetchRooms}>
+                        Фильтровать
+                    </Button>
+                </Grid>
+            </Grid>
 
-      <Grid container spacing={2}>
-  {rooms.map((room) => (
-    <Grid item xs={12} md={6} lg={4} key={room.id}>
-    <Card sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100%',
-      '& .MuiCardContent-root': {
-        padding: '12px',
-      },
-      '& .MuiTypography-root': {
-        lineHeight: '1.3',
-      }
-    }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5 }}>
-        <Box sx={{ flex: 1, pr: 1.5 }}>
-          <AccommodationInfo room={room} />
-          <Typography variant="h6" sx={{ 
-            mb: 0.5,
-            fontSize: '1.1rem'
-          }}>
-            {room.name}
-          </Typography>
-          {room.accommodation_type === 'bed' ? (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              Цена за койко-место: {room.price_per_night} руб./ночь
-            </Typography>
-          ) : (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              Цена за {room.accommodation_type === 'apartment' ? 'квартиру' : 'комнату'}: {room.price_per_night} руб./ночь
-            </Typography>
-          )}
-        </Box>
-        
-        {/* Правый верхний угол: эскиз */}
-        <Box sx={{ 
-          width: '100px',
-          height: '100px',
-          flexShrink: 0,
-          p: room.images?.length ? 0 : 1
-        }}>
-          {room.images && room.images.length > 0 ? (
-            <CardMedia
-              component="img"
-              sx={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                borderRadius: '4px',
-                '&:hover': {
-                  opacity: 0.8,
-                  transition: 'opacity 0.2s ease-in-out',
-                },
-              }}
-              image={`${BACKEND_URL}/uploads/${room.images[0].file_path}`}
-              alt={room.name}
-              onClick={() => {
-                setSelectedRoom(room);
-                setGalleryOpen(true);
-              }}
-            />
-          ) : (
-            <Box
-              sx={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: 'grey.100',
-                borderRadius: '4px',
-                fontSize: '0.8rem'
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Нет фото
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      </Box>
-  
-      <Divider />
-  
-      {/* Нижняя часть карточки с адресом и кнопками */}
-      <CardContent sx={{ 
-        pt: 1,
-        pb: '8px !important',
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center'
-      }}>
-        <Typography variant="body2" color="text.secondary" sx={{ 
-          fontSize: '0.85rem',
-          flex: 1,
-          mr: 1
-        }}>
-          {room.address_street}
-          {room.address_city && `, ${room.address_city}`}
-          {room.address_state && `, ${room.address_state}`}
-          {room.address_country && `, ${room.address_country}`}
-          {room.address_postal_code && ` (${room.address_postal_code})`}
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
-          {room.images && room.images.length > 1 && (
-            <Button
-              size="small"
-              sx={{ 
-                minWidth: 'auto',
-                padding: '4px 8px',
-                fontSize: '0.8rem'
-              }}
-              onClick={() => {
-                setSelectedRoom(room);
-                setGalleryOpen(true);
-              }}
-            >
-              Все ({room.images.length})
-            </Button>
-          )}
-          <Button
-            variant="contained"
-            color="primary"
-            size="small"
-            sx={{ 
-              minWidth: 'auto',
-              padding: '4px 8px',
-              fontSize: '0.8rem'
-            }}
-            onClick={() => handleBooking(room)}
-            disabled={!filters.start_date || !filters.end_date}
-          >
-            Забронировать
-          </Button>
-        </Box>
-      </CardContent>
-    </Card>
-  </Grid>
+            <Grid container spacing={2}>
+                {rooms.map((room) => (
+                    <Grid item xs={12} md={6} lg={4} key={room.id}>
+                        <Card sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            height: '100%',
+                            '& .MuiCardContent-root': {
+                                padding: '12px',
+                            },
+                            '& .MuiTypography-root': {
+                                lineHeight: '1.3',
+                            }
+                        }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5 }}>
+                                <Box sx={{ flex: 1, pr: 1.5 }}>
+                                    <AccommodationInfo room={room} />
+                                    <Typography variant="h6" sx={{
+                                        mb: 0.5,
+                                        fontSize: '1.1rem'
+                                    }}>
+                                        {room.name}
+                                    </Typography>
+                                    {room.accommodation_type === 'bed' ? (
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                            Цена за койко-место: {room.price_per_night} руб./ночь
+                                        </Typography>
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                            Цена за {room.accommodation_type === 'apartment' ? 'квартиру' : 'комнату'}: {room.price_per_night} руб./ночь
+                                        </Typography>
+                                    )}
+                                </Box>
 
-))}
-</Grid>
+                                {/* Правый верхний угол: эскиз */}
+                                <Box sx={{
+                                    width: '100px',
+                                    height: '100px',
+                                    flexShrink: 0,
+                                    p: room.images?.length ? 0 : 1
+                                }}>
+                                    {room.images && room.images.length > 0 ? (
+                                        <CardMedia
+                                            component="img"
+                                            sx={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                                borderRadius: '4px',
+                                                '&:hover': {
+                                                    opacity: 0.8,
+                                                    transition: 'opacity 0.2s ease-in-out',
+                                                },
+                                            }}
+                                            image={`${BACKEND_URL}/uploads/${room.images[0].file_path}`}
+                                            alt={room.name}
+                                            onClick={() => {
+                                                setSelectedRoom(room);
+                                                setGalleryOpen(true);
+                                            }}
+                                        />
+                                    ) : (
+                                        <Box
+                                            sx={{
+                                                width: '100%',
+                                                height: '100%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                bgcolor: 'grey.100',
+                                                borderRadius: '4px',
+                                                fontSize: '0.8rem'
+                                            }}
+                                        >
+                                            <Typography variant="body2" color="text.secondary">
+                                                Нет фото
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Box>
 
-    {selectedRoom && (
-      <>
-        <ImageGallery
-          images={selectedRoom.images || []}
-          open={galleryOpen}
-          onClose={() => {
-            setGalleryOpen(false);
-            setSelectedRoom(null);
-          }}
-        />
-        <BookingDialog
-          open={bookingDialogOpen}
-          onClose={() => {
-            setBookingDialogOpen(false);
-            setSelectedRoom(null);
-          }}
-          room={selectedRoom}
-          startDate={filters.start_date}
-          endDate={filters.end_date}
-        />
-      </>
-    )}
-  </div>
-);
+                            <Divider />
+
+                            {/* Нижняя часть карточки с адресом и кнопками */}
+                            <CardContent sx={{
+                                pt: 1,
+                                pb: '8px !important',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}>
+                                <Typography variant="body2" color="text.secondary" sx={{
+                                    fontSize: '0.85rem',
+                                    flex: 1,
+                                    mr: 1
+                                }}>
+                                    {room.address_street}
+                                    {room.address_city && `, ${room.address_city}`}
+                                    {room.address_state && `, ${room.address_state}`}
+                                    {room.address_country && `, ${room.address_country}`}
+                                    {room.address_postal_code && ` (${room.address_postal_code})`}
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    {room.images && room.images.length > 1 && (
+                                        <Button
+                                            size="small"
+                                            sx={{
+                                                minWidth: 'auto',
+                                                padding: '4px 8px',
+                                                fontSize: '0.8rem'
+                                            }}
+                                            onClick={() => {
+                                                setSelectedRoom(room);
+                                                setGalleryOpen(true);
+                                            }}
+                                        >
+                                            Все ({room.images.length})
+                                        </Button>
+                                    )}
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        size="small"
+                                        sx={{
+                                            minWidth: 'auto',
+                                            padding: '4px 8px',
+                                            fontSize: '0.8rem'
+                                        }}
+                                        onClick={() => handleBooking(room)}
+                                        disabled={!filters.start_date || !filters.end_date}
+                                    >
+                                        Забронировать
+                                    </Button>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                ))}
+            </Grid>
+
+            {selectedRoom && (
+                <>
+                    <ImageGallery
+                        images={selectedRoom.images || []}
+                        open={galleryOpen}
+                        onClose={() => {
+                            setGalleryOpen(false);
+                            setSelectedRoom(null);
+                        }}
+                    />
+                    <BookingDialog
+                        open={bookingDialogOpen}
+                        onClose={() => {
+                            setBookingDialogOpen(false);
+                            setSelectedRoom(null);
+                        }}
+                        room={selectedRoom}
+                        startDate={filters.start_date}
+                        endDate={filters.end_date}
+                    />
+                </>
+            )}
+        </div>
+    );
 };
 
 export default RoomList;
@@ -1818,17 +2323,17 @@ export default RoomList;
 import React, { useState } from "react";
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import axios from "../api/axios";
-import { 
-    TextField, Button, Container, Typography, 
+import {
+    TextField, Button, Container, Typography,
     Box, Alert, Grid, IconButton,
     FormControl, InputLabel, Select, MenuItem,
-    FormControlLabel, Switch 
+    FormControlLabel, Switch
 } from "@mui/material";
 
 const AddRoom = () => {
     const [room, setRoom] = useState({
         name: "",
-        accommodation_type: "room", // Добавляем тип размещения
+        accommodation_type: "room",
         capacity: 0,
         price_per_night: 0,
         address_street: "",
@@ -1836,10 +2341,10 @@ const AddRoom = () => {
         address_state: "",
         address_country: "",
         address_postal_code: "",
-        is_shared: false,         // Общее помещение
-        total_beds: null,         // Всего кроватей (для типа bed)
-        available_beds: null,     // Доступно кроватей (для типа bed)
-        has_private_bathroom: true // Наличие отдельной ванной
+        is_shared: false,
+        total_beds: null,
+        available_beds: null,
+        has_private_bathroom: true
     });
     const [beds, setBeds] = useState([
         { bed_number: "1", price_per_night: 0 }
@@ -1875,7 +2380,7 @@ const AddRoom = () => {
             return;
         }
         setImages(prev => [...prev, ...validFiles]);
-        
+
         // Создаем превью
         validFiles.forEach(file => {
             const reader = new FileReader();
@@ -1899,7 +2404,7 @@ const AddRoom = () => {
         e.preventDefault();
         setError("");
         setSuccess(false);
-    
+
         try {
             // Валидация в зависимости от типа размещения
             if (room.accommodation_type === 'bed') {
@@ -1908,7 +2413,7 @@ const AddRoom = () => {
                     return;
                 }
             }
-    
+
             // Подготовка данных комнаты
             const roomData = {
                 ...room,
@@ -1918,12 +2423,12 @@ const AddRoom = () => {
                 // Цена за ночь будет общей для комнаты/квартиры, для койко-мест - отдельно
                 price_per_night: room.accommodation_type === 'bed' ? 0 : room.price_per_night
             };
-    
+
             // Создаем комнату
             console.log('Отправляемые данные комнаты:', roomData);
             const roomResponse = await axios.post("/rooms", roomData);
             const roomId = roomResponse.data.id;
-    
+
             // Если тип размещения - койко-места, создаем кровати
             if (room.accommodation_type === 'bed' && beds.length > 0) {
                 console.log('Добавление кроватей для комнаты:', roomId);
@@ -1943,21 +2448,21 @@ const AddRoom = () => {
                     })
                 );
             }
-    
+
             // Загружаем изображения
             if (images.length > 0) {
                 const formData = new FormData();
                 images.forEach(image => {
                     formData.append('images', image);
                 });
-    
+
                 await axios.post(`/rooms/${roomId}/images`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
             }
-    
+
             setSuccess(true);
             // Очистка формы
             setRoom({
@@ -1987,23 +2492,14 @@ const AddRoom = () => {
     return (
         <Container>
             <Typography variant="h4" gutterBottom>
-                Добавить комнату
+                Добавить объект размещения
             </Typography>
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
-            {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                    Комната успешно добавлена!
-                </Alert>
-            )}
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
+                    {/* Базовая информация */}
                     <Grid item xs={12}>
                         <TextField
-                            label="Название комнаты"
+                            label="Название"
                             fullWidth
                             required
                             value={room.name}
@@ -2011,20 +2507,33 @@ const AddRoom = () => {
                         />
                     </Grid>
 
+                    {/* Тип размещения */}
                     <Grid item xs={12}>
-    <FormControl fullWidth>
-        <InputLabel>Тип размещения</InputLabel>
-        <Select
-            value={room.accommodation_type}
-            onChange={(e) => setRoom({ ...room, accommodation_type: e.target.value })}
-        >
-            <MenuItem value="bed">Койко-место</MenuItem>
-            <MenuItem value="room">Комната</MenuItem>
-            <MenuItem value="apartment">Квартира</MenuItem>
-        </Select>
-    </FormControl>
-</Grid>
+                        <FormControl fullWidth>
+                            <InputLabel>Тип размещения</InputLabel>
+                            <Select
+                                value={room.accommodation_type}
+                                onChange={(e) => {
+                                    const newType = e.target.value;
+                                    setRoom(prev => ({
+                                        ...prev,
+                                        accommodation_type: newType,
+                                        // Сбрасываем специфичные поля при смене типа
+                                        total_beds: newType === 'bed' ? prev.total_beds : null,
+                                        available_beds: newType === 'bed' ? prev.available_beds : null,
+                                        is_shared: newType === 'bed' ? true : false,
+                                    }));
+                                }}
+                            >
+                                <MenuItem value="bed">Койко-место</MenuItem>
+                                <MenuItem value="room">Комната</MenuItem>
+                                <MenuItem value="apartment">Квартира</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
 
+                    {/* Показываем поля в зависимости от типа размещения */}
+{/* Показываем поля в зависимости от типа размещения */}
 {room.accommodation_type === 'bed' ? (
     <>
         <Grid item xs={12} md={6}>
@@ -2084,7 +2593,7 @@ const AddRoom = () => {
             </Button>
         </Grid>
     </>
-) : (
+) : ( // Закрыта фигурная скобка перед else
     <Grid item xs={12} md={6}>
         <TextField
             label="Вместимость"
@@ -2098,29 +2607,29 @@ const AddRoom = () => {
     </Grid>
 )}
 
-<Grid item xs={12}>
-    <FormControlLabel
-        control={
-            <Switch
-                checked={room.is_shared}
-                onChange={(e) => setRoom({ ...room, is_shared: e.target.checked })}
-            />
-        }
-        label="Общее помещение"
-    />
-</Grid>
+                    <Grid item xs={12}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={room.is_shared}
+                                    onChange={(e) => setRoom({ ...room, is_shared: e.target.checked })}
+                                />
+                            }
+                            label="Общее помещение"
+                        />
+                    </Grid>
 
-<Grid item xs={12}>
-    <FormControlLabel
-        control={
-            <Switch
-                checked={room.has_private_bathroom}
-                onChange={(e) => setRoom({ ...room, has_private_bathroom: e.target.checked })}
-            />
-        }
-        label="Отдельная ванная комната"
-    />
-</Grid>
+                    <Grid item xs={12}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={room.has_private_bathroom}
+                                    onChange={(e) => setRoom({ ...room, has_private_bathroom: e.target.checked })}
+                                />
+                            }
+                            label="Отдельная ванная комната"
+                        />
+                    </Grid>
 
                     <Grid item xs={12} md={6}>
                         <TextField
@@ -2201,42 +2710,42 @@ const AddRoom = () => {
                             Фотографии комнаты
                         </Typography>
                     </Grid>
-            <Grid item xs={12}>
-                <Box sx={{ mt: 1, mb: 2 }}>
-                    <Button
-                        variant="contained"
-                        component="label"
-                        startIcon={<CloudUploadIcon />}
-                    >
-                        Загрузить изображения
-                        <input
-                            type="file"
-                            hidden
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            onClick={(e) => e.target.value = null} // Сброс значения input
-                        />
-                    </Button>
-                </Box>
-                {/* Добавим информацию о загруженных файлах */}
-                {images.length > 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Выбрано файлов: {images.length}
-                    </Typography>
-                )}
-            </Grid>
+                    <Grid item xs={12}>
+                        <Box sx={{ mt: 1, mb: 2 }}>
+                            <Button
+                                variant="contained"
+                                component="label"
+                                startIcon={<CloudUploadIcon />}
+                            >
+                                Загрузить изображения
+                                <input
+                                    type="file"
+                                    hidden
+                                    multiple
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    onClick={(e) => e.target.value = null} // Сброс значения input
+                                />
+                            </Button>
+                        </Box>
+                        {/* Добавим информацию о загруженных файлах */}
+                        {images.length > 0 && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                Выбрано файлов: {images.length}
+                            </Typography>
+                        )}
+                    </Grid>
                 </Grid>
 
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                     {previewUrls.map((url, index) => (
                         <Grid item xs={12} sm={6} md={4} key={index}>
                             <Box sx={{ position: 'relative' }}>
-                                <img 
-                                    src={url} 
-                                    alt={`Preview ${index}`} 
-                                    style={{ 
-                                        width: '100%', 
+                                <img
+                                    src={url}
+                                    alt={`Preview ${index}`}
+                                    style={{
+                                        width: '100%',
                                         height: '200px',
                                         objectFit: 'cover',
                                         borderRadius: '4px'
@@ -2262,14 +2771,14 @@ const AddRoom = () => {
                 </Grid>
 
                 <Box sx={{ mt: 3 }}>
-                    <Button 
-                        type="submit" 
-                        variant="contained" 
+                    <Button
+                        type="submit"
+                        variant="contained"
                         color="primary"
                         fullWidth
                         size="large"
-                        disabled={!room.name || !room.capacity || !room.price_per_night || 
-                                !room.address_street || !room.address_city || !room.address_country}
+                        disabled={!room.name || !room.capacity || !room.price_per_night ||
+                            !room.address_street || !room.address_city || !room.address_country}
                     >
                         Добавить комнату
                     </Button>
@@ -2280,6 +2789,103 @@ const AddRoom = () => {
 };
 
 export default AddRoom;
+
+--- Содержимое файла: frontend/hostel-frontend/src/components/BookingsList.js ---
+
+// frontend/hostel-frontend/src/components/BookingsList.js
+import React, { useState, useEffect } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Box
+} from '@mui/material';
+import axios from "../api/axios";
+
+const BookingsList = () => {
+  const [bookings, setBookings] = useState([]);
+  const [rooms, setRooms] = useState({});
+  const [users, setUsers] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Получаем все бронирования
+        const bookingsResponse = await axios.get('/bookings');
+        setBookings(bookingsResponse.data);
+
+        // Получаем информацию о комнатах
+        const roomsResponse = await axios.get('/rooms');
+        const roomsMap = {};
+        roomsResponse.data.forEach(room => {
+          roomsMap[room.id] = room;
+        });
+        setRooms(roomsMap);
+
+        // Получаем информацию о пользователях
+        const usersResponse = await axios.get('/users');
+        const usersMap = {};
+        usersResponse.data.forEach(user => {
+          usersMap[user.id] = user;
+        });
+        setUsers(usersMap);
+      } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" gutterBottom>
+        Список бронирований
+      </Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Пользователь</TableCell>
+              <TableCell>Комната</TableCell>
+              <TableCell>Тип размещения</TableCell>
+              <TableCell>Дата заезда</TableCell>
+              <TableCell>Дата выезда</TableCell>
+              <TableCell>Статус</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {bookings.map((booking) => (
+              <TableRow key={booking.id}>
+                <TableCell>{booking.id}</TableCell>
+                <TableCell>
+                  {users[booking.user_id]?.name || `Пользователь ${booking.user_id}`}
+                </TableCell>
+                <TableCell>
+                  {rooms[booking.room_id]?.name || `Комната ${booking.room_id}`}
+                </TableCell>
+                <TableCell>
+                  {booking.bed_id ? 'Койко-место' : 'Комната целиком'}
+                </TableCell>
+                <TableCell>{booking.start_date}</TableCell>
+                <TableCell>{booking.end_date}</TableCell>
+                <TableCell>{booking.status || 'Подтверждено'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+};
+
+export default BookingsList;
 
 --- Содержимое файла: frontend/hostel-frontend/src/pages/AddBookingPage.js ---
 
@@ -2313,6 +2919,7 @@ export default AddUserPage;
 
 --- Содержимое файла: frontend/hostel-frontend/src/pages/HomePage.js ---
 
+// frontend/hostel-frontend/src/pages/HomePage.js
 import React from "react";
 import { Link } from "react-router-dom";
 import { AppBar, Toolbar, Typography, Button, Container } from "@mui/material";
@@ -2325,14 +2932,14 @@ const HomePage = () => (
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Hostel Booking System
         </Typography>
+        <Button color="inherit" component={Link} to="/bookings">
+          Бронирования
+        </Button>
         <Button color="inherit" component={Link} to="/add-room">
           Добавить комнату
         </Button>
         <Button color="inherit" component={Link} to="/add-user">
           Добавить пользователя
-        </Button>
-        <Button color="inherit" component={Link} to="/admin">
-          Админская панель
         </Button>
       </Toolbar>
     </AppBar>
@@ -2347,6 +2954,35 @@ const HomePage = () => (
 
 export default HomePage;
 
+--- Содержимое файла: frontend/hostel-frontend/src/pages/BookingsListPage.js ---
+
+// frontend/hostel-frontend/src/pages/BookingsListPage.js
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
+import BookingsList from '../components/BookingsList';
+
+const BookingsListPage = () => {
+  return (
+    <div>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Hostel Booking System
+          </Typography>
+          <Button color="inherit" component={Link} to="/">
+            На главную
+          </Button>
+        </Toolbar>
+      </AppBar>
+      <Container sx={{ mt: 4 }}>
+        <BookingsList />
+      </Container>
+    </div>
+  );
+};
+
+export default BookingsListPage;
 
 --- Содержимое файла: frontend/hostel-frontend/src/pages/BookRoomPage.js ---
 
@@ -2415,15 +3051,15 @@ export default AdminPanelPage;
 
 --- Содержимое файла: frontend/hostel-frontend/src/App.js ---
 
+// frontend/hostel-frontend/src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Container } from '@mui/material';
 import HomePage from "./pages/HomePage";
 import AddRoomPage from "./pages/AddRoomPage";
 import AddUserPage from "./pages/AddUserPage";
-import BookRoomPage from "./pages/BookRoomPage";
+import BookingsListPage from "./pages/BookingsListPage";
 import AdminPanelPage from "./pages/AdminPanelPage";
-import AddBookingPage from "./pages/AddBookingPage";
 
 function App() {
   return (
@@ -2431,11 +3067,10 @@ function App() {
       <Container>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/bookings" element={<BookingsListPage />} />
           <Route path="/add-room" element={<AddRoomPage />} />
           <Route path="/add-user" element={<AddUserPage />} />
-          <Route path="/book-room" element={<BookRoomPage />} />
           <Route path="/admin" element={<AdminPanelPage />} />
-          <Route path="/add-booking" element={<AddBookingPage />} />
         </Routes>
       </Container>
     </Router>
