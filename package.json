@@ -1,12 +1,13 @@
 {
-  "dependencies": {
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
-    "@mui/material": "^6.1.7",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+  "name": "hostel-booking-system",
+  "version": "1.0.0",
+  "description": "Hostel booking system with React frontend and Go backend",
+  "private": true,
+  "workspaces": [
+    "frontend/*"
+  ],
+  "scripts": {
+    "start": "cd frontend/hostel-frontend && npm start",
+    "build": "cd frontend/hostel-frontend && npm run build"
   }
 }

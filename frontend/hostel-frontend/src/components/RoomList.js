@@ -4,19 +4,23 @@ import { Chip } from '@mui/material';
 import {
     Grid, Card, CardContent, Typography, TextField,
     Button, Divider, Box, Dialog, DialogContent, IconButton,
-    MobileStepper, CardMedia
+    MobileStepper, CardMedia,
+    ToggleButton,
+    ToggleButtonGroup,
+    Paper
 } from "@mui/material";
 import {
     KeyboardArrowLeft, KeyboardArrowRight,
-    Close as CloseIcon
-} from '@mui/icons-material';
-import BookingDialog from "./BookingDialog";
-import {
+    Close as CloseIcon,
     SingleBed as SingleBedIcon,
     Hotel as HotelIcon,
     Apartment as ApartmentIcon,
-    Home as HomeIcon
+    Home as HomeIcon,
+    ViewList as ViewListIcon,
+    Map as MapIcon
 } from '@mui/icons-material';
+import BookingDialog from "./BookingDialog";
+import MapView from './MapView';
 
 
 const BACKEND_URL = 'http://localhost:3000';
@@ -103,7 +107,39 @@ const RoomList = () => {
         start_date: "",
         end_date: ""
     });
+    const [viewMode, setViewMode] = useState('list'); // 'list' или 'map'
+    const [roomsWithCoordinates, setRoomsWithCoordinates] = useState([]);
+    const geocodeRooms = async (rooms) => {
+        if (!window.google) return rooms;
 
+        const geocoder = new window.google.maps.Geocoder();
+        const geocodeAddress = async (room) => {
+            const address = `${room.address_street}, ${room.address_city}, ${room.address_country}`;
+            try {
+                const result = await new Promise((resolve, reject) => {
+                    geocoder.geocode({ address }, (results, status) => {
+                        if (status === 'OK') {
+                            resolve(results[0].geometry.location);
+                        } else {
+                            reject(status);
+                        }
+                    });
+                });
+
+                return {
+                    ...room,
+                    latitude: result.lat(),
+                    longitude: result.lng()
+                };
+            } catch (error) {
+                console.error(`Error geocoding address: ${address}`, error);
+                return room;
+            }
+        };
+
+        const roomsWithCoords = await Promise.all(rooms.map(geocodeAddress));
+        return roomsWithCoords;
+    };
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [galleryOpen, setGalleryOpen] = useState(false);
     const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
@@ -120,27 +156,68 @@ const RoomList = () => {
                 params.append('start_date', filters.start_date);
                 params.append('end_date', filters.end_date);
             }
-
+    
             const response = await axios.get(`/rooms?${params.toString()}`);
             const roomsData = response.data || [];
-
-            // Получаем изображения для каждой комнаты
-            const roomsWithImages = await Promise.all(
+    
+            // Получаем изображения и геокодируем адреса для каждой комнаты
+            const roomsWithImagesAndCoords = await Promise.all(
                 roomsData.map(async (room) => {
+                    // Получаем изображения
                     const imagesResponse = await axios.get(`/rooms/${room.id}/images`);
-                    return {
-                        ...room,
-                        images: imagesResponse.data || []
-                    };
+                    const images = imagesResponse.data || [];
+    
+                    // Геокодируем адрес
+                    const address = `${room.address_street}, ${room.address_city}, ${room.address_country}`;
+                    try {
+                        const geocoder = new window.google.maps.Geocoder();
+                        const result = await new Promise((resolve, reject) => {
+                            geocoder.geocode({ address }, (results, status) => {
+                                if (status === 'OK') {
+                                    resolve(results[0].geometry.location);
+                                } else {
+                                    reject(status);
+                                }
+                            });
+                        });
+    
+                        return {
+                            ...room,
+                            images,
+                            latitude: result.lat(),
+                            longitude: result.lng()
+                        };
+                    } catch (error) {
+                        console.error(`Ошибка геокодирования для ${address}:`, error);
+                        return {
+                            ...room,
+                            images
+                        };
+                    }
                 })
             );
-
-            setRooms(roomsWithImages);
+    
+            setRooms(roomsWithImagesAndCoords);
+            setRoomsWithCoordinates(roomsWithImagesAndCoords);
         } catch (error) {
             console.error("Ошибка при получении списка комнат:", error);
         }
     }, [filters]);
-
+    useEffect(() => {
+        if (!window.google) {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+    
+            script.onload = () => {
+                fetchRooms();
+            };
+        } else {
+            fetchRooms();
+        }
+    }, [fetchRooms]);
     const handleDateChange = (field, value) => {
         setFilters(prev => {
             const newFilters = { ...prev, [field]: value };
@@ -166,16 +243,31 @@ const RoomList = () => {
         setBookingDialogOpen(true);
     };
 
-    const handleBookingTypeSelect = (bookingType) => {
-        setBookingOptionsOpen(false);
-        setSelectedBookingType(bookingType);
-        setBookingDialogOpen(true);
-    };
 
     useEffect(() => {
-        fetchRooms();
-    }, [fetchRooms]);
-
+        const updateRoomsWithCoordinates = async () => {
+            const roomsWithCoords = await geocodeRooms(rooms);
+            setRoomsWithCoordinates(roomsWithCoords);
+        };
+        updateRoomsWithCoordinates();
+    }, [rooms]);
+    const viewToggle = (
+        <Paper sx={{ p: 1, mb: 2 }}>
+            <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                aria-label="view mode"
+            >
+                <ToggleButton value="list" aria-label="list view">
+                    <ViewListIcon /> Список
+                </ToggleButton>
+                <ToggleButton value="map" aria-label="map view">
+                    <MapIcon /> Карта
+                </ToggleButton>
+            </ToggleButtonGroup>
+        </Paper>
+    );
     const AccommodationInfo = ({ room }) => {
         const getAccommodationInfo = () => {
             switch (room.accommodation_type) {
@@ -232,72 +324,6 @@ const RoomList = () => {
                     </Typography>
                 </Box>
             </Box>
-        );
-    };
-
-    const BookingOptions = ({ room, onBookingTypeSelect }) => {
-        const getAvailableOptions = () => {
-            const options = [];
-
-            if (room.accommodation_type === 'bed') {
-                options.push({
-                    type: 'single_bed',
-                    title: 'Забронировать койко-место',
-                    price: room.price_per_night
-                });
-
-                if (room.available_beds > 1) {
-                    options.push({
-                        type: 'multiple_beds',
-                        title: 'Забронировать несколько мест',
-                        price: room.price_per_night,
-                        maxCount: room.available_beds
-                    });
-                }
-            } else if (room.accommodation_type === 'room') {
-                if (room.is_shared) {
-                    options.push({
-                        type: 'shared_room',
-                        title: 'Забронировать место в комнате',
-                        price: room.price_per_night / room.capacity
-                    });
-                }
-                options.push({
-                    type: 'whole_room',
-                    title: 'Забронировать всю комнату',
-                    price: room.price_per_night
-                });
-            } else if (room.accommodation_type === 'apartment') {
-                options.push({
-                    type: 'apartment',
-                    title: 'Забронировать квартиру',
-                    price: room.price_per_night
-                });
-            }
-
-            return options;
-        };
-
-        return (
-            <Dialog open={open} onClose={onClose}>
-                <DialogTitle>Выберите тип бронирования</DialogTitle>
-                <DialogContent>
-                    <Stack spacing={2}>
-                        {getAvailableOptions().map((option) => (
-                            <Button
-                                key={option.type}
-                                variant="outlined"
-                                onClick={() => onBookingTypeSelect(option)}
-                            >
-                                {option.title}
-                                <Typography variant="caption" display="block">
-                                    {option.price} руб./ночь
-                                </Typography>
-                            </Button>
-                        ))}
-                    </Stack>
-                </DialogContent>
-            </Dialog>
         );
     };
 
@@ -379,149 +405,163 @@ const RoomList = () => {
                     </Button>
                 </Grid>
             </Grid>
+            {viewToggle}
 
-            <Grid container spacing={2}>
-                {rooms.map((room) => (
-                    <Grid item xs={12} md={6} lg={4} key={room.id}>
-                        <Card sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            height: '100%',
-                            '& .MuiCardContent-root': {
-                                padding: '12px',
-                            },
-                            '& .MuiTypography-root': {
-                                lineHeight: '1.3',
-                            }
-                        }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5 }}>
-                                <Box sx={{ flex: 1, pr: 1.5 }}>
-                                    <AccommodationInfo room={room} />
-                                    <Typography variant="h6" sx={{
-                                        mb: 0.5,
-                                        fontSize: '1.1rem'
-                                    }}>
-                                        {room.name}
-                                    </Typography>
-                                    {room.accommodation_type === 'bed' ? (
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                                            Цена за койко-место: {room.price_per_night} руб./ночь
-                                        </Typography>
-                                    ) : (
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                                            Цена за {room.accommodation_type === 'apartment' ? 'квартиру' : 'комнату'}: {room.price_per_night} руб./ночь
-                                        </Typography>
-                                    )}
-                                </Box>
-
-                                {/* Правый верхний угол: эскиз */}
-                                <Box sx={{
-                                    width: '100px',
-                                    height: '100px',
-                                    flexShrink: 0,
-                                    p: room.images?.length ? 0 : 1
-                                }}>
-                                    {room.images && room.images.length > 0 ? (
-                                        <CardMedia
-                                            component="img"
-                                            sx={{
-                                                width: '100%',
-                                                height: '100%',
-                                                objectFit: 'cover',
-                                                borderRadius: '4px',
-                                                '&:hover': {
-                                                    opacity: 0.8,
-                                                    transition: 'opacity 0.2s ease-in-out',
-                                                },
-                                            }}
-                                            image={`${BACKEND_URL}/uploads/${room.images[0].file_path}`}
-                                            alt={room.name}
-                                            onClick={() => {
-                                                setSelectedRoom(room);
-                                                setGalleryOpen(true);
-                                            }}
-                                        />
-                                    ) : (
-                                        <Box
-                                            sx={{
-                                                width: '100%',
-                                                height: '100%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                bgcolor: 'grey.100',
-                                                borderRadius: '4px',
-                                                fontSize: '0.8rem'
-                                            }}
-                                        >
-                                            <Typography variant="body2" color="text.secondary">
-                                                Нет фото
-                                            </Typography>
-                                        </Box>
-                                    )}
-                                </Box>
-                            </Box>
-
-                            <Divider />
-
-                            {/* Нижняя часть карточки с адресом и кнопками */}
-                            <CardContent sx={{
-                                pt: 1,
-                                pb: '8px !important',
+            {viewMode === 'map' ? (
+                <MapView
+                    rooms={roomsWithCoordinates}
+                    onRoomSelect={(room) => {
+                        setSelectedRoom(room);
+                        setBookingDialogOpen(true);
+                    }}
+                    onOpenGallery={(room) => {
+                        setSelectedRoom(room);
+                        setGalleryOpen(true);
+                    }}
+                />
+            ) : (
+                <Grid container spacing={2}>
+                    {rooms.map((room) => (
+                        <Grid item xs={12} md={6} lg={4} key={room.id}>
+                            <Card sx={{
                                 display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center'
+                                flexDirection: 'column',
+                                height: '100%',
+                                '& .MuiCardContent-root': {
+                                    padding: '12px',
+                                },
+                                '& .MuiTypography-root': {
+                                    lineHeight: '1.3',
+                                }
                             }}>
-                                <Typography variant="body2" color="text.secondary" sx={{
-                                    fontSize: '0.85rem',
-                                    flex: 1,
-                                    mr: 1
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5 }}>
+                                    <Box sx={{ flex: 1, pr: 1.5 }}>
+                                        <AccommodationInfo room={room} />
+                                        <Typography variant="h6" sx={{
+                                            mb: 0.5,
+                                            fontSize: '1.1rem'
+                                        }}>
+                                            {room.name}
+                                        </Typography>
+                                        {room.accommodation_type === 'bed' ? (
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                                Цена за койко-место: {room.price_per_night} руб./ночь
+                                            </Typography>
+                                        ) : (
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                                Цена за {room.accommodation_type === 'apartment' ? 'квартиру' : 'комнату'}: {room.price_per_night} руб./ночь
+                                            </Typography>
+                                        )}
+                                    </Box>
+
+                                    {/* Правый верхний угол: эскиз */}
+                                    <Box sx={{
+                                        width: '100px',
+                                        height: '100px',
+                                        flexShrink: 0,
+                                        p: room.images?.length ? 0 : 1
+                                    }}>
+                                        {room.images && room.images.length > 0 ? (
+                                            <CardMedia
+                                                component="img"
+                                                sx={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '4px',
+                                                    '&:hover': {
+                                                        opacity: 0.8,
+                                                        transition: 'opacity 0.2s ease-in-out',
+                                                    },
+                                                }}
+                                                image={`${BACKEND_URL}/uploads/${room.images[0].file_path}`}
+                                                alt={room.name}
+                                                onClick={() => {
+                                                    setSelectedRoom(room);
+                                                    setGalleryOpen(true);
+                                                }}
+                                            />
+                                        ) : (
+                                            <Box
+                                                sx={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    bgcolor: 'grey.100',
+                                                    borderRadius: '4px',
+                                                    fontSize: '0.8rem'
+                                                }}
+                                            >
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Нет фото
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </Box>
+
+                                <Divider />
+
+                                {/* Нижняя часть карточки с адресом и кнопками */}
+                                <CardContent sx={{
+                                    pt: 1,
+                                    pb: '8px !important',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
                                 }}>
-                                    {room.address_street}
-                                    {room.address_city && `, ${room.address_city}`}
-                                    {room.address_state && `, ${room.address_state}`}
-                                    {room.address_country && `, ${room.address_country}`}
-                                    {room.address_postal_code && ` (${room.address_postal_code})`}
-                                </Typography>
-                                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                    {room.images && room.images.length > 1 && (
+                                    <Typography variant="body2" color="text.secondary" sx={{
+                                        fontSize: '0.85rem',
+                                        flex: 1,
+                                        mr: 1
+                                    }}>
+                                        {room.address_street}
+                                        {room.address_city && `, ${room.address_city}`}
+                                        {room.address_state && `, ${room.address_state}`}
+                                        {room.address_country && `, ${room.address_country}`}
+                                        {room.address_postal_code && ` (${room.address_postal_code})`}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                        {room.images && room.images.length > 1 && (
+                                            <Button
+                                                size="small"
+                                                sx={{
+                                                    minWidth: 'auto',
+                                                    padding: '4px 8px',
+                                                    fontSize: '0.8rem'
+                                                }}
+                                                onClick={() => {
+                                                    setSelectedRoom(room);
+                                                    setGalleryOpen(true);
+                                                }}
+                                            >
+                                                Все ({room.images.length})
+                                            </Button>
+                                        )}
                                         <Button
+                                            variant="contained"
+                                            color="primary"
                                             size="small"
                                             sx={{
                                                 minWidth: 'auto',
                                                 padding: '4px 8px',
                                                 fontSize: '0.8rem'
                                             }}
-                                            onClick={() => {
-                                                setSelectedRoom(room);
-                                                setGalleryOpen(true);
-                                            }}
+                                            onClick={() => handleBooking(room)}
+                                            disabled={!filters.start_date || !filters.end_date}
                                         >
-                                            Все ({room.images.length})
+                                            Забронировать
                                         </Button>
-                                    )}
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        size="small"
-                                        sx={{
-                                            minWidth: 'auto',
-                                            padding: '4px 8px',
-                                            fontSize: '0.8rem'
-                                        }}
-                                        onClick={() => handleBooking(room)}
-                                        disabled={!filters.start_date || !filters.end_date}
-                                    >
-                                        Забронировать
-                                    </Button>
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </Grid>
 
-                ))}
-            </Grid>
-
+                    ))}
+                </Grid>
+            )}
             {selectedRoom && (
                 <>
                     <ImageGallery
