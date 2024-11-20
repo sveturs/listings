@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from "../api/axios";
 import { Chip } from '@mui/material';
+import { LoadScript } from '@react-google-maps/api';
 import {
     Grid, Card, CardContent, Typography, TextField,
     Button, Divider, Box, Dialog, DialogContent, IconButton,
@@ -203,21 +204,7 @@ const RoomList = () => {
             console.error("Ошибка при получении списка комнат:", error);
         }
     }, [filters]);
-    useEffect(() => {
-        if (!window.google) {
-            const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
-            script.async = true;
-            script.defer = true;
-            document.head.appendChild(script);
     
-            script.onload = () => {
-                fetchRooms();
-            };
-        } else {
-            fetchRooms();
-        }
-    }, [fetchRooms]);
     const handleDateChange = (field, value) => {
         setFilters(prev => {
             const newFilters = { ...prev, [field]: value };
@@ -245,12 +232,8 @@ const RoomList = () => {
 
 
     useEffect(() => {
-        const updateRoomsWithCoordinates = async () => {
-            const roomsWithCoords = await geocodeRooms(rooms);
-            setRoomsWithCoordinates(roomsWithCoords);
-        };
-        updateRoomsWithCoordinates();
-    }, [rooms]);
+        fetchRooms();
+    }, [fetchRooms]);
     const viewToggle = (
         <Paper sx={{ p: 1, mb: 2 }}>
             <ToggleButtonGroup
@@ -408,17 +391,22 @@ const RoomList = () => {
             {viewToggle}
 
             {viewMode === 'map' ? (
-                <MapView
-                    rooms={roomsWithCoordinates}
-                    onRoomSelect={(room) => {
-                        setSelectedRoom(room);
-                        setBookingDialogOpen(true);
-                    }}
-                    onOpenGallery={(room) => {
-                        setSelectedRoom(room);
-                        setGalleryOpen(true);
-                    }}
-                />
+                <LoadScript 
+                    googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
+                    libraries={["places", "geometry"]}
+                >
+                    <MapView
+                        rooms={roomsWithCoordinates}
+                        onRoomSelect={(room) => {
+                            setSelectedRoom(room);
+                            setBookingDialogOpen(true);
+                        }}
+                        onOpenGallery={(room) => {
+                            setSelectedRoom(room);
+                            setGalleryOpen(true);
+                        }}
+                    />
+                </LoadScript>
             ) : (
                 <Grid container spacing={2}>
                     {rooms.map((room) => (

@@ -19,14 +19,8 @@ import {
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 const BACKEND_URL = 'http://localhost:3000';
 
-const libraries = ["places", "geometry"];
-
 const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
-    console.log('Rooms in MapView:', rooms); // Добавим для отладки
     const [selectedRoom, setSelectedRoom] = useState(null);
-    const [map, setMap] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     const mapContainerStyle = {
         width: '100%',
@@ -38,22 +32,15 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
         lng: 37.6173
     };
 
-    useEffect(() => {
-        if (!GOOGLE_MAPS_API_KEY) {
-            setError("Google Maps API key is missing");
-            setLoading(false);
-        }
-    }, []);
-
     const onMapLoad = useCallback((map) => {
-        setMap(map);
-        setLoading(false);
-        
         if (rooms.length > 0) {
             const bounds = new window.google.maps.LatLngBounds();
             rooms.forEach(room => {
                 if (room.latitude && room.longitude) {
-                    bounds.extend({ lat: parseFloat(room.latitude), lng: parseFloat(room.longitude) });
+                    bounds.extend({ 
+                        lat: parseFloat(room.latitude), 
+                        lng: parseFloat(room.longitude) 
+                    });
                 }
             });
             map.fitBounds(bounds);
@@ -166,66 +153,60 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
     };
 
     return (
-        <LoadScript 
-            googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-            libraries={libraries}
+        <GoogleMap
+            mapContainerStyle={mapContainerStyle}
+            center={defaultCenter}
+            zoom={10}
+            onLoad={onMapLoad}
+            options={{
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    }
+                ],
+                fullscreenControl: false,
+                streetViewControl: false,
+            }}
         >
-            <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={defaultCenter}
-                zoom={10}
-                onLoad={onMapLoad}
-                options={{
-                    styles: [
-                        {
-                            featureType: "poi",
-                            elementType: "labels",
-                            stylers: [{ visibility: "off" }]
-                        }
-                    ],
-                    fullscreenControl: false,
-                    streetViewControl: false,
-                }}
-            >
-                {!loading && rooms.map((room) => {
-                    console.log('Room coordinates:', room.latitude, room.longitude); // Добавим для отладки
-                    return room.latitude && room.longitude ? (
-                        <Marker
-                            key={room.id}
-                            position={{ 
-                                lat: parseFloat(room.latitude), 
-                                lng: parseFloat(room.longitude) 
-                            }}
-                            onClick={() => setSelectedRoom(room)}
-                            icon={{
-                                path: window.google.maps.SymbolPath.CIRCLE,
-                                fillColor: room.accommodation_type === 'bed'
-                                    ? '#1976d2'
-                                    : room.accommodation_type === 'apartment'
-                                        ? '#dc004e'
-                                        : '#4caf50',
-                                fillOpacity: 1,
-                                strokeWeight: 1,
-                                strokeColor: '#ffffff',
-                                scale: 10,
-                            }}
-                        />
-                    ) : null;
-                })}
-
-                {selectedRoom && (
-                    <InfoWindow
+            {rooms.map((room) => (
+                room.latitude && room.longitude ? (
+                    <Marker
+                        key={room.id}
                         position={{ 
-                            lat: parseFloat(selectedRoom.latitude), 
-                            lng: parseFloat(selectedRoom.longitude) 
+                            lat: parseFloat(room.latitude), 
+                            lng: parseFloat(room.longitude) 
                         }}
-                        onCloseClick={() => setSelectedRoom(null)}
-                    >
-                        <InfoWindowContent room={selectedRoom} />
-                    </InfoWindow>
-                )}
-            </GoogleMap>
-        </LoadScript>
+                        onClick={() => setSelectedRoom(room)}
+                        icon={{
+                            path: window.google.maps.SymbolPath.CIRCLE,
+                            fillColor: room.accommodation_type === 'bed'
+                                ? '#1976d2'
+                                : room.accommodation_type === 'apartment'
+                                    ? '#dc004e'
+                                    : '#4caf50',
+                            fillOpacity: 1,
+                            strokeWeight: 1,
+                            strokeColor: '#ffffff',
+                            scale: 10,
+                        }}
+                    />
+                ) : null
+            ))}
+
+            {selectedRoom && (
+                <InfoWindow
+                    position={{ 
+                        lat: parseFloat(selectedRoom.latitude), 
+                        lng: parseFloat(selectedRoom.longitude) 
+                    }}
+                    onCloseClick={() => setSelectedRoom(null)}
+                >
+                    <InfoWindowContent room={selectedRoom} />
+                </InfoWindow>
+            )}
+        </GoogleMap>
     );
 };
 
