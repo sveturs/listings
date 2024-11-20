@@ -266,6 +266,9 @@ func main() {
 		TotalBeds          *int     `json:"total_beds,omitempty"`
 		AvailableBeds      *int     `json:"available_beds,omitempty"`
 		HasPrivateBathroom bool     `json:"has_private_bathroom"`
+		Latitude           *float64 `json:"latitude"`
+		Longitude          *float64 `json:"longitude"`
+		FormattedAddress   string   `json:"formatted_address"`
 	}
 
 	type Bed struct {
@@ -291,19 +294,21 @@ func main() {
 
 		var roomId int
 		err := pool.QueryRow(context.Background(), `
-        INSERT INTO rooms (
-            name, capacity, price_per_night,
-            address_street, address_city, address_state,
-            address_country, address_postal_code,
-            accommodation_type, is_shared,
-            total_beds, available_beds, has_private_bathroom
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        RETURNING id`,
+		INSERT INTO rooms (
+			name, capacity, price_per_night,
+			address_street, address_city, address_state,
+			address_country, address_postal_code,
+			accommodation_type, is_shared,
+			total_beds, available_beds, has_private_bathroom,
+			latitude, longitude, formatted_address
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+		RETURNING id`,
 			room.Name, room.Capacity, room.PricePerNight,
 			room.AddressStreet, room.AddressCity, room.AddressState,
 			room.AddressCountry, room.AddressPostalCode,
 			room.AccommodationType, room.IsShared,
 			room.TotalBeds, room.AvailableBeds, room.HasPrivateBathroom,
+			room.Latitude, room.Longitude, room.FormattedAddress,
 		).Scan(&roomId)
 
 		if err != nil {

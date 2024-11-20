@@ -19,6 +19,20 @@ import {
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 const BACKEND_URL = 'http://localhost:3000';
 
+const mapOptions = {
+    scrollwheel: true,
+    styles: [
+        {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+        }
+    ],
+    fullscreenControl: false,
+    streetViewControl: false,
+    mapTypeControl: false,
+};
+
 const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
     const [selectedRoom, setSelectedRoom] = useState(null);
 
@@ -28,8 +42,8 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
     };
 
     const defaultCenter = {
-        lat: 55.7558,
-        lng: 37.6173
+        lat: 45.1558,
+        lng: 19.4973
     };
 
     const onMapLoad = useCallback((map) => {
@@ -37,9 +51,9 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
             const bounds = new window.google.maps.LatLngBounds();
             rooms.forEach(room => {
                 if (room.latitude && room.longitude) {
-                    bounds.extend({ 
-                        lat: parseFloat(room.latitude), 
-                        lng: parseFloat(room.longitude) 
+                    bounds.extend({
+                        lat: parseFloat(room.latitude),
+                        lng: parseFloat(room.longitude)
                     });
                 }
             });
@@ -50,12 +64,12 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
     const InfoWindowContent = ({ room }) => {
         const hasImages = room.images && room.images.length > 0;
         const mainImage = hasImages ? room.images.find(img => img.is_main) || room.images[0] : null;
-        
+
         return (
             <Card sx={{ width: 300, border: 'none', boxShadow: 'none' }}>
                 {mainImage && (
-                    <Box 
-                        sx={{ 
+                    <Box
+                        sx={{
                             position: 'relative',
                             cursor: 'pointer',
                             '&:hover': {
@@ -74,7 +88,7 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                             height="160"
                             image={`${BACKEND_URL}/uploads/${mainImage.file_path}`}
                             alt={room.name}
-                            sx={{ 
+                            sx={{
                                 borderRadius: '4px 4px 0 0',
                                 objectFit: 'cover'
                             }}
@@ -158,25 +172,15 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
             center={defaultCenter}
             zoom={10}
             onLoad={onMapLoad}
-            options={{
-                styles: [
-                    {
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{ visibility: "off" }]
-                    }
-                ],
-                fullscreenControl: false,
-                streetViewControl: false,
-            }}
+            options={mapOptions}
         >
             {rooms.map((room) => (
                 room.latitude && room.longitude ? (
                     <Marker
                         key={room.id}
-                        position={{ 
-                            lat: parseFloat(room.latitude), 
-                            lng: parseFloat(room.longitude) 
+                        position={{
+                            lat: parseFloat(room.latitude),
+                            lng: parseFloat(room.longitude)
                         }}
                         onClick={() => setSelectedRoom(room)}
                         icon={{
@@ -197,9 +201,9 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
 
             {selectedRoom && (
                 <InfoWindow
-                    position={{ 
-                        lat: parseFloat(selectedRoom.latitude), 
-                        lng: parseFloat(selectedRoom.longitude) 
+                    position={{
+                        lat: parseFloat(selectedRoom.latitude),
+                        lng: parseFloat(selectedRoom.longitude)
                     }}
                     onCloseClick={() => setSelectedRoom(null)}
                 >
