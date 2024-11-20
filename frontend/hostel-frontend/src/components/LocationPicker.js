@@ -3,7 +3,6 @@ import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import {
     Box,
     TextField,
-    Button,
     Paper,
     Typography,
     InputAdornment,
@@ -16,7 +15,6 @@ const libraries = ["places", "geometry"];
 const LocationPicker = ({ onLocationSelect }) => {
     const [map, setMap] = useState(null);
     const [marker, setMarker] = useState(null);
-    const [searchBox, setSearchBox] = useState(null);
     const [address, setAddress] = useState('');
 
     const mapContainerStyle = {
@@ -25,28 +23,31 @@ const LocationPicker = ({ onLocationSelect }) => {
     };
 
     const defaultCenter = {
-        lat: 45.1558,
-        lng: 19.4973
+        lat: 45.2671,  // Нови-Сад
+        lng: 19.8335
     };
 
     const mapOptions = {
-        scrollwheel: true,  // Включаем масштабирование колёсиком
+        scrollwheel: true,
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+            style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+            mapTypeIds: ["roadmap", "satellite", "hybrid"]
+        },
         streetViewControl: false,
-        mapTypeControl: false,
-        fullscreenControl: false,
+        fullscreenControl: true,
     };
 
     const onMapLoad = useCallback((map) => {
         setMap(map);
         // Инициализируем поисковую строку
-        const searchBox = new window.google.maps.places.SearchBox(
+        const searchBoxElement = new window.google.maps.places.SearchBox(
             document.getElementById('location-search')
         );
-        setSearchBox(searchBox);
 
         // Слушаем изменения в поисковой строке
-        searchBox.addListener('places_changed', () => {
-            const places = searchBox.getPlaces();
+        searchBoxElement.addListener('places_changed', () => {
+            const places = searchBoxElement.getPlaces();
             if (places.length === 0) return;
 
             const place = places[0];

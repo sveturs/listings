@@ -115,7 +115,7 @@ const AddBooking = () => {
               >
                 {rooms.map((room) => (
                   <MenuItem key={room.id} value={room.id}>
-                    {room.name} ({room.address_city}, {room.price_per_night} руб/ночь)
+                    {room.name} ({room.address_city}, {room.price_per_night} евро/сутки)
                   </MenuItem>
                 ))}
               </TextField>

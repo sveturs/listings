@@ -20,12 +20,11 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
   const [userId, setUserId] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [selectedBed, setSelectedBed] = useState(null);
+  const [selectedBed, setSelectedBed] = useState('');
   const [availableBeds, setAvailableBeds] = useState([]);
 
   useEffect(() => {
-    if (open && room && room.accommodation_type === 'bed') {
-      // Загружаем доступные койко-места при открытии диалога
+    if (open && room && room.accommodation_type === 'bed' && startDate && endDate) {
       axios.get(`/rooms/${room.id}/available-beds`, {
         params: {
           start_date: startDate,
@@ -34,7 +33,8 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
       })
       .then(response => {
         setAvailableBeds(response.data);
-        setSelectedBed(null); // Сбрасываем выбор при каждом открытии
+        setSelectedBed('');
+        setError('');
       })
       .catch(err => {
         console.error('Ошибка загрузки доступных койко-мест:', err);
@@ -44,9 +44,13 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
   }, [open, room, startDate, endDate]);
 
   const calculateTotalPrice = () => {
-    const daysCount = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+    if (!startDate || !endDate) return 0;
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    
     let pricePerNight;
-
     if (room.accommodation_type === 'bed' && selectedBed) {
       const selectedBedData = availableBeds.find(bed => bed.id === selectedBed);
       pricePerNight = selectedBedData ? selectedBedData.price_per_night : 0;
@@ -61,6 +65,11 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
+
+    if (!startDate || !endDate) {
+      setError('Выберите даты проживания');
+      return;
+    }
 
     if (!userId) {
       setError('Введите ID пользователя');
@@ -80,7 +89,6 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
         end_date: endDate
       };
 
-      // Добавляем ID койко-места, если бронируется койко-место
       if (room.accommodation_type === 'bed') {
         bookingData.bed_id = selectedBed;
       }
@@ -88,12 +96,10 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
       await axios.post('/bookings', bookingData);
       setSuccess(true);
       
-      // Закрываем диалог через 2 секунды после успешного бронирования
       setTimeout(() => {
         onClose();
-        // Сбрасываем состояния
         setUserId('');
-        setSelectedBed(null);
+        setSelectedBed('');
         setError('');
         setSuccess(false);
       }, 2000);
@@ -134,15 +140,16 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
               {room.address_street}, {room.address_city}
             </Typography>
             <Typography sx={{ mt: 2 }}>
-              Период проживания: {startDate} - {endDate}
+              Период проживания: {startDate || '-'} - {endDate || '-'}
             </Typography>
 
             {room.accommodation_type === 'bed' && (
               <FormControl fullWidth sx={{ mt: 2 }}>
                 <InputLabel>Выберите койко-место</InputLabel>
                 <Select
-                  value={selectedBed || ''}
+                  value={selectedBed}
                   onChange={(e) => setSelectedBed(e.target.value)}
+                  label="Выберите койко-место"
                 >
                   {availableBeds.map(bed => (
                     <MenuItem key={bed.id} value={bed.id}>
@@ -177,7 +184,12 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
           onClick={handleSubmit} 
           color="primary" 
           variant="contained"
-          disabled={!userId || (room?.accommodation_type === 'bed' && !selectedBed)}
+          disabled={
+            !userId || 
+            !startDate || 
+            !endDate || 
+            (room?.accommodation_type === 'bed' && !selectedBed)
+          }
         >
           Забронировать
         </Button>

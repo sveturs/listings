@@ -157,17 +157,17 @@ const RoomList = () => {
                 params.append('start_date', filters.start_date);
                 params.append('end_date', filters.end_date);
             }
-    
+
             const response = await axios.get(`/rooms?${params.toString()}`);
             const roomsData = response.data || [];
-    
+
             // Получаем изображения и геокодируем адреса для каждой комнаты
             const roomsWithImagesAndCoords = await Promise.all(
                 roomsData.map(async (room) => {
                     // Получаем изображения
                     const imagesResponse = await axios.get(`/rooms/${room.id}/images`);
                     const images = imagesResponse.data || [];
-    
+
                     // Геокодируем адрес
                     const address = `${room.address_street}, ${room.address_city}, ${room.address_country}`;
                     try {
@@ -181,7 +181,7 @@ const RoomList = () => {
                                 }
                             });
                         });
-    
+
                         return {
                             ...room,
                             images,
@@ -197,14 +197,14 @@ const RoomList = () => {
                     }
                 })
             );
-    
+
             setRooms(roomsWithImagesAndCoords);
             setRoomsWithCoordinates(roomsWithImagesAndCoords);
         } catch (error) {
             console.error("Ошибка при получении списка комнат:", error);
         }
     }, [filters]);
-    
+
     const handleDateChange = (field, value) => {
         setFilters(prev => {
             const newFilters = { ...prev, [field]: value };
@@ -391,7 +391,7 @@ const RoomList = () => {
             {viewToggle}
 
             {viewMode === 'map' ? (
-                <LoadScript 
+                <LoadScript
                     googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
                     libraries={["places", "geometry"]}
                 >
@@ -433,11 +433,11 @@ const RoomList = () => {
                                         </Typography>
                                         {room.accommodation_type === 'bed' ? (
                                             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                                                Цена за койко-место: {room.price_per_night} руб./ночь
+                                                Цена за койко-место: {room.price_per_night} евро/сутки
                                             </Typography>
                                         ) : (
                                             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                                                Цена за {room.accommodation_type === 'apartment' ? 'квартиру' : 'комнату'}: {room.price_per_night} руб./ночь
+                                                Цена за {room.accommodation_type === 'apartment' ? 'квартиру' : 'комнату'}: {room.price_per_night} евро/сутки
                                             </Typography>
                                         )}
                                     </Box>
