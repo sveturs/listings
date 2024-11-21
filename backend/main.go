@@ -481,6 +481,8 @@ func main() {
 			r.id, 
 			r.name, 
 			r.capacity, 
+			r.latitude,  -- Добавляем явное указание полей
+			r.longitude, -- Добавляем явное указание полей
 			CASE
 				WHEN r.accommodation_type = 'bed' THEN
 					COALESCE((
@@ -575,15 +577,16 @@ func main() {
 		var rooms []map[string]interface{}
 		for rows.Next() {
 			var id, capacity int
-			var totalBeds, availableBeds int // теперь уже не указатели
+			var totalBeds, availableBeds int
 			var name, addressStreet, addressCity, addressState,
 				addressCountry, addressPostalCode, accommodationType string
+			var latitude, longitude float64 // Добавляем переменные для координат
 			var pricePerNight float64
 			var isShared, hasPrivateBathroom bool
 			var createdAt time.Time
 
 			if err := rows.Scan(
-				&id, &name, &capacity, &pricePerNight,
+				&id, &name, &capacity, &latitude, &longitude, &pricePerNight, // Добавляем сканирование координат
 				&addressStreet, &addressCity, &addressState,
 				&addressCountry, &addressPostalCode,
 				&accommodationType, &isShared,
@@ -591,13 +594,15 @@ func main() {
 				&createdAt,
 			); err != nil {
 				log.Printf("Ошибка сканирования строки: %v", err)
-				continue // Используем continue вместо return, чтобы пропустить проблемную запись
+				continue
 			}
 
 			rooms = append(rooms, map[string]interface{}{
 				"id":                   id,
 				"name":                 name,
 				"capacity":             capacity,
+				"latitude":             latitude,  // Добавляем координаты в результат
+				"longitude":            longitude, // Добавляем координаты в результат
 				"price_per_night":      pricePerNight,
 				"address_street":       addressStreet,
 				"address_city":         addressCity,

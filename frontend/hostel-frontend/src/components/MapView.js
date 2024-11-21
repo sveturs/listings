@@ -33,11 +33,12 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
     const [map, setMap] = useState(null);
     const [selectedRoom, setSelectedRoom] = useState(null);
 
-    const getMapOptions = () => ({
+    // Выносим опции карты в отдельную функцию для предотвращения проблем с window.google
+    const getMapOptions = useCallback(() => ({
         scrollwheel: true,
         mapTypeControl: true,
         mapTypeControlOptions: {
-            style: window.google?.maps.MapTypeControlStyle.DROPDOWN_MENU,
+            style: 'DEFAULT', // Убираем прямую ссылку на google.maps
             mapTypeIds: ["roadmap", "satellite", "hybrid"]
         },
         styles: [
@@ -50,21 +51,31 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
         fullscreenControl: true,
         streetViewControl: false,
         zoomControl: true,
-    });
+    }), []);
 
     const onMapLoad = useCallback((map) => {
         setMap(map);
-        if (rooms.length > 0) {
+        console.log('Map loaded, rooms:', rooms); // Отладка
+        if (rooms?.length > 0) {
             const bounds = new window.google.maps.LatLngBounds();
+            let hasValidCoords = false;
+            
             rooms.forEach(room => {
                 if (room.latitude && room.longitude) {
-                    bounds.extend({
-                        lat: parseFloat(room.latitude),
-                        lng: parseFloat(room.longitude)
-                    });
+                    const lat = parseFloat(room.latitude);
+                    const lng = parseFloat(room.longitude);
+                    
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        bounds.extend({ lat, lng });
+                        hasValidCoords = true;
+                        console.log(`Added to bounds: ${room.name}, lat: ${lat}, lng: ${lng}`); // Отладка
+                    }
                 }
             });
-            map.fitBounds(bounds);
+            
+            if (hasValidCoords) {
+                map.fitBounds(bounds);
+            }
         }
     }, [rooms]);
 
@@ -203,30 +214,36 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                 onLoad={onMapLoad}
                 options={getMapOptions()}
             >
-                {rooms.map((room) => (
-                    room.latitude && room.longitude ? (
-                        <Marker
-                            key={room.id}
-                            position={{
-                                lat: parseFloat(room.latitude),
-                                lng: parseFloat(room.longitude)
-                            }}
-                            onClick={() => setSelectedRoom(room)}
-                            icon={{
-                                path: window.google?.maps.SymbolPath.CIRCLE,
-                                fillColor: room.accommodation_type === 'bed'
-                                    ? '#1976d2'
-                                    : room.accommodation_type === 'apartment'
-                                        ? '#dc004e'
-                                        : '#4caf50',
-                                fillOpacity: 1,
-                                strokeWeight: 1,
-                                strokeColor: '#ffffff',
-                                scale: 10,
-                            }}
-                        />
-                    ) : null
-                ))}
+                {rooms?.map((room) => {
+                    if (room.latitude && room.longitude) {
+                        const lat = parseFloat(room.latitude);
+                        const lng = parseFloat(room.longitude);
+                        
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            console.log(`Rendering marker for ${room.name} at ${lat}, ${lng}`); // Отладка
+                            return (
+                                <Marker
+                                    key={room.id}
+                                    position={{ lat, lng }}
+                                    onClick={() => setSelectedRoom(room)}
+                                    icon={{
+                                        path: 'M -10,0 A10,10 0 1,1 10,0 A10,10 0 1,1 -10,0', // Используем SVG path вместо google.maps.SymbolPath
+                                        fillColor: room.accommodation_type === 'bed'
+                                            ? '#1976d2'
+                                            : room.accommodation_type === 'apartment'
+                                                ? '#dc004e'
+                                                : '#4caf50',
+                                        fillOpacity: 1,
+                                        strokeWeight: 1,
+                                        strokeColor: '#ffffff',
+                                        scale: 1,
+                                    }}
+                                />
+                            );
+                        }
+                    }
+                    return null;
+                })}
 
                 {selectedRoom && (
                     <InfoWindow

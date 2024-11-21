@@ -16,6 +16,7 @@ const LocationPicker = ({ onLocationSelect }) => {
     const [map, setMap] = useState(null);
     const [marker, setMarker] = useState(null);
     const [address, setAddress] = useState('');
+    const [searchBox, setSearchBox] = useState(null);
 
     const mapContainerStyle = {
         width: '100%',
@@ -23,7 +24,7 @@ const LocationPicker = ({ onLocationSelect }) => {
     };
 
     const defaultCenter = {
-        lat: 45.2671,  // Нови-Сад
+        lat: 45.2671, // Нови-Сад
         lng: 19.8335
     };
 
@@ -31,49 +32,77 @@ const LocationPicker = ({ onLocationSelect }) => {
         scrollwheel: true,
         mapTypeControl: true,
         mapTypeControlOptions: {
-            style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+            style: 'DEFAULT',
             mapTypeIds: ["roadmap", "satellite", "hybrid"]
         },
         streetViewControl: false,
-        fullscreenControl: true,
+        fullscreenControl: false,
     };
 
     const onMapLoad = useCallback((map) => {
         setMap(map);
-        // Инициализируем поисковую строку
-        const searchBoxElement = new window.google.maps.places.SearchBox(
-            document.getElementById('location-search')
-        );
+        // Инициализируем поисковую строку после загрузки карты
+        const searchInput = document.getElementById('location-search');
+        if (searchInput && window.google) {
+            const searchBoxInstance = new window.google.maps.places.SearchBox(searchInput);
+            setSearchBox(searchBoxInstance);
 
-        // Слушаем изменения в поисковой строке
-        searchBoxElement.addListener('places_changed', () => {
-            const places = searchBoxElement.getPlaces();
-            if (places.length === 0) return;
+            searchBoxInstance.addListener('places_changed', () => {
+                const places = searchBoxInstance.getPlaces();
+                if (places.length === 0) return;
 
-            const place = places[0];
-            if (!place.geometry) return;
+                const place = places[0];
+                if (!place.geometry) return;
 
-            // Центрируем карту на найденном месте
-            map.setCenter(place.geometry.location);
-            map.setZoom(17);
+                // Центрируем карту на найденном месте
+                map.setCenter(place.geometry.location);
+                map.setZoom(17);
 
-            // Устанавливаем маркер
-            setMarker({
-                lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng()
+                // Устанавливаем маркер
+                setMarker({
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng()
+                });
+
+                // Обновляем адрес
+                setAddress(place.formatted_address);
+
+                // Вызываем callback с данными
+                onLocationSelect({
+                    latitude: place.geometry.location.lat(),
+                    longitude: place.geometry.location.lng(),
+                    formatted_address: place.formatted_address,
+                    address_components: place.address_components
+                });
             });
+        }
+    }, [onLocationSelect]);
 
-            // Обновляем адрес
-            setAddress(place.formatted_address);
+    const handleMapClick = useCallback((e) => {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        
+        setMarker({ lat, lng });
 
-            // Вызываем callback с данными
-            onLocationSelect({
-                latitude: place.geometry.location.lat(),
-                longitude: place.geometry.location.lng(),
-                formatted_address: place.formatted_address,
-                address_components: place.address_components
-            });
-        });
+        // Получаем адрес по координатам
+        if (window.google) {
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode(
+                { location: { lat, lng } }, 
+                (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        const place = results[0];
+                        setAddress(place.formatted_address);
+                        onLocationSelect({
+                            latitude: lat,
+                            longitude: lng,
+                            formatted_address: place.formatted_address,
+                            address_components: place.address_components
+                        });
+                    }
+                }
+            );
+        }
     }, [onLocationSelect]);
 
     const handleCurrentLocation = () => {
@@ -91,64 +120,34 @@ const LocationPicker = ({ onLocationSelect }) => {
                     }
 
                     // Получаем адрес по координатам
-                    const geocoder = new window.google.maps.Geocoder();
-                    geocoder.geocode(
-                        { location: { lat, lng } },
-                        (results, status) => {
-                            if (status === 'OK' && results[0]) {
-                                const place = results[0];
-                                // Обновляем адрес в поле ввода
-                                setAddress(place.formatted_address);
-                                // Вызываем callback с данными
-                                onLocationSelect({
-                                    latitude: lat,
-                                    longitude: lng,
-                                    formatted_address: place.formatted_address,
-                                    address_components: place.address_components
-                                });
+                    if (window.google) {
+                        const geocoder = new window.google.maps.Geocoder();
+                        geocoder.geocode(
+                            { location: { lat, lng } },
+                            (results, status) => {
+                                if (status === 'OK' && results[0]) {
+                                    const place = results[0];
+                                    setAddress(place.formatted_address);
+                                    onLocationSelect({
+                                        latitude: lat,
+                                        longitude: lng,
+                                        formatted_address: place.formatted_address,
+                                        address_components: place.address_components
+                                    });
+                                }
                             }
-                        }
-                    );
+                        );
+                    }
                 },
                 (error) => {
                     console.error("Error getting current location:", error);
                     alert("Не удалось получить текущее местоположение");
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
                 }
             );
         } else {
             alert("Геолокация не поддерживается вашим браузером");
         }
     };
-
-    const handleMapClick = useCallback((e) => {
-        const lat = e.latLng.lat();
-        const lng = e.latLng.lng();
-        
-        setMarker({ lat, lng });
-
-        // Получаем адрес по координатам
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode(
-            { location: { lat, lng } }, 
-            (results, status) => {
-                if (status === 'OK' && results[0]) {
-                    const place = results[0];
-                    setAddress(place.formatted_address);
-                    onLocationSelect({
-                        latitude: lat,
-                        longitude: lng,
-                        formatted_address: place.formatted_address,
-                        address_components: place.address_components
-                    });
-                }
-            }
-        );
-    }, [onLocationSelect]);
 
     return (
         <Paper sx={{ p: 2 }}>
@@ -188,7 +187,7 @@ const LocationPicker = ({ onLocationSelect }) => {
                 <GoogleMap
                     mapContainerStyle={mapContainerStyle}
                     center={defaultCenter}
-                    zoom={10}
+                    zoom={13}
                     onLoad={onMapLoad}
                     onClick={handleMapClick}
                     options={mapOptions}
