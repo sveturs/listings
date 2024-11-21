@@ -291,7 +291,7 @@ func main() {
 		if err := c.BodyParser(&room); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
-
+	
 		// Устанавливаем значения по умолчанию для total_beds и available_beds
 		totalBeds := 0
 		availableBeds := 0
@@ -304,28 +304,27 @@ func main() {
 				availableBeds = totalBeds
 			}
 		}
-
+	
 		var roomId int
 		err := pool.QueryRow(context.Background(), `
-		INSERT INTO rooms (
-			name, capacity, price_per_night,
-			address_street, address_city, address_state,
-			address_country, address_postal_code,
-			accommodation_type, is_shared,
-			total_beds, available_beds, has_private_bathroom,
-			latitude, longitude, formatted_address
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
-			COALESCE($11, 0), COALESCE($12, 0), 
-			$13, $14, $15, $16)
-		RETURNING id`,
-			room.Name, room.Capacity, room.PricePerNight,
+			INSERT INTO rooms (
+				name, capacity, price_per_night,
+				address_street, address_city, address_state,
+				address_country, address_postal_code,
+				accommodation_type, is_shared,
+				total_beds, available_beds, has_private_bathroom,
+				latitude, longitude, formatted_address
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+				$11, $12, $13, $14, $15, $16)
+			RETURNING id
+		`, room.Name, room.Capacity, room.PricePerNight,
 			room.AddressStreet, room.AddressCity, room.AddressState,
 			room.AddressCountry, room.AddressPostalCode,
 			room.AccommodationType, room.IsShared,
 			totalBeds, availableBeds, room.HasPrivateBathroom,
 			room.Latitude, room.Longitude, room.FormattedAddress,
 		).Scan(&roomId)
-
+	
 		if err != nil {
 			if strings.Contains(err.Error(), "unique constraint") {
 				return c.Status(400).SendString("Комната с таким названием уже существует")
@@ -333,9 +332,10 @@ func main() {
 			log.Printf("Ошибка добавления комнаты: %v", err)
 			return c.Status(500).SendString("Ошибка добавления комнаты")
 		}
-
+	
 		return c.JSON(fiber.Map{"id": roomId})
 	})
+	
 
 	// Добавление кровати
 	// Обработчик создания кровати
