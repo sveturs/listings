@@ -39,6 +39,39 @@ const LocationPicker = ({ onLocationSelect }) => {
         fullscreenControl: false,
     };
 
+    // Добавьте новую функцию handleLocationSelect перед onMapLoad
+    const handleLocationSelect = (location) => {
+        const getAddressComponent = (type) => {
+            return location.address_components?.find(
+                component => component.types.includes(type)
+            )?.long_name || '';
+        };
+
+        // Получаем номер дома и улицу отдельно
+        const streetNumber = getAddressComponent('street_number');
+        const route = getAddressComponent('route');
+
+        // Формируем полный адрес улицы с номером дома
+        const fullStreetAddress = route
+            ? (streetNumber ? `${route}, ${streetNumber}` : route)
+            : '';
+
+        // Передаем данные в родительский компонент
+        onLocationSelect({
+            latitude: location.latitude,
+            longitude: location.longitude,
+            formatted_address: location.formatted_address,
+            // Передаем сформированный адрес с номером дома
+            address_components: {
+                street: fullStreetAddress || getAddressComponent('sublocality') || '',
+                city: getAddressComponent('locality'),
+                state: getAddressComponent('administrative_area_level_1'),
+                country: getAddressComponent('country'),
+                postal_code: getAddressComponent('postal_code')
+            }
+        });
+    };
+
     const onMapLoad = useCallback((map) => {
         setMap(map);
         // Инициализируем поисковую строку после загрузки карты
@@ -67,8 +100,8 @@ const LocationPicker = ({ onLocationSelect }) => {
                 // Обновляем адрес
                 setAddress(place.formatted_address);
 
-                // Вызываем callback с данными
-                onLocationSelect({
+                // Вызываем обработчик с данными места
+                handleLocationSelect({
                     latitude: place.geometry.location.lat(),
                     longitude: place.geometry.location.lng(),
                     formatted_address: place.formatted_address,
@@ -81,29 +114,29 @@ const LocationPicker = ({ onLocationSelect }) => {
     const handleMapClick = useCallback((e) => {
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
-        
+
         setMarker({ lat, lng });
 
-        // Получаем адрес по координатам
         if (window.google) {
             const geocoder = new window.google.maps.Geocoder();
             geocoder.geocode(
-                { location: { lat, lng } }, 
+                { location: { lat, lng } },
                 (results, status) => {
                     if (status === 'OK' && results[0]) {
                         const place = results[0];
                         setAddress(place.formatted_address);
-                        onLocationSelect({
+                        const location = {
                             latitude: lat,
                             longitude: lng,
                             formatted_address: place.formatted_address,
                             address_components: place.address_components
-                        });
+                        };
+                        handleLocationSelect(location);
                     }
                 }
             );
         }
-    }, [onLocationSelect]);
+    }, []);
 
     const handleCurrentLocation = () => {
         if (navigator.geolocation) {
@@ -128,7 +161,7 @@ const LocationPicker = ({ onLocationSelect }) => {
                                 if (status === 'OK' && results[0]) {
                                     const place = results[0];
                                     setAddress(place.formatted_address);
-                                    onLocationSelect({
+                                    handleLocationSelect({
                                         latitude: lat,
                                         longitude: lng,
                                         formatted_address: place.formatted_address,
@@ -169,7 +202,7 @@ const LocationPicker = ({ onLocationSelect }) => {
                         ),
                         endAdornment: (
                             <InputAdornment position="end">
-                                <IconButton 
+                                <IconButton
                                     onClick={handleCurrentLocation}
                                     title="Мое местоположение"
                                 >

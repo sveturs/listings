@@ -645,7 +645,107 @@ WHERE 1=1
 		}
 		return c.JSON(rooms)
 	})
+// Добавить после существующих импортов в main.go
 
+// Добавление изображений койко-места
+app.Post("/beds/:id/images", func(c *fiber.Ctx) error {
+    bedID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return c.Status(400).SendString("Неверный ID койко-места")
+    }
+
+    form, err := c.MultipartForm()
+    if err != nil {
+        return c.Status(400).SendString("Ошибка получения файлов")
+    }
+
+    files := form.File["images"]
+    var uploadedImages []map[string]interface{}
+
+    for _, file := range files {
+        if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
+            return c.Status(400).SendString("Допустимы только изображения")
+        }
+
+        if file.Size > 5*1024*1024 {
+            return c.Status(400).SendString("Размер файла не должен превышать 5MB")
+        }
+
+        fileName, err := processImage(file)
+        if err != nil {
+            return c.Status(500).SendString("Ошибка обработки изображения")
+        }
+
+        // Сохраняем информацию в базу данных
+        var imageID int
+        err = pool.QueryRow(context.Background(), `
+            INSERT INTO bed_images (bed_id, file_path, file_name, file_size, content_type)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id
+        `, bedID, fileName, file.Filename, file.Size, file.Header.Get("Content-Type")).Scan(&imageID)
+
+        if err != nil {
+            return c.Status(500).SendString("Ошибка сохранения информации об изображении")
+        }
+
+        uploadedImages = append(uploadedImages, map[string]interface{}{
+            "id": imageID,
+            "bed_id": bedID,
+            "file_path": fileName,
+            "file_name": file.Filename,
+            "file_size": file.Size,
+            "content_type": file.Header.Get("Content-Type"),
+        })
+    }
+
+    return c.JSON(uploadedImages)
+})
+
+// Получение изображений койко-места
+app.Get("/beds/:id/images", func(c *fiber.Ctx) error {
+    bedID := c.Params("id")
+
+    rows, err := pool.Query(context.Background(), `
+        SELECT id, bed_id, file_path, file_name, file_size, content_type, created_at
+        FROM bed_images
+        WHERE bed_id = $1
+        ORDER BY created_at DESC
+    `, bedID)
+    if err != nil {
+        return c.Status(500).SendString("Ошибка получения изображений")
+    }
+    defer rows.Close()
+
+    var images []map[string]interface{}
+    for rows.Next() {
+        var (
+            id          int
+            bedID       int
+            filePath    string
+            fileName    string
+            fileSize    int
+            contentType string
+            createdAt   time.Time
+        )
+
+        err := rows.Scan(&id, &bedID, &filePath, &fileName, &fileSize, &contentType, &createdAt)
+        if err != nil {
+            continue
+        }
+
+        images = append(images, map[string]interface{}{
+            "id": id,
+            "bed_id": bedID,
+            "file_path": filePath,
+            "file_name": fileName,
+            "file_size": fileSize,
+            "content_type": contentType,
+            "created_at": createdAt,
+        })
+    }
+
+    return c.JSON(images)
+})
 	// Добавление бронирования
 	app.Post("/bookings", func(c *fiber.Ctx) error {
 		type BookingRequest struct {
@@ -660,7 +760,9 @@ WHERE 1=1
 		if err := c.BodyParser(&booking); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
-
+		if booking.StartDate == booking.EndDate {
+			return c.Status(400).SendString("Дата выезда должна быть позже даты заезда")
+		}
 		// Начинаем транзакцию
 		tx, err := pool.Begin(context.Background())
 		if err != nil {

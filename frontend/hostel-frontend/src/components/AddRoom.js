@@ -40,12 +40,50 @@ const AddRoom = () => {
     });
 
     const [beds, setBeds] = useState([
-        { bed_number: "1", price_per_night: 0 }
+        { bed_number: "1", price_per_night: 0, images: [], imagePreviewUrls: [] }
     ]);
     const [images, setImages] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
     const [errorMessage, setErrorMessage] = useState("");
     const [isSuccess, setIsSuccess] = useState(false);
+
+    const handleBedImageChange = (index, e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        const validFiles = files.filter(file => {
+            if (!file.type.startsWith('image/')) {
+                setErrorMessage("Можно загружать только изображения");
+                return false;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                setErrorMessage("Размер файла не должен превышать 5MB");
+                return false;
+            }
+            return true;
+        });
+
+        if (validFiles.length === 0) return;
+
+        const newBeds = [...beds];
+        newBeds[index] = {
+            ...newBeds[index],
+            images: [...(newBeds[index].images || []), ...validFiles]
+        };
+
+        // Создаем превью для изображений
+        validFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                newBeds[index].imagePreviewUrls = [
+                    ...(newBeds[index].imagePreviewUrls || []),
+                    reader.result
+                ];
+                setBeds([...newBeds]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
 
     const handleLocationSelect = (location) => {
         setRoom(prev => ({
@@ -53,21 +91,11 @@ const AddRoom = () => {
             latitude: location.latitude,
             longitude: location.longitude,
             formatted_address: location.formatted_address,
-            address_street: location.address_components.find(
-                c => c.types.includes('route')
-            )?.long_name || '',
-            address_city: location.address_components.find(
-                c => c.types.includes('locality')
-            )?.long_name || '',
-            address_state: location.address_components.find(
-                c => c.types.includes('administrative_area_level_1')
-            )?.long_name || '',
-            address_country: location.address_components.find(
-                c => c.types.includes('country')
-            )?.long_name || '',
-            address_postal_code: location.address_components.find(
-                c => c.types.includes('postal_code')
-            )?.long_name || ''
+            address_street: location.address_components?.street || '',
+            address_city: location.address_components?.city || '',
+            address_state: location.address_components?.state || '',
+            address_country: location.address_components?.country || '',
+            address_postal_code: location.address_components?.postal_code || ''
         }));
     };
 
@@ -124,24 +152,39 @@ const AddRoom = () => {
             const roomResponse = await axios.post("/rooms", roomData);
             const roomId = roomResponse.data.id;
 
-            // Если тип размещения - койко-места, создаем кровати
+            // Если тип размещения - койко-места, создаем кровати и загружаем их изображения
             if (room.accommodation_type === 'bed' && beds.length > 0) {
                 await Promise.all(
                     beds.map(async (bed) => {
                         try {
-                            await axios.post(`/rooms/${roomId}/beds`, {
+                            // Создаем койко-место
+                            const bedResponse = await axios.post(`/rooms/${roomId}/beds`, {
                                 bed_number: bed.bed_number,
                                 price_per_night: parseFloat(bed.price_per_night)
                             });
+
+                            // Если есть изображения для койко-места, загружаем их
+                            if (bed.images && bed.images.length > 0) {
+                                const formData = new FormData();
+                                bed.images.forEach(image => {
+                                    formData.append('images', image);
+                                });
+
+                                await axios.post(`/beds/${bedResponse.data.id}/images`, formData, {
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data'
+                                    }
+                                });
+                            }
                         } catch (error) {
-                            console.error('Ошибка добавления кровати:', error);
+                            console.error('Ошибка добавления кровати или её изображений:', error);
                             throw error;
                         }
                     })
                 );
             }
 
-            // Загружаем изображения
+            // Загружаем общие изображения комнаты
             if (images.length > 0) {
                 const formData = new FormData();
                 images.forEach(image => {
@@ -156,6 +199,7 @@ const AddRoom = () => {
             }
 
             setIsSuccess(true);
+            // Сброс формы
             setRoom({
                 name: "",
                 accommodation_type: "room",
@@ -174,7 +218,7 @@ const AddRoom = () => {
                 longitude: null,
                 formatted_address: ''
             });
-            setBeds([{ bed_number: "1", price_per_night: 0 }]);
+            setBeds([{ bed_number: "1", price_per_night: 0, images: [], imagePreviewUrls: [] }]);
             setImages([]);
             setPreviewUrls([]);
         } catch (error) {
@@ -273,6 +317,64 @@ const AddRoom = () => {
                                                 setBeds(newBeds);
                                             }}
                                         />
+                                        <Box>
+                                            <Button
+                                                variant="contained"
+                                                component="label"
+                                                size="small"
+                                            >
+                                                Фото кровати
+                                                <input
+                                                    type="file"
+                                                    hidden
+                                                    multiple
+                                                    accept="image/*"
+                                                    onChange={(e) => handleBedImageChange(index, e)}
+                                                />
+                                            </Button>
+                                            {bed.imagePreviewUrls && bed.imagePreviewUrls.length > 0 && (
+                                                <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                                                    {bed.imagePreviewUrls.map((url, imgIndex) => (
+                                                        <Box
+                                                            key={imgIndex}
+                                                            sx={{
+                                                                position: 'relative',
+                                                                width: 60,
+                                                                height: 60
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src={url}
+                                                                alt={`Preview ${imgIndex}`}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '4px'
+                                                                }}
+                                                            />
+                                                            <IconButton
+                                                                size="small"
+                                                                sx={{
+                                                                    position: 'absolute',
+                                                                    top: -8,
+                                                                    right: -8,
+                                                                    bgcolor: 'background.paper'
+                                                                }}
+                                                                onClick={() => {
+                                                                    const newBeds = [...beds];
+                                                                    newBeds[index].images.splice(imgIndex, 1);
+                                                                    newBeds[index].imagePreviewUrls.splice(imgIndex, 1);
+                                                                    setBeds(newBeds);
+                                                                }}
+                                                            >
+                                                                <DeleteIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Box>
+                                                    ))}
+                                                </Box>
+                                            )}
+                                        </Box>
                                         <IconButton onClick={() => {
                                             const newBeds = [...beds];
                                             newBeds.splice(index, 1);
@@ -282,6 +384,7 @@ const AddRoom = () => {
                                         </IconButton>
                                     </Box>
                                 ))}
+
                                 <Button
                                     variant="outlined"
                                     onClick={() => setBeds([...beds, { bed_number: `${beds.length + 1}`, price_per_night: 0 }])}
