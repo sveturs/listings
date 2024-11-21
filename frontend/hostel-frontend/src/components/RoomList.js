@@ -148,63 +148,65 @@ const RoomList = () => {
     const fetchRooms = useCallback(async () => {
         try {
             const params = new URLSearchParams();
-            if (filters.capacity) params.append('capacity', filters.capacity);
-            if (filters.min_price) params.append('min_price', filters.min_price);
-            if (filters.max_price) params.append('max_price', filters.max_price);
-            if (filters.city) params.append('city', filters.city);
-            if (filters.country) params.append('country', filters.country);
-            if (filters.start_date && filters.end_date) {
-                params.append('start_date', filters.start_date);
-                params.append('end_date', filters.end_date);
+    
+            // Добавляем параметры только если они заданы
+            if (filters.capacity && parseInt(filters.capacity) > 0) {
+                params.append('capacity', filters.capacity);
             }
-
+            if (filters.min_price && parseFloat(filters.min_price) > 0) {
+                params.append('min_price', filters.min_price);
+            }
+            if (filters.max_price && parseFloat(filters.max_price) > 0) {
+                params.append('max_price', filters.max_price);
+            }
+            if (filters.city?.trim()) {
+                params.append('city', filters.city.trim());
+            }
+            if (filters.country?.trim()) {
+                params.append('country', filters.country.trim());
+            }
+            
+            // Всегда отправляем даты для проверки доступности
+            const today = new Date().toISOString().split('T')[0];
+            params.append('start_date', filters.start_date || today);
+            params.append('end_date', filters.end_date || today);
+    
             const response = await axios.get(`/rooms?${params.toString()}`);
             const roomsData = response.data || [];
     
-            // Добавляем детальный лог для проверки данных
-            console.log('Raw rooms data (detailed):', roomsData.map(room => ({
-                id: room.id,
-                name: room.name,
-                latitude: room.latitude,
-                longitude: room.longitude
-            })));
+            // Добавляем дополнительную фильтрацию на фронтенде если нужно
+            const filteredRooms = roomsData.filter(room => {
+                // Проверяем все условия доступности
+                if (room.accommodation_type === 'bed' && room.available_beds <= 0) {
+                    return false;
+                }
+                
+                // Дополнительные условия можно добавить здесь
+                
+                return true;
+            });
     
+            // Получаем изображения для отфильтрованных комнат
             const roomsWithImages = await Promise.all(
-                roomsData.map(async (room) => {
+                filteredRooms.map(async (room) => {
                     const imagesResponse = await axios.get(`/rooms/${room.id}/images`);
                     return {
                         ...room,
-                        images: imagesResponse.data || [],
-                        // Проверяем тип данных
-                        latitude: typeof room.latitude === 'string' ? parseFloat(room.latitude) : room.latitude,
-                        longitude: typeof room.longitude === 'string' ? parseFloat(room.longitude) : room.longitude
+                        images: imagesResponse.data || []
                     };
                 })
             );
     
-            // Проверяем преобразованные данные
-            console.log('Processed rooms data:', roomsWithImages.map(room => ({
-                id: room.id,
-                name: room.name,
-                latitude: room.latitude,
-                longitude: room.longitude,
-                hasValidCoords: !!(room.latitude && room.longitude)
-            })));
-    
-            const validRooms = roomsWithImages.filter(room => 
-                room.latitude && room.longitude &&
-                !isNaN(room.latitude) && !isNaN(room.longitude)
-            );
-    
             setRooms(roomsWithImages);
-            setRoomsWithCoordinates(validRooms);
+            setRoomsWithCoordinates(roomsWithImages.filter(room => 
+                room.latitude && room.longitude));
     
         } catch (error) {
             console.error("Ошибка при получении списка комнат:", error);
         }
     }, [filters]);
 
-    
+
     const handleDateChange = (field, value) => {
         setFilters(prev => {
             const newFilters = { ...prev, [field]: value };

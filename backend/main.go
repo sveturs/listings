@@ -263,8 +263,8 @@ func main() {
 		AddressPostalCode  string   `json:"address_postal_code"`
 		AccommodationType  string   `json:"accommodation_type"`
 		IsShared           bool     `json:"is_shared"`
-		TotalBeds          *int     `json:"total_beds,omitempty"`
-		AvailableBeds      *int     `json:"available_beds,omitempty"`
+		TotalBeds          *int     `json:"total_beds"`
+		AvailableBeds      *int     `json:"available_beds"`
 		HasPrivateBathroom bool     `json:"has_private_bathroom"`
 		Latitude           *float64 `json:"latitude"`
 		Longitude          *float64 `json:"longitude"`
@@ -292,6 +292,19 @@ func main() {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
 
+		// Устанавливаем значения по умолчанию для total_beds и available_beds
+		totalBeds := 0
+		availableBeds := 0
+		if room.TotalBeds != nil {
+			totalBeds = *room.TotalBeds
+			// Для available_beds используем либо переданное значение, либо total_beds
+			if room.AvailableBeds != nil {
+				availableBeds = *room.AvailableBeds
+			} else {
+				availableBeds = totalBeds
+			}
+		}
+
 		var roomId int
 		err := pool.QueryRow(context.Background(), `
 		INSERT INTO rooms (
@@ -301,13 +314,15 @@ func main() {
 			accommodation_type, is_shared,
 			total_beds, available_beds, has_private_bathroom,
 			latitude, longitude, formatted_address
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
+			COALESCE($11, 0), COALESCE($12, 0), 
+			$13, $14, $15, $16)
 		RETURNING id`,
 			room.Name, room.Capacity, room.PricePerNight,
 			room.AddressStreet, room.AddressCity, room.AddressState,
 			room.AddressCountry, room.AddressPostalCode,
 			room.AccommodationType, room.IsShared,
-			room.TotalBeds, room.AvailableBeds, room.HasPrivateBathroom,
+			totalBeds, availableBeds, room.HasPrivateBathroom,
 			room.Latitude, room.Longitude, room.FormattedAddress,
 		).Scan(&roomId)
 
@@ -321,6 +336,7 @@ func main() {
 
 		return c.JSON(fiber.Map{"id": roomId})
 	})
+
 	// Добавление кровати
 	// Обработчик создания кровати
 	app.Post("/rooms/:id/beds", func(c *fiber.Ctx) error {
@@ -455,57 +471,76 @@ func main() {
 				r.id,
 				COALESCE(r.total_beds, 0) as total_beds,
 				CASE 
-					WHEN r.accommodation_type = 'bed' THEN
-						(
-							SELECT COUNT(*)
-							FROM beds b2
-							WHERE b2.room_id = r.id
-							AND b2.is_available = true
-							AND b2.id NOT IN (
-								SELECT bb.bed_id
-								FROM bed_bookings bb
-								WHERE bb.status = 'confirmed'
-								AND CASE 
-									WHEN $1::TEXT = '' OR $2::TEXT = '' THEN
-										bb.start_date <= CURRENT_DATE AND bb.end_date >= CURRENT_DATE
-									ELSE
-										bb.start_date <= $2::DATE AND bb.end_date >= $1::DATE
-								END
-							)
+					WHEN r.accommodation_type = 'bed' THEN (
+						SELECT COALESCE(COUNT(*), 0)  -- Добавили COALESCE здесь
+						FROM beds b2
+						WHERE b2.room_id = r.id
+						AND b2.is_available = true
+						AND b2.id NOT IN (
+							SELECT bb.bed_id
+							FROM bed_bookings bb
+							WHERE bb.status = 'confirmed'
+							AND bb.start_date <= $2
+							AND bb.end_date >= $1
 						)
-					ELSE COALESCE(r.total_beds, 0)
-				END as current_available_beds
-			FROM rooms r
-		)
-		SELECT 
-			r.id, 
-			r.name, 
-			r.capacity, 
-			r.latitude,  -- Добавляем явное указание полей
-			r.longitude, -- Добавляем явное указание полей
-			CASE
-				WHEN r.accommodation_type = 'bed' THEN
-					COALESCE((
-						SELECT MIN(b.price_per_night)
-						FROM beds b
-						WHERE b.room_id = r.id
-						AND b.is_available = true
-					), r.price_per_night)
-				ELSE r.price_per_night
-			END as price_per_night,
-			r.address_street, 
-			r.address_city, 
-			r.address_state,
-			r.address_country, 
-			r.address_postal_code,
-			r.accommodation_type, 
-			r.is_shared, 
-			COALESCE(r.total_beds, 0) as total_beds,
-			COALESCE(ra.current_available_beds, 0) as available_beds,
-			r.has_private_bathroom, 
-			r.created_at 
-		FROM rooms r
-		LEFT JOIN room_availability ra ON r.id = ra.id`
+					)
+					ELSE 
+						CASE WHEN EXISTS (
+							SELECT 1 FROM bookings b
+							WHERE b.room_id = r.id
+							AND b.status = 'confirmed'
+							AND b.start_date <= $2
+							AND b.end_date >= $1
+						) THEN 0 ELSE 1 END
+				END as available_count,
+        CASE 
+            WHEN r.accommodation_type = 'bed' THEN
+                COALESCE(
+                    (SELECT MIN(b3.price_per_night) 
+                     FROM beds b3 
+                     WHERE b3.room_id = r.id 
+                     AND b3.is_available = true
+                     AND b3.id NOT IN (
+                        SELECT bb.bed_id
+                        FROM bed_bookings bb
+                        WHERE bb.status = 'confirmed'
+                        AND bb.start_date <= $2
+                        AND bb.end_date >= $1
+                     )),
+                    r.price_per_night
+                )
+            ELSE r.price_per_night
+        END as actual_price
+    FROM rooms r
+)
+SELECT 
+    r.id, 
+    r.name, 
+    r.capacity,
+    r.latitude,
+    r.longitude,
+    ra.actual_price as price_per_night,
+    r.address_street, 
+    r.address_city, 
+    r.address_state,
+    r.address_country, 
+    r.address_postal_code,
+    r.accommodation_type, 
+    r.is_shared,
+    COALESCE(r.total_beds, 0) as total_beds,
+    COALESCE(ra.available_count, 0) as available_beds,
+    r.has_private_bathroom,
+    r.created_at
+FROM rooms r
+JOIN room_availability ra ON r.id = ra.id
+WHERE 1=1
+    AND (
+        CASE 
+            WHEN r.accommodation_type = 'bed' 
+            THEN ra.available_count > 0 AND ra.actual_price IS NOT NULL
+            ELSE ra.available_count = 1
+        END
+    )`
 
 		var conditions []string
 		args := []interface{}{startDate, endDate}
@@ -520,7 +555,7 @@ func main() {
 		if minPrice != "" {
 			minPriceFloat, err := strconv.ParseFloat(minPrice, 64)
 			if err == nil {
-				conditions = append(conditions, fmt.Sprintf("r.price_per_night >= $%d", len(args)+1))
+				conditions = append(conditions, fmt.Sprintf("ra.actual_price >= $%d", len(args)+1))
 				args = append(args, minPriceFloat)
 			}
 		}
@@ -529,21 +564,9 @@ func main() {
 		if maxPrice != "" {
 			maxPriceFloat, err := strconv.ParseFloat(maxPrice, 64)
 			if err == nil {
-				conditions = append(conditions, fmt.Sprintf("r.price_per_night <= $%d", len(args)+1))
+				conditions = append(conditions, fmt.Sprintf("ra.actual_price <= $%d", len(args)+1))
 				args = append(args, maxPriceFloat)
 			}
-		}
-
-		// Фильтр по доступности дат
-		if startDate != "" && endDate != "" {
-			conditions = append(conditions, fmt.Sprintf(`
-				r.id NOT IN (
-					SELECT room_id 
-					FROM bookings 
-					WHERE $%d < end_date 
-					AND $%d > start_date
-				)`, len(args)+1, len(args)+2))
-			args = append(args, startDate, endDate)
 		}
 
 		// Фильтры по городу и стране
@@ -558,9 +581,11 @@ func main() {
 
 		// Добавляем условия WHERE, если они есть
 		if len(conditions) > 0 {
-			baseQuery += " WHERE " + strings.Join(conditions, " AND ")
+			baseQuery += " AND " + strings.Join(conditions, " AND ")
 		}
 
+		// Добавляем сортировку
+		baseQuery += " ORDER BY ra.available_count DESC, ra.actual_price ASC, r.created_at DESC"
 		// Логирование запроса
 		log.Printf("SQL Query: %s, Args: %v", baseQuery, args)
 
@@ -580,17 +605,18 @@ func main() {
 			var totalBeds, availableBeds int
 			var name, addressStreet, addressCity, addressState,
 				addressCountry, addressPostalCode, accommodationType string
-			var latitude, longitude float64 // Добавляем переменные для координат
+			var latitude, longitude float64
 			var pricePerNight float64
 			var isShared, hasPrivateBathroom bool
 			var createdAt time.Time
 
 			if err := rows.Scan(
-				&id, &name, &capacity, &latitude, &longitude, &pricePerNight, // Добавляем сканирование координат
+				&id, &name, &capacity, &latitude, &longitude, &pricePerNight,
 				&addressStreet, &addressCity, &addressState,
 				&addressCountry, &addressPostalCode,
 				&accommodationType, &isShared,
-				&totalBeds, &availableBeds, &hasPrivateBathroom,
+				&totalBeds, &availableBeds, // теперь это не может быть NULL
+				&hasPrivateBathroom,
 				&createdAt,
 			); err != nil {
 				log.Printf("Ошибка сканирования строки: %v", err)
