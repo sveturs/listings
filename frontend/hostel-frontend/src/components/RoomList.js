@@ -625,7 +625,7 @@ const RoomList = () => {
                                                     }}
                                                 >
                                                     Все ({room.images.length})
-                                                </Button>
+                                                </Button> 
                                             )}
                                             <Button
                                                 variant="contained"
