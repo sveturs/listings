@@ -8,7 +8,8 @@ import {
     MobileStepper, CardMedia,
     ToggleButton,
     ToggleButtonGroup,
-    Paper
+    Paper,
+    ButtonGroup
 } from "@mui/material";
 import {
     KeyboardArrowLeft, KeyboardArrowRight,
@@ -18,7 +19,8 @@ import {
     Apartment as ApartmentIcon,
     Home as HomeIcon,
     ViewList as ViewListIcon,
-    Map as MapIcon
+    Map as MapIcon,
+    Search as SearchIcon
 } from '@mui/icons-material';
 import BookingDialog from "./BookingDialog";
 import MapView from './MapView';
@@ -106,8 +108,18 @@ const RoomList = () => {
         city: "",
         country: "",
         start_date: "",
-        end_date: ""
+        end_date: "",
+        type: ''
     });
+
+    const handleTypeFilter = (type) => {
+        setFilters(prev => ({
+            ...prev,
+            type: prev.type === type ? '' : type // сброс фильтра при повторном нажатии
+        }));
+    };
+
+
     const [viewMode, setViewMode] = useState('list'); // 'list' или 'map'
     const [roomsWithCoordinates, setRoomsWithCoordinates] = useState([]);
     const geocodeRooms = async (rooms) => {
@@ -148,8 +160,8 @@ const RoomList = () => {
     const fetchRooms = useCallback(async () => {
         try {
             const params = new URLSearchParams();
-    
-            // Добавляем параметры только если они заданы
+
+            // Добавляем базовые параметры
             if (filters.capacity && parseInt(filters.capacity) > 0) {
                 params.append('capacity', filters.capacity);
             }
@@ -165,27 +177,43 @@ const RoomList = () => {
             if (filters.country?.trim()) {
                 params.append('country', filters.country.trim());
             }
-            
+
+            // Добавляем фильтр по типу размещения
+            if (filters.type) {
+                params.append('accommodation_type', filters.type);
+                if (filters.type === 'room') {
+                    params.append('has_private_rooms', 'true');
+                }
+            }
+
             // Всегда отправляем даты для проверки доступности
             const today = new Date().toISOString().split('T')[0];
             params.append('start_date', filters.start_date || today);
             params.append('end_date', filters.end_date || today);
-    
+
             const response = await axios.get(`/rooms?${params.toString()}`);
             const roomsData = response.data || [];
-    
-            // Добавляем дополнительную фильтрацию на фронтенде если нужно
+
+            // Фильтрация на фронтенде
             const filteredRooms = roomsData.filter(room => {
-                // Проверяем все условия доступности
+                // Базовая проверка доступности
                 if (room.accommodation_type === 'bed' && room.available_beds <= 0) {
                     return false;
                 }
-                
-                // Дополнительные условия можно добавить здесь
-                
+
+                // Проверка типа размещения
+                if (filters.type && room.accommodation_type !== filters.type) {
+                    return false;
+                }
+
+                // Проверка для приватных комнат
+                if (filters.type === 'room' && room.is_shared) {
+                    return false;
+                }
+
                 return true;
             });
-    
+
             // Получаем изображения для отфильтрованных комнат
             const roomsWithImages = await Promise.all(
                 filteredRooms.map(async (room) => {
@@ -196,16 +224,15 @@ const RoomList = () => {
                     };
                 })
             );
-    
+
             setRooms(roomsWithImages);
-            setRoomsWithCoordinates(roomsWithImages.filter(room => 
+            setRoomsWithCoordinates(roomsWithImages.filter(room =>
                 room.latitude && room.longitude));
-    
+
         } catch (error) {
             console.error("Ошибка при получении списка комнат:", error);
         }
     }, [filters]);
-
 
     const handleDateChange = (field, value) => {
         setFilters(prev => {
@@ -318,76 +345,111 @@ const RoomList = () => {
     return (
         <div>
 
-            <Grid container spacing={2} sx={{ marginBottom: 4 }}>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Дата заезда"
-                        type="date"
-                        fullWidth
-                        InputLabelProps={{ shrink: true }}
-                        value={filters.start_date}
-                        onChange={(e) => handleDateChange('start_date', e.target.value)}
-                        inputProps={{ min: today }}
-                    />
+// В RoomList.js обновляем стили фильтров
+            <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
+                {/* Первая строка с датами, городом, страной и ценами */}
+                <Grid item container spacing={2} xs={12}>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Дата заезда"
+                            type="date"
+                            size="small"
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                            value={filters.start_date}
+                            onChange={(e) => handleDateChange('start_date', e.target.value)}
+                            inputProps={{ min: today }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Дата выезда"
+                            type="date"
+                            size="small"
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                            value={filters.end_date}
+                            onChange={(e) => handleDateChange('end_date', e.target.value)}
+                            inputProps={{ min: filters.start_date || today }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Город"
+                            size="small"
+                            fullWidth
+                            value={filters.city}
+                            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Страна"
+                            size="small"
+                            fullWidth
+                            value={filters.country}
+                            onChange={(e) => setFilters({ ...filters, country: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Мин. цена"
+                            type="number"
+                            size="small"
+                            fullWidth
+                            value={filters.min_price}
+                            onChange={(e) => setFilters({ ...filters, min_price: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Макс. цена"
+                            type="number"
+                            size="small"
+                            fullWidth
+                            value={filters.max_price}
+                            onChange={(e) => setFilters({ ...filters, max_price: e.target.value })}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Дата выезда"
-                        type="date"
-                        fullWidth
-                        InputLabelProps={{ shrink: true }}
-                        value={filters.end_date}
-                        onChange={(e) => handleDateChange('end_date', e.target.value)}
-                        inputProps={{ min: filters.start_date || today }}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <TextField
-                        label="Вместимость"
-                        type="number"
-                        fullWidth
-                        value={filters.capacity}
-                        onChange={(e) => setFilters({ ...filters, capacity: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <TextField
-                        label="Мин. цена"
-                        type="number"
-                        fullWidth
-                        value={filters.min_price}
-                        onChange={(e) => setFilters({ ...filters, min_price: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <TextField
-                        label="Макс. цена"
-                        type="number"
-                        fullWidth
-                        value={filters.max_price}
-                        onChange={(e) => setFilters({ ...filters, max_price: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Город"
-                        fullWidth
-                        value={filters.city}
-                        onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Страна"
-                        fullWidth
-                        value={filters.country}
-                        onChange={(e) => setFilters({ ...filters, country: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <Button variant="contained" color="primary" onClick={fetchRooms}>
-                        Фильтровать
-                    </Button>
+
+                {/* Вторая строка с кнопками */}
+                <Grid item container xs={12} spacing={2} alignItems="center" justifyContent="flex-start">
+                    <Grid item>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={fetchRooms}
+                            startIcon={<SearchIcon />}
+                        >
+                            Найти
+                        </Button>
+                    </Grid>
+                    <Grid item>
+                        <ButtonGroup variant="outlined">
+                            <Button
+                                onClick={() => handleTypeFilter('apartment')}
+                                startIcon={<ApartmentIcon />}
+                                color={filters.type === 'apartment' ? 'primary' : 'inherit'}
+                            >
+                                Аппарты
+                            </Button>
+                            <Button
+                                onClick={() => handleTypeFilter('room')}
+                                startIcon={<HotelIcon />}
+                                color={filters.type === 'room' ? 'primary' : 'inherit'}
+                            >
+                                Приватка
+                            </Button>
+                            <Button
+                                onClick={() => handleTypeFilter('bed')}
+                                startIcon={<SingleBedIcon />}
+                                color={filters.type === 'bed' ? 'primary' : 'inherit'}
+                            >
+                                Кровать
+                            </Button>
+                        </ButtonGroup>
+                    </Grid>
                 </Grid>
             </Grid>
             {viewToggle}

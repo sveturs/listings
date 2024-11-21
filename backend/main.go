@@ -291,7 +291,7 @@ func main() {
 		if err := c.BodyParser(&room); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
-	
+
 		// Устанавливаем значения по умолчанию для total_beds и available_beds
 		totalBeds := 0
 		availableBeds := 0
@@ -304,7 +304,7 @@ func main() {
 				availableBeds = totalBeds
 			}
 		}
-	
+
 		var roomId int
 		err := pool.QueryRow(context.Background(), `
 			INSERT INTO rooms (
@@ -324,7 +324,7 @@ func main() {
 			totalBeds, availableBeds, room.HasPrivateBathroom,
 			room.Latitude, room.Longitude, room.FormattedAddress,
 		).Scan(&roomId)
-	
+
 		if err != nil {
 			if strings.Contains(err.Error(), "unique constraint") {
 				return c.Status(400).SendString("Комната с таким названием уже существует")
@@ -332,10 +332,9 @@ func main() {
 			log.Printf("Ошибка добавления комнаты: %v", err)
 			return c.Status(500).SendString("Ошибка добавления комнаты")
 		}
-	
+
 		return c.JSON(fiber.Map{"id": roomId})
 	})
-	
 
 	// Добавление кровати
 	// Обработчик создания кровати
@@ -544,7 +543,16 @@ WHERE 1=1
 
 		var conditions []string
 		args := []interface{}{startDate, endDate}
+		// Добавляем фильтр по типу размещения
+		if accommodationType := c.Query("accommodation_type"); accommodationType != "" {
+			conditions = append(conditions, fmt.Sprintf("r.accommodation_type = $%d", len(args)+1))
+			args = append(args, accommodationType)
 
+			// Дополнительная проверка для приватных комнат
+			if accommodationType == "room" && c.Query("has_private_rooms") == "true" {
+				conditions = append(conditions, "r.is_shared = false")
+			}
+		}
 		// Фильтр по вместимости
 		if capacity != "" {
 			conditions = append(conditions, fmt.Sprintf("r.capacity >= $%d", len(args)+1))
@@ -645,107 +653,107 @@ WHERE 1=1
 		}
 		return c.JSON(rooms)
 	})
-// Добавить после существующих импортов в main.go
+	// Добавить после существующих импортов в main.go
 
-// Добавление изображений койко-места
-app.Post("/beds/:id/images", func(c *fiber.Ctx) error {
-    bedID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return c.Status(400).SendString("Неверный ID койко-места")
-    }
+	// Добавление изображений койко-места
+	app.Post("/beds/:id/images", func(c *fiber.Ctx) error {
+		bedID, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.Status(400).SendString("Неверный ID койко-места")
+		}
 
-    form, err := c.MultipartForm()
-    if err != nil {
-        return c.Status(400).SendString("Ошибка получения файлов")
-    }
+		form, err := c.MultipartForm()
+		if err != nil {
+			return c.Status(400).SendString("Ошибка получения файлов")
+		}
 
-    files := form.File["images"]
-    var uploadedImages []map[string]interface{}
+		files := form.File["images"]
+		var uploadedImages []map[string]interface{}
 
-    for _, file := range files {
-        if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
-            return c.Status(400).SendString("Допустимы только изображения")
-        }
+		for _, file := range files {
+			if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
+				return c.Status(400).SendString("Допустимы только изображения")
+			}
 
-        if file.Size > 5*1024*1024 {
-            return c.Status(400).SendString("Размер файла не должен превышать 5MB")
-        }
+			if file.Size > 5*1024*1024 {
+				return c.Status(400).SendString("Размер файла не должен превышать 5MB")
+			}
 
-        fileName, err := processImage(file)
-        if err != nil {
-            return c.Status(500).SendString("Ошибка обработки изображения")
-        }
+			fileName, err := processImage(file)
+			if err != nil {
+				return c.Status(500).SendString("Ошибка обработки изображения")
+			}
 
-        // Сохраняем информацию в базу данных
-        var imageID int
-        err = pool.QueryRow(context.Background(), `
+			// Сохраняем информацию в базу данных
+			var imageID int
+			err = pool.QueryRow(context.Background(), `
             INSERT INTO bed_images (bed_id, file_path, file_name, file_size, content_type)
             VALUES ($1, $2, $3, $4, $5)
             RETURNING id
         `, bedID, fileName, file.Filename, file.Size, file.Header.Get("Content-Type")).Scan(&imageID)
 
-        if err != nil {
-            return c.Status(500).SendString("Ошибка сохранения информации об изображении")
-        }
+			if err != nil {
+				return c.Status(500).SendString("Ошибка сохранения информации об изображении")
+			}
 
-        uploadedImages = append(uploadedImages, map[string]interface{}{
-            "id": imageID,
-            "bed_id": bedID,
-            "file_path": fileName,
-            "file_name": file.Filename,
-            "file_size": file.Size,
-            "content_type": file.Header.Get("Content-Type"),
-        })
-    }
+			uploadedImages = append(uploadedImages, map[string]interface{}{
+				"id":           imageID,
+				"bed_id":       bedID,
+				"file_path":    fileName,
+				"file_name":    file.Filename,
+				"file_size":    file.Size,
+				"content_type": file.Header.Get("Content-Type"),
+			})
+		}
 
-    return c.JSON(uploadedImages)
-})
+		return c.JSON(uploadedImages)
+	})
 
-// Получение изображений койко-места
-app.Get("/beds/:id/images", func(c *fiber.Ctx) error {
-    bedID := c.Params("id")
+	// Получение изображений койко-места
+	app.Get("/beds/:id/images", func(c *fiber.Ctx) error {
+		bedID := c.Params("id")
 
-    rows, err := pool.Query(context.Background(), `
+		rows, err := pool.Query(context.Background(), `
         SELECT id, bed_id, file_path, file_name, file_size, content_type, created_at
         FROM bed_images
         WHERE bed_id = $1
         ORDER BY created_at DESC
     `, bedID)
-    if err != nil {
-        return c.Status(500).SendString("Ошибка получения изображений")
-    }
-    defer rows.Close()
+		if err != nil {
+			return c.Status(500).SendString("Ошибка получения изображений")
+		}
+		defer rows.Close()
 
-    var images []map[string]interface{}
-    for rows.Next() {
-        var (
-            id          int
-            bedID       int
-            filePath    string
-            fileName    string
-            fileSize    int
-            contentType string
-            createdAt   time.Time
-        )
+		var images []map[string]interface{}
+		for rows.Next() {
+			var (
+				id          int
+				bedID       int
+				filePath    string
+				fileName    string
+				fileSize    int
+				contentType string
+				createdAt   time.Time
+			)
 
-        err := rows.Scan(&id, &bedID, &filePath, &fileName, &fileSize, &contentType, &createdAt)
-        if err != nil {
-            continue
-        }
+			err := rows.Scan(&id, &bedID, &filePath, &fileName, &fileSize, &contentType, &createdAt)
+			if err != nil {
+				continue
+			}
 
-        images = append(images, map[string]interface{}{
-            "id": id,
-            "bed_id": bedID,
-            "file_path": filePath,
-            "file_name": fileName,
-            "file_size": fileSize,
-            "content_type": contentType,
-            "created_at": createdAt,
-        })
-    }
+			images = append(images, map[string]interface{}{
+				"id":           id,
+				"bed_id":       bedID,
+				"file_path":    filePath,
+				"file_name":    fileName,
+				"file_size":    fileSize,
+				"content_type": contentType,
+				"created_at":   createdAt,
+			})
+		}
 
-    return c.JSON(images)
-})
+		return c.JSON(images)
+	})
 	// Добавление бронирования
 	app.Post("/bookings", func(c *fiber.Ctx) error {
 		type BookingRequest struct {

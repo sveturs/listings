@@ -293,7 +293,7 @@ func main() {
 		if err := c.BodyParser(&room); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
-	
+
 		// Устанавливаем значения по умолчанию для total_beds и available_beds
 		totalBeds := 0
 		availableBeds := 0
@@ -306,7 +306,7 @@ func main() {
 				availableBeds = totalBeds
 			}
 		}
-	
+
 		var roomId int
 		err := pool.QueryRow(context.Background(), `
 			INSERT INTO rooms (
@@ -326,7 +326,7 @@ func main() {
 			totalBeds, availableBeds, room.HasPrivateBathroom,
 			room.Latitude, room.Longitude, room.FormattedAddress,
 		).Scan(&roomId)
-	
+
 		if err != nil {
 			if strings.Contains(err.Error(), "unique constraint") {
 				return c.Status(400).SendString("Комната с таким названием уже существует")
@@ -334,10 +334,9 @@ func main() {
 			log.Printf("Ошибка добавления комнаты: %v", err)
 			return c.Status(500).SendString("Ошибка добавления комнаты")
 		}
-	
+
 		return c.JSON(fiber.Map{"id": roomId})
 	})
-	
 
 	// Добавление кровати
 	// Обработчик создания кровати
@@ -546,7 +545,16 @@ WHERE 1=1
 
 		var conditions []string
 		args := []interface{}{startDate, endDate}
+		// Добавляем фильтр по типу размещения
+		if accommodationType := c.Query("accommodation_type"); accommodationType != "" {
+			conditions = append(conditions, fmt.Sprintf("r.accommodation_type = $%d", len(args)+1))
+			args = append(args, accommodationType)
 
+			// Дополнительная проверка для приватных комнат
+			if accommodationType == "room" && c.Query("has_private_rooms") == "true" {
+				conditions = append(conditions, "r.is_shared = false")
+			}
+		}
 		// Фильтр по вместимости
 		if capacity != "" {
 			conditions = append(conditions, fmt.Sprintf("r.capacity >= $%d", len(args)+1))
@@ -647,7 +655,107 @@ WHERE 1=1
 		}
 		return c.JSON(rooms)
 	})
+	// Добавить после существующих импортов в main.go
 
+	// Добавление изображений койко-места
+	app.Post("/beds/:id/images", func(c *fiber.Ctx) error {
+		bedID, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.Status(400).SendString("Неверный ID койко-места")
+		}
+
+		form, err := c.MultipartForm()
+		if err != nil {
+			return c.Status(400).SendString("Ошибка получения файлов")
+		}
+
+		files := form.File["images"]
+		var uploadedImages []map[string]interface{}
+
+		for _, file := range files {
+			if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
+				return c.Status(400).SendString("Допустимы только изображения")
+			}
+
+			if file.Size > 5*1024*1024 {
+				return c.Status(400).SendString("Размер файла не должен превышать 5MB")
+			}
+
+			fileName, err := processImage(file)
+			if err != nil {
+				return c.Status(500).SendString("Ошибка обработки изображения")
+			}
+
+			// Сохраняем информацию в базу данных
+			var imageID int
+			err = pool.QueryRow(context.Background(), `
+            INSERT INTO bed_images (bed_id, file_path, file_name, file_size, content_type)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id
+        `, bedID, fileName, file.Filename, file.Size, file.Header.Get("Content-Type")).Scan(&imageID)
+
+			if err != nil {
+				return c.Status(500).SendString("Ошибка сохранения информации об изображении")
+			}
+
+			uploadedImages = append(uploadedImages, map[string]interface{}{
+				"id":           imageID,
+				"bed_id":       bedID,
+				"file_path":    fileName,
+				"file_name":    file.Filename,
+				"file_size":    file.Size,
+				"content_type": file.Header.Get("Content-Type"),
+			})
+		}
+
+		return c.JSON(uploadedImages)
+	})
+
+	// Получение изображений койко-места
+	app.Get("/beds/:id/images", func(c *fiber.Ctx) error {
+		bedID := c.Params("id")
+
+		rows, err := pool.Query(context.Background(), `
+        SELECT id, bed_id, file_path, file_name, file_size, content_type, created_at
+        FROM bed_images
+        WHERE bed_id = $1
+        ORDER BY created_at DESC
+    `, bedID)
+		if err != nil {
+			return c.Status(500).SendString("Ошибка получения изображений")
+		}
+		defer rows.Close()
+
+		var images []map[string]interface{}
+		for rows.Next() {
+			var (
+				id          int
+				bedID       int
+				filePath    string
+				fileName    string
+				fileSize    int
+				contentType string
+				createdAt   time.Time
+			)
+
+			err := rows.Scan(&id, &bedID, &filePath, &fileName, &fileSize, &contentType, &createdAt)
+			if err != nil {
+				continue
+			}
+
+			images = append(images, map[string]interface{}{
+				"id":           id,
+				"bed_id":       bedID,
+				"file_path":    filePath,
+				"file_name":    fileName,
+				"file_size":    fileSize,
+				"content_type": contentType,
+				"created_at":   createdAt,
+			})
+		}
+
+		return c.JSON(images)
+	})
 	// Добавление бронирования
 	app.Post("/bookings", func(c *fiber.Ctx) error {
 		type BookingRequest struct {
@@ -662,7 +770,9 @@ WHERE 1=1
 		if err := c.BodyParser(&booking); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
-
+		if booking.StartDate == booking.EndDate {
+			return c.Status(400).SendString("Дата выезда должна быть позже даты заезда")
+		}
 		// Начинаем транзакцию
 		tx, err := pool.Begin(context.Background())
 		if err != nil {
@@ -969,6 +1079,20 @@ ALTER TABLE users
     ADD CONSTRAINT valid_name 
     CHECK (length(name) >= 2);
 
+--- Содержимое файла: backend/migrations/0018_add_bed_images.up.sql ---
+
+CREATE TABLE bed_images (
+    id SERIAL PRIMARY KEY,
+    bed_id INT NOT NULL REFERENCES beds(id) ON DELETE CASCADE,
+    file_path VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_size INT NOT NULL,
+    content_type VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_bed_images_bed_id ON bed_images(bed_id);
+
 --- Содержимое файла: backend/migrations/0016_fix_bed_availability.down.sql ---
 
 DROP FUNCTION IF EXISTS get_beds_availability;
@@ -1215,6 +1339,11 @@ ALTER TABLE bookings
 
 CREATE INDEX idx_bookings_status ON bookings(status);
 CREATE INDEX idx_bookings_dates ON bookings(start_date, end_date);
+
+--- Содержимое файла: backend/migrations/0018_add_bed_images.down.sql ---
+
+DROP TABLE IF EXISTS bed_images;
+
 
 --- Содержимое файла: backend/migrations/0013_update_bed_bookings.down.sql ---
 
@@ -1973,202 +2102,311 @@ export default AddBooking;
 
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Box,
-  Typography,
-  Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    Box,
+    Typography,
+    Alert,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Grid,
+//    Tooltip,
+    Popover,
 } from '@mui/material';
 import axios from "../api/axios";
 
+const BACKEND_URL = 'http://localhost:3000';
+
 const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
-  const [userId, setUserId] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [selectedBed, setSelectedBed] = useState('');
-  const [availableBeds, setAvailableBeds] = useState([]);
+    const [userId, setUserId] = useState('');
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+    const [selectedBed, setSelectedBed] = useState('');
+    const [availableBeds, setAvailableBeds] = useState([]);
+    const [bedImages, setBedImages] = useState({});
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [activeBed, setActiveBed] = useState(null);
+    // Добавляем состояния для дат
+    const [bookingStartDate, setBookingStartDate] = useState(startDate);
+    const [bookingEndDate, setBookingEndDate] = useState(endDate);
 
-  useEffect(() => {
-    if (open && room && room.accommodation_type === 'bed' && startDate && endDate) {
-      axios.get(`/rooms/${room.id}/available-beds`, {
-        params: {
-          start_date: startDate,
-          end_date: endDate
+    useEffect(() => {
+        if (open && room && room.accommodation_type === 'bed' && bookingStartDate && bookingEndDate) {
+            // Сбрасываем предыдущий выбор койки при изменении дат
+            setSelectedBed('');
+            setError('');
+
+            axios.get(`/rooms/${room.id}/available-beds`, {
+                params: {
+                    start_date: bookingStartDate,
+                    end_date: bookingEndDate
+                }
+            })
+                .then(response => {
+                    setAvailableBeds(response.data);
+                    response.data.forEach(bed => {
+                        axios.get(`/beds/${bed.id}/images`)
+                            .then(imgResponse => {
+                                setBedImages(prev => ({
+                                    ...prev,
+                                    [bed.id]: imgResponse.data
+                                }));
+                            })
+                            .catch(console.error);
+                    });
+                })
+                .catch(err => {
+                    console.error('Ошибка загрузки доступных койко-мест:', err);
+                    setError('Не удалось загрузить список доступных койко-мест');
+                });
         }
-      })
-      .then(response => {
-        setAvailableBeds(response.data);
-        setSelectedBed('');
-        setError('');
-      })
-      .catch(err => {
-        console.error('Ошибка загрузки доступных койко-мест:', err);
-        setError('Не удалось загрузить список доступных койко-мест');
-      });
-    }
-  }, [open, room, startDate, endDate]);
+    }, [open, room, bookingStartDate, bookingEndDate]);
+    const handleMouseEnter = (event, bed) => {
+        if (bedImages[bed.id]?.length > 0) {
+            setActiveBed(bed);
+            setAnchorEl(event.currentTarget);
+        }
+    };
 
-  const calculateTotalPrice = () => {
-    if (!startDate || !endDate) return 0;
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const daysCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    
-    let pricePerNight;
-    if (room.accommodation_type === 'bed' && selectedBed) {
-      const selectedBedData = availableBeds.find(bed => bed.id === selectedBed);
-      pricePerNight = selectedBedData ? selectedBedData.price_per_night : 0;
-    } else {
-      pricePerNight = room.price_per_night;
-    }
+    const handleMouseLeave = () => {
+        setActiveBed(null);
+        setAnchorEl(null);
+    };
 
-    return pricePerNight * daysCount;
-  };
+    const renderBedImage = () => {
+        if (!activeBed || !bedImages[activeBed.id]?.length) return null;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess(false);
+        const image = bedImages[activeBed.id][0];
+        return (
+            <Box sx={{ p: 1 }}>
+                <img
+                    src={`${BACKEND_URL}/uploads/${image.file_path}`}
+                    alt={`Койко-место ${activeBed.bed_number}`}
+                    style={{
+                        width: '200px',
+                        height: '150px',
+                        objectFit: 'cover',
+                        borderRadius: '4px'
+                    }}
+                />
+            </Box>
+        );
+    };
 
-    if (!startDate || !endDate) {
-      setError('Выберите даты проживания');
-      return;
-    }
+    const calculateTotalPrice = () => {
+        if (!startDate || !endDate) return 0;
 
-    if (!userId) {
-      setError('Введите ID пользователя');
-      return;
-    }
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const daysCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
-    if (room.accommodation_type === 'bed' && !selectedBed) {
-      setError('Выберите койко-место');
-      return;
-    }
+        let pricePerNight;
+        if (room.accommodation_type === 'bed' && selectedBed) {
+            const selectedBedData = availableBeds.find(bed => bed.id === selectedBed);
+            pricePerNight = selectedBedData ? selectedBedData.price_per_night : 0;
+        } else {
+            pricePerNight = room.price_per_night;
+        }
 
-    try {
-      const bookingData = {
-        user_id: parseInt(userId),
-        room_id: room.id,
-        start_date: startDate,
-        end_date: endDate
-      };
+        return pricePerNight * daysCount;
+    };
 
-      if (room.accommodation_type === 'bed') {
-        bookingData.bed_id = selectedBed;
-      }
-
-      await axios.post('/bookings', bookingData);
-      setSuccess(true);
-      
-      setTimeout(() => {
-        onClose();
-        setUserId('');
-        setSelectedBed('');
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         setError('');
         setSuccess(false);
-      }, 2000);
-    } catch (error) {
-      setError(error.response?.data || 'Произошла ошибка при бронировании');
-    }
-  };
 
-  const getDialogTitle = () => {
-    switch (room?.accommodation_type) {
-      case 'bed':
-        return 'Бронирование койко-места';
-      case 'apartment':
-        return 'Бронирование квартиры';
-      default:
-        return 'Бронирование комнаты';
-    }
-  };
+        if (!startDate || !endDate) {
+            setError('Выберите даты проживания');
+            return;
+        }
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{getDialogTitle()}</DialogTitle>
-      <DialogContent>
-        {success && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            Бронирование успешно создано!
-          </Alert>
-        )}
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-        {room && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h6">{room.name}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {room.address_street}, {room.address_city}
-            </Typography>
-            <Typography sx={{ mt: 2 }}>
-              Период проживания: {startDate || '-'} - {endDate || '-'}
-            </Typography>
+        if (!userId) {
+            setError('Введите ID пользователя');
+            return;
+        }
 
-            {room.accommodation_type === 'bed' && (
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Выберите койко-место</InputLabel>
-                <Select
-                  value={selectedBed}
-                  onChange={(e) => setSelectedBed(e.target.value)}
-                  label="Выберите койко-место"
+        if (room.accommodation_type === 'bed' && !selectedBed) {
+            setError('Выберите койко-место');
+            return;
+        }
+
+        if (startDate === endDate) {
+            setError('Дата выезда должна быть позже даты заезда');
+            return;
+        }
+
+        try {
+            const bookingData = {
+                user_id: parseInt(userId),
+                room_id: room.id,
+                start_date: startDate,
+                end_date: endDate
+            };
+
+            if (room.accommodation_type === 'bed') {
+                bookingData.bed_id = selectedBed;
+            }
+
+            await axios.post('/bookings', bookingData);
+            setSuccess(true);
+
+            setTimeout(() => {
+                onClose();
+                setUserId('');
+                setSelectedBed('');
+                setError('');
+                setSuccess(false);
+            }, 2000);
+        } catch (error) {
+            setError(error.response?.data || 'Произошла ошибка при бронировании');
+        }
+    };
+
+    const getDialogTitle = () => {
+        switch (room?.accommodation_type) {
+            case 'bed':
+                return 'Бронирование койко-места';
+            case 'apartment':
+                return 'Бронирование квартиры';
+            default:
+                return 'Бронирование комнаты';
+        }
+    };
+
+    const today = new Date().toISOString().split('T')[0];
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+            <DialogTitle>{getDialogTitle()}</DialogTitle>
+            <DialogContent>
+                {success && (
+                    <Alert severity="success" sx={{ mt: 2 }}>
+                        Бронирование успешно создано!
+                    </Alert>
+                )}
+                {error && (
+                    <Alert severity="error" sx={{ mt: 2 }}>
+                        {error}
+                    </Alert>
+                )}
+                {room && (
+                    <Box sx={{ mt: 2 }}>
+                        <Typography variant="h6">{room.name}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {room.address_street}, {room.address_city}
+                        </Typography>
+
+                        {/* Добавляем поля выбора дат */}
+                        <Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    label="Дата заезда"
+                                    type="date"
+                                    fullWidth
+                                    value={bookingStartDate}
+                                    onChange={(e) => setBookingStartDate(e.target.value)}
+                                    inputProps={{ min: today }}
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    label="Дата выезда"
+                                    type="date"
+                                    fullWidth
+                                    value={bookingEndDate}
+                                    onChange={(e) => setBookingEndDate(e.target.value)}
+                                    inputProps={{ min: bookingStartDate || today }}
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </Grid>
+                        </Grid>
+
+                        {/* Остальные элементы диалога... */}
+                        {room.accommodation_type === 'bed' && (
+                            <FormControl fullWidth sx={{ mt: 2 }}>
+                                <InputLabel>Выберите койко-место</InputLabel>
+                                <Select
+                                    value={selectedBed}
+                                    onChange={(e) => setSelectedBed(e.target.value)}
+                                    label="Выберите койко-место"
+                                >
+                                    {availableBeds.map(bed => (
+                                        <MenuItem
+                                            key={bed.id}
+                                            value={bed.id}
+                                            onMouseEnter={(e) => handleMouseEnter(e, bed)}
+                                            onMouseLeave={handleMouseLeave}
+                                        >
+                                            Место {bed.bed_number} - {bed.price_per_night} руб./ночь
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
+
+                        <TextField
+                            margin="dense"
+                            label="ID пользователя"
+                            type="number"
+                            fullWidth
+                            value={userId}
+                            onChange={(e) => setUserId(e.target.value)}
+                            sx={{ mt: 2 }}
+                        />
+
+                        <Typography variant="h6" sx={{ mt: 2 }}>
+                            Итого к оплате: {calculateTotalPrice()} руб.
+                        </Typography>
+                    </Box>
+                )}
+
+                {/* Popover для предпросмотра изображений */}
+                <Popover
+                    open={Boolean(anchorEl)}
+                    anchorEl={anchorEl}
+                    onClose={handleMouseLeave}
+                    anchorOrigin={{
+                        vertical: 'center',
+                        horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                        vertical: 'center',
+                        horizontal: 'left',
+                    }}
+                    sx={{
+                        pointerEvents: 'none',
+                    }}
                 >
-                  {availableBeds.map(bed => (
-                    <MenuItem key={bed.id} value={bed.id}>
-                      Место {bed.bed_number} - {bed.price_per_night} руб./ночь
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-
-            <TextField
-              margin="dense"
-              label="ID пользователя"
-              type="number"
-              fullWidth
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              sx={{ mt: 2 }}
-            />
-
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              Итого к оплате: {calculateTotalPrice()} руб.
-            </Typography>
-          </Box>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="inherit">
-          Отмена
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          color="primary" 
-          variant="contained"
-          disabled={
-            !userId || 
-            !startDate || 
-            !endDate || 
-            (room?.accommodation_type === 'bed' && !selectedBed)
-          }
-        >
-          Забронировать
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
+                    {renderBedImage()}
+                </Popover>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose} color="inherit">
+                    Отмена
+                </Button>
+                <Button
+                    onClick={handleSubmit}
+                    color="primary"
+                    variant="contained"
+                    disabled={!userId ||
+                        !bookingStartDate ||
+                        !bookingEndDate ||
+                        bookingStartDate === bookingEndDate ||
+                        (room?.accommodation_type === 'bed' && !selectedBed)}
+                >
+                    Забронировать
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
 };
 
 export default BookingDialog;
@@ -2220,6 +2458,39 @@ const LocationPicker = ({ onLocationSelect }) => {
         fullscreenControl: false,
     };
 
+    // Добавьте новую функцию handleLocationSelect перед onMapLoad
+    const handleLocationSelect = (location) => {
+        const getAddressComponent = (type) => {
+            return location.address_components?.find(
+                component => component.types.includes(type)
+            )?.long_name || '';
+        };
+
+        // Получаем номер дома и улицу отдельно
+        const streetNumber = getAddressComponent('street_number');
+        const route = getAddressComponent('route');
+
+        // Формируем полный адрес улицы с номером дома
+        const fullStreetAddress = route
+            ? (streetNumber ? `${route}, ${streetNumber}` : route)
+            : '';
+
+        // Передаем данные в родительский компонент
+        onLocationSelect({
+            latitude: location.latitude,
+            longitude: location.longitude,
+            formatted_address: location.formatted_address,
+            // Передаем сформированный адрес с номером дома
+            address_components: {
+                street: fullStreetAddress || getAddressComponent('sublocality') || '',
+                city: getAddressComponent('locality'),
+                state: getAddressComponent('administrative_area_level_1'),
+                country: getAddressComponent('country'),
+                postal_code: getAddressComponent('postal_code')
+            }
+        });
+    };
+
     const onMapLoad = useCallback((map) => {
         setMap(map);
         // Инициализируем поисковую строку после загрузки карты
@@ -2248,8 +2519,8 @@ const LocationPicker = ({ onLocationSelect }) => {
                 // Обновляем адрес
                 setAddress(place.formatted_address);
 
-                // Вызываем callback с данными
-                onLocationSelect({
+                // Вызываем обработчик с данными места
+                handleLocationSelect({
                     latitude: place.geometry.location.lat(),
                     longitude: place.geometry.location.lng(),
                     formatted_address: place.formatted_address,
@@ -2262,29 +2533,29 @@ const LocationPicker = ({ onLocationSelect }) => {
     const handleMapClick = useCallback((e) => {
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
-        
+
         setMarker({ lat, lng });
 
-        // Получаем адрес по координатам
         if (window.google) {
             const geocoder = new window.google.maps.Geocoder();
             geocoder.geocode(
-                { location: { lat, lng } }, 
+                { location: { lat, lng } },
                 (results, status) => {
                     if (status === 'OK' && results[0]) {
                         const place = results[0];
                         setAddress(place.formatted_address);
-                        onLocationSelect({
+                        const location = {
                             latitude: lat,
                             longitude: lng,
                             formatted_address: place.formatted_address,
                             address_components: place.address_components
-                        });
+                        };
+                        handleLocationSelect(location);
                     }
                 }
             );
         }
-    }, [onLocationSelect]);
+    }, []);
 
     const handleCurrentLocation = () => {
         if (navigator.geolocation) {
@@ -2309,7 +2580,7 @@ const LocationPicker = ({ onLocationSelect }) => {
                                 if (status === 'OK' && results[0]) {
                                     const place = results[0];
                                     setAddress(place.formatted_address);
-                                    onLocationSelect({
+                                    handleLocationSelect({
                                         latitude: lat,
                                         longitude: lng,
                                         formatted_address: place.formatted_address,
@@ -2350,7 +2621,7 @@ const LocationPicker = ({ onLocationSelect }) => {
                         ),
                         endAdornment: (
                             <InputAdornment position="end">
-                                <IconButton 
+                                <IconButton
                                     onClick={handleCurrentLocation}
                                     title="Мое местоположение"
                                 >
@@ -2450,7 +2721,8 @@ import {
     MobileStepper, CardMedia,
     ToggleButton,
     ToggleButtonGroup,
-    Paper
+    Paper,
+    ButtonGroup
 } from "@mui/material";
 import {
     KeyboardArrowLeft, KeyboardArrowRight,
@@ -2460,7 +2732,8 @@ import {
     Apartment as ApartmentIcon,
     Home as HomeIcon,
     ViewList as ViewListIcon,
-    Map as MapIcon
+    Map as MapIcon,
+    Search as SearchIcon
 } from '@mui/icons-material';
 import BookingDialog from "./BookingDialog";
 import MapView from './MapView';
@@ -2548,8 +2821,18 @@ const RoomList = () => {
         city: "",
         country: "",
         start_date: "",
-        end_date: ""
+        end_date: "",
+        type: ''
     });
+
+    const handleTypeFilter = (type) => {
+        setFilters(prev => ({
+            ...prev,
+            type: prev.type === type ? '' : type // сброс фильтра при повторном нажатии
+        }));
+    };
+
+
     const [viewMode, setViewMode] = useState('list'); // 'list' или 'map'
     const [roomsWithCoordinates, setRoomsWithCoordinates] = useState([]);
     const geocodeRooms = async (rooms) => {
@@ -2590,8 +2873,8 @@ const RoomList = () => {
     const fetchRooms = useCallback(async () => {
         try {
             const params = new URLSearchParams();
-    
-            // Добавляем параметры только если они заданы
+
+            // Добавляем базовые параметры
             if (filters.capacity && parseInt(filters.capacity) > 0) {
                 params.append('capacity', filters.capacity);
             }
@@ -2607,27 +2890,43 @@ const RoomList = () => {
             if (filters.country?.trim()) {
                 params.append('country', filters.country.trim());
             }
-            
+
+            // Добавляем фильтр по типу размещения
+            if (filters.type) {
+                params.append('accommodation_type', filters.type);
+                if (filters.type === 'room') {
+                    params.append('has_private_rooms', 'true');
+                }
+            }
+
             // Всегда отправляем даты для проверки доступности
             const today = new Date().toISOString().split('T')[0];
             params.append('start_date', filters.start_date || today);
             params.append('end_date', filters.end_date || today);
-    
+
             const response = await axios.get(`/rooms?${params.toString()}`);
             const roomsData = response.data || [];
-    
-            // Добавляем дополнительную фильтрацию на фронтенде если нужно
+
+            // Фильтрация на фронтенде
             const filteredRooms = roomsData.filter(room => {
-                // Проверяем все условия доступности
+                // Базовая проверка доступности
                 if (room.accommodation_type === 'bed' && room.available_beds <= 0) {
                     return false;
                 }
-                
-                // Дополнительные условия можно добавить здесь
-                
+
+                // Проверка типа размещения
+                if (filters.type && room.accommodation_type !== filters.type) {
+                    return false;
+                }
+
+                // Проверка для приватных комнат
+                if (filters.type === 'room' && room.is_shared) {
+                    return false;
+                }
+
                 return true;
             });
-    
+
             // Получаем изображения для отфильтрованных комнат
             const roomsWithImages = await Promise.all(
                 filteredRooms.map(async (room) => {
@@ -2638,16 +2937,15 @@ const RoomList = () => {
                     };
                 })
             );
-    
+
             setRooms(roomsWithImages);
-            setRoomsWithCoordinates(roomsWithImages.filter(room => 
+            setRoomsWithCoordinates(roomsWithImages.filter(room =>
                 room.latitude && room.longitude));
-    
+
         } catch (error) {
             console.error("Ошибка при получении списка комнат:", error);
         }
     }, [filters]);
-
 
     const handleDateChange = (field, value) => {
         setFilters(prev => {
@@ -2760,76 +3058,111 @@ const RoomList = () => {
     return (
         <div>
 
-            <Grid container spacing={2} sx={{ marginBottom: 4 }}>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Дата заезда"
-                        type="date"
-                        fullWidth
-                        InputLabelProps={{ shrink: true }}
-                        value={filters.start_date}
-                        onChange={(e) => handleDateChange('start_date', e.target.value)}
-                        inputProps={{ min: today }}
-                    />
+// В RoomList.js обновляем стили фильтров
+            <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
+                {/* Первая строка с датами, городом, страной и ценами */}
+                <Grid item container spacing={2} xs={12}>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Дата заезда"
+                            type="date"
+                            size="small"
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                            value={filters.start_date}
+                            onChange={(e) => handleDateChange('start_date', e.target.value)}
+                            inputProps={{ min: today }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Дата выезда"
+                            type="date"
+                            size="small"
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                            value={filters.end_date}
+                            onChange={(e) => handleDateChange('end_date', e.target.value)}
+                            inputProps={{ min: filters.start_date || today }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Город"
+                            size="small"
+                            fullWidth
+                            value={filters.city}
+                            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Страна"
+                            size="small"
+                            fullWidth
+                            value={filters.country}
+                            onChange={(e) => setFilters({ ...filters, country: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Мин. цена"
+                            type="number"
+                            size="small"
+                            fullWidth
+                            value={filters.min_price}
+                            onChange={(e) => setFilters({ ...filters, min_price: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            label="Макс. цена"
+                            type="number"
+                            size="small"
+                            fullWidth
+                            value={filters.max_price}
+                            onChange={(e) => setFilters({ ...filters, max_price: e.target.value })}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Дата выезда"
-                        type="date"
-                        fullWidth
-                        InputLabelProps={{ shrink: true }}
-                        value={filters.end_date}
-                        onChange={(e) => handleDateChange('end_date', e.target.value)}
-                        inputProps={{ min: filters.start_date || today }}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <TextField
-                        label="Вместимость"
-                        type="number"
-                        fullWidth
-                        value={filters.capacity}
-                        onChange={(e) => setFilters({ ...filters, capacity: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <TextField
-                        label="Мин. цена"
-                        type="number"
-                        fullWidth
-                        value={filters.min_price}
-                        onChange={(e) => setFilters({ ...filters, min_price: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <TextField
-                        label="Макс. цена"
-                        type="number"
-                        fullWidth
-                        value={filters.max_price}
-                        onChange={(e) => setFilters({ ...filters, max_price: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Город"
-                        fullWidth
-                        value={filters.city}
-                        onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Страна"
-                        fullWidth
-                        value={filters.country}
-                        onChange={(e) => setFilters({ ...filters, country: e.target.value })}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <Button variant="contained" color="primary" onClick={fetchRooms}>
-                        Фильтровать
-                    </Button>
+
+                {/* Вторая строка с кнопками */}
+                <Grid item container xs={12} spacing={2} alignItems="center" justifyContent="flex-start">
+                    <Grid item>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={fetchRooms}
+                            startIcon={<SearchIcon />}
+                        >
+                            Найти
+                        </Button>
+                    </Grid>
+                    <Grid item>
+                        <ButtonGroup variant="outlined">
+                            <Button
+                                onClick={() => handleTypeFilter('apartment')}
+                                startIcon={<ApartmentIcon />}
+                                color={filters.type === 'apartment' ? 'primary' : 'inherit'}
+                            >
+                                Аппарты
+                            </Button>
+                            <Button
+                                onClick={() => handleTypeFilter('room')}
+                                startIcon={<HotelIcon />}
+                                color={filters.type === 'room' ? 'primary' : 'inherit'}
+                            >
+                                Приватка
+                            </Button>
+                            <Button
+                                onClick={() => handleTypeFilter('bed')}
+                                startIcon={<SingleBedIcon />}
+                                color={filters.type === 'bed' ? 'primary' : 'inherit'}
+                            >
+                                Кровать
+                            </Button>
+                        </ButtonGroup>
+                    </Grid>
                 </Grid>
             </Grid>
             {viewToggle}
@@ -3067,12 +3400,50 @@ const AddRoom = () => {
     });
 
     const [beds, setBeds] = useState([
-        { bed_number: "1", price_per_night: 0 }
+        { bed_number: "1", price_per_night: 0, images: [], imagePreviewUrls: [] }
     ]);
     const [images, setImages] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
     const [errorMessage, setErrorMessage] = useState("");
     const [isSuccess, setIsSuccess] = useState(false);
+
+    const handleBedImageChange = (index, e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        const validFiles = files.filter(file => {
+            if (!file.type.startsWith('image/')) {
+                setErrorMessage("Можно загружать только изображения");
+                return false;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                setErrorMessage("Размер файла не должен превышать 5MB");
+                return false;
+            }
+            return true;
+        });
+
+        if (validFiles.length === 0) return;
+
+        const newBeds = [...beds];
+        newBeds[index] = {
+            ...newBeds[index],
+            images: [...(newBeds[index].images || []), ...validFiles]
+        };
+
+        // Создаем превью для изображений
+        validFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                newBeds[index].imagePreviewUrls = [
+                    ...(newBeds[index].imagePreviewUrls || []),
+                    reader.result
+                ];
+                setBeds([...newBeds]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
 
     const handleLocationSelect = (location) => {
         setRoom(prev => ({
@@ -3080,21 +3451,11 @@ const AddRoom = () => {
             latitude: location.latitude,
             longitude: location.longitude,
             formatted_address: location.formatted_address,
-            address_street: location.address_components.find(
-                c => c.types.includes('route')
-            )?.long_name || '',
-            address_city: location.address_components.find(
-                c => c.types.includes('locality')
-            )?.long_name || '',
-            address_state: location.address_components.find(
-                c => c.types.includes('administrative_area_level_1')
-            )?.long_name || '',
-            address_country: location.address_components.find(
-                c => c.types.includes('country')
-            )?.long_name || '',
-            address_postal_code: location.address_components.find(
-                c => c.types.includes('postal_code')
-            )?.long_name || ''
+            address_street: location.address_components?.street || '',
+            address_city: location.address_components?.city || '',
+            address_state: location.address_components?.state || '',
+            address_country: location.address_components?.country || '',
+            address_postal_code: location.address_components?.postal_code || ''
         }));
     };
 
@@ -3151,24 +3512,39 @@ const AddRoom = () => {
             const roomResponse = await axios.post("/rooms", roomData);
             const roomId = roomResponse.data.id;
 
-            // Если тип размещения - койко-места, создаем кровати
+            // Если тип размещения - койко-места, создаем кровати и загружаем их изображения
             if (room.accommodation_type === 'bed' && beds.length > 0) {
                 await Promise.all(
                     beds.map(async (bed) => {
                         try {
-                            await axios.post(`/rooms/${roomId}/beds`, {
+                            // Создаем койко-место
+                            const bedResponse = await axios.post(`/rooms/${roomId}/beds`, {
                                 bed_number: bed.bed_number,
                                 price_per_night: parseFloat(bed.price_per_night)
                             });
+
+                            // Если есть изображения для койко-места, загружаем их
+                            if (bed.images && bed.images.length > 0) {
+                                const formData = new FormData();
+                                bed.images.forEach(image => {
+                                    formData.append('images', image);
+                                });
+
+                                await axios.post(`/beds/${bedResponse.data.id}/images`, formData, {
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data'
+                                    }
+                                });
+                            }
                         } catch (error) {
-                            console.error('Ошибка добавления кровати:', error);
+                            console.error('Ошибка добавления кровати или её изображений:', error);
                             throw error;
                         }
                     })
                 );
             }
 
-            // Загружаем изображения
+            // Загружаем общие изображения комнаты
             if (images.length > 0) {
                 const formData = new FormData();
                 images.forEach(image => {
@@ -3183,6 +3559,7 @@ const AddRoom = () => {
             }
 
             setIsSuccess(true);
+            // Сброс формы
             setRoom({
                 name: "",
                 accommodation_type: "room",
@@ -3201,7 +3578,7 @@ const AddRoom = () => {
                 longitude: null,
                 formatted_address: ''
             });
-            setBeds([{ bed_number: "1", price_per_night: 0 }]);
+            setBeds([{ bed_number: "1", price_per_night: 0, images: [], imagePreviewUrls: [] }]);
             setImages([]);
             setPreviewUrls([]);
         } catch (error) {
@@ -3300,6 +3677,64 @@ const AddRoom = () => {
                                                 setBeds(newBeds);
                                             }}
                                         />
+                                        <Box>
+                                            <Button
+                                                variant="contained"
+                                                component="label"
+                                                size="small"
+                                            >
+                                                Фото кровати
+                                                <input
+                                                    type="file"
+                                                    hidden
+                                                    multiple
+                                                    accept="image/*"
+                                                    onChange={(e) => handleBedImageChange(index, e)}
+                                                />
+                                            </Button>
+                                            {bed.imagePreviewUrls && bed.imagePreviewUrls.length > 0 && (
+                                                <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                                                    {bed.imagePreviewUrls.map((url, imgIndex) => (
+                                                        <Box
+                                                            key={imgIndex}
+                                                            sx={{
+                                                                position: 'relative',
+                                                                width: 60,
+                                                                height: 60
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src={url}
+                                                                alt={`Preview ${imgIndex}`}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '4px'
+                                                                }}
+                                                            />
+                                                            <IconButton
+                                                                size="small"
+                                                                sx={{
+                                                                    position: 'absolute',
+                                                                    top: -8,
+                                                                    right: -8,
+                                                                    bgcolor: 'background.paper'
+                                                                }}
+                                                                onClick={() => {
+                                                                    const newBeds = [...beds];
+                                                                    newBeds[index].images.splice(imgIndex, 1);
+                                                                    newBeds[index].imagePreviewUrls.splice(imgIndex, 1);
+                                                                    setBeds(newBeds);
+                                                                }}
+                                                            >
+                                                                <DeleteIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Box>
+                                                    ))}
+                                                </Box>
+                                            )}
+                                        </Box>
                                         <IconButton onClick={() => {
                                             const newBeds = [...beds];
                                             newBeds.splice(index, 1);
@@ -3309,6 +3744,7 @@ const AddRoom = () => {
                                         </IconButton>
                                     </Box>
                                 ))}
+
                                 <Button
                                     variant="outlined"
                                     onClick={() => setBeds([...beds, { bed_number: `${beds.length + 1}`, price_per_night: 0 }])}
