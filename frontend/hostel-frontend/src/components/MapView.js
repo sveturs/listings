@@ -59,12 +59,12 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
         if (rooms?.length > 0) {
             const bounds = new window.google.maps.LatLngBounds();
             let hasValidCoords = false;
-            
+
             rooms.forEach(room => {
                 if (room.latitude && room.longitude) {
                     const lat = parseFloat(room.latitude);
                     const lng = parseFloat(room.longitude);
-                    
+
                     if (!isNaN(lat) && !isNaN(lng)) {
                         bounds.extend({ lat, lng });
                         hasValidCoords = true;
@@ -72,7 +72,7 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                     }
                 }
             });
-            
+
             if (hasValidCoords) {
                 map.fitBounds(bounds);
             }
@@ -218,26 +218,40 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                     if (room.latitude && room.longitude) {
                         const lat = parseFloat(room.latitude);
                         const lng = parseFloat(room.longitude);
-                        
+
                         if (!isNaN(lat) && !isNaN(lng)) {
-                            console.log(`Rendering marker for ${room.name} at ${lat}, ${lng}`); // Отладка
+                            const icon = {
+                                path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",  // SVG path для капли
+                                fillColor: room.accommodation_type === 'bed'
+                                    ? '#1976d2'
+                                    : room.accommodation_type === 'apartment'
+                                        ? '#dc004e'
+                                        : '#4caf50',
+                                fillOpacity: 1,
+                                strokeWeight: 1,
+                                strokeColor: '#ffffff',
+                                scale: 2,
+                                anchor: new window.google.maps.Point(12, 22),
+                                labelOrigin: new window.google.maps.Point(12, 9)
+                            };
+
+                            const label = {
+                                text: room.accommodation_type === 'bed'
+                                    ? '🛏️'
+                                    : room.accommodation_type === 'apartment'
+                                        ? '🏢'
+                                        : '🏠',
+                                color: '#FFFFFF',
+                                fontSize: '14px'
+                            };
+
                             return (
                                 <Marker
                                     key={room.id}
                                     position={{ lat, lng }}
                                     onClick={() => setSelectedRoom(room)}
-                                    icon={{
-                                        path: 'M -10,0 A10,10 0 1,1 10,0 A10,10 0 1,1 -10,0', // Используем SVG path вместо google.maps.SymbolPath
-                                        fillColor: room.accommodation_type === 'bed'
-                                            ? '#1976d2'
-                                            : room.accommodation_type === 'apartment'
-                                                ? '#dc004e'
-                                                : '#4caf50',
-                                        fillOpacity: 1,
-                                        strokeWeight: 1,
-                                        strokeColor: '#ffffff',
-                                        scale: 1,
-                                    }}
+                                    icon={icon}
+                                    label={label}
                                 />
                             );
                         }

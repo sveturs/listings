@@ -263,23 +263,7 @@ const RoomList = () => {
     useEffect(() => {
         fetchRooms();
     }, [fetchRooms]);
-    const viewToggle = (
-        <Paper sx={{ p: 1, mb: 2 }}>
-            <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={(e, newMode) => newMode && setViewMode(newMode)}
-                aria-label="view mode"
-            >
-                <ToggleButton value="list" aria-label="list view">
-                    <ViewListIcon /> Список
-                </ToggleButton>
-                <ToggleButton value="map" aria-label="map view">
-                    <MapIcon /> Карта
-                </ToggleButton>
-            </ToggleButtonGroup>
-        </Paper>
-    );
+
     const AccommodationInfo = ({ room }) => {
         const getAccommodationInfo = () => {
             switch (room.accommodation_type) {
@@ -345,7 +329,6 @@ const RoomList = () => {
     return (
         <div>
 
-// В RoomList.js обновляем стили фильтров
             <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
                 {/* Первая строка с датами, городом, страной и ценами */}
                 <Grid item container spacing={2} xs={12}>
@@ -414,7 +397,7 @@ const RoomList = () => {
                 </Grid>
 
                 {/* Вторая строка с кнопками */}
-                <Grid item container xs={12} spacing={2} alignItems="center" justifyContent="flex-start">
+                <Grid item container xs={12} spacing={2} alignItems="center">
                     <Grid item>
                         <Button
                             variant="contained"
@@ -426,7 +409,18 @@ const RoomList = () => {
                         </Button>
                     </Grid>
                     <Grid item>
-                        <ButtonGroup variant="outlined">
+                        <ButtonGroup
+                            variant="outlined"
+                            sx={{
+                                '& .MuiButton-root': {
+                                    borderColor: '#1976d2',
+                                    '&:hover': {
+                                        borderColor: '#1976d2',
+                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                    }
+                                }
+                            }}
+                        >
                             <Button
                                 onClick={() => handleTypeFilter('apartment')}
                                 startIcon={<ApartmentIcon />}
@@ -450,9 +444,39 @@ const RoomList = () => {
                             </Button>
                         </ButtonGroup>
                     </Grid>
+                    <Grid item sx={{ marginLeft: 'auto' }}>
+                        <ToggleButtonGroup
+                            value={viewMode}
+                            exclusive
+                            onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                            aria-label="view mode"
+                            size="small"
+                            sx={{
+                                border: '1px solid rgba(25, 118, 210, 0.5)',
+                                '& .MuiToggleButton-root': {
+                                    '&.Mui-selected': {
+                                        backgroundColor: '#1976d2',
+                                        color: 'white',
+                                        '&:hover': {
+                                            backgroundColor: '#1565c0',
+                                        }
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                    }
+                                }
+                            }}
+                        >
+                            <ToggleButton value="list" aria-label="list view">
+                                <ViewListIcon /> Список
+                            </ToggleButton>
+                            <ToggleButton value="map" aria-label="map view">
+                                <MapIcon /> Карта
+                            </ToggleButton>
+                        </ToggleButtonGroup>
+                    </Grid>
                 </Grid>
             </Grid>
-            {viewToggle}
             <Box>
                 {viewMode === 'map' ? (
                     <LoadScript
@@ -479,6 +503,11 @@ const RoomList = () => {
                                     display: 'flex',
                                     flexDirection: 'column',
                                     height: '100%',
+                                    border: '1px solid rgba(25, 118, 210, 0.2)',
+                                    boxShadow: '0 2px 4px rgba(25, 118, 210, 0.1)',
+                                    '&:hover': {
+                                        boxShadow: '0 4px 8px rgba(25, 118, 210, 0.2)',
+                                    },
                                     '& .MuiCardContent-root': {
                                         padding: '12px',
                                     },
@@ -582,7 +611,13 @@ const RoomList = () => {
                                                     sx={{
                                                         minWidth: 'auto',
                                                         padding: '4px 8px',
-                                                        fontSize: '0.8rem'
+                                                        fontSize: '0.8rem',
+                                                        borderColor: '#1976d2',
+                                                        color: '#1976d2',
+                                                        '&:hover': {
+                                                            borderColor: '#1565c0',
+                                                            backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                                        }
                                                     }}
                                                     onClick={() => {
                                                         setSelectedRoom(room);
@@ -599,7 +634,11 @@ const RoomList = () => {
                                                 sx={{
                                                     minWidth: 'auto',
                                                     padding: '4px 8px',
-                                                    fontSize: '0.8rem'
+                                                    fontSize: '0.8rem',
+                                                    boxShadow: '0 2px 4px rgba(25, 118, 210, 0.2)',
+                                                    '&:hover': {
+                                                        boxShadow: '0 4px 8px rgba(25, 118, 210, 0.3)',
+                                                    }
                                                 }}
                                                 onClick={() => handleBooking(room)}
                                                 disabled={!filters.start_date || !filters.end_date}
