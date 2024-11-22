@@ -33,7 +33,7 @@ func main() {
 
 	// Настройка CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3001,http://localhost:3000",
+		AllowOrigins:     "http://192.168.100.14:3001,http://192.168.100.14:3000",
 		AllowMethods:     "GET,POST,DELETE,PUT",
 		AllowHeaders:     "Origin, Content-Type, Accept",
 		ExposeHeaders:    "Content-Length",
@@ -1009,5 +1009,5 @@ WHERE 1=1
 	// (оставлено без изменений для краткости)
 
 	// Запуск приложения
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen("0.0.0.0:3000"))
 }

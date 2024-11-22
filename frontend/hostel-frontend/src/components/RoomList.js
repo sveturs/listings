@@ -26,7 +26,7 @@ import BookingDialog from "./BookingDialog";
 import MapView from './MapView';
 
 
-const BACKEND_URL = 'http://localhost:3000';
+const BACKEND_URL = 'http://192.168.100.14:3000';
 
 const ImageGallery = ({ images, open, onClose }) => {
     const [activeStep, setActiveStep] = useState(0);

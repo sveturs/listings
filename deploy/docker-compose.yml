@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: hostel_db
     ports:
       - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
 
   backend:
     build:
@@ -19,13 +21,23 @@ services:
       - ../backend/.env
     depends_on:
       - db
+    command: ["go", "run", "main.go"]
+    networks:
+      - hostel_network
 
-      
-frontend:
-  build:
-    context: ../frontend/hostel-frontend
-  ports:
-    - "3001:3000"
-  environment:
-    - REACT_APP_API_URL=http://localhost:3000
+  frontend:
+    build:
+      context: ../frontend/hostel-frontend
+    ports:
+      - "3001:3000"
+    environment:
+      - REACT_APP_API_URL=http://192.168.100.14:3000
+    networks:
+      - hostel_network
 
+volumes:
+  db_data:
+
+networks:
+  hostel_network:
+    driver: bridge

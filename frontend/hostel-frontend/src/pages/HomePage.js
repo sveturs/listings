@@ -23,9 +23,7 @@ const HomePage = () => (
       </Toolbar>
     </AppBar>
     <Container sx={{ marginTop: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Список комнат
-      </Typography>
+
       <RoomList />
     </Container>
   </div>

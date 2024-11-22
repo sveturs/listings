@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import axios from "../api/axios";
 
-const BACKEND_URL = 'http://localhost:3000';
+const BACKEND_URL = 'http://192.168.100.14:3000';
 
 const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
     const [userId, setUserId] = useState('');

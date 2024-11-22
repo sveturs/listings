@@ -17,7 +17,7 @@ import {
     MyLocation as MyLocationIcon,
 } from '@mui/icons-material';
 
-const BACKEND_URL = 'http://localhost:3000';
+const BACKEND_URL = 'http://192.168.100.14:3000';
 
 const mapContainerStyle = {
     width: '100%',
