@@ -84,7 +84,25 @@ func main() {
 
 		return fileName, nil
 	}
+	// Удаление бронирования комнаты
+	app.Delete("/rooms/:roomId/bookings/:bookingId", func(c *fiber.Ctx) error {
+		bookingID := c.Params("bookingId")
+		_, err := pool.Exec(context.Background(), "DELETE FROM bookings WHERE id = $1", bookingID)
+		if err != nil {
+			return c.Status(500).SendString("Ошибка удаления бронирования")
+		}
+		return c.SendString("Бронирование удалено")
+	})
 
+	// Удаление бронирования койко-места
+	app.Delete("/beds/:bedId/bookings/:bookingId", func(c *fiber.Ctx) error {
+		bookingID := c.Params("bookingId")
+		_, err := pool.Exec(context.Background(), "DELETE FROM bed_bookings WHERE id = $1", bookingID)
+		if err != nil {
+			return c.Status(500).SendString("Ошибка удаления бронирования")
+		}
+		return c.SendString("Бронирование удалено")
+	})
 	// Добавляем эндпоинт для загрузки изображений
 	app.Post("/rooms/:id/images", func(c *fiber.Ctx) error {
 		log.Printf("Начало загрузки изображений")

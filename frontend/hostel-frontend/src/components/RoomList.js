@@ -14,8 +14,8 @@ import {
 import {
     KeyboardArrowLeft, KeyboardArrowRight,
     Close as CloseIcon,
-    SingleBed as SingleBedIcon,
-    Hotel as HotelIcon,
+    SingleBed as HotelIcon,
+    Hotel as SingleBedIcon,
     Apartment as ApartmentIcon,
     Home as HomeIcon,
     ViewList as ViewListIcon,
@@ -271,14 +271,14 @@ const RoomList = () => {
                     return {
                         title: 'Койко-место',
                         details: `Доступно ${room.available_beds} из ${room.total_beds} мест`,
-                        icon: <SingleBedIcon />,
+                        icon: <HotelIcon />,
                         shared: true
                     };
                 case 'room':
                     return {
                         title: room.is_shared ? 'Общая комната' : 'Отдельная комната',
                         details: `Вместимость: ${room.capacity} чел.`,
-                        icon: <HotelIcon />,
+                        icon: <SingleBedIcon />,
                         shared: room.is_shared
                     };
                 case 'apartment':
