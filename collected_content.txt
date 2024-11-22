@@ -400,22 +400,21 @@ func main() {
 
 		// Обновленный запрос, который правильно проверяет пересечение периодов бронирования
 		query := `
-			SELECT b.id, b.bed_number, b.price_per_night
-			FROM beds b
-			WHERE b.room_id = $1
-			AND b.is_available = true
-			AND NOT EXISTS (
-				SELECT 1
-				FROM bed_bookings bb
-				WHERE bb.bed_id = b.id
-				AND bb.status = 'confirmed'
-				AND (
-					(bb.start_date <= $3 AND bb.end_date >= $2) OR
-					(bb.start_date >= $2 AND bb.start_date <= $3)
-				)
-			)
-			ORDER BY b.bed_number
-		`
+    SELECT b.id, b.bed_number, b.price_per_night
+    FROM beds b
+    WHERE b.room_id = $1
+    AND b.is_available = true
+    AND NOT EXISTS (
+        SELECT 1
+        FROM bed_bookings bb
+        WHERE bb.bed_id = b.id
+        AND bb.status = 'confirmed'
+        AND (
+            (bb.start_date <= $3 AND bb.end_date >= $2) -- Проверяем пересечение периодов
+        )
+    )
+    ORDER BY b.bed_number
+`
 
 		rows, err := pool.Query(context.Background(), query, roomID, startDate, endDate)
 		if err != nil {
@@ -468,32 +467,29 @@ func main() {
 
 		baseQuery := `
 		WITH room_availability AS (
-			SELECT 
-				r.id,
-				COALESCE(r.total_beds, 0) as total_beds,
-				CASE 
-					WHEN r.accommodation_type = 'bed' THEN (
-						SELECT COALESCE(COUNT(*), 0)  -- Добавили COALESCE здесь
-						FROM beds b2
-						WHERE b2.room_id = r.id
-						AND b2.is_available = true
-						AND b2.id NOT IN (
-							SELECT bb.bed_id
-							FROM bed_bookings bb
-							WHERE bb.status = 'confirmed'
-							AND bb.start_date <= $2
-							AND bb.end_date >= $1
-						)
-					)
-					ELSE 
-						CASE WHEN EXISTS (
-							SELECT 1 FROM bookings b
-							WHERE b.room_id = r.id
-							AND b.status = 'confirmed'
-							AND b.start_date <= $2
-							AND b.end_date >= $1
-						) THEN 0 ELSE 1 END
-				END as available_count,
+    SELECT 
+        r.id,
+        COALESCE(r.total_beds, 0) as total_beds,
+        CASE 
+            WHEN r.accommodation_type = 'bed' THEN (
+                SELECT COALESCE(r.total_beds, 0) - COALESCE(COUNT(DISTINCT bb.bed_id), 0)
+                FROM beds b2
+                LEFT JOIN bed_bookings bb ON b2.id = bb.bed_id
+                WHERE b2.room_id = r.id
+                AND bb.status = 'confirmed'
+                AND bb.start_date <= $2  -- Дата окончания запрашиваемого периода
+                AND bb.end_date >= $1    -- Дата начала запрашиваемого периода
+                GROUP BY b2.room_id
+            )
+            ELSE 
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM bookings b
+                    WHERE b.room_id = r.id
+                    AND b.status = 'confirmed'
+                    AND b.start_date <= $2
+                    AND b.end_date >= $1
+                ) THEN 0 ELSE 1 END
+        END as available_count,
         CASE 
             WHEN r.accommodation_type = 'bed' THEN
                 COALESCE(
@@ -1386,6 +1382,28 @@ CREATE INDEX idx_bookings_user_id ON bookings(user_id);
 CREATE INDEX idx_bookings_room_id ON bookings(room_id);
 
 
+--- Содержимое файла: backend/migrations/0019_update_bed_availability_trigger.down.sql ---
+
+CREATE OR REPLACE FUNCTION update_available_beds()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE rooms r
+    SET available_beds = (
+        SELECT COUNT(*)
+        FROM beds b
+        WHERE b.room_id = NEW.room_id
+        AND b.is_available = true
+        AND b.id NOT IN (
+            SELECT bed_id
+            FROM bed_bookings
+            WHERE status = 'confirmed'
+        )
+    )
+    WHERE id = NEW.room_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 --- Содержимое файла: backend/migrations/0012_add_accommodation_types.up.sql ---
 
 -- 0012_add_accommodation_types.up.sql
@@ -1640,6 +1658,33 @@ CREATE INDEX idx_rooms_price ON rooms (price_per_night);
 CREATE INDEX idx_bookings_room_date ON bookings (room_id, start_date, end_date);
 
 
+--- Содержимое файла: backend/migrations/0019_update_bed_availability_trigger.up.sql ---
+
+-- Обновляем функцию подсчета доступных мест
+CREATE OR REPLACE FUNCTION update_available_beds()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Обновляем количество доступных мест для комнаты с учетом текущих броней
+    WITH current_bookings AS (
+        SELECT b.room_id,
+               COUNT(DISTINCT bb.bed_id) as booked_beds
+        FROM beds b
+        JOIN bed_bookings bb ON b.id = bb.bed_id
+        WHERE bb.status = 'confirmed'
+        AND bb.start_date <= CURRENT_DATE
+        AND bb.end_date >= CURRENT_DATE
+        GROUP BY b.room_id
+    )
+    UPDATE rooms r
+    SET available_beds = COALESCE(r.total_beds, 0) - COALESCE(cb.booked_beds, 0)
+    FROM current_bookings cb
+    WHERE r.id = cb.room_id
+    AND r.accommodation_type = 'bed';
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 --- Содержимое файла: frontend/hostel-frontend/src/components/MapView.js ---
 
 import React, { useState, useCallback } from 'react';
@@ -1703,12 +1748,12 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
         if (rooms?.length > 0) {
             const bounds = new window.google.maps.LatLngBounds();
             let hasValidCoords = false;
-            
+
             rooms.forEach(room => {
                 if (room.latitude && room.longitude) {
                     const lat = parseFloat(room.latitude);
                     const lng = parseFloat(room.longitude);
-                    
+
                     if (!isNaN(lat) && !isNaN(lng)) {
                         bounds.extend({ lat, lng });
                         hasValidCoords = true;
@@ -1716,7 +1761,7 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                     }
                 }
             });
-            
+
             if (hasValidCoords) {
                 map.fitBounds(bounds);
             }
@@ -1862,26 +1907,40 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                     if (room.latitude && room.longitude) {
                         const lat = parseFloat(room.latitude);
                         const lng = parseFloat(room.longitude);
-                        
+
                         if (!isNaN(lat) && !isNaN(lng)) {
-                            console.log(`Rendering marker for ${room.name} at ${lat}, ${lng}`); // Отладка
+                            const icon = {
+                                path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",  // SVG path для капли
+                                fillColor: room.accommodation_type === 'bed'
+                                    ? '#1976d2'
+                                    : room.accommodation_type === 'apartment'
+                                        ? '#dc004e'
+                                        : '#4caf50',
+                                fillOpacity: 1,
+                                strokeWeight: 1,
+                                strokeColor: '#ffffff',
+                                scale: 2,
+                                anchor: new window.google.maps.Point(12, 22),
+                                labelOrigin: new window.google.maps.Point(12, 9)
+                            };
+
+                            const label = {
+                                text: room.accommodation_type === 'bed'
+                                    ? '🛏️'
+                                    : room.accommodation_type === 'apartment'
+                                        ? '🏢'
+                                        : '🏠',
+                                color: '#FFFFFF',
+                                fontSize: '14px'
+                            };
+
                             return (
                                 <Marker
                                     key={room.id}
                                     position={{ lat, lng }}
                                     onClick={() => setSelectedRoom(room)}
-                                    icon={{
-                                        path: 'M -10,0 A10,10 0 1,1 10,0 A10,10 0 1,1 -10,0', // Используем SVG path вместо google.maps.SymbolPath
-                                        fillColor: room.accommodation_type === 'bed'
-                                            ? '#1976d2'
-                                            : room.accommodation_type === 'apartment'
-                                                ? '#dc004e'
-                                                : '#4caf50',
-                                        fillOpacity: 1,
-                                        strokeWeight: 1,
-                                        strokeColor: '#ffffff',
-                                        scale: 1,
-                                    }}
+                                    icon={icon}
+                                    label={label}
                                 />
                             );
                         }
@@ -2976,23 +3035,7 @@ const RoomList = () => {
     useEffect(() => {
         fetchRooms();
     }, [fetchRooms]);
-    const viewToggle = (
-        <Paper sx={{ p: 1, mb: 2 }}>
-            <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={(e, newMode) => newMode && setViewMode(newMode)}
-                aria-label="view mode"
-            >
-                <ToggleButton value="list" aria-label="list view">
-                    <ViewListIcon /> Список
-                </ToggleButton>
-                <ToggleButton value="map" aria-label="map view">
-                    <MapIcon /> Карта
-                </ToggleButton>
-            </ToggleButtonGroup>
-        </Paper>
-    );
+
     const AccommodationInfo = ({ room }) => {
         const getAccommodationInfo = () => {
             switch (room.accommodation_type) {
@@ -3058,7 +3101,6 @@ const RoomList = () => {
     return (
         <div>
 
-// В RoomList.js обновляем стили фильтров
             <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
                 {/* Первая строка с датами, городом, страной и ценами */}
                 <Grid item container spacing={2} xs={12}>
@@ -3127,7 +3169,7 @@ const RoomList = () => {
                 </Grid>
 
                 {/* Вторая строка с кнопками */}
-                <Grid item container xs={12} spacing={2} alignItems="center" justifyContent="flex-start">
+                <Grid item container xs={12} spacing={2} alignItems="center">
                     <Grid item>
                         <Button
                             variant="contained"
@@ -3139,7 +3181,18 @@ const RoomList = () => {
                         </Button>
                     </Grid>
                     <Grid item>
-                        <ButtonGroup variant="outlined">
+                        <ButtonGroup
+                            variant="outlined"
+                            sx={{
+                                '& .MuiButton-root': {
+                                    borderColor: '#1976d2',
+                                    '&:hover': {
+                                        borderColor: '#1976d2',
+                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                    }
+                                }
+                            }}
+                        >
                             <Button
                                 onClick={() => handleTypeFilter('apartment')}
                                 startIcon={<ApartmentIcon />}
@@ -3163,9 +3216,39 @@ const RoomList = () => {
                             </Button>
                         </ButtonGroup>
                     </Grid>
+                    <Grid item sx={{ marginLeft: 'auto' }}>
+                        <ToggleButtonGroup
+                            value={viewMode}
+                            exclusive
+                            onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                            aria-label="view mode"
+                            size="small"
+                            sx={{
+                                border: '1px solid rgba(25, 118, 210, 0.5)',
+                                '& .MuiToggleButton-root': {
+                                    '&.Mui-selected': {
+                                        backgroundColor: '#1976d2',
+                                        color: 'white',
+                                        '&:hover': {
+                                            backgroundColor: '#1565c0',
+                                        }
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                    }
+                                }
+                            }}
+                        >
+                            <ToggleButton value="list" aria-label="list view">
+                                <ViewListIcon /> Список
+                            </ToggleButton>
+                            <ToggleButton value="map" aria-label="map view">
+                                <MapIcon /> Карта
+                            </ToggleButton>
+                        </ToggleButtonGroup>
+                    </Grid>
                 </Grid>
             </Grid>
-            {viewToggle}
             <Box>
                 {viewMode === 'map' ? (
                     <LoadScript
@@ -3192,6 +3275,11 @@ const RoomList = () => {
                                     display: 'flex',
                                     flexDirection: 'column',
                                     height: '100%',
+                                    border: '1px solid rgba(25, 118, 210, 0.2)',
+                                    boxShadow: '0 2px 4px rgba(25, 118, 210, 0.1)',
+                                    '&:hover': {
+                                        boxShadow: '0 4px 8px rgba(25, 118, 210, 0.2)',
+                                    },
                                     '& .MuiCardContent-root': {
                                         padding: '12px',
                                     },
@@ -3295,7 +3383,13 @@ const RoomList = () => {
                                                     sx={{
                                                         minWidth: 'auto',
                                                         padding: '4px 8px',
-                                                        fontSize: '0.8rem'
+                                                        fontSize: '0.8rem',
+                                                        borderColor: '#1976d2',
+                                                        color: '#1976d2',
+                                                        '&:hover': {
+                                                            borderColor: '#1565c0',
+                                                            backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                                        }
                                                     }}
                                                     onClick={() => {
                                                         setSelectedRoom(room);
@@ -3303,7 +3397,7 @@ const RoomList = () => {
                                                     }}
                                                 >
                                                     Все ({room.images.length})
-                                                </Button>
+                                                </Button> 
                                             )}
                                             <Button
                                                 variant="contained"
@@ -3312,7 +3406,11 @@ const RoomList = () => {
                                                 sx={{
                                                     minWidth: 'auto',
                                                     padding: '4px 8px',
-                                                    fontSize: '0.8rem'
+                                                    fontSize: '0.8rem',
+                                                    boxShadow: '0 2px 4px rgba(25, 118, 210, 0.2)',
+                                                    '&:hover': {
+                                                        boxShadow: '0 4px 8px rgba(25, 118, 210, 0.3)',
+                                                    }
                                                 }}
                                                 onClick={() => handleBooking(room)}
                                                 disabled={!filters.start_date || !filters.end_date}

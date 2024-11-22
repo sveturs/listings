@@ -398,22 +398,21 @@ func main() {
 
 		// Обновленный запрос, который правильно проверяет пересечение периодов бронирования
 		query := `
-			SELECT b.id, b.bed_number, b.price_per_night
-			FROM beds b
-			WHERE b.room_id = $1
-			AND b.is_available = true
-			AND NOT EXISTS (
-				SELECT 1
-				FROM bed_bookings bb
-				WHERE bb.bed_id = b.id
-				AND bb.status = 'confirmed'
-				AND (
-					(bb.start_date <= $3 AND bb.end_date >= $2) OR
-					(bb.start_date >= $2 AND bb.start_date <= $3)
-				)
-			)
-			ORDER BY b.bed_number
-		`
+    SELECT b.id, b.bed_number, b.price_per_night
+    FROM beds b
+    WHERE b.room_id = $1
+    AND b.is_available = true
+    AND NOT EXISTS (
+        SELECT 1
+        FROM bed_bookings bb
+        WHERE bb.bed_id = b.id
+        AND bb.status = 'confirmed'
+        AND (
+            (bb.start_date <= $3 AND bb.end_date >= $2) -- Проверяем пересечение периодов
+        )
+    )
+    ORDER BY b.bed_number
+`
 
 		rows, err := pool.Query(context.Background(), query, roomID, startDate, endDate)
 		if err != nil {
@@ -465,33 +464,33 @@ func main() {
 		country := c.Query("country")
 
 		baseQuery := `
-		WITH room_availability AS (
-			SELECT 
-				r.id,
-				COALESCE(r.total_beds, 0) as total_beds,
-				CASE 
-					WHEN r.accommodation_type = 'bed' THEN (
-						SELECT COALESCE(COUNT(*), 0)  -- Добавили COALESCE здесь
-						FROM beds b2
-						WHERE b2.room_id = r.id
-						AND b2.is_available = true
-						AND b2.id NOT IN (
-							SELECT bb.bed_id
-							FROM bed_bookings bb
-							WHERE bb.status = 'confirmed'
-							AND bb.start_date <= $2
-							AND bb.end_date >= $1
-						)
-					)
-					ELSE 
-						CASE WHEN EXISTS (
-							SELECT 1 FROM bookings b
-							WHERE b.room_id = r.id
-							AND b.status = 'confirmed'
-							AND b.start_date <= $2
-							AND b.end_date >= $1
-						) THEN 0 ELSE 1 END
-				END as available_count,
+WITH room_availability AS (
+    SELECT 
+        r.id,
+        COALESCE(r.total_beds, 0) as total_beds,
+        CASE 
+            WHEN r.accommodation_type = 'bed' THEN 
+                COALESCE(
+                    r.total_beds - COALESCE((
+                        SELECT COUNT(DISTINCT bb.bed_id)
+                        FROM beds b2
+                        LEFT JOIN bed_bookings bb ON b2.id = bb.bed_id
+                        WHERE b2.room_id = r.id
+                        AND bb.status = 'confirmed'
+                        AND bb.start_date <= $2
+                        AND bb.end_date >= $1
+                    ), 0),
+                    r.total_beds
+                )
+            ELSE 
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM bookings b
+                    WHERE b.room_id = r.id
+                    AND b.status = 'confirmed'
+                    AND b.start_date <= $2
+                    AND b.end_date >= $1
+                ) THEN 0 ELSE 1 END
+        END as available_count,
         CASE 
             WHEN r.accommodation_type = 'bed' THEN
                 COALESCE(
@@ -536,8 +535,8 @@ WHERE 1=1
     AND (
         CASE 
             WHEN r.accommodation_type = 'bed' 
-            THEN ra.available_count > 0 AND ra.actual_price IS NOT NULL
-            ELSE ra.available_count = 1
+            THEN COALESCE(ra.available_count, 0) > 0 
+            ELSE COALESCE(ra.available_count, 1) = 1
         END
     )`
 
