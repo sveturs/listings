@@ -25,13 +25,12 @@ type RoomImage struct {
 	FileSize    int       `json:"file_size"`
 	ContentType string    `json:"content_type"`
 	IsMain      bool      `json:"is_main"`
-	CreatedAt   time.Time `json:"created_at"` // Изменено с string на time.Time
+	CreatedAt   time.Time `json:"created_at"` 
 }
 
 func main() {
 	app := fiber.New()
 
-	// Настройка CORS
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://192.168.100.14:3001,http://192.168.100.14:3000",
 		AllowMethods:     "GET,POST,DELETE,PUT",
@@ -55,19 +54,19 @@ func main() {
 		}
 		defer src.Close()
 
-		// Генерируем уникальное имя файла
+		//  уникальное имя файла
 		ext := filepath.Ext(file.Filename)
 		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
 		filePath := filepath.Join("uploads", fileName)
 
-		// Создаем файл для сохранения
+		//  файл для сохранения
 		dst, err := os.Create(filePath)
 		if err != nil {
 			return "", err
 		}
 		defer dst.Close()
 
-		// Открываем изображение для обработки
+		//  изображение для обработки
 		img, err := imaging.Decode(src)
 		if err != nil {
 			return "", err
@@ -76,7 +75,7 @@ func main() {
 		// Изменяем размер изображения (например, максимальная ширина 1200px)
 		resized := imaging.Resize(img, 1200, 0, imaging.Lanczos)
 
-		// Сохраняем обработанное изображение
+		//    обработанное изображение
 		err = imaging.Save(resized, filePath)
 		if err != nil {
 			return "", err
@@ -103,7 +102,7 @@ func main() {
 		}
 		return c.SendString("Бронирование удалено")
 	})
-	// Добавляем эндпоинт для загрузки изображений
+	//  эндпоинт для загрузки изображений
 	app.Post("/rooms/:id/images", func(c *fiber.Ctx) error {
 		log.Printf("Начало загрузки изображений")
 		roomID, err := strconv.Atoi(c.Params("id"))
@@ -414,7 +413,7 @@ func main() {
 			return c.Status(400).SendString("Необходимо указать даты")
 		}
 
-		// Обновленный запрос, который правильно проверяет пересечение периодов бронирования
+		// проверяет пересечение периодов бронирования
 		query := `
     SELECT b.id, b.bed_number, b.price_per_night
     FROM beds b
@@ -465,13 +464,11 @@ func main() {
 
 		if err != nil {
 			log.Printf("Ошибка обновления количества доступных кроватей: %v", err)
-			// Не возвращаем ошибку, так как это некритичное обновление
-		}
+			}
 
 		return c.JSON(beds)
 	})
 
-	// В endpoint получения списка комнат обновляем запрос
 	app.Get("/rooms", func(c *fiber.Ctx) error {
 		capacity := c.Query("capacity")
 		startDate := c.Query("start_date")
@@ -652,8 +649,8 @@ WHERE 1=1
 				"id":                   id,
 				"name":                 name,
 				"capacity":             capacity,
-				"latitude":             latitude,  // Добавляем координаты в результат
-				"longitude":            longitude, // Добавляем координаты в результат
+				"latitude":             latitude,  
+				"longitude":            longitude, 
 				"price_per_night":      pricePerNight,
 				"address_street":       addressStreet,
 				"address_city":         addressCity,
@@ -670,7 +667,6 @@ WHERE 1=1
 		}
 		return c.JSON(rooms)
 	})
-	// Добавить после существующих импортов в main.go
 
 	// Добавление изображений койко-места
 	app.Post("/beds/:id/images", func(c *fiber.Ctx) error {
@@ -788,7 +784,6 @@ WHERE 1=1
 		if booking.StartDate == booking.EndDate {
 			return c.Status(400).SendString("Дата выезда должна быть позже даты заезда")
 		}
-		// Начинаем транзакцию
 		tx, err := pool.Begin(context.Background())
 		if err != nil {
 			return c.Status(500).SendString("Ошибка начала транзакции")
@@ -889,7 +884,6 @@ WHERE 1=1
 			return c.Status(500).SendString("Ошибка создания бронирования")
 		}
 
-		// Фиксируем транзакцию
 		if err = tx.Commit(context.Background()); err != nil {
 			return c.Status(500).SendString("Ошибка фиксации транзакции")
 		}
@@ -1023,8 +1017,7 @@ WHERE 1=1
 		return c.SendString("Комната успешно удалена")
 	})
 
-	// Добавление бронирования
-	// (оставлено без изменений для краткости)
+
 
 	// Запуск приложения
 	log.Fatal(app.Listen("0.0.0.0:3000"))

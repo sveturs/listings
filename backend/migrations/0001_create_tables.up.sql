@@ -8,7 +8,7 @@ CREATE TABLE users (
 CREATE TABLE rooms (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    capacity INT NOT NULL CHECK (capacity > 0),
+    capacity INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
