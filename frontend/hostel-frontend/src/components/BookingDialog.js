@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import axios from "../api/axios";
 
-const BACKEND_URL = 'http://192.168.100.14:3000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
     const [userId, setUserId] = useState('');

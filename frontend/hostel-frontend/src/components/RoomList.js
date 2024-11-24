@@ -26,7 +26,7 @@ import BookingDialog from "./BookingDialog";
 import MapView from './MapView';
 
 
-const BACKEND_URL = 'http://192.168.100.14:3000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const ImageGallery = ({ images, open, onClose }) => {
     const [activeStep, setActiveStep] = useState(0);
@@ -259,9 +259,28 @@ const RoomList = () => {
         setBookingDialogOpen(true);
     };
 
-
+// долой протечки памяти
     useEffect(() => {
-        fetchRooms();
+        let isSubscribed = true;
+        
+        const fetchData = async () => {
+            try {
+                const response = await fetchRooms();
+                if (isSubscribed) {
+                    setRooms(response.data);
+                }
+            } catch (error) {
+                if (isSubscribed) {
+                    console.error(error);
+                }
+            }
+        };
+        
+        fetchData();
+        
+        return () => {
+            isSubscribed = false;
+        };
     }, [fetchRooms]);
 
     const AccommodationInfo = ({ room }) => {

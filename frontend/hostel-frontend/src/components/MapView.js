@@ -17,7 +17,7 @@ import {
     MyLocation as MyLocationIcon,
 } from '@mui/icons-material';
 
-const BACKEND_URL = 'http://192.168.100.14:3000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const mapContainerStyle = {
     width: '100%',
