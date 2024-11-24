@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: hostel_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: c9XWc7Cm
+      POSTGRES_DB: hostel_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hostel_network
+
+  backend:
+    build: ./backend
+    container_name: hostel_backend
+    environment:
+      - DATABASE_URL=postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - db
+    networks:
+      - hostel_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: hostel_nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/hostel-frontend/build:/usr/share/nginx/html:ro
+      - ./backend/uploads:/usr/share/nginx/uploads
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - hostel_network
+
+volumes:
+  postgres_data:
+
+networks:
+  hostel_network:
+    driver: bridge
