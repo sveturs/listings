@@ -25,7 +25,7 @@ type RoomImage struct {
 	FileSize    int       `json:"file_size"`
 	ContentType string    `json:"content_type"`
 	IsMain      bool      `json:"is_main"`
-	CreatedAt   time.Time `json:"created_at"` 
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 func main() {
@@ -464,7 +464,7 @@ func main() {
 
 		if err != nil {
 			log.Printf("Ошибка обновления количества доступных кроватей: %v", err)
-			}
+		}
 
 		return c.JSON(beds)
 	})
@@ -649,8 +649,8 @@ WHERE 1=1
 				"id":                   id,
 				"name":                 name,
 				"capacity":             capacity,
-				"latitude":             latitude,  
-				"longitude":            longitude, 
+				"latitude":             latitude,
+				"longitude":            longitude,
 				"price_per_night":      pricePerNight,
 				"address_street":       addressStreet,
 				"address_city":         addressCity,
@@ -1016,8 +1016,6 @@ WHERE 1=1
 		}
 		return c.SendString("Комната успешно удалена")
 	})
-
-
 
 	// Запуск приложения
 	log.Fatal(app.Listen("0.0.0.0:3000"))
