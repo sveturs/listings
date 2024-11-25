@@ -41,8 +41,10 @@ def collect_content(paths, output_file):
 # Пример использования
 paths = [
     "backend/main.go",
-    "frontend/hostel-frontend/src/api/axios.js",
     "backend/migrations",  # папка
+    "frontend/hostel-frontend/src/api/axios.js",
+    "backend/.env",
+    "backend/.env.local",
     "frontend/hostel-frontend/src/components", # папка
     "frontend/hostel-frontend/src/pages", # папка
     "frontend/hostel-frontend/src/App.css",
@@ -50,11 +52,16 @@ paths = [
     "frontend/hostel-frontend/src/index.css",
     "frontend/hostel-frontend/src/index.js",
     "deploy",
-    "backend/.env",
+    "frontend/hostel-frontend/.env.local",
     "frontend/hostel-frontend/package.json",
     "frontend/package.json",
     "frontend/hostel-frontend/.env",
-    "docker-compose.yml"
+    "docker-compose.yml",
+    "docker-compose.prod.yml",
+    "deploy.sh",
+    ".gitignore",
+    "nginx.conf",
+    "package.json"
 ]
 output_file = "collected_content.txt"
 

@@ -13,8 +13,9 @@ mkdir -p frontend/hostel-frontend/build
 # Сохраняем важные файлы
 echo "Backing up environment files..."
 mkdir -p /tmp/hostel-backup
-cp -f backend/.env* /tmp/hostel-backup/ 2>/dev/null || true
-cp -f frontend/hostel-frontend/.env* /tmp/hostel-backup/ 2>/dev/null || true
+cp -f backend/.env /tmp/hostel-backup/backend.env 2>/dev/null || true
+cp -f frontend/hostel-frontend/.env /tmp/hostel-backup/frontend.env 2>/dev/null || true
+
 
 # Сохраняем загруженные изображения
 echo "Backing up uploads..."
@@ -30,10 +31,9 @@ echo "Pulling latest changes..."
 git pull
 
 # Восстанавливаем env файлы и загрузки
-echo "Restoring environment files and uploads..."
-cp -f /tmp/hostel-backup/.env* backend/ 2>/dev/null || true
-cp -f /tmp/hostel-backup/.env* frontend/hostel-frontend/ 2>/dev/null || true
-cp -r /tmp/hostel-backup/uploads/* backend/uploads/ 2>/dev/null || true
+echo "Restoring environment files..."
+cp -f /tmp/hostel-backup/backend.env backend/.env 2>/dev/null || true
+cp -f /tmp/hostel-backup/frontend.env frontend/hostel-frontend/.env 2>/dev/null || true
 
 # Устанавливаем правильные права
 echo "Setting permissions..."
