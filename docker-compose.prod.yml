@@ -13,19 +13,19 @@ services:
     networks:
       - hostel_network
 
-  backend:
+backend:
     build: ./backend
     container_name: hostel_backend
     env_file:
         - ./backend/.env
+    networks:
+        - hostel_network
     environment:
       - DATABASE_URL=postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
       - db
-    networks:
-      - hostel_network
 
   nginx:
     image: nginx:alpine
