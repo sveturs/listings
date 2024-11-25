@@ -5,6 +5,11 @@ echo "Starting deployment..."
 # Переходим в папку проекта
 cd /opt/hostel-booking-system
 
+# Создаем необходимые директории
+echo "Creating required directories..."
+mkdir -p backend/uploads
+mkdir -p frontend/hostel-frontend/build
+
 # Сохраняем важные файлы
 echo "Backing up environment files..."
 mkdir -p /tmp/hostel-backup
@@ -28,8 +33,12 @@ git pull
 echo "Restoring environment files and uploads..."
 cp -f /tmp/hostel-backup/.env* backend/ 2>/dev/null || true
 cp -f /tmp/hostel-backup/.env* frontend/hostel-frontend/ 2>/dev/null || true
-mkdir -p backend/uploads
 cp -r /tmp/hostel-backup/uploads/* backend/uploads/ 2>/dev/null || true
+
+# Устанавливаем правильные права
+echo "Setting permissions..."
+chmod -R 755 backend/uploads
+chmod -R 755 frontend/hostel-frontend/build
 
 # Удаляем временные файлы
 rm -rf /tmp/hostel-backup
@@ -47,8 +56,10 @@ echo "Restarting containers..."
 docker-compose -f docker-compose.prod.yml down
 docker-compose -f docker-compose.prod.yml up -d --build
 
-# Проверяем статус
-echo "Checking status..."
+# Проверяем статус и логи
+echo "Checking container status and logs..."
 docker-compose -f docker-compose.prod.yml ps
+docker logs hostel_nginx
+docker logs hostel_backend
 
 echo "Deployment completed!"
