@@ -13,7 +13,7 @@ services:
     networks:
       - hostel_network
 
-backend:
+  backend:
     build: ./backend
     container_name: hostel_backend
     env_file:

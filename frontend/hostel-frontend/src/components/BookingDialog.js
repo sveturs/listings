@@ -14,7 +14,7 @@ import {
     Select,
     MenuItem,
     Grid,
-//    Tooltip,
+    //    Tooltip,
     Popover,
 } from '@mui/material';
 import axios from "../api/axios";
@@ -98,10 +98,10 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
     };
 
     const calculateTotalPrice = () => {
-        if (!startDate || !endDate) return 0;
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        if (!bookingStartDate || !bookingEndDate) return 0;
+    
+        const start = new Date(bookingStartDate);
+        const end = new Date(bookingEndDate);
         const daysCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
         let pricePerNight;
@@ -120,7 +120,7 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
         setError('');
         setSuccess(false);
 
-        if (!startDate || !endDate) {
+        if (!bookingStartDate || !bookingEndDate) {
             setError('Выберите даты проживания');
             return;
         }
@@ -135,7 +135,7 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
             return;
         }
 
-        if (startDate === endDate) {
+        if (bookingStartDate === bookingEndDate) {
             setError('Дата выезда должна быть позже даты заезда');
             return;
         }
@@ -144,9 +144,10 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
             const bookingData = {
                 user_id: parseInt(userId),
                 room_id: room.id,
-                start_date: startDate,
-                end_date: endDate
+                start_date: bookingStartDate,  // Используем локальное состояние
+                end_date: bookingEndDate       // вместо пропсов
             };
+
 
             if (room.accommodation_type === 'bed') {
                 bookingData.bed_id = selectedBed;

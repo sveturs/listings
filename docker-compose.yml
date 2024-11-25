@@ -19,7 +19,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./backend/.env
+      - ./backend/.env.local
     depends_on:
       - db
     volumes:
