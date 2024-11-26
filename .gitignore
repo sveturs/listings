@@ -28,6 +28,12 @@ build/
 dist/
 .cache/
 
+# SSL certificates and related files
+/certbot/
+
+# Uploads directory
+/backend/uploads/
+
 # Editor files
 .vscode/
 .idea/
@@ -39,3 +45,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 collected_content.txt
+
+# Build directories
+/frontend/hostel-frontend/build/
+/frontend/hostel-frontend/node_modules/
