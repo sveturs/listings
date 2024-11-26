@@ -7,7 +7,7 @@ const AddUser = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://192.168.100.14:3000/users", user);
+    await axios.post('/users', user);
     alert("Пользователь добавлен!");
   };
 
