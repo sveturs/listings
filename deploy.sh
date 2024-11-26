@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e  # Останавливаем выполнение при ошибках
+
 echo "Starting deployment..."
 
 # Переходим в папку проекта
@@ -18,6 +20,7 @@ wait_for_postgres() {
     for i in {1..30}; do
         if docker exec hostel_db pg_isready -U postgres > /dev/null 2>&1; then
             echo "PostgreSQL is ready!"
+            sleep 5  # Даем дополнительное время для полной инициализации
             return 0
         fi
         echo "Waiting... ($i/30)"
@@ -47,39 +50,86 @@ run_migrations() {
     fi
 }
 
-# Основной процесс деплоя...
-# [предыдущий код до docker-compose down остается тем же]
+# Сохраняем важные файлы
+echo "Backing up environment files and SSL certificates..."
+mkdir -p /tmp/hostel-backup
+cp -f backend/.env /tmp/hostel-backup/backend.env 2>/dev/null || true
+cp -f frontend/hostel-frontend/.env /tmp/hostel-backup/frontend.env 2>/dev/null || true
 
-# Перезапускаем контейнеры
-echo "Restarting containers..."
-docker-compose -f docker-compose.prod.yml down
+# Сохраняем SSL сертификаты
+if [ -d "certbot/conf" ]; then
+    cp -r certbot/conf /tmp/hostel-backup/ 2>/dev/null || true
+fi
+
+# Сохраняем загруженные изображения
+cp -r backend/uploads /tmp/hostel-backup/ 2>/dev/null || true
+
+# Сбрасываем все локальные изменения
+echo "Resetting local changes..."
+git reset --hard
+git clean -fdx -e "*.env*" -e "uploads/" -e "certbot/"
+
+# Получаем последние изменения из git
+echo "Pulling latest changes..."
+git pull
+
+# Восстанавливаем файлы
+echo "Restoring backups..."
+cp -f /tmp/hostel-backup/backend.env backend/.env 2>/dev/null || true
+cp -f /tmp/hostel-backup/frontend.env frontend/hostel-frontend/.env 2>/dev/null || true
+if [ -d "/tmp/hostel-backup/conf" ]; then
+    rm -rf certbot/conf
+    cp -r /tmp/hostel-backup/conf certbot/ 2>/dev/null || true
+fi
+
+# Устанавливаем права
+chmod -R 755 backend/uploads
+chmod -R 755 frontend/hostel-frontend/build
+chmod -R 755 certbot/conf
+
+# Удаляем бэкапы
+rm -rf /tmp/hostel-backup
+
+# Собираем фронтенд
+echo "Building frontend..."
+cd frontend/hostel-frontend
+NODE_ENV=production docker run -v $(pwd):/app -w /app node:18 sh -c "npm install --legacy-peer-deps && npm install @babel/plugin-proposal-private-property-in-object && npm run build"
+
+# Возвращаемся в корневую папку
+cd ../..
+
+# Останавливаем все контейнеры и удаляем volumes
+echo "Stopping all containers..."
+docker-compose -f docker-compose.prod.yml down -v
+
+echo "Starting database..."
 docker-compose -f docker-compose.prod.yml up -d hostel_db
 
 # Ждем готовности базы данных
-wait_for_postgres
-
-# Запускаем миграции после того, как база готова
-if [ $? -eq 0 ]; then
-    run_migrations
-    
-    if [ $? -eq 0 ]; then
-        # Запускаем остальные сервисы только после успешных миграций
+if wait_for_postgres; then
+    if run_migrations; then
+        echo "Starting remaining services..."
         docker-compose -f docker-compose.prod.yml up -d --build
+        
+        echo "Verifying database setup..."
+        sleep 5  # Даем время на запуск всех сервисов
+        
+        echo "Database tables:"
+        docker exec hostel_db psql -U postgres -d hostel_db -c "\dt"
+        
+        echo "Checking demo data..."
+        docker exec hostel_db psql -U postgres -d hostel_db -c "SELECT COUNT(*) FROM rooms;"
         
         echo "Checking container status and logs..."
         docker-compose -f docker-compose.prod.yml ps
         docker logs hostel_nginx
         docker logs hostel_backend
-        
-        # Проверяем, что таблицы созданы
-        echo "Checking database tables..."
-        docker exec hostel_db psql -U postgres -d hostel_db -c "\dt"
     else
         echo "Failed to run migrations. Stopping deployment."
         exit 1
     fi
 else
-    echo "Database is not ready. Stopping deployment."
+    echo "Database failed to start. Stopping deployment."
     exit 1
 fi
 
