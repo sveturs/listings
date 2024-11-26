@@ -27,7 +27,7 @@ type RoomImage struct {
 	FileSize    int       `json:"file_size"`
 	ContentType string    `json:"content_type"`
 	IsMain      bool      `json:"is_main"`
-	CreatedAt   time.Time `json:"created_at"` 
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 func main() {
@@ -466,7 +466,7 @@ func main() {
 
 		if err != nil {
 			log.Printf("Ошибка обновления количества доступных кроватей: %v", err)
-			}
+		}
 
 		return c.JSON(beds)
 	})
@@ -651,8 +651,8 @@ WHERE 1=1
 				"id":                   id,
 				"name":                 name,
 				"capacity":             capacity,
-				"latitude":             latitude,  
-				"longitude":            longitude, 
+				"latitude":             latitude,
+				"longitude":            longitude,
 				"price_per_night":      pricePerNight,
 				"address_street":       addressStreet,
 				"address_city":         addressCity,
@@ -1018,8 +1018,6 @@ WHERE 1=1
 		}
 		return c.SendString("Комната успешно удалена")
 	})
-
-
 
 	// Запуск приложения
 	log.Fatal(app.Listen("0.0.0.0:3000"))
@@ -1841,7 +1839,8 @@ export default instance;
 
 --- Содержимое файла: backend/.env ---
 
-DATABASE_URL=postgres://postgres:password@db:5432/hostel_db?sslmode=disable
+DATABASE_URL=postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable
+CORS_ORIGINS=http://185.41.187.9,https://185.41.187.9
 
 --- Содержимое файла: backend/.env.local ---
 
@@ -2339,7 +2338,7 @@ import {
     Select,
     MenuItem,
     Grid,
-//    Tooltip,
+    //    Tooltip,
     Popover,
 } from '@mui/material';
 import axios from "../api/axios";
@@ -2423,10 +2422,10 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
     };
 
     const calculateTotalPrice = () => {
-        if (!startDate || !endDate) return 0;
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        if (!bookingStartDate || !bookingEndDate) return 0;
+    
+        const start = new Date(bookingStartDate);
+        const end = new Date(bookingEndDate);
         const daysCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
         let pricePerNight;
@@ -2445,7 +2444,7 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
         setError('');
         setSuccess(false);
 
-        if (!startDate || !endDate) {
+        if (!bookingStartDate || !bookingEndDate) {
             setError('Выберите даты проживания');
             return;
         }
@@ -2460,7 +2459,7 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
             return;
         }
 
-        if (startDate === endDate) {
+        if (bookingStartDate === bookingEndDate) {
             setError('Дата выезда должна быть позже даты заезда');
             return;
         }
@@ -2469,9 +2468,10 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
             const bookingData = {
                 user_id: parseInt(userId),
                 room_id: room.id,
-                start_date: startDate,
-                end_date: endDate
+                start_date: bookingStartDate,  // Используем локальное состояние
+                end_date: bookingEndDate       // вместо пропсов
             };
+
 
             if (room.accommodation_type === 'bed') {
                 bookingData.bed_id = selectedBed;
@@ -4666,7 +4666,6 @@ networks:
 
 REACT_APP_API_URL=http://192.168.100.14:3000
 REACT_APP_BACKEND_URL=http://192.168.100.14:3000
-REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyBISWAfMMEdWSIKL9WASQIWeKbSQo4Dv48
 
 
 --- Содержимое файла: frontend/hostel-frontend/package.json ---
@@ -4789,7 +4788,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./backend/.env
+      - ./backend/.env.local
     depends_on:
       - db
     volumes:
@@ -4833,14 +4832,16 @@ services:
   backend:
     build: ./backend
     container_name: hostel_backend
+    env_file:
+        - ./backend/.env
+    networks:
+        - hostel_network
     environment:
       - DATABASE_URL=postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
       - db
-    networks:
-      - hostel_network
 
   nginx:
     image: nginx:alpine
@@ -4880,8 +4881,9 @@ mkdir -p frontend/hostel-frontend/build
 # Сохраняем важные файлы
 echo "Backing up environment files..."
 mkdir -p /tmp/hostel-backup
-cp -f backend/.env* /tmp/hostel-backup/ 2>/dev/null || true
-cp -f frontend/hostel-frontend/.env* /tmp/hostel-backup/ 2>/dev/null || true
+cp -f backend/.env /tmp/hostel-backup/backend.env 2>/dev/null || true
+cp -f frontend/hostel-frontend/.env /tmp/hostel-backup/frontend.env 2>/dev/null || true
+
 
 # Сохраняем загруженные изображения
 echo "Backing up uploads..."
@@ -4897,10 +4899,9 @@ echo "Pulling latest changes..."
 git pull
 
 # Восстанавливаем env файлы и загрузки
-echo "Restoring environment files and uploads..."
-cp -f /tmp/hostel-backup/.env* backend/ 2>/dev/null || true
-cp -f /tmp/hostel-backup/.env* frontend/hostel-frontend/ 2>/dev/null || true
-cp -r /tmp/hostel-backup/uploads/* backend/uploads/ 2>/dev/null || true
+echo "Restoring environment files..."
+cp -f /tmp/hostel-backup/backend.env backend/.env 2>/dev/null || true
+cp -f /tmp/hostel-backup/frontend.env frontend/hostel-frontend/.env 2>/dev/null || true
 
 # Устанавливаем правильные права
 echo "Setting permissions..."
@@ -4952,7 +4953,7 @@ echo "Deployment completed!"
 .env.development.local
 .env.test.local
 .env.production.local
-.env*
+
 
 npm-debug.log*
 yarn-debug.log*
@@ -4961,7 +4962,6 @@ yarn-error.log*
 node_modules/
 build/
 dist/
-.env
 .cache/
 
 # Editor files
@@ -4978,6 +4978,9 @@ yarn-error.log*
 
 --- Содержимое файла: nginx.conf ---
 
+upstream api_backend {
+    server hostel_backend:3000;
+}
 server {
     listen 80;
     server_name 185.41.187.9;
@@ -4991,7 +4994,7 @@ server {
 
     location /api/ {
         rewrite ^/api/(.*) /$1 break;
-        proxy_pass http://backend:3000;
+        proxy_pass http://api_backend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
