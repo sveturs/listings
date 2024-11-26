@@ -14,42 +14,6 @@ mkdir -p frontend/hostel-frontend/build
 mkdir -p certbot/conf
 mkdir -p certbot/www
 
-# Функция для ожидания готовности базы данных
-wait_for_postgres() {
-    echo "Waiting for PostgreSQL to start..."
-    for i in {1..30}; do
-        if docker exec hostel_db pg_isready -U postgres > /dev/null 2>&1; then
-            echo "PostgreSQL is ready!"
-            sleep 5  # Даем дополнительное время для полной инициализации
-            return 0
-        fi
-        echo "Waiting... ($i/30)"
-        sleep 2
-    done
-    echo "Failed to connect to PostgreSQL"
-    return 1
-}
-
-# Функция для выполнения миграций
-run_migrations() {
-    echo "Running database migrations..."
-    docker run --rm \
-        --network hostel-booking-system_hostel_network \
-        -v $(pwd)/backend/migrations:/migrations \
-        migrate/migrate \
-        -path=/migrations/ \
-        -database="postgres://postgres:c9XWc7Cm@hostel_db:5432/hostel_db?sslmode=disable" \
-        up
-
-    if [ $? -eq 0 ]; then
-        echo "Migrations completed successfully!"
-        return 0
-    else
-        echo "Migration failed!"
-        return 1
-    fi
-}
-
 # Сохраняем важные файлы
 echo "Backing up environment files and SSL certificates..."
 mkdir -p /tmp/hostel-backup
@@ -82,55 +46,82 @@ if [ -d "/tmp/hostel-backup/conf" ]; then
     cp -r /tmp/hostel-backup/conf certbot/ 2>/dev/null || true
 fi
 
-# Устанавливаем права
-chmod -R 755 backend/uploads
-chmod -R 755 frontend/hostel-frontend/build
-chmod -R 755 certbot/conf
-
-# Удаляем бэкапы
-rm -rf /tmp/hostel-backup
-
 # Собираем фронтенд
 echo "Building frontend..."
 cd frontend/hostel-frontend
 NODE_ENV=production docker run -v $(pwd):/app -w /app node:18 sh -c "npm install --legacy-peer-deps && npm install @babel/plugin-proposal-private-property-in-object && npm run build"
-
-# Возвращаемся в корневую папку
 cd ../..
 
-# Останавливаем все контейнеры и удаляем volumes
+# Останавливаем все контейнеры
 echo "Stopping all containers..."
 docker-compose -f docker-compose.prod.yml down -v
 
+# Создаем сеть если её нет
+docker network create hostel-booking-system_hostel_network 2>/dev/null || true
+
+# Запускаем только базу данных
 echo "Starting database..."
-docker-compose -f docker-compose.prod.yml up -d hostel_db
+docker-compose -f docker-compose.prod.yml up -d db
+
+# Функция для проверки готовности базы данных
+check_db() {
+    echo "Checking database connection..."
+    docker-compose -f docker-compose.prod.yml exec -T db pg_isready -U postgres
+}
 
 # Ждем готовности базы данных
-if wait_for_postgres; then
-    if run_migrations; then
-        echo "Starting remaining services..."
-        docker-compose -f docker-compose.prod.yml up -d --build
-        
-        echo "Verifying database setup..."
-        sleep 5  # Даем время на запуск всех сервисов
-        
-        echo "Database tables:"
-        docker exec hostel_db psql -U postgres -d hostel_db -c "\dt"
-        
-        echo "Checking demo data..."
-        docker exec hostel_db psql -U postgres -d hostel_db -c "SELECT COUNT(*) FROM rooms;"
-        
-        echo "Checking container status and logs..."
-        docker-compose -f docker-compose.prod.yml ps
-        docker logs hostel_nginx
-        docker logs hostel_backend
-    else
-        echo "Failed to run migrations. Stopping deployment."
-        exit 1
+echo "Waiting for database to start..."
+for i in {1..30}; do
+    if check_db > /dev/null 2>&1; then
+        echo "Database is ready!"
+        break
     fi
-else
-    echo "Database failed to start. Stopping deployment."
+    echo "Waiting for database... Attempt $i/30"
+    sleep 2
+done
+
+# Проверяем финальную готовность
+if ! check_db > /dev/null 2>&1; then
+    echo "Database failed to start"
     exit 1
 fi
+
+# Выполняем миграции
+echo "Running migrations..."
+docker run --rm \
+    --network hostel-booking-system_hostel_network \
+    -v $(pwd)/backend/migrations:/migrations \
+    migrate/migrate \
+    -path=/migrations/ \
+    -database="postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable" \
+    up
+
+# Проверяем результат миграций
+if [ $? -eq 0 ]; then
+    echo "Migrations successful! Starting other services..."
+    
+    # Запускаем остальные сервисы
+    docker-compose -f docker-compose.prod.yml up -d
+
+    # Проверяем структуру базы данных
+    echo "Checking database structure..."
+    sleep 5
+    docker-compose -f docker-compose.prod.yml exec -T db psql -U postgres -d hostel_db -c "\dt"
+    
+    echo "Checking container status..."
+    docker-compose -f docker-compose.prod.yml ps
+else
+    echo "Migration failed!"
+    exit 1
+fi
+
+# Устанавливаем права на директории
+echo "Setting permissions..."
+chmod -R 755 backend/uploads || true
+chmod -R 755 frontend/hostel-frontend/build || true
+chmod -R 755 certbot/conf || true
+
+# Удаляем бэкапы
+rm -rf /tmp/hostel-backup
 
 echo "Deployment completed!"
