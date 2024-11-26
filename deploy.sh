@@ -70,6 +70,18 @@ cd ../..
 # Перезапускаем контейнеры
 echo "Restarting containers..."
 docker-compose -f docker-compose.prod.yml down
+
+# Запускаем с миграциями
+echo "Running database migrations..."
+docker run --rm \
+    --network hostel-booking-system_hostel_network \
+    -v $(pwd)/backend/migrations:/migrations \
+    migrate/migrate \
+    -path=/migrations/ \
+    -database="postgres://postgres:c9XWc7Cm@hostel_db:5432/hostel_db?sslmode=disable" \
+    up
+
+# Запускаем основные контейнеры
 docker-compose -f docker-compose.prod.yml up -d --build
 
 # Проверяем статус и логи
