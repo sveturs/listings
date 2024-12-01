@@ -21,7 +21,7 @@ services:
       - ../backend/.env
     depends_on:
       - db
-    command: ["go", "run", "main.go"]
+    command: [ "go", "run", "main.go" ]
     networks:
       - hostel_network
 
@@ -31,12 +31,13 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - REACT_APP_API_URL=http://192.168.100.14:3000
+      - REACT_APP_API_URL=http://localhost:3000
     networks:
       - hostel_network
 
 volumes:
   db_data:
+
 
 networks:
   hostel_network:

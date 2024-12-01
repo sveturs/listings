@@ -5,6 +5,6 @@ RUN go mod download
 COPY . .
 RUN mkdir -p uploads
 RUN go mod tidy
-RUN go build -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 EXPOSE 3000
 CMD ["./main"]
