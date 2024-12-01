@@ -277,7 +277,7 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                 onClick={handleMyLocation}
                 sx={{
                     position: 'absolute',
-                    top: '10px',
+                    top: '15px',
                     right: '60px',
                     backgroundColor: 'white',
                     color: 'black',
@@ -287,7 +287,7 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                     boxShadow: '0 2px 6px rgba(0,0,0,.3)',
                 }}
             >
-                Моё местоположение
+
             </Button>
         </Box>
     );

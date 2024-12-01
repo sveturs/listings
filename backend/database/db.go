@@ -84,6 +84,55 @@ type Booking struct {
 	UserEmail      string    `json:"user_email"`
 	BookingType    string    `json:"booking_type"`
 }
+type User struct {
+    ID         int    `json:"id"`
+    Name       string `json:"name"`
+    Email      string `json:"email"`
+    GoogleID   string `json:"google_id"`
+    PictureURL string `json:"picture_url"`
+}
+
+func (db *Database) GetOrCreateGoogleUser(ctx context.Context, name, email, googleID, pictureURL string) (int, error) {
+    var userID int
+    
+    // Пробуем найти пользователя по google_id
+    err := db.pool.QueryRow(ctx, `
+        SELECT id FROM users WHERE google_id = $1
+    `, googleID).Scan(&userID)
+
+    if err == nil {
+        // Пользователь найден, обновляем информацию
+        _, err = db.pool.Exec(ctx, `
+            UPDATE users 
+            SET name = $1, email = $2, picture_url = $3
+            WHERE id = $4
+        `, name, email, pictureURL, userID)
+        return userID, err
+    }
+
+    // Пользователь не найден, создаём нового
+    err = db.pool.QueryRow(ctx, `
+        INSERT INTO users (name, email, google_id, picture_url)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (email) DO UPDATE 
+            SET google_id = $3, 
+                picture_url = $4,
+                name = $1
+        RETURNING id
+    `, name, email, googleID, pictureURL).Scan(&userID)
+
+    return userID, err
+}
+
+func (db *Database) GetUserIDByEmail(ctx context.Context, email string) (int, error) {
+    var userID int
+    err := db.pool.QueryRow(ctx, "SELECT id FROM users WHERE email = $1", email).Scan(&userID)
+    if err != nil {
+        return 0, err
+    }
+    return userID, nil
+}
+
 
 func New(dbURL string) (*Database, error) {
 	pool, err := pgxpool.New(context.Background(), dbURL)

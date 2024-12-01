@@ -1,0 +1,3 @@
+ALTER TABLE users 
+ADD COLUMN google_id VARCHAR(255) UNIQUE,
+ADD COLUMN picture_url TEXT;

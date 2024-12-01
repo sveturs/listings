@@ -1,12 +1,11 @@
 import axios from 'axios';
 
-// базовый URL для API-сервера
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: process.env.REACT_APP_BACKEND_URL,
+  withCredentials: true,
   headers: {
-    "Content-Type": "application/json",
-  },
+    'Content-Type': 'application/json'
+  }
 });
-
 
 export default instance;

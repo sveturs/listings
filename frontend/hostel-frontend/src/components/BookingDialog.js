@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import {
     Dialog,
     DialogTitle,
@@ -22,7 +23,7 @@ import axios from "../api/axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
-    const [userId, setUserId] = useState('');
+    const { user } = useAuth(); // Получаем данные пользователя из контекста
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const [selectedBed, setSelectedBed] = useState('');
@@ -30,7 +31,6 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
     const [bedImages, setBedImages] = useState({});
     const [anchorEl, setAnchorEl] = useState(null);
     const [activeBed, setActiveBed] = useState(null);
-    // Добавляем состояния для дат
     const [bookingStartDate, setBookingStartDate] = useState(startDate);
     const [bookingEndDate, setBookingEndDate] = useState(endDate);
 
@@ -120,13 +120,13 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
         setError('');
         setSuccess(false);
 
-        if (!bookingStartDate || !bookingEndDate) {
-            setError('Выберите даты проживания');
+        if (!user) {
+            setError('Необходимо войти в систему для бронирования');
             return;
         }
 
-        if (!userId) {
-            setError('Введите ID пользователя');
+        if (!bookingStartDate || !bookingEndDate) {
+            setError('Выберите даты проживания');
             return;
         }
 
@@ -142,29 +142,33 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
 
         try {
             const bookingData = {
-                user_id: parseInt(userId),
                 room_id: room.id,
-                start_date: bookingStartDate,  // Используем локальное состояние
-                end_date: bookingEndDate       // вместо пропсов
+                start_date: bookingStartDate,
+                end_date: bookingEndDate
             };
-
 
             if (room.accommodation_type === 'bed') {
                 bookingData.bed_id = selectedBed;
             }
 
-            await axios.post('/bookings', bookingData);
-            setSuccess(true);
+            // Отправляем запрос с куками для авторизации
+            const response = await axios.post('/bookings', bookingData, {
+                withCredentials: true
+            });
 
+            setSuccess(true);
             setTimeout(() => {
                 onClose();
-                setUserId('');
                 setSelectedBed('');
                 setError('');
                 setSuccess(false);
             }, 2000);
         } catch (error) {
-            setError(error.response?.data || 'Произошла ошибка при бронировании');
+            if (error.response?.status === 401) {
+                setError('Необходимо войти в систему');
+            } else {
+                setError(error.response?.data || 'Произошла ошибка при бронировании');
+            }
         }
     };
 
@@ -185,89 +189,84 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>{getDialogTitle()}</DialogTitle>
             <DialogContent>
-                {success && (
-                    <Alert severity="success" sx={{ mt: 2 }}>
-                        Бронирование успешно создано!
+                {!user ? (
+                    <Alert severity="warning" sx={{ mt: 2 }}>
+                        Для бронирования необходимо войти в систему
                     </Alert>
-                )}
-                {error && (
-                    <Alert severity="error" sx={{ mt: 2 }}>
-                        {error}
-                    </Alert>
-                )}
-                {room && (
-                    <Box sx={{ mt: 2 }}>
-                        <Typography variant="h6">{room.name}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {room.address_street}, {room.address_city}
-                        </Typography>
-
-                        {/* Добавляем поля выбора дат */}
-                        <Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    label="Дата заезда"
-                                    type="date"
-                                    fullWidth
-                                    value={bookingStartDate}
-                                    onChange={(e) => setBookingStartDate(e.target.value)}
-                                    inputProps={{ min: today }}
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    label="Дата выезда"
-                                    type="date"
-                                    fullWidth
-                                    value={bookingEndDate}
-                                    onChange={(e) => setBookingEndDate(e.target.value)}
-                                    inputProps={{ min: bookingStartDate || today }}
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            </Grid>
-                        </Grid>
-
-                        {/* Остальные элементы диалога... */}
-                        {room.accommodation_type === 'bed' && (
-                            <FormControl fullWidth sx={{ mt: 2 }}>
-                                <InputLabel>Выберите койко-место</InputLabel>
-                                <Select
-                                    value={selectedBed}
-                                    onChange={(e) => setSelectedBed(e.target.value)}
-                                    label="Выберите койко-место"
-                                >
-                                    {availableBeds.map(bed => (
-                                        <MenuItem
-                                            key={bed.id}
-                                            value={bed.id}
-                                            onMouseEnter={(e) => handleMouseEnter(e, bed)}
-                                            onMouseLeave={handleMouseLeave}
-                                        >
-                                            Место {bed.bed_number} - {bed.price_per_night} руб./ночь
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                ) : (
+                    <>
+                        {success && (
+                            <Alert severity="success" sx={{ mt: 2 }}>
+                                Бронирование успешно создано!
+                            </Alert>
                         )}
-
-                        <TextField
-                            margin="dense"
-                            label="ID пользователя"
-                            type="number"
-                            fullWidth
-                            value={userId}
-                            onChange={(e) => setUserId(e.target.value)}
-                            sx={{ mt: 2 }}
-                        />
-
-                        <Typography variant="h6" sx={{ mt: 2 }}>
-                            Итого к оплате: {calculateTotalPrice()} руб.
-                        </Typography>
-                    </Box>
+                        {error && (
+                            <Alert severity="error" sx={{ mt: 2 }}>
+                                {error}
+                            </Alert>
+                        )}
+                        {room && (
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="h6">{room.name}</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {room.address_street}, {room.address_city}
+                                </Typography>
+    
+                                <Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Дата заезда"
+                                            type="date"
+                                            fullWidth
+                                            value={bookingStartDate}
+                                            onChange={(e) => setBookingStartDate(e.target.value)}
+                                            inputProps={{ min: today }}
+                                            InputLabelProps={{ shrink: true }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Дата выезда"
+                                            type="date"
+                                            fullWidth
+                                            value={bookingEndDate}
+                                            onChange={(e) => setBookingEndDate(e.target.value)}
+                                            inputProps={{ min: bookingStartDate || today }}
+                                            InputLabelProps={{ shrink: true }}
+                                        />
+                                    </Grid>
+                                </Grid>
+    
+                                {room.accommodation_type === 'bed' && (
+                                    <FormControl fullWidth sx={{ mt: 2 }}>
+                                        <InputLabel>Выберите койко-место</InputLabel>
+                                        <Select
+                                            value={selectedBed}
+                                            onChange={(e) => setSelectedBed(e.target.value)}
+                                            label="Выберите койко-место"
+                                        >
+                                            {availableBeds.map(bed => (
+                                                <MenuItem
+                                                    key={bed.id}
+                                                    value={bed.id}
+                                                    onMouseEnter={(e) => handleMouseEnter(e, bed)}
+                                                    onMouseLeave={handleMouseLeave}
+                                                >
+                                                    Место {bed.bed_number} - {bed.price_per_night} руб./ночь
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+    
+                                <Typography variant="h6" sx={{ mt: 2 }}>
+                                    Итого к оплате: {calculateTotalPrice()} руб.
+                                </Typography>
+                            </Box>
+                        )}
+                    </>
                 )}
-
-                {/* Popover для предпросмотра изображений */}
+    
                 <Popover
                     open={Boolean(anchorEl)}
                     anchorEl={anchorEl}
@@ -295,7 +294,7 @@ const BookingDialog = ({ open, onClose, room, startDate, endDate }) => {
                     onClick={handleSubmit}
                     color="primary"
                     variant="contained"
-                    disabled={!userId ||
+                    disabled={!user ||
                         !bookingStartDate ||
                         !bookingEndDate ||
                         bookingStartDate === bookingEndDate ||

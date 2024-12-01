@@ -1,7 +1,11 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
+	"hostel-backend/auth"
+	"hostel-backend/database"
 	"log"
 	"mime/multipart"
 	"os"
@@ -10,13 +14,19 @@ import (
 	"strings"
 	"time"
 
-	"hostel-backend/database"
-
 	"github.com/disintegration/imaging"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/joho/godotenv"
 )
 
+type Server struct {
+	app  *fiber.App
+	db   *database.Database
+	auth *auth.AuthManager
+}
+
+// Вспомогательная функция для обработки изображений
 func processImage(file *multipart.FileHeader) (string, error) {
 	src, err := file.Open()
 	if err != nil {
@@ -40,7 +50,6 @@ func processImage(file *multipart.FileHeader) (string, error) {
 	}
 
 	resized := imaging.Resize(img, 1200, 0, imaging.Lanczos)
-
 	err = imaging.Save(resized, filePath)
 	if err != nil {
 		return "", err
@@ -49,63 +58,49 @@ func processImage(file *multipart.FileHeader) (string, error) {
 	return fileName, nil
 }
 
-func main() {
-	app := fiber.New()
-
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",
-		AllowMethods:     "GET,POST,DELETE,PUT",
-		AllowHeaders:     "Origin, Content-Type, Accept",
-		ExposeHeaders:    "Content-Length",
-		AllowCredentials: false,
-		MaxAge:           300,
-	}))
-
-	os.MkdirAll("./uploads", os.ModePerm)
-
-	// Инициализация базы данных
-	db, err := database.New(os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatalf("Ошибка подключения к базе данных: %v", err)
+// Вспомогательная функция для генерации токена сессии
+func generateSessionToken() string {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return ""
 	}
-	defer db.Close()
+	return hex.EncodeToString(b)
+}
 
-	// Главный маршрут
-	app.Get("/", func(c *fiber.Ctx) error {
+func (s *Server) setupRoutes() {
+	// Основные маршруты
+	s.app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hostel Booking System API")
 	})
 
 	// Добавление пользователя
-	app.Post("/users", func(c *fiber.Ctx) error {
-		type User struct {
+	s.app.Post("/users", func(c *fiber.Ctx) error {
+		var user struct {
 			Name  string `json:"name"`
 			Email string `json:"email"`
 		}
-
-		var user User
 		if err := c.BodyParser(&user); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
 
-		err := db.AddUser(c.Context(), user.Name, user.Email)
+		err := s.db.AddUser(c.Context(), user.Name, user.Email)
 		if err != nil {
 			if strings.Contains(err.Error(), "unique constraint") {
 				return c.Status(400).SendString("Email уже используется")
 			}
 			return c.Status(500).SendString("Ошибка добавления пользователя")
 		}
-
 		return c.SendString("Пользователь добавлен успешно")
 	})
 
-	// Добавление комнаты
-	app.Post("/rooms", func(c *fiber.Ctx) error {
+	// Маршруты для комнат
+	s.app.Post("/rooms", func(c *fiber.Ctx) error {
 		var room database.Room
 		if err := c.BodyParser(&room); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
 
-		roomID, err := db.AddRoom(c.Context(), room)
+		roomID, err := s.db.AddRoom(c.Context(), room)
 		if err != nil {
 			if strings.Contains(err.Error(), "unique constraint") {
 				return c.Status(400).SendString("Комната с таким названием уже существует")
@@ -116,8 +111,7 @@ func main() {
 		return c.JSON(fiber.Map{"id": roomID})
 	})
 
-	// Получение списка комнат
-	app.Get("/rooms", func(c *fiber.Ctx) error {
+	s.app.Get("/rooms", func(c *fiber.Ctx) error {
 		filters := map[string]string{
 			"capacity":           c.Query("capacity"),
 			"start_date":         c.Query("start_date"),
@@ -130,7 +124,7 @@ func main() {
 			"has_private_rooms":  c.Query("has_private_rooms"),
 		}
 
-		rooms, err := db.GetRooms(c.Context(), filters)
+		rooms, err := s.db.GetRooms(c.Context(), filters)
 		if err != nil {
 			return c.Status(500).SendString("Ошибка получения списка комнат")
 		}
@@ -138,20 +132,8 @@ func main() {
 		return c.JSON(rooms)
 	})
 
-	// Удаление комнаты
-	app.Delete("/rooms/:id", func(c *fiber.Ctx) error {
-		err := db.DeleteRoom(c.Context(), c.Params("id"))
-		if err != nil {
-			if err.Error() == "room not found" {
-				return c.Status(404).SendString("Комната не найдена")
-			}
-			return c.Status(500).SendString("Ошибка удаления комнаты")
-		}
-		return c.SendString("Комната успешно удалена")
-	})
-
-	// Загрузка изображений комнаты
-	app.Post("/rooms/:id/images", func(c *fiber.Ctx) error {
+	// Изображения комнат
+	s.app.Post("/rooms/:id/images", func(c *fiber.Ctx) error {
 		roomID, err := strconv.Atoi(c.Params("id"))
 		if err != nil {
 			return c.Status(400).SendString("Неверный ID комнаты")
@@ -189,7 +171,7 @@ func main() {
 				IsMain:      isMain,
 			}
 
-			imageID, err := db.AddRoomImage(c.Context(), roomID, image)
+			imageID, err := s.db.AddRoomImage(c.Context(), roomID, image)
 			if err != nil {
 				return c.Status(500).SendString("Ошибка сохранения информации об изображении")
 			}
@@ -202,18 +184,16 @@ func main() {
 		return c.JSON(uploadedImages)
 	})
 
-	// Получение изображений комнаты
-	app.Get("/rooms/:id/images", func(c *fiber.Ctx) error {
-		images, err := db.GetRoomImages(c.Context(), c.Params("id"))
+	s.app.Get("/rooms/:id/images", func(c *fiber.Ctx) error {
+		images, err := s.db.GetRoomImages(c.Context(), c.Params("id"))
 		if err != nil {
 			return c.Status(500).SendString("Ошибка получения изображений")
 		}
 		return c.JSON(images)
 	})
 
-	// Удаление изображения комнаты
-	app.Delete("/rooms/:roomId/images/:imageId", func(c *fiber.Ctx) error {
-		filePath, err := db.DeleteRoomImage(c.Context(), c.Params("imageId"))
+	s.app.Delete("/rooms/:roomId/images/:imageId", func(c *fiber.Ctx) error {
+		filePath, err := s.db.DeleteRoomImage(c.Context(), c.Params("imageId"))
 		if err != nil {
 			return c.Status(404).SendString("Изображение не найдено")
 		}
@@ -222,8 +202,8 @@ func main() {
 		return c.SendString("Изображение удалено")
 	})
 
-	// Добавление кровати
-	app.Post("/rooms/:id/beds", func(c *fiber.Ctx) error {
+	// Маршруты для кроватей
+	s.app.Post("/rooms/:id/beds", func(c *fiber.Ctx) error {
 		type BedRequest struct {
 			BedNumber     string  `json:"bed_number"`
 			PricePerNight float64 `json:"price_per_night"`
@@ -239,7 +219,7 @@ func main() {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
 
-		bedID, err := db.AddBed(c.Context(), roomID, bedReq.BedNumber, bedReq.PricePerNight)
+		bedID, err := s.db.AddBed(c.Context(), roomID, bedReq.BedNumber, bedReq.PricePerNight)
 		if err != nil {
 			if err.Error() == "room not found" {
 				return c.Status(404).SendString("Комната не найдена")
@@ -256,8 +236,7 @@ func main() {
 		})
 	})
 
-	// Получение доступных кроватей
-	app.Get("/rooms/:id/available-beds", func(c *fiber.Ctx) error {
+	s.app.Get("/rooms/:id/available-beds", func(c *fiber.Ctx) error {
 		startDate := c.Query("start_date")
 		endDate := c.Query("end_date")
 
@@ -265,7 +244,7 @@ func main() {
 			return c.Status(400).SendString("Необходимо указать даты")
 		}
 
-		beds, err := db.GetAvailableBeds(c.Context(), c.Params("id"), startDate, endDate)
+		beds, err := s.db.GetAvailableBeds(c.Context(), c.Params("id"), startDate, endDate)
 		if err != nil {
 			return c.Status(500).SendString("Ошибка получения списка кроватей")
 		}
@@ -273,76 +252,36 @@ func main() {
 		return c.JSON(beds)
 	})
 
-	// Загрузка изображений койко-места
-	app.Post("/beds/:id/images", func(c *fiber.Ctx) error {
-		bedID, err := strconv.Atoi(c.Params("id"))
-		if err != nil {
-			return c.Status(400).SendString("Неверный ID койко-места")
+	// Маршруты для бронирований
+	s.app.Post("/bookings", func(c *fiber.Ctx) error {
+		// Получаем сессию пользователя
+		sessionToken := c.Cookies("session_token")
+		if sessionToken == "" {
+			return c.Status(401).SendString("Необходима авторизация")
 		}
-
-		form, err := c.MultipartForm()
-		if err != nil {
-			return c.Status(400).SendString("Ошибка получения файлов")
+	
+		sessionData, ok := s.auth.GetSession(sessionToken)
+		if !ok {
+			return c.Status(401).SendString("Необходима авторизация")
 		}
-
-		files := form.File["images"]
-		var uploadedImages []database.BedImage
-
-		for _, file := range files {
-			if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
-				return c.Status(400).SendString("Допустимы только изображения")
-			}
-
-			if file.Size > 5*1024*1024 {
-				return c.Status(400).SendString("Размер файла не должен превышать 5MB")
-			}
-
-			fileName, err := processImage(file)
-			if err != nil {
-				return c.Status(500).SendString("Ошибка обработки изображения")
-			}
-
-			image := database.BedImage{
-				BedID:       bedID,
-				FilePath:    fileName,
-				FileName:    file.Filename,
-				FileSize:    int(file.Size),
-				ContentType: file.Header.Get("Content-Type"),
-			}
-
-			imageID, err := db.AddBedImage(c.Context(), bedID, image)
-			if err != nil {
-				return c.Status(500).SendString("Ошибка сохранения информации об изображении")
-			}
-
-			image.ID = imageID
-			uploadedImages = append(uploadedImages, image)
-		}
-
-		return c.JSON(uploadedImages)
-	})
-
-	// Получение изображений койко-места
-	app.Get("/beds/:id/images", func(c *fiber.Ctx) error {
-		images, err := db.GetBedImages(c.Context(), c.Params("id"))
-		if err != nil {
-			return c.Status(500).SendString("Ошибка получения изображений")
-		}
-		return c.JSON(images)
-	})
-
-	// Создание бронирования
-	app.Post("/bookings", func(c *fiber.Ctx) error {
+	
 		var booking database.BookingRequest
 		if err := c.BodyParser(&booking); err != nil {
 			return c.Status(400).SendString("Неверный формат данных")
 		}
-
-		err := db.CreateBooking(c.Context(), booking)
+	
+		// Получаем id пользователя по email из сессии
+		userId, err := s.db.GetUserIDByEmail(c.Context(), sessionData.Email)
+		if err != nil {
+			return c.Status(500).SendString("Ошибка получения данных пользователя")
+		}
+	
+		// Устанавливаем ID пользователя из сессии
+		booking.UserID = userId
+	
+		err = s.db.CreateBooking(c.Context(), booking)
 		if err != nil {
 			switch err.Error() {
-			case "user not found":
-				return c.Status(400).SendString("Пользователь не найден")
 			case "bed ID is required for bed booking":
 				return c.Status(400).SendString("Для койко-места необходимо указать ID кровати")
 			case "bed is not available":
@@ -357,31 +296,29 @@ func main() {
 				return c.Status(500).SendString("Ошибка создания бронирования")
 			}
 		}
-
+	
 		return c.SendString("Бронирование создано успешно")
 	})
 
-	// Получение всех бронирований
-	app.Get("/bookings", func(c *fiber.Ctx) error {
-		bookings, err := db.GetAllBookings(c.Context())
+	
+	s.app.Get("/bookings", func(c *fiber.Ctx) error {
+		bookings, err := s.db.GetAllBookings(c.Context())
 		if err != nil {
 			return c.Status(500).SendString("Ошибка получения списка бронирований")
 		}
 		return c.JSON(bookings)
 	})
 
-	// Удаление бронирования комнаты
-	app.Delete("/rooms/:roomId/bookings/:bookingId", func(c *fiber.Ctx) error {
-		err := db.DeleteBooking(c.Context(), c.Params("bookingId"), "room")
+	s.app.Delete("/rooms/:roomId/bookings/:bookingId", func(c *fiber.Ctx) error {
+		err := s.db.DeleteBooking(c.Context(), c.Params("bookingId"), "room")
 		if err != nil {
 			return c.Status(500).SendString("Ошибка удаления бронирования")
 		}
 		return c.SendString("Бронирование удалено")
 	})
 
-	// Удаление бронирования койко-места
-	app.Delete("/beds/:bedId/bookings/:bookingId", func(c *fiber.Ctx) error {
-		err := db.DeleteBooking(c.Context(), c.Params("bookingId"), "bed")
+	s.app.Delete("/beds/:bedId/bookings/:bookingId", func(c *fiber.Ctx) error {
+		err := s.db.DeleteBooking(c.Context(), c.Params("bookingId"), "bed")
 		if err != nil {
 			return c.Status(500).SendString("Ошибка удаления бронирования")
 		}
@@ -389,8 +326,153 @@ func main() {
 	})
 
 	// Статическая раздача изображений
-	app.Static("/uploads", "./uploads")
+	s.app.Static("/uploads", "./uploads")
+}
 
-	// Запуск приложения
-	log.Fatal(app.Listen("0.0.0.0:3000"))
+func (s *Server) setupAuthRoutes() {
+	s.app.Get("/auth/google", func(c *fiber.Ctx) error {
+		url := s.auth.GetGoogleAuthURL()
+		return c.Redirect(url)
+	})
+
+	s.app.Get("/auth/google/callback", func(c *fiber.Ctx) error {
+		code := c.Query("code")
+		if code == "" {
+			return c.Status(400).SendString("Missing code")
+		}
+
+		sessionData, err := s.auth.HandleGoogleCallback(c.Context(), code)
+		if err != nil {
+			return c.Status(500).SendString("Authentication failed")
+		}
+
+		// Получаем или создаём пользователя
+		userID, err := s.db.GetOrCreateGoogleUser(
+			c.Context(),
+			sessionData.Name,
+			sessionData.Email,
+			sessionData.GoogleID,   // Должно приходить из auth.SessionData
+			sessionData.PictureURL, // Должно приходить из auth.SessionData
+		)
+		if err != nil {
+			log.Printf("Error managing user: %v", err)
+			return c.Status(500).SendString("Error managing user")
+		}
+
+		sessionToken := generateSessionToken()
+		sessionData.UserID = userID // Добавляем ID пользователя в данные сессии
+		s.auth.SaveSession(sessionToken, sessionData)
+
+		c.Cookie(&fiber.Cookie{
+			Name:     "session_token",
+			Value:    sessionToken,
+			Path:     "/",
+			MaxAge:   3600 * 24,
+			Secure:   true,
+			HTTPOnly: true,
+			SameSite: "Lax",
+		})
+
+		return c.Redirect(os.Getenv("FRONTEND_URL"))
+	})
+
+	s.app.Get("/auth/session", func(c *fiber.Ctx) error {
+		sessionToken := c.Cookies("session_token")
+		if sessionToken == "" {
+			return c.JSON(fiber.Map{
+				"authenticated": false,
+			})
+		}
+
+		sessionData, ok := s.auth.GetSession(sessionToken)
+		if !ok {
+			return c.JSON(fiber.Map{
+				"authenticated": false,
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"authenticated": true,
+			"user": fiber.Map{
+				"name":     sessionData.Name,
+				"email":    sessionData.Email,
+				"provider": sessionData.Provider,
+			},
+		})
+	})
+
+	s.app.Get("/auth/logout", func(c *fiber.Ctx) error {
+		sessionToken := c.Cookies("session_token")
+		if sessionToken != "" {
+			s.auth.DeleteSession(sessionToken)
+			c.Cookie(&fiber.Cookie{
+				Name:     "session_token",
+				Value:    "",
+				Path:     "/",
+				MaxAge:   -1,
+				Secure:   true,
+				HTTPOnly: true,
+				SameSite: "Lax",
+			})
+		}
+		return c.SendStatus(200)
+	})
+}
+
+func NewServer() (*Server, error) {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	db, err := database.New(os.Getenv("DATABASE_URL"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
+	}
+
+	authManager := auth.NewAuthManager(
+		os.Getenv("GOOGLE_CLIENT_ID"),
+		os.Getenv("GOOGLE_CLIENT_SECRET"),
+		os.Getenv("GOOGLE_OAUTH_REDIRECT_URL"),
+	)
+
+	app := fiber.New()
+
+	// Настройка CORS
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     os.Getenv("FRONTEND_URL"),
+		AllowMethods:     "GET,POST,DELETE,PUT,OPTIONS",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		ExposeHeaders:    "Content-Length",
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+
+	os.MkdirAll("./uploads", os.ModePerm)
+
+	server := &Server{
+		app:  app,
+		db:   db,
+		auth: authManager,
+	}
+
+	// Настройка маршрутов
+	server.setupAuthRoutes()
+	server.setupRoutes()
+
+	return server, nil
+}
+
+func main() {
+	server, err := NewServer()
+	if err != nil {
+		log.Fatalf("Failed to create server: %v", err)
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+
+	log.Printf("Server running on port %s", port)
+	log.Fatal(server.app.Listen(fmt.Sprintf(":%s", port)))
 }

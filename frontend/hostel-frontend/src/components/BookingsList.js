@@ -1,150 +1,136 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Typography,
-  Box,
-  IconButton,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Typography,
+    Chip,
+    Box
 } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
-import axios from "../api/axios";
+import {
+    Apartment as ApartmentIcon,
+    Hotel as HotelIcon,
+    SingleBed as SingleBedIcon
+} from '@mui/icons-material';
+import axios from '../api/axios';
 
 const BookingsList = () => {
-  const [bookings, setBookings] = useState([]);
-  const [rooms, setRooms] = useState({});
-  const [users, setUsers] = useState({});
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [bookingToDelete, setBookingToDelete] = useState(null);
+    const [bookings, setBookings] = useState([]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+    useEffect(() => {
+        const fetchBookings = async () => {
+            try {
+                const response = await axios.get('/bookings', { withCredentials: true });
+                setBookings(response.data);
+            } catch (error) {
+                console.error('Ошибка получения списка бронирований:', error);
+            }
+        };
 
-  const fetchData = async () => {
-    try {
-      const bookingsResponse = await axios.get('/bookings');
-      setBookings(bookingsResponse.data);
+        fetchBookings();
+    }, []);
 
-      const roomsResponse = await axios.get('/rooms');
-      const roomsMap = {};
-      roomsResponse.data.forEach(room => {
-        roomsMap[room.id] = room;
-      });
-      setRooms(roomsMap);
+    const getAccommodationIcon = (type) => {
+        switch (type) {
+            case 'bed':
+                return <SingleBedIcon color="primary" />;
+            case 'room':
+                return <HotelIcon color="primary" />;
+            case 'apartment':
+                return <ApartmentIcon color="primary" />;
+            default:
+                return null;
+        }
+    };
 
-      const usersResponse = await axios.get('/users');
-      const usersMap = {};
-      usersResponse.data.forEach(user => {
-        usersMap[user.id] = user;
-      });
-      setUsers(usersMap);
-    } catch (error) {
-      console.error('Ошибка загрузки данных:', error);
-    }
-  };
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+    };
 
-  const handleDeleteClick = (booking) => {
-    setBookingToDelete(booking);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      if (bookingToDelete.bed_id) {
-        await axios.delete(`/beds/${bookingToDelete.bed_id}/bookings/${bookingToDelete.id}`);
-      } else {
-        await axios.delete(`/rooms/${bookingToDelete.room_id}/bookings/${bookingToDelete.id}`);
-      }
-      setDeleteDialogOpen(false);
-      setBookingToDelete(null);
-      fetchData(); // Обновляем список после удаления
-    } catch (error) {
-      console.error('Ошибка удаления бронирования:', error);
-      alert('Ошибка удаления бронирования');
-    }
-  };
-
-  return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        Список бронирований
-      </Typography>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Пользователь</TableCell>
-              <TableCell>Комната</TableCell>
-              <TableCell>Тип размещения</TableCell>
-              <TableCell>Дата заезда</TableCell>
-              <TableCell>Дата выезда</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell>Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {bookings.map((booking) => (
-              <TableRow key={booking.id}>
-                <TableCell>{booking.id}</TableCell>
-                <TableCell>
-                  {users[booking.user_id]?.name || `Пользователь ${booking.user_id}`}
-                </TableCell>
-                <TableCell>
-                  {rooms[booking.room_id]?.name || `Комната ${booking.room_id}`}
-                </TableCell>
-                <TableCell>
-                  {booking.bed_id ? 'Койко-место' : 'Комната целиком'}
-                </TableCell>
-                <TableCell>{booking.start_date}</TableCell>
-                <TableCell>{booking.end_date}</TableCell>
-                <TableCell>{booking.status || 'Подтверждено'}</TableCell>
-                <TableCell>
-                  <IconButton 
-                    color="error" 
-                    onClick={() => handleDeleteClick(booking)}
-                    title="Удалить бронирование"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Диалог подтверждения удаления */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Подтверждение удаления</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Вы действительно хотите удалить это бронирование?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
+    return (
+        <Box>
+            <Typography variant="h5" gutterBottom>
+                Список бронирований
+            </Typography>
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Тип размещения</TableCell>
+                            <TableCell>Комната</TableCell>
+                            <TableCell>Клиент</TableCell>
+                            <TableCell>Даты проживания</TableCell>
+                            <TableCell>Статус</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {bookings.map((booking) => (
+                            <TableRow key={booking.id} hover>
+                                <TableCell>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        {getAccommodationIcon(booking.type)}
+                                        <Typography variant="body2">
+                                            {booking.type === 'bed' 
+                                                ? 'Койко-место' 
+                                                : booking.type === 'room' 
+                                                    ? 'Комната' 
+                                                    : 'Квартира'}
+                                        </Typography>
+                                    </Box>
+                                </TableCell>
+                                <TableCell>
+                                    <Typography variant="body2">
+                                        {booking.room_name}
+                                        {booking.bed_id && (
+                                            <Typography variant="caption" display="block" color="text.secondary">
+                                                Место {booking.bed_id}
+                                            </Typography>
+                                        )}
+                                    </Typography>
+                                </TableCell>
+                                <TableCell>
+                                    <Typography variant="body2">
+                                        {booking.user_name}
+                                        <Typography variant="caption" display="block" color="text.secondary">
+                                            {booking.user_email}
+                                        </Typography>
+                                    </Typography>
+                                </TableCell>
+                                <TableCell>
+                                    <Box>
+                                        <Typography variant="body2">
+                                            {`${formatDate(booking.start_date)} - ${formatDate(booking.end_date)}`}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {Math.ceil(
+                                                (new Date(booking.end_date) - new Date(booking.start_date)) / 
+                                                (1000 * 60 * 60 * 24)
+                                            )} дней
+                                        </Typography>
+                                    </Box>
+                                </TableCell>
+                                <TableCell>
+                                    <Chip
+                                        size="small"
+                                        label={booking.status === 'confirmed' ? 'Подтверждено' : 'В обработке'}
+                                        color={booking.status === 'confirmed' ? 'success' : 'warning'}
+                                    />
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Box>
+    );
 };
 
 export default BookingsList;
