@@ -300,7 +300,7 @@ func (s *Server) setupRoutes() {
 		return c.SendString("Бронирование создано успешно")
 	})
 
-	
+
 	s.app.Get("/bookings", func(c *fiber.Ctx) error {
 		bookings, err := s.db.GetAllBookings(c.Context())
 		if err != nil {
@@ -332,6 +332,7 @@ func (s *Server) setupRoutes() {
 func (s *Server) setupAuthRoutes() {
 	s.app.Get("/auth/google", func(c *fiber.Ctx) error {
 		url := s.auth.GetGoogleAuthURL()
+		log.Printf("Generated Google Auth URL: %s", url) 
 		return c.Redirect(url)
 	})
 

@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 	"sync"
-
+"log"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	oauth2v2 "google.golang.org/api/oauth2/v2"
@@ -25,6 +25,10 @@ type AuthManager struct {
 }
 
 func NewAuthManager(googleClientID, googleClientSecret, googleRedirectURL string) *AuthManager {
+    log.Printf("Initializing AuthManager with: ClientID=%s, RedirectURL=%s", 
+        googleClientID, googleRedirectURL)
+
+
 	googleConfig := &oauth2.Config{
 		ClientID:     googleClientID,
 		ClientSecret: googleClientSecret,
@@ -41,9 +45,13 @@ func NewAuthManager(googleClientID, googleClientSecret, googleRedirectURL string
 	}
 }
 
+
 func (am *AuthManager) GetGoogleAuthURL() string {
-	return am.googleConfig.AuthCodeURL("state")
+    url := am.googleConfig.AuthCodeURL("state")
+    log.Printf("Generated Google Auth URL: %s", url)
+    return url
 }
+
 
 func (am *AuthManager) HandleGoogleCallback(ctx context.Context, code string) (*SessionData, error) {
     token, err := am.googleConfig.Exchange(ctx, code)
