@@ -38,30 +38,34 @@ def collect_content(paths, output_file):
     except Exception as e:
         print(f"Ошибка при сборе содержимого: {e}")
 
-# Пример использования
 paths = [
     "backend/main.go",
-    "backend/migrations",  # папка
-    "frontend/hostel-frontend/src/api/axios.js",
+    "backend/Dockerfile",
     "backend/.env",
-    "backend/.env.local",
-    "frontend/hostel-frontend/src/components", # папка
-    "frontend/hostel-frontend/src/pages", # папка
-    "frontend/hostel-frontend/src/App.css",
-    "frontend/hostel-frontend/src/App.js",
-    "frontend/hostel-frontend/src/index.css",
-    "frontend/hostel-frontend/src/index.js",
-    "deploy",
-    "frontend/hostel-frontend/.env.local",
-    "frontend/hostel-frontend/package.json",
-    "frontend/package.json",
+    "backend/.env.local",  
+    "backend/.dockerignore",      
+    "backend/auth/auth.go",
+    "backend/database/db.go",
+    "backend/migrations",
+    "deploy/docker-compose.yml",
+    "frontend/hostel-frontend/public",
+    "frontend/hostel-frontend/src",
+    "frontend/hostel-frontend/src/api/axios.js",        
+    "frontend/hostel-frontend/src/components",
+    "frontend/hostel-frontend/src/contexts",
+    "frontend/hostel-frontend/src/pages",
     "frontend/hostel-frontend/.env",
-    "docker-compose.yml",
-    "docker-compose.prod.yml",
-    "deploy.sh",
+    "frontend/hostel-frontend/.env.local",
+    "frontend/hostel-frontend/.gitignore",
+    "frontend/hostel-frontend/package.json",        
     ".gitignore",
+    "deploy.sh",
+    "docker-compose.prod.yml",
+    "docker-compose.yml",
+    "init-ssl.sh",
     "nginx.conf",
     "package.json"
+
 ]
 output_file = "collected_content.txt"
 
