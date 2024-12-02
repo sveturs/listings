@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	"context"
 	"github.com/disintegration/imaging"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -123,12 +123,15 @@ func (s *Server) setupRoutes() {
 			"accommodation_type": c.Query("accommodation_type"),
 			"has_private_rooms":  c.Query("has_private_rooms"),
 		}
+		log.Printf("Handling /rooms request with filters: %+v", filters) // Добавить
 
 		rooms, err := s.db.GetRooms(c.Context(), filters)
 		if err != nil {
+			log.Printf("Error getting rooms: %v", err) // Добавить
 			return c.Status(500).SendString("Ошибка получения списка комнат")
 		}
-
+	
+		log.Printf("Successfully retrieved %d rooms", len(rooms)) // Добавить
 		return c.JSON(rooms)
 	})
 
@@ -421,14 +424,18 @@ func (s *Server) setupAuthRoutes() {
 }
 
 func NewServer() (*Server, error) {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found")
+    }
 
 	db, err := database.New(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
+    if err := db.Ping(context.Background()); err != nil {
+        return nil, fmt.Errorf("cannot ping database: %v", err)
+    }
+    log.Println("Successfully connected to database")
 
 	authManager := auth.NewAuthManager(
 		os.Getenv("GOOGLE_CLIENT_ID"),

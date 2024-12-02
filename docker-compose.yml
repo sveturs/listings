@@ -12,6 +12,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -21,12 +26,13 @@ services:
     env_file:
       - ./backend/.env.local
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend/uploads:/app/uploads
     environment:
       - UPLOAD_DIR=/app/uploads
-      
+
   migrate:
     image: migrate/migrate
     volumes:
@@ -37,7 +43,8 @@ services:
       "up"
     ]
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

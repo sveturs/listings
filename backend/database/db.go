@@ -199,7 +199,9 @@ func (db *Database) DeleteRoom(ctx context.Context, id string) error {
 	}
 	return nil
 }
-
+func (db *Database) Ping(ctx context.Context) error {
+    return db.pool.Ping(ctx)
+}
 func (db *Database) GetRooms(ctx context.Context, filters map[string]string) ([]map[string]interface{}, error) {
 	baseQuery := `
 	WITH room_availability AS (
