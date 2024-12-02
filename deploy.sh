@@ -1,11 +1,14 @@
 #!/bin/bash
-
 set -e  # Останавливаем выполнение при ошибках
 
 echo "Starting deployment..."
 
 # Переходим в папку проекта
 cd /opt/hostel-booking-system
+
+# Настраиваем git pull strategy
+echo "Configuring git..."
+git config pull.rebase false
 
 # Создаем необходимые директории
 echo "Creating required directories..."
@@ -28,14 +31,11 @@ fi
 # Сохраняем загруженные изображения
 cp -r backend/uploads /tmp/hostel-backup/ 2>/dev/null || true
 
-# Сбрасываем все локальные изменения
-echo "Resetting local changes..."
-git reset --hard
+# Обеспечиваем чистое состояние git
+echo "Resetting git state..."
+git fetch origin
+git reset --hard origin/main
 git clean -fdx -e "*.env*" -e "uploads/" -e "certbot/"
-
-# Получаем последние изменения из git
-echo "Pulling latest changes..."
-git pull
 
 # Восстанавливаем файлы
 echo "Restoring backups..."
