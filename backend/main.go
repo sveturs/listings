@@ -447,15 +447,23 @@ func NewServer() (*Server, error) {
 	app := fiber.New()
 
 	// Настройка CORS
-	app.Use(cors.New(cors.Config{
+	//app.Use(cors.New(cors.Config{
 	//	AllowOrigins:     os.Getenv("FRONTEND_URL"),
-		AllowOrigins:     "*",
-		AllowMethods:     "GET,POST,DELETE,PUT,OPTIONS",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		ExposeHeaders:    "Content-Length",
-		AllowCredentials: true,
-		MaxAge:           300,
+	//	AllowMethods:     "GET,POST,DELETE,PUT,OPTIONS",
+	//	AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+	//	ExposeHeaders:    "Content-Length",
+	//	AllowCredentials: true,
+	//	MaxAge:           300,
+	//}))
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000, http://localhost:3001, https://landhub.rs, http://landhub.rs", // Укажите домены, которые разрешены
+		AllowCredentials: true, // Включить передачу cookie
+		AllowMethods: "GET,POST,DELETE,PUT,OPTIONS", // Разрешить основные HTTP методы
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization", // Разрешить заголовки
+		ExposeHeaders: "Content-Length", // Экспонировать определенные заголовки
 	}))
+	
 
 	os.MkdirAll("./uploads", os.ModePerm)
 
