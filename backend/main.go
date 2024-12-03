@@ -457,7 +457,7 @@ func NewServer() (*Server, error) {
 	//}))
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000, http://localhost:3001, https://landhub.rs, http://landhub.rs", // Укажите домены, которые разрешены
+		AllowOrigins: "http://localhost:3000,http://localhost:3001,https://landhub.rs,http://landhub.rs", // Укажите домены, которые разрешены
 		AllowCredentials: true, // Включить передачу cookie
 		AllowMethods: "GET,POST,DELETE,PUT,OPTIONS", // Разрешить основные HTTP методы
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization", // Разрешить заголовки
