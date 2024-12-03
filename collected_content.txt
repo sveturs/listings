@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	"context"
 	"github.com/disintegration/imaging"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -125,12 +125,16 @@ func (s *Server) setupRoutes() {
 			"accommodation_type": c.Query("accommodation_type"),
 			"has_private_rooms":  c.Query("has_private_rooms"),
 		}
+		log.Printf("Handling /rooms request with filters: %+v", filters) // Добавить
 
 		rooms, err := s.db.GetRooms(c.Context(), filters)
 		if err != nil {
+			log.Printf("Error getting rooms: %v", err) // Добавить
 			return c.Status(500).SendString("Ошибка получения списка комнат")
 		}
-
+	
+		log.Printf("Successfully retrieved %d rooms", len(rooms)) // Добавить
+		log.Printf("Returning rooms: %+v", rooms)
 		return c.JSON(rooms)
 	})
 
@@ -302,7 +306,7 @@ func (s *Server) setupRoutes() {
 		return c.SendString("Бронирование создано успешно")
 	})
 
-	
+
 	s.app.Get("/bookings", func(c *fiber.Ctx) error {
 		bookings, err := s.db.GetAllBookings(c.Context())
 		if err != nil {
@@ -334,6 +338,7 @@ func (s *Server) setupRoutes() {
 func (s *Server) setupAuthRoutes() {
 	s.app.Get("/auth/google", func(c *fiber.Ctx) error {
 		url := s.auth.GetGoogleAuthURL()
+		log.Printf("Generated Google Auth URL: %s", url) 
 		return c.Redirect(url)
 	})
 
@@ -422,14 +427,18 @@ func (s *Server) setupAuthRoutes() {
 }
 
 func NewServer() (*Server, error) {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found")
+    }
 
 	db, err := database.New(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
+    if err := db.Ping(context.Background()); err != nil {
+        return nil, fmt.Errorf("cannot ping database: %v", err)
+    }
+    log.Println("Successfully connected to database")
 
 	authManager := auth.NewAuthManager(
 		os.Getenv("GOOGLE_CLIENT_ID"),
@@ -440,14 +449,23 @@ func NewServer() (*Server, error) {
 	app := fiber.New()
 
 	// Настройка CORS
+	//app.Use(cors.New(cors.Config{
+	//	AllowOrigins:     os.Getenv("FRONTEND_URL"),
+	//	AllowMethods:     "GET,POST,DELETE,PUT,OPTIONS",
+	//	AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+	//	ExposeHeaders:    "Content-Length",
+	//	AllowCredentials: true,
+	//	MaxAge:           300,
+	//}))
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     os.Getenv("FRONTEND_URL"),
-		AllowMethods:     "GET,POST,DELETE,PUT,OPTIONS",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		ExposeHeaders:    "Content-Length",
-		AllowCredentials: true,
-		MaxAge:           300,
+		AllowOrigins: "http://localhost:3000,http://localhost:3001,https://landhub.rs,http://landhub.rs", // Укажите домены, которые разрешены
+		AllowCredentials: true, // Включить передачу cookie
+		AllowMethods: "GET,POST,DELETE,PUT,OPTIONS", // Разрешить основные HTTP методы
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization", // Разрешить заголовки
+		ExposeHeaders: "Content-Length", // Экспонировать определенные заголовки
 	}))
+	
 
 	os.MkdirAll("./uploads", os.ModePerm)
 
@@ -532,7 +550,7 @@ package auth
 import (
 	"context"
 	"sync"
-
+"log"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	oauth2v2 "google.golang.org/api/oauth2/v2"
@@ -554,6 +572,10 @@ type AuthManager struct {
 }
 
 func NewAuthManager(googleClientID, googleClientSecret, googleRedirectURL string) *AuthManager {
+    log.Printf("Initializing AuthManager with: ClientID=%s, RedirectURL=%s", 
+        googleClientID, googleRedirectURL)
+
+
 	googleConfig := &oauth2.Config{
 		ClientID:     googleClientID,
 		ClientSecret: googleClientSecret,
@@ -570,9 +592,13 @@ func NewAuthManager(googleClientID, googleClientSecret, googleRedirectURL string
 	}
 }
 
+
 func (am *AuthManager) GetGoogleAuthURL() string {
-	return am.googleConfig.AuthCodeURL("state")
+    url := am.googleConfig.AuthCodeURL("state")
+    log.Printf("Generated Google Auth URL: %s", url)
+    return url
 }
+
 
 func (am *AuthManager) HandleGoogleCallback(ctx context.Context, code string) (*SessionData, error) {
     token, err := am.googleConfig.Exchange(ctx, code)
@@ -820,7 +846,9 @@ func (db *Database) DeleteRoom(ctx context.Context, id string) error {
 	}
 	return nil
 }
-
+func (db *Database) Ping(ctx context.Context) error {
+    return db.pool.Ping(ctx)
+}
 func (db *Database) GetRooms(ctx context.Context, filters map[string]string) ([]map[string]interface{}, error) {
 	baseQuery := `
 	WITH room_availability AS (
@@ -5025,137 +5053,143 @@ export default Layout;
 
 import React, { useState, useEffect } from 'react';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    Typography,
-    Chip,
-    Box
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Chip,
+  Box
 } from '@mui/material';
 import {
-    Apartment as ApartmentIcon,
-    Hotel as HotelIcon,
-    SingleBed as SingleBedIcon
+  Apartment as ApartmentIcon,
+  Hotel as HotelIcon,
+  SingleBed as SingleBedIcon
 } from '@mui/icons-material';
 import axios from '../api/axios';
 
 const BookingsList = () => {
-    const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState([]);
 
-    useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const response = await axios.get('/bookings', { withCredentials: true });
-                setBookings(response.data);
-            } catch (error) {
-                console.error('Ошибка получения списка бронирований:', error);
-            }
-        };
-
-        fetchBookings();
-    }, []);
-
-    const getAccommodationIcon = (type) => {
-        switch (type) {
-            case 'bed':
-                return <SingleBedIcon color="primary" />;
-            case 'room':
-                return <HotelIcon color="primary" />;
-            case 'apartment':
-                return <ApartmentIcon color="primary" />;
-            default:
-                return null;
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await axios.get('/bookings');
+        if (Array.isArray(response.data)) {
+          setBookings(response.data);
+        } else {
+          console.error('Unexpected data format:', response.data);
+          setBookings([]); // или другая логика
         }
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        setBookings([]);
+      }
     };
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-    };
+    fetchBookings();
+  }, []);
 
-    return (
-        <Box>
-            <Typography variant="h5" gutterBottom>
-                Список бронирований
-            </Typography>
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Тип размещения</TableCell>
-                            <TableCell>Комната</TableCell>
-                            <TableCell>Клиент</TableCell>
-                            <TableCell>Даты проживания</TableCell>
-                            <TableCell>Статус</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {bookings.map((booking) => (
-                            <TableRow key={booking.id} hover>
-                                <TableCell>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        {getAccommodationIcon(booking.type)}
-                                        <Typography variant="body2">
-                                            {booking.type === 'bed' 
-                                                ? 'Койко-место' 
-                                                : booking.type === 'room' 
-                                                    ? 'Комната' 
-                                                    : 'Квартира'}
-                                        </Typography>
-                                    </Box>
-                                </TableCell>
-                                <TableCell>
-                                    <Typography variant="body2">
-                                        {booking.room_name}
-                                        {booking.bed_id && (
-                                            <Typography variant="caption" display="block" color="text.secondary">
-                                                Место {booking.bed_id}
-                                            </Typography>
-                                        )}
-                                    </Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <Typography variant="body2">
-                                        {booking.user_name}
-                                        <Typography variant="caption" display="block" color="text.secondary">
-                                            {booking.user_email}
-                                        </Typography>
-                                    </Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <Box>
-                                        <Typography variant="body2">
-                                            {`${formatDate(booking.start_date)} - ${formatDate(booking.end_date)}`}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {Math.ceil(
-                                                (new Date(booking.end_date) - new Date(booking.start_date)) / 
-                                                (1000 * 60 * 60 * 24)
-                                            )} дней
-                                        </Typography>
-                                    </Box>
-                                </TableCell>
-                                <TableCell>
-                                    <Chip
-                                        size="small"
-                                        label={booking.status === 'confirmed' ? 'Подтверждено' : 'В обработке'}
-                                        color={booking.status === 'confirmed' ? 'success' : 'warning'}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Box>
-    );
+  const getAccommodationIcon = (type) => {
+    switch (type) {
+      case 'bed':
+        return <SingleBedIcon color="primary" />;
+      case 'room':
+        return <HotelIcon color="primary" />;
+      case 'apartment':
+        return <ApartmentIcon color="primary" />;
+      default:
+        return null;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  return (
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        Список бронирований
+      </Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Тип размещения</TableCell>
+              <TableCell>Комната</TableCell>
+              <TableCell>Клиент</TableCell>
+              <TableCell>Даты проживания</TableCell>
+              <TableCell>Статус</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {bookings.map((booking) => (
+              <TableRow key={booking.id} hover>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {getAccommodationIcon(booking.type)}
+                    <Typography variant="body2">
+                      {booking.type === 'bed'
+                        ? 'Койко-место'
+                        : booking.type === 'room'
+                          ? 'Комната'
+                          : 'Квартира'}
+                    </Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {booking.room_name}
+                    {booking.bed_id && (
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        Место {booking.bed_id}
+                      </Typography>
+                    )}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {booking.user_name}
+                    <Typography variant="caption" display="block" color="text.secondary">
+                      {booking.user_email}
+                    </Typography>
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Box>
+                    <Typography variant="body2">
+                      {`${formatDate(booking.start_date)} - ${formatDate(booking.end_date)}`}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {Math.ceil(
+                        (new Date(booking.end_date) - new Date(booking.start_date)) /
+                        (1000 * 60 * 60 * 24)
+                      )} дней
+                    </Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={booking.status === 'confirmed' ? 'Подтверждено' : 'В обработке'}
+                    color={booking.status === 'confirmed' ? 'success' : 'warning'}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
 };
 
 export default BookingsList;
@@ -7854,137 +7888,143 @@ export default Layout;
 
 import React, { useState, useEffect } from 'react';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    Typography,
-    Chip,
-    Box
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Chip,
+  Box
 } from '@mui/material';
 import {
-    Apartment as ApartmentIcon,
-    Hotel as HotelIcon,
-    SingleBed as SingleBedIcon
+  Apartment as ApartmentIcon,
+  Hotel as HotelIcon,
+  SingleBed as SingleBedIcon
 } from '@mui/icons-material';
 import axios from '../api/axios';
 
 const BookingsList = () => {
-    const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState([]);
 
-    useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const response = await axios.get('/bookings', { withCredentials: true });
-                setBookings(response.data);
-            } catch (error) {
-                console.error('Ошибка получения списка бронирований:', error);
-            }
-        };
-
-        fetchBookings();
-    }, []);
-
-    const getAccommodationIcon = (type) => {
-        switch (type) {
-            case 'bed':
-                return <SingleBedIcon color="primary" />;
-            case 'room':
-                return <HotelIcon color="primary" />;
-            case 'apartment':
-                return <ApartmentIcon color="primary" />;
-            default:
-                return null;
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await axios.get('/bookings');
+        if (Array.isArray(response.data)) {
+          setBookings(response.data);
+        } else {
+          console.error('Unexpected data format:', response.data);
+          setBookings([]); // или другая логика
         }
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        setBookings([]);
+      }
     };
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-    };
+    fetchBookings();
+  }, []);
 
-    return (
-        <Box>
-            <Typography variant="h5" gutterBottom>
-                Список бронирований
-            </Typography>
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Тип размещения</TableCell>
-                            <TableCell>Комната</TableCell>
-                            <TableCell>Клиент</TableCell>
-                            <TableCell>Даты проживания</TableCell>
-                            <TableCell>Статус</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {bookings.map((booking) => (
-                            <TableRow key={booking.id} hover>
-                                <TableCell>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        {getAccommodationIcon(booking.type)}
-                                        <Typography variant="body2">
-                                            {booking.type === 'bed' 
-                                                ? 'Койко-место' 
-                                                : booking.type === 'room' 
-                                                    ? 'Комната' 
-                                                    : 'Квартира'}
-                                        </Typography>
-                                    </Box>
-                                </TableCell>
-                                <TableCell>
-                                    <Typography variant="body2">
-                                        {booking.room_name}
-                                        {booking.bed_id && (
-                                            <Typography variant="caption" display="block" color="text.secondary">
-                                                Место {booking.bed_id}
-                                            </Typography>
-                                        )}
-                                    </Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <Typography variant="body2">
-                                        {booking.user_name}
-                                        <Typography variant="caption" display="block" color="text.secondary">
-                                            {booking.user_email}
-                                        </Typography>
-                                    </Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <Box>
-                                        <Typography variant="body2">
-                                            {`${formatDate(booking.start_date)} - ${formatDate(booking.end_date)}`}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {Math.ceil(
-                                                (new Date(booking.end_date) - new Date(booking.start_date)) / 
-                                                (1000 * 60 * 60 * 24)
-                                            )} дней
-                                        </Typography>
-                                    </Box>
-                                </TableCell>
-                                <TableCell>
-                                    <Chip
-                                        size="small"
-                                        label={booking.status === 'confirmed' ? 'Подтверждено' : 'В обработке'}
-                                        color={booking.status === 'confirmed' ? 'success' : 'warning'}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Box>
-    );
+  const getAccommodationIcon = (type) => {
+    switch (type) {
+      case 'bed':
+        return <SingleBedIcon color="primary" />;
+      case 'room':
+        return <HotelIcon color="primary" />;
+      case 'apartment':
+        return <ApartmentIcon color="primary" />;
+      default:
+        return null;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  return (
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        Список бронирований
+      </Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Тип размещения</TableCell>
+              <TableCell>Комната</TableCell>
+              <TableCell>Клиент</TableCell>
+              <TableCell>Даты проживания</TableCell>
+              <TableCell>Статус</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {bookings.map((booking) => (
+              <TableRow key={booking.id} hover>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {getAccommodationIcon(booking.type)}
+                    <Typography variant="body2">
+                      {booking.type === 'bed'
+                        ? 'Койко-место'
+                        : booking.type === 'room'
+                          ? 'Комната'
+                          : 'Квартира'}
+                    </Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {booking.room_name}
+                    {booking.bed_id && (
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        Место {booking.bed_id}
+                      </Typography>
+                    )}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {booking.user_name}
+                    <Typography variant="caption" display="block" color="text.secondary">
+                      {booking.user_email}
+                    </Typography>
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Box>
+                    <Typography variant="body2">
+                      {`${formatDate(booking.start_date)} - ${formatDate(booking.end_date)}`}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {Math.ceil(
+                        (new Date(booking.end_date) - new Date(booking.start_date)) /
+                        (1000 * 60 * 60 * 24)
+                      )} дней
+                    </Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={booking.status === 'confirmed' ? 'Подтверждено' : 'В обработке'}
+                    color={booking.status === 'confirmed' ? 'success' : 'warning'}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
 };
 
 export default BookingsList;
@@ -8133,16 +8173,14 @@ export default AdminPanelPage;
 --- Содержимое файла: frontend/hostel-frontend/.env ---
 
 REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyBISWAfMMEdWSIKL9WASQIWeKbSQo4Dv48
-REACT_APP_API_URL=https://landhub.rs/api
+REACT_APP_API_URL=https://landhub.rs
 REACT_APP_BACKEND_URL=https://landhub.rs
+FRONTEND_URL=https://landhub.rs
 
 --- Содержимое файла: frontend/hostel-frontend/.env.local ---
 
 REACT_APP_API_URL=http://localhost:3000
 REACT_APP_BACKEND_URL=http://localhost:3000
-
-
-
 tw=Z3Y733JX5KN65B5D8ZXJ1EDD
 GOOGLE_CLIENT_ID=917315728307-au9ga5fl7o3bbid9nv7e4l92gut194pq.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=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
@@ -8429,20 +8467,26 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - hostel_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
     container_name: hostel_backend
     env_file:
-        - ./backend/.env
+      - ./backend/.env
     networks:
-        - hostel_network
+      - hostel_network
     environment:
       - DATABASE_URL=postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   nginx:
     image: nginx:alpine
@@ -8457,7 +8501,8 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     networks:
       - hostel_network
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
@@ -8479,6 +8524,7 @@ networks:
   hostel_network:
     driver: bridge
 
+
 --- Содержимое файла: docker-compose.yml ---
 
 version: '3.8'
@@ -8495,6 +8541,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -8504,12 +8555,13 @@ services:
     env_file:
       - ./backend/.env.local
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend/uploads:/app/uploads
     environment:
       - UPLOAD_DIR=/app/uploads
-      
+
   migrate:
     image: migrate/migrate
     volumes:
@@ -8520,7 +8572,8 @@ services:
       "up"
     ]
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:
@@ -8624,7 +8677,6 @@ server {
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
-
     location / {
         return 301 https://$host$request_uri;
     }
@@ -8648,25 +8700,25 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    location / {
-        try_files $uri $uri/ /index.html;
-        add_header Cache-Control "no-cache";
-    }
-
-    location /api/ {
-        rewrite ^/api/(.*) /$1 break;
+    # Backend API и Auth endpoints
+    location ~ ^/(api|auth)/ {
         proxy_pass http://api_backend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
-        proxy_buffer_size 128k;
-        proxy_buffers 4 256k;
-        proxy_busy_buffers_size 256k;
-        proxy_cache_bypass $http_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffer_size 128k;
+        proxy_buffers 4 256k;
+        proxy_busy_buffers_size 256k;
+    }
+
+    # Frontend routes
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache";
     }
 
     location /uploads/ {
@@ -8684,6 +8736,7 @@ server {
         log_not_found off;
     }
 }
+
 
 --- Содержимое файла: package.json ---
 
