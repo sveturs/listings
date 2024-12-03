@@ -7,6 +7,7 @@ import AddRoomPage from "./pages/AddRoomPage";
 import AddUserPage from "./pages/AddUserPage";
 import BookingsListPage from "./pages/BookingsListPage";
 import AdminPanelPage from "./pages/AdminPanelPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="/add-room" element={<AddRoomPage />} />
             <Route path="/add-user" element={<AddUserPage />} />
             <Route path="/admin" element={<AdminPanelPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           </Routes>
         </Layout>
       </Router>
