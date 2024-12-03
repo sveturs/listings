@@ -132,6 +132,7 @@ func (s *Server) setupRoutes() {
 		}
 	
 		log.Printf("Successfully retrieved %d rooms", len(rooms)) // Добавить
+		log.Printf("Returning rooms: %+v", rooms)
 		return c.JSON(rooms)
 	})
 
@@ -447,7 +448,8 @@ func NewServer() (*Server, error) {
 
 	// Настройка CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     os.Getenv("FRONTEND_URL"),
+	//	AllowOrigins:     os.Getenv("FRONTEND_URL"),
+		AllowOrigins:     "*",
 		AllowMethods:     "GET,POST,DELETE,PUT,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		ExposeHeaders:    "Content-Length",
