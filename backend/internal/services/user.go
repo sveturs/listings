@@ -1,0 +1,34 @@
+package services
+
+import (
+    "context"
+    "backend/internal/domain/models"
+    "backend/internal/storage"
+)
+
+type UserService struct {
+    storage storage.Storage
+}
+
+func NewUserService(storage storage.Storage) *UserService {
+    return &UserService{
+        storage: storage,
+    }
+}
+
+
+func (s *UserService) GetUserByID(ctx context.Context, id int) (*models.User, error) {
+	return s.storage.GetUserByID(ctx, id)
+}
+
+func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	return s.storage.GetUserByEmail(ctx, email)
+}
+
+func (s *UserService) CreateUser(ctx context.Context, user *models.User) error {
+	return s.storage.CreateUser(ctx, user)
+}
+
+func (s *UserService) UpdateUser(ctx context.Context, user *models.User) error {
+	return s.storage.UpdateUser(ctx, user)
+}

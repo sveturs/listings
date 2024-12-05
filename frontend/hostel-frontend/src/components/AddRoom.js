@@ -14,7 +14,10 @@ import {
     Select,
     MenuItem,
     FormControlLabel,
-    Switch
+    Switch,
+    Paper,
+    FormGroup,
+    Checkbox
 } from "@mui/material";
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import axios from "../api/axios";
@@ -40,8 +43,18 @@ const AddRoom = () => {
     });
 
     const [beds, setBeds] = useState([
-        { bed_number: "1", price_per_night: 0, images: [], imagePreviewUrls: [] }
+        {
+            bed_number: "1",
+            price_per_night: 0,
+            has_outlet: true,
+            has_light: true,
+            has_shelf: true,
+            bed_type: 'single',
+            images: [],
+            imagePreviewUrls: []
+        }
     ]);
+    
     const [images, setImages] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
     const [errorMessage, setErrorMessage] = useState("");
@@ -71,7 +84,6 @@ const AddRoom = () => {
             images: [...(newBeds[index].images || []), ...validFiles]
         };
 
-        // Создаем превью для изображений
         validFiles.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -135,63 +147,53 @@ const AddRoom = () => {
         e.preventDefault();
         setErrorMessage("");
         setIsSuccess(false);
-
         try {
-            if (room.accommodation_type === 'bed' && (!room.total_beds || beds.length === 0)) {
-                setErrorMessage("Добавьте информацию о кроватях");
-                return;
+            const roomResponse = await axios.post("/api/v1/rooms", room);
+            const roomId = roomResponse.data.data.id;
+            console.log('Room response:', roomResponse);
+
+            if (!roomId) {
+                console.error('No room ID in response:', roomResponse);
+                throw new Error('Failed to get room ID');
             }
 
-            const roomData = {
-                ...room,
-                latitude: parseFloat(room.latitude),
-                longitude: parseFloat(room.longitude)
-            };
-
-            // Создаем комнату
-            const roomResponse = await axios.post("/rooms", roomData);
-            const roomId = roomResponse.data.id;
-
-            // Если тип размещения - койко-места, создаем кровати и загружаем их изображения
             if (room.accommodation_type === 'bed' && beds.length > 0) {
-                await Promise.all(
-                    beds.map(async (bed) => {
-                        try {
-                            // Создаем койко-место
-                            const bedResponse = await axios.post(`/rooms/${roomId}/beds`, {
-                                bed_number: bed.bed_number,
-                                price_per_night: parseFloat(bed.price_per_night)
-                            });
+                for (const bed of beds) {
+                    console.log(`Creating bed for room ${roomId}:`, bed);
+                    const bedResponse = await axios.post(`/api/v1/rooms/${roomId}/beds`, {
+                        bed_number: bed.bed_number,
+                        price_per_night: parseFloat(bed.price_per_night),
+                        has_outlet: bed.has_outlet,
+                        has_light: bed.has_light,
+                        has_shelf: bed.has_shelf,
+                        bed_type: bed.bed_type
+                    });
+                    console.log('Bed response:', bedResponse);
 
-                            // Если есть изображения для койко-места, загружаем их
-                            if (bed.images && bed.images.length > 0) {
-                                const formData = new FormData();
-                                bed.images.forEach(image => {
-                                    formData.append('images', image);
-                                });
+                    const bedId = bedResponse.data.data.id;
 
-                                await axios.post(`/beds/${bedResponse.data.id}/images`, formData, {
-                                    headers: {
-                                        'Content-Type': 'multipart/form-data'
-                                    }
-                                });
+                    if (bed.images && bed.images.length > 0) {
+                        const formData = new FormData();
+                        bed.images.forEach(image => {
+                            formData.append('images', image);
+                        });
+
+                        await axios.post(`/api/v1/rooms/${roomId}/beds/${bedId}/images`, formData, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
                             }
-                        } catch (error) {
-                            console.error('Ошибка добавления кровати или её изображений:', error);
-                            throw error;
-                        }
-                    })
-                );
+                        });
+                    }
+                }
             }
 
-            // Загружаем общие изображения комнаты
             if (images.length > 0) {
                 const formData = new FormData();
                 images.forEach(image => {
                     formData.append('images', image);
                 });
 
-                await axios.post(`/rooms/${roomId}/images`, formData, {
+                await axios.post(`/api/v1/rooms/${roomId}/images`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
@@ -199,7 +201,6 @@ const AddRoom = () => {
             }
 
             setIsSuccess(true);
-            // Сброс формы
             setRoom({
                 name: "",
                 accommodation_type: "room",
@@ -218,12 +219,22 @@ const AddRoom = () => {
                 longitude: null,
                 formatted_address: ''
             });
-            setBeds([{ bed_number: "1", price_per_night: 0, images: [], imagePreviewUrls: [] }]);
+            setBeds([{
+                bed_number: "1",
+                price_per_night: 0,
+                has_outlet: true,
+                has_light: true,
+                has_shelf: true,
+                bed_type: 'single',
+                images: [],
+                imagePreviewUrls: []
+            }]);
             setImages([]);
             setPreviewUrls([]);
+
         } catch (error) {
             console.error('Ошибка при добавлении:', error);
-            setErrorMessage(error.response?.data || "Ошибка при добавлении объекта размещения");
+            setErrorMessage(error.response?.data?.error || "Ошибка при добавлении объекта размещения");
         }
     };
 
@@ -244,7 +255,6 @@ const AddRoom = () => {
             )}
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
-                    {/* Базовая информация */}
                     <Grid item xs={12}>
                         <TextField
                             label="Название"
@@ -255,7 +265,6 @@ const AddRoom = () => {
                         />
                     </Grid>
 
-                    {/* Тип размещения */}
                     <Grid item xs={12}>
                         <FormControl fullWidth>
                             <InputLabel>Тип размещения</InputLabel>
@@ -281,294 +290,399 @@ const AddRoom = () => {
 
                     {room.accommodation_type === 'bed' ? (
                         <>
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    label="Всего кроватей"
-                                    type="number"
-                                    fullWidth
-                                    required
-                                    value={room.total_beds || ''}
-                                    onChange={(e) => setRoom({
-                                        ...room,
-                                        total_beds: parseInt(e.target.value) || 0,
-                                        available_beds: parseInt(e.target.value) || 0
-                                    })}
-                                />
+                            <Grid item container xs={12} spacing={2}>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        label="Всего кроватей"
+                                        type="number"
+                                        fullWidth
+                                        required
+                                        value={room.total_beds || ''}
+                                        onChange={(e) => {
+                                            const totalBeds = parseInt(e.target.value) || 0;
+                                            const defaultPrice = room.default_price || 0;
+
+                                            setRoom({
+                                                ...room,
+                                                total_beds: totalBeds,
+                                                available_beds: totalBeds
+                                            });
+
+                                            const newBeds = Array.from({ length: totalBeds }, (_, index) => ({
+                                                bed_number: `${index + 1}`,
+                                                price_per_night: defaultPrice,
+                                                has_outlet: true,
+                                                has_light: true,
+                                                has_shelf: true,
+                                                bed_type: 'single',
+                                                images: [],
+                                                imagePreviewUrls: []
+                                            }));
+                                            setBeds(newBeds);
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        label="Стандартная цена за ночь"
+                                        type="number"
+                                        fullWidth
+                                        required
+                                        value={room.default_price || ''}
+                                        onChange={(e) => {
+                                            const defaultPrice = parseFloat(e.target.value) || 0;
+                                            setRoom({
+                                                ...room,
+                                                default_price: defaultPrice
+                                            });
+                                            setBeds(prevBeds =>
+                                                prevBeds.map(bed => ({
+                                                    ...bed,
+                                                    price_per_night: defaultPrice
+                                                }))
+                                            );
+                                        }}
+                                    />
+                                </Grid>
                             </Grid>
+
                             <Grid item xs={12}>
+                                <Typography variant="h6" sx={{ mt: 2, mb: 2 }}>
+                                    Информация о кроватях
+                                </Typography>
                                 {beds.map((bed, index) => (
-                                    <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                                        <TextField
-                                            label={`Номер кровати ${index + 1}`}
-                                            value={bed.bed_number}
-                                            onChange={(e) => {
-                                                const newBeds = [...beds];
-                                                newBeds[index].bed_number = e.target.value;
-                                                setBeds(newBeds);
-                                            }}
-                                        />
-                                        <TextField
-                                            label="Цена за ночь"
-                                            type="number"
-                                            value={bed.price_per_night}
-                                            onChange={(e) => {
-                                                const newBeds = [...beds];
-                                                newBeds[index].price_per_night = parseFloat(e.target.value);
-                                                setBeds(newBeds);
-                                            }}
-                                        />
-                                        <Box>
-                                            <Button
-                                                variant="contained"
-                                                component="label"
-                                                size="small"
-                                            >
-                                                Фото кровати
-                                                <input
-                                                    type="file"
-                                                    hidden
-                                                    multiple
-                                                    accept="image/*"
-                                                    onChange={(e) => handleBedImageChange(index, e)}
-                                                />
-                                            </Button>
-                                            {bed.imagePreviewUrls && bed.imagePreviewUrls.length > 0 && (
-                                                <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                                                    {bed.imagePreviewUrls.map((url, imgIndex) => (
-                                                        <Box
-                                                            key={imgIndex}
-                                                            sx={{
-                                                                position: 'relative',
-                                                                width: 60,
-                                                                height: 60
+                                    <Grid item xs={12} key={index}>
+                                        <Paper sx={{ p: 2, mb: 2 }}>
+                                            <Grid container spacing={2} alignItems="center">
+                                                <Grid item xs={12} sm={6} md={3}>
+                                                    <TextField
+                                                        label={`Номер кровати ${index + 1}`}
+                                                        value={bed.bed_number}
+                                                        onChange={(e) => {
+                                                            const newBeds = [...beds];
+                                                            newBeds[index].bed_number = e.target.value;
+                                                            setBeds(newBeds);
+                                                        }}
+                                                        fullWidth
+                                                    />
+                                                </Grid>
+                                                
+                                                <Grid item xs={12} sm={6} md={3}>
+                                                    <TextField
+                                                        label="Цена за ночь"
+                                                        type="number"
+                                                        value={bed.price_per_night}
+                                                        onChange={(e) => {
+                                                            const newBeds = [...beds];
+                                                            newBeds[index].price_per_night = parseFloat(e.target.value);
+                                                            setBeds(newBeds);
+                                                        }}
+                                                        fullWidth
+                                                    />
+                                                </Grid>
+
+                                                <Grid item xs={12} sm={6} md={3}>
+                                                    <FormControl fullWidth>
+                                                        <InputLabel>Тип кровати</InputLabel>
+                                                        <Select
+                                                            value={bed.bed_type || 'single'}
+                                                            onChange={(e) => {
+                                                                const newBeds = [...beds];
+                                                                newBeds[index].bed_type = e.target.value;
+                                                                setBeds(newBeds);
                                                             }}
                                                         >
-                                                            <img
-                                                                src={url}
-                                                                alt={`Preview ${imgIndex}`}
-                                                                style={{
-                                                                    width: '100%',
-                                                                    height: '100%',
-                                                                    objectFit: 'cover',
-                                                                    borderRadius: '4px'
-                                                                }}
+                                                            <MenuItem value="single">Отдельностоящая</MenuItem>
+                                                            <MenuItem value="top">Верхний ярус</MenuItem>
+                                                            <MenuItem value="bottom">Нижний ярус</MenuItem>
+                                                        </Select>
+                                                    </FormControl>
+                                                </Grid>
+
+                                                <Grid item xs={12}>
+                                                    <FormGroup row>
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox
+                                                                    checked={bed.has_outlet}
+                                                                    onChange={(e) => {
+                                                                        const newBeds = [...beds];
+                                                                        newBeds[index].has_outlet = e.target.checked;
+                                                                        setBeds(newBeds);
+                                                                    }}
+                                                                />
+                                                            }
+                                                            label="Розетка"
+                                                        />
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox
+                                                                    checked={bed.has_light}
+                                                                    onChange={(e) => {
+                                                                        const newBeds = [...beds];
+                                                                        newBeds[index].has_light = e.target.checked;
+                                                                        setBeds(newBeds);
+                                                                    }}
+                                                                />
+                                                            }
+                                                            label="Светильник"
                                                             />
-                                                            <IconButton
+                                                            <FormControlLabel
+                                                                control={
+                                                                    <Checkbox
+                                                                        checked={bed.has_shelf}
+                                                                        onChange={(e) => {
+                                                                            const newBeds = [...beds];
+                                                                            newBeds[index].has_shelf = e.target.checked;
+                                                                            setBeds(newBeds);
+                                                                        }}
+                                                                    />
+                                                                }
+                                                                label="Полка"
+                                                            />
+                                                        </FormGroup>
+                                                    </Grid>
+    
+                                                    <Grid item xs={12}>
+                                                        <Box>
+                                                            <Button
+                                                                variant="contained"
+                                                                component="label"
                                                                 size="small"
-                                                                sx={{
-                                                                    position: 'absolute',
-                                                                    top: -8,
-                                                                    right: -8,
-                                                                    bgcolor: 'background.paper'
-                                                                }}
-                                                                onClick={() => {
-                                                                    const newBeds = [...beds];
-                                                                    newBeds[index].images.splice(imgIndex, 1);
-                                                                    newBeds[index].imagePreviewUrls.splice(imgIndex, 1);
-                                                                    setBeds(newBeds);
-                                                                }}
+                                                                startIcon={<CloudUploadIcon />}
                                                             >
-                                                                <DeleteIcon fontSize="small" />
-                                                            </IconButton>
+                                                                Фото кровати
+                                                                <input
+                                                                    type="file"
+                                                                    hidden
+                                                                    multiple
+                                                                    accept="image/*"
+                                                                    onChange={(e) => handleBedImageChange(index, e)}
+                                                                />
+                                                            </Button>
+                                                            {bed.imagePreviewUrls && bed.imagePreviewUrls.length > 0 && (
+                                                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+                                                                    {bed.imagePreviewUrls.map((url, imgIndex) => (
+                                                                        <Box
+                                                                            key={imgIndex}
+                                                                            sx={{
+                                                                                position: 'relative',
+                                                                                width: 60,
+                                                                                height: 60
+                                                                            }}
+                                                                        >
+                                                                            <img
+                                                                                src={url}
+                                                                                alt={`Preview ${imgIndex}`}
+                                                                                style={{
+                                                                                    width: '100%',
+                                                                                    height: '100%',
+                                                                                    objectFit: 'cover',
+                                                                                    borderRadius: '4px'
+                                                                                }}
+                                                                            />
+                                                                            <IconButton
+                                                                                size="small"
+                                                                                sx={{
+                                                                                    position: 'absolute',
+                                                                                    top: -8,
+                                                                                    right: -8,
+                                                                                    bgcolor: 'background.paper'
+                                                                                }}
+                                                                                onClick={() => {
+                                                                                    const newBeds = [...beds];
+                                                                                    newBeds[index].images.splice(imgIndex, 1);
+                                                                                    newBeds[index].imagePreviewUrls.splice(imgIndex, 1);
+                                                                                    setBeds(newBeds);
+                                                                                }}
+                                                                            >
+                                                                                <DeleteIcon fontSize="small" />
+                                                                            </IconButton>
+                                                                        </Box>
+                                                                    ))}
+                                                                </Box>
+                                                            )}
                                                         </Box>
-                                                    ))}
-                                                </Box>
-                                            )}
-                                        </Box>
-                                        <IconButton onClick={() => {
-                                            const newBeds = [...beds];
-                                            newBeds.splice(index, 1);
-                                            setBeds(newBeds);
-                                        }}>
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Box>
-                                ))}
-
-                                <Button
-                                    variant="outlined"
-                                    onClick={() => setBeds([...beds, { bed_number: `${beds.length + 1}`, price_per_night: 0 }])}
-                                >
-                                    Добавить кровать
-                                </Button>
-                            </Grid>
-                        </>
-                    ) : (
-                        <>
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    label="Вместимость"
-                                    type="number"
-                                    fullWidth
-                                    required
-                                    value={room.capacity}
-                                    onChange={(e) => setRoom({ ...room, capacity: parseInt(e.target.value) || 0 })}
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    label="Цена за ночь"
-                                    type="number"
-                                    fullWidth
-                                    required
-                                    value={room.price_per_night}
-                                    onChange={(e) => setRoom({ ...room, price_per_night: parseFloat(e.target.value) || 0 })}
-                                />
-                            </Grid>
-                        </>
-                    )}
-
-                    <Grid item xs={12}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={room.is_shared}
-                                    onChange={(e) => setRoom({ ...room, is_shared: e.target.checked })}
-                                />
-                            }
-                            label="Общее помещение"
-                        />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={room.has_private_bathroom}
-                                    onChange={(e) => setRoom({ ...room, has_private_bathroom: e.target.checked })}
-                                />
-                            }
-                            label="Отдельная ванная комната"
-                        />
-                    </Grid>
-
-                    {/* Выбор местоположения */}
-                    <Grid item xs={12}>
-                        <LocationPicker onLocationSelect={handleLocationSelect} />
-                    </Grid>
-
-                    {/* Адрес */}
-                    <Grid item xs={12}>
-                        <Typography variant="h6">Адрес</Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            label="Улица"
-                            fullWidth
-                            required
-                            value={room.address_street}
-                            onChange={(e) => setRoom({ ...room, address_street: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            label="Город"
-                            fullWidth
-                            required
-                            value={room.address_city}
-                            onChange={(e) => setRoom({ ...room, address_city: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            label="Область/Регион"
-                            fullWidth
-                            value={room.address_state}
-                            onChange={(e) => setRoom({ ...room, address_state: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            label="Страна"
-                            fullWidth
-                            required
-                            value={room.address_country}
-                            onChange={(e) => setRoom({ ...room, address_country: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            label="Почтовый индекс"
-                            fullWidth
-                            value={room.address_postal_code}
-                            onChange={(e) => setRoom({ ...room, address_postal_code: e.target.value })}
-                        />
-                    </Grid>
-
-                    {/* Изображения */}
-                    <Grid item xs={12}>
-                        <Typography variant="h6">Фотографии</Typography>
-                        <Box sx={{ mt: 1, mb: 2 }}>
-                            <Button
-                                variant="contained"
-                                component="label"
-                                startIcon={<CloudUploadIcon />}
-                            >
-                                Загрузить изображения
-                                <input
-                                    type="file"
-                                    hidden
-                                    multiple
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                />
-                            </Button>
-                        </Box>
-                        <Grid container spacing={2}>
-                            {previewUrls.map((url, index) => (
-                                <Grid item xs={12} sm={4} key={index}>
-                                    <Box sx={{ position: 'relative' }}>
-                                        <img
-                                            src={url}
-                                            alt={`Preview ${index}`}
-                                            style={{
-                                                width: '100%',
-                                                height: '200px',
-                                                objectFit: 'cover',
-                                                borderRadius: '4px'
-                                            }}
-                                        />
-                                        <IconButton
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 8,
-                                                right: 8,
-                                                bgcolor: 'rgba(255, 255, 255, 0.8)'
-                                            }}
-                                            onClick={() => {
-                                                setImages(prev => prev.filter((_, i) => i !== index));
-                                                setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-                                            }}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Box>
+                                                    </Grid>
+                                                </Grid>
+                                            </Paper>
+                                        </Grid>
+                                    ))}
                                 </Grid>
-                            ))}
+                            </>
+                        ) : (
+                            <>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        label="Вместимость"
+                                        type="number"
+                                        fullWidth
+                                        required
+                                        value={room.capacity}
+                                        onChange={(e) => setRoom({ ...room, capacity: parseInt(e.target.value) || 0 })}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        label="Цена за ночь"
+                                        type="number"
+                                        fullWidth
+                                        required
+                                        value={room.price_per_night}
+                                        onChange={(e) => setRoom({ ...room, price_per_night: parseFloat(e.target.value) || 0 })}
+                                    />
+                                </Grid>
+                            </>
+                        )}
+    
+                        <Grid item xs={12}>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={room.is_shared}
+                                        onChange={(e) => setRoom({ ...room, is_shared: e.target.checked })}
+                                    />
+                                }
+                                label="Общее помещение"
+                            />
+                        </Grid>
+    
+                        <Grid item xs={12}>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={room.has_private_bathroom}
+                                        onChange={(e) => setRoom({ ...room, has_private_bathroom: e.target.checked })}
+                                    />
+                                }
+                                label="Отдельная ванная комната"
+                            />
+                        </Grid>
+    
+                        <Grid item xs={12}>
+                            <LocationPicker onLocationSelect={handleLocationSelect} />
+                        </Grid>
+    
+                        <Grid item xs={12}>
+                            <Typography variant="h6">Адрес</Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Улица"
+                                fullWidth
+                                required
+                                value={room.address_street}
+                                onChange={(e) => setRoom({ ...room, address_street: e.target.value })}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label="Город"
+                                fullWidth
+                                required
+                                value={room.address_city}
+                                onChange={(e) => setRoom({ ...room, address_city: e.target.value })}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label="Область/Регион"
+                                fullWidth
+                                value={room.address_state}
+                                onChange={(e) => setRoom({ ...room, address_state: e.target.value })}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label="Страна"
+                                fullWidth
+                                required
+                                value={room.address_country}
+                                onChange={(e) => setRoom({ ...room, address_country: e.target.value })}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label="Почтовый индекс"
+                                fullWidth
+                                value={room.address_postal_code}
+                                onChange={(e) => setRoom({ ...room, address_postal_code: e.target.value })}
+                            />
+                        </Grid>
+    
+                        <Grid item xs={12}>
+                            <Typography variant="h6">Фотографии</Typography>
+                            <Box sx={{ mt: 1, mb: 2 }}>
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    startIcon={<CloudUploadIcon />}
+                                >
+                                    Загрузить изображения
+                                    <input
+                                        type="file"
+                                        hidden
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                    />
+                                </Button>
+                            </Box>
+                            <Grid container spacing={2}>
+                                {previewUrls.map((url, index) => (
+                                    <Grid item xs={12} sm={4} key={index}>
+                                        <Box sx={{ position: 'relative' }}>
+                                            <img
+                                                src={url}
+                                                alt={`Preview ${index}`}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '200px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '4px'
+                                                }}
+                                            />
+                                            <IconButton
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: 8,
+                                                    right: 8,
+                                                    bgcolor: 'rgba(255, 255, 255, 0.8)'
+                                                }}
+                                                onClick={() => {
+                                                    setImages(prev => prev.filter((_, i) => i !== index));
+                                                    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+                                                }}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Box>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Grid>
+    
+                        <Grid item xs={12}>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                fullWidth
+                                size="large"
+                                disabled={!room.name ||
+                                    !room.latitude ||
+                                    !room.longitude ||
+                                    !room.address_city ||
+                                    !room.address_country ||
+                                    (room.accommodation_type === 'bed' && (!room.total_beds || beds.length === 0))}
+                            >
+                                Добавить
+                            </Button>
                         </Grid>
                     </Grid>
-
-                    <Grid item xs={12}>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            size="large"
-                            disabled={!room.name ||
-                                !room.latitude ||
-                                !room.longitude ||
-                                !room.address_city ||
-                                !room.address_country ||
-                                (room.accommodation_type === 'bed' && (!room.total_beds || beds.length === 0))}
-                        >
-                            Добавить
-                        </Button>
-                    </Grid>
-                </Grid>
-            </form>
-        </Container>
-    );
-};
-
-export default AddRoom;
+                </form>
+            </Container>
+        );
+    };
+    
+    export default AddRoom;

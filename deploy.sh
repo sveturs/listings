@@ -101,7 +101,7 @@ if [ $? -eq 0 ]; then
     echo "Migrations successful! Starting other services..."
     
     # Запускаем остальные сервисы
-    docker-compose -f docker-compose.prod.yml up -d logs > deployment_logs.txt 2>&1
+    docker-compose -f docker-compose.prod.yml up -d
 
     # Проверяем структуру базы данных
     echo "Checking database structure..."

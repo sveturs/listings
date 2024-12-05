@@ -25,9 +25,8 @@ import {
 import BookingDialog from "./BookingDialog";
 import MapView from './MapView';
 
-
+console.log('BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
 const ImageGallery = ({ images, open, onClose }) => {
     const [activeStep, setActiveStep] = useState(0);
     const maxSteps = images.length;
@@ -111,12 +110,17 @@ const RoomList = () => {
         end_date: "",
         type: ''
     });
-
+    const [filteredRooms, setFilteredRooms] = useState([]);
     const handleTypeFilter = (type) => {
         setFilters(prev => ({
             ...prev,
-            type: prev.type === type ? '' : type // сброс фильтра при повторном нажатии
+            type,
+            accommodation_type: type
         }));
+        fetchRooms({
+            ...filters,
+            accommodation_type: type
+        });
     };
 
 
@@ -177,7 +181,6 @@ const RoomList = () => {
             if (filters.country?.trim()) {
                 params.append('country', filters.country.trim());
             }
-
             // Добавляем фильтр по типу размещения
             if (filters.type) {
                 params.append('accommodation_type', filters.type);
@@ -191,8 +194,20 @@ const RoomList = () => {
             params.append('start_date', filters.start_date || today);
             params.append('end_date', filters.end_date || today);
 
-            const response = await axios.get(`/rooms?${params.toString()}`);
-            const roomsData = response.data || [];
+            const response = await axios.get(`${BACKEND_URL}/rooms?${params.toString()}`);
+            console.log('Ответ от сервера:', response.data);
+
+            // Проверяем, что получили массив комнат
+            let roomsData = response.data;
+
+            if (response.data.rooms) {
+                roomsData = response.data.rooms;
+            }
+
+            if (!Array.isArray(roomsData)) {
+                console.error('Ожидаемый массив комнат, но получили:', roomsData);
+                return;
+            }
 
             // Фильтрация на фронтенде
             const filteredRooms = roomsData.filter(room => {
@@ -218,9 +233,10 @@ const RoomList = () => {
             const roomsWithImages = await Promise.all(
                 filteredRooms.map(async (room) => {
                     const imagesResponse = await axios.get(`/rooms/${room.id}/images`);
+                    console.log(`Images for room ${room.id}:`, imagesResponse.data); // добавляем этот лог
                     return {
                         ...room,
-                        images: imagesResponse.data || []
+                        images: imagesResponse.data.data || [] // Добавляем .data, так как ответ обернут в {data: [...], success: true}
                     };
                 })
             );
@@ -259,25 +275,49 @@ const RoomList = () => {
         setBookingDialogOpen(true);
     };
 
-// долой протечки памяти
+    // долой протечки памяти
     useEffect(() => {
         let isSubscribed = true;
-        
+
         const fetchData = async () => {
             try {
-                const response = await fetchRooms();
-                if (isSubscribed) {
-                    setRooms(response.data);
+                const response = await axios.get(`${BACKEND_URL}/rooms`, { params: filters });
+                console.log('Ответ от сервера:', response);
+
+                // Правильно обрабатываем структуру ответа
+                let roomsData;
+                if (response.data.data) {
+                    roomsData = response.data.data;  // Получаем массив из data
+                } else if (Array.isArray(response.data)) {
+                    roomsData = response.data;  // На случай если придет просто массив
+                } else {
+                    console.error('Неожиданный формат данных:', response.data);
+                    roomsData = [];
                 }
+
+                // Получаем изображения для отфильтрованных комнат
+                const roomsWithImages = await Promise.all(
+                    roomsData.map(async (room) => {
+                        const imagesResponse = await axios.get(`/rooms/${room.id}/images`);
+                        console.log(`Images response for room ${room.id}:`, imagesResponse); // Добавьте этот лог
+                        return {
+                            ...room,
+                            images: imagesResponse.data.data || [] // Добавляем .data, так как ответ обернут в {data: [...], success: true}
+                        };
+                    })
+                );
+
+                setRooms(roomsWithImages);
+                setRoomsWithCoordinates(roomsWithImages.filter(room =>
+                    room.latitude && room.longitude));
+
             } catch (error) {
-                if (isSubscribed) {
-                    console.error(error);
-                }
+                console.error("Ошибка при получении списка комнат:", error);
             }
         };
-        
+
         fetchData();
-        
+
         return () => {
             isSubscribed = false;
         };
@@ -575,8 +615,10 @@ const RoomList = () => {
                                                         },
                                                     }}
                                                     image={`${BACKEND_URL}/uploads/${room.images[0].file_path}`}
+
                                                     alt={room.name}
                                                     onClick={() => {
+                                                        console.log('Image URL:', `${BACKEND_URL}/uploads/${room.images[0].file_path}`); // добавляем этот лог
                                                         setSelectedRoom(room);
                                                         setGalleryOpen(true);
                                                     }}
@@ -644,7 +686,7 @@ const RoomList = () => {
                                                     }}
                                                 >
                                                     Все ({room.images.length})
-                                                </Button> 
+                                                </Button>
                                             )}
                                             <Button
                                                 variant="contained"

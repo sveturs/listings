@@ -23,22 +23,23 @@ const BookingsList = () => {
 
   useEffect(() => {
     const fetchBookings = async () => {
-      try {
-        const response = await axios.get('/bookings');
-        if (Array.isArray(response.data)) {
-          setBookings(response.data);
-        } else {
-          console.error('Unexpected data format:', response.data);
-          setBookings([]); // или другая логика
+        try {
+            const response = await axios.get('/api/v1/bookings'); // Используем /api/v1
+            if (Array.isArray(response.data.data)) { // Проверяем структуру ответа
+                setBookings(response.data.data);
+            } else {
+                console.error('Unexpected data format:', response.data);
+                setBookings([]);
+            }
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+            setBookings([]);
         }
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-        setBookings([]);
-      }
     };
 
     fetchBookings();
-  }, []);
+}, []);
+
 
   const getAccommodationIcon = (type) => {
     switch (type) {

@@ -49,3 +49,5 @@ collected_content.txt
 # Build directories
 /frontend/hostel-frontend/build/
 /frontend/hostel-frontend/node_modules/
+collected_code.txt
+project_code.txt
