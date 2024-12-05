@@ -8,7 +8,7 @@ import (
 
 func (m *Middleware) CORS() fiber.Handler {
     return cors.New(cors.Config{
-        AllowOrigins:     strings.Join([]string{m.config.FrontendURL,"http://localhost:3000","http://localhost:3001"}, ","),
+        AllowOrigins:     strings.Join([]string{m.config.FrontendURL,"http://localhost:3000","http://localhost:3001,http://landhub.rs,https://landhub.rs"}, ","),
         AllowMethods:     "GET,POST,DELETE,PUT,OPTIONS",
         AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
         AllowCredentials: true,
