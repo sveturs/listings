@@ -86,7 +86,6 @@ func (s *Server) setupRoutes() {
     
     // Protected room routes
     rooms := protected.Group("/rooms")
-    rooms.Get("/", s.handlers.Rooms.List)
     rooms.Post("/", s.handlers.Rooms.Create)
     rooms.Get("/:id", s.handlers.Rooms.Get)
     rooms.Post("/:id/images", s.handlers.Rooms.UploadImages)
