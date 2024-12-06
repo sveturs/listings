@@ -65,45 +65,39 @@ func (s *Server) setupRoutes() {
     s.app.Static("/uploads", "./uploads")
     os.MkdirAll("./uploads", os.ModePerm)
 
-    // Public routes (without /api/v1 prefix)
+    // Public routes
     s.app.Get("/rooms", s.handlers.Rooms.List)
     s.app.Get("/rooms/:id", s.handlers.Rooms.Get)
     s.app.Get("/rooms/:id/images", s.handlers.Rooms.ListImages)
-	s.app.Get("/rooms/:id/available-beds", s.handlers.Rooms.GetAvailableBeds) 
-    s.app.Post("/rooms", s.handlers.Rooms.Create)
-    
-    // Auth routes
-    s.app.Get("/auth/session", s.handlers.Auth.GetSession)
-    s.app.Get("/auth/google", s.handlers.Auth.GoogleAuth)
-    s.app.Get("/auth/google/callback", s.handlers.Auth.GoogleCallback)
-    s.app.Get("/auth/logout", s.handlers.Auth.Logout)
+    s.app.Get("/rooms/:id/available-beds", s.handlers.Rooms.GetAvailableBeds)
+    s.app.Get("/beds/:id/images", s.handlers.Rooms.ListBedImages)
 
-    // API v1 routes
-    api := s.app.Group("/api/v1")
+    // Auth routes
+    auth := s.app.Group("/auth")
+    auth.Get("/session", s.handlers.Auth.GetSession)
+    auth.Get("/google", s.handlers.Auth.GoogleAuth)
+    auth.Get("/google/callback", s.handlers.Auth.GoogleCallback)
+    auth.Get("/logout", s.handlers.Auth.Logout)
 
     // Protected API routes
-    protected := api.Use(s.middleware.AuthRequired)
-    
+    api := s.app.Group("/api/v1", s.middleware.AuthRequired)
+
     // Protected room routes
-    rooms := protected.Group("/rooms")
+    rooms := api.Group("/rooms")
     rooms.Post("/", s.handlers.Rooms.Create)
-    rooms.Get("/:id", s.handlers.Rooms.Get)
     rooms.Post("/:id/images", s.handlers.Rooms.UploadImages)
-    rooms.Get("/:id/images", s.handlers.Rooms.ListImages)
     rooms.Delete("/:id/images/:imageId", s.handlers.Rooms.DeleteImage)
     rooms.Post("/:id/beds", s.handlers.Rooms.AddBed)
-    rooms.Get("/:id/available-beds", s.handlers.Rooms.GetAvailableBeds)
-	s.app.Get("/beds/:id/images", s.handlers.Rooms.ListBedImages)  // Публичный маршрут
-	rooms.Post("/:roomId/beds/:bedId/images", s.handlers.Rooms.UploadBedImages)
+    rooms.Post("/:roomId/beds/:bedId/images", s.handlers.Rooms.UploadBedImages)
 
     // Protected booking routes
-    bookings := protected.Group("/bookings")
+    bookings := api.Group("/bookings")
     bookings.Post("/", s.handlers.Bookings.Create)
     bookings.Get("/", s.handlers.Bookings.List)
     bookings.Delete("/:id", s.handlers.Bookings.Delete)
 
     // Protected user routes
-    users := protected.Group("/users")
+    users := api.Group("/users")
     users.Post("/register", s.handlers.Users.Register)
     users.Get("/me", s.handlers.Users.GetProfile)
     users.Put("/me", s.handlers.Users.UpdateProfile)
