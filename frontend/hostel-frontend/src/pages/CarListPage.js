@@ -59,7 +59,8 @@ const CarListPage = () => {
     const fetchCars = useCallback(async () => {
         try {
             // Изменить путь запроса
-            const response = await axios.get('/api/v1/cars/available');
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/v1/cars/available`, { withCredentials: true });
+
             console.log('Response:', response.data); // Добавить для отладки
             
             const carsData = response.data?.data || [];
