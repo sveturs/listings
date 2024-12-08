@@ -20,7 +20,10 @@ type RoomServiceInterface interface {
     AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error)
     GetAvailableBeds(ctx context.Context, roomID string, startDate string, endDate string) ([]models.Bed, error)
 }
-
+type CarServiceInterface interface {
+    AddCar(ctx context.Context, car *models.Car) (int, error)
+    GetAvailableCars(ctx context.Context) ([]models.Car, error)
+}
 type AuthServiceInterface interface {
     GetGoogleAuthURL() string
     HandleGoogleCallback(ctx context.Context, code string) (*types.SessionData, error)

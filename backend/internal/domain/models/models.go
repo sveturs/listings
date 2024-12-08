@@ -10,7 +10,15 @@ type User struct {
 	PictureURL string    `json:"picture_url"`
 	CreatedAt  time.Time `json:"created_at"`
 }
-
+type Car struct {
+    ID           int       `json:"id"`
+    Make         string    `json:"make"`
+    Model        string    `json:"model"`
+    Year         int       `json:"year"`
+    PricePerDay  float64   `json:"price_per_day"`
+    Availability bool      `json:"availability"`
+    Location     string    `json:"location"`
+}
 type Room struct {
 	ID                 int       `json:"id"`
 	Name               string    `json:"name"`

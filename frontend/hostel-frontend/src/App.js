@@ -8,6 +8,8 @@ import AddUserPage from "./pages/AddUserPage";
 import BookingsListPage from "./pages/BookingsListPage";
 import AdminPanelPage from "./pages/AdminPanelPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import CarListPage from "./pages/CarListPage";
+import AddCarPage from "./pages/AddCarPage";
 
 function App() {
   return (
@@ -21,6 +23,9 @@ function App() {
             <Route path="/add-user" element={<AddUserPage />} />
             <Route path="/admin" element={<AdminPanelPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/cars" element={<CarListPage />} /> {/* Список автомобилей */}
+            <Route path="/add-car" element={<AddCarPage />} /> {/* Добавление автомобиля */}
+          
           </Routes>
         </Layout>
       </Router>

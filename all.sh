@@ -37,11 +37,12 @@ exclude_dirs=(
     "node_modules"
     "vendor"
     "dist"
+    "build"
     ".git"
     "uploads"
     "/data/proj/hostel-booking-system/frontend/node_modules/"
-    "/data/proj/hostel-booking-system/node_modules/"
     "/data/proj/hostel-booking-system/frontend/hostel-frontend/build/"
+    "/data/proj/hostel-booking-system/node_modules/"
 
 )
 
@@ -57,6 +58,7 @@ exclude_files=(
     "/data/proj/hostel-booking-system/backend/main.go"
     "/data/proj/hostel-booking-system/backend/database/db.go"
     "/data/proj/hostel-booking-system/package-lock.json"
+    
 
 
     

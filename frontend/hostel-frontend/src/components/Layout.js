@@ -28,6 +28,7 @@ const Layout = ({ children }) => {
     <Box>
       <AppBar position="static">
         <Toolbar>
+          {/* Логотип или заголовок */}
           <Typography
             variant="h6"
             component={Link}
@@ -43,6 +44,7 @@ const Layout = ({ children }) => {
 
           {user ? (
             <>
+              {/* Кнопки для авторизованных пользователей */}
               <Button
                 color="inherit"
                 component={Link}
@@ -57,7 +59,22 @@ const Layout = ({ children }) => {
               >
                 Добавить объявление
               </Button>
+              <Button
+                color="inherit"
+                component={Link}
+                to="/cars"
+              >
+                Список автомобилей
+              </Button>
+              <Button
+                color="inherit"
+                component={Link}
+                to="/add-car"
+              >
+                Добавить автомобиль
+              </Button>
 
+              {/* Аватар пользователя и меню */}
               <Box 
                 onClick={handleMenu}
                 sx={{ 
@@ -99,6 +116,7 @@ const Layout = ({ children }) => {
               </Menu>
             </>
           ) : (
+            // Кнопка входа для неавторизованных пользователей
             <Button 
               color="inherit"
               onClick={login}
@@ -108,6 +126,7 @@ const Layout = ({ children }) => {
           )}
         </Toolbar>
       </AppBar>
+      {/* Контент страницы */}
       {children}
     </Box>
   );

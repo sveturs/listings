@@ -12,6 +12,10 @@ type Storage interface {
     GetUserByID(ctx context.Context, id int) (*models.User, error)
     CreateUser(ctx context.Context, user *models.User) error
     UpdateUser(ctx context.Context, user *models.User) error
+    
+    // Методы для работы с автомобилями
+    AddCar(ctx context.Context, car *models.Car) (int, error)
+    GetAvailableCars(ctx context.Context) ([]models.Car, error)
 
     // Room methods
     AddRoom(ctx context.Context, room *models.Room) (int, error)

@@ -9,6 +9,7 @@ type Handler struct {
     Rooms    *RoomHandler
     Bookings *BookingHandler
     Users    *UserHandler
+    Cars     *CarHandler 
 }
 
 func NewHandler(services services.ServicesInterface) *Handler {
@@ -17,5 +18,6 @@ func NewHandler(services services.ServicesInterface) *Handler {
         Rooms:    NewRoomHandler(services),
         Bookings: NewBookingHandler(services),
         Users:    NewUserHandler(services),
+        Cars:     NewCarHandler(services),
     }
 }
