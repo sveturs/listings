@@ -12,11 +12,14 @@ type Storage interface {
     GetUserByID(ctx context.Context, id int) (*models.User, error)
     CreateUser(ctx context.Context, user *models.User) error
     UpdateUser(ctx context.Context, user *models.User) error
-    
+
     // Методы для работы с автомобилями
     AddCar(ctx context.Context, car *models.Car) (int, error)
     GetAvailableCars(ctx context.Context) ([]models.Car, error)
-
+    AddCarImage(ctx context.Context, image *models.CarImage) (int, error)
+    GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error)
+    DeleteCarImage(ctx context.Context, imageID string) (string, error)
+    
     // Room methods
     AddRoom(ctx context.Context, room *models.Room) (int, error)
     AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error)

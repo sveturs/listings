@@ -72,9 +72,6 @@ func (s *Server) setupRoutes() {
     s.app.Get("/rooms/:id/available-beds", s.handlers.Rooms.GetAvailableBeds)
     s.app.Get("/beds/:id/images", s.handlers.Rooms.ListBedImages)
 
-    // Routes for cars
-    s.app.Post("/api/cars", s.handlers.Cars.AddCar)
-    s.app.Get("/api/cars/available", s.handlers.Cars.GetAvailableCars)
 
     // Auth routes
     auth := s.app.Group("/auth")
@@ -85,6 +82,12 @@ func (s *Server) setupRoutes() {
 
     // Protected API routes
     api := s.app.Group("/api/v1", s.middleware.AuthRequired)
+    cars := api.Group("/cars")
+    cars.Post("/", s.handlers.Cars.AddCar)
+    cars.Get("/available", s.handlers.Cars.GetAvailableCars)
+    cars.Post("/:id/images", s.handlers.Cars.UploadImages)
+    cars.Get("/:id/images", s.handlers.Cars.GetImages)
+
 
     // Protected room routes
     rooms := api.Group("/rooms")

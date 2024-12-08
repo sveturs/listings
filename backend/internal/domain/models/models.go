@@ -10,14 +10,52 @@ type User struct {
 	PictureURL string    `json:"picture_url"`
 	CreatedAt  time.Time `json:"created_at"`
 }
+type CarCategory struct {
+    ID          int    `json:"id"`
+    Name        string `json:"name"`
+    Description string `json:"description"`
+}
+
+type CarImage struct {
+    ID          int       `json:"id"`
+    CarID       int       `json:"car_id"`
+    FilePath    string    `json:"file_path"`
+    FileName    string    `json:"file_name"`
+    FileSize    int       `json:"file_size"`
+    ContentType string    `json:"content_type"`
+    IsMain      bool      `json:"is_main"`
+    CreatedAt   time.Time `json:"created_at"`
+}
+
 type Car struct {
-    ID           int       `json:"id"`
-    Make         string    `json:"make"`
-    Model        string    `json:"model"`
-    Year         int       `json:"year"`
-    PricePerDay  float64   `json:"price_per_day"`
-    Availability bool      `json:"availability"`
-    Location     string    `json:"location"`
+    ID          int       `json:"id"`
+    Make        string    `json:"make"`
+    Model       string    `json:"model"`
+    Year        int       `json:"year"`
+    PricePerDay float64   `json:"price_per_day"`
+    Location    string    `json:"location"`
+    Availability bool     `json:"availability"`
+    Transmission string   `json:"transmission"`
+    FuelType    string    `json:"fuel_type"`
+    Seats       int       `json:"seats"`
+    Features    []string  `json:"features"`
+    CreatedAt   time.Time `json:"created_at"`
+}
+
+type CarBooking struct {
+    ID              int       `json:"id"`
+    CarID           int       `json:"car_id"`
+    UserID          int       `json:"user_id"`
+    StartDate       time.Time `json:"start_date"`
+    EndDate         time.Time `json:"end_date"`
+    PickupLocation  string    `json:"pickup_location"`
+    DropoffLocation string    `json:"dropoff_location"`
+    Status          string    `json:"status"`
+    TotalPrice      float64   `json:"total_price"`
+    CreatedAt       time.Time `json:"created_at"`
+    Car             *Car      `json:"car,omitempty"`
+    UserName        string    `json:"user_name,omitempty"`
+    UserEmail       string    `json:"user_email,omitempty"`
 }
 type Room struct {
 	ID                 int       `json:"id"`
