@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
     "backend/internal/services"
     "strconv"
+    "log"
 
 )
 type CarHandler struct {
@@ -18,12 +19,15 @@ func NewCarHandler(services services.ServicesInterface) *CarHandler {
     }
 }
 func (h *CarHandler) AddCar(c *fiber.Ctx) error {
-    var car struct {
+    var carData struct {
         Make        string   `json:"make"`
         Model       string   `json:"model"`
         Year        int      `json:"year"`
         PricePerDay float64  `json:"price_per_day"`
         Location    string   `json:"location"`
+        Latitude    float64  `json:"latitude"`
+        Longitude   float64  `json:"longitude"`
+        Description string   `json:"description"`
         Availability bool    `json:"availability"`
         Transmission string  `json:"transmission"`
         FuelType    string   `json:"fuel_type"`
@@ -31,32 +35,38 @@ func (h *CarHandler) AddCar(c *fiber.Ctx) error {
         Features    []string `json:"features"`
     }
 
-    if err := c.BodyParser(&car); err != nil {
+    if err := c.BodyParser(&carData); err != nil {
+        log.Printf("Error parsing request body: %v", err)
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
     }
 
-    // Валидация данных
-    if car.Make == "" || car.Model == "" || car.Year == 0 || car.PricePerDay == 0 || car.Location == "" {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "All required fields must be filled")
+    log.Printf("Received car data: %+v", carData)
+
+    // Валидация обязательных полей
+    if carData.Make == "" || carData.Model == "" || carData.PricePerDay == 0 {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Missing required fields")
     }
 
-    // Создаем модель Car для базы данных
-    carModel := &models.Car{
-        Make:         car.Make,
-        Model:        car.Model,
-        Year:         car.Year,
-        PricePerDay:  car.PricePerDay,
-        Location:     car.Location,
-        Availability: car.Availability,
-        Transmission: car.Transmission,
-        FuelType:     car.FuelType,
-        Seats:        car.Seats,
-        Features:     car.Features,
+    car := &models.Car{
+        Make:         carData.Make,
+        Model:        carData.Model,
+        Year:         carData.Year,
+        PricePerDay:  carData.PricePerDay,
+        Location:     carData.Location,
+        Latitude:     carData.Latitude,
+        Longitude:    carData.Longitude,
+        Description:  carData.Description,
+        Availability: true,
+        Transmission: carData.Transmission,
+        FuelType:     carData.FuelType,
+        Seats:        carData.Seats,
+        Features:     carData.Features,
     }
 
-    carID, err := h.services.Car().AddCar(c.Context(), carModel)
+    carID, err := h.services.Car().AddCar(c.Context(), car)
     if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error adding car: "+err.Error())
+        log.Printf("Error adding car to database: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error adding car")
     }
 
     return utils.SuccessResponse(c, fiber.Map{

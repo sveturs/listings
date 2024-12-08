@@ -28,18 +28,26 @@ type CarImage struct {
 }
 
 type Car struct {
-    ID          int       `json:"id"`
-    Make        string    `json:"make"`
-    Model       string    `json:"model"`
-    Year        int       `json:"year"`
-    PricePerDay float64   `json:"price_per_day"`
-    Location    string    `json:"location"`
-    Availability bool     `json:"availability"`
-    Transmission string   `json:"transmission"`
-    FuelType    string    `json:"fuel_type"`
-    Seats       int       `json:"seats"`
-    Features    []string  `json:"features"`
-    CreatedAt   time.Time `json:"created_at"`
+    ID               int       `json:"id"`
+    Make            string    `json:"make"`
+    Model           string    `json:"model"`
+    Year            int       `json:"year"`
+    PricePerDay     float64   `json:"price_per_day"`
+    Location        string    `json:"location"`
+    Latitude        float64   `json:"latitude"`
+    Longitude       float64   `json:"longitude"`
+    Description     string    `json:"description,omitempty"`
+    Availability    bool      `json:"availability"`
+    Transmission    string    `json:"transmission"`
+    FuelType        string    `json:"fuel_type"`
+    Seats           int       `json:"seats"`
+    CategoryID      int       `json:"category_id"`
+    Category        string    `json:"category"`
+    Features        []string  `json:"features"`
+    DailyMileageLimit int     `json:"daily_mileage_limit"`
+    InsuranceIncluded bool    `json:"insurance_included"`
+    Images          []CarImage `json:"images,omitempty"`
+    CreatedAt       time.Time `json:"created_at"`
 }
 
 type CarBooking struct {
@@ -57,6 +65,13 @@ type CarBooking struct {
     UserName        string    `json:"user_name,omitempty"`
     UserEmail       string    `json:"user_email,omitempty"`
 }
+type CarFeature struct {
+    ID          int    `json:"id"`
+    Name        string `json:"name"`
+    Category    string `json:"category"`
+    Description string `json:"description,omitempty"`
+}
+
 type Room struct {
 	ID                 int       `json:"id"`
 	Name               string    `json:"name"`

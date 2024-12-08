@@ -19,7 +19,10 @@ type Storage interface {
     AddCarImage(ctx context.Context, image *models.CarImage) (int, error)
     GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error)
     DeleteCarImage(ctx context.Context, imageID string) (string, error)
-    
+    GetCarFeatures(ctx context.Context) ([]models.CarFeature, error)
+    GetCarCategories(ctx context.Context) ([]models.CarCategory, error)
+    GetCarWithFeatures(ctx context.Context, carID int) (*models.Car, error)
+
     // Room methods
     AddRoom(ctx context.Context, room *models.Room) (int, error)
     AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error)
