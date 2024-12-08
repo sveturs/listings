@@ -1,3 +1,4 @@
+//frontend/hostel-frontend/src/pages/CarListPage.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { LoadScript } from '@react-google-maps/api';
 import MapView from '../components/CarMapView';
