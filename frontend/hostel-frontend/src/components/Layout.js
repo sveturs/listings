@@ -11,11 +11,19 @@ import {
   Box,
   Container,
   Divider,
-  IconButton,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  ListItemIcon,
+  ListItemText
 } from "@mui/material";
-import { DirectionsCar, HomeWork, Menu as MenuIcon } from '@mui/icons-material';
+import { 
+  DirectionsCar, 
+  HomeWork, 
+  ListAlt,
+  AddHome,
+  Logout,
+  Person
+} from '@mui/icons-material';
 import { useAuth } from "../contexts/AuthContext";
 
 const Layout = ({ children }) => {
@@ -25,119 +33,131 @@ const Layout = ({ children }) => {
   const location = useLocation();
   
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [mobileMenuAnchor, setMobileMenuAnchor] = React.useState(null);
 
-  // Группируем пункты меню по категориям
-  const accommodationItems = [
-    { to: "/bookings", label: "Все бронирования" },
-    { to: "/add-room", label: "Добавить объявление" },
-  ];
-
-  const carItems = [
-    { to: "/cars", label: "Список автомобилей" },
-    { to: "/add-car", label: "Добавить автомобиль" },
-  ];
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
         <Container maxWidth="xl">
-          <Toolbar disableGutters>
-            {/* Логотип */}
+          <Toolbar disableGutters sx={{ minHeight: '64px' }}>
+            {/* Жилье */}
             <Typography
               variant="h6"
               component={Link}
               to="/"
               sx={{
-                flexGrow: { xs: 1, md: 0 },
-                mr: 4,
                 textDecoration: 'none',
                 color: 'text.primary',
                 fontWeight: 700,
-                letterSpacing: '-0.5px'
+                fontSize: '1.2rem',
+                display: 'flex',
+                alignItems: 'center'
               }}
             >
-              Hostel Booking System
+              <HomeWork sx={{ mr: 1, color: 'primary.main' }} />
+              Hostel Booking
             </Typography>
 
-            {/* Десктопное меню */}
-            {!isMobile && user && (
-              <>
-                <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                  {/* Секция жилья */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <HomeWork sx={{ color: 'primary.main' }} />
-                    {accommodationItems.map((item) => (
-                      <Button
-                        key={item.to}
-                        component={Link}
-                        to={item.to}
-                        sx={{
-                          color: 'text.primary',
-                          '&.active': {
-                            color: 'primary.main',
-                          }
-                        }}
-                      >
-                        {item.label}
-                      </Button>
-                    ))}
-                  </Box>
+            <Box sx={{ flexGrow: 1 }} />
 
-                  <Divider orientation="vertical" flexItem />
+            {/* Автомобили */}
+            <Typography
+              variant="h6"
+              component={Link}
+              to="/cars"
+              sx={{
+                textDecoration: 'none',
+                color: 'text.primary',
+                fontWeight: 700,
+                fontSize: '1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                mr: 4
+              }}
+            >
+              <DirectionsCar sx={{ mr: 1, color: 'primary.main' }} />
+              Auto Booking
+            </Typography>
 
-                  {/* Секция автомобилей */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <DirectionsCar sx={{ color: 'primary.main' }} />
-                    {carItems.map((item) => (
-                      <Button
-                        key={item.to}
-                        component={Link}
-                        to={item.to}
-                        sx={{
-                          color: 'text.primary',
-                          '&.active': {
-                            color: 'primary.main',
-                          }
-                        }}
-                      >
-                        {item.label}
-                      </Button>
-                    ))}
-                  </Box>
-                </Box>
-
-                <Box sx={{ flexGrow: 1 }} />
-              </>
-            )}
-
-            {/* Профиль пользователя */}
+            {/* Профиль */}
             {user ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <>
                 <Avatar
-                  onClick={(e) => setAnchorEl(e.currentTarget)}
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    cursor: 'pointer',
-                    bgcolor: 'primary.main'
-                  }}
                   src={user.pictureUrl}
+                  sx={{ cursor: 'pointer', width: 36, height: 36 }}
+                  onClick={(e) => setAnchorEl(e.currentTarget)}
+                />
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleCloseMenu}
+                  onClick={handleCloseMenu}
+                  PaperProps={{
+                    sx: { width: 220, mt: 1.5 }
+                  }}
+                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 >
-                  {user.name?.charAt(0)}
-                </Avatar>
-              </Box>
+                  <MenuItem disabled>
+                    <ListItemText 
+                      primary={user.name}
+                      secondary={user.email}
+                      primaryTypographyProps={{ 
+                        variant: 'subtitle2',
+                        noWrap: true
+                      }}
+                      secondaryTypographyProps={{ 
+                        variant: 'caption',
+                        noWrap: true
+                      }}
+                    />
+                  </MenuItem>
+                  
+                  <Divider />
+                  
+                  <MenuItem component={Link} to="/bookings">
+                    <ListItemIcon>
+                      <ListAlt fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Мои бронирования</ListItemText>
+                  </MenuItem>
+
+                  <Divider />
+
+                  <MenuItem component={Link} to="/add-room">
+                    <ListItemIcon>
+                      <AddHome fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Добавить жильё</ListItemText>
+                  </MenuItem>
+                  
+                  <MenuItem component={Link} to="/add-car">
+                    <ListItemIcon>
+                      <DirectionsCar fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Добавить автомобиль</ListItemText>
+                  </MenuItem>
+                  
+                  <Divider />
+                  
+                  <MenuItem onClick={logout}>
+                    <ListItemIcon>
+                      <Logout fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Выйти</ListItemText>
+                  </MenuItem>
+                </Menu>
+              </>
             ) : (
               <Button
                 variant="contained"
                 onClick={login}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  px: 3
-                }}
+                sx={{ borderRadius: 2, px: 3 }}
               >
-                Войти через Google
+                Войти
               </Button>
             )}
           </Toolbar>
