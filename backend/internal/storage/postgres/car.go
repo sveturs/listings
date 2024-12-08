@@ -1,4 +1,5 @@
 // backend/internal/storage/postgres/car.go
+
 package postgres
 
 import (
@@ -85,6 +86,60 @@ for _, featureName := range car.Features {
     log.Printf("Successfully added car with ID: %d", carID)
     return carID, nil
 }
+func (db *Database) CreateCarBooking(ctx context.Context, booking *models.CarBooking) error {
+    tx, err := db.pool.Begin(ctx)
+    if err != nil {
+        return err
+    }
+    defer tx.Rollback(ctx)
+
+    // Проверяем доступность автомобиля на выбранные даты
+    var count int
+    err = tx.QueryRow(ctx, `
+        SELECT COUNT(*)
+        FROM car_bookings
+        WHERE car_id = $1
+        AND status = 'confirmed'
+        AND (
+            ($2 BETWEEN start_date AND end_date)
+            OR ($3 BETWEEN start_date AND end_date)
+            OR (start_date BETWEEN $2 AND $3)
+        )
+    `, booking.CarID, booking.StartDate, booking.EndDate).Scan(&count)
+
+    if err != nil {
+        return err
+    }
+
+    if count > 0 {
+        return fmt.Errorf("car is not available for selected dates")
+    }
+
+    // Создаем бронирование
+    err = tx.QueryRow(ctx, `
+        INSERT INTO car_bookings (
+            car_id, user_id, start_date, end_date,
+            pickup_location, dropoff_location,
+            status, total_price
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id
+    `,
+        booking.CarID,
+        booking.UserID,
+        booking.StartDate,
+        booking.EndDate,
+        booking.PickupLocation,
+        booking.DropoffLocation,
+        "pending",
+        booking.TotalPrice,
+    ).Scan(&booking.ID)
+
+    if err != nil {
+        return err
+    }
+
+    return tx.Commit(ctx)
+}
 func (db *Database) GetCarWithFeatures(ctx context.Context, carID int) (*models.Car, error) {
     var car models.Car
     err := db.pool.QueryRow(ctx, `
@@ -121,27 +176,45 @@ func (db *Database) GetCarWithFeatures(ctx context.Context, carID int) (*models.
     return &car, err
 }
 func (db *Database) GetAvailableCars(ctx context.Context) ([]models.Car, error) {
-    query := `
-        WITH car_features AS (
-            SELECT cl.car_id, array_agg(f.name) as features
-            FROM car_feature_links cl
-            JOIN car_features f ON f.id = cl.feature_id
-            GROUP BY cl.car_id
-        )
-        SELECT 
-            c.id, c.make, c.model, c.year, c.price_per_day,
-            c.location, c.latitude, c.longitude, c.description,
-            c.availability, c.transmission, c.fuel_type, c.seats,
-            c.daily_mileage_limit, c.insurance_included, c.created_at,
-            COALESCE(cf.features, '{}'::text[]) as features
-        FROM cars c
-        LEFT JOIN car_features cf ON cf.car_id = c.id
-        WHERE c.availability = true
-        ORDER BY c.created_at DESC
-    `
+    // Сначала проверим общее количество
+    var count int
+    err := db.pool.QueryRow(ctx, "SELECT COUNT(*) FROM cars WHERE availability = true").Scan(&count)
+    if err != nil {
+        log.Printf("Error counting cars: %v", err)
+    } else {
+        log.Printf("Total available cars in DB: %d", count)
+    }
+
+query := `
+    SELECT 
+        c.id, 
+        c.make, 
+        c.model, 
+        c.year, 
+        c.price_per_day,
+        c.location, 
+        c.latitude, 
+        c.longitude, 
+        c.description,
+        c.availability, 
+        c.transmission, 
+        c.fuel_type, 
+        c.seats,
+        c.daily_mileage_limit, 
+        c.insurance_included, 
+        c.created_at,
+        '{}'::text[] as features
+    FROM cars c
+    WHERE c.availability = true
+    ORDER BY c.created_at DESC
+`
+    
+
+    log.Printf("Executing cars query...")
 
     rows, err := db.pool.Query(ctx, query)
     if err != nil {
+        log.Printf("Error executing query: %v", err)
         return nil, err
     }
     defer rows.Close()
@@ -150,24 +223,43 @@ func (db *Database) GetAvailableCars(ctx context.Context) ([]models.Car, error) 
     for rows.Next() {
         var car models.Car
         err := rows.Scan(
-            &car.ID, &car.Make, &car.Model, &car.Year, &car.PricePerDay,
-            &car.Location, &car.Latitude, &car.Longitude, &car.Description,
-            &car.Availability, &car.Transmission, &car.FuelType, &car.Seats,
-            &car.DailyMileageLimit, &car.InsuranceIncluded, &car.CreatedAt,
+            &car.ID, 
+            &car.Make, 
+            &car.Model, 
+            &car.Year,
+            &car.PricePerDay,
+            &car.Location, 
+            &car.Latitude,
+            &car.Longitude,
+            &car.Description,
+            &car.Availability,
+            &car.Transmission,
+            &car.FuelType,
+            &car.Seats,
+            &car.DailyMileageLimit,
+            &car.InsuranceIncluded,
+            &car.CreatedAt,
             &car.Features,
         )
         if err != nil {
+            log.Printf("Error scanning row: %v", err)
             continue
         }
+        log.Printf("Found car: ID=%d, Make=%s, Model=%s", car.ID, car.Make, car.Model)
         cars = append(cars, car)
     }
+
+    log.Printf("Found %d cars after scanning", len(cars))
 
     // Загружаем изображения для каждой машины
     for i := range cars {
         images, err := db.GetCarImages(ctx, fmt.Sprintf("%d", cars[i].ID))
-        if err == nil {
-            cars[i].Images = images
+        if err != nil {
+            log.Printf("Error loading images for car %d: %v", cars[i].ID, err)
+            continue
         }
+        cars[i].Images = images
+        log.Printf("Loaded %d images for car %d", len(images), cars[i].ID)
     }
 
     return cars, nil

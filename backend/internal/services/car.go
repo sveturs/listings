@@ -1,3 +1,4 @@
+//backend/internal/services/car.go
 package services
 
 import (
@@ -65,4 +66,7 @@ func (s *CarService) AddCarImage(ctx context.Context, image *models.CarImage) (i
 
 func (s *CarService) GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error) {
     return s.storage.GetCarImages(ctx, carID)
+}
+func (s *CarService) CreateBooking(ctx context.Context, booking *models.CarBooking) error {
+    return s.storage.CreateCarBooking(ctx, booking)
 }

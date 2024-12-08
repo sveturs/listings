@@ -1,3 +1,4 @@
+//backend/internal/handlers/car.go
 package handlers
 
 import (
@@ -74,7 +75,28 @@ func (h *CarHandler) AddCar(c *fiber.Ctx) error {
         "message": "Car added successfully",
     })
 }
+func (h *CarHandler) CreateBooking(c *fiber.Ctx) error {
+    var booking models.CarBooking
+    if err := c.BodyParser(&booking); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+    }
+
+    // Получаем ID пользователя из сессии
+    userID := c.Locals("user_id").(int)
+    booking.UserID = userID
+
+    err := h.services.Car().CreateBooking(c.Context(), &booking)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating booking")
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Booking created successfully",
+        "booking": booking,
+    })
+}
 func (h *CarHandler) UploadImages(c *fiber.Ctx) error {
+    log.Printf("Starting image upload for car")
     carID, err := strconv.Atoi(c.Params("id"))
     if err != nil {
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid car ID")

@@ -1,3 +1,4 @@
+//backend/internal/services/interfaces.go
 package services
 
 import (
@@ -26,7 +27,9 @@ type CarServiceInterface interface {
     ProcessImage(file *multipart.FileHeader) (string, error)
     AddCarImage(ctx context.Context, image *models.CarImage) (int, error)
     GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error)
+    CreateBooking(ctx context.Context, booking *models.CarBooking) error // Добавить этот метод
 }
+
 type AuthServiceInterface interface {
     GetGoogleAuthURL() string
     HandleGoogleCallback(ctx context.Context, code string) (*types.SessionData, error)

@@ -44,8 +44,8 @@ type Car struct {
     CategoryID      int       `json:"category_id"`
     Category        string    `json:"category"`
     Features        []string  `json:"features"`
-    DailyMileageLimit int     `json:"daily_mileage_limit"`
-    InsuranceIncluded bool    `json:"insurance_included"`
+    DailyMileageLimit *int    `json:"daily_mileage_limit"` // Изменить на указатель
+	InsuranceIncluded bool    `json:"insurance_included"`
     Images          []CarImage `json:"images,omitempty"`
     CreatedAt       time.Time `json:"created_at"`
 }

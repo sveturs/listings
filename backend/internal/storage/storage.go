@@ -14,6 +14,7 @@ type Storage interface {
     UpdateUser(ctx context.Context, user *models.User) error
 
     // Методы для работы с автомобилями
+    CreateCarBooking(ctx context.Context, booking *models.CarBooking) error
     AddCar(ctx context.Context, car *models.Car) (int, error)
     GetAvailableCars(ctx context.Context) ([]models.Car, error)
     AddCarImage(ctx context.Context, image *models.CarImage) (int, error)
