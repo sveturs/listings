@@ -1,133 +1,153 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
+import { Link, useLocation } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
   Avatar,
   Menu,
   MenuItem,
   Box,
+  Container,
+  Divider,
+  IconButton,
+  useTheme,
+  useMediaQuery
 } from "@mui/material";
+import { DirectionsCar, HomeWork, Menu as MenuIcon } from '@mui/icons-material';
 import { useAuth } from "../contexts/AuthContext";
 
 const Layout = ({ children }) => {
   const { user, login, logout } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
+  
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [mobileMenuAnchor, setMobileMenuAnchor] = React.useState(null);
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  // Группируем пункты меню по категориям
+  const accommodationItems = [
+    { to: "/bookings", label: "Все бронирования" },
+    { to: "/add-room", label: "Добавить объявление" },
+  ];
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const carItems = [
+    { to: "/cars", label: "Список автомобилей" },
+    { to: "/add-car", label: "Добавить автомобиль" },
+  ];
 
   return (
-    <Box>
-      <AppBar position="static">
-        <Toolbar>
-          {/* Логотип или заголовок */}
-          <Typography
-            variant="h6"
-            component={Link}
-            to="/"
-            sx={{
-              flexGrow: 1,
-              textDecoration: 'none',
-              color: 'inherit'
-            }}
-          >
-            Hostel Booking System
-          </Typography>
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
+        <Container maxWidth="xl">
+          <Toolbar disableGutters>
+            {/* Логотип */}
+            <Typography
+              variant="h6"
+              component={Link}
+              to="/"
+              sx={{
+                flexGrow: { xs: 1, md: 0 },
+                mr: 4,
+                textDecoration: 'none',
+                color: 'text.primary',
+                fontWeight: 700,
+                letterSpacing: '-0.5px'
+              }}
+            >
+              Hostel Booking System
+            </Typography>
 
-          {user ? (
-            <>
-              {/* Кнопки для авторизованных пользователей */}
-              <Button
-                color="inherit"
-                component={Link}
-                to="/bookings"
-              >
-                Все бронирования
-              </Button>
-              <Button
-                color="inherit"
-                component={Link}
-                to="/add-room"
-              >
-                Добавить объявление
-              </Button>
-              <Button
-                color="inherit"
-                component={Link}
-                to="/cars"
-              >
-                Список автомобилей
-              </Button>
-              <Button
-                color="inherit"
-                component={Link}
-                to="/add-car"
-              >
-                Добавить автомобиль
-              </Button>
+            {/* Десктопное меню */}
+            {!isMobile && user && (
+              <>
+                <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                  {/* Секция жилья */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <HomeWork sx={{ color: 'primary.main' }} />
+                    {accommodationItems.map((item) => (
+                      <Button
+                        key={item.to}
+                        component={Link}
+                        to={item.to}
+                        sx={{
+                          color: 'text.primary',
+                          '&.active': {
+                            color: 'primary.main',
+                          }
+                        }}
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
+                  </Box>
 
-              {/* Аватар пользователя и меню */}
-              <Box 
-                onClick={handleMenu}
-                sx={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  ml: 2,
-                  cursor: 'pointer'
-                }}
-              >
+                  <Divider orientation="vertical" flexItem />
+
+                  {/* Секция автомобилей */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <DirectionsCar sx={{ color: 'primary.main' }} />
+                    {carItems.map((item) => (
+                      <Button
+                        key={item.to}
+                        component={Link}
+                        to={item.to}
+                        sx={{
+                          color: 'text.primary',
+                          '&.active': {
+                            color: 'primary.main',
+                          }
+                        }}
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
+                  </Box>
+                </Box>
+
+                <Box sx={{ flexGrow: 1 }} />
+              </>
+            )}
+
+            {/* Профиль пользователя */}
+            {user ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
-                  sx={{ 
-                    width: 32,
-                    height: 32,
-                    bgcolor: 'primary.dark'
+                  onClick={(e) => setAnchorEl(e.currentTarget)}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    cursor: 'pointer',
+                    bgcolor: 'primary.main'
                   }}
+                  src={user.pictureUrl}
                 >
-                  {user.name.charAt(0)}
+                  {user.name?.charAt(0)}
                 </Avatar>
               </Box>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
+            ) : (
+              <Button
+                variant="contained"
+                onClick={login}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  px: 3
                 }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
               >
-                <MenuItem disabled>
-                  <Typography variant="body2">{user.email}</Typography>
-                </MenuItem>
-                <MenuItem onClick={logout}>Выйти</MenuItem>
-              </Menu>
-            </>
-          ) : (
-            // Кнопка входа для неавторизованных пользователей
-            <Button 
-              color="inherit"
-              onClick={login}
-            >
-              ВОЙТИ ЧЕРЕЗ GOOGLE
-            </Button>
-          )}
-        </Toolbar>
+                Войти через Google
+              </Button>
+            )}
+          </Toolbar>
+        </Container>
       </AppBar>
-      {/* Контент страницы */}
-      {children}
+
+      {/* Основной контент */}
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        {children}
+      </Container>
     </Box>
   );
 };
