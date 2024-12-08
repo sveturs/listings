@@ -58,17 +58,12 @@ const CarListPage = () => {
 
     const fetchCars = useCallback(async () => {
         try {
-            // Изменить путь запроса
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/v1/cars/available`, { withCredentials: true });
-
-            console.log('Response:', response.data); // Добавить для отладки
-            
+            const response = await axios.get(`${BACKEND_URL}/cars/available`); // Изменено с /api/v1/cars/available
             const carsData = response.data?.data || [];
             const carsWithImages = await Promise.all(
                 carsData.map(async (car) => {
                     try {
-                        const imagesResponse = await axios.get(`/api/v1/cars/${car.id}/images`);
-                        console.log('Images for car', car.id, ':', imagesResponse.data); // Добавить для отладки
+                        const imagesResponse = await axios.get(`${BACKEND_URL}/cars/${car.id}/images`); // Изменено с /api/v1/cars/:id/images
                         return {
                             ...car,
                             images: imagesResponse.data?.data || []
@@ -81,14 +76,13 @@ const CarListPage = () => {
             );
             setCars(carsWithImages);
             setFilteredCars(carsWithImages);
-            setIsInitialView(false);
         } catch (error) {
             console.error('Ошибка при получении списка автомобилей:', error.response || error);
             setCars([]);
             setFilteredCars([]);
         }
-    }, [filters]);
-
+    }, []);
+    
     useEffect(() => {
         setIsLoading(true);
         axios.get("/api/v1/cars/available")
