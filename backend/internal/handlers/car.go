@@ -147,10 +147,13 @@ func (h *CarHandler) GetImages(c *fiber.Ctx) error {
     return utils.SuccessResponse(c, images)
 }
 func (h *CarHandler) GetAvailableCars(c *fiber.Ctx) error {
+    log.Printf("Getting available cars")  // добавим для отладки
     cars, err := h.services.Car().GetAvailableCars(c.Context())
     if err != nil {
+        log.Printf("Error getting available cars: %v", err)  // добавим для отладки
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching cars")
     }
 
+    log.Printf("Found %d available cars", len(cars))  // добавим для отладки
     return utils.SuccessResponse(c, cars)
 }

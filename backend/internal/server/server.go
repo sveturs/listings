@@ -90,6 +90,8 @@ func (s *Server) setupRoutes() {
 	cars := api.Group("/cars")
 	cars.Post("/", s.handlers.Cars.AddCar)
 	cars.Post("/:id/images", s.handlers.Cars.UploadImages)
+    cars.Post("/book", s.handlers.Cars.CreateBooking)
+
 
 	// Protected room routes
 	rooms := api.Group("/rooms")
