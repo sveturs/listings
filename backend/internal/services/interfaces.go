@@ -10,7 +10,7 @@ import (
 
 type RoomServiceInterface interface {
     CreateRoom(ctx context.Context, room *models.Room) (int, error)
-    GetRooms(ctx context.Context, filters map[string]string) ([]models.Room, error)
+    GetRooms(ctx context.Context, filters map[string]string, sortBy string, sortDirection string, limit int, offset int) ([]models.Room, int64, error)
     GetRoomByID(ctx context.Context, id int) (*models.Room, error)
     ProcessImage(file *multipart.FileHeader) (string, error)
     AddRoomImage(ctx context.Context, image *models.RoomImage) (int, error)

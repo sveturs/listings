@@ -1,16 +1,19 @@
+//backend/internal/services/room.go
 package services
 
 import (
-	"backend/internal/domain/models"
+    "backend/internal/domain/models"
     "backend/internal/storage"
-	"context"
-	"fmt"
-	"mime/multipart"
-	"os"
+    "context"
+    "errors"
+    "fmt"
+    "mime/multipart"
+    "os"
 	"path/filepath"
-	"time"
-	"log"
-	"github.com/disintegration/imaging"
+    "strconv"
+    "time"
+    "log"
+    "github.com/disintegration/imaging"
 )
 var _ RoomServiceInterface = (*RoomService)(nil) 
 type RoomService struct {
@@ -32,18 +35,58 @@ func (s *RoomService) CreateRoom(ctx context.Context, room *models.Room) (int, e
     return s.storage.AddRoom(ctx, room)
 }
 
-func (s *RoomService) GetRooms(ctx context.Context, filters map[string]string) ([]models.Room, error) {
-    log.Printf("RoomService.GetRooms called with filters: %+v", filters)
-    
-    rooms, err := s.storage.GetRooms(ctx, filters)
-    if err != nil {
-        log.Printf("Error in RoomService.GetRooms: %v", err)
-        return nil, fmt.Errorf("error getting rooms from storage: %w", err)
+func (s *RoomService) GetRooms(ctx context.Context, filters map[string]string, sortBy string, sortDirection string, limit int, offset int) ([]models.Room, int64, error) {
+    // Проверяем и нормализуем параметры сортировки
+    if sortDirection != "asc" && sortDirection != "desc" {
+        sortDirection = "asc"
     }
     
-    return rooms, nil
-}
+    validSortFields := map[string]bool{
+        "price_per_night": true,
+        "rating": true,
+        "created_at": true,
+    }
+    if !validSortFields[sortBy] {
+        sortBy = "created_at"
+    }
 
+    // Валидация фильтров
+    if filters["capacity"] != "" {
+        if _, err := strconv.Atoi(filters["capacity"]); err != nil {
+            return nil, 0, errors.New("invalid capacity value")
+        }
+    }
+
+    if filters["start_date"] != "" {
+        if _, err := time.Parse("2006-01-02", filters["start_date"]); err != nil {
+            return nil, 0, errors.New("invalid start_date format")
+        }
+    }
+
+    if filters["end_date"] != "" {
+        if _, err := time.Parse("2006-01-02", filters["end_date"]); err != nil {
+            return nil, 0, errors.New("invalid end_date format")
+        }
+    }
+
+    // Получаем комнаты и общее количество
+    rooms, total, err := s.storage.GetRooms(ctx, filters, sortBy, sortDirection, limit, offset)
+    if err != nil {
+        return nil, 0, fmt.Errorf("error getting rooms: %w", err)
+    }
+
+    // Для каждой комнаты получаем изображения
+    for i := range rooms {
+        images, err := s.storage.GetRoomImages(ctx, strconv.Itoa(rooms[i].ID))
+        if err != nil {
+            log.Printf("Error getting images for room %d: %v", rooms[i].ID, err)
+            continue
+        }
+        rooms[i].Images = images
+    }
+
+    return rooms, total, nil
+}
 func (s *RoomService) ProcessImage(file *multipart.FileHeader) (string, error) {
 	src, err := file.Open()
 	if err != nil {

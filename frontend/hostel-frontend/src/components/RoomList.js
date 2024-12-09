@@ -1,731 +1,327 @@
-//frontend/hostel-frontend/src/components/RoomList.js
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from "../api/axios";
-import { Chip } from '@mui/material';
 import { LoadScript } from '@react-google-maps/api';
+import MapView from './MapView';
+import BookingDialog from './BookingDialog';
+import AdvancedFilters from './AdvancedFilters';
 import {
-    Grid, Card, CardContent, Typography, TextField,
-    Button, Divider, Box, Dialog, DialogContent, IconButton,
-    MobileStepper, CardMedia,
-    ToggleButton,
+    Grid,
+    Card,
+    CardContent,
+    Typography,
+    Box,
+    Button,
     ToggleButtonGroup,
-    Paper,
-    ButtonGroup
-} from "@mui/material";
+    ToggleButton,
+    Chip,
+    CardMedia,
+    Divider,
+    CircularProgress,
+    Alert,
+} from '@mui/material';
 import {
-    KeyboardArrowLeft, KeyboardArrowRight,
-    Close as CloseIcon,
-    SingleBed as HotelIcon,
-    Hotel as SingleBedIcon,
-    Apartment as ApartmentIcon,
-    Home as HomeIcon,
     ViewList as ViewListIcon,
     Map as MapIcon,
-    Search as SearchIcon
+    LocationOn as LocationIcon,
+    PhotoLibrary as GalleryIcon,
+    SingleBed as SingleBedIcon,
+    Hotel as HotelIcon,
+    Apartment as ApartmentIcon,
 } from '@mui/icons-material';
-import BookingDialog from "./BookingDialog";
-import MapView from './MapView';
+import axios from '../api/axios';
 
-console.log('BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const ImageGallery = ({ images, open, onClose }) => {
-    const [activeStep, setActiveStep] = useState(0);
-    const maxSteps = images.length;
-
-    const handleNext = () => {
-        setActiveStep((prevStep) => (prevStep + 1) % maxSteps);
-    };
-
-    const handleBack = () => {
-        setActiveStep((prevStep) => (prevStep - 1 + maxSteps) % maxSteps);
-    };
-
-    if (!images.length) return null;
-
-    return (
-        <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-            <DialogContent sx={{ position: 'relative', p: 0 }}>
-                <IconButton
-                    onClick={onClose}
-                    sx={{
-                        position: 'absolute',
-                        right: 8,
-                        top: 8,
-                        color: 'white',
-                        bgcolor: 'rgba(0, 0, 0, 0.5)',
-                        '&:hover': {
-                            bgcolor: 'rgba(0, 0, 0, 0.7)',
-                        },
-                    }}
-                >
-                    <CloseIcon />
-                </IconButton>
-                <Box sx={{ height: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <img
-                        src={`${BACKEND_URL}/uploads/${images[activeStep].file_path}`} // Исправлено здесь
-                        alt={images[activeStep].file_name}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain',
-                        }}
-                    />
-                    <MobileStepper
-                        steps={maxSteps}
-                        position="static"
-                        activeStep={activeStep}
-                        sx={{
-                            bgcolor: 'background.default',
-                            position: 'absolute',
-                            bottom: 0,
-                            width: '100%',
-                        }}
-                        nextButton={
-                            <Button size="small" onClick={handleNext}>
-                                Следующее
-                                <KeyboardArrowRight />
-                            </Button>
-                        }
-                        backButton={
-                            <Button size="small" onClick={handleBack}>
-                                <KeyboardArrowLeft />
-                                Предыдущее
-                            </Button>
-                        }
-                    />
-                </Box>
-            </DialogContent>
-        </Dialog>
-    );
-};
 
 const RoomList = () => {
     const [rooms, setRooms] = useState([]);
-    const [filters, setFilters] = useState({
-        capacity: "",
-        min_price: "",
-        max_price: "",
-        city: "",
-        country: "",
-        start_date: "",
-        end_date: "",
-        type: ''
-    });
-    const [filteredRooms, setFilteredRooms] = useState([]);
-    const handleTypeFilter = (type) => {
-        setFilters(prev => ({
-            ...prev,
-            type,
-            accommodation_type: type
-        }));
-        fetchRooms({
-            ...filters,
-            accommodation_type: type
-        });
-    };
-
-
-    const [viewMode, setViewMode] = useState('list'); // 'list' или 'map'
-    const [roomsWithCoordinates, setRoomsWithCoordinates] = useState([]);
-    const geocodeRooms = async (rooms) => {
-        if (!window.google) return rooms;
-
-        const geocoder = new window.google.maps.Geocoder();
-        const geocodeAddress = async (room) => {
-            const address = `${room.address_street}, ${room.address_city}, ${room.address_country}`;
-            try {
-                const result = await new Promise((resolve, reject) => {
-                    geocoder.geocode({ address }, (results, status) => {
-                        if (status === 'OK') {
-                            resolve(results[0].geometry.location);
-                        } else {
-                            reject(status);
-                        }
-                    });
-                });
-
-                return {
-                    ...room,
-                    latitude: result.lat(),
-                    longitude: result.lng()
-                };
-            } catch (error) {
-                console.error(`Error geocoding address: ${address}`, error);
-                return room;
-            }
-        };
-
-        const roomsWithCoords = await Promise.all(rooms.map(geocodeAddress));
-        return roomsWithCoords;
-    };
+    const [viewMode, setViewMode] = useState('list');
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [galleryOpen, setGalleryOpen] = useState(false);
     const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [totalCount, setTotalCount] = useState(0);
+    const [filters, setFilters] = useState({
+        start_date: '',
+        end_date: '',
+        city: '',
+        country: '',
+        min_price: '',
+        max_price: '',
+        capacity: '',
+        accommodation_type: '',
+        sort_by: 'created_at',
+        sort_direction: 'desc'
+    });
 
-    const fetchRooms = useCallback(async () => {
+    const fetchRooms = useCallback(async (isLoadMore = false) => {
         try {
+            setLoading(true);
+            setError(null);
+
             const params = new URLSearchParams();
 
-            // Добавляем базовые параметры
-            if (filters.capacity && parseInt(filters.capacity) > 0) {
-                params.append('capacity', filters.capacity);
-            }
-            if (filters.min_price && parseFloat(filters.min_price) > 0) {
-                params.append('min_price', filters.min_price);
-            }
-            if (filters.max_price && parseFloat(filters.max_price) > 0) {
-                params.append('max_price', filters.max_price);
-            }
-            if (filters.city?.trim()) {
-                params.append('city', filters.city.trim());
-            }
-            if (filters.country?.trim()) {
-                params.append('country', filters.country.trim());
-            }
-            // Добавляем фильтр по типу размещения
-            if (filters.type) {
-                params.append('accommodation_type', filters.type);
-                if (filters.type === 'room') {
-                    params.append('has_private_rooms', 'true');
-                }
-            }
-
-            // Всегда отправляем даты для проверки доступности
-            const today = new Date().toISOString().split('T')[0];
-            params.append('start_date', filters.start_date || today);
-            params.append('end_date', filters.end_date || today);
-
-            const response = await axios.get(`${BACKEND_URL}/rooms?${params.toString()}`);
-            console.log('Ответ от сервера:', response.data);
-
-            // Проверяем, что получили массив комнат
-            let roomsData = response.data;
-
-            if (response.data.rooms) {
-                roomsData = response.data.rooms;
-            }
-
-            if (!Array.isArray(roomsData)) {
-                console.error('Ожидаемый массив комнат, но получили:', roomsData);
-                return;
-            }
-
-            // Фильтрация на фронтенде
-            const filteredRooms = roomsData.filter(room => {
-                // Базовая проверка доступности
-                if (room.accommodation_type === 'bed' && room.available_beds <= 0) {
-                    return false;
-                }
-
-                // Проверка типа размещения
-                if (filters.type && room.accommodation_type !== filters.type) {
-                    return false;
-                }
-
-                // Проверка для приватных комнат
-                if (filters.type === 'room' && room.is_shared) {
-                    return false;
-                }
-
-                return true;
+            // Добавляем все фильтры
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value) params.append(key, value);
             });
 
-            // Получаем изображения для отфильтрованных комнат
-            const roomsWithImages = await Promise.all(
-                filteredRooms.map(async (room) => {
-                    const imagesResponse = await axios.get(`/rooms/${room.id}/images`);
-                    console.log(`Images for room ${room.id}:`, imagesResponse.data); // добавляем этот лог
-                    return {
-                        ...room,
-                        images: imagesResponse.data.data || [] // Добавляем .data, так как ответ обернут в {data: [...], success: true}
-                    };
-                })
-            );
+            // Добавляем параметры пагинации
+            params.append('page', isLoadMore ? page + 1 : 1);
+            params.append('limit', 12);
 
-            setRooms(roomsWithImages);
-            setRoomsWithCoordinates(roomsWithImages.filter(room =>
-                room.latitude && room.longitude));
+            const response = await axios.get(`${BACKEND_URL}/rooms`, { params: filters });
+
+            const { data, meta } = response.data.data;
+            const roomsData = response.data?.data || [];
+            setRooms(roomsData);
+            setTotalCount(response.data?.meta?.total || 0);
+            setHasMore(response.data?.meta?.has_more || false);
+            setRooms(prev => isLoadMore ? [...prev, ...data] : data);
+            setTotalCount(meta.total);
+            setHasMore(meta.has_more);
+
+            if (isLoadMore) {
+                setPage(p => p + 1);
+            } else {
+                setPage(1);
+            }
 
         } catch (error) {
             console.error("Ошибка при получении списка комнат:", error);
+            setError(error.response?.data?.error || "Ошибка при загрузке комнат");
+            setRooms([]); // Устанавливаем пустой массив в случае ошибки
+        } finally {
+            setLoading(false);
         }
     }, [filters]);
 
-    const handleDateChange = (field, value) => {
-        setFilters(prev => {
-            const newFilters = { ...prev, [field]: value };
 
-            if (field === 'end_date' && newFilters.start_date && value < newFilters.start_date) {
-                return prev;
-            }
+    useEffect(() => {
+        fetchRooms();
+    }, [fetchRooms]);
 
-            if (field === 'start_date' && newFilters.end_date && value > newFilters.end_date) {
-                return prev;
-            }
+    const handleFilterChange = (newFilters) => {
+        setFilters(newFilters);
+    };
 
-            return newFilters;
-        });
+    const handleSortChange = (sortBy, direction) => {
+        setFilters(prev => ({
+            ...prev,
+            sort_by: sortBy,
+            sort_direction: direction
+        }));
+    };
+
+    const handleLoadMore = () => {
+        if (!loading && hasMore) {
+            fetchRooms(true);
+        }
     };
 
     const handleBooking = (room) => {
         if (!filters.start_date || !filters.end_date) {
-            alert('Пожалуйста, выберите даты заезда и выезда');
+            setError('Пожалуйста, выберите даты заезда и выезда');
             return;
         }
         setSelectedRoom(room);
         setBookingDialogOpen(true);
     };
 
-    // долой протечки памяти
-    useEffect(() => {
-        let isSubscribed = true;
-
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${BACKEND_URL}/rooms`, { params: filters });
-                console.log('Ответ от сервера:', response);
-
-                // Правильно обрабатываем структуру ответа
-                let roomsData;
-                if (response.data.data) {
-                    roomsData = response.data.data;  // Получаем массив из data
-                } else if (Array.isArray(response.data)) {
-                    roomsData = response.data;  // На случай если придет просто массив
-                } else {
-                    console.error('Неожиданный формат данных:', response.data);
-                    roomsData = [];
-                }
-
-                // Получаем изображения для отфильтрованных комнат
-                const roomsWithImages = await Promise.all(
-                    roomsData.map(async (room) => {
-                        const imagesResponse = await axios.get(`/rooms/${room.id}/images`);
-                        console.log(`Images response for room ${room.id}:`, imagesResponse); // Добавьте этот лог
-                        return {
-                            ...room,
-                            images: imagesResponse.data.data || [] // Добавляем .data, так как ответ обернут в {data: [...], success: true}
-                        };
-                    })
-                );
-
-                setRooms(roomsWithImages);
-                setRoomsWithCoordinates(roomsWithImages.filter(room =>
-                    room.latitude && room.longitude));
-
-            } catch (error) {
-                console.error("Ошибка при получении списка комнат:", error);
+    const renderRoomCard = (room) => (
+        <Card sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            '&:hover': {
+                boxShadow: 6,
+                transform: 'translateY(-2px)',
+                transition: 'all 0.2s ease-in-out'
             }
-        };
-
-        fetchData();
-
-        return () => {
-            isSubscribed = false;
-        };
-    }, [fetchRooms]);
-
-    const AccommodationInfo = ({ room }) => {
-        const getAccommodationInfo = () => {
-            switch (room.accommodation_type) {
-                case 'bed':
-                    return {
-                        title: 'Койко-место',
-                        details: `Доступно ${room.available_beds} из ${room.total_beds} мест`,
-                        icon: <HotelIcon />,
-                        shared: true
-                    };
-                case 'room':
-                    return {
-                        title: room.is_shared ? 'Общая комната' : 'Отдельная комната',
-                        details: `Вместимость: ${room.capacity} чел.`,
-                        icon: <SingleBedIcon />,
-                        shared: room.is_shared
-                    };
-                case 'apartment':
-                    return {
-                        title: 'Квартира',
-                        details: `${room.capacity} комнат`,
-                        icon: <ApartmentIcon />,
-                        shared: false
-                    };
-                default:
-                    return {
-                        title: 'Помещение',
-                        details: `Вместимость: ${room.capacity} чел.`,
-                        icon: <HomeIcon />,
-                        shared: false
-                    };
-            }
-        };
-
-        const info = getAccommodationInfo();
-
-        return (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                {info.icon}
-                <Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
-                        {info.title}
-                        {info.shared && (
-                            <Chip
-                                size="small"
-                                label="Общее помещение"
-                                color="secondary"
-                                sx={{ ml: 1 }}
-                            />
-                        )}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        {info.details}
-                    </Typography>
-                </Box>
-            </Box>
-        );
-    };
-
-
-    const today = new Date().toISOString().split('T')[0];
-
-    return (
-        <div>
-
-            <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
-                {/* Первая строка с датами, городом, страной и ценами */}
-                <Grid item container spacing={2} xs={12}>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <TextField
-                            label="Дата заезда"
-                            type="date"
-                            size="small"
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                            value={filters.start_date}
-                            onChange={(e) => handleDateChange('start_date', e.target.value)}
-                            inputProps={{ min: today }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <TextField
-                            label="Дата выезда"
-                            type="date"
-                            size="small"
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                            value={filters.end_date}
-                            onChange={(e) => handleDateChange('end_date', e.target.value)}
-                            inputProps={{ min: filters.start_date || today }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <TextField
-                            label="Город"
-                            size="small"
-                            fullWidth
-                            value={filters.city}
-                            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <TextField
-                            label="Страна"
-                            size="small"
-                            fullWidth
-                            value={filters.country}
-                            onChange={(e) => setFilters({ ...filters, country: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <TextField
-                            label="Мин. цена"
-                            type="number"
-                            size="small"
-                            fullWidth
-                            value={filters.min_price}
-                            onChange={(e) => setFilters({ ...filters, min_price: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <TextField
-                            label="Макс. цена"
-                            type="number"
-                            size="small"
-                            fullWidth
-                            value={filters.max_price}
-                            onChange={(e) => setFilters({ ...filters, max_price: e.target.value })}
-                        />
-                    </Grid>
-                </Grid>
-
-                {/* Вторая строка с кнопками */}
-                <Grid item container xs={12} spacing={2} alignItems="center">
-                    <Grid item>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={fetchRooms}
-                            startIcon={<SearchIcon />}
-                        >
-                            Найти
-                        </Button>
-                    </Grid>
-                    <Grid item>
-                        <ButtonGroup
-                            variant="outlined"
-                            sx={{
-                                '& .MuiButton-root': {
-                                    borderColor: '#1976d2',
-                                    '&:hover': {
-                                        borderColor: '#1976d2',
-                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                                    }
-                                }
-                            }}
-                        >
-                            <Button
-                                onClick={() => handleTypeFilter('apartment')}
-                                startIcon={<ApartmentIcon />}
-                                color={filters.type === 'apartment' ? 'primary' : 'inherit'}
-                            >
-                                Аппарты
-                            </Button>
-                            <Button
-                                onClick={() => handleTypeFilter('room')}
-                                startIcon={<HotelIcon />}
-                                color={filters.type === 'room' ? 'primary' : 'inherit'}
-                            >
-                                Приватка
-                            </Button>
-                            <Button
-                                onClick={() => handleTypeFilter('bed')}
-                                startIcon={<SingleBedIcon />}
-                                color={filters.type === 'bed' ? 'primary' : 'inherit'}
-                            >
-                                Кровать
-                            </Button>
-                        </ButtonGroup>
-                    </Grid>
-                    <Grid item sx={{ marginLeft: 'auto' }}>
-                        <ToggleButtonGroup
-                            value={viewMode}
-                            exclusive
-                            onChange={(e, newMode) => newMode && setViewMode(newMode)}
-                            aria-label="view mode"
-                            size="small"
-                            sx={{
-                                border: '1px solid rgba(25, 118, 210, 0.5)',
-                                '& .MuiToggleButton-root': {
-                                    '&.Mui-selected': {
-                                        backgroundColor: '#1976d2',
-                                        color: 'white',
-                                        '&:hover': {
-                                            backgroundColor: '#1565c0',
-                                        }
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                                    }
-                                }
-                            }}
-                        >
-                            <ToggleButton value="list" aria-label="list view">
-                                <ViewListIcon /> Список
-                            </ToggleButton>
-                            <ToggleButton value="map" aria-label="map view">
-                                <MapIcon /> Карта
-                            </ToggleButton>
-                        </ToggleButtonGroup>
-                    </Grid>
-                </Grid>
-            </Grid>
-            <Box>
-                {viewMode === 'map' ? (
-                    <LoadScript
-                        googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
-                        libraries={["places", "geometry"]}
+        }}>
+            <Box sx={{ position: 'relative', pt: '56.25%' }}>
+                <CardMedia
+                    component="img"
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        cursor: 'pointer',
+                    }}
+                    image={room.images?.[0] ?
+                        `${BACKEND_URL}/uploads/${room.images[0].file_path}` :
+                        '/placeholder-room.jpg'}
+                    alt={room.name}
+                    onClick={() => {
+                        if (room.images?.length) {
+                            setSelectedRoom(room);
+                            setGalleryOpen(true);
+                        }
+                    }}
+                />
+                {room.images?.length > 1 && (
+                    <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<GalleryIcon />}
+                        sx={{
+                            position: 'absolute',
+                            bottom: 8,
+                            right: 8,
+                            bgcolor: 'rgba(0, 0, 0, 0.7)',
+                        }}
+                        onClick={() => {
+                            setSelectedRoom(room);
+                            setGalleryOpen(true);
+                        }}
                     >
-                        <MapView
-                            rooms={roomsWithCoordinates}
-                            onRoomSelect={(room) => {
-                                setSelectedRoom(room);
-                                setBookingDialogOpen(true);
-                            }}
-                            onOpenGallery={(room) => {
-                                setSelectedRoom(room);
-                                setGalleryOpen(true);
-                            }}
-                        />
-                    </LoadScript>
-                ) : (
-                    <Grid container spacing={2}>
-                        {rooms.map((room) => (
-                            <Grid item xs={12} md={6} lg={4} key={room.id}>
-                                <Card sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    height: '100%',
-                                    border: '1px solid rgba(25, 118, 210, 0.2)',
-                                    boxShadow: '0 2px 4px rgba(25, 118, 210, 0.1)',
-                                    '&:hover': {
-                                        boxShadow: '0 4px 8px rgba(25, 118, 210, 0.2)',
-                                    },
-                                    '& .MuiCardContent-root': {
-                                        padding: '12px',
-                                    },
-                                    '& .MuiTypography-root': {
-                                        lineHeight: '1.3',
-                                    }
-                                }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5 }}>
-                                        <Box sx={{ flex: 1, pr: 1.5 }}>
-                                            <AccommodationInfo room={room} />
-                                            <Typography variant="h6" sx={{
-                                                mb: 0.5,
-                                                fontSize: '1.1rem'
-                                            }}>
-                                                {room.name}
-                                            </Typography>
-                                            {room.accommodation_type === 'bed' ? (
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                                                    Цена за койко-место: {room.price_per_night} евро/сутки
-                                                </Typography>
-                                            ) : (
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                                                    Цена за {room.accommodation_type === 'apartment' ? 'квартиру' : 'комнату'}: {room.price_per_night} евро/сутки
-                                                </Typography>
-                                            )}
-                                        </Box>
-
-                                        {/* Правый верхний угол: эскиз */}
-                                        <Box sx={{
-                                            width: '100px',
-                                            height: '100px',
-                                            flexShrink: 0,
-                                            p: room.images?.length ? 0 : 1
-                                        }}>
-                                            {room.images && room.images.length > 0 ? (
-                                                <CardMedia
-                                                    component="img"
-                                                    sx={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: 'cover',
-                                                        borderRadius: '4px',
-                                                        '&:hover': {
-                                                            opacity: 0.8,
-                                                            transition: 'opacity 0.2s ease-in-out',
-                                                        },
-                                                    }}
-                                                    image={`${BACKEND_URL}/uploads/${room.images[0].file_path}`}
-
-                                                    alt={room.name}
-                                                    onClick={() => {
-                                                        console.log('Image URL:', `${BACKEND_URL}/uploads/${room.images[0].file_path}`); // добавляем этот лог
-                                                        setSelectedRoom(room);
-                                                        setGalleryOpen(true);
-                                                    }}
-                                                />
-                                            ) : (
-                                                <Box
-                                                    sx={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        bgcolor: 'grey.100',
-                                                        borderRadius: '4px',
-                                                        fontSize: '0.8rem'
-                                                    }}
-                                                >
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        Нет фото
-                                                    </Typography>
-                                                </Box>
-                                            )}
-                                        </Box>
-                                    </Box>
-
-                                    <Divider />
-
-                                    {/* Нижняя часть карточки с адресом и кнопками */}
-                                    <CardContent sx={{
-                                        pt: 1,
-                                        pb: '8px !important',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}>
-                                        <Typography variant="body2" color="text.secondary" sx={{
-                                            fontSize: '0.85rem',
-                                            flex: 1,
-                                            mr: 1
-                                        }}>
-                                            {room.address_street}
-                                            {room.address_city && `, ${room.address_city}`}
-                                            {room.address_state && `, ${room.address_state}`}
-                                            {room.address_country && `, ${room.address_country}`}
-                                            {room.address_postal_code && ` (${room.address_postal_code})`}
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                            {room.images && room.images.length > 1 && (
-                                                <Button
-                                                    size="small"
-                                                    sx={{
-                                                        minWidth: 'auto',
-                                                        padding: '4px 8px',
-                                                        fontSize: '0.8rem',
-                                                        borderColor: '#1976d2',
-                                                        color: '#1976d2',
-                                                        '&:hover': {
-                                                            borderColor: '#1565c0',
-                                                            backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                                                        }
-                                                    }}
-                                                    onClick={() => {
-                                                        setSelectedRoom(room);
-                                                        setGalleryOpen(true);
-                                                    }}
-                                                >
-                                                    Все ({room.images.length})
-                                                </Button>
-                                            )}
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                size="small"
-                                                sx={{
-                                                    minWidth: 'auto',
-                                                    padding: '4px 8px',
-                                                    fontSize: '0.8rem',
-                                                    boxShadow: '0 2px 4px rgba(25, 118, 210, 0.2)',
-                                                    '&:hover': {
-                                                        boxShadow: '0 4px 8px rgba(25, 118, 210, 0.3)',
-                                                    }
-                                                }}
-                                                onClick={() => handleBooking(room)}
-                                                disabled={!filters.start_date || !filters.end_date}
-                                            >
-                                                Забронировать
-                                            </Button>
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-
-                        ))}
-                    </Grid>
+                        {room.images.length} фото
+                    </Button>
                 )}
             </Box>
-            {selectedRoom && (
+
+            <CardContent sx={{ flexGrow: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    {room.accommodation_type === 'bed' ? (
+                        <SingleBedIcon color="primary" sx={{ mr: 1 }} />
+                    ) : room.accommodation_type === 'apartment' ? (
+                        <ApartmentIcon color="primary" sx={{ mr: 1 }} />
+                    ) : (
+                        <HotelIcon color="primary" sx={{ mr: 1 }} />
+                    )}
+                    <Typography variant="h6" noWrap>
+                        {room.name}
+                    </Typography>
+                </Box>
+
+                <Typography variant="body2" color="text.secondary" sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    mb: 1
+                }}>
+                    <LocationIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                    {room.address_street}, {room.address_city}
+                </Typography>
+
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+                    <Chip
+                        label={`${room.price_per_night} ₽/ночь`}
+                        color="primary"
+                        size="small"
+                    />
+                    {room.accommodation_type === 'bed' && (
+                        <Chip
+                            label={`${room.available_beds}/${room.total_beds} мест`}
+                            color="secondary"
+                            size="small"
+                        />
+                    )}
+                    {room.rating > 0 && (
+                        <Chip
+                            label={`Рейтинг: ${room.rating.toFixed(1)}`}
+                            size="small"
+                            color="default"
+                        />
+                    )}
+                </Box>
+            </CardContent>
+
+            <Divider />
+
+            <Box sx={{ p: 2 }}>
+                <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => handleBooking(room)}
+                    disabled={!filters.start_date || !filters.end_date}
+                >
+                    Забронировать
+                </Button>
+            </Box>
+        </Card>
+    );
+
+    return (
+        <Box>
+            <AdvancedFilters
+                initialFilters={filters}
+                onFilterChange={handleFilterChange}
+                onSortChange={handleSortChange}
+                isLoading={loading}
+            />
+
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+                    {error}
+                </Alert>
+            )}
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                    Найдено: {totalCount}
+                </Typography>
+
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                    size="small"
+                >
+                    <ToggleButton value="list">
+                        <ViewListIcon sx={{ mr: 1 }} /> Список
+                    </ToggleButton>
+                    <ToggleButton value="map">
+                        <MapIcon sx={{ mr: 1 }} /> Карта
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Box>
+
+            {loading && page === 1 ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress />
+                </Box>
+            ) : viewMode === 'list' ? (
                 <>
-                    <ImageGallery
-                        images={selectedRoom.images || []}
-                        open={galleryOpen}
-                        onClose={() => {
-                            setGalleryOpen(false);
-                            setSelectedRoom(null);
+                    <Grid container spacing={3}>
+                        {Array.isArray(rooms) && rooms.map((room) => (
+                            <Grid item xs={12} sm={6} md={4} key={room.id}>
+                                {renderRoomCard(room)}
+                            </Grid>
+                        ))}
+                    </Grid>
+
+                    {hasMore && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                            <Button
+                                variant="outlined"
+                                onClick={handleLoadMore}
+                                disabled={loading}
+                                startIcon={loading && <CircularProgress size={20} />}
+                            >
+                                {loading ? 'Загрузка...' : 'Загрузить еще'}
+                            </Button>
+                        </Box>
+                    )}
+                </>
+            ) : (
+                <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+                    <MapView
+                        rooms={rooms}
+                        onRoomSelect={handleBooking}
+                        onOpenGallery={(room) => {
+                            setSelectedRoom(room);
+                            setGalleryOpen(true);
                         }}
                     />
+                </LoadScript>
+            )}
+
+            {selectedRoom && (
+                <>
                     <BookingDialog
                         open={bookingDialogOpen}
                         onClose={() => {
@@ -738,7 +334,7 @@ const RoomList = () => {
                     />
                 </>
             )}
-        </div>
+        </Box>
     );
 };
 

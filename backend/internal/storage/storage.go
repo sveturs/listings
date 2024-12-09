@@ -28,7 +28,7 @@ type Storage interface {
     // Room methods
     AddRoom(ctx context.Context, room *models.Room) (int, error)
     AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error)
-    GetRooms(ctx context.Context, filters map[string]string) ([]models.Room, error)
+    GetRooms(ctx context.Context, filters map[string]string, sortBy string, sortDirection string, limit int, offset int) ([]models.Room, int64, error)
     GetRoomByID(ctx context.Context, id int) (*models.Room, error)
     AddRoomImage(ctx context.Context, image *models.RoomImage) (int, error)
     GetRoomImages(ctx context.Context, roomID string) ([]models.RoomImage, error)

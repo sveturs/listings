@@ -31,6 +31,12 @@ func (h *RoomHandler) Create(c *fiber.Ctx) error {
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
     }
 
+    // Установим значения по умолчанию для nullable полей
+    if room.AccommodationType == "bed" && room.TotalBeds == nil {
+        defaultBeds := 1
+        room.TotalBeds = &defaultBeds
+    }
+
     roomID, err := h.services.Room().CreateRoom(c.Context(), &room)
     if err != nil {
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка создания комнаты")
@@ -104,21 +110,33 @@ func (h *RoomHandler) List(c *fiber.Ctx) error {
         "has_private_rooms":  c.Query("has_private_rooms"),
     }
 
-    log.Printf("Getting rooms with filters: %+v", filters)
-    
-    rooms, err := h.services.Room().GetRooms(c.Context(), filters)
+    // Параметры сортировки
+    sortBy := c.Query("sort_by")
+    sortDirection := c.Query("sort_direction", "asc")
+
+    // Параметры пагинации
+    page, _ := strconv.ParseInt(c.Query("page", "1"), 10, 64)
+    limit, _ := strconv.ParseInt(c.Query("limit", "12"), 10, 64)
+    offset := (page - 1) * limit
+
+    // Получаем комнаты с учетом всех параметров
+    rooms, total, err := h.services.Room().GetRooms(c.Context(), filters, sortBy, sortDirection, int(limit), int(offset))
     if err != nil {
         log.Printf("Error getting rooms: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Ошибка получения списка комнат: %v", err))
     }
 
-    log.Printf("Found %d rooms", len(rooms))
-    for i, room := range rooms {
-        log.Printf("Room %d: %+v", i, room)
-    }
-
-    return utils.SuccessResponse(c, rooms)
+    return utils.SuccessResponse(c, fiber.Map{
+        "data": rooms,
+        "meta": fiber.Map{
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "has_more": total > page*limit,
+        },
+    })
 }
+
 // В RoomHandler struct (handlers/rooms.go)
 func (h *RoomHandler) ListBedImages(c *fiber.Ctx) error {
     bedID := c.Params("id")
