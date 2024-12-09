@@ -78,22 +78,17 @@ const AddCarPage = () => {
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
         
-        // Валидация файлов
+        // Проверяем только размер
         const validFiles = files.filter(file => {
-            if (!file.type.startsWith('image/')) {
-                setErrorMessage("Можно загружать только изображения");
-                return false;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                setErrorMessage("Размер файла не должен превышать 5MB");
+            if (file.size > 10 * 1024 * 1024) { // Увеличим до 10MB
+                setErrorMessage("Размер файла не должен превышать 10MB");
                 return false;
             }
             return true;
         });
-
+    
         if (validFiles.length) {
             setImages(prev => [...prev, ...validFiles]);
-
             // Создаем превью
             validFiles.forEach(file => {
                 const reader = new FileReader();
@@ -105,6 +100,7 @@ const AddCarPage = () => {
         }
     };
 
+    
     const handleLocationSelect = (location) => {
         setFormData(prev => ({
             ...prev,
