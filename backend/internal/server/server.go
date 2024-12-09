@@ -74,9 +74,9 @@ func (s *Server) setupRoutes() {
 	s.app.Get("/rooms/:id/available-beds", s.handlers.Rooms.GetAvailableBeds)
 	s.app.Get("/beds/:id/images", s.handlers.Rooms.ListBedImages)
 
-	// Публичные маршруты для автомобилей
-	s.app.Get("/cars/available", s.handlers.Cars.GetAvailableCars)
-	s.app.Get("/cars/:id/images", s.handlers.Cars.GetImages)
+    //  публичные маршруты для автомобилей
+    s.app.Get("/api/v1/cars/available", s.handlers.Cars.GetAvailableCars)
+    s.app.Get("/api/v1/cars/:id/images", s.handlers.Cars.GetImages)
 
 	// Auth routes
 	auth := s.app.Group("/auth")

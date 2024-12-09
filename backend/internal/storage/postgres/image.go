@@ -1,3 +1,4 @@
+//backend/internal/storage/postgres/image.go
 package postgres
 
 import (

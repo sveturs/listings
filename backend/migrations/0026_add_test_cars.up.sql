@@ -1,3 +1,4 @@
+-- backend/migrations/0026_add_test_cars.up.sql
 -- Добавляем тестовые автомобили
 INSERT INTO cars (
     make, model, year, price_per_day, location, latitude, longitude,
