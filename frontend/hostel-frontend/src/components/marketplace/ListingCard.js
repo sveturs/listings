@@ -9,12 +9,12 @@ import {
     Button
 } from '@mui/material';
 import {
-    LocationOn as LocationIcon,
-    AccessTime,
-    PhotoCamera
-} from '@mui/icons-material';
+    MapPin as LocationIcon,
+    Clock as AccessTime,
+    Camera
+} from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
 const ListingCard = ({ listing }) => {
     const formatPrice = (price) => {
@@ -33,11 +33,23 @@ const ListingCard = ({ listing }) => {
             year: 'numeric'
         });
     };
-
+    console.log('Full listing data:', listing);
+    // Получаем URL основного изображения
+    const getMainImageUrl = () => {
+        console.log('Listing images:', listing.images);
+        if (listing.images && listing.images.length > 0) {
+            const mainImage = listing.images.find(img => img.is_main) || listing.images[0];
+            console.log('Selected image:', mainImage);
+            return `${BACKEND_URL}/uploads/${mainImage.file_path}`;
+        }
+        console.log('No images found, using placeholder');
+        return '/placeholder.jpg';
+    };
+    console.log('Full listing data:', listing);
     return (
-        <Card sx={{ 
-            height: '100%', 
-            display: 'flex', 
+        <Card sx={{
+            height: '100%',
+            display: 'flex',
             flexDirection: 'column',
             '&:hover': {
                 transform: 'translateY(-4px)',
@@ -56,14 +68,12 @@ const ListingCard = ({ listing }) => {
                         height: '100%',
                         objectFit: 'cover'
                     }}
-                    image={listing.images?.[0] ? 
-                        `${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}` : 
-                        'https://via.placeholder.com/300x200'}
+                    image={getMainImageUrl()}
                     alt={listing.title || 'Изображение отсутствует'}
                 />
-                {listing.images?.length > 1 && (
+                {listing.images && listing.images.length > 1 && (
                     <Chip
-                        icon={<PhotoCamera />}
+                        icon={<Camera size={16} />}
                         label={`${listing.images.length} фото`}
                         size="small"
                         sx={{
@@ -87,22 +97,22 @@ const ListingCard = ({ listing }) => {
                 </Typography>
 
                 <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                    <LocationIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                    <LocationIcon size={18} style={{ marginRight: 4 }} />
                     <Typography variant="body2" noWrap>
                         {listing.city || 'Местоположение не указано'}
                     </Typography>
                 </Box>
 
                 <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                    <AccessTime sx={{ fontSize: 18, mr: 0.5 }} />
+                    <AccessTime size={18} style={{ marginRight: 4 }} />
                     <Typography variant="body2">
                         {formatDate(listing.created_at)}
                     </Typography>
                 </Box>
 
-                <Button 
-                    variant="contained" 
-                    fullWidth 
+                <Button
+                    variant="contained"
+                    fullWidth
                     sx={{ mt: 2 }}
                 >
                     Подробнее
@@ -111,5 +121,4 @@ const ListingCard = ({ listing }) => {
         </Card>
     );
 };
-
 export default ListingCard;

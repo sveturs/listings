@@ -112,14 +112,13 @@ func (s *Server) setupRoutes() {
 	users.Get("/me", s.handlers.Users.GetProfile)
 	users.Put("/me", s.handlers.Users.UpdateProfile)
 
-    // Public marketplace routes
-    s.app.Get("/api/v1/marketplace/listings", s.handlers.Marketplace.GetListings)
-    s.app.Get("/api/v1/marketplace/categories", s.handlers.Marketplace.GetCategories)
-    s.app.Get("/api/v1/marketplace/listings/:id", s.handlers.Marketplace.GetListing)
-
+	marketplace := s.app.Group("/api/v1/marketplace")
+    marketplace.Get("/listings", s.handlers.Marketplace.GetListings)        // Публичный доступ
+    marketplace.Get("/listings/:id", s.handlers.Marketplace.GetListing)     // Публичный доступ
+    marketplace.Get("/categories", s.handlers.Marketplace.GetCategories)    // Публичный доступ
     
-    // Protected marketplace routes
-    marketplaceProtected := api.Group("/marketplace")  // Изменили имя переменной
+    // Protected marketplace routes (требуют авторизации)
+    marketplaceProtected := marketplace.Group("/", s.middleware.AuthRequired)
     marketplaceProtected.Post("/listings", s.handlers.Marketplace.CreateListing)
     marketplaceProtected.Put("/listings/:id", s.handlers.Marketplace.UpdateListing)
     marketplaceProtected.Delete("/listings/:id", s.handlers.Marketplace.DeleteListing)

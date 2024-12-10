@@ -16,6 +16,10 @@ func (m *Middleware) AuthRequired(c *fiber.Ctx) error {
         return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Invalid or expired session")
     }
 
+    // Устанавливаем user_id в контекст
+    c.Locals("user_id", sessionData.UserID)
+    // Для обратной совместимости оставляем и полный объект сессии
     c.Locals("user", sessionData)
+    
     return c.Next()
 }

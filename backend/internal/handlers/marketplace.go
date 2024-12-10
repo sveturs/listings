@@ -21,34 +21,118 @@ func NewMarketplaceHandler(services services.ServicesInterface) *MarketplaceHand
 }
 
 func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(int)
-    
+    // Получаем ID пользователя из контекста
+    userID, ok := c.Locals("user_id").(int)
+    if !ok {
+        log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+    }
+
     var listing models.MarketplaceListing
     if err := c.BodyParser(&listing); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+        log.Printf("Failed to parse request body: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректные данные")
     }
-    
+
+    // Устанавливаем ID пользователя из контекста
     listing.UserID = userID
-    
+
+    // Валидация обязательных полей
+    if listing.Title == "" || listing.Description == "" || listing.Price <= 0 || listing.CategoryID == 0 {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Заполните все обязательные поля")
+    }
+
+    // Создаем объявление
     listingID, err := h.services.Marketplace().CreateListing(c.Context(), &listing)
     if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating listing")
+        log.Printf("Failed to create listing: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
     }
-    
+
     return utils.SuccessResponse(c, fiber.Map{
         "id": listingID,
-        "message": "Listing created successfully",
+        "message": "Объявление успешно создано",
     })
 }
 
+func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
+    log.Printf("Starting image upload for listing ID: %v", c.Params("id"))
+    listingID, err := c.ParamsInt("id")
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+    }
+
+    // Получаем файлы из формы
+    form, err := c.MultipartForm()
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Ошибка при получении файлов")
+    }
+
+    files := form.File["images"]
+    if len(files) == 0 {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Нет файлов для загрузки")
+    }
+
+    if len(files) > 10 {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Максимум 10 фотографий")
+    }
+
+    var uploadedImages []models.MarketplaceImage
+    mainImageIndex := 0
+    if mainIdx := c.FormValue("main_image_index"); mainIdx != "" {
+        mainImageIndex, _ = strconv.Atoi(mainIdx)
+    }
+
+    for i, file := range files {
+        // Обработка файла
+        fileName, err := h.services.Marketplace().ProcessImage(file)
+        if err != nil {
+            log.Printf("Failed to process image: %v", err)
+            continue
+        }
+
+        // Сохраняем информацию о файле
+        image := models.MarketplaceImage{
+            ListingID:   listingID,
+            FilePath:    fileName,
+            FileName:    file.Filename,
+            FileSize:    int(file.Size),
+            ContentType: file.Header.Get("Content-Type"),
+            IsMain:      i == mainImageIndex,
+        }
+
+        // Сохраняем файл
+        err = c.SaveFile(file, "./uploads/"+fileName)
+        if err != nil {
+            log.Printf("Failed to save file: %v", err)
+            continue
+        }
+        log.Printf("Image saved: %s", image.FilePath)
+        // Сохраняем информацию в базу
+        imageID, err := h.services.Marketplace().AddListingImage(c.Context(), &image)
+        if err != nil {
+            log.Printf("Failed to save image info: %v", err)
+            continue
+        }
+
+        image.ID = imageID
+        uploadedImages = append(uploadedImages, image)
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Изображения успешно загружены",
+        "images":  uploadedImages,
+    })
+}
 func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
     filters := map[string]string{
-        
         "category_id": c.Query("category_id"),
         "city":       c.Query("city"),
         "min_price":  c.Query("min_price"),
         "max_price":  c.Query("max_price"),
-        // другие фильтры...
+        "query":      c.Query("query"),
+        "condition":  c.Query("condition"),
+        "sort_by":    c.Query("sort_by"),
     }
     
     page, _ := strconv.Atoi(c.Query("page", "1"))
@@ -57,11 +141,17 @@ func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
     
     listings, total, err := h.services.Marketplace().GetListings(c.Context(), filters, limit, offset)
     if err != nil {
-        log.Printf("Error getting listings: %v", err) // Добавьте это
+        log.Printf("Error getting listings: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listings")
     }
 
-    log.Printf("Found %d listings", len(listings)) // И это
+    log.Printf("Found %d listings", len(listings))
+    
+    // Добавляем информацию о том, добавлено ли объявление в избранное
+   // userID, ok := c.Locals("user_id").(int)
+    //if ok {
+        // TODO: Добавить проверку избранного для авторизованных пользователей
+    //}
     
     return utils.SuccessResponse(c, fiber.Map{
         "data": listings,
@@ -163,49 +253,6 @@ func (h *MarketplaceHandler) DeleteListing(c *fiber.Ctx) error {
     })
 }
 
-// UploadImages - загрузка изображений для объявления
-func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
-    listingID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-    }
-
-    form, err := c.MultipartForm()
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Error getting files")
-    }
-
-    files := form.File["images"]
-    isMain := len(files) > 0
-
-    var uploadedImages []models.MarketplaceImage
-    for _, file := range files {
-        fileName, err := h.services.Marketplace().ProcessImage(file)
-        if err != nil {
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error processing image")
-        }
-
-        image := models.MarketplaceImage{
-            ListingID:   listingID,
-            FilePath:    fileName,
-            FileName:    file.Filename,
-            FileSize:    int(file.Size),
-            ContentType: file.Header.Get("Content-Type"),
-            IsMain:      isMain,
-        }
-
-        imageID, err := h.services.Marketplace().AddListingImage(c.Context(), &image)
-        if err != nil {
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error saving image information")
-        }
-
-        image.ID = imageID
-        uploadedImages = append(uploadedImages, image)
-        isMain = false
-    }
-
-    return utils.SuccessResponse(c, uploadedImages)
-}
 
 // GetCategories - получение списка категорий
 func (h *MarketplaceHandler) GetCategories(c *fiber.Ctx) error {

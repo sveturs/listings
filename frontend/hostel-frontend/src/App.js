@@ -11,6 +11,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CarListPage from "./pages/CarListPage";
 import AddCarPage from "./pages/AddCarPage";
 import MarketplacePage from "./pages/MarketplacePage";
+import CreateListingPage from "./pages/CreateListingPage";
 
 function App() {
   return (
@@ -27,7 +28,7 @@ function App() {
             <Route path="/cars" element={<CarListPage />} /> {/* Список автомобилей */}
             <Route path="/add-car" element={<AddCarPage />} /> {/* Добавление автомобиля */}
             <Route path="/marketplace" element={<MarketplacePage />} />
-
+            <Route path="/marketplace/create" element={<CreateListingPage />} />
           
           </Routes>
         </Layout>

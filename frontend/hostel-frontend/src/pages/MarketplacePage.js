@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Container,
     Grid,
     Box,
     Typography,
-    CircularProgress
+    CircularProgress,
+    Button
 } from '@mui/material';
+import { Plus } from 'lucide-react';
 import ListingCard from '../components/marketplace/ListingCard';
 import MarketplaceFilters from '../components/marketplace/MarketplaceFilters';
 import axios from '../api/axios';
 import { debounce } from 'lodash';
 
 const MarketplacePage = () => {
+    const navigate = useNavigate();
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(false);
     const [filters, setFilters] = useState({
@@ -37,15 +41,14 @@ const MarketplacePage = () => {
             }, {});
 
             const response = await axios.get('/api/v1/marketplace/listings', { params });
+            console.log('Full API response:', response.data);
             console.log('Server response:', response.data);
             
-            // Извлекаем данные из правильного уровня вложенности
             const listingsData = response.data.data.data || [];
             console.log('Extracted listings:', listingsData);
             
             setListings(listingsData);
 
-            // Обновляем максимальную цену только при первой загрузке
             if (listingsData.length > 0 && !currentFilters.max_price) {
                 const maxPrice = Math.max(...listingsData.map(listing => listing.price));
                 setFilters(prev => ({
@@ -61,13 +64,11 @@ const MarketplacePage = () => {
         }
     }, []);
 
-    // Создаем дебаунсированную версию функции fetchListings
     const debouncedFetch = useMemo(
         () => debounce((filters) => fetchListings(filters), 500),
         [fetchListings]
     );
 
-    // Обработчик изменения фильтров с дебаунсингом
     const handleFilterChange = useCallback((newFilters) => {
         setFilters(prevFilters => {
             const updatedFilters = {
@@ -82,14 +83,22 @@ const MarketplacePage = () => {
     useEffect(() => {
         fetchListings(filters);
         return () => debouncedFetch.cancel();
-    }, []);
+    }, [fetchListings, filters, debouncedFetch]);
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4 }}>
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" gutterBottom>
+            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h4">
                     Объявления
                 </Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate('/marketplace/create')}
+                    startIcon={<Plus />}
+                >
+                    Создать объявление
+                </Button>
             </Box>
             <Grid container spacing={3}>
                 <Grid item xs={12} md={3}>

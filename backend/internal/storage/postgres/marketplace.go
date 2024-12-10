@@ -2,16 +2,18 @@
 package postgres
 
 import (
-    "backend/internal/domain/models"
-    "context"
-    "fmt"
-    "strings"
+	"backend/internal/domain/models"
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"strings"
 	"log"
 )
 
 func (db *Database) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
-    var listingID int
-    err := db.pool.QueryRow(ctx, `
+	var listingID int
+	err := db.pool.QueryRow(ctx, `
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
@@ -19,88 +21,107 @@ func (db *Database) CreateListing(ctx context.Context, listing *models.Marketpla
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING id
     `,
-        listing.UserID, listing.CategoryID, listing.Title, listing.Description,
-        listing.Price, listing.Condition, listing.Status, listing.Location,
-        listing.Latitude, listing.Longitude, listing.City, listing.Country,
-    ).Scan(&listingID)
+		listing.UserID, listing.CategoryID, listing.Title, listing.Description,
+		listing.Price, listing.Condition, listing.Status, listing.Location,
+		listing.Latitude, listing.Longitude, listing.City, listing.Country,
+	).Scan(&listingID)
 
-    return listingID, err
+	return listingID, err
 }
 func (db *Database) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
-    var imageID int
-    err := db.pool.QueryRow(ctx, `
+	var imageID int
+	err := db.pool.QueryRow(ctx, `
         INSERT INTO marketplace_images (
             listing_id, file_path, file_name, file_size, 
             content_type, is_main
         ) VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id
     `,
-        image.ListingID, image.FilePath, image.FileName,
-        image.FileSize, image.ContentType, image.IsMain,
-    ).Scan(&imageID)
+		image.ListingID, image.FilePath, image.FileName,
+		image.FileSize, image.ContentType, image.IsMain,
+	).Scan(&imageID)
 
-    return imageID, err
+	return imageID, err
 }
 
 func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-    rows, err := db.pool.Query(ctx, `
+	rows, err := db.pool.Query(ctx, `
         SELECT id, listing_id, file_path, file_name, 
                file_size, content_type, is_main, created_at
         FROM marketplace_images
         WHERE listing_id = $1
         ORDER BY is_main DESC, created_at DESC
     `, listingID)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var images []models.MarketplaceImage
-    for rows.Next() {
-        var img models.MarketplaceImage
-        err := rows.Scan(
-            &img.ID, &img.ListingID, &img.FilePath,
-            &img.FileName, &img.FileSize, &img.ContentType,
-            &img.IsMain, &img.CreatedAt,
-        )
-        if err != nil {
-            continue
-        }
-        images = append(images, img)
-    }
+	var images []models.MarketplaceImage
+	for rows.Next() {
+		var img models.MarketplaceImage
+		err := rows.Scan(
+			&img.ID, &img.ListingID, &img.FilePath,
+			&img.FileName, &img.FileSize, &img.ContentType,
+			&img.IsMain, &img.CreatedAt,
+		)
+		if err != nil {
+			continue
+		}
+		images = append(images, img)
+	}
 
-    return images, rows.Err()
+	return images, rows.Err()
 }
 
 func (db *Database) DeleteListingImage(ctx context.Context, imageID string) (string, error) {
-    var filePath string
-    err := db.pool.QueryRow(ctx,
-        "SELECT file_path FROM marketplace_images WHERE id = $1",
-        imageID,
-    ).Scan(&filePath)
-    if err != nil {
-        return "", err
-    }
+	var filePath string
+	err := db.pool.QueryRow(ctx,
+		"SELECT file_path FROM marketplace_images WHERE id = $1",
+		imageID,
+	).Scan(&filePath)
+	if err != nil {
+		return "", err
+	}
 
-    _, err = db.pool.Exec(ctx,
-        "DELETE FROM marketplace_images WHERE id = $1",
-        imageID,
-    )
-    if err != nil {
-        return "", err
-    }
+	_, err = db.pool.Exec(ctx,
+		"DELETE FROM marketplace_images WHERE id = $1",
+		imageID,
+	)
+	if err != nil {
+		return "", err
+	}
 
-    return filePath, nil
+	return filePath, nil
 }
 
 func (db *Database) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-    // Базовый запрос с CTE
-    query := `
-        WITH filtered_listings AS (
+    baseQuery := `
+        WITH RECURSIVE listing_data AS (
             SELECT 
                 l.*, 
-                u.name as user_name, u.email as user_email,
-                c.name as category_name, c.slug as category_slug
+                u.name as user_name, 
+                u.email as user_email,
+                c.name as category_name, 
+                c.slug as category_slug,
+                COALESCE(
+                    (SELECT json_agg(
+                        json_build_object(
+                            'id', mi.id,
+                            'listing_id', mi.listing_id,
+                            'file_path', mi.file_path,
+                            'file_name', mi.file_name,
+                            'file_size', mi.file_size,
+                            'content_type', mi.content_type,
+                            'is_main', mi.is_main,
+                            'created_at', to_char(mi.created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+                        )
+                    ) 
+                    FROM marketplace_images mi 
+                    WHERE mi.listing_id = l.id
+                    ),
+                    '[]'::json
+                ) as images
             FROM marketplace_listings l
             JOIN users u ON l.user_id = u.id
             JOIN marketplace_categories c ON l.category_id = c.id
@@ -109,7 +130,7 @@ func (db *Database) GetListings(ctx context.Context, filters map[string]string, 
 
     var conditions []string
     var args []interface{}
-    argCount := 0
+    argCount := 2 // начинаем с 3, так как $1 и $2 зарезервированы для LIMIT и OFFSET
 
     // Добавляем условия фильтрации
     if v := filters["min_price"]; v != "" {
@@ -128,105 +149,90 @@ func (db *Database) GetListings(ctx context.Context, filters map[string]string, 
         args = append(args, "%"+v+"%", "%"+v+"%")
         argCount++
     }
-    if v := filters["category_id"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND l.category_id = $%d", argCount))
-        args = append(args, v)
-    }
-    if v := filters["city"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND LOWER(l.address_city) = LOWER($%d)", argCount))
-        args = append(args, v)
-    }
 
     // Добавляем условия в запрос
-    query += strings.Join(conditions, " ")
-
-    // Закрываем CTE и добавляем основной запрос
-    query += `
-        )
-        SELECT 
-            fl.*,
-            COUNT(*) OVER() as total_count
-        FROM filtered_listings fl
-    `
-
-    // Добавляем сортировку
-    switch filters["sort_by"] {
-    case "price_asc":
-        query += " ORDER BY fl.price ASC"
-    case "price_desc":
-        query += " ORDER BY fl.price DESC"
-    case "date_asc":
-        query += " ORDER BY fl.created_at ASC"
-    case "views":
-        query += " ORDER BY fl.views_count DESC"
-    default:
-        query += " ORDER BY fl.created_at DESC"
+    if len(conditions) > 0 {
+        baseQuery += " " + strings.Join(conditions, " ")
     }
 
-    // Добавляем пагинацию
-    argCount++
-    query += fmt.Sprintf(" LIMIT $%d", argCount)
-    args = append(args, limit)
+    // Закрываем CTE и добавляем основной запрос
+    baseQuery += `) 
+        SELECT *, COUNT(*) OVER() as total_count 
+        FROM listing_data 
+        ORDER BY created_at DESC 
+        LIMIT $1 OFFSET $2`
 
-    argCount++
-    query += fmt.Sprintf(" OFFSET $%d", argCount)
-    args = append(args, offset)
+    // Добавляем аргументы для LIMIT и OFFSET в начало списка
+    args = append([]interface{}{limit, offset}, args...)
 
     // Выполняем запрос
-    rows, err := db.pool.Query(ctx, query, args...)
+    rows, err := db.pool.Query(ctx, baseQuery, args...)
     if err != nil {
-        return nil, 0, fmt.Errorf("error executing query: %w", err)
+        return nil, 0, fmt.Errorf("error querying listings: %w", err)
     }
     defer rows.Close()
 
-    var listings []models.MarketplaceListing
-    var totalCount int64
+	var listings []models.MarketplaceListing
+	var totalCount int64
 
-    for rows.Next() {
-        var l models.MarketplaceListing
-        l.User = &models.User{}      // Инициализируем вложенные структуры
-        l.Category = &models.MarketplaceCategory{}
+	for rows.Next() {
+		var listing models.MarketplaceListing
+		// Инициализируем вложенные структуры
+		listing.User = &models.User{}
+		listing.Category = &models.MarketplaceCategory{}
+		var imagesJSON []byte
 
-        err := rows.Scan(
-            &l.ID, &l.UserID, &l.CategoryID, &l.Title, &l.Description,
-            &l.Price, &l.Condition, &l.Status, &l.Location, &l.Latitude,
-            &l.Longitude, &l.City, &l.Country, &l.ViewsCount,
-            &l.CreatedAt, &l.UpdatedAt,
-            &l.User.Name, &l.User.Email,
-            &l.Category.Name, &l.Category.Slug,
-            &totalCount,
-        )
-        if err != nil {
-            return nil, 0, fmt.Errorf("error scanning row: %w", err)
-        }
-        listings = append(listings, l)
-    }
+		err := rows.Scan(
+			&listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title,
+			&listing.Description, &listing.Price, &listing.Condition, &listing.Status,
+			&listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
+			&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
+			&listing.User.Name, &listing.User.Email,
+			&listing.Category.Name, &listing.Category.Slug,
+			&imagesJSON, &totalCount,
+		)
+		if err != nil {
+			log.Printf("Error scanning row: %v", err)
+			return nil, 0, fmt.Errorf("error scanning listing: %w", err)
+		}
 
-    return listings, totalCount, nil
+		if len(imagesJSON) > 0 {
+			if err := json.Unmarshal(imagesJSON, &listing.Images); err != nil {
+				log.Printf("Error parsing images JSON for listing %d: %v", listing.ID, err)
+				log.Printf("Raw JSON: %s", string(imagesJSON))
+				listing.Images = []models.MarketplaceImage{}
+			} else {
+				log.Printf("Successfully parsed %d images for listing %d", len(listing.Images), listing.ID)
+			}
+		} else {
+			listing.Images = []models.MarketplaceImage{}
+		}
+
+		listings = append(listings, listing)
+	}
+
+	return listings, totalCount, nil
 }
 
-
 func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {
-    _, err := db.pool.Exec(ctx, `
+	_, err := db.pool.Exec(ctx, `
         INSERT INTO marketplace_favorites (user_id, listing_id)
         VALUES ($1, $2)
         ON CONFLICT (user_id, listing_id) DO NOTHING
     `, userID, listingID)
-    return err
+	return err
 }
 
 func (db *Database) RemoveFromFavorites(ctx context.Context, userID int, listingID int) error {
-    _, err := db.pool.Exec(ctx, `
+	_, err := db.pool.Exec(ctx, `
         DELETE FROM marketplace_favorites
         WHERE user_id = $1 AND listing_id = $2
     `, userID, listingID)
-    return err
+	return err
 }
 
 func (db *Database) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
-    query := `
+	query := `
         SELECT 
             l.id, l.user_id, l.category_id, l.title, l.description,
             l.price, l.condition, l.status, l.location, l.latitude,
@@ -236,50 +242,50 @@ func (db *Database) GetUserFavorites(ctx context.Context, userID int) ([]models.
         JOIN marketplace_favorites f ON l.id = f.listing_id
         WHERE f.user_id = $1
     `
-    
-    rows, err := db.pool.Query(ctx, query, userID)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
 
-    var listings []models.MarketplaceListing
-    for rows.Next() {
-        var l models.MarketplaceListing
-        err := rows.Scan(
-            &l.ID, &l.UserID, &l.CategoryID, &l.Title, &l.Description,
-            &l.Price, &l.Condition, &l.Status, &l.Location, &l.Latitude,
-            &l.Longitude, &l.City, &l.Country, &l.ViewsCount,
-            &l.CreatedAt, &l.UpdatedAt,
-        )
-        if err != nil {
-            continue
-        }
-        listings = append(listings, l)
-    }
+	rows, err := db.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    return listings, rows.Err()
+	var listings []models.MarketplaceListing
+	for rows.Next() {
+		var l models.MarketplaceListing
+		err := rows.Scan(
+			&l.ID, &l.UserID, &l.CategoryID, &l.Title, &l.Description,
+			&l.Price, &l.Condition, &l.Status, &l.Location, &l.Latitude,
+			&l.Longitude, &l.City, &l.Country, &l.ViewsCount,
+			&l.CreatedAt, &l.UpdatedAt,
+		)
+		if err != nil {
+			continue
+		}
+		listings = append(listings, l)
+	}
+
+	return listings, rows.Err()
 }
 func (db *Database) DeleteListing(ctx context.Context, id int, userID int) error {
-    result, err := db.pool.Exec(ctx, `
+	result, err := db.pool.Exec(ctx, `
         DELETE FROM marketplace_listings
         WHERE id = $1 AND user_id = $2
     `, id, userID)
-    
-    if err != nil {
-        return err
-    }
-    
-    rowsAffected := result.RowsAffected()
-    if rowsAffected == 0 {
-        return fmt.Errorf("listing not found or you don't have permission to delete it")
-    }
-    
-    return nil
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("listing not found or you don't have permission to delete it")
+	}
+
+	return nil
 }
 
 func (db *Database) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-    result, err := db.pool.Exec(ctx, `
+	result, err := db.pool.Exec(ctx, `
         UPDATE marketplace_listings
         SET 
             title = $1,
@@ -295,33 +301,33 @@ func (db *Database) UpdateListing(ctx context.Context, listing *models.Marketpla
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $11 AND user_id = $12
     `,
-        listing.Title,
-        listing.Description,
-        listing.Price,
-        listing.Condition,
-        listing.Status,
-        listing.Location,
-        listing.Latitude,
-        listing.Longitude,
-        listing.City,
-        listing.Country,
-        listing.ID,
-        listing.UserID,
-    )
-    
-    if err != nil {
-        return err
-    }
-    
-    rowsAffected := result.RowsAffected()
-    if rowsAffected == 0 {
-        return fmt.Errorf("listing not found or you don't have permission to update it")
-    }
-    
-    return nil
+		listing.Title,
+		listing.Description,
+		listing.Price,
+		listing.Condition,
+		listing.Status,
+		listing.Location,
+		listing.Latitude,
+		listing.Longitude,
+		listing.City,
+		listing.Country,
+		listing.ID,
+		listing.UserID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("listing not found or you don't have permission to update it")
+	}
+
+	return nil
 }
 func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-    rows, err := db.pool.Query(ctx, `
+	rows, err := db.pool.Query(ctx, `
         SELECT 
             id, name, slug, parent_id, icon, created_at
         FROM marketplace_categories
@@ -329,57 +335,57 @@ func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCate
             CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END,
             name
     `)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var categories []models.MarketplaceCategory
-    for rows.Next() {
-        var cat models.MarketplaceCategory
-        err := rows.Scan(
-            &cat.ID,
-            &cat.Name,
-            &cat.Slug,
-            &cat.ParentID,
-            &cat.Icon,
-            &cat.CreatedAt,
-        )
-        if err != nil {
-            continue
-        }
-        categories = append(categories, cat)
-    }
+	var categories []models.MarketplaceCategory
+	for rows.Next() {
+		var cat models.MarketplaceCategory
+		err := rows.Scan(
+			&cat.ID,
+			&cat.Name,
+			&cat.Slug,
+			&cat.ParentID,
+			&cat.Icon,
+			&cat.CreatedAt,
+		)
+		if err != nil {
+			continue
+		}
+		categories = append(categories, cat)
+	}
 
-    return categories, rows.Err()
+	return categories, rows.Err()
 }
 
 func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
-    cat := &models.MarketplaceCategory{}
-    err := db.pool.QueryRow(ctx, `
+	cat := &models.MarketplaceCategory{}
+	err := db.pool.QueryRow(ctx, `
         SELECT 
             id, name, slug, parent_id, icon, created_at
         FROM marketplace_categories
         WHERE id = $1
     `, id).Scan(
-        &cat.ID,
-        &cat.Name,
-        &cat.Slug,
-        &cat.ParentID,
-        &cat.Icon,
-        &cat.CreatedAt,
-    )
-    if err != nil {
-        return nil, err
-    }
+		&cat.ID,
+		&cat.Name,
+		&cat.Slug,
+		&cat.ParentID,
+		&cat.Icon,
+		&cat.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
 
-    return cat, nil
+	return cat, nil
 }
 func (db *Database) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-    listing := &models.MarketplaceListing{}
-    
-    // Получаем основные данные объявления вместе с информацией о пользователе и категории
-    err := db.pool.QueryRow(ctx, `
+	listing := &models.MarketplaceListing{}
+
+	// Получаем основные данные объявления вместе с информацией о пользователе и категории
+	err := db.pool.QueryRow(ctx, `
         SELECT 
             l.id, l.user_id, l.category_id, l.title, l.description,
             l.price, l.condition, l.status, l.location, l.latitude,
@@ -392,37 +398,37 @@ func (db *Database) GetListingByID(ctx context.Context, id int) (*models.Marketp
         JOIN marketplace_categories c ON l.category_id = c.id
         WHERE l.id = $1
     `, id).Scan(
-        &listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title, &listing.Description,
-        &listing.Price, &listing.Condition, &listing.Status, &listing.Location, &listing.Latitude,
-        &listing.Longitude, &listing.City, &listing.Country, &listing.ViewsCount,
-        &listing.CreatedAt, &listing.UpdatedAt,
-        &listing.User.Name, &listing.User.Email,
-        &listing.Category.Name, &listing.Category.Slug,
-    )
-    
-    if err != nil {
-        return nil, err
-    }
+		&listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title, &listing.Description,
+		&listing.Price, &listing.Condition, &listing.Status, &listing.Location, &listing.Latitude,
+		&listing.Longitude, &listing.City, &listing.Country, &listing.ViewsCount,
+		&listing.CreatedAt, &listing.UpdatedAt,
+		&listing.User.Name, &listing.User.Email,
+		&listing.Category.Name, &listing.Category.Slug,
+	)
 
-    // Увеличиваем счетчик просмотров
-    _, err = db.pool.Exec(ctx, `
+	if err != nil {
+		return nil, err
+	}
+
+	// Увеличиваем счетчик просмотров
+	_, err = db.pool.Exec(ctx, `
         UPDATE marketplace_listings 
         SET views_count = views_count + 1 
         WHERE id = $1
     `, id)
-    if err != nil {
-        // Логируем ошибку, но не прерываем выполнение
-        log.Printf("Error updating views count: %v", err)
-    }
+	if err != nil {
+		// Логируем ошибку, но не прерываем выполнение
+		log.Printf("Error updating views count: %v", err)
+	}
 
-    // Получаем изображения для объявления
-    images, err := db.GetListingImages(ctx, fmt.Sprintf("%d", id))
-    if err != nil {
-        // Логируем ошибку, но продолжаем без изображений
-        log.Printf("Error getting images for listing %d: %v", id, err)
-    } else {
-        listing.Images = images
-    }
+	// Получаем изображения для объявления
+	images, err := db.GetListingImages(ctx, fmt.Sprintf("%d", id))
+	if err != nil {
+		// Логируем ошибку, но продолжаем без изображений
+		log.Printf("Error getting images for listing %d: %v", id, err)
+	} else {
+		listing.Images = images
+	}
 
-    return listing, nil
+	return listing, nil
 }

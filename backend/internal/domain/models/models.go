@@ -174,5 +174,5 @@ type MarketplaceImage struct {
     FileSize    int       `json:"file_size"`
     ContentType string    `json:"content_type"`
     IsMain      bool      `json:"is_main"`
-    CreatedAt   time.Time `json:"created_at"`
+    CreatedAt   string    `json:"created_at"` // Изменено на string
 }
