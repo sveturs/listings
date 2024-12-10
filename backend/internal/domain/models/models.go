@@ -136,3 +136,43 @@ type Bed struct {
 	HasShelf      bool    `json:"has_shelf"`
 	BedType       string  `json:"bed_type"`
 }
+type MarketplaceListing struct {
+    ID          int       `json:"id"`
+    UserID      int       `json:"user_id"`
+    CategoryID  int       `json:"category_id"`
+    Title       string    `json:"title"`
+    Description string    `json:"description"`
+    Price       float64   `json:"price"`
+    Condition   string    `json:"condition"`
+    Status      string    `json:"status"`
+    Location    string    `json:"location"`
+    Latitude    *float64  `json:"latitude,omitempty"`
+    Longitude   *float64  `json:"longitude,omitempty"`
+    City        string    `json:"city"`
+    Country     string    `json:"country"`
+    ViewsCount  int       `json:"views_count"`
+    CreatedAt   time.Time `json:"created_at"`
+    UpdatedAt   time.Time `json:"updated_at"`
+    Images      []MarketplaceImage `json:"images,omitempty"`
+    User        *User     `json:"user,omitempty"`
+    Category    *MarketplaceCategory `json:"category,omitempty"`
+}
+
+type MarketplaceCategory struct {
+    ID        int       `json:"id"`
+    Name      string    `json:"name"`
+    Slug      string    `json:"slug"`
+    ParentID  *int      `json:"parent_id,omitempty"`
+    Icon      string    `json:"icon,omitempty"`
+    CreatedAt time.Time `json:"created_at"`
+}
+type MarketplaceImage struct {
+    ID          int       `json:"id"`
+    ListingID   int       `json:"listing_id"`
+    FilePath    string    `json:"file_path"`
+    FileName    string    `json:"file_name"`
+    FileSize    int       `json:"file_size"`
+    ContentType string    `json:"content_type"`
+    IsMain      bool      `json:"is_main"`
+    CreatedAt   time.Time `json:"created_at"`
+}

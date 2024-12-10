@@ -66,7 +66,6 @@ func (s *Server) setupRoutes() {
 	// Static files
 	s.app.Static("/uploads", "./uploads")
 	os.MkdirAll("./uploads", os.ModePerm)
-    
 
 	// Public routes
 	s.app.Get("/rooms", s.handlers.Rooms.List)
@@ -75,9 +74,9 @@ func (s *Server) setupRoutes() {
 	s.app.Get("/rooms/:id/available-beds", s.handlers.Rooms.GetAvailableBeds)
 	s.app.Get("/beds/:id/images", s.handlers.Rooms.ListBedImages)
 
-    //  публичные маршруты для автомобилей
-    s.app.Get("/api/v1/cars/available", s.handlers.Cars.GetAvailableCars)
-    s.app.Get("/api/v1/cars/:id/images", s.handlers.Cars.GetImages)
+	//  публичные маршруты для автомобилей
+	s.app.Get("/api/v1/cars/available", s.handlers.Cars.GetAvailableCars)
+	s.app.Get("/api/v1/cars/:id/images", s.handlers.Cars.GetImages)
 
 	// Auth routes
 	auth := s.app.Group("/auth")
@@ -91,8 +90,7 @@ func (s *Server) setupRoutes() {
 	cars := api.Group("/cars")
 	cars.Post("/", s.handlers.Cars.AddCar)
 	cars.Post("/:id/images", s.handlers.Cars.UploadImages)
-    cars.Post("/book", s.handlers.Cars.CreateBooking)
-
+	cars.Post("/book", s.handlers.Cars.CreateBooking)
 
 	// Protected room routes
 	rooms := api.Group("/rooms")
@@ -113,6 +111,19 @@ func (s *Server) setupRoutes() {
 	users.Post("/register", s.handlers.Users.Register)
 	users.Get("/me", s.handlers.Users.GetProfile)
 	users.Put("/me", s.handlers.Users.UpdateProfile)
+
+	// Marketplace routes
+	marketplace := api.Group("/marketplace")
+	marketplace.Get("/listings", s.handlers.Marketplace.GetListings)
+	marketplace.Post("/listings", s.handlers.Marketplace.CreateListing)
+	marketplace.Get("/listings/:id", s.handlers.Marketplace.GetListing)
+	marketplace.Put("/listings/:id", s.handlers.Marketplace.UpdateListing)
+	marketplace.Delete("/listings/:id", s.handlers.Marketplace.DeleteListing)
+	marketplace.Post("/listings/:id/images", s.handlers.Marketplace.UploadImages)
+	marketplace.Post("/listings/:id/favorite", s.handlers.Marketplace.AddToFavorites)
+	marketplace.Delete("/listings/:id/favorite", s.handlers.Marketplace.RemoveFromFavorites)
+	marketplace.Get("/categories", s.handlers.Marketplace.GetCategories)
+
 }
 
 func (s *Server) Start() error {

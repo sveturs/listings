@@ -13,6 +13,7 @@ type ServicesInterface interface {
     User() UserServiceInterface
     Car() CarServiceInterface
     Config() *config.Config
+    Marketplace() MarketplaceServiceInterface
 }
 
 type Services struct {
@@ -20,7 +21,8 @@ type Services struct {
     room    RoomServiceInterface
     booking BookingServiceInterface
     user    UserServiceInterface
-    car     CarServiceInterface // Добавляем поле для CarService
+    car     CarServiceInterface
+    marketplace MarketplaceServiceInterface 
     config  *config.Config
 }
 
@@ -30,7 +32,8 @@ func NewServices(storage storage.Storage, cfg *config.Config) *Services {
         room:    NewRoomService(storage),
         booking: NewBookingService(storage),
         user:    NewUserService(storage),
-        car:     NewCarService(storage), // Инициализируем CarService
+        car:     NewCarService(storage),
+        marketplace: NewMarketplaceService(storage),
         config:  cfg,
     }
 }
@@ -56,6 +59,8 @@ func (s *Services) User() UserServiceInterface {
 func (s *Services) Config() *config.Config { 
     return s.config
 }
-
+func (s *Services) Marketplace() MarketplaceServiceInterface {
+    return s.marketplace
+}
 // Проверяем, что Services реализует ServicesInterface
 var _ ServicesInterface = (*Services)(nil)

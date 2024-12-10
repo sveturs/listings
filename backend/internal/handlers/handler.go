@@ -11,6 +11,7 @@ type Handler struct {
     Bookings *BookingHandler
     Users    *UserHandler
     Cars     *CarHandler 
+    Marketplace *MarketplaceHandler
 }
 
 func NewHandler(services services.ServicesInterface) *Handler {
@@ -20,5 +21,6 @@ func NewHandler(services services.ServicesInterface) *Handler {
         Bookings: NewBookingHandler(services),
         Users:    NewUserHandler(services),
         Cars:     NewCarHandler(services),
+        Marketplace: NewMarketplaceHandler(services),
     }
 }
