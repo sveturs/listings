@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     Container,
     Grid,
@@ -9,7 +9,7 @@ import {
 import ListingCard from '../components/marketplace/ListingCard';
 import MarketplaceFilters from '../components/marketplace/MarketplaceFilters';
 import axios from '../api/axios';
-
+import { debounce } from 'lodash';
 
 const MarketplacePage = () => {
     const [listings, setListings] = useState([]);
@@ -22,30 +22,67 @@ const MarketplacePage = () => {
         city: '',
         country: '',
         condition: '',
+        with_photos: false,
         sort_by: 'date_desc'
     });
 
-    const fetchListings = async () => {
+    const fetchListings = useCallback(async (currentFilters) => {
         try {
             setLoading(true);
-            const response = await axios.get('/api/v1/marketplace/listings', { params: filters });
-            console.log('Response data:', response.data);
-            setListings(response.data.data); // Предполагается, что массив находится в `data.data`
+            const params = Object.entries(currentFilters).reduce((acc, [key, value]) => {
+                if (value !== '' && value !== null && value !== undefined) {
+                    acc[key] = value;
+                }
+                return acc;
+            }, {});
+
+            const response = await axios.get('/api/v1/marketplace/listings', { params });
+            console.log('Server response:', response.data);
+            
+            // Извлекаем данные из правильного уровня вложенности
+            const listingsData = response.data.data.data || [];
+            console.log('Extracted listings:', listingsData);
+            
+            setListings(listingsData);
+
+            // Обновляем максимальную цену только при первой загрузке
+            if (listingsData.length > 0 && !currentFilters.max_price) {
+                const maxPrice = Math.max(...listingsData.map(listing => listing.price));
+                setFilters(prev => ({
+                    ...prev,
+                    max_price: maxPrice
+                }));
+            }
         } catch (error) {
             console.error('Error fetching listings:', error);
-            setListings([]); // Устанавливаем пустой массив в случае ошибки
+            setListings([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    // Создаем дебаунсированную версию функции fetchListings
+    const debouncedFetch = useMemo(
+        () => debounce((filters) => fetchListings(filters), 500),
+        [fetchListings]
+    );
+
+    // Обработчик изменения фильтров с дебаунсингом
+    const handleFilterChange = useCallback((newFilters) => {
+        setFilters(prevFilters => {
+            const updatedFilters = {
+                ...prevFilters,
+                ...newFilters
+            };
+            debouncedFetch(updatedFilters);
+            return updatedFilters;
+        });
+    }, [debouncedFetch]);
 
     useEffect(() => {
-        fetchListings();
-    }, [filters]);
-
-    const handleFilterChange = (newFilters) => {
-        setFilters(prev => ({ ...prev, ...newFilters }));
-    };
+        fetchListings(filters);
+        return () => debouncedFetch.cancel();
+    }, []);
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -54,7 +91,6 @@ const MarketplacePage = () => {
                     Объявления
                 </Typography>
             </Box>
-
             <Grid container spacing={3}>
                 <Grid item xs={12} md={3}>
                     <MarketplaceFilters
@@ -69,14 +105,18 @@ const MarketplacePage = () => {
                         </Box>
                     ) : (
                         <Grid container spacing={2}>
-                            {Array.isArray(listings) && listings.length > 0 ? (
+                            {listings && listings.length > 0 ? (
                                 listings.map((listing) => (
                                     <Grid item xs={12} sm={6} md={4} key={listing.id}>
                                         <ListingCard listing={listing} />
                                     </Grid>
                                 ))
                             ) : (
-                                <Typography variant="body1">No listings available</Typography>
+                                <Grid item xs={12}>
+                                    <Typography variant="body1" align="center">
+                                        Объявления не найдены
+                                    </Typography>
+                                </Grid>
                             )}
                         </Grid>
                     )}
@@ -86,4 +126,4 @@ const MarketplacePage = () => {
     );
 };
 
-export default MarketplacePage;
+export default React.memo(MarketplacePage);

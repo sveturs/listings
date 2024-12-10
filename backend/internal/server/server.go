@@ -112,20 +112,21 @@ func (s *Server) setupRoutes() {
 	users.Get("/me", s.handlers.Users.GetProfile)
 	users.Put("/me", s.handlers.Users.UpdateProfile)
 
-	// Marketplace routes
-	marketplace := api.Group("/marketplace")
-	marketplace.Get("/listings", s.handlers.Marketplace.GetListings)
-	marketplace.Post("/listings", s.handlers.Marketplace.CreateListing)
-	marketplace.Get("/listings/:id", s.handlers.Marketplace.GetListing)
-	marketplace.Put("/listings/:id", s.handlers.Marketplace.UpdateListing)
-	marketplace.Delete("/listings/:id", s.handlers.Marketplace.DeleteListing)
-	marketplace.Post("/listings/:id/images", s.handlers.Marketplace.UploadImages)
-	marketplace.Post("/listings/:id/favorite", s.handlers.Marketplace.AddToFavorites)
-	marketplace.Delete("/listings/:id/favorite", s.handlers.Marketplace.RemoveFromFavorites)
-	marketplace.Get("/categories", s.handlers.Marketplace.GetCategories)
+    // Public marketplace routes
+    s.app.Get("/api/v1/marketplace/listings", s.handlers.Marketplace.GetListings)
+    s.app.Get("/api/v1/marketplace/categories", s.handlers.Marketplace.GetCategories)
+    s.app.Get("/api/v1/marketplace/listings/:id", s.handlers.Marketplace.GetListing)
 
+    
+    // Protected marketplace routes
+    marketplaceProtected := api.Group("/marketplace")  // Изменили имя переменной
+    marketplaceProtected.Post("/listings", s.handlers.Marketplace.CreateListing)
+    marketplaceProtected.Put("/listings/:id", s.handlers.Marketplace.UpdateListing)
+    marketplaceProtected.Delete("/listings/:id", s.handlers.Marketplace.DeleteListing)
+    marketplaceProtected.Post("/listings/:id/images", s.handlers.Marketplace.UploadImages)
+    marketplaceProtected.Post("/listings/:id/favorite", s.handlers.Marketplace.AddToFavorites)
+    marketplaceProtected.Delete("/listings/:id/favorite", s.handlers.Marketplace.RemoveFromFavorites)
 }
-
 func (s *Server) Start() error {
 	return s.app.Listen(fmt.Sprintf(":%s", s.cfg.Port))
 }

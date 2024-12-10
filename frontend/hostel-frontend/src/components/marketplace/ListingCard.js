@@ -9,7 +9,7 @@ import {
     Button
 } from '@mui/material';
 import {
-    LocationOn,
+    LocationOn as LocationIcon,
     AccessTime,
     PhotoCamera
 } from '@mui/icons-material';
@@ -22,11 +22,12 @@ const ListingCard = ({ listing }) => {
             style: 'currency',
             currency: 'RUB',
             maximumFractionDigits: 0
-        }).format(price);
+        }).format(price || 0);
     };
 
-    const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('ru-RU', {
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        return new Date(dateString).toLocaleDateString('ru-RU', {
             day: 'numeric',
             month: 'long',
             year: 'numeric'
@@ -56,9 +57,9 @@ const ListingCard = ({ listing }) => {
                         objectFit: 'cover'
                     }}
                     image={listing.images?.[0] ? 
-                        `${BACKEND_URL}/uploads/${listing.images[0].file_path}` : 
-                        '/placeholder-listing.jpg'}
-                    alt={listing.title}
+                        `${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}` : 
+                        'https://via.placeholder.com/300x200'}
+                    alt={listing.title || 'Изображение отсутствует'}
                 />
                 {listing.images?.length > 1 && (
                     <Chip
@@ -78,7 +79,7 @@ const ListingCard = ({ listing }) => {
 
             <CardContent sx={{ flexGrow: 1 }}>
                 <Typography variant="h6" noWrap>
-                    {listing.title}
+                    {listing.title || 'Без названия'}
                 </Typography>
 
                 <Typography variant="h5" color="primary" sx={{ mt: 1 }}>
@@ -86,9 +87,9 @@ const ListingCard = ({ listing }) => {
                 </Typography>
 
                 <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                    <LocationOn sx={{ fontSize: 18, mr: 0.5 }} />
+                    <LocationIcon sx={{ fontSize: 18, mr: 0.5 }} />
                     <Typography variant="body2" noWrap>
-                        {listing.city}
+                        {listing.city || 'Местоположение не указано'}
                     </Typography>
                 </Box>
 

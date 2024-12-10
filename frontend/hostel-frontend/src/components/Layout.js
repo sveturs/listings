@@ -104,7 +104,25 @@ const Layout = ({ children }) => {
                 Auto Booking
               </Typography>
             </Box>
-
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+    {/* существующие ссылки */}
+    <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+    <Typography
+        variant="h6"
+        component={Link}
+        to="/marketplace"
+        sx={{
+            textDecoration: "none",
+            color: "text.primary",
+            fontWeight: 700,
+            fontSize: "1.2rem",
+            display: "flex",
+            alignItems: "center"
+        }}
+    >
+        Marketplace
+    </Typography>
+</Box>
             {/* Правый блок */}
             <Box sx={{ display: "flex", alignItems: "center" }}>
               {!user ? (

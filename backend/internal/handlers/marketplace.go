@@ -7,6 +7,7 @@ import (
     "backend/pkg/utils"
     "github.com/gofiber/fiber/v2"
     "strconv"
+    "log"
 )
 
 type MarketplaceHandler struct {
@@ -42,6 +43,7 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 
 func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
     filters := map[string]string{
+        
         "category_id": c.Query("category_id"),
         "city":       c.Query("city"),
         "min_price":  c.Query("min_price"),
@@ -55,8 +57,11 @@ func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
     
     listings, total, err := h.services.Marketplace().GetListings(c.Context(), filters, limit, offset)
     if err != nil {
+        log.Printf("Error getting listings: %v", err) // Добавьте это
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listings")
     }
+
+    log.Printf("Found %d listings", len(listings)) // И это
     
     return utils.SuccessResponse(c, fiber.Map{
         "data": listings,

@@ -1,3 +1,4 @@
+// backend/internal/storage/postgres/marketplace.go
 package postgres
 
 import (
@@ -91,191 +92,122 @@ func (db *Database) DeleteListingImage(ctx context.Context, imageID string) (str
 
     return filePath, nil
 }
+
 func (db *Database) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-    // Базовый запрос с JOIN'ами
+    // Базовый запрос с CTE
     query := `
-        SELECT 
-            l.id, l.user_id, l.category_id, l.title, l.description,
-            l.price, l.condition, l.status, l.location, l.latitude,
-            l.longitude, l.address_city, l.address_country, l.views_count,
-            l.created_at, l.updated_at,
-            u.name as user_name, u.email as user_email,
-            c.name as category_name, c.slug as category_slug,
-            COALESCE(i.image_count, 0) as image_count,
-            COUNT(*) OVER() as total_count
-        FROM marketplace_listings l
-        JOIN users u ON l.user_id = u.id
-        JOIN marketplace_categories c ON l.category_id = c.id
-        LEFT JOIN (
-            SELECT listing_id, COUNT(*) as image_count
-            FROM marketplace_images
-            GROUP BY listing_id
-        ) i ON i.listing_id = l.id
-        WHERE l.status = 'active'
+        WITH filtered_listings AS (
+            SELECT 
+                l.*, 
+                u.name as user_name, u.email as user_email,
+                c.name as category_name, c.slug as category_slug
+            FROM marketplace_listings l
+            JOIN users u ON l.user_id = u.id
+            JOIN marketplace_categories c ON l.category_id = c.id
+            WHERE 1=1
     `
 
     var conditions []string
     var args []interface{}
     argCount := 0
 
-    // Поиск по тексту (в заголовке и описании)
-    if v := filters["query"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf(
-            "(LOWER(l.title) LIKE LOWER($%d) OR LOWER(l.description) LIKE LOWER($%d))",
-            argCount, argCount,
-        ))
-        args = append(args, "%"+v+"%")
-    }
-
-    // Фильтр по категории
-    if v := filters["category_id"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf(
-            "(l.category_id = $%d OR c.parent_id = $%d)", 
-            argCount, argCount,
-        ))
-        args = append(args, v)
-    }
-
-    // Фильтр по диапазону цен
+    // Добавляем условия фильтрации
     if v := filters["min_price"]; v != "" {
         argCount++
-        conditions = append(conditions, fmt.Sprintf("l.price >= $%d", argCount))
+        conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
         args = append(args, v)
     }
     if v := filters["max_price"]; v != "" {
         argCount++
-        conditions = append(conditions, fmt.Sprintf("l.price <= $%d", argCount))
+        conditions = append(conditions, fmt.Sprintf("AND l.price <= $%d", argCount))
         args = append(args, v)
     }
-
-    // Фильтр по состоянию товара
-    if v := filters["condition"]; v != "" {
+    if v := filters["query"]; v != "" {
         argCount++
-        conditions = append(conditions, fmt.Sprintf("l.condition = $%d", argCount))
+        conditions = append(conditions, fmt.Sprintf("AND (LOWER(l.title) LIKE LOWER($%d) OR LOWER(l.description) LIKE LOWER($%d))", argCount, argCount+1))
+        args = append(args, "%"+v+"%", "%"+v+"%")
+        argCount++
+    }
+    if v := filters["category_id"]; v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf("AND l.category_id = $%d", argCount))
         args = append(args, v)
     }
-
-    // Фильтр по городу
     if v := filters["city"]; v != "" {
         argCount++
-        conditions = append(conditions, fmt.Sprintf("LOWER(l.address_city) LIKE LOWER($%d)", argCount))
-        args = append(args, "%"+v+"%")
-    }
-
-    // Фильтр по стране
-    if v := filters["country"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("LOWER(l.address_country) LIKE LOWER($%d)", argCount))
-        args = append(args, "%"+v+"%")
-    }
-
-    // Фильтр только с фото
-    if v := filters["with_photos"]; v == "true" {
-        conditions = append(conditions, "i.image_count > 0")
-    }
-
-    // Фильтр по дате публикации
-    if v := filters["date_from"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("l.created_at >= $%d", argCount))
+        conditions = append(conditions, fmt.Sprintf("AND LOWER(l.address_city) = LOWER($%d)", argCount))
         args = append(args, v)
-    }
-    if v := filters["date_to"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("l.created_at <= $%d", argCount))
-        args = append(args, v)
-    }
-
-    // Фильтр по радиусу от точки (если указаны координаты)
-    if lat := filters["latitude"]; lat != "" {
-        if lon := filters["longitude"]; lon != "" {
-            if radius := filters["radius"]; radius != "" {
-                argCount += 3
-                // Используем формулу гаверсинусов для расчета расстояния
-                conditions = append(conditions, fmt.Sprintf(`
-                    (6371 * acos(cos(radians($%d)) * cos(radians(l.latitude)) * 
-                    cos(radians(l.longitude) - radians($%d)) + 
-                    sin(radians($%d)) * sin(radians(l.latitude)))) <= $%d`,
-                    argCount-2, argCount-1, argCount-2, argCount))
-                args = append(args, lat, lon, radius)
-            }
-        }
     }
 
     // Добавляем условия в запрос
-    if len(conditions) > 0 {
-        query += " AND " + strings.Join(conditions, " AND ")
-    }
+    query += strings.Join(conditions, " ")
 
-    // Сортировка
+    // Закрываем CTE и добавляем основной запрос
+    query += `
+        )
+        SELECT 
+            fl.*,
+            COUNT(*) OVER() as total_count
+        FROM filtered_listings fl
+    `
+
+    // Добавляем сортировку
     switch filters["sort_by"] {
     case "price_asc":
-        query += " ORDER BY l.price ASC"
+        query += " ORDER BY fl.price ASC"
     case "price_desc":
-        query += " ORDER BY l.price DESC"
+        query += " ORDER BY fl.price DESC"
     case "date_asc":
-        query += " ORDER BY l.created_at ASC"
+        query += " ORDER BY fl.created_at ASC"
     case "views":
-        query += " ORDER BY l.views_count DESC"
+        query += " ORDER BY fl.views_count DESC"
     default:
-        query += " ORDER BY l.created_at DESC"
+        query += " ORDER BY fl.created_at DESC"
     }
 
     // Добавляем пагинацию
-    argCount += 2
-    query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount-1, argCount)
-    args = append(args, limit, offset)
+    argCount++
+    query += fmt.Sprintf(" LIMIT $%d", argCount)
+    args = append(args, limit)
+
+    argCount++
+    query += fmt.Sprintf(" OFFSET $%d", argCount)
+    args = append(args, offset)
 
     // Выполняем запрос
     rows, err := db.pool.Query(ctx, query, args...)
     if err != nil {
-        return nil, 0, fmt.Errorf("error querying listings: %w", err)
+        return nil, 0, fmt.Errorf("error executing query: %w", err)
     }
     defer rows.Close()
 
     var listings []models.MarketplaceListing
-    var total int64
+    var totalCount int64
 
     for rows.Next() {
         var l models.MarketplaceListing
-        var u models.User
-        var c models.MarketplaceCategory
-        var imageCount int
+        l.User = &models.User{}      // Инициализируем вложенные структуры
+        l.Category = &models.MarketplaceCategory{}
 
         err := rows.Scan(
             &l.ID, &l.UserID, &l.CategoryID, &l.Title, &l.Description,
             &l.Price, &l.Condition, &l.Status, &l.Location, &l.Latitude,
             &l.Longitude, &l.City, &l.Country, &l.ViewsCount,
             &l.CreatedAt, &l.UpdatedAt,
-            &u.Name, &u.Email,
-            &c.Name, &c.Slug,
-            &imageCount,
-            &total,
+            &l.User.Name, &l.User.Email,
+            &l.Category.Name, &l.Category.Slug,
+            &totalCount,
         )
         if err != nil {
-            return nil, 0, fmt.Errorf("error scanning listing: %w", err)
+            return nil, 0, fmt.Errorf("error scanning row: %w", err)
         }
-
-        l.User = &u
-        l.Category = &c
-
-        // Получаем изображения для объявления
-        if imageCount > 0 {
-            images, err := db.GetListingImages(ctx, fmt.Sprintf("%d", l.ID))
-            if err != nil {
-                log.Printf("Error getting images for listing %d: %v", l.ID, err)
-            } else {
-                l.Images = images
-            }
-        }
-
         listings = append(listings, l)
     }
 
-    return listings, total, rows.Err()
+    return listings, totalCount, nil
 }
+
+
 func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {
     _, err := db.pool.Exec(ctx, `
         INSERT INTO marketplace_favorites (user_id, listing_id)

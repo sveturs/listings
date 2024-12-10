@@ -134,3 +134,65 @@ INSERT INTO marketplace_favorites (user_id, listing_id)
 VALUES
 (1, 2),
 (1, 3);
+
+-- После уже существующих INSERT для категорий добавим:
+
+-- Добавляем тестовые объявления
+INSERT INTO marketplace_listings 
+(user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country) 
+VALUES
+-- Смартфон
+(1, 
+(SELECT id FROM marketplace_categories WHERE slug = 'phones'), 
+'iPhone 14 Pro', 
+'Продаю iPhone 14 Pro 256GB. Цвет - космический черный. На гарантии еще 9 месяцев. Полный комплект.',
+95000, 
+'used', 
+'active', 
+'Novi Sad, Serbia', 
+45.2671, 
+19.8335, 
+'Novi Sad', 
+'Serbia'),
+
+-- Ноутбук
+(1, 
+(SELECT id FROM marketplace_categories WHERE slug = 'laptops'),
+'MacBook Pro 16" M2',
+'Новый MacBook Pro 16" с чипом M2 Pro. 32GB RAM, 1TB SSD. Максимальная комплектация.',
+250000,
+'new',
+'active',
+'Novi Sad, Serbia',
+45.2551,
+19.8452,
+'Novi Sad',
+'Serbia'),
+
+-- Квартира
+(1,
+(SELECT id FROM marketplace_categories WHERE slug = 'apartments'),
+'3-х комнатная квартира в центре',
+'Просторная квартира с отличным ремонтом. 85м². Подземный паркинг. 2 санузла. Вид на реку.',
+12500000,
+'new',
+'active',
+'Novi Sad, Serbia',
+45.2541,
+19.8401,
+'Novi Sad',
+'Serbia');
+
+-- Добавляем изображения
+INSERT INTO marketplace_images 
+(listing_id, file_path, file_name, file_size, content_type, is_main)
+VALUES
+-- Изображения для iPhone
+(1, 'iphone14_1.jpg', 'iphone14_1.jpg', 1024, 'image/jpeg', true),
+(1, 'iphone14_2.jpg', 'iphone14_2.jpg', 1024, 'image/jpeg', false),
+-- Изображения для MacBook
+(2, 'macbook16_1.jpg', 'macbook16_1.jpg', 1024, 'image/jpeg', true),
+(2, 'macbook16_2.jpg', 'macbook16_2.jpg', 1024, 'image/jpeg', false),
+-- Изображения для квартиры
+(3, 'apartment_1.jpg', 'apartment_1.jpg', 1024, 'image/jpeg', true),
+(3, 'apartment_2.jpg', 'apartment_2.jpg', 1024, 'image/jpeg', false);

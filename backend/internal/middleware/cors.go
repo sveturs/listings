@@ -20,5 +20,6 @@ func (m *Middleware) CORS() fiber.Handler {
         AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
         AllowCredentials: true,
         ExposeHeaders:    "Content-Length",
+        MaxAge:           86400, // 24 часов
     })
 }
