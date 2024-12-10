@@ -94,7 +94,7 @@ const CarMapView = ({ cars, onCarSelect, onOpenGallery }) => {
                         <CardMedia
                             component="img"
                             height="160"
-                            image={`${BACKEND_URL}/uploads/${mainImage.file_path}`}
+                            image={`${process.env.REACT_APP_BACKEND_URL}/uploads/${mainImage.file_path}`}
                             alt={`${car.make} ${car.model}`}
                             sx={{
                                 borderRadius: '4px 4px 0 0',

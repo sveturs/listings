@@ -226,7 +226,7 @@ const CarListPage = () => {
                                                     objectFit: 'cover',
                                                 }}
                                                 image={car.images?.length > 0 ? 
-                                                    `/uploads/${car.images[0].file_path}` : 
+                                                    `${process.env.REACT_APP_BACKEND_URL}/uploads/${car.images[0].file_path}` : 
                                                     '/placeholder-car.jpg'}
                                                 alt={`${car.make} ${car.model}`}
                                                 onClick={() => {

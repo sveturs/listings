@@ -45,6 +45,9 @@ if [ -d "/tmp/hostel-backup/conf" ]; then
     rm -rf certbot/conf
     cp -r /tmp/hostel-backup/conf certbot/ 2>/dev/null || true
 fi
+#удаляем образы
+echo "Cleaning up old Docker images..."
+docker image prune -f
 
 # Собираем фронтенд
 echo "Building frontend..."
@@ -61,7 +64,7 @@ docker network create hostel-booking-system_hostel_network 2>/dev/null || true
 
 # Запускаем только базу данных
 echo "Starting database..."
-docker-compose -f docker-compose.prod.yml up -d db
+docker-compose -f docker-compose.prod.yml up --build -d db
 
 # Функция для проверки готовности базы данных
 check_db() {
@@ -101,7 +104,7 @@ if [ $? -eq 0 ]; then
     echo "Migrations successful! Starting other services..."
     
     # Запускаем остальные сервисы
-    docker-compose -f docker-compose.prod.yml up -d
+    docker-compose -f docker-compose.prod.yml up --build -d
 
     # Проверяем структуру базы данных
     echo "Checking database structure..."

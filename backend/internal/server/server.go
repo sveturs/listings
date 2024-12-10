@@ -66,6 +66,7 @@ func (s *Server) setupRoutes() {
 	// Static files
 	s.app.Static("/uploads", "./uploads")
 	os.MkdirAll("./uploads", os.ModePerm)
+    
 
 	// Public routes
 	s.app.Get("/rooms", s.handlers.Rooms.List)
