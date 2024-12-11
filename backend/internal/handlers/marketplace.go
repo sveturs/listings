@@ -54,7 +54,32 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
         "message": "Объявление успешно создано",
     })
 }
+func (h *MarketplaceHandler) GetCategoryTree(c *fiber.Ctx) error {
+    categories, err := h.services.Marketplace().GetCategoryTree(c.Context())
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching category tree")
+    }
 
+    // Строим дерево из плоского списка
+    categoryMap := make(map[int]*models.CategoryTreeNode)
+    var rootCategories []*models.CategoryTreeNode
+
+    for i := range categories {
+        cat := &categories[i]
+        categoryMap[cat.ID] = cat
+        
+        if cat.ParentID == nil {
+            rootCategories = append(rootCategories, cat)
+        } else {
+            parent := categoryMap[*cat.ParentID]
+            if parent != nil {
+                parent.Children = append(parent.Children, *cat)
+            }
+        }
+    }
+
+    return utils.SuccessResponse(c, rootCategories)
+}
 func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
     log.Printf("Starting image upload for listing ID: %v", c.Params("id"))
     listingID, err := c.ParamsInt("id")

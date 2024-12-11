@@ -36,14 +36,16 @@ const ListingCard = ({ listing }) => {
     console.log('Full listing data:', listing);
     // Получаем URL основного изображения
     const getMainImageUrl = () => {
-        console.log('Listing images:', listing.images);
-        if (listing.images && listing.images.length > 0) {
-            const mainImage = listing.images.find(img => img.is_main) || listing.images[0];
-            console.log('Selected image:', mainImage);
-            return `${BACKEND_URL}/uploads/${mainImage.file_path}`;
+        if (!listing.images || listing.images.length === 0) {
+            return '/placeholder.jpg';  // Убедитесь что такой файл есть в public директории
         }
-        console.log('No images found, using placeholder');
-        return '/placeholder.jpg';
+        
+        const mainImage = listing.images.find(img => img.is_main) || listing.images[0];
+        if (!mainImage || !mainImage.file_path) {
+            return '/placeholder.jpg';
+        }
+        
+        return `${BACKEND_URL}/uploads/${mainImage.file_path}`;
     };
     console.log('Full listing data:', listing);
     return (

@@ -116,6 +116,7 @@ func (s *Server) setupRoutes() {
     marketplace.Get("/listings", s.handlers.Marketplace.GetListings)        // Публичный доступ
     marketplace.Get("/listings/:id", s.handlers.Marketplace.GetListing)     // Публичный доступ
     marketplace.Get("/categories", s.handlers.Marketplace.GetCategories)    // Публичный доступ
+	marketplace.Get("/category-tree", s.handlers.Marketplace.GetCategoryTree)
     
     // Protected marketplace routes (требуют авторизации)
     marketplaceProtected := marketplace.Group("/", s.middleware.AuthRequired)

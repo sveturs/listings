@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Paper,
     Typography,
@@ -6,16 +6,41 @@ import {
     Box,
     Slider,
     FormControl,
-    InputLabel,
     Select,
     MenuItem,
     Divider,
     FormControlLabel,
-    Switch
+    Switch,
+    CircularProgress,
+    Alert,
+    InputLabel  
 } from '@mui/material';
+import CategoryTree from './CategoryTree';
+import axios from '../../api/axios';
 
 const MarketplaceFilters = ({ filters, onFilterChange }) => {
-    // Обработчики для всех типов фильтров
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await axios.get('/api/v1/marketplace/category-tree');
+                setCategories(response.data.data || []);
+            } catch (err) {
+                console.error('Error fetching categories:', err);
+                setError('Не удалось загрузить категории');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
     const handlePriceChange = (event, newValue) => {
         onFilterChange({
             min_price: newValue[0],
@@ -53,6 +78,25 @@ const MarketplaceFilters = ({ filters, onFilterChange }) => {
                     size="small"
                 />
             </Box>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* Категории */}
+            {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                    <CircularProgress size={24} />
+                </Box>
+            ) : error ? (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            ) : (
+                <CategoryTree
+                    categories={categories}
+                    selectedId={filters.category_id}
+                    onSelectCategory={(id) => onFilterChange({ category_id: id })}
+                />
+            )}
 
             <Divider sx={{ my: 2 }} />
 

@@ -59,9 +59,10 @@ type MarketplaceServiceInterface interface {
     GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error)
     UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error
     DeleteListing(ctx context.Context, id int, userID int) error
+    ProcessImage(file *multipart.FileHeader) (string, error)
     AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
     GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error)
     AddToFavorites(ctx context.Context, userID int, listingID int) error
     RemoveFromFavorites(ctx context.Context, userID int, listingID int) error
-    ProcessImage(file *multipart.FileHeader) (string, error)
+    GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) 
 }

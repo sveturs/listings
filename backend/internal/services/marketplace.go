@@ -39,7 +39,9 @@ func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*model
 func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
     return s.storage.UpdateListing(ctx, listing)
 }
-
+func (s *MarketplaceService) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
+    return s.storage.GetCategoryTree(ctx)
+}
 func (s *MarketplaceService) DeleteListing(ctx context.Context, id int, userID int) error {
     // Проверяем, что пользователь является владельцем объявления
     listing, err := s.storage.GetListingByID(ctx, id)

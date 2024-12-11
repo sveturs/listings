@@ -96,10 +96,24 @@ func (db *Database) DeleteListingImage(ctx context.Context, imageID string) (str
 }
 
 func (db *Database) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
+    // Сначала создаем CTE для получения ID всех подкатегорий
     baseQuery := `
-        WITH RECURSIVE listing_data AS (
+        WITH RECURSIVE category_tree AS (
+            -- Базовый случай: выбранная категория
+            SELECT id, parent_id, name
+            FROM marketplace_categories
+            WHERE id = COALESCE($1::int, id)
+            
+            UNION ALL
+            
+            -- Рекурсивная часть: все дочерние категории
+            SELECT c.id, c.parent_id, c.name
+            FROM marketplace_categories c
+            INNER JOIN category_tree ct ON c.parent_id = ct.id
+        ),
+        listing_data AS (
             SELECT 
-                l.*, 
+                l.*,
                 u.name as user_name, 
                 u.email as user_email,
                 c.name as category_name, 
@@ -130,7 +144,15 @@ func (db *Database) GetListings(ctx context.Context, filters map[string]string, 
 
     var conditions []string
     var args []interface{}
-    argCount := 2 // начинаем с 3, так как $1 и $2 зарезервированы для LIMIT и OFFSET
+    argCount := 1 // Начинаем с 1 для category_id
+
+    // Добавляем фильтр по категории
+    if v := filters["category_id"]; v != "" {
+        args = append(args, v)
+        conditions = append(conditions, "AND l.category_id IN (SELECT id FROM category_tree)")
+    } else {
+        args = append(args, nil) // nil для COALESCE в CTE
+    }
 
     // Добавляем условия фильтрации
     if v := filters["min_price"]; v != "" {
@@ -156,14 +178,14 @@ func (db *Database) GetListings(ctx context.Context, filters map[string]string, 
     }
 
     // Закрываем CTE и добавляем основной запрос
-    baseQuery += `) 
+    baseQuery += `)
         SELECT *, COUNT(*) OVER() as total_count 
         FROM listing_data 
         ORDER BY created_at DESC 
-        LIMIT $1 OFFSET $2`
+        LIMIT $` + fmt.Sprintf("%d", argCount+1) + ` OFFSET $` + fmt.Sprintf("%d", argCount+2)
 
-    // Добавляем аргументы для LIMIT и OFFSET в начало списка
-    args = append([]interface{}{limit, offset}, args...)
+    args = append(args, limit, offset)
+
 
     // Выполняем запрос
     rows, err := db.pool.Query(ctx, baseQuery, args...)
@@ -213,7 +235,67 @@ func (db *Database) GetListings(ctx context.Context, filters map[string]string, 
 
 	return listings, totalCount, nil
 }
+func (db *Database) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
+    query := `
+        WITH RECURSIVE category_tree AS (
+            -- Корневые категории
+            SELECT 
+                c.id,
+                c.name,
+                c.slug,
+                c.icon,
+                c.parent_id,
+                c.created_at,
+                0 as level,
+                c.name::text as path  -- Добавляем явное приведение типа
+            FROM marketplace_categories c
+            WHERE parent_id IS NULL
 
+            UNION ALL
+
+            -- Дочерние категории
+            SELECT 
+                c.id,
+                c.name,
+                c.slug,
+                c.icon,
+                c.parent_id,
+                c.created_at,
+                ct.level + 1,
+                (ct.path || ' > ' || c.name)::text -- Добавляем явное приведение типа
+            FROM marketplace_categories c
+            JOIN category_tree ct ON c.parent_id = ct.id
+        )
+        SELECT 
+            id, name, slug, icon, parent_id, created_at, 
+            level, path,
+            (SELECT COUNT(*) FROM marketplace_listings WHERE category_id = ct.id) as listing_count
+        FROM category_tree ct
+        ORDER BY path;
+    `
+
+
+    rows, err := db.pool.Query(ctx, query)
+    if err != nil {
+        return nil, fmt.Errorf("error querying category tree: %w", err)
+    }
+    defer rows.Close()
+
+    var categories []models.CategoryTreeNode
+    for rows.Next() {
+        var cat models.CategoryTreeNode
+        err := rows.Scan(
+            &cat.ID, &cat.Name, &cat.Slug, &cat.Icon, &cat.ParentID,
+            &cat.CreatedAt, &cat.Level, &cat.Path, &cat.ListingCount,
+        )
+        if err != nil {
+            return nil, fmt.Errorf("error scanning category: %w", err)
+        }
+        categories = append(categories, cat)
+    }
+
+    return categories, rows.Err()
+}
 func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {
 	_, err := db.pool.Exec(ctx, `
         INSERT INTO marketplace_favorites (user_id, listing_id)

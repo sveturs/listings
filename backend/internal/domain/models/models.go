@@ -176,3 +176,15 @@ type MarketplaceImage struct {
     IsMain      bool      `json:"is_main"`
     CreatedAt   string    `json:"created_at"` // Изменено на string
 }
+type CategoryTreeNode struct {
+    ID           int       `json:"id"`
+    Name         string    `json:"name"`
+    Slug         string    `json:"slug"`
+    Icon         string    `json:"icon,omitempty"`
+    ParentID     *int      `json:"parent_id,omitempty"`
+    CreatedAt    time.Time `json:"created_at"`
+    Level        int       `json:"level"`
+    Path         string    `json:"path"`
+    ListingCount int       `json:"listing_count"`
+    Children     []CategoryTreeNode `json:"children,omitempty"`
+}
