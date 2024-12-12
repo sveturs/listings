@@ -51,3 +51,5 @@ collected_content.txt
 /frontend/hostel-frontend/node_modules/
 collected_code.txt
 project_code.txt
+market_project_code.txt
+.gitignore

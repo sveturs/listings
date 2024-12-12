@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -6,7 +6,9 @@ import {
     Box,
     Typography,
     CircularProgress,
-    Button
+    Button,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
 import { Plus } from 'lucide-react';
 import ListingCard from '../components/marketplace/ListingCard';
@@ -15,9 +17,12 @@ import axios from '../api/axios';
 import { debounce } from 'lodash';
 
 const MarketplacePage = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const navigate = useNavigate();
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [filters, setFilters] = useState({
         query: '',
         category_id: '',
@@ -33,6 +38,8 @@ const MarketplacePage = () => {
     const fetchListings = useCallback(async (currentFilters) => {
         try {
             setLoading(true);
+            setError(null);
+            
             const params = Object.entries(currentFilters).reduce((acc, [key, value]) => {
                 if (value !== '' && value !== null && value !== undefined) {
                     acc[key] = value;
@@ -41,49 +48,37 @@ const MarketplacePage = () => {
             }, {});
 
             const response = await axios.get('/api/v1/marketplace/listings', { params });
-            console.log('Full API response:', response.data);
-            console.log('Server response:', response.data);
+            console.log('API Response:', response.data);
             
-            const listingsData = response.data.data.data || [];
-            console.log('Extracted listings:', listingsData);
-            
-            setListings(listingsData);
-
-            if (listingsData.length > 0 && !currentFilters.max_price) {
-                const maxPrice = Math.max(...listingsData.map(listing => listing.price));
-                setFilters(prev => ({
-                    ...prev,
-                    max_price: maxPrice
-                }));
+            // Проверяем структуру ответа и извлекаем данные
+            const listingsData = response.data?.data?.data || [];
+            if (Array.isArray(listingsData)) {
+                setListings(listingsData);
+            } else {
+                console.error('Invalid listings data format:', listingsData);
+                setListings([]);
             }
         } catch (error) {
             console.error('Error fetching listings:', error);
+            setError('Не удалось загрузить объявления');
             setListings([]);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    const debouncedFetch = useMemo(
-        () => debounce((filters) => fetchListings(filters), 500),
-        [fetchListings]
-    );
-
     const handleFilterChange = useCallback((newFilters) => {
-        setFilters(prevFilters => {
-            const updatedFilters = {
-                ...prevFilters,
-                ...newFilters
-            };
-            debouncedFetch(updatedFilters);
-            return updatedFilters;
-        });
-    }, [debouncedFetch]);
+        setFilters(prev => ({
+            ...prev,
+            ...newFilters
+        }));
+    }, []);
 
     useEffect(() => {
-        fetchListings(filters);
+        const debouncedFetch = debounce(() => fetchListings(filters), 500);
+        debouncedFetch();
         return () => debouncedFetch.cancel();
-    }, [fetchListings, filters, debouncedFetch]);
+    }, [fetchListings, filters]);
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -93,7 +88,6 @@ const MarketplacePage = () => {
                 </Typography>
                 <Button
                     variant="contained"
-                    color="primary"
                     onClick={() => navigate('/marketplace/create')}
                     startIcon={<Plus />}
                 >
@@ -112,22 +106,22 @@ const MarketplacePage = () => {
                         <Box display="flex" justifyContent="center" p={4}>
                             <CircularProgress />
                         </Box>
-                    ) : (
+                    ) : error ? (
+                        <Box display="flex" justifyContent="center" p={4}>
+                            <Typography color="error">{error}</Typography>
+                        </Box>
+                    ) : listings.length > 0 ? (
                         <Grid container spacing={2}>
-                            {listings && listings.length > 0 ? (
-                                listings.map((listing) => (
-                                    <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                                        <ListingCard listing={listing} />
-                                    </Grid>
-                                ))
-                            ) : (
-                                <Grid item xs={12}>
-                                    <Typography variant="body1" align="center">
-                                        Объявления не найдены
-                                    </Typography>
+                            {listings.map((listing) => (
+                                <Grid item xs={12} sm={6} md={4} key={listing.id}>
+                                    <ListingCard listing={listing} />
                                 </Grid>
-                            )}
+                            ))}
                         </Grid>
+                    ) : (
+                        <Box display="flex" justifyContent="center" p={4}>
+                            <Typography>Объявления не найдены</Typography>
+                        </Box>
                     )}
                 </Grid>
             </Grid>
@@ -135,4 +129,4 @@ const MarketplacePage = () => {
     );
 };
 
-export default React.memo(MarketplacePage);
+export default MarketplacePage;
