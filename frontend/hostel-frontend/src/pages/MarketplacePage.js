@@ -8,9 +8,12 @@ import {
     CircularProgress,
     Button,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    Drawer,
+    IconButton,
+    Fab
 } from '@mui/material';
-import { Plus } from 'lucide-react';
+import { Plus, Filter, X } from 'lucide-react';
 import ListingCard from '../components/marketplace/ListingCard';
 import MarketplaceFilters from '../components/marketplace/MarketplaceFilters';
 import axios from '../api/axios';
@@ -18,11 +21,13 @@ import { debounce } from 'lodash';
 
 const MarketplacePage = () => {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    // Изменяем точку перелома на md
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filters, setFilters] = useState({
         query: '',
         category_id: '',
@@ -39,7 +44,7 @@ const MarketplacePage = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             const params = Object.entries(currentFilters).reduce((acc, [key, value]) => {
                 if (value !== '' && value !== null && value !== undefined) {
                     acc[key] = value;
@@ -49,7 +54,7 @@ const MarketplacePage = () => {
 
             const response = await axios.get('/api/v1/marketplace/listings', { params });
             console.log('API Response:', response.data);
-            
+
             // Проверяем структуру ответа и извлекаем данные
             const listingsData = response.data?.data?.data || [];
             if (Array.isArray(listingsData)) {
@@ -79,7 +84,99 @@ const MarketplacePage = () => {
         debouncedFetch();
         return () => debouncedFetch.cancel();
     }, [fetchListings, filters]);
+    if (isMobile) {
+        return (
+            <Box sx={{ pb: 7, position: 'relative', minHeight: '100vh' }}>
+                <Box sx={{
+                    p: 2,
+                    position: 'sticky',
+                    top: 0,
+                    bgcolor: 'background.paper',
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    zIndex: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                }}>
+                    <Typography variant="h6">
+                        Объявления
+                    </Typography>
+                    <IconButton onClick={() => setIsFilterOpen(true)}>
+                        <Filter />
+                    </IconButton>
+                </Box>
 
+                <Box sx={{ p: 1 }}>
+                    {loading ? (
+                        <Box display="flex" justifyContent="center" p={4}>
+                            <CircularProgress />
+                        </Box>
+                    ) : error ? (
+                        <Box display="flex" justifyContent="center" p={4}>
+                            <Typography color="error">{error}</Typography>
+                        </Box>
+                    ) : (
+                        <Grid container spacing={1}>
+                            {listings.map((listing) => (
+                                <Grid item xs={4} key={listing.id}>
+                                    <ListingCard listing={listing} isMobile={true} />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    )}
+                </Box>
+
+                <Fab
+                    color="primary"
+                    sx={{
+                        position: 'fixed',
+                        bottom: 16,
+                        right: 16,
+                    }}
+                    onClick={() => navigate('/marketplace/create')}
+                >
+                    <Plus />
+                </Fab>
+
+                <Drawer
+                    anchor="bottom"
+                    open={isFilterOpen}
+                    onClose={() => setIsFilterOpen(false)}
+                    PaperProps={{
+                        sx: {
+                            maxHeight: '90vh',
+                            borderTopLeftRadius: 16,
+                            borderTopRightRadius: 16,
+                            pb: 4
+                        }
+                    }}
+                >
+                    <Box sx={{ p: 2 }}>
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            mb: 2
+                        }}>
+                            <Typography variant="h6">Фильтры</Typography>
+                            <IconButton onClick={() => setIsFilterOpen(false)}>
+                                <X />
+                            </IconButton>
+                        </Box>
+                        <MarketplaceFilters
+                            filters={filters}
+                            onFilterChange={(newFilters) => {
+                                handleFilterChange(newFilters);
+                                setIsFilterOpen(false);
+                            }}
+                            isMobile={true}
+                        />
+                    </Box>
+                </Drawer>
+            </Box>
+        );
+    }
     return (
         <Container maxWidth="lg" sx={{ mt: 4 }}>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -110,7 +207,7 @@ const MarketplacePage = () => {
                         <Box display="flex" justifyContent="center" p={4}>
                             <Typography color="error">{error}</Typography>
                         </Box>
-                    ) : listings.length > 0 ? (
+                    ) : (
                         <Grid container spacing={2}>
                             {listings.map((listing) => (
                                 <Grid item xs={12} sm={6} md={4} key={listing.id}>
@@ -118,10 +215,6 @@ const MarketplacePage = () => {
                                 </Grid>
                             ))}
                         </Grid>
-                    ) : (
-                        <Box display="flex" justifyContent="center" p={4}>
-                            <Typography>Объявления не найдены</Typography>
-                        </Box>
                     )}
                 </Grid>
             </Grid>

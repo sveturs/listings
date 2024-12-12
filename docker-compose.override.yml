@@ -6,15 +6,16 @@ services:
       context: ./frontend/hostel-frontend
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"  # React по умолчанию использует порт 3000
+      - "3001:3001"
     environment:
       - NODE_ENV=development
-      - PORT=3000
-      - WATCHPACK_POLLING=true  # Для hot-reload на Windows/WSL
+      - PORT=3001
+      - WDS_SOCKET_PORT=3001
+      - DANGEROUSLY_DISABLE_HOST_CHECK=true
     volumes:
       - ./frontend/hostel-frontend:/app
+      # Исключаем node_modules из монтирования
       - /app/node_modules
-    command: ["npm", "start"]
     networks:
       - hostel_network
 

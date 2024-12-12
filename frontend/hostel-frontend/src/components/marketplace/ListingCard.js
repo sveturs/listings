@@ -1,22 +1,19 @@
+// src/components/marketplace/ListingCard.js
 import React from 'react';
 import {
     Card,
-    CardMedia,
     CardContent,
+    CardMedia,
     Typography,
     Box,
     Chip,
     Button
 } from '@mui/material';
-import {
-    MapPin as LocationIcon,
-    Clock as AccessTime,
-    Camera
-} from 'lucide-react';
+import { MapPin as LocationIcon, Clock as AccessTime, Camera } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
-const ListingCard = ({ listing }) => {
+const ListingCard = ({ listing, isMobile }) => {
     const formatPrice = (price) => {
         return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
@@ -33,11 +30,10 @@ const ListingCard = ({ listing }) => {
             year: 'numeric'
         });
     };
-    console.log('Full listing data:', listing);
-    // Получаем URL основного изображения
+
     const getMainImageUrl = () => {
         if (!listing.images || listing.images.length === 0) {
-            return '/placeholder.jpg';  // Убедитесь что такой файл есть в public директории
+            return '/placeholder.jpg';
         }
         
         const mainImage = listing.images.find(img => img.is_main) || listing.images[0];
@@ -47,7 +43,7 @@ const ListingCard = ({ listing }) => {
         
         return `${BACKEND_URL}/uploads/${mainImage.file_path}`;
     };
-    console.log('Full listing data:', listing);
+
     return (
         <Card sx={{
             height: '100%',
@@ -59,7 +55,7 @@ const ListingCard = ({ listing }) => {
                 transition: 'all 0.2s ease-in-out'
             }
         }}>
-            <Box sx={{ position: 'relative', pt: '75%' }}>
+            <Box sx={{ position: 'relative', pt: isMobile ? '100%' : '75%' }}>
                 <CardMedia
                     component="img"
                     sx={{
@@ -73,7 +69,7 @@ const ListingCard = ({ listing }) => {
                     image={getMainImageUrl()}
                     alt={listing.title || 'Изображение отсутствует'}
                 />
-                {listing.images && listing.images.length > 1 && (
+                {listing.images && listing.images.length > 1 && !isMobile && (
                     <Chip
                         icon={<Camera size={16} />}
                         label={`${listing.images.length} фото`}
@@ -89,38 +85,62 @@ const ListingCard = ({ listing }) => {
                 )}
             </Box>
 
-            <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6" noWrap>
+            <CardContent sx={{ 
+                flexGrow: 1, 
+                p: isMobile ? 1 : 2,
+                '&:last-child': { pb: isMobile ? 1 : 2 }
+            }}>
+                <Typography 
+                    variant={isMobile ? "body2" : "h6"} 
+                    noWrap
+                    sx={{ 
+                        fontSize: isMobile ? '0.875rem' : undefined,
+                        fontWeight: 'medium'
+                    }}
+                >
                     {listing.title || 'Без названия'}
                 </Typography>
 
-                <Typography variant="h5" color="primary" sx={{ mt: 1 }}>
+                <Typography 
+                    variant={isMobile ? "body2" : "h5"} 
+                    color="primary" 
+                    sx={{ 
+                        mt: 0.5,
+                        fontSize: isMobile ? '0.875rem' : undefined,
+                        fontWeight: 'bold'
+                    }}
+                >
                     {formatPrice(listing.price)}
                 </Typography>
 
-                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                    <LocationIcon size={18} style={{ marginRight: 4 }} />
-                    <Typography variant="body2" noWrap>
-                        {listing.city || 'Местоположение не указано'}
-                    </Typography>
-                </Box>
+                {!isMobile && (
+                    <>
+                        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                            <LocationIcon size={18} style={{ marginRight: 4 }} />
+                            <Typography variant="body2" noWrap>
+                                {listing.city || 'Местоположение не указано'}
+                            </Typography>
+                        </Box>
 
-                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                    <AccessTime size={18} style={{ marginRight: 4 }} />
-                    <Typography variant="body2">
-                        {formatDate(listing.created_at)}
-                    </Typography>
-                </Box>
+                        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                            <AccessTime size={18} style={{ marginRight: 4 }} />
+                            <Typography variant="body2">
+                                {formatDate(listing.created_at)}
+                            </Typography>
+                        </Box>
 
-                <Button
-                    variant="contained"
-                    fullWidth
-                    sx={{ mt: 2 }}
-                >
-                    Подробнее
-                </Button>
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            sx={{ mt: 2 }}
+                        >
+                            Подробнее
+                        </Button>
+                    </>
+                )}
             </CardContent>
         </Card>
     );
 };
+
 export default ListingCard;
