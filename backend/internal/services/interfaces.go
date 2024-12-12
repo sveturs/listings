@@ -23,11 +23,11 @@ type RoomServiceInterface interface {
 }
 type CarServiceInterface interface {
     AddCar(ctx context.Context, car *models.Car) (int, error)
-    GetAvailableCars(ctx context.Context) ([]models.Car, error)
+    GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error)
     ProcessImage(file *multipart.FileHeader) (string, error)
     AddCarImage(ctx context.Context, image *models.CarImage) (int, error)
     GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error)
-    CreateBooking(ctx context.Context, booking *models.CarBooking) error // Добавить этот метод
+    CreateBooking(ctx context.Context, booking *models.CarBooking) error
 }
 
 type AuthServiceInterface interface {

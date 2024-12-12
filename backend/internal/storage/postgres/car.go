@@ -7,6 +7,7 @@ import (
     "context"
     "fmt"
 	"log"
+    "strings"
 )
 
 func (db *Database) AddCar(ctx context.Context, car *models.Car) (int, error) {
@@ -175,8 +176,7 @@ func (db *Database) GetCarWithFeatures(ctx context.Context, carID int) (*models.
     )
     return &car, err
 }
-func (db *Database) GetAvailableCars(ctx context.Context) ([]models.Car, error) {
-    // Сначала проверим общее количество
+func (db *Database) GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error) {
     var count int
     err := db.pool.QueryRow(ctx, "SELECT COUNT(*) FROM cars WHERE availability = true").Scan(&count)
     if err != nil {
@@ -185,34 +185,68 @@ func (db *Database) GetAvailableCars(ctx context.Context) ([]models.Car, error) 
         log.Printf("Total available cars in DB: %d", count)
     }
 
-query := `
-    SELECT 
-        c.id, 
-        c.make, 
-        c.model, 
-        c.year, 
-        c.price_per_day,
-        c.location, 
-        c.latitude, 
-        c.longitude, 
-        c.description,
-        c.availability, 
-        c.transmission, 
-        c.fuel_type, 
-        c.seats,
-        c.daily_mileage_limit, 
-        c.insurance_included, 
-        c.created_at,
-        '{}'::text[] as features
-    FROM cars c
-    WHERE c.availability = true
-    ORDER BY c.created_at DESC
-`
-    
+    baseQuery := `
+        SELECT 
+            c.id, 
+            c.make, 
+            c.model, 
+            c.year, 
+            c.price_per_day,
+            c.location, 
+            c.latitude, 
+            c.longitude, 
+            c.description,
+            c.availability, 
+            c.transmission, 
+            c.fuel_type, 
+            c.seats,
+            c.daily_mileage_limit, 
+            c.insurance_included, 
+            c.created_at,
+            ARRAY_AGG(DISTINCT f.name) as features
+        FROM cars c
+        LEFT JOIN car_feature_links cfl ON c.id = cfl.car_id
+        LEFT JOIN car_features f ON cfl.feature_id = f.id
+        WHERE c.availability = true
+    `
+
+    // Добавляем условия фильтрации
+    var conditions []string
+    var args []interface{}
+    argCount := 1
+
+    if v := filters["make"]; v != "" {
+        conditions = append(conditions, fmt.Sprintf("LOWER(c.make) LIKE LOWER($%d)", argCount))
+        args = append(args, "%"+v+"%")
+        argCount++
+    }
+
+    if v := filters["transmission"]; v != "" {
+        conditions = append(conditions, fmt.Sprintf("c.transmission = $%d", argCount))
+        args = append(args, v)
+        argCount++
+    }
+
+    if v := filters["fuel_type"]; v != "" {
+        conditions = append(conditions, fmt.Sprintf("c.fuel_type = $%d", argCount))
+        args = append(args, v)
+        argCount++
+    }
+
+    // Добавляем условия в запрос
+    if len(conditions) > 0 {
+        baseQuery += " AND " + strings.Join(conditions, " AND ")
+    }
+
+    // Добавляем группировку
+    baseQuery += " GROUP BY c.id"
+
+    // Добавляем сортировку
+    baseQuery += " ORDER BY c.created_at DESC"
 
     log.Printf("Executing cars query...")
 
-    rows, err := db.pool.Query(ctx, query)
+    rows, err := db.pool.Query(ctx, baseQuery, args...)
     if err != nil {
         log.Printf("Error executing query: %v", err)
         return nil, err

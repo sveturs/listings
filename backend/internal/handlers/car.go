@@ -147,13 +147,28 @@ func (h *CarHandler) GetImages(c *fiber.Ctx) error {
     return utils.SuccessResponse(c, images)
 }
 func (h *CarHandler) GetAvailableCars(c *fiber.Ctx) error {
-    log.Printf("Getting available cars")  // добавим для отладки
-    cars, err := h.services.Car().GetAvailableCars(c.Context())
+    log.Printf("Getting available cars")
+    
+    // Создаем map для фильтров из query параметров
+    filters := make(map[string]string)
+    
+    // Добавляем параметры в map если они есть
+    if make := c.Query("make"); make != "" {
+        filters["make"] = make
+    }
+    if transmission := c.Query("transmission"); transmission != "" {
+        filters["transmission"] = transmission
+    }
+    if fuelType := c.Query("fuel_type"); fuelType != "" {
+        filters["fuel_type"] = fuelType
+    }
+
+    cars, err := h.services.Car().GetAvailableCars(c.Context(), filters)
     if err != nil {
-        log.Printf("Error getting available cars: %v", err)  // добавим для отладки
+        log.Printf("Error getting available cars: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching cars")
     }
 
-    log.Printf("Found %d available cars", len(cars))  // добавим для отладки
+    log.Printf("Found %d available cars", len(cars))
     return utils.SuccessResponse(c, cars)
 }

@@ -77,6 +77,7 @@ func (s *Server) setupRoutes() {
 	//  публичные маршруты для автомобилей
 	s.app.Get("/api/v1/cars/available", s.handlers.Cars.GetAvailableCars)
 	s.app.Get("/api/v1/cars/:id/images", s.handlers.Cars.GetImages)
+	s.app.Post("/api/v1/car-bookings", s.handlers.Cars.CreateBooking) 
 
 	// Auth routes
 	auth := s.app.Group("/auth")
@@ -90,7 +91,7 @@ func (s *Server) setupRoutes() {
 	cars := api.Group("/cars")
 	cars.Post("/", s.handlers.Cars.AddCar)
 	cars.Post("/:id/images", s.handlers.Cars.UploadImages)
-	cars.Post("/book", s.handlers.Cars.CreateBooking)
+	//cars.Post("/book", s.handlers.Cars.CreateBooking)
 
 	// Protected room routes
 	rooms := api.Group("/rooms")

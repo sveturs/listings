@@ -20,6 +20,7 @@ import {
     MenuItem,
     CircularProgress
 } from '@mui/material';
+import { debounce } from 'lodash';
 import {
     ViewList as ViewListIcon,
     Map as MapIcon,
@@ -52,52 +53,55 @@ const CarListPage = () => {
     const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const fetchCars = useCallback(async () => {
+    // Функция загрузки автомобилей
+    const fetchCars = useCallback(async (currentFilters) => {
         try {
-            const response = await axios.get('/api/v1/cars/available', { params: filters });
+            setIsLoading(true);
+            const params = Object.entries(currentFilters).reduce((acc, [key, value]) => {
+                if (value !== '' && value !== null && value !== undefined) {
+                    acc[key] = value;
+                }
+                return acc;
+            }, {});
+
+            const response = await axios.get('/api/v1/cars/available', { params });
             const carsData = response.data?.data || [];
-            
-            const carsWithImages = await Promise.all(
-                carsData.map(async (car) => {
-                    try {
-                        const imagesResponse = await axios.get(`/api/v1/cars/${car.id}/images`);
-                        return {
-                            ...car,
-                            images: imagesResponse.data?.data || []
-                        };
-                    } catch (imageError) {
-                        console.error(`Error loading images for car ${car.id}:`, imageError);
-                        return { ...car, images: [] };
-                    }
-                })
-            );
-            
-            setCars(carsWithImages);
-            setFilteredCars(carsWithImages);
-            
-            return carsWithImages;
+            setCars(carsData);
+            setFilteredCars(carsData);
         } catch (error) {
             console.error('Ошибка при получении списка автомобилей:', error);
             setCars([]);
             setFilteredCars([]);
-            return [];
+        } finally {
+            setIsLoading(false);
         }
-    }, [filters]);
+    }, []);
 
+    // Загрузка автомобилей при монтировании компонента
     useEffect(() => {
-        setIsLoading(true);
-        fetchCars()
-            .finally(() => {
-                setIsLoading(false);
-            });
-    }, [fetchCars]);
+        fetchCars(filters);
+    }, []); // Пустой массив зависимостей для загрузки только при монтировании
 
+    // Отложенный поиск при изменении фильтров
+    const debouncedSearch = useCallback(
+        debounce((filters) => {
+            fetchCars(filters);
+        }, 500),
+        [fetchCars]
+    );
+
+    // Обработчик изменения фильтров
+    const handleFilterChange = (newFilters) => {
+        setFilters(prev => {
+            const updatedFilters = { ...prev, ...newFilters };
+            debouncedSearch(updatedFilters);
+            return updatedFilters;
+        });
+    };
+
+    // Обработчик кнопки поиска
     const handleSearch = () => {
-        setIsLoading(true);
-        fetchCars()
-            .finally(() => {
-                setIsLoading(false);
-            });
+        fetchCars(filters);
     };
 
     const handleBooking = (car) => {
@@ -108,7 +112,6 @@ const CarListPage = () => {
         setSelectedCar(car);
         setBookingDialogOpen(true);
     };
-
     return (
         <Container maxWidth="xl">
             {isLoading ? (
@@ -186,8 +189,9 @@ const CarListPage = () => {
                                     fullWidth
                                     onClick={handleSearch}
                                     startIcon={<SearchIcon />}
+                                    disabled={isLoading}
                                 >
-                                    Найти
+                                    {isLoading ? 'Поиск...' : 'Найти'}
                                 </Button>
                             </Grid>
                         </Grid>
@@ -225,8 +229,8 @@ const CarListPage = () => {
                                                     height: '100%',
                                                     objectFit: 'cover',
                                                 }}
-                                                image={car.images?.length > 0 ? 
-                                                    `${process.env.REACT_APP_BACKEND_URL}/uploads/${car.images[0].file_path}` : 
+                                                image={car.images?.length > 0 ?
+                                                    `${process.env.REACT_APP_BACKEND_URL}/uploads/${car.images[0].file_path}` :
                                                     '/placeholder-car.jpg'}
                                                 alt={`${car.make} ${car.model}`}
                                                 onClick={() => {
@@ -260,9 +264,9 @@ const CarListPage = () => {
                                         <CardContent sx={{ flexGrow: 1 }}>
                                             <Typography variant="h6" gutterBottom>
                                                 {car.make} {car.model}
-                                                <Typography 
-                                                    component="span" 
-                                                    color="text.secondary" 
+                                                <Typography
+                                                    component="span"
+                                                    color="text.secondary"
                                                     sx={{ ml: 1 }}
                                                 >
                                                     {car.year}
@@ -273,8 +277,8 @@ const CarListPage = () => {
                                                 <Chip
                                                     icon={<FuelIcon />}
                                                     label={car.fuel_type === 'petrol' ? 'Бензин' :
-                                                          car.fuel_type === 'diesel' ? 'Дизель' :
-                                                          car.fuel_type === 'electric' ? 'Электро' : 'Гибрид'}
+                                                        car.fuel_type === 'diesel' ? 'Дизель' :
+                                                            car.fuel_type === 'electric' ? 'Электро' : 'Гибрид'}
                                                     size="small"
                                                     sx={{ mr: 1, mb: 1 }}
                                                 />

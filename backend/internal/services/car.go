@@ -31,8 +31,8 @@ func (s *CarService) AddCar(ctx context.Context, car *models.Car) (int, error) {
 	return s.storage.AddCar(ctx, car)
 }
 
-func (s *CarService) GetAvailableCars(ctx context.Context) ([]models.Car, error) {
-	return s.storage.GetAvailableCars(ctx)
+func (s *CarService) GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error) {
+    return s.storage.GetAvailableCars(ctx, filters)
 }
 
 const (

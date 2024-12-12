@@ -17,7 +17,7 @@ type Storage interface {
     // Методы для работы с автомобилями
     CreateCarBooking(ctx context.Context, booking *models.CarBooking) error
     AddCar(ctx context.Context, car *models.Car) (int, error)
-    GetAvailableCars(ctx context.Context) ([]models.Car, error)
+    GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error)
     AddCarImage(ctx context.Context, image *models.CarImage) (int, error)
     GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error)
     DeleteCarImage(ctx context.Context, imageID string) (string, error)
