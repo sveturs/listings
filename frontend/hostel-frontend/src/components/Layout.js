@@ -1,194 +1,177 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
-  Typography,
   Box,
   Container,
+  Typography,
   IconButton,
-  Tooltip,
   Avatar,
+  Tooltip,
   Menu,
   MenuItem,
   Divider,
   useMediaQuery,
   useTheme,
-  ListItemIcon,
-  ListItemText
 } from "@mui/material";
 import {
-  DirectionsCar,
   HomeWork,
+  DirectionsCar,
+  AttachMoney,
   Key,
   Logout,
   ListAlt,
-  AddHome
+  AddHome,
+  AccountCircle,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
 
 const Layout = ({ children }) => {
-  const { user, login, logout } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const location = useLocation();
+
+  // Определение текущей страницы
+  const currentPath = location.pathname;
+
+  const { user, login, logout } = useAuth();
 
   const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const handleOpenMenu = (e) => {
+    setAnchorEl(e.currentTarget);
+  };
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
   };
 
+  const menuItems = [
+    { path: "/", label: "Hostel", icon: <HomeWork fontSize="medium" /> },
+    { path: "/cars", label: "Auto", icon: <DirectionsCar fontSize="medium" /> },
+    { path: "/marketplace", label: "Market", icon: <AttachMoney fontSize="medium" /> },
+  ];
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        elevation={0}
         sx={{
-          bgcolor: "background.paper",
-          borderBottom: 1,
-          borderColor: "divider"
+          bgcolor: "background.default",
+          color: "text.primary",
+          borderBottom: "1px solid #e0e0e0",
+          boxShadow: "none",
         }}
       >
-        <Container maxWidth="xl">
+        <Container maxWidth="lg">
           <Toolbar
             disableGutters
             sx={{
-              minHeight: "64px",
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center"
+              alignItems: "center",
+              minHeight: "56px",
+              px: 2,
             }}
           >
-            {/* Левый блок */}
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Typography
-                variant="h6"
-                component={Link}
-                to="/"
-                sx={{
-                  textDecoration: "none",
-                  color: "text.primary",
-                  fontWeight: 700,
-                  fontSize: "1.2rem",
-                  display: "flex",
-                  alignItems: "center",
-                  mr: 0.4
-                }}
-              >
-                Hostel Booking
-              </Typography>
-              <HomeWork sx={{ color: "primary.main", mr: 0.4 }} />
-              <Divider
-                orientation="vertical"
-                flexItem
-                sx={{
-                  bgcolor: "text.secondary",
-                  mx: 0,
-                  height: "1.5rem"
-                }}
-              />
-              <DirectionsCar sx={{ color: "primary.main", mr: 0.2 }} />
-              <Typography
-                variant="h6"
-                component={Link}
-                to="/cars"
-                sx={{
-                  textDecoration: "none",
-                  color: "text.primary",
-                  fontWeight: 700,
-                  fontSize: "1.2rem",
-                  display: "flex",
-                  alignItems: "center"
-                }}
-              >
-                Auto Booking
-              </Typography>
+            {/* Левый блок (меню) */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: isMobile ? 1.5 : 3,
+              }}
+            >
+              {menuItems.map((item) => (
+                <Box
+                  key={item.path}
+                  component={Link}
+                  to={item.path}
+                  sx={{
+                    textDecoration: "none",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 0.3,
+                    color: currentPath === item.path ? "primary.main" : "text.secondary",
+                    fontWeight: currentPath === item.path ? 600 : 400,
+                    fontSize: "0.9rem",
+                    transition: "color 0.3s ease, transform 0.3s ease",
+                    "&:hover": {
+                      color: "primary.main",
+                      transform: "scale(1.05)",
+                    },
+                  }}
+                >
+                  {item.icon}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: isMobile ? "0.75rem" : "0.85rem",
+                      textAlign: "center",
+                    }}
+                  >
+                    {item.label}
+                  </Typography>
+                </Box>
+              ))}
             </Box>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-    {/* существующие ссылки */}
-    <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-    <Typography
-        variant="h6"
-        component={Link}
-        to="/marketplace"
-        sx={{
-            textDecoration: "none",
-            color: "text.primary",
-            fontWeight: 700,
-            fontSize: "1.2rem",
-            display: "flex",
-            alignItems: "center"
-        }}
-    >
-        Marketplace
-    </Typography>
-</Box>
-            {/* Правый блок */}
-            <Box sx={{ display: "flex", alignItems: "center" }}>
+
+            {/* Правый блок (авторизация) */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               {!user ? (
-                <Tooltip title={!isMobile ? "Залогиниться" : ""}>
-                  <IconButton onClick={login}>
-                    <Key fontSize="large" sx={{ color: "primary.main" }} />
+                <Tooltip title="Войти">
+                  <IconButton onClick={login} color="primary">
+                    <Key />
                   </IconButton>
                 </Tooltip>
               ) : (
                 <>
-                  <Avatar
-                    src={user.pictureUrl}
-                    sx={{ cursor: "pointer", width: 36, height: 36, ml: 2 }}
-                    onClick={(e) => setAnchorEl(e.currentTarget)}
-                  />
+                  <Tooltip title="Мой профиль">
+                    <IconButton onClick={handleOpenMenu}>
+                      <Avatar
+                        src={user.pictureUrl}
+                        alt={user.name}
+                        sx={{ width: 32, height: 32 }}
+                      />
+                    </IconButton>
+                  </Tooltip>
                   <Menu
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
                     onClose={handleCloseMenu}
-                    onClick={handleCloseMenu}
                     PaperProps={{
-                      sx: { width: 220, mt: 1.5 }
+                      sx: { mt: 1.5, width: 220 },
                     }}
                     transformOrigin={{ horizontal: "right", vertical: "top" }}
                     anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
                   >
-                    <MenuItem disabled>
-                      <ListItemText
-                        primary={user.name}
-                        secondary={user.email}
-                        primaryTypographyProps={{
-                          variant: "subtitle2",
-                          noWrap: true
-                        }}
-                        secondaryTypographyProps={{
-                          variant: "caption",
-                          noWrap: true
-                        }}
-                      />
+                    <MenuItem disabled sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0.5 }}>
+                      <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600 }}>
+                        {user.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" noWrap>
+                        {user.email}
+                      </Typography>
                     </MenuItem>
                     <Divider />
                     <MenuItem component={Link} to="/bookings">
-                      <ListItemIcon>
-                        <ListAlt fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>Мои бронирования</ListItemText>
+                      <ListAlt fontSize="small" sx={{ mr: 1 }} />
+                      Мои бронирования
                     </MenuItem>
-                    <Divider />
                     <MenuItem component={Link} to="/add-room">
-                      <ListItemIcon>
-                        <AddHome fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>Добавить жильё</ListItemText>
+                      <AddHome fontSize="small" sx={{ mr: 1 }} />
+                      Добавить жильё
                     </MenuItem>
                     <MenuItem component={Link} to="/add-car">
-                      <ListItemIcon>
-                        <DirectionsCar fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>Добавить автомобиль</ListItemText>
+                      <DirectionsCar fontSize="small" sx={{ mr: 1 }} />
+                      Добавить автомобиль
                     </MenuItem>
                     <Divider />
                     <MenuItem onClick={logout}>
-                      <ListItemIcon>
-                        <Logout fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>Выйти</ListItemText>
+                      <Logout fontSize="small" sx={{ mr: 1 }} />
+                      Выйти
                     </MenuItem>
                   </Menu>
                 </>
@@ -199,7 +182,7 @@ const Layout = ({ children }) => {
       </AppBar>
 
       {/* Основной контент */}
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
         {children}
       </Container>
     </Box>
