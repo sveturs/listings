@@ -107,12 +107,12 @@ const MarketplaceFilters = ({ filters, onFilterChange }) => {
                     <Slider
                         value={[
                             Number(filters.min_price) || 0,
-                            Number(filters.max_price) || 1000000
+                            Number(filters.max_price) || 10000000
                         ]}
                         onChange={handlePriceChange}
                         valueLabelDisplay="auto"
                         min={0}
-                        max={1000000}
+                        max={10000000}
                         step={1000}
                     />
                     <Box sx={{ display: 'flex', gap: 1 }}>

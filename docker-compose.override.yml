@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend/hostel-frontend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./frontend/hostel-frontend:/app
+      - /app/node_modules
+    command: ["npm", "start"]
+    networks:
+      - hostel_network
+
+networks:
+  hostel_network:
+    driver: bridge

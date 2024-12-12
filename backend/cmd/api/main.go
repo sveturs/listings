@@ -1,4 +1,3 @@
-//backend/cmd/api/main.go
 package main
 
 import (
@@ -16,9 +15,14 @@ import (
 )
 
 func main() {
-	// Загрузка конфигурации
-	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: .env file not found")
+	// Загрузка конфигурации из файла окружения
+	envFile := os.Getenv("ENV_FILE")
+	if envFile == "" {
+		envFile = ".env"
+	}
+
+	if err := godotenv.Load(envFile); err != nil {
+		log.Printf("Warning: Could not load .env file: %s", envFile)
 	}
 
 	// Инициализация конфигурации

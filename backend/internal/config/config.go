@@ -1,4 +1,3 @@
-//backend/internal/config/config.go
 package config
 
 import (
@@ -47,6 +46,11 @@ func NewConfig() (*Config, error) {
 		return nil, fmt.Errorf("FRONTEND_URL is not set")
 	}
 
+	environment := os.Getenv("APP_MODE")
+	if environment == "" {
+		environment = "development"
+	}
+
 	return &Config{
 		Port:               port,
 		DatabaseURL:        dbURL,
@@ -54,6 +58,6 @@ func NewConfig() (*Config, error) {
 		GoogleClientSecret: googleClientSecret,
 		GoogleRedirectURL:  googleRedirectURL,
 		FrontendURL:        frontendURL,
-		Environment:        os.Getenv("ENV"),
+		Environment:        environment,
 	}, nil
 }

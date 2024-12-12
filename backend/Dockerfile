@@ -1,10 +1,19 @@
 FROM golang:1.21
+
 WORKDIR /app
+
 COPY go.mod go.sum ./
 RUN go mod download
+
 COPY . .
+
 RUN mkdir -p uploads
 RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/api
+
 EXPOSE 3000
+
+ENV APP_MODE production
+ENV ENV_FILE .env
+
 CMD ["./main"]
