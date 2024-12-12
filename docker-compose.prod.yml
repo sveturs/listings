@@ -51,4 +51,9 @@ services:
     networks:
       - hostel_network
 
-vo
+volumes:
+  postgres_data:
+
+networks:
+  hostel_network:
+    driver: bridge
