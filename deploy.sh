@@ -77,7 +77,7 @@ fi
 
 # Запускаем миграции
 echo "Running migrations..."
-docker run --rm --network hostel-booking-system_hostel_network -v $(pwd)/backend/migrations:/migrations migrate/migrate -path=/migrations/ -database="postgres://postgres:password@db:5432/hostel_db?sslmode=disable" up
+docker run --rm --network hostel-booking-system_hostel_network -v $(pwd)/backend/migrations:/migrations migrate/migrate -path=/migrations/ -database="postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable" up
 
 # Запускаем остальные сервисы
 echo "Starting services..."
