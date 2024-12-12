@@ -84,3 +84,4 @@ echo "Starting services..."
 docker-compose -f docker-compose.prod.yml up --build -d
 
 echo "Deployment completed!"
+root@ultravds-r60ri:/opt/hostel-booking-system# 
