@@ -71,3 +71,10 @@ type ReviewsFilter struct {
     Page       int    `query:"page"`
     Limit      int    `query:"limit"`
 }
+type ReviewStats struct {
+    TotalReviews      int     `json:"total_reviews"`
+    AverageRating     float64 `json:"average_rating"`
+    VerifiedReviews   int     `json:"verified_reviews"`
+    RatingDistribution map[int]int `json:"rating_distribution"` // Распределение оценок: {1: 10, 2: 20, ...}
+    PhotoReviews      int     `json:"photo_reviews"`          // Количество отзывов с фото
+}

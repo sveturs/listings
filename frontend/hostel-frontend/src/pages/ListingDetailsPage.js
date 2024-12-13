@@ -1,35 +1,57 @@
+//frontend/hostel-frontend/src/pages/ListingDetailsPage.js
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import ReviewsSection from '../components/reviews/ReviewsSection';
 import {
     Container,
     Grid,
     Box,
     Typography,
-    Tabs,
-    Tab,
-    CircularProgress,
-    Rating,
-    Stack
+    Button,
+    Card,
+    CardContent,
+    Skeleton,
+    Stack,
+    Avatar,
+    IconButton,
+    useTheme,
+    useMediaQuery,
+    ImageList,
+    ImageListItem
 } from '@mui/material';
-import ReviewsSection from '../components/reviews/ReviewsSection';
+import {
+    MapPin,
+    Calendar,
+    Heart,
+    Share2,
+    Phone,
+    MessageCircle,
+    ChevronLeft,
+    ChevronRight
+} from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import axios from '../api/axios';
 
 const ListingDetailsPage = () => {
     const { id } = useParams();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const { user } = useAuth();
+
     const [listing, setListing] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState(0);
+    const [error, setError] = useState(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    // Определяем fetchListing внутри useEffect с использованием useCallback
     useEffect(() => {
         const fetchListing = async () => {
-            if (!id) return;
-            
             try {
+                setLoading(true);
                 const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
                 setListing(response.data.data);
-            } catch (error) {
-                console.error('Error fetching listing:', error);
+            } catch (err) {
+                console.error('Error fetching listing:', err);
+                setError('Не удалось загрузить объявление');
             } finally {
                 setLoading(false);
             }
@@ -38,75 +60,273 @@ const ListingDetailsPage = () => {
         fetchListing();
     }, [id]);
 
+    const handleFavoriteClick = async () => {
+        if (!user) {
+            // Можно показать сообщение о необходимости авторизации
+            return;
+        }
+
+        try {
+            if (listing.is_favorite) {
+                await axios.delete(`/api/v1/marketplace/listings/${id}/favorite`);
+            } else {
+                await axios.post(`/api/v1/marketplace/listings/${id}/favorite`);
+            }
+            setListing(prev => ({
+                ...prev,
+                is_favorite: !prev.is_favorite
+            }));
+        } catch (err) {
+            console.error('Error toggling favorite:', err);
+        }
+    };
+
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB',
+            maximumFractionDigits: 0
+        }).format(price);
+    };
+
     if (loading) {
         return (
-            <Container sx={{ py: 4, textAlign: 'center' }}>
-                <CircularProgress />
+            <Container maxWidth="lg" sx={{ py: 4 }}>
+                <Grid container spacing={4}>
+                    <Grid item xs={12} md={8}>
+                        <Skeleton variant="rectangular" height={400} />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                        <Skeleton variant="rectangular" height={200} />
+                    </Grid>
+                </Grid>
             </Container>
         );
     }
 
-    if (!listing) {
+    if (error) {
         return (
-            <Container sx={{ py: 4, textAlign: 'center' }}>
-                <Typography>Объявление не найдено</Typography>
+            <Container maxWidth="lg" sx={{ py: 4 }}>
+                <Typography color="error">{error}</Typography>
             </Container>
         );
     }
+
+    if (!listing) return null;
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Grid container spacing={4}>
-                <Grid item xs={12} md={7}>
-                    {/* Здесь компонент галереи */}
-                </Grid>
-                <Grid item xs={12} md={5}>
-                    <Box>
+                {/* Галерея изображений */}
+                <Grid item xs={12} md={8}>
+                    <Box sx={{ position: 'relative' }}>
+                        {listing.images && listing.images.length > 0 ? (
+                            <>
+                                <Box
+                                    component="img"
+                                    src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[currentImageIndex].file_path}`}
+                                    alt={listing.title}
+                                    sx={{
+                                        width: '100%',
+                                        height: isMobile ? '300px' : '500px',
+                                        objectFit: 'cover',
+                                        borderRadius: 2
+                                    }}
+                                />
+                                {listing.images.length > 1 && (
+                                    <>
+                                        <IconButton
+                                            sx={{
+                                                position: 'absolute',
+                                                left: 8,
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                bgcolor: 'background.paper',
+                                                '&:hover': { bgcolor: 'background.paper' }
+                                            }}
+                                            onClick={() => setCurrentImageIndex(prev =>
+                                                prev > 0 ? prev - 1 : listing.images.length - 1
+                                            )}
+                                        >
+                                            <ChevronLeft />
+                                        </IconButton>
+                                        <IconButton
+                                            sx={{
+                                                position: 'absolute',
+                                                right: 8,
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                bgcolor: 'background.paper',
+                                                '&:hover': { bgcolor: 'background.paper' }
+                                            }}
+                                            onClick={() => setCurrentImageIndex(prev =>
+                                                prev < listing.images.length - 1 ? prev + 1 : 0
+                                            )}
+                                        >
+                                            <ChevronRight />
+                                        </IconButton>
+                                    </>
+                                )}
+                            </>
+                        ) : (
+                            <Box
+                                sx={{
+                                    width: '100%',
+                                    height: isMobile ? '300px' : '500px',
+                                    bgcolor: 'grey.200',
+                                    borderRadius: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <Typography color="text.secondary">
+                                    Нет изображений
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+
+                    {listing.images && listing.images.length > 1 && (
+                        <ImageList
+                            sx={{ mt: 2, maxHeight: 100 }}
+                            cols={Math.min(listing.images.length, 6)}
+                            rowHeight={100}
+                        >
+                            {listing.images.map((image, index) => (
+                                <ImageListItem
+                                    key={image.id}
+                                    sx={{
+                                        cursor: 'pointer',
+                                        opacity: currentImageIndex === index ? 1 : 0.6,
+                                        transition: 'opacity 0.2s',
+                                        '&:hover': { opacity: 1 }
+                                    }}
+                                    onClick={() => setCurrentImageIndex(index)}
+                                >
+                                    <img
+                                        src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${image.file_path}`}
+                                        alt={`${listing.title} ${index + 1}`}
+                                        style={{
+                                            height: '100%',
+                                            objectFit: 'cover'
+                                        }}
+                                    />
+                                </ImageListItem>
+                            ))}
+                        </ImageList>
+                    )}
+
+                    {/* Описание объявления */}
+                    <Box sx={{ mt: 4 }}>
                         <Typography variant="h4" gutterBottom>
                             {listing.title}
                         </Typography>
-                        {listing.rating > 0 && (
-                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-                                <Rating value={listing.rating} readOnly precision={0.1} />
-                                <Typography variant="body2" color="text.secondary">
-                                    {listing.rating?.toFixed(1)} ({listing.reviews_count || 0} отзывов)
+
+                        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                                <MapPin size={18} style={{ marginRight: 4 }} />
+                                <Typography>
+                                    {listing.location || `${listing.city}, ${listing.country}`}
                                 </Typography>
-                            </Stack>
-                        )}
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                                <Calendar size={18} style={{ marginRight: 4 }} />
+                                <Typography>
+                                    {new Date(listing.created_at).toLocaleDateString()}
+                                </Typography>
+                            </Box>
+                        </Stack>
+
+                        <Typography variant="body1" sx={{ mb: 4 }}>
+                            {listing.description}
+                        </Typography>
+
+                        {/* Отзывы */}
+                        <Box sx={{ mt: 4 }}>
+                            <ReviewsSection
+                                entityType="listing"
+                                entityId={parseInt(id)}
+                                entityTitle={listing.title}
+                                canReview={user && user.id !== listing.user_id}
+                            />
+                        </Box>
+                    </Box>
+                </Grid>
+
+                {/* Правая панель */}
+                <Grid item xs={12} md={4}>
+                    <Box sx={{ position: 'sticky', top: 24 }}>
+                        {/* Карточка с ценой и контактами */}
+                        <Card elevation={2}>
+                            <CardContent>
+                                <Typography variant="h4" gutterBottom>
+                                    {formatPrice(listing.price)}
+                                </Typography>
+
+                                <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+                                    <Button
+                                        variant="contained"
+                                        fullWidth
+                                        startIcon={<Phone />}
+                                    >
+                                        Позвонить
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        fullWidth
+                                        startIcon={<MessageCircle />}
+                                    >
+                                        Написать
+                                    </Button>
+                                </Stack>
+
+                                <Stack direction="row" spacing={1}>
+                                    <Button
+                                        variant="outlined"
+                                        fullWidth
+                                        startIcon={<Heart fill={listing.is_favorite ? 'currentColor' : 'none'} />}
+                                        onClick={handleFavoriteClick}
+                                    >
+                                        {listing.is_favorite ? 'В избранном' : 'В избранное'}
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        fullWidth
+                                        startIcon={<Share2 />}
+                                    >
+                                        Поделиться
+                                    </Button>
+                                </Stack>
+                            </CardContent>
+                        </Card>
+
+                        {/* Карточка продавца */}
+                        <Card elevation={2} sx={{ mt: 2 }}>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>
+                                    Продавец
+                                </Typography>
+                                <Stack direction="row" spacing={2} alignItems="center">
+                                    <Avatar
+                                        src={listing.user?.picture_url}
+                                        alt={listing.user?.name}
+                                        sx={{ width: 56, height: 56 }}
+                                    />
+                                    <Box>
+                                        <Typography variant="subtitle1">
+                                            {listing.user?.name}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            На сайте с {new Date(listing.user?.created_at).toLocaleDateString()}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </CardContent>
+                        </Card>
                     </Box>
                 </Grid>
             </Grid>
-
-            <Box sx={{ mt: 4 }}>
-                <Tabs
-                    value={activeTab}
-                    onChange={(e, newValue) => setActiveTab(newValue)}
-                    sx={{ borderBottom: 1, borderColor: 'divider' }}
-                >
-                    <Tab label="Описание" />
-                    <Tab
-                        label={`Отзывы (${listing.reviews_count || 0})`}
-                        id="reviews-tab"
-                    />
-                </Tabs>
-
-                {activeTab === 0 && (
-                    <Box sx={{ py: 3 }}>
-                        <Typography>{listing.description}</Typography>
-                    </Box>
-                )}
-
-                {activeTab === 1 && (
-                    <Box sx={{ py: 3 }}>
-                        <ReviewsSection
-                            entityType="listing"
-                            entityId={listing.id}
-                            entityTitle={listing.title}
-                            canAddReview={true}
-                        />
-                    </Box>
-                )}
-            </Box>
         </Container>
     );
 };

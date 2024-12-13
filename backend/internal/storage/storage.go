@@ -36,6 +36,8 @@ type Storage interface {
 	GetReviewVotes(ctx context.Context, reviewId int) (helpful int, notHelpful int, err error)
 	GetUserReviewVote(ctx context.Context, userId int, reviewId int) (string, error)
 	GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error)
+    QueryRow(ctx context.Context, sql string, args ...interface{}) Row
+    Query(ctx context.Context, sql string, args ...interface{}) (Rows, error)
 
 	// Room methods
 	AddRoom(ctx context.Context, room *models.Room) (int, error)
@@ -76,4 +78,12 @@ type Storage interface {
 	// Database connection
 	Close()
 	Ping(ctx context.Context) error
+}
+type Row interface {
+    Scan(dest ...interface{}) error
+}
+type Rows interface {
+    Next() bool
+    Scan(dest ...interface{}) error
+    Close() error
 }

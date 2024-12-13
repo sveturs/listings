@@ -85,7 +85,13 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/listings/:id", s.handlers.Marketplace.GetListing)
 	marketplace.Get("/categories", s.handlers.Marketplace.GetCategories)
 	marketplace.Get("/category-tree", s.handlers.Marketplace.GetCategoryTree)
-
+ 
+	// Публичные маршруты для отзывов
+    reviews := s.app.Group("/api/v1/reviews")
+    reviews.Get("/", s.handlers.Reviews.GetReviews)  // Получение списка отзывов
+    reviews.Get("/:id", s.handlers.Reviews.GetReviewByID)  // Получение отдельного отзыва
+    reviews.Get("/stats", s.handlers.Reviews.GetStats)  // Статистика по отзывам
+	
 	// Auth routes
 	auth := s.app.Group("/auth")
 	auth.Get("/session", s.handlers.Auth.GetSession)
@@ -99,12 +105,20 @@ func (s *Server) setupRoutes() {
 	cars.Post("/", s.handlers.Cars.AddCar)
 	cars.Post("/:id/images", s.handlers.Cars.UploadImages)
 
-	// Маршруты для отзывов (требуют авторизации)
-	reviews := s.app.Group("/api/v1/reviews", s.middleware.AuthRequired)
-	reviews.Post("/", s.handlers.Reviews.CreateReview)
-	reviews.Get("/", s.handlers.Reviews.GetReviews) // можно вынести из protected routes
-	reviews.Post("/:id/vote", s.handlers.Reviews.VoteForReview)
-	reviews.Post("/:id/response", s.handlers.Reviews.AddResponse)
+    // Маршруты для отзывов, требующие авторизации
+    protectedReviews := s.app.Group("/api/v1/reviews", s.middleware.AuthRequired)
+    protectedReviews.Post("/", s.handlers.Reviews.CreateReview)  // Создание отзыва
+    protectedReviews.Put("/:id", s.handlers.Reviews.UpdateReview)  // Обновление отзыва
+    protectedReviews.Delete("/:id", s.handlers.Reviews.DeleteReview)  // Удаление отзыва
+    protectedReviews.Post("/:id/vote", s.handlers.Reviews.VoteForReview)  // Голосование за отзыв
+    protectedReviews.Post("/:id/response", s.handlers.Reviews.AddResponse)  // Добавление ответа на отзыв
+    protectedReviews.Post("/:id/photos", s.handlers.Reviews.UploadPhotos)  // Загрузка фотографий к отзыву
+
+    // Маршруты для статистики по сущностям
+    entityStats := s.app.Group("/api/v1/entity")
+    entityStats.Get("/:type/:id/rating", s.handlers.Reviews.GetEntityRating)  // Получение рейтинга сущности
+    entityStats.Get("/:type/:id/stats", s.handlers.Reviews.GetEntityStats)  // Получение статистики по отзывам сущности
+
 
 	// Protected room routes
 	rooms := api.Group("/rooms")

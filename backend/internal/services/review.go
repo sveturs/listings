@@ -114,3 +114,67 @@ func (s *ReviewService) checkVerifiedPurchase(ctx context.Context, userId int, e
         return false
     }
 }
+func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, entityId int) (*models.ReviewStats, error) {
+    stats := &models.ReviewStats{
+        RatingDistribution: make(map[int]int),
+    }
+
+    // Получаем общую статистику
+    err := s.storage.QueryRow(ctx, `
+        SELECT 
+            COUNT(*) as total,
+            COALESCE(AVG(rating), 0) as avg_rating,
+            COUNT(*) FILTER (WHERE is_verified_purchase) as verified,
+            COUNT(*) FILTER (WHERE array_length(photos, 1) > 0) as with_photos
+        FROM reviews
+        WHERE entity_type = $1 
+        AND entity_id = $2
+        AND status = 'published'
+    `, entityType, entityId).Scan(
+        &stats.TotalReviews,
+        &stats.AverageRating,
+        &stats.VerifiedReviews,
+        &stats.PhotoReviews,
+    )
+    if err != nil {
+        return nil, err
+    }
+
+    // Получаем распределение оценок
+    rows, err := s.storage.Query(ctx, `
+        SELECT rating, COUNT(*)
+        FROM reviews
+        WHERE entity_type = $1 
+        AND entity_id = $2
+        AND status = 'published'
+        GROUP BY rating
+    `, entityType, entityId)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var rating, count int
+        if err := rows.Scan(&rating, &count); err != nil {
+            return nil, err
+        }
+        stats.RatingDistribution[rating] = count
+    }
+
+    return stats, nil
+}
+
+func (s *ReviewService) UpdateReviewPhotos(ctx context.Context, reviewId int, photoUrls []string) error {
+    // Получаем текущий отзыв
+    review, err := s.storage.GetReviewByID(ctx, reviewId)
+    if err != nil {
+        return err
+    }
+
+    // Обновляем массив фотографий
+    review.Photos = photoUrls
+
+    // Сохраняем изменения
+    return s.storage.UpdateReview(ctx, review)
+}

@@ -1,157 +1,229 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-    Box,
-    Typography,
-    Rating,
-    Stack,
-    LinearProgress,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    CircularProgress
-} from '@mui/material';
+//frontend/hostel-frontend/src/components/reviews/ReviewsSection.js
+import React, { useState, useEffect } from 'react';
+import { Box, Button, Dialog, DialogTitle, DialogContent, Alert, Snackbar } from '@mui/material';
 import { PencilLine } from 'lucide-react';
-import ReviewCard from './ReviewCard';
-import ReviewForm from './ReviewForm';
+import { ReviewForm, ReviewCard, RatingStats } from './ReviewComponents';
 import axios from '../../api/axios';
 
-export const ReviewsSection = ({ 
-    entityType,
-    entityId,
-    entityTitle,
-    canAddReview = true
+const ReviewsSection = ({ 
+    entityType, // тип сущности (listing, room, car)
+    entityId,   // ID сущности
+    entityTitle, // название сущности для отображения
+    canReview = true // может ли пользователь оставлять отзывы
 }) => {
     const [reviews, setReviews] = useState([]);
+    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [showReviewForm, setShowReviewForm] = useState(false);
-    const [stats, setStats] = useState({
-        averageRating: 0,
-        totalReviews: 0,
-        ratingDistribution: {
-            1: 0, 2: 0, 3: 0, 4: 0, 5: 0
-        }
-    });
+    const [editingReview, setEditingReview] = useState(null);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-    const fetchReviews = useCallback(async () => {
+    // Загрузка отзывов и статистики
+    const fetchData = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('/api/v1/reviews', {
-                params: {
-                    entity_type: entityType,
-                    entity_id: entityId
-                }
-            });
-            setReviews(response.data.data || []);
-        } catch (error) {
-            console.error('Error fetching reviews:', error);
+            const [reviewsResponse, statsResponse] = await Promise.all([
+                axios.get('/api/v1/reviews', {
+                    params: {
+                        entity_type: entityType,
+                        entity_id: entityId
+                    }
+                }),
+                axios.get(`/api/v1/entity/${entityType}/${entityId}/stats`)
+            ]);
+    
+            // Добавим проверку данных
+            setReviews(reviewsResponse.data.data || []);  // Если нет данных, используем пустой массив
+            setStats(statsResponse.data.data);
+        } catch (err) {
+            setError('Не удалось загрузить отзывы');
+            console.error('Error fetching reviews:', err);
         } finally {
             setLoading(false);
         }
+    };
+
+    useEffect(() => {
+        fetchData();
     }, [entityType, entityId]);
 
-    const fetchStats = useCallback(async () => {
+    // Обработка создания/редактирования отзыва
+    const handleReviewSubmit = async (formData) => {
         try {
-            const response = await axios.get('/api/v1/reviews/stats', {
-                params: {
+            if (editingReview) {
+                await axios.put(`/api/v1/reviews/${editingReview.id}`, formData);
+                setSnackbar({
+                    open: true,
+                    message: 'Отзыв успешно обновлен',
+                    severity: 'success'
+                });
+            } else {
+                await axios.post('/api/v1/reviews', {
+                    ...formData,
                     entity_type: entityType,
                     entity_id: entityId
-                }
+                });
+                setSnackbar({
+                    open: true,
+                    message: 'Отзыв успешно опубликован',
+                    severity: 'success'
+                });
+            }
+            setShowReviewForm(false);
+            setEditingReview(null);
+            fetchData();
+        } catch (err) {
+            setSnackbar({
+                open: true,
+                message: 'Ошибка при сохранении отзыва',
+                severity: 'error'
             });
-            setStats(response.data.data || {
-                averageRating: 0,
-                totalReviews: 0,
-                ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
-            });
-        } catch (error) {
-            console.error('Error fetching review stats:', error);
         }
-    }, [entityType, entityId]);
+    };
 
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" p={4}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+    // Обработка голосования за отзыв
+    const handleVote = async (reviewId, voteType) => {
+        try {
+            await axios.post(`/api/v1/reviews/${reviewId}/vote`, { vote_type: voteType });
+            fetchData();
+        } catch (err) {
+            setSnackbar({
+                open: true,
+                message: 'Ошибка при голосовании',
+                severity: 'error'
+            });
+        }
+    };
+
+    // Обработка ответа на отзыв
+    const handleReply = async (reviewId, response) => {
+        try {
+            await axios.post(`/api/v1/reviews/${reviewId}/response`, { response });
+            fetchData();
+            setSnackbar({
+                open: true,
+                message: 'Ответ успешно добавлен',
+                severity: 'success'
+            });
+        } catch (err) {
+            setSnackbar({
+                open: true,
+                message: 'Ошибка при добавлении ответа',
+                severity: 'error'
+            });
+        }
+    };
+
+    // Обработка удаления отзыва
+    const handleDelete = async (reviewId) => {
+        try {
+            await axios.delete(`/api/v1/reviews/${reviewId}`);
+            fetchData();
+            setSnackbar({
+                open: true,
+                message: 'Отзыв успешно удален',
+                severity: 'success'
+            });
+        } catch (err) {
+            setSnackbar({
+                open: true,
+                message: 'Ошибка при удалении отзыва',
+                severity: 'error'
+            });
+        }
+    };
+
+    // Обработка жалобы на отзыв
+    const handleReport = async (reviewId) => {
+        try {
+            await axios.post(`/api/v1/reviews/${reviewId}/report`);
+            setSnackbar({
+                open: true,
+                message: 'Жалоба отправлена',
+                severity: 'success'
+            });
+        } catch (err) {
+            setSnackbar({
+                open: true,
+                message: 'Ошибка при отправке жалобы',
+                severity: 'error'
+            });
+        }
+    };
 
     return (
         <Box>
             {/* Статистика рейтингов */}
-            <Stack direction="row" spacing={4} alignItems="center" sx={{ mb: 4 }}>
-                <Box textAlign="center">
-                    <Typography variant="h3" fontWeight="bold">
-                        {stats.averageRating.toFixed(1)}
-                    </Typography>
-                    <Rating value={stats.averageRating} readOnly precision={0.1} />
-                    <Typography color="text.secondary">
-                        {stats.totalReviews} отзывов
-                    </Typography>
-                </Box>
+            {stats && <RatingStats stats={stats} />}
 
-                {/* Распределение рейтингов */}
-                <Box flex={1}>
-                    {Object.entries(stats.ratingDistribution).reverse().map(([rating, count]) => (
-                        <Stack key={rating} direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
-                            <Typography minWidth={20}>{rating}</Typography>
-                            <LinearProgress
-                                variant="determinate"
-                                value={(count / stats.totalReviews) * 100 || 0}
-                                sx={{ flex: 1, height: 8, borderRadius: 1 }}
-                            />
-                            <Typography minWidth={40}>{count}</Typography>
-                        </Stack>
-                    ))}
-                </Box>
-
-                {canAddReview && (
-                    <Button
-                        variant="contained"
-                        onClick={() => setShowReviewForm(true)}
-                        startIcon={<PencilLine />}
-                    >
-                        Написать отзыв
-                    </Button>
-                )}
-            </Stack>
+            {/* Кнопка добавления отзыва */}
+            {canReview && (
+                <Button
+                    variant="contained"
+                    onClick={() => setShowReviewForm(true)}
+                    startIcon={<PencilLine />}
+                    sx={{ mb: 3 }}
+                >
+                    Написать отзыв
+                </Button>
+            )}
 
             {/* Список отзывов */}
-            <Stack spacing={2}>
-                {reviews.map(review => (
-                    <ReviewCard key={review.id} review={review} />
-                ))}
-            </Stack>
+            {Array.isArray(reviews) && reviews.map(review => (
+                <ReviewCard
+                    key={review.id}
+                    review={review}
+                    onVote={handleVote}
+                    onReply={handleReply}
+                    onEdit={(review) => {
+                        setEditingReview(review);
+                        setShowReviewForm(true);
+                    }}
+                    onDelete={handleDelete}
+                    onReport={handleReport}
+                />
+            ))}
 
-            {/* Диалог добавления отзыва */}
+            {/* Диалог создания/редактирования отзыва */}
             <Dialog
                 open={showReviewForm}
-                onClose={() => setShowReviewForm(false)}
+                onClose={() => {
+                    setShowReviewForm(false);
+                    setEditingReview(null);
+                }}
                 maxWidth="md"
                 fullWidth
             >
                 <DialogTitle>
-                    Отзыв о {entityTitle}
+                    {editingReview ? 'Редактирование отзыва' : 'Новый отзыв'}
                 </DialogTitle>
                 <DialogContent>
-                    <ReviewForm 
-                        onSubmit={async (reviewData) => {
-                            try {
-                                await axios.post('/api/v1/reviews', {
-                                    ...reviewData,
-                                    entity_type: entityType,
-                                    entity_id: entityId
-                                });
-                                setShowReviewForm(false);
-                                fetchReviews();
-                                fetchStats();
-                            } catch (error) {
-                                console.error('Error submitting review:', error);
-                            }
+                    <ReviewForm
+                        initialData={editingReview}
+                        onSubmit={handleReviewSubmit}
+                        onCancel={() => {
+                            setShowReviewForm(false);
+                            setEditingReview(null);
                         }}
                     />
                 </DialogContent>
             </Dialog>
+
+            {/* Уведомления */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+            >
+                <Alert
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

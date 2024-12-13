@@ -157,12 +157,12 @@ const MarketplaceListingDetails = ({ listing }) => {
             <ListingInfo listing={listing} />
             
             {/* Секция отзывов */}
-            <ReviewsSection
-                entityType="listing"
-                entityId={listing.id}
-                entityTitle={listing.title}
-                canAddReview={listing.can_review} // Проверяем, может ли пользователь оставить отзыв
-            />
+<ReviewsSection
+    entityType="listing"
+    entityId={parseInt(id)}
+    entityTitle={listing.title}
+    canReview={user && user.id !== listing.user_id}
+/>
         </Box>
     );
 };

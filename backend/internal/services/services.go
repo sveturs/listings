@@ -52,6 +52,9 @@ type ReviewServiceInterface interface {
     VoteForReview(ctx context.Context, userId int, reviewId int, voteType string) error
     AddResponse(ctx context.Context, userId int, reviewId int, response string) error
     GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error)
+    GetReviewStats(ctx context.Context, entityType string, entityId int) (*models.ReviewStats, error)
+    UpdateReviewPhotos(ctx context.Context, reviewId int, photoUrls []string) error
+
 }
 func (s *Services) Auth() AuthServiceInterface { 
     return s.auth
