@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"github.com/gofiber/fiber/v2"
+	"strconv"
 )
 
 func GenerateSessionToken() string {
@@ -26,4 +27,14 @@ func SuccessResponse(c *fiber.Ctx, data interface{}) error {
 		"success": true,
 		"data":    data,
 	})
+}
+func StringToInt(str string, defaultValue int) int {
+    if str == "" {
+        return defaultValue
+    }
+    val, err := strconv.Atoi(str)
+    if err != nil {
+        return defaultValue
+    }
+    return val
 }

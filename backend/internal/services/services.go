@@ -4,6 +4,9 @@ package services
 import (
     "backend/internal/config"
     "backend/internal/storage"
+    "context"
+    "backend/internal/domain/models"
+
 )
 
 type ServicesInterface interface {
@@ -14,6 +17,7 @@ type ServicesInterface interface {
     Car() CarServiceInterface
     Config() *config.Config
     Marketplace() MarketplaceServiceInterface
+    Review() ReviewServiceInterface  
 }
 
 type Services struct {
@@ -23,6 +27,7 @@ type Services struct {
     user    UserServiceInterface
     car     CarServiceInterface
     marketplace MarketplaceServiceInterface 
+    review      ReviewServiceInterface  
     config  *config.Config
 }
 
@@ -34,10 +39,20 @@ func NewServices(storage storage.Storage, cfg *config.Config) *Services {
         user:    NewUserService(storage),
         car:     NewCarService(storage),
         marketplace: NewMarketplaceService(storage),
+        review:      NewReviewService(storage),
         config:  cfg,
     }
 }
-
+type ReviewServiceInterface interface {
+    CreateReview(ctx context.Context, userId int, review *models.CreateReviewRequest) error
+    GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
+    GetReviewByID(ctx context.Context, id int) (*models.Review, error)
+    UpdateReview(ctx context.Context, userId int, reviewId int, review *models.Review) error
+    DeleteReview(ctx context.Context, userId int, reviewId int) error
+    VoteForReview(ctx context.Context, userId int, reviewId int, voteType string) error
+    AddResponse(ctx context.Context, userId int, reviewId int, response string) error
+    GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error)
+}
 func (s *Services) Auth() AuthServiceInterface { 
     return s.auth
 }
@@ -61,6 +76,9 @@ func (s *Services) Config() *config.Config {
 }
 func (s *Services) Marketplace() MarketplaceServiceInterface {
     return s.marketplace
+}
+func (s *Services) Review() ReviewServiceInterface {
+    return s.review
 }
 // Проверяем, что Services реализует ServicesInterface
 var _ ServicesInterface = (*Services)(nil)

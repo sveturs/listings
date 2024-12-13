@@ -58,75 +58,82 @@ func NewServer(cfg *config.Config) (*Server, error) {
 }
 
 func (s *Server) setupRoutes() {
-    // Root path
-    s.app.Get("/", func(c *fiber.Ctx) error {
-        return c.SendString("Hostel Booking System API")
-    })
+	// Root path
+	s.app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hostel Booking System API")
+	})
 
-    // Static files
-    s.app.Static("/uploads", "./uploads")
-    os.MkdirAll("./uploads", os.ModePerm)
+	// Static files
+	s.app.Static("/uploads", "./uploads")
+	os.MkdirAll("./uploads", os.ModePerm)
 
-    // Public routes
-    s.app.Get("/rooms", s.handlers.Rooms.List)
-    s.app.Get("/rooms/:id", s.handlers.Rooms.Get)
-    s.app.Get("/rooms/:id/images", s.handlers.Rooms.ListImages)
-    s.app.Get("/rooms/:id/available-beds", s.handlers.Rooms.GetAvailableBeds)
-    s.app.Get("/beds/:id/images", s.handlers.Rooms.ListBedImages)
+	// Public routes
+	s.app.Get("/rooms", s.handlers.Rooms.List)
+	s.app.Get("/rooms/:id", s.handlers.Rooms.Get)
+	s.app.Get("/rooms/:id/images", s.handlers.Rooms.ListImages)
+	s.app.Get("/rooms/:id/available-beds", s.handlers.Rooms.GetAvailableBeds)
+	s.app.Get("/beds/:id/images", s.handlers.Rooms.ListBedImages)
 
-    // Публичные маршруты для автомобилей
-    s.app.Get("/api/v1/cars/available", s.handlers.Cars.GetAvailableCars)
-    s.app.Get("/api/v1/cars/:id/images", s.handlers.Cars.GetImages)
-    s.app.Post("/api/v1/car-bookings", s.handlers.Cars.CreateBooking)
+	// Публичные маршруты для автомобилей
+	s.app.Get("/api/v1/cars/available", s.handlers.Cars.GetAvailableCars)
+	s.app.Get("/api/v1/cars/:id/images", s.handlers.Cars.GetImages)
+	s.app.Post("/api/v1/car-bookings", s.handlers.Cars.CreateBooking)
 
-    // Публичные маршруты маркетплейса
-    marketplace := s.app.Group("/api/v1/marketplace")
-    marketplace.Get("/listings", s.handlers.Marketplace.GetListings)
-    marketplace.Get("/listings/:id", s.handlers.Marketplace.GetListing)
-    marketplace.Get("/categories", s.handlers.Marketplace.GetCategories)
-    marketplace.Get("/category-tree", s.handlers.Marketplace.GetCategoryTree)
+	// Публичные маршруты маркетплейса
+	marketplace := s.app.Group("/api/v1/marketplace")
+	marketplace.Get("/listings", s.handlers.Marketplace.GetListings)
+	marketplace.Get("/listings/:id", s.handlers.Marketplace.GetListing)
+	marketplace.Get("/categories", s.handlers.Marketplace.GetCategories)
+	marketplace.Get("/category-tree", s.handlers.Marketplace.GetCategoryTree)
 
-    // Auth routes
-    auth := s.app.Group("/auth")
-    auth.Get("/session", s.handlers.Auth.GetSession)
-    auth.Get("/google", s.handlers.Auth.GoogleAuth)
-    auth.Get("/google/callback", s.handlers.Auth.GoogleCallback)
-    auth.Get("/logout", s.handlers.Auth.Logout)
+	// Auth routes
+	auth := s.app.Group("/auth")
+	auth.Get("/session", s.handlers.Auth.GetSession)
+	auth.Get("/google", s.handlers.Auth.GoogleAuth)
+	auth.Get("/google/callback", s.handlers.Auth.GoogleCallback)
+	auth.Get("/logout", s.handlers.Auth.Logout)
 
-    // Protected API routes
-    api := s.app.Group("/api/v1", s.middleware.AuthRequired)
-    cars := api.Group("/cars")
-    cars.Post("/", s.handlers.Cars.AddCar)
-    cars.Post("/:id/images", s.handlers.Cars.UploadImages)
+	// Protected API routes
+	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
+	cars := api.Group("/cars")
+	cars.Post("/", s.handlers.Cars.AddCar)
+	cars.Post("/:id/images", s.handlers.Cars.UploadImages)
 
-    // Protected room routes
-    rooms := api.Group("/rooms")
-    rooms.Post("/", s.handlers.Rooms.Create)
-    rooms.Post("/:id/images", s.handlers.Rooms.UploadImages)
-    rooms.Delete("/:id/images/:imageId", s.handlers.Rooms.DeleteImage)
-    rooms.Post("/:id/beds", s.handlers.Rooms.AddBed)
-    rooms.Post("/:roomId/beds/:bedId/images", s.handlers.Rooms.UploadBedImages)
+	// Маршруты для отзывов (требуют авторизации)
+	reviews := s.app.Group("/api/v1/reviews", s.middleware.AuthRequired)
+	reviews.Post("/", s.handlers.Reviews.CreateReview)
+	reviews.Get("/", s.handlers.Reviews.GetReviews) // можно вынести из protected routes
+	reviews.Post("/:id/vote", s.handlers.Reviews.VoteForReview)
+	reviews.Post("/:id/response", s.handlers.Reviews.AddResponse)
 
-    // Protected booking routes
-    bookings := api.Group("/bookings")
-    bookings.Post("/", s.handlers.Bookings.Create)
-    bookings.Get("/", s.handlers.Bookings.List)
-    bookings.Delete("/:id", s.handlers.Bookings.Delete)
+	// Protected room routes
+	rooms := api.Group("/rooms")
+	rooms.Post("/", s.handlers.Rooms.Create)
+	rooms.Post("/:id/images", s.handlers.Rooms.UploadImages)
+	rooms.Delete("/:id/images/:imageId", s.handlers.Rooms.DeleteImage)
+	rooms.Post("/:id/beds", s.handlers.Rooms.AddBed)
+	rooms.Post("/:roomId/beds/:bedId/images", s.handlers.Rooms.UploadBedImages)
 
-    // Protected user routes
-    users := api.Group("/users")
-    users.Post("/register", s.handlers.Users.Register)
-    users.Get("/me", s.handlers.Users.GetProfile)
-    users.Put("/me", s.handlers.Users.UpdateProfile)
+	// Protected booking routes
+	bookings := api.Group("/bookings")
+	bookings.Post("/", s.handlers.Bookings.Create)
+	bookings.Get("/", s.handlers.Bookings.List)
+	bookings.Delete("/:id", s.handlers.Bookings.Delete)
 
-    // Защищенные маршруты маркетплейса
-    marketplaceProtected := api.Group("/marketplace")
-    marketplaceProtected.Post("/listings", s.handlers.Marketplace.CreateListing)
-    marketplaceProtected.Put("/listings/:id", s.handlers.Marketplace.UpdateListing)
-    marketplaceProtected.Delete("/listings/:id", s.handlers.Marketplace.DeleteListing)
-    marketplaceProtected.Post("/listings/:id/images", s.handlers.Marketplace.UploadImages)
-    marketplaceProtected.Post("/listings/:id/favorite", s.handlers.Marketplace.AddToFavorites)
-    marketplaceProtected.Delete("/listings/:id/favorite", s.handlers.Marketplace.RemoveFromFavorites)
+	// Protected user routes
+	users := api.Group("/users")
+	users.Post("/register", s.handlers.Users.Register)
+	users.Get("/me", s.handlers.Users.GetProfile)
+	users.Put("/me", s.handlers.Users.UpdateProfile)
+
+	// Защищенные маршруты маркетплейса
+	marketplaceProtected := api.Group("/marketplace")
+	marketplaceProtected.Post("/listings", s.handlers.Marketplace.CreateListing)
+	marketplaceProtected.Put("/listings/:id", s.handlers.Marketplace.UpdateListing)
+	marketplaceProtected.Delete("/listings/:id", s.handlers.Marketplace.DeleteListing)
+	marketplaceProtected.Post("/listings/:id/images", s.handlers.Marketplace.UploadImages)
+	marketplaceProtected.Post("/listings/:id/favorite", s.handlers.Marketplace.AddToFavorites)
+	marketplaceProtected.Delete("/listings/:id/favorite", s.handlers.Marketplace.RemoveFromFavorites)
 }
 func (s *Server) Start() error {
 	return s.app.Listen(fmt.Sprintf(":%s", s.cfg.Port))

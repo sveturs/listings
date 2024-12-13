@@ -12,6 +12,7 @@ type Handler struct {
     Users    *UserHandler
     Cars     *CarHandler 
     Marketplace *MarketplaceHandler
+    Reviews     *ReviewHandler
 }
 
 func NewHandler(services services.ServicesInterface) *Handler {
@@ -22,5 +23,6 @@ func NewHandler(services services.ServicesInterface) *Handler {
         Users:    NewUserHandler(services),
         Cars:     NewCarHandler(services),
         Marketplace: NewMarketplaceHandler(services),
+        Reviews:     NewReviewHandler(services),
     }
 }

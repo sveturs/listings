@@ -9,6 +9,8 @@ import (
 
 	"strings"
 	"log"
+    "time"  // добавляем импорт time
+    "github.com/jackc/pgx/v5"  // добавляем импорт pgx
 )
 
 func (db *Database) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
@@ -463,11 +465,15 @@ func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.Market
 
 	return cat, nil
 }
-func (db *Database) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-	listing := &models.MarketplaceListing{}
+// backend/internal/storage/postgres/marketplace.go
 
-	// Получаем основные данные объявления вместе с информацией о пользователе и категории
-	err := db.pool.QueryRow(ctx, `
+func (db *Database) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
+    listing := &models.MarketplaceListing{
+        User:     &models.User{},
+        Category: &models.MarketplaceCategory{},
+    }
+
+    err := db.pool.QueryRow(ctx, `
         SELECT 
             l.id, l.user_id, l.category_id, l.title, l.description,
             l.price, l.condition, l.status, l.location, l.latitude,
@@ -476,41 +482,47 @@ func (db *Database) GetListingByID(ctx context.Context, id int) (*models.Marketp
             u.name as user_name, u.email as user_email,
             c.name as category_name, c.slug as category_slug
         FROM marketplace_listings l
-        JOIN users u ON l.user_id = u.id
-        JOIN marketplace_categories c ON l.category_id = c.id
+        LEFT JOIN users u ON l.user_id = u.id
+        LEFT JOIN marketplace_categories c ON l.category_id = c.id
         WHERE l.id = $1
     `, id).Scan(
-		&listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title, &listing.Description,
-		&listing.Price, &listing.Condition, &listing.Status, &listing.Location, &listing.Latitude,
-		&listing.Longitude, &listing.City, &listing.Country, &listing.ViewsCount,
-		&listing.CreatedAt, &listing.UpdatedAt,
-		&listing.User.Name, &listing.User.Email,
-		&listing.Category.Name, &listing.Category.Slug,
-	)
+        &listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title, &listing.Description,
+        &listing.Price, &listing.Condition, &listing.Status, &listing.Location, &listing.Latitude,
+        &listing.Longitude, &listing.City, &listing.Country, &listing.ViewsCount,
+        &listing.CreatedAt, &listing.UpdatedAt,
+        &listing.User.Name, &listing.User.Email,
+        &listing.Category.Name, &listing.Category.Slug,
+    )
 
-	if err != nil {
-		return nil, err
-	}
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            return nil, fmt.Errorf("listing not found")
+        }
+        return nil, fmt.Errorf("error fetching listing: %w", err)
+    }
 
-	// Увеличиваем счетчик просмотров
-	_, err = db.pool.Exec(ctx, `
-        UPDATE marketplace_listings 
-        SET views_count = views_count + 1 
-        WHERE id = $1
-    `, id)
-	if err != nil {
-		// Логируем ошибку, но не прерываем выполнение
-		log.Printf("Error updating views count: %v", err)
-	}
+    // Увеличиваем счетчик просмотров в отдельной горутине
+    go func() {
+        timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+        
+        _, err = db.pool.Exec(timeoutCtx, `
+            UPDATE marketplace_listings 
+            SET views_count = views_count + 1 
+            WHERE id = $1
+        `, id)
+        if err != nil {
+            log.Printf("Error updating views count: %v", err)
+        }
+    }()
 
-	// Получаем изображения для объявления
-	images, err := db.GetListingImages(ctx, fmt.Sprintf("%d", id))
-	if err != nil {
-		// Логируем ошибку, но продолжаем без изображений
-		log.Printf("Error getting images for listing %d: %v", id, err)
-	} else {
-		listing.Images = images
-	}
+    // Получаем изображения
+    images, err := db.GetListingImages(ctx, fmt.Sprintf("%d", id))
+    if err != nil {
+        log.Printf("Error getting images for listing %d: %v", id, err)
+    } else {
+        listing.Images = images
+    }
 
-	return listing, nil
+    return listing, nil
 }

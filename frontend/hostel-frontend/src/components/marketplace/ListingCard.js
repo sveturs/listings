@@ -7,8 +7,11 @@ import {
     Typography,
     Box,
     Chip,
-    Button
+    Button,
+    Rating,
+    Stack
 } from '@mui/material';
+import { Star } from 'lucide-react';
 import { MapPin as LocationIcon, Clock as AccessTime, Camera } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
@@ -100,6 +103,24 @@ const ListingCard = ({ listing, isMobile }) => {
                 >
                     {listing.title || 'Без названия'}
                 </Typography>
+
+                {/* Добавляем рейтинг */}
+                {listing.rating > 0 && (
+                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 1 }}>
+                        <Rating 
+                            value={listing.rating} 
+                            readOnly 
+                            size="small" 
+                            precision={0.1}
+                        />
+                        <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                        >
+                            ({listing.reviews_count})
+                        </Typography>
+                    </Stack>
+                )}
 
                 <Typography 
                     variant={isMobile ? "body2" : "h5"} 

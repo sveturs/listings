@@ -12,6 +12,7 @@ import CarListPage from "./pages/CarListPage";
 import AddCarPage from "./pages/AddCarPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import CreateListingPage from "./pages/CreateListingPage";
+import ListingDetailsPage from './pages/ListingDetailsPage';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/add-car" element={<AddCarPage />} /> {/* Добавление автомобиля */}
             <Route path="/marketplace" element={<MarketplacePage />} />
             <Route path="/marketplace/create" element={<CreateListingPage />} />
+            <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
           
           </Routes>
         </Layout>

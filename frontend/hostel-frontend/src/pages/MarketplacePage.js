@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -211,7 +212,12 @@ const MarketplacePage = () => {
                         <Grid container spacing={2}>
                             {listings.map((listing) => (
                                 <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                                    <ListingCard listing={listing} />
+                                    <Link
+                                        to={`/marketplace/listings/${listing.id}`}
+                                        style={{ textDecoration: 'none' }}
+                                    >
+                                        <ListingCard listing={listing} isMobile={isMobile} />
+                                    </Link>
                                 </Grid>
                             ))}
                         </Grid>

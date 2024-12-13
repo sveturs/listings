@@ -8,6 +8,7 @@ import (
     "github.com/gofiber/fiber/v2"
     "strconv"
     "log"
+
 )
 
 type MarketplaceHandler struct {
@@ -220,6 +221,8 @@ func (h *MarketplaceHandler) RemoveFromFavorites(c *fiber.Ctx) error {
     })
 }
 // GetListing - получение объявления по ID
+// backend/internal/handlers/marketplace.go
+
 func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
     id, err := strconv.Atoi(c.Params("id"))
     if err != nil {
@@ -228,7 +231,11 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 
     listing, err := h.services.Marketplace().GetListingByID(c.Context(), id)
     if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+        log.Printf("Error getting listing %d: %v", id, err)
+        if err.Error() == "listing not found" {
+            return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+        }
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listing")
     }
 
     return utils.SuccessResponse(c, listing)
