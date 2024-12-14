@@ -5,7 +5,7 @@ import { PencilLine } from 'lucide-react';
 import { ReviewForm, ReviewCard, RatingStats } from './ReviewComponents';
 import axios from '../../api/axios';
 
-const ReviewsSection = ({ 
+const ReviewsSection = ({
     entityType, // тип сущности (listing, room, car)
     entityId,   // ID сущности
     entityTitle, // название сущности для отображения
@@ -32,7 +32,7 @@ const ReviewsSection = ({
                 }),
                 axios.get(`/api/v1/entity/${entityType}/${entityId}/stats`)
             ]);
-    
+
             // Добавим проверку данных
             setReviews(reviewsResponse.data.data || []);  // Если нет данных, используем пустой массив
             setStats(statsResponse.data.data);
@@ -49,39 +49,39 @@ const ReviewsSection = ({
     }, [entityType, entityId]);
 
     // Обработка создания/редактирования отзыва
-    const handleReviewSubmit = async (formData) => {
+    const handleReviewSubmit = async ({ reviewData, photosFormData }) => {
         try {
-            if (editingReview) {
-                await axios.put(`/api/v1/reviews/${editingReview.id}`, formData);
-                setSnackbar({
-                    open: true,
-                    message: 'Отзыв успешно обновлен',
-                    severity: 'success'
-                });
-            } else {
-                await axios.post('/api/v1/reviews', {
-                    ...formData,
-                    entity_type: entityType,
-                    entity_id: entityId
-                });
-                setSnackbar({
-                    open: true,
-                    message: 'Отзыв успешно опубликован',
-                    severity: 'success'
+            console.log('Sending review data:', reviewData);
+            
+            // Сначала создаем отзыв
+            const response = await axios.post('/api/v1/reviews', reviewData);
+            
+            // Если есть фотографии и отзыв успешно создан - загружаем их
+            if (photosFormData && response.data && response.data.id) {
+                await axios.post(`/api/v1/reviews/${response.data.id}/photos`, photosFormData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
                 });
             }
+    
             setShowReviewForm(false);
             setEditingReview(null);
             fetchData();
-        } catch (err) {
             setSnackbar({
                 open: true,
-                message: 'Ошибка при сохранении отзыва',
+                message: 'Отзыв успешно создан',
+                severity: 'success'
+            });
+        } catch (err) {
+            console.error('Error submitting review:', err);
+            setSnackbar({
+                open: true,
+                message: err.response?.data?.error || 'Ошибка при сохранении отзыва',
                 severity: 'error'
             });
         }
     };
-
     // Обработка голосования за отзыв
     const handleVote = async (reviewId, voteType) => {
         try {
@@ -200,6 +200,8 @@ const ReviewsSection = ({
                 </DialogTitle>
                 <DialogContent>
                     <ReviewForm
+                        entityType={entityType}
+                        entityId={entityId}
                         initialData={editingReview}
                         onSubmit={handleReviewSubmit}
                         onCancel={() => {

@@ -1,3 +1,4 @@
+//frontend/hostel-frontend/src/components/Review.js
 import React, { useState } from 'react';
 import {
     Box,
@@ -11,7 +12,6 @@ import {
     Stack,
     Chip,
     IconButton,
-    Divider,
     List,
     ListItem
 } from '@mui/material';
@@ -20,7 +20,6 @@ import {
     ThumbsDown,
     MessageSquare,
     Flag,
-    Image,
     Check
 } from 'lucide-react';
 
@@ -202,183 +201,5 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
     );
 };
 
-// Компонент формы создания отзыва
-const ReviewForm = ({ onSubmit, initialRating = 0 }) => {
-    const [review, setReview] = useState({
-        rating: initialRating,
-        comment: '',
-        pros: '',
-        cons: '',
-        photos: []
-    });
-    const [previewUrls, setPreviewUrls] = useState([]);
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSubmit(review);
-    };
-
-    const handlePhotoUpload = (e) => {
-        const files = Array.from(e.target.files);
-        
-        // Проверяем ограничения
-        if (files.length + review.photos.length > 10) {
-            alert('Можно загрузить максимум 10 фотографий');
-            return;
-        }
-
-        // Обрабатываем каждый файл
-        const validFiles = files.filter(file => {
-            if (!file.type.startsWith('image/')) {
-                alert('Можно загружать только изображения');
-                return false;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Размер файла не должен превышать 5MB');
-                return false;
-            }
-            return true;
-        });
-
-        setReview(prev => ({
-            ...prev,
-            photos: [...prev.photos, ...validFiles]
-        }));
-
-        // Создаем превью для каждого файла
-        validFiles.forEach(file => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewUrls(prev => [...prev, reader.result]);
-            };
-            reader.readAsDataURL(file);
-        });
-    };
-
-    const removePhoto = (index) => {
-        setReview(prev => ({
-            ...prev,
-            photos: prev.photos.filter((_, i) => i !== index)
-        }));
-        setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-    };
-
-    return (
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <Stack spacing={3}>
-                {/* Рейтинг */}
-                <Box>
-                    <Typography gutterBottom>Общая оценка</Typography>
-                    <Rating
-                        value={review.rating}
-                        onChange={(e, newValue) => setReview({ ...prev => ({ ...prev, rating: newValue })})}
-                        size="large"
-                        required
-                    />
-                </Box>
-
-                {/* Комментарий */}
-                <TextField
-                    label="Комментарий"
-                    multiline
-                    rows={4}
-                    value={review.comment}
-                    onChange={(e) => setReview(prev => ({ ...prev, comment: e.target.value }))}
-                    required
-                />
-
-                {/* Достоинства */}
-                <TextField
-                    label="Достоинства"
-                    multiline
-                    rows={2}
-                    value={review.pros}
-                    onChange={(e) => setReview(prev => ({ ...prev, pros: e.target.value }))}
-                    placeholder="Что вам особенно понравилось?"
-                />
-
-                {/* Недостатки */}
-                <TextField
-                    label="Недостатки"
-                    multiline
-                    rows={2}
-                    value={review.cons}
-                    onChange={(e) => setReview(prev => ({ ...prev, cons: e.target.value }))}
-                    placeholder="Что можно было бы улучшить?"
-                />
-
-                {/* Загрузка фотографий */}
-                <Box>
-                    <Button
-                        variant="outlined"
-                        component="label"
-                        startIcon={<Image />}
-                    >
-                        Добавить фото
-                        <input
-                            type="file"
-                            hidden
-                            multiple
-                            accept="image/*"
-                            onChange={handlePhotoUpload}
-                        />
-                    </Button>
-                    
-                    {/* Превью фотографий */}
-                    <Box sx={{ 
-                        display: 'flex', 
-                        gap: 1, 
-                        flexWrap: 'wrap',
-                        mt: 2 
-                    }}>
-                        {previewUrls.map((url, index) => (
-                            <Box
-                                key={index}
-                                sx={{
-                                    position: 'relative',
-                                    width: 100,
-                                    height: 100
-                                }}
-                            >
-                                <img
-                                    src={url}
-                                    alt={`Preview ${index}`}
-                                    style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        objectFit: 'cover',
-                                        borderRadius: '4px'
-                                    }}
-                                />
-                                <IconButton
-                                    size="small"
-                                    sx={{
-                                        position: 'absolute',
-                                        top: -10,
-                                        right: -10,
-                                        bgcolor: 'background.paper'
-                                    }}
-                                    onClick={() => removePhoto(index)}
-                                >
-                                    <X size={16} />
-                                </IconButton>
-                            </Box>
-                        ))}
-                    </Box>
-                </Box>
-
-                {/* Кнопка отправки */}
-                <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    disabled={!review.rating || !review.comment}
-                >
-                    Опубликовать отзыв
-                </Button>
-            </Stack>
-        </Box>
-    );
-};
 
 export default ReviewForm;

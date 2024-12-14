@@ -29,8 +29,11 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
     var request models.CreateReviewRequest
 
     if err := c.BodyParser(&request); err != nil {
+        log.Printf("Error parsing request body: %v", err)
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
     }
+
+    log.Printf("Creating review: %+v", request) // Добавить логирование
 
     err := h.services.Review().CreateReview(c.Context(), userId, &request)
     if err != nil {

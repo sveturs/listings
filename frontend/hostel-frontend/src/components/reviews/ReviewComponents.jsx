@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 
 // Компонент формы создания/редактирования отзыва
-const ReviewForm = ({ onSubmit, initialData = null, onCancel }) => {
+const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entityId }) => {
     const [formData, setFormData] = useState({
         rating: initialData?.rating || 0,
         comment: initialData?.comment || '',
@@ -38,28 +38,49 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel }) => {
         photos: initialData?.photos || []
     });
     const [photoFiles, setPhotoFiles] = useState([]);
+// В компоненте ReviewForm, перед handleSubmit добавляем:
 
-    const handlePhotoAdd = (event) => {
-        const files = Array.from(event.target.files);
-        if (files.length + photoFiles.length > 10) {
-            alert('Максимум 10 фотографий');
-            return;
-        }
-        setPhotoFiles(prev => [...prev, ...files]);
-    };
+const handlePhotoAdd = (event) => {
+    const files = Array.from(event.target.files);
+    
+    // Валидация файлов
+    const validFiles = files.filter(file => {
+        const isValidType = file.type.startsWith('image/');
+        const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
+        return isValidType && isValidSize;
+    });
 
+    if (validFiles.length + photoFiles.length > 10) {
+        alert('Можно загрузить максимум 10 фотографий');
+        return;
+    }
+
+    setPhotoFiles(prev => [...prev, ...validFiles]);
+};
     const handleSubmit = (e) => {
         e.preventDefault();
-        const formDataToSend = new FormData();
-        Object.keys(formData).forEach(key => {
-            if (key !== 'photos') {
-                formDataToSend.append(key, formData[key]);
-            }
-        });
-        photoFiles.forEach(file => {
-            formDataToSend.append('photos', file);
-        });
-        onSubmit(formDataToSend);
+        
+        // Создаем объект с данными отзыва
+        const reviewData = {
+            entity_type: entityType,
+            entity_id: entityId,
+            rating: parseInt(formData.rating), // преобразуем в число
+            comment: formData.comment,
+            pros: formData.pros,
+            cons: formData.cons
+        };
+
+        // Если есть фотографии, создаем FormData для них
+        let photosFormData = null;
+        if (photoFiles.length > 0) {
+            photosFormData = new FormData();
+            photoFiles.forEach(file => {
+                photosFormData.append('photos', file);
+            });
+        }
+
+        // Отправляем данные
+        onSubmit({ reviewData, photosFormData });
     };
 
     return (

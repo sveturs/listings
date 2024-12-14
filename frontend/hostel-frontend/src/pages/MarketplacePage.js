@@ -121,7 +121,17 @@ const MarketplacePage = () => {
                         <Grid container spacing={1}>
                             {listings.map((listing) => (
                                 <Grid item xs={4} key={listing.id}>
-                                    <ListingCard listing={listing} isMobile={true} />
+                                    <Link
+                                        to={`/marketplace/listings/${listing.id}`}
+                                        style={{ textDecoration: 'none' }}
+                                        onClick={(e) => {
+                                            // Stop event propagation if needed
+                                            e.stopPropagation();
+                                            navigate(`/marketplace/listings/${listing.id}`);
+                                        }}
+                                    >
+                                        <ListingCard listing={listing} isMobile={true} />
+                                    </Link>
                                 </Grid>
                             ))}
                         </Grid>
@@ -210,13 +220,14 @@ const MarketplacePage = () => {
                         </Box>
                     ) : (
                         <Grid container spacing={2}>
+
                             {listings.map((listing) => (
-                                <Grid item xs={12} sm={6} md={4} key={listing.id}>
+                                <Grid item xs={4} key={listing.id}>
                                     <Link
                                         to={`/marketplace/listings/${listing.id}`}
                                         style={{ textDecoration: 'none' }}
                                     >
-                                        <ListingCard listing={listing} isMobile={isMobile} />
+                                        <ListingCard listing={listing} isMobile={true} />
                                     </Link>
                                 </Grid>
                             ))}
