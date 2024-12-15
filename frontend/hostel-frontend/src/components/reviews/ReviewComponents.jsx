@@ -1,5 +1,6 @@
 //frontend/hostel-frontend/src/components/reviews/ReviewComponents.jsx
 import React, { useState } from 'react';
+import { useMediaQuery } from '@mui/material';
 import {
     Box,
     Typography,
@@ -220,10 +221,8 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
         setReplyText('');
         setShowReplyForm(false);
     };
-    console.log('ReviewCard votes:', {
-        helpful: review.helpful_votes,
-        notHelpful: review.not_helpful_votes
-    });
+
+    const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm')); // Проверка мобильного устройства
 
     return (
         <Card sx={{ mb: 2 }}>
@@ -245,13 +244,19 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                     {new Date(review.created_at).toLocaleDateString()}
                                 </Typography>
                             </Box>
+
+                            {/* Проверенная покупка */}
                             {review.is_verified_purchase && (
-                                <Chip
-                                    icon={<CheckCircle2 size={16} />}
-                                    label="Проверенная покупка"
-                                    size="small"
-                                    color="success"
-                                />
+                                isMobile ? (
+                                    <CheckCircle2 size={20} color="green" /> // Только значок для мобильной версии
+                                ) : (
+                                    <Chip
+                                        icon={<CheckCircle2 size={16} />}
+                                        label="Проверенная покупка"
+                                        size="small"
+                                        color="success"
+                                    />
+                                )
                             )}
                         </Stack>
 
@@ -326,6 +331,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                         </Stack>
                     )}
 
+                    {/* Кнопки голосования */}
                     <Stack direction="row" spacing={2}>
                         <Button
                             size="small"
@@ -333,7 +339,11 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                             startIcon={<ThumbsUp />}
                             variant={review.current_user_vote === 'helpful' ? 'contained' : 'outlined'}
                         >
-                            Полезно ({review.helpful_votes || 0})
+                            {isMobile ? (
+                                `(${review.helpful_votes || 0})`
+                            ) : (
+                                `ЗА (${review.helpful_votes || 0})`
+                            )}
                         </Button>
                         <Button
                             size="small"
@@ -341,24 +351,41 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                             startIcon={<ThumbsDown />}
                             variant={review.current_user_vote === 'not_helpful' ? 'contained' : 'outlined'}
                         >
-                            Не полезно ({review.not_helpful_votes || 0})
+                            {isMobile ? (
+                                `(${review.not_helpful_votes || 0})`
+                            ) : (
+                                `НЕ ЗА (${review.not_helpful_votes || 0})`
+                            )}
                         </Button>
 
-
-                        <Button
-                            size="small"
-                            startIcon={<MessageSquare />}
-                            onClick={() => setShowReplyForm(!showReplyForm)}
-                        >
-                            Ответить
-                        </Button>
-                        <Button
-                            size="small"
-                            startIcon={<Flag />}
-                            onClick={() => onReport(review.id)}
-                        >
-                            Пожаловаться
-                        </Button>
+                        {/* Ответить и пожаловаться */}
+                        {isMobile ? (
+                            <>
+                                <IconButton onClick={() => setShowReplyForm(!showReplyForm)}>
+                                    <MessageSquare size={20} />
+                                </IconButton>
+                                <IconButton onClick={() => onReport(review.id)}>
+                                    <Flag size={20} />
+                                </IconButton>
+                            </>
+                        ) : (
+                            <>
+                                <Button
+                                    size="small"
+                                    startIcon={<MessageSquare />}
+                                    onClick={() => setShowReplyForm(!showReplyForm)}
+                                >
+                                    Ответить
+                                </Button>
+                                <Button
+                                    size="small"
+                                    startIcon={<Flag />}
+                                    onClick={() => onReport(review.id)}
+                                >
+                                    Пожаловаться
+                                </Button>
+                            </>
+                        )}
                     </Stack>
 
                     {showReplyForm && (
@@ -421,6 +448,8 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
         </Card>
     );
 };
+
+
 
 // Компонент статистики рейтингов
 const RatingStats = ({ stats }) => {

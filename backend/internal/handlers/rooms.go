@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-
+    "strings"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -208,6 +208,16 @@ func (h *RoomHandler) UploadImages(c *fiber.Ctx) error {
 		image.ID = imageID
 		uploadedImages = append(uploadedImages, image)
 		isMain = false
+        for _, file := range files {
+            contentType := file.Header.Get("Content-Type")
+            if !strings.HasPrefix(contentType, "image/") {
+                return utils.ErrorResponse(c, fiber.StatusBadRequest, "Поддерживаются только изображения")
+            }
+        
+            if contentType != "image/jpeg" && contentType != "image/png" {
+                return utils.ErrorResponse(c, fiber.StatusBadRequest, "Формат изображения неподдерживается")
+            }
+        }
 	}
     log.Println("UploadImages handler completed successfully")
     return utils.SuccessResponse(c, uploadedImages)

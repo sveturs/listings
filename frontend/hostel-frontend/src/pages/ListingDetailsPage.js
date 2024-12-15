@@ -287,6 +287,7 @@ const ListingDetailsPage = () => {
                 <Grid item xs={12} md={4}>
                     <Box sx={{ position: 'sticky', top: 24 }}>
                         {/* Карточка с ценой и контактами */}
+                        {/* Карточка с ценой и контактами */}
                         <Card elevation={2}>
                             <CardContent>
                                 <Typography variant="h4" gutterBottom>
@@ -297,16 +298,22 @@ const ListingDetailsPage = () => {
                                     <Button
                                         variant="contained"
                                         fullWidth
-                                        startIcon={<Phone />}
+                                        startIcon={!isMobile && <Phone />}
+                                        onClick={() => {
+                                            // Здесь можно добавить логику для звонка
+                                        }}
                                     >
-                                        Позвонить
+                                        {isMobile ? <Phone size={20} /> : 'Позвонить'}
                                     </Button>
                                     <Button
                                         variant="outlined"
                                         fullWidth
-                                        startIcon={<MessageCircle />}
+                                        startIcon={!isMobile && <MessageCircle />}
+                                        onClick={() => {
+                                            // Здесь можно добавить логику для отправки сообщения
+                                        }}
                                     >
-                                        Написать
+                                        {isMobile ? <MessageCircle size={20} /> : 'Написать'}
                                     </Button>
                                 </Stack>
 
@@ -314,17 +321,25 @@ const ListingDetailsPage = () => {
                                     <Button
                                         variant="outlined"
                                         fullWidth
-                                        startIcon={<Heart fill={listing.is_favorite ? 'currentColor' : 'none'} />}
+                                        startIcon={!isMobile && <Heart fill={listing.is_favorite ? 'currentColor' : 'none'} />}
                                         onClick={handleFavoriteClick}
                                     >
-                                        {listing.is_favorite ? 'В избранном' : 'В избранное'}
+                                        {isMobile ? (
+                                            <Heart
+                                                size={20}
+                                                fill={listing.is_favorite ? 'currentColor' : 'none'}
+                                            />
+                                        ) : listing.is_favorite ? 'В избранном' : 'В избранное'}
                                     </Button>
                                     <Button
                                         variant="outlined"
                                         fullWidth
-                                        startIcon={<Share2 />}
+                                        startIcon={!isMobile && <Share2 />}
+                                        onClick={() => {
+                                            // Здесь можно добавить логику для шаринга
+                                        }}
                                     >
-                                        Поделиться
+                                        {isMobile ? <Share2 size={20} /> : 'Поделиться'}
                                     </Button>
                                 </Stack>
                             </CardContent>

@@ -111,6 +111,7 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 
     for i, file := range files {
         // Обработка файла
+        log.Printf("Processing file %d: Name=%s, Size=%d, ContentType=%s", i, file.Filename, file.Size, file.Header.Get("Content-Type"))
         fileName, err := h.services.Marketplace().ProcessImage(file)
         if err != nil {
             log.Printf("Failed to process image: %v", err)

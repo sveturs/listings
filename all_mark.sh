@@ -14,7 +14,7 @@ file_extensions=(
     "go"
     "js"
     "sql"
-#    "jsx"
+    "jsx"
 #    "ts"
 #    "tsx"
     "json"
@@ -28,11 +28,10 @@ specific_files=(
 "backend/cmd/api/main.go"
 "backend/internal/config/config.go"
 "backend/internal/domain/models/models.go"
-
+"backend/internal/domain/models/review.go"
+"backend/internal/handlers/reviews.go"
 "backend/internal/handlers/auth.go"
 "backend/internal/handlers/handler.go"
- 
-
 "backend/internal/handlers/users.go"
 "backend/internal/middleware/auth.go"
 "backend/internal/middleware/cors.go"
@@ -41,10 +40,11 @@ specific_files=(
 "backend/internal/server/server.go"
 "backend/internal/services/auth.go"
 "backend/internal/services/interfaces.go"
- 
+"backend/internal/services/review.go"
 "backend/internal/services/services.go"
 "backend/internal/services/user.go"
 "backend/internal/storage/postgres/db.go"
+"backend/internal/storage/postgres/reviews.go"
 "backend/internal/storage/postgres/user.go"
 "backend/internal/storage/storage.go"
 "backend/internal/types/auth.go"
@@ -61,13 +61,11 @@ specific_files=(
 "nginx.conf"
 "nginx.local.conf"
 # сервер маркет
-"backend/internal/domain/models/review.go"
+
 "backend/internal/handlers/marketplace.go"
-"backend/internal/handlers/reviews.go"
 "backend/internal/services/marketplace.go"
-"backend/internal/services/review.go"
 "backend/internal/storage/postgres/marketplace.go"
-"backend/internal/storage/postgres/reviews.go"
+
 # общие фронт
 "frontend/hostel-frontend/package.json"
 "frontend/hostel-frontend/.env"
@@ -80,15 +78,25 @@ specific_files=(
 "frontend/hostel-frontend/src/setupProxy.js"
 "frontend/hostel-frontend/src/api/axios.js"
 "frontend/hostel-frontend/src/components/Layout.js"
+"frontend/hostel-frontend/src/components/reviews/index.js"
+"frontend/hostel-frontend/src/components/reviews/ReviewCard.js"
+"frontend/hostel-frontend/src/components/reviews/ReviewComponents.jsx"
+"frontend/hostel-frontend/src/components/reviews/ReviewForm.js"
+"frontend/hostel-frontend/src/components/reviews/ReviewsSection.js"
+"frontend/hostel-frontend/src/components/Review.js"
 "frontend/hostel-frontend/src/contexts/AuthContext.js"
+"frontend/hostel-frontend/src/pages/CreateListingPage.js"
+"frontend/hostel-frontend/src/setupProxy.js"
+
 
 # фронт маркет
 "frontend/hostel-frontend/src/components/marketplace/CategoryTree.js"
 "frontend/hostel-frontend/src/components/marketplace/ItemDetails.js"
 "frontend/hostel-frontend/src/components/marketplace/ListingCard.js"
 "frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js"
-"frontend/hostel-frontend/src/pages/CreateListingPage.js"
+"frontend/hostel-frontend/src/components/marketplace/MobileMarketplacePage.js"
 "frontend/hostel-frontend/src/pages/MarketplacePage.js"
+"frontend/hostel-frontend/src/pages/ListingDetailsPage.js"
 "frontend/hostel-frontend/src/components/reviews/ReviewCard.js"
 "frontend/hostel-frontend/src/components/reviews/ReviewForm.js"
 "frontend/hostel-frontend/src/components/reviews/ReviewsSection.js"
