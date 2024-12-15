@@ -19,6 +19,8 @@ type Review struct {
     Status            string    `json:"status"`
     CreatedAt         time.Time `json:"created_at"`
     UpdatedAt         time.Time `json:"updated_at"`
+	HelpfulVotes      int       `json:"helpful_votes"`       
+	NotHelpfulVotes   int       `json:"not_helpful_votes"`   
     
     // Дополнительные поля для отображения
     User              *User     `json:"user,omitempty"`

@@ -46,7 +46,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
         // Валидация файлов
         const validFiles = files.filter(file => {
             const isValidType = file.type.startsWith('image/');
-            const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
+            const isValidSize = file.size <= 15 * 1024 * 1024; // 5MB
             return isValidType && isValidSize;
         });
 
@@ -220,6 +220,10 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
         setReplyText('');
         setShowReplyForm(false);
     };
+    console.log('ReviewCard votes:', {
+        helpful: review.helpful_votes,
+        notHelpful: review.not_helpful_votes
+    });
 
     return (
         <Card sx={{ mb: 2 }}>
@@ -325,20 +329,22 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                     <Stack direction="row" spacing={2}>
                         <Button
                             size="small"
-                            startIcon={<ThumbsUp />}
                             onClick={() => onVote(review.id, 'helpful')}
-                            color={review.current_user_vote === 'helpful' ? 'primary' : 'inherit'}
+                            startIcon={<ThumbsUp />}
+                            variant={review.current_user_vote === 'helpful' ? 'contained' : 'outlined'}
                         >
-                            Полезно ({review.votes_count?.helpful || 0})
+                            Полезно ({review.helpful_votes || 0})
                         </Button>
                         <Button
                             size="small"
-                            startIcon={<ThumbsDown />}
                             onClick={() => onVote(review.id, 'not_helpful')}
-                            color={review.current_user_vote === 'not_helpful' ? 'primary' : 'inherit'}
+                            startIcon={<ThumbsDown />}
+                            variant={review.current_user_vote === 'not_helpful' ? 'contained' : 'outlined'}
                         >
-                            Не полезно ({review.votes_count?.not_helpful || 0})
+                            Не полезно ({review.not_helpful_votes || 0})
                         </Button>
+
+
                         <Button
                             size="small"
                             startIcon={<MessageSquare />}

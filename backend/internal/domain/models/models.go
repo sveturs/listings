@@ -74,28 +74,28 @@ type CarFeature struct {
 }
 
 type Room struct {
-    ID                 int       `json:"id"`
-    Name               string    `json:"name"`
-    Capacity           int       `json:"capacity"`
-    PricePerNight      float64   `json:"price_per_night"`
-    AddressStreet      string    `json:"address_street"`
-    AddressCity        string    `json:"address_city"`
-    AddressState       string    `json:"address_state"`
-    AddressCountry     string    `json:"address_country"`
-    AddressPostalCode  string    `json:"address_postal_code"`
-    AccommodationType  string    `json:"accommodation_type"`
-    IsShared           bool      `json:"is_shared"`
-    TotalBeds          *int      `json:"total_beds,omitempty"`      // Сделали указателем
-    AvailableBeds      *int      `json:"available_beds,omitempty"`  // Сделали указателем
-    HasPrivateBathroom bool      `json:"has_private_bathroom"`
-    Latitude           *float64  `json:"latitude,omitempty"`        // Сделали указателем
-    Longitude          *float64  `json:"longitude,omitempty"`       // Сделали указателем
-    FormattedAddress   string    `json:"formatted_address"`
-    CreatedAt          time.Time `json:"created_at"`
-    ActualPrice        float64   `json:"actual_price"`
-    AvailableCount     int       `json:"available_count"`
-    Rating             float64   `json:"rating"`
-    Images             []RoomImage `json:"images,omitempty"`
+	ID                 int         `json:"id"`
+	Name               string      `json:"name"`
+	Capacity           int         `json:"capacity"`
+	PricePerNight      float64     `json:"price_per_night"`
+	AddressStreet      string      `json:"address_street"`
+	AddressCity        string      `json:"address_city"`
+	AddressState       string      `json:"address_state"`
+	AddressCountry     string      `json:"address_country"`
+	AddressPostalCode  string      `json:"address_postal_code"`
+	AccommodationType  string      `json:"accommodation_type"`
+	IsShared           bool        `json:"is_shared"`
+	TotalBeds          *int        `json:"total_beds,omitempty"`     // Сделали указателем
+	AvailableBeds      *int        `json:"available_beds,omitempty"` // Сделали указателем
+	HasPrivateBathroom bool        `json:"has_private_bathroom"`
+	Latitude           *float64    `json:"latitude,omitempty"`  // Сделали указателем
+	Longitude          *float64    `json:"longitude,omitempty"` // Сделали указателем
+	FormattedAddress   string      `json:"formatted_address"`
+	CreatedAt          time.Time   `json:"created_at"`
+	ActualPrice        float64     `json:"actual_price"`
+	AvailableCount     int         `json:"available_count"`
+	Rating             float64     `json:"rating"`
+	Images             []RoomImage `json:"images,omitempty"`
 }
 
 type RoomImage struct {
@@ -137,54 +137,56 @@ type Bed struct {
 	BedType       string  `json:"bed_type"`
 }
 type MarketplaceListing struct {
-    ID          int       `json:"id"`
-    UserID      int       `json:"user_id"`
-    CategoryID  int       `json:"category_id"`
-    Title       string    `json:"title"`
-    Description string    `json:"description"`
-    Price       float64   `json:"price"`
-    Condition   string    `json:"condition"`
-    Status      string    `json:"status"`
-    Location    string    `json:"location"`
-    Latitude    *float64  `json:"latitude,omitempty"`
-    Longitude   *float64  `json:"longitude,omitempty"`
-    City        string    `json:"city"`
-    Country     string    `json:"country"`
-    ViewsCount  int       `json:"views_count"`
-    CreatedAt   time.Time `json:"created_at"`
-    UpdatedAt   time.Time `json:"updated_at"`
-    Images      []MarketplaceImage `json:"images,omitempty"`
-    User        *User     `json:"user,omitempty"`
-    Category    *MarketplaceCategory `json:"category,omitempty"`
+	ID              int                  `json:"id"`
+	UserID          int                  `json:"user_id"`
+	CategoryID      int                  `json:"category_id"`
+	Title           string               `json:"title"`
+	Description     string               `json:"description"`
+	Price           float64              `json:"price"`
+	Condition       string               `json:"condition"`
+	Status          string               `json:"status"`
+	Location        string               `json:"location"`
+	Latitude        *float64             `json:"latitude,omitempty"`
+	Longitude       *float64             `json:"longitude,omitempty"`
+	City            string               `json:"city"`
+	Country         string               `json:"country"`
+	ViewsCount      int                  `json:"views_count"`
+	CreatedAt       time.Time            `json:"created_at"`
+	UpdatedAt       time.Time            `json:"updated_at"`
+	Images          []MarketplaceImage   `json:"images,omitempty"`
+	User            *User                `json:"user,omitempty"`
+	Category        *MarketplaceCategory `json:"category,omitempty"`
+	HelpfulVotes    int                  `json:"helpful_votes"`
+	NotHelpfulVotes int                  `json:"not_helpful_votes"`
 }
 
 type MarketplaceCategory struct {
-    ID        int       `json:"id"`
-    Name      string    `json:"name"`
-    Slug      string    `json:"slug"`
-    ParentID  *int      `json:"parent_id,omitempty"`
-    Icon      string    `json:"icon,omitempty"`
-    CreatedAt time.Time `json:"created_at"`
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Slug      string    `json:"slug"`
+	ParentID  *int      `json:"parent_id,omitempty"`
+	Icon      string    `json:"icon,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 }
 type MarketplaceImage struct {
-    ID          int       `json:"id"`
-    ListingID   int       `json:"listing_id"`
-    FilePath    string    `json:"file_path"`
-    FileName    string    `json:"file_name"`
-    FileSize    int       `json:"file_size"`
-    ContentType string    `json:"content_type"`
-    IsMain      bool      `json:"is_main"`
-    CreatedAt   time.Time    `json:"created_at"`
+	ID          int       `json:"id"`
+	ListingID   int       `json:"listing_id"`
+	FilePath    string    `json:"file_path"`
+	FileName    string    `json:"file_name"`
+	FileSize    int       `json:"file_size"`
+	ContentType string    `json:"content_type"`
+	IsMain      bool      `json:"is_main"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 type CategoryTreeNode struct {
-    ID           int       `json:"id"`
-    Name         string    `json:"name"`
-    Slug         string    `json:"slug"`
-    Icon         string    `json:"icon,omitempty"`
-    ParentID     *int      `json:"parent_id,omitempty"`
-    CreatedAt    time.Time `json:"created_at"`
-    Level        int       `json:"level"`
-    Path         string    `json:"path"`
-    ListingCount int       `json:"listing_count"`
-    Children     []CategoryTreeNode `json:"children,omitempty"`
+	ID           int                `json:"id"`
+	Name         string             `json:"name"`
+	Slug         string             `json:"slug"`
+	Icon         string             `json:"icon,omitempty"`
+	ParentID     *int               `json:"parent_id,omitempty"`
+	CreatedAt    time.Time          `json:"created_at"`
+	Level        int                `json:"level"`
+	Path         string             `json:"path"`
+	ListingCount int                `json:"listing_count"`
+	Children     []CategoryTreeNode `json:"children,omitempty"`
 }

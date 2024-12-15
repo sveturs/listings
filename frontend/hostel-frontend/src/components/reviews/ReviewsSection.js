@@ -36,9 +36,9 @@ const ReviewsSection = ({
             ]);
             console.log('Reviews response:', reviewsResponse.data);
             console.log('Stats response:', statsResponse.data);
-            
-            setReviews(reviewsResponse.data.data.data || []); // Изменена эта строка
-            setStats(statsResponse.data.data);
+    
+            setReviews(reviewsResponse.data.data.data  || []); // Обновляем отзывы
+            setStats(statsResponse.data.data); // Обновляем статистику
         } catch (err) {
             setError('Не удалось загрузить отзывы');
             console.error('Error fetching reviews:', err);
@@ -46,6 +46,7 @@ const ReviewsSection = ({
             setLoading(false);
         }
     };
+    
 
     useEffect(() => {
         fetchData();
@@ -91,21 +92,50 @@ const ReviewsSection = ({
     };
     // Обработка голосования за отзыв
     const handleVote = async (reviewId, voteType) => {
+        // Сохраняем старые данные для отката в случае ошибки
+        const oldReviews = [...reviews];
+        
+        // Оптимистично обновляем UI
+        setReviews((prevReviews) =>
+            prevReviews.map((review) =>
+                review.id === reviewId
+                    ? {
+                        ...review,
+                        votes_count: {
+                            ...review.votes_count,
+                            [voteType]: (review.votes_count?.[voteType] || 0) + 1,
+                        },
+                        current_user_vote: voteType,
+                    }
+                    : review
+            )
+        );
+    
         try {
-            console.log('Voting for review:', reviewId, voteType);
-            await axios.post(`/api/v1/reviews/${reviewId}/vote`, { vote_type: voteType });
-            console.log('Vote successful, fetching new data...');
-            await fetchData();
-            console.log('Data updated after vote');
+            // Отправляем голос на сервер
+            await axios.post(`/api/v1/reviews/${reviewId}/vote`, {
+                vote_type: voteType,
+            });
+            
+            // Важно! Убираем немедленный fetchData()
+            // Вместо этого подождем некоторое время перед обновлением данных
+            setTimeout(() => {
+                fetchData();
+            }, 1000);
+            
         } catch (err) {
-            console.error('Vote error:', err);
+            // В случае ошибки возвращаем старые данные
+            setReviews(oldReviews);
             setSnackbar({
                 open: true,
                 message: 'Ошибка при голосовании',
-                severity: 'error'
+                severity: 'error',
             });
         }
     };
+    
+    
+    
 
     // Обработка ответа на отзыв
     const handleReply = async (reviewId, response) => {

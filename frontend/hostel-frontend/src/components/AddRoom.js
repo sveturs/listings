@@ -69,7 +69,7 @@ const AddRoom = () => {
                 setErrorMessage("Можно загружать только изображения");
                 return false;
             }
-            if (file.size > 5 * 1024 * 1024) {
+            if (file.size > 15 * 1024 * 1024) {
                 setErrorMessage("Размер файла не должен превышать 5MB");
                 return false;
             }
@@ -120,7 +120,7 @@ const AddRoom = () => {
                 setErrorMessage("Можно загружать только изображения");
                 return false;
             }
-            if (file.size > 5 * 1024 * 1024) {
+            if (file.size > 15 * 1024 * 1024) {
                 setErrorMessage("Размер файла не должен превышать 5MB");
                 return false;
             }

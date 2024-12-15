@@ -80,7 +80,7 @@ const AddCarPage = () => {
         
         // Проверяем только размер
         const validFiles = files.filter(file => {
-            if (file.size > 10 * 1024 * 1024) { // Увеличим до 10MB
+            if (file.size > 15 * 1024 * 1024) { // Увеличим до 10MB
                 setErrorMessage("Размер файла не должен превышать 10MB");
                 return false;
             }

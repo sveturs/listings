@@ -71,7 +71,7 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
                                 {review.comment}
                             </Typography>
                         )}
-                        
+
                         {review.pros && (
                             <Box sx={{ mb: 1 }}>
                                 <Typography variant="subtitle2" color="success.main">
@@ -80,7 +80,7 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
                                 <Typography variant="body2">{review.pros}</Typography>
                             </Box>
                         )}
-                        
+
                         {review.cons && (
                             <Box sx={{ mb: 1 }}>
                                 <Typography variant="subtitle2" color="error.main">
@@ -116,17 +116,17 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
                             size="small"
                             startIcon={<ThumbsUp />}
                             onClick={() => onVote(review.id, 'helpful')}
-                            color={review.current_user_vote === 'helpful' ? 'primary' : 'inherit'}
+                            color={review.current_user_vote === 'helpful' ? 'success' : 'inherit'}
                         >
-                            Полезно ({review.votes_count.helpful})
+                            Полезно ({review.votes_count?.helpful || 0})
                         </Button>
                         <Button
                             size="small"
                             startIcon={<ThumbsDown />}
                             onClick={() => onVote(review.id, 'not_helpful')}
-                            color={review.current_user_vote === 'not_helpful' ? 'primary' : 'inherit'}
+                            color={review.current_user_vote === 'not_helpful' ? 'error' : 'inherit'}
                         >
-                            Не полезно ({review.votes_count.not_helpful})
+                            Не полезно ({review.votes_count?.not_helpful || 0})
                         </Button>
                         <Button
                             size="small"
