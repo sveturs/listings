@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { LoadScript } from '@react-google-maps/api';
 import MapView from './MapView';
 import BookingDialog from './BookingDialog';
+import RoomDetailsDialog from './RoomDetailsDialog';
 import AdvancedFilters from './AdvancedFilters';
 import {
     Grid,
@@ -32,6 +33,7 @@ import axios from '../api/axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const RoomList = () => {
+    const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
     const [rooms, setRooms] = useState([]);
     const [viewMode, setViewMode] = useState('list');
     const [selectedRoom, setSelectedRoom] = useState(null);
@@ -54,6 +56,10 @@ const RoomList = () => {
         sort_by: 'created_at',
         sort_direction: 'desc'
     });
+    const handleRoomClick = (room) => {
+        setSelectedRoom(room);
+        setDetailsDialogOpen(true);
+    };
 
     const fetchRooms = useCallback(async (isLoadMore = false) => {
         try {
@@ -130,16 +136,18 @@ const RoomList = () => {
     };
 
     const renderRoomCard = (room) => (
-        <Card sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            '&:hover': {
-                boxShadow: 6,
-                transform: 'translateY(-2px)',
-                transition: 'all 0.2s ease-in-out'
-            }
-        }}>
+        <Card
+            onClick={() => handleRoomClick(room)}
+            sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                '&:hover': {
+                    boxShadow: 6,
+                    transform: 'translateY(-2px)',
+                    transition: 'all 0.2s ease-in-out'
+                }
+            }}>
             <Box sx={{ position: 'relative', pt: '56.25%' }}>
                 <CardMedia
                     component="img"
@@ -245,6 +253,7 @@ const RoomList = () => {
         </Card>
     );
 
+
     return (
         <Box>
             <AdvancedFilters
@@ -322,6 +331,12 @@ const RoomList = () => {
 
             {selectedRoom && (
                 <>
+                    <RoomDetailsDialog
+                        open={detailsDialogOpen}
+                        onClose={() => setDetailsDialogOpen(false)}
+                        room={selectedRoom}
+                        onBook={handleBooking}
+                    />
                     <BookingDialog
                         open={bookingDialogOpen}
                         onClose={() => {

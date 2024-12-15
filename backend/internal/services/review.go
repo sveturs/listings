@@ -19,7 +19,9 @@ func NewReviewService(storage storage.Storage) ReviewServiceInterface {
     }
 }
 
-func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *models.CreateReviewRequest) error {
+// internal/services/review.go
+
+func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *models.CreateReviewRequest) (*models.Review, error) {
     review := &models.Review{
         UserID:     userId,
         EntityType: req.EntityType,
@@ -35,7 +37,13 @@ func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *model
     // Проверяем, является ли покупка верифицированной
     review.IsVerifiedPurchase = s.checkVerifiedPurchase(ctx, userId, req.EntityType, req.EntityID)
     
-    return s.storage.CreateReview(ctx, review)
+    // Исправляем эту строку, чтобы получить оба возвращаемых значения
+    createdReview, err := s.storage.CreateReview(ctx, review)
+    if err != nil {
+        return nil, err
+    }
+    
+    return createdReview, nil
 }
 
 func (s *ReviewService) GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error) {

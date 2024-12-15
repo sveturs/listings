@@ -24,6 +24,8 @@ func NewReviewHandler(services services.ServicesInterface) *ReviewHandler {
     }
 }
 
+// internal/handlers/reviews.go
+
 func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
     userId := c.Locals("user_id").(int)
     var request models.CreateReviewRequest
@@ -33,9 +35,9 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
     }
 
-    log.Printf("Creating review: %+v", request) // Добавить логирование
+    log.Printf("Creating review: %+v", request)
 
-    err := h.services.Review().CreateReview(c.Context(), userId, &request)
+    review, err := h.services.Review().CreateReview(c.Context(), userId, &request)
     if err != nil {
         log.Printf("Error creating review: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating review")
@@ -43,6 +45,7 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 
     return utils.SuccessResponse(c, fiber.Map{
         "message": "Review created successfully",
+        "id": review.ID,
     })
 }
 

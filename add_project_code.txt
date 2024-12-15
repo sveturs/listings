@@ -1,0 +1,2215 @@
+=== backend/internal/handlers/car.go ===
+
+//backend/internal/handlers/car.go
+package handlers
+
+import (
+	"backend/internal/domain/models"
+	"backend/pkg/utils"
+	"github.com/gofiber/fiber/v2"
+    "backend/internal/services"
+    "strconv"
+    "log"
+
+)
+type CarHandler struct {
+    services services.ServicesInterface
+}
+
+func NewCarHandler(services services.ServicesInterface) *CarHandler {
+    return &CarHandler{
+        services: services,
+    }
+}
+func (h *CarHandler) AddCar(c *fiber.Ctx) error {
+    var carData struct {
+        Make        string   `json:"make"`
+        Model       string   `json:"model"`
+        Year        int      `json:"year"`
+        PricePerDay float64  `json:"price_per_day"`
+        Location    string   `json:"location"`
+        Latitude    float64  `json:"latitude"`
+        Longitude   float64  `json:"longitude"`
+        Description string   `json:"description"`
+        Availability bool    `json:"availability"`
+        Transmission string  `json:"transmission"`
+        FuelType    string   `json:"fuel_type"`
+        Seats       int      `json:"seats"`
+        Features    []string `json:"features"`
+    }
+
+    if err := c.BodyParser(&carData); err != nil {
+        log.Printf("Error parsing request body: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+    }
+
+    log.Printf("Received car data: %+v", carData)
+
+    // Валидация обязательных полей
+    if carData.Make == "" || carData.Model == "" || carData.PricePerDay == 0 {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Missing required fields")
+    }
+
+    car := &models.Car{
+        Make:         carData.Make,
+        Model:        carData.Model,
+        Year:         carData.Year,
+        PricePerDay:  carData.PricePerDay,
+        Location:     carData.Location,
+        Latitude:     carData.Latitude,
+        Longitude:    carData.Longitude,
+        Description:  carData.Description,
+        Availability: true,
+        Transmission: carData.Transmission,
+        FuelType:     carData.FuelType,
+        Seats:        carData.Seats,
+        Features:     carData.Features,
+    }
+
+    carID, err := h.services.Car().AddCar(c.Context(), car)
+    if err != nil {
+        log.Printf("Error adding car to database: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error adding car")
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "id": carID,
+        "message": "Car added successfully",
+    })
+}
+func (h *CarHandler) CreateBooking(c *fiber.Ctx) error {
+    var booking models.CarBooking
+    if err := c.BodyParser(&booking); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+    }
+
+    // Получаем ID пользователя из сессии
+    userID := c.Locals("user_id").(int)
+    booking.UserID = userID
+
+    err := h.services.Car().CreateBooking(c.Context(), &booking)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating booking")
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Booking created successfully",
+        "booking": booking,
+    })
+}
+func (h *CarHandler) UploadImages(c *fiber.Ctx) error {
+    log.Printf("Starting image upload for car")
+    carID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid car ID")
+    }
+
+    form, err := c.MultipartForm()
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Error getting files")
+    }
+
+    files := form.File["images"]
+    isMain := len(files) > 0
+
+    var uploadedImages []models.CarImage
+    for _, file := range files {
+        fileName, err := h.services.Car().ProcessImage(file)
+        if err != nil {
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error processing image")
+        }
+
+        image := models.CarImage{
+            CarID:       carID,
+            FilePath:    fileName,
+            FileName:    file.Filename,
+            FileSize:    int(file.Size),
+            ContentType: file.Header.Get("Content-Type"),
+            IsMain:      isMain,
+        }
+
+        imageID, err := h.services.Car().AddCarImage(c.Context(), &image)
+        if err != nil {
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error saving image information")
+        }
+
+        image.ID = imageID
+        uploadedImages = append(uploadedImages, image)
+        isMain = false
+    }
+
+    return utils.SuccessResponse(c, uploadedImages)
+}
+
+func (h *CarHandler) GetImages(c *fiber.Ctx) error {
+    images, err := h.services.Car().GetCarImages(c.Context(), c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting images")
+    }
+    return utils.SuccessResponse(c, images)
+}
+func (h *CarHandler) GetAvailableCars(c *fiber.Ctx) error {
+    log.Printf("Getting available cars")
+    
+    // Создаем map для фильтров из query параметров
+    filters := make(map[string]string)
+    
+    // Добавляем параметры в map если они есть
+    if make := c.Query("make"); make != "" {
+        filters["make"] = make
+    }
+    if transmission := c.Query("transmission"); transmission != "" {
+        filters["transmission"] = transmission
+    }
+    if fuelType := c.Query("fuel_type"); fuelType != "" {
+        filters["fuel_type"] = fuelType
+    }
+
+    cars, err := h.services.Car().GetAvailableCars(c.Context(), filters)
+    if err != nil {
+        log.Printf("Error getting available cars: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching cars")
+    }
+
+    log.Printf("Found %d available cars", len(cars))
+    return utils.SuccessResponse(c, cars)
+}
+=== backend/internal/services/car.go ===
+
+// backend/internal/services/car.go
+package services
+
+import (
+	"backend/internal/domain/models"
+	"backend/internal/storage"
+	"bytes"
+	"context"
+	"fmt"
+	"image"
+	"image/jpeg"
+	"io"
+	"log"
+	"mime/multipart"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/disintegration/imaging"
+)
+
+type CarService struct {
+	storage storage.Storage
+}
+
+func NewCarService(storage storage.Storage) *CarService {
+	return &CarService{storage: storage}
+}
+
+func (s *CarService) AddCar(ctx context.Context, car *models.Car) (int, error) {
+	return s.storage.AddCar(ctx, car)
+}
+
+func (s *CarService) GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error) {
+    return s.storage.GetAvailableCars(ctx, filters)
+}
+
+const (
+	maxWidth    = 1920 // Максимальная ширина
+	maxHeight   = 1080 // Максимальная высота
+	jpegQuality = 85   // Качество JPEG
+)
+
+func (s *CarService) ProcessImage(file *multipart.FileHeader) (string, error) {
+	// Открываем загруженный файл
+	src, err := file.Open()
+	if err != nil {
+		return "", fmt.Errorf("error opening uploaded file: %w", err)
+	}
+	defer src.Close()
+
+	// Читаем содержимое в буфер
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, src); err != nil {
+		return "", fmt.Errorf("error reading file: %w", err)
+	}
+
+	// Декодируем изображение
+	img, format, err := image.Decode(bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		return "", fmt.Errorf("error decoding image: %w", err)
+	}
+
+	log.Printf("Processing image: original format = %s, size = %d bytes", format, buf.Len())
+
+	// Создаем имя файла
+	fileName := fmt.Sprintf("%d.jpg", time.Now().UnixNano())
+	filePath := filepath.Join("uploads", fileName)
+
+	// Масштабируем изображение
+	maxWidth := 1920
+	maxHeight := 1080
+	currentWidth := img.Bounds().Dx()
+	currentHeight := img.Bounds().Dy()
+
+	var resized image.Image
+	if currentWidth > maxWidth || currentHeight > maxHeight {
+		resized = imaging.Fit(img, maxWidth, maxHeight, imaging.Lanczos)
+	} else {
+		resized = img
+	}
+
+	// Оптимизируем и сохраняем как JPEG
+	out, err := os.Create(filePath)
+	if err != nil {
+		return "", fmt.Errorf("error creating output file: %w", err)
+	}
+	defer out.Close()
+
+	// Настраиваем качество JPEG
+	opts := jpeg.Options{
+		Quality: 85, // Баланс между качеством и размером
+	}
+
+	// Конвертируем в JPEG
+	if err := jpeg.Encode(out, resized, &opts); err != nil {
+		return "", fmt.Errorf("error encoding JPEG: %w", err)
+	}
+
+	// Проверяем размер получившегося файла
+	fi, err := out.Stat()
+	if err == nil {
+		log.Printf("Processed image saved: size = %d bytes, path = %s", fi.Size(), filePath)
+	}
+
+	return fileName, nil
+}
+
+func (s *CarService) AddCarImage(ctx context.Context, image *models.CarImage) (int, error) {
+	return s.storage.AddCarImage(ctx, image)
+}
+
+func (s *CarService) GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error) {
+	return s.storage.GetCarImages(ctx, carID)
+}
+func (s *CarService) CreateBooking(ctx context.Context, booking *models.CarBooking) error {
+	return s.storage.CreateCarBooking(ctx, booking)
+}
+
+=== backend/internal/storage/postgres/car_image.go ===
+
+// backend/internal/storage/postgres/car_image.go
+package postgres
+
+import (
+    "backend/internal/domain/models"
+    "context"
+)
+
+func (db *Database) AddCarImage(ctx context.Context, image *models.CarImage) (int, error) {
+    var imageID int
+    err := db.pool.QueryRow(ctx, `
+        INSERT INTO car_images (car_id, file_path, file_name, file_size, content_type, is_main)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
+    `,
+        image.CarID, image.FilePath, image.FileName,
+        image.FileSize, image.ContentType, image.IsMain,
+    ).Scan(&imageID)
+
+    return imageID, err
+}
+
+func (db *Database) GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error) {
+    rows, err := db.pool.Query(ctx, `
+        SELECT id, car_id, file_path, file_name, file_size, content_type, is_main, created_at
+        FROM car_images
+        WHERE car_id = $1
+        ORDER BY is_main DESC, created_at DESC
+    `, carID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var images []models.CarImage
+    for rows.Next() {
+        var img models.CarImage
+        err := rows.Scan(
+            &img.ID, &img.CarID, &img.FilePath,
+            &img.FileName, &img.FileSize, &img.ContentType,
+            &img.IsMain, &img.CreatedAt,
+        )
+        if err != nil {
+            continue
+        }
+        images = append(images, img)
+    }
+
+    return images, rows.Err()
+}
+
+func (db *Database) DeleteCarImage(ctx context.Context, imageID string) (string, error) {
+    var filePath string
+    err := db.pool.QueryRow(ctx,
+        "DELETE FROM car_images WHERE id = $1 RETURNING file_path", imageID,
+    ).Scan(&filePath)
+    return filePath, err
+}
+=== backend/internal/storage/postgres/car.go ===
+
+// backend/internal/storage/postgres/car.go
+
+package postgres
+
+import (
+    "backend/internal/domain/models"
+    "context"
+    "fmt"
+	"log"
+    "strings"
+)
+
+func (db *Database) AddCar(ctx context.Context, car *models.Car) (int, error) {
+    log.Printf("Starting AddCar with data: %+v", car)
+
+    tx, err := db.pool.Begin(ctx)
+    if err != nil {
+        return 0, fmt.Errorf("error beginning transaction: %w", err)
+    }
+    defer tx.Rollback(ctx)
+
+    var carID int
+    // Вставляем основные данные автомобиля без features
+    err = tx.QueryRow(ctx, `
+        INSERT INTO cars (
+            make, model, year, price_per_day, location, 
+            latitude, longitude, description, availability,
+            transmission, fuel_type, seats,
+            daily_mileage_limit, insurance_included
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        RETURNING id
+    `,
+        car.Make, car.Model, car.Year, car.PricePerDay, car.Location,
+        car.Latitude, car.Longitude, car.Description, car.Availability,
+        car.Transmission, car.FuelType, car.Seats,
+        car.DailyMileageLimit, car.InsuranceIncluded,
+    ).Scan(&carID)
+
+    if err != nil {
+        log.Printf("Error executing insert car query: %v", err)
+        return 0, fmt.Errorf("error inserting car: %w", err)
+    }
+
+    // Добавляем features через связующую таблицу
+    if len(car.Features) > 0 {
+        // For each feature
+for _, featureName := range car.Features {
+    var featureID int
+    // First try to get existing feature
+    err = tx.QueryRow(ctx, `
+        SELECT id FROM car_features WHERE name = $1
+    `, featureName).Scan(&featureID)
+
+    if err != nil {
+        // If feature doesn't exist, create it
+        err = tx.QueryRow(ctx, `
+            INSERT INTO car_features (name)
+            VALUES ($1)
+            RETURNING id
+        `, featureName).Scan(&featureID)
+        
+        if err != nil {
+            log.Printf("Error creating feature %s: %v", featureName, err)
+            continue
+        }
+    }
+
+    // Create link between car and feature
+    _, err = tx.Exec(ctx, `
+        INSERT INTO car_feature_links (car_id, feature_id)
+        VALUES ($1, $2)
+        ON CONFLICT DO NOTHING
+    `, carID, featureID)
+
+    if err != nil {
+        log.Printf("Error linking feature %s to car: %v", featureName, err)
+    }
+}
+    }
+
+    err = tx.Commit(ctx)
+    if err != nil {
+        log.Printf("Error committing transaction: %v", err)
+        return 0, fmt.Errorf("error committing transaction: %w", err)
+    }
+
+    log.Printf("Successfully added car with ID: %d", carID)
+    return carID, nil
+}
+func (db *Database) CreateCarBooking(ctx context.Context, booking *models.CarBooking) error {
+    tx, err := db.pool.Begin(ctx)
+    if err != nil {
+        return err
+    }
+    defer tx.Rollback(ctx)
+
+    // Проверяем доступность автомобиля на выбранные даты
+    var count int
+    err = tx.QueryRow(ctx, `
+        SELECT COUNT(*)
+        FROM car_bookings
+        WHERE car_id = $1
+        AND status = 'confirmed'
+        AND (
+            ($2 BETWEEN start_date AND end_date)
+            OR ($3 BETWEEN start_date AND end_date)
+            OR (start_date BETWEEN $2 AND $3)
+        )
+    `, booking.CarID, booking.StartDate, booking.EndDate).Scan(&count)
+
+    if err != nil {
+        return err
+    }
+
+    if count > 0 {
+        return fmt.Errorf("car is not available for selected dates")
+    }
+
+    // Создаем бронирование
+    err = tx.QueryRow(ctx, `
+        INSERT INTO car_bookings (
+            car_id, user_id, start_date, end_date,
+            pickup_location, dropoff_location,
+            status, total_price
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id
+    `,
+        booking.CarID,
+        booking.UserID,
+        booking.StartDate,
+        booking.EndDate,
+        booking.PickupLocation,
+        booking.DropoffLocation,
+        "pending",
+        booking.TotalPrice,
+    ).Scan(&booking.ID)
+
+    if err != nil {
+        return err
+    }
+
+    return tx.Commit(ctx)
+}
+func (db *Database) GetCarWithFeatures(ctx context.Context, carID int) (*models.Car, error) {
+    var car models.Car
+    err := db.pool.QueryRow(ctx, `
+        SELECT 
+            c.id, c.make, c.model, c.year, c.price_per_day,
+            c.location, c.availability, c.latitude, c.longitude,
+            c.description, c.seats, c.transmission, c.fuel_type,
+            c.daily_mileage_limit, c.insurance_included, c.created_at,
+            array_remove(array_agg(f.name), NULL) as features
+        FROM cars c
+        LEFT JOIN car_feature_links cfl ON c.id = cfl.car_id
+        LEFT JOIN car_features f ON cfl.feature_id = f.id
+        WHERE c.id = $1
+        GROUP BY c.id
+    `, carID).Scan(
+        &car.ID,
+        &car.Make,
+        &car.Model,
+        &car.Year,
+        &car.PricePerDay,
+        &car.Location,
+        &car.Availability,
+        &car.Latitude,
+        &car.Longitude,
+        &car.Description,
+        &car.Seats,
+        &car.Transmission,
+        &car.FuelType,
+        &car.DailyMileageLimit,
+        &car.InsuranceIncluded,
+        &car.CreatedAt,
+        &car.Features,
+    )
+    return &car, err
+}
+func (db *Database) GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error) {
+    var count int
+    err := db.pool.QueryRow(ctx, "SELECT COUNT(*) FROM cars WHERE availability = true").Scan(&count)
+    if err != nil {
+        log.Printf("Error counting cars: %v", err)
+    } else {
+        log.Printf("Total available cars in DB: %d", count)
+    }
+
+    baseQuery := `
+        SELECT 
+            c.id, 
+            c.make, 
+            c.model, 
+            c.year, 
+            c.price_per_day,
+            c.location, 
+            c.latitude, 
+            c.longitude, 
+            c.description,
+            c.availability, 
+            c.transmission, 
+            c.fuel_type, 
+            c.seats,
+            c.daily_mileage_limit, 
+            c.insurance_included, 
+            c.created_at,
+            ARRAY_AGG(DISTINCT f.name) as features
+        FROM cars c
+        LEFT JOIN car_feature_links cfl ON c.id = cfl.car_id
+        LEFT JOIN car_features f ON cfl.feature_id = f.id
+        WHERE c.availability = true
+    `
+
+    // Добавляем условия фильтрации
+    var conditions []string
+    var args []interface{}
+    argCount := 1
+
+    if v := filters["make"]; v != "" {
+        conditions = append(conditions, fmt.Sprintf("LOWER(c.make) LIKE LOWER($%d)", argCount))
+        args = append(args, "%"+v+"%")
+        argCount++
+    }
+
+    if v := filters["transmission"]; v != "" {
+        conditions = append(conditions, fmt.Sprintf("c.transmission = $%d", argCount))
+        args = append(args, v)
+        argCount++
+    }
+
+    if v := filters["fuel_type"]; v != "" {
+        conditions = append(conditions, fmt.Sprintf("c.fuel_type = $%d", argCount))
+        args = append(args, v)
+        argCount++
+    }
+
+    // Добавляем условия в запрос
+    if len(conditions) > 0 {
+        baseQuery += " AND " + strings.Join(conditions, " AND ")
+    }
+
+    // Добавляем группировку
+    baseQuery += " GROUP BY c.id"
+
+    // Добавляем сортировку
+    baseQuery += " ORDER BY c.created_at DESC"
+
+    log.Printf("Executing cars query...")
+
+    rows, err := db.pool.Query(ctx, baseQuery, args...)
+    if err != nil {
+        log.Printf("Error executing query: %v", err)
+        return nil, err
+    }
+    defer rows.Close()
+
+    var cars []models.Car
+    for rows.Next() {
+        var car models.Car
+        err := rows.Scan(
+            &car.ID, 
+            &car.Make, 
+            &car.Model, 
+            &car.Year,
+            &car.PricePerDay,
+            &car.Location, 
+            &car.Latitude,
+            &car.Longitude,
+            &car.Description,
+            &car.Availability,
+            &car.Transmission,
+            &car.FuelType,
+            &car.Seats,
+            &car.DailyMileageLimit,
+            &car.InsuranceIncluded,
+            &car.CreatedAt,
+            &car.Features,
+        )
+        if err != nil {
+            log.Printf("Error scanning row: %v", err)
+            continue
+        }
+        log.Printf("Found car: ID=%d, Make=%s, Model=%s", car.ID, car.Make, car.Model)
+        cars = append(cars, car)
+    }
+
+    log.Printf("Found %d cars after scanning", len(cars))
+
+    // Загружаем изображения для каждой машины
+    for i := range cars {
+        images, err := db.GetCarImages(ctx, fmt.Sprintf("%d", cars[i].ID))
+        if err != nil {
+            log.Printf("Error loading images for car %d: %v", cars[i].ID, err)
+            continue
+        }
+        cars[i].Images = images
+        log.Printf("Loaded %d images for car %d", len(images), cars[i].ID)
+    }
+
+    return cars, nil
+}
+
+func (db *Database) GetCarFeatures(ctx context.Context) ([]models.CarFeature, error) {
+    rows, err := db.pool.Query(ctx, `
+        SELECT id, name, category, description 
+        FROM car_features 
+        ORDER BY category, name
+    `)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var features []models.CarFeature
+    for rows.Next() {
+        var feature models.CarFeature
+        if err := rows.Scan(&feature.ID, &feature.Name, &feature.Category, &feature.Description); err != nil {
+            return nil, err
+        }
+        features = append(features, feature)
+    }
+    return features, nil
+}
+
+
+func (db *Database) GetCarCategories(ctx context.Context) ([]models.CarCategory, error) {
+    rows, err := db.pool.Query(ctx, `
+        SELECT id, name, description
+        FROM car_categories
+        ORDER BY name
+    `)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var categories []models.CarCategory
+    for rows.Next() {
+        var category models.CarCategory
+        err := rows.Scan(
+            &category.ID,
+            &category.Name,
+            &category.Description,
+        )
+        if err != nil {
+            continue
+        }
+        categories = append(categories, category)
+    }
+
+    return categories, nil
+}
+=== backend/internal/storage/postgres/image.go ===
+
+//backend/internal/storage/postgres/image.go
+package postgres
+
+import (
+	"backend/internal/domain/models"
+	"context"
+)
+
+// AddRoomImage добавляет изображение комнаты
+func (db *Database) AddRoomImage(ctx context.Context, image *models.RoomImage) (int, error) {
+    var imageID int
+    err := db.pool.QueryRow(ctx, `
+        INSERT INTO room_images (room_id, file_path, file_name, file_size, content_type, is_main)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
+    `,
+        image.RoomID, image.FilePath, image.FileName,
+        image.FileSize, image.ContentType, image.IsMain,
+    ).Scan(&imageID)
+
+    return imageID, err
+}
+// В storage/postgres/image.go
+
+func (db *Database) GetBedImages(ctx context.Context, bedID string) ([]models.RoomImage, error) {
+    rows, err := db.pool.Query(ctx, `
+        SELECT bi.id, b.room_id, bi.file_path, bi.file_name, bi.file_size, bi.content_type, bi.is_main, bi.created_at
+        FROM bed_images bi
+        JOIN beds b ON bi.bed_id = b.id
+        WHERE bi.bed_id = $1
+        ORDER BY bi.is_main DESC, bi.created_at DESC
+    `, bedID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var images []models.RoomImage
+    for rows.Next() {
+        var img models.RoomImage
+        err := rows.Scan(
+            &img.ID, &img.RoomID, &img.FilePath,
+            &img.FileName, &img.FileSize, &img.ContentType,
+            &img.IsMain, &img.CreatedAt,
+        )
+        if err != nil {
+            continue
+        }
+        images = append(images, img)
+    }
+    return images, rows.Err()
+}
+func (db *Database) AddBedImage(ctx context.Context, image *models.RoomImage) (int, error) {
+    var imageID int
+    err := db.pool.QueryRow(ctx, `
+        INSERT INTO bed_images (bed_id, file_path, file_name, file_size, content_type, is_main)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
+    `,
+        image.BedID, image.FilePath, image.FileName,
+        image.FileSize, image.ContentType, image.IsMain,
+    ).Scan(&imageID)
+
+    return imageID, err
+}
+// GetRoomImages получает все изображения комнаты
+func (db *Database) GetRoomImages(ctx context.Context, roomID string) ([]models.RoomImage, error) {
+	rows, err := db.pool.Query(ctx, `
+		SELECT id, room_id, file_path, file_name, file_size, content_type, is_main, created_at
+		FROM room_images
+		WHERE room_id = $1
+		ORDER BY is_main DESC, created_at DESC
+	`, roomID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var images []models.RoomImage
+	for rows.Next() {
+		var img models.RoomImage
+		err := rows.Scan(
+			&img.ID, &img.RoomID, &img.FilePath,
+			&img.FileName, &img.FileSize, &img.ContentType,
+			&img.IsMain, &img.CreatedAt,
+		)
+		if err != nil {
+			continue
+		}
+		images = append(images, img)
+	}
+
+	return images, rows.Err()
+}
+
+// DeleteRoomImage удаляет изображение комнаты
+func (db *Database) DeleteRoomImage(ctx context.Context, imageID string) (string, error) {
+	var filePath string
+	err := db.pool.QueryRow(ctx,
+		"SELECT file_path FROM room_images WHERE id = $1", imageID,
+	).Scan(&filePath)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = db.pool.Exec(ctx,
+		"DELETE FROM room_images WHERE id = $1", imageID,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return filePath, nil
+}
+
+=== frontend/hostel-frontend/src/components/CarBookingDialog.js ===
+
+import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    Box,
+    Typography,
+    Alert,
+    Grid,
+    Paper,
+    Divider,
+    Chip,
+    FormControlLabel,
+    Checkbox,
+} from '@mui/material';
+import {
+    DirectionsCar as CarIcon,
+    LocalGasStation as FuelIcon,
+    Speed as TransmissionIcon,
+    EventAvailable as DateIcon,
+    LocationOn as LocationIcon,
+    CreditCard as PaymentIcon,
+    Close as CloseIcon,
+    Assignment as InsuranceIcon,
+} from '@mui/icons-material';
+import axios from '../api/axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+const CarBookingDialog = ({ open, onClose, car, startDate, endDate }) => {
+    const { user } = useAuth();
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [bookingData, setBookingData] = useState({
+        pickup_location: car?.location || '',
+        dropoff_location: car?.location || '',
+        include_insurance: true,
+        additional_notes: ''
+    });
+
+    // Расчет общей стоимости
+    const calculateTotalPrice = () => {
+        if (!startDate || !endDate) return 0;
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        
+        let total = car.price_per_day * days;
+        
+        // Добавляем стоимость страховки если выбрана
+        if (bookingData.include_insurance) {
+            total += days * 500; // Предположим, страховка стоит 500р в день
+        }
+
+        return total;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess(false);
+        setLoading(true);
+
+        if (!user) {
+            setError('Необходимо войти в систему для бронирования');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const bookingPayload = {
+                car_id: car.id,
+                start_date: startDate,
+                end_date: endDate,
+                pickup_location: bookingData.pickup_location,
+                dropoff_location: bookingData.dropoff_location,
+                include_insurance: bookingData.include_insurance,
+                additional_notes: bookingData.additional_notes,
+                total_price: calculateTotalPrice()
+            };
+
+            await axios.post('/api/v1/car-bookings', bookingPayload, {
+                withCredentials: true
+            });
+
+            setSuccess(true);
+            setTimeout(() => {
+                onClose();
+            }, 2000);
+        } catch (error) {
+            if (error.response?.status === 401) {
+                setError('Необходимо войти в систему');
+            } else {
+                setError(error.response?.data?.error || 'Произошла ошибка при бронировании');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const renderCarDetails = () => (
+        <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+                {car.make} {car.model}
+                <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>
+                    {car.year}
+                </Typography>
+            </Typography>
+
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                <Chip
+                    icon={<FuelIcon />}
+                    label={car.fuel_type === 'petrol' ? 'Бензин' :
+                           car.fuel_type === 'diesel' ? 'Дизель' :
+                           car.fuel_type === 'electric' ? 'Электро' : 'Гибрид'}
+                    size="small"
+                />
+                <Chip
+                    icon={<TransmissionIcon />}
+                    label={car.transmission === 'automatic' ? 'Автомат' : 'Механика'}
+                    size="small"
+                />
+                <Chip
+                    label={`${car.seats} мест`}
+                    size="small"
+                />
+            </Box>
+
+            {car.features?.length > 0 && (
+                <Typography variant="body2" color="text.secondary">
+                    {car.features.join(' • ')}
+                </Typography>
+            )}
+        </Box>
+    );
+
+    const renderPriceDetails = () => {
+        const totalPrice = calculateTotalPrice();
+        const days = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+
+        return (
+            <Paper variant="outlined" sx={{ p: 2, mt: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                    Детали оплаты
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2">
+                        Аренда ({days} {days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'})
+                    </Typography>
+                    <Typography variant="body2">
+                        {car.price_per_day * days} ₽
+                    </Typography>
+                </Box>
+                {bookingData.include_insurance && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="body2">
+                            Страховка ({days} {days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'})
+                        </Typography>
+                        <Typography variant="body2">
+                            {500 * days} ₽
+                        </Typography>
+                    </Box>
+                )}
+                <Divider sx={{ my: 1 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                        Итого
+                    </Typography>
+                    <Typography variant="subtitle1" fontWeight="bold" color="primary">
+                        {totalPrice} ₽
+                    </Typography>
+                </Box>
+            </Paper>
+        );
+    };
+
+    return (
+        <Dialog 
+            open={open} 
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: { p: 2 }
+            }}
+        >
+            <DialogTitle sx={{ p: 0, mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h5">
+                        Бронирование автомобиля
+                    </Typography>
+                    <Button
+                        onClick={onClose}
+                        color="inherit"
+                        startIcon={<CloseIcon />}
+                    >
+                        Закрыть
+                    </Button>
+                </Box>
+            </DialogTitle>
+
+            {!user ? (
+                <Alert 
+                    severity="warning"
+                    action={
+                        <Button color="inherit" size="small">
+                            Войти
+                        </Button>
+                    }
+                >
+                    Для бронирования необходимо войти в систему
+                </Alert>
+            ) : (
+                <form onSubmit={handleSubmit}>
+                    <DialogContent sx={{ p: 0 }}>
+                        {error && (
+                            <Alert severity="error" sx={{ mb: 2 }}>
+                                {error}
+                            </Alert>
+                        )}
+                        {success && (
+                            <Alert severity="success" sx={{ mb: 2 }}>
+                                Бронирование успешно создано!
+                            </Alert>
+                        )}
+
+                        {renderCarDetails()}
+
+                        <Divider sx={{ my: 3 }} />
+
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} sm={6}>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                    <DateIcon sx={{ mr: 1, verticalAlign: 'bottom' }} />
+                                    Период аренды
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                    <LocationIcon sx={{ mr: 1, verticalAlign: 'bottom' }} />
+                                    Место получения и возврата
+                                </Typography>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Место получения"
+                                            fullWidth
+                                            size="small"
+                                            value={bookingData.pickup_location}
+                                            onChange={(e) => setBookingData({
+                                                ...bookingData,
+                                                pickup_location: e.target.value
+                                            })}
+                                            required
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Место возврата"
+                                            fullWidth
+                                            size="small"
+                                            value={bookingData.dropoff_location}
+                                            onChange={(e) => setBookingData({
+                                                ...bookingData,
+                                                dropoff_location: e.target.value
+                                            })}
+                                            required
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={bookingData.include_insurance}
+                                            onChange={(e) => setBookingData({
+                                                ...bookingData,
+                                                include_insurance: e.target.checked
+                                            })}
+                                            icon={<InsuranceIcon />}
+                                            checkedIcon={<InsuranceIcon />}
+                                        />
+                                    }
+                                    label="Включить страховку (500₽ в день)"
+                                />
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Дополнительные пожелания"
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    value={bookingData.additional_notes}
+                                    onChange={(e) => setBookingData({
+                                        ...bookingData,
+                                        additional_notes: e.target.value
+                                    })}
+                                />
+                            </Grid>
+                        </Grid>
+
+                        {renderPriceDetails()}
+                    </DialogContent>
+
+                    <DialogActions sx={{ p: 0, mt: 3 }}>
+                        <Button onClick={onClose} color="inherit">
+                            Отмена
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            disabled={loading || !startDate || !endDate}
+                            startIcon={<PaymentIcon />}
+                        >
+                            Забронировать
+                        </Button>
+                    </DialogActions>
+                </form>
+            )}
+        </Dialog>
+    );
+};
+
+export default CarBookingDialog;
+=== frontend/hostel-frontend/src/components/CarMapView.js ===
+
+import React, { useState, useCallback } from 'react';
+import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
+import {
+    Card,
+    CardContent,
+    Typography,
+    Box,
+    Button,
+    Chip,
+    CardMedia,
+} from '@mui/material';
+import {
+    LocalGasStation as FuelIcon,
+    Speed as TransmissionIcon,
+    PhotoLibrary as PhotoLibraryIcon,
+} from '@mui/icons-material';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+const mapContainerStyle = {
+    width: '100%',
+    height: '700px'
+};
+
+const defaultCenter = {
+    lat: 45.2671, // Нови-Сад
+    lng: 19.8335
+};
+
+const CarMapView = ({ cars, onCarSelect, onOpenGallery }) => {
+    const [map, setMap] = useState(null);
+    const [selectedCar, setSelectedCar] = useState(null);
+
+    const getMapOptions = useCallback(() => ({
+        scrollwheel: true,
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+            style: 'DEFAULT',
+            mapTypeIds: ["roadmap", "satellite", "hybrid"]
+        },
+        styles: [
+            {
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [{ visibility: "off" }]
+            }
+        ],
+        fullscreenControl: true,
+        streetViewControl: false,
+        zoomControl: true,
+    }), []);
+
+    const onMapLoad = useCallback((map) => {
+        setMap(map);
+        if (cars?.length > 0) {
+            const bounds = new window.google.maps.LatLngBounds();
+            let hasValidCoords = false;
+
+            cars.forEach(car => {
+                if (car.latitude && car.longitude) {
+                    bounds.extend({ lat: car.latitude, lng: car.longitude });
+                    hasValidCoords = true;
+                }
+            });
+
+            if (hasValidCoords) {
+                map.fitBounds(bounds);
+            }
+        }
+    }, [cars]);
+
+    const InfoWindowContent = ({ car }) => {
+        const hasImages = car.images && car.images.length > 0;
+        const mainImage = hasImages ? car.images[0] : null;
+
+        return (
+            <Card sx={{ width: 300, border: 'none', boxShadow: 'none' }}>
+                {mainImage && (
+                    <Box
+                        sx={{
+                            position: 'relative',
+                            cursor: 'pointer',
+                            '&:hover': {
+                                '& .overlay': {
+                                    opacity: 1
+                                }
+                            }
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenGallery(car);
+                        }}
+                    >
+                        <CardMedia
+                            component="img"
+                            height="160"
+                            image={`${process.env.REACT_APP_BACKEND_URL}/uploads/${mainImage.file_path}`}
+                            alt={`${car.make} ${car.model}`}
+                            sx={{
+                                borderRadius: '4px 4px 0 0',
+                                objectFit: 'cover'
+                            }}
+                        />
+                        {car.images.length > 1 && (
+                            <Box
+                                className="overlay"
+                                sx={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    right: 0,
+                                    bgcolor: 'rgba(0, 0, 0, 0.6)',
+                                    color: 'white',
+                                    px: 1,
+                                    py: 0.5,
+                                    borderRadius: '4px 0 0 0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                }}
+                            >
+                                <PhotoLibraryIcon fontSize="small" />
+                                <Typography variant="caption">
+                                    +{car.images.length - 1}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                )}
+                <CardContent sx={{ p: 1.5 }}>
+                    <Typography variant="h6" gutterBottom>
+                        {car.make} {car.model}
+                        <Typography variant="body2" color="text.secondary" component="span" sx={{ ml: 1 }}>
+                            {car.year}
+                        </Typography>
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.5 }}>
+                        <Chip
+                            icon={<FuelIcon />}
+                            label={car.fuel_type === 'petrol' ? 'Бензин' :
+                                  car.fuel_type === 'diesel' ? 'Дизель' :
+                                  car.fuel_type === 'electric' ? 'Электро' : 'Гибрид'}
+                            size="small"
+                        />
+                        <Chip
+                            icon={<TransmissionIcon />}
+                            label={car.transmission === 'automatic' ? 'Автомат' : 'Механика'}
+                            size="small"
+                        />
+                        <Chip
+                            size="small"
+                            label={`${car.price_per_day} ₽/день`}
+                            color="primary"
+                        />
+                    </Box>
+
+                    <Button
+                        variant="contained"
+                        size="small"
+                        fullWidth
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onCarSelect(car);
+                        }}
+                    >
+                        Забронировать
+                    </Button>
+                </CardContent>
+            </Card>
+        );
+    };
+
+    return (
+        <Box sx={{ position: 'relative' }}>
+            <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={defaultCenter}
+                zoom={13}
+                onLoad={onMapLoad}
+                options={getMapOptions()}
+            >
+                {cars?.map((car) => {
+                    if (car.latitude && car.longitude) {
+                        return (
+                            <Marker
+                                key={car.id}
+                                position={{ lat: car.latitude, lng: car.longitude }}
+                                onClick={() => setSelectedCar(car)}
+                                icon={{
+                                    path: "M10 2C6.68 2 4 4.68 4 8c0 2.04 1.01 3.84 2.56 4.94L10 20l3.44-7.06C14.99 11.84 16 10.04 16 8c0-3.32-2.68-6-6-6zm0 8.5c-1.38 0-2.5-1.12-2.5-2.5S8.62 5.5 10 5.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
+                                    fillColor: '#1976d2',
+                                    fillOpacity: 1,
+                                    strokeWeight: 1,
+                                    strokeColor: '#ffffff',
+                                    scale: 2,
+                                    anchor: new window.google.maps.Point(10, 20),
+                                }}
+                            />
+                        );
+                    }
+                    return null;
+                })}
+
+                {selectedCar && (
+                    <InfoWindow
+                        position={{ lat: selectedCar.latitude, lng: selectedCar.longitude }}
+                        onCloseClick={() => setSelectedCar(null)}
+                    >
+                        <InfoWindowContent car={selectedCar} />
+                    </InfoWindow>
+                )}
+            </GoogleMap>
+        </Box>
+    );
+};
+
+export default CarMapView;
+=== frontend/hostel-frontend/src/pages/AddCarPage.js ===
+
+import React, { useState } from "react";
+import {
+    Container,
+    TextField,
+    Button,
+    Box,
+    Alert,
+    Grid,
+    Typography,
+    Paper,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Chip,
+    Input,
+    Divider,
+} from "@mui/material";
+import {
+    DirectionsCar as CarIcon,
+    CloudUpload as UploadIcon,
+    AddLocation as LocationIcon,
+} from '@mui/icons-material';
+import axios from '../api/axios';
+import LocationPicker from '../components/LocationPicker';
+
+const FEATURES = [
+    'Кондиционер',
+    'Климат-контроль',
+    'Круиз-контроль',
+    'Парктроники',
+    'Камера заднего вида',
+    'Навигация',
+    'Bluetooth',
+    'USB',
+    'AUX',
+    'MP3',
+    'CD',
+    'Кожаный салон',
+    'Люк',
+    'Панорамная крыша',
+    'Подогрев сидений',
+    'Электропривод сидений',
+    'Электропривод зеркал',
+    'Электропривод окон',
+];
+
+const AddCarPage = () => {
+    const [formData, setFormData] = useState({
+        make: "",
+        model: "",
+        year: "",
+        price_per_day: "",
+        transmission: "",
+        fuel_type: "",
+        seats: "",
+        location: "",
+        latitude: null,
+        longitude: null,
+        formatted_address: "",
+        features: [],
+        description: "",
+    });
+
+    const [images, setImages] = useState([]);
+    const [previewUrls, setPreviewUrls] = useState([]);
+    const [successMessage, setSuccessMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
+        
+        // Проверяем только размер
+        const validFiles = files.filter(file => {
+            if (file.size > 15 * 1024 * 1024) { // Увеличим до 10MB
+                setErrorMessage("Размер файла не должен превышать 10MB");
+                return false;
+            }
+            return true;
+        });
+    
+        if (validFiles.length) {
+            setImages(prev => [...prev, ...validFiles]);
+            // Создаем превью
+            validFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setPreviewUrls(prev => [...prev, reader.result]);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    };
+
+    
+    const handleLocationSelect = (location) => {
+        setFormData(prev => ({
+            ...prev,
+            location: location.formatted_address,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            formatted_address: location.formatted_address
+        }));
+    };
+
+    const handleFeatureToggle = (feature) => {
+        setFormData(prev => ({
+            ...prev,
+            features: prev.features.includes(feature)
+                ? prev.features.filter(f => f !== feature)
+                : [...prev.features, feature]
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setErrorMessage("");
+        setSuccessMessage("");
+
+        try {
+            // Сначала создаем автомобиль
+            const carResponse = await axios.post("/api/v1/cars", {
+                ...formData,
+                year: parseInt(formData.year),
+                price_per_day: parseFloat(formData.price_per_day),
+                seats: parseInt(formData.seats),
+                availability: true
+            });
+
+            const carId = carResponse.data.data.id;
+
+            // Если есть изображения, загружаем их
+            if (images.length > 0) {
+                const formData = new FormData();
+                images.forEach(image => {
+                    formData.append('images', image);
+                });
+
+                await axios.post(`/api/v1/cars/${carId}/images`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+            }
+
+            setSuccessMessage("Автомобиль успешно добавлен!");
+            setFormData({
+                make: "",
+                model: "",
+                year: "",
+                price_per_day: "",
+                transmission: "",
+                fuel_type: "",
+                seats: "",
+                location: "",
+                latitude: null,
+                longitude: null,
+                formatted_address: "",
+                features: [],
+                description: "",
+            });
+            setImages([]);
+            setPreviewUrls([]);
+
+        } catch (error) {
+            setErrorMessage(error.response?.data?.error || "Ошибка при добавлении автомобиля");
+        }
+    };
+
+    return (
+        <Container>
+            <Box sx={{ mt: 4, mb: 4 }}>
+                <Typography variant="h4" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <CarIcon sx={{ mr: 2 }} />
+                    Добавить автомобиль
+                </Typography>
+
+                {successMessage && (
+                    <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
+                )}
+                {errorMessage && (
+                    <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert>
+                )}
+
+                <form onSubmit={handleSubmit}>
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Основная информация
+                        </Typography>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <TextField
+                                    label="Марка автомобиля"
+                                    name="make"
+                                    value={formData.make}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <TextField
+                                    label="Модель"
+                                    name="model"
+                                    value={formData.model}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <TextField
+                                    label="Год выпуска"
+                                    name="year"
+                                    type="number"
+                                    value={formData.year}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    InputProps={{ inputProps: { min: 1900, max: new Date().getFullYear() } }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <TextField
+                                    label="Цена за день"
+                                    name="price_per_day"
+                                    type="number"
+                                    value={formData.price_per_day}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    InputProps={{
+                                        inputProps: { min: 0 },
+                                        startAdornment: <span>₽&nbsp;</span>
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <FormControl fullWidth required>
+                                    <InputLabel>Коробка передач</InputLabel>
+                                    <Select
+                                        name="transmission"
+                                        value={formData.transmission}
+                                        onChange={handleChange}
+                                        label="Коробка передач"
+                                    >
+                                        <MenuItem value="automatic">Автомат</MenuItem>
+                                        <MenuItem value="manual">Механика</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <FormControl fullWidth required>
+                                    <InputLabel>Тип топлива</InputLabel>
+                                    <Select
+                                        name="fuel_type"
+                                        value={formData.fuel_type}
+                                        onChange={handleChange}
+                                        label="Тип топлива"
+                                    >
+                                        <MenuItem value="petrol">Бензин</MenuItem>
+                                        <MenuItem value="diesel">Дизель</MenuItem>
+                                        <MenuItem value="electric">Электро</MenuItem>
+                                        <MenuItem value="hybrid">Гибрид</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    label="Количество мест"
+                                    name="seats"
+                                    type="number"
+                                    value={formData.seats}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    InputProps={{ inputProps: { min: 1, max: 9 } }}
+                                />
+                            </Grid>
+                        </Grid>
+                    </Paper>
+
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                            <LocationIcon sx={{ mr: 1 }} />
+                            Местоположение
+                        </Typography>
+                        <LocationPicker onLocationSelect={handleLocationSelect} />
+                    </Paper>
+
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Особенности и комплектация
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                            {FEATURES.map(feature => (
+                                <Chip
+                                    key={feature}
+                                    label={feature}
+                                    onClick={() => handleFeatureToggle(feature)}
+                                    color={formData.features.includes(feature) ? "primary" : "default"}
+                                    sx={{ '&:hover': { opacity: 0.8 } }}
+                                />
+                            ))}
+                        </Box>
+                        <TextField
+                            label="Описание автомобиля"
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            fullWidth
+                            multiline
+                            rows={4}
+                            sx={{ mt: 2 }}
+                        />
+                    </Paper>
+
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Фотографии
+                        </Typography>
+                        <Box sx={{ mb: 2 }}>
+                            <Button
+                                variant="outlined"
+                                component="label"
+                                startIcon={<UploadIcon />}
+                            >
+                                Загрузить фото
+                                <Input
+                                    type="file"
+                                    hidden
+                                    multiple
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                />
+                            </Button>
+                        </Box>
+                        <Grid container spacing={2}>
+                            {previewUrls.map((url, index) => (
+                                <Grid item xs={6} sm={4} md={3} key={index}>
+                                    <Box
+                                        sx={{
+                                            width: '100%',
+                                            paddingTop: '75%',
+                                            position: 'relative',
+                                            borderRadius: 1,
+                                            overflow: 'hidden'
+                                        }}
+                                    >
+                                        <img
+                                            src={url}
+                                            alt={`Preview ${index + 1}`}
+                                            style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover'
+                                            }}
+                                        />
+                                    </Box>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Paper>
+
+                    <Divider sx={{ my: 3 }} />
+
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                        fullWidth
+                        disabled={!formData.make || !formData.model || !formData.price_per_day || !formData.location}
+                        startIcon={<CarIcon />}
+                    >
+                        Добавить автомобиль
+                    </Button>
+                </form>
+            </Box>
+        </Container>
+    );
+};
+
+export default AddCarPage;
+=== frontend/hostel-frontend/src/pages/CarListPage.js ===
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { LoadScript } from '@react-google-maps/api';
+import MapView from '../components/CarMapView';
+import CarBookingDialog from '../components/CarBookingDialog';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  Chip,
+  Container,
+  Divider,
+  Grid,
+  IconButton,
+  MenuItem,
+  Paper,
+  Skeleton,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+  useTheme,
+  useMediaQuery
+} from '@mui/material';
+import {
+  Map as MapIcon,
+  ViewList as ListIcon,
+  Search as SearchIcon,
+  LocalGasStation as FuelIcon,
+  Speed as TransmissionIcon,
+  AirlineSeatReclineNormal as SeatsIcon,
+  CalendarMonth as CalendarIcon,
+  PhotoLibrary as GalleryIcon,
+  LocationOn as LocationIcon,
+  Tune as FilterIcon,
+  Clear as ClearIcon
+} from '@mui/icons-material';
+import { debounce } from 'lodash';
+import axios from '../api/axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+export default function CarListPage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  
+  const [viewMode, setViewMode] = useState('list');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(!isMobile);
+  const [cars, setCars] = useState([]);
+  const [selectedCar, setSelectedCar] = useState(null);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    start_date: '',
+    end_date: '',
+    make: '',
+    transmission: '',
+    fuel_type: '',
+    min_price: '',
+    max_price: ''
+  });
+
+  const fetchCars = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const params = Object.fromEntries(
+        Object.entries(filters).filter(([_, v]) => v !== '')
+      );
+      const { data } = await axios.get('/api/v1/cars/available', { params });
+      setCars(data?.data || []);
+    } catch (error) {
+      console.error('Error fetching cars:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
+  const debouncedFetch = debounce(fetchCars, 500);
+
+  const handleFilterChange = (name, value) => {
+    setFilters(prev => ({ ...prev, [name]: value }));
+    debouncedFetch();
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      start_date: '',
+      end_date: '',
+      make: '',
+      transmission: '',
+      fuel_type: '',
+      min_price: '',
+      max_price: ''
+    });
+    fetchCars();
+  };
+
+  const renderFilters = () => (
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        p: 2,
+        border: 1,
+        borderColor: 'divider',
+        display: showFilters ? 'block' : 'none'
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Typography variant="h6">Фильтры</Typography>
+        <Button 
+          size="small" 
+          startIcon={<ClearIcon />}
+          onClick={clearFilters}
+        >
+          Сбросить
+        </Button>
+      </Box>
+
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <TextField
+            label="Дата начала"
+            type="date"
+            fullWidth
+            size="small"
+            value={filters.start_date}
+            onChange={(e) => handleFilterChange('start_date', e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+        
+        <Grid item xs={12} md={6}>
+          <TextField
+            label="Дата окончания"
+            type="date"
+            fullWidth
+            size="small"
+            value={filters.end_date}
+            onChange={(e) => handleFilterChange('end_date', e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            select
+            label="Тип топлива"
+            fullWidth
+            size="small"
+            value={filters.fuel_type}
+            onChange={(e) => handleFilterChange('fuel_type', e.target.value)}
+          >
+            <MenuItem value="">Все</MenuItem>
+            <MenuItem value="petrol">Бензин</MenuItem>
+            <MenuItem value="diesel">Дизель</MenuItem>
+            <MenuItem value="electric">Электро</MenuItem>
+            <MenuItem value="hybrid">Гибрид</MenuItem>
+          </TextField>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            select
+            label="Коробка передач"
+            fullWidth
+            size="small"
+            value={filters.transmission}
+            onChange={(e) => handleFilterChange('transmission', e.target.value)}
+          >
+            <MenuItem value="">Все</MenuItem>
+            <MenuItem value="automatic">Автомат</MenuItem>
+            <MenuItem value="manual">Механика</MenuItem>
+          </TextField>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            label="Минимальная цена"
+            type="number"
+            fullWidth
+            size="small"
+            value={filters.min_price}
+            onChange={(e) => handleFilterChange('min_price', e.target.value)}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            label="Максимальная цена"
+            type="number"
+            fullWidth
+            size="small"
+            value={filters.max_price}
+            onChange={(e) => handleFilterChange('max_price', e.target.value)}
+          />
+        </Grid>
+      </Grid>
+    </Paper>
+  );
+
+  const renderCarCard = (car) => (
+    <Card 
+      elevation={0}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        border: 1,
+        borderColor: 'divider',
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.shadows[4]
+        }
+      }}
+    >
+      <Box sx={{ position: 'relative', pt: '56.25%' }}>
+        <CardMedia
+          component="img"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+          image={car.images?.[0] ? 
+            `${BACKEND_URL}/uploads/${car.images[0].file_path}` : 
+            '/placeholder-car.jpg'
+          }
+          alt={`${car.make} ${car.model}`}
+        />
+        {car.images?.length > 1 && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<GalleryIcon />}
+            sx={{
+              position: 'absolute',
+              bottom: 8,
+              right: 8,
+              bgcolor: 'rgba(0, 0, 0, 0.7)'
+            }}
+          >
+            {car.images.length} фото
+          </Button>
+        )}
+      </Box>
+
+      <CardContent sx={{ flexGrow: 1, p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          {car.make} {car.model}
+          <Typography 
+            component="span" 
+            color="text.secondary" 
+            sx={{ ml: 1 }}
+          >
+            {car.year}
+          </Typography>
+        </Typography>
+
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+          <Chip
+            icon={<FuelIcon />}
+            label={
+              car.fuel_type === 'petrol' ? 'Бензин' :
+              car.fuel_type === 'diesel' ? 'Дизель' :
+              car.fuel_type === 'electric' ? 'Электро' : 'Гибрид'
+            }
+            size="small"
+          />
+          <Chip
+            icon={<TransmissionIcon />}
+            label={car.transmission === 'automatic' ? 'Автомат' : 'Механика'}
+            size="small"
+          />
+          <Chip
+            icon={<SeatsIcon />}
+            label={`${car.seats} мест`}
+            size="small"
+          />
+        </Box>
+
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          <LocationIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'text-bottom' }} />
+          {car.location}
+        </Typography>
+
+        {car.features?.length > 0 && (
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              mb: 2
+            }}
+          >
+            {car.features.join(' • ')}
+          </Typography>
+        )}
+      </CardContent>
+
+      <Divider />
+
+      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box>
+          <Typography variant="h6" color="primary">
+            {car.price_per_day} ₽
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            в день
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          onClick={() => {
+            setSelectedCar(car);
+            setBookingDialogOpen(true);
+          }}
+          disabled={!filters.start_date || !filters.end_date}
+        >
+          Забронировать
+        </Button>
+      </Box>
+    </Card>
+  );
+
+  return (
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+          flexWrap: 'wrap',
+          gap: 2
+        }}>
+          <Typography variant="h4" component="h1">
+            Аренда автомобилей
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={(_, mode) => mode && setViewMode(mode)}
+              size="small"
+            >
+              <ToggleButton value="list">
+                <ListIcon sx={{ mr: 1 }} /> Список
+              </ToggleButton>
+              <ToggleButton value="map">
+                <MapIcon sx={{ mr: 1 }} /> Карта
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {isMobile && (
+              <Button
+                variant="outlined"
+                onClick={() => setShowFilters(!showFilters)}
+                startIcon={<FilterIcon />}
+              >
+                Фильтры
+              </Button>
+            )}
+          </Box>
+        </Box>
+
+        {renderFilters()}
+      </Box>
+
+      {isLoading ? (
+        <Grid container spacing={3}>
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Grid item xs={12} sm={6} md={4} key={i}>
+              <Skeleton variant="rectangular" height={200} />
+              <Box sx={{ pt: 0.5 }}>
+                <Skeleton />
+                <Skeleton width="60%" />
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      ) : viewMode === 'list' ? (
+        <Grid container spacing={3}>
+          {cars.map(car => (
+            <Grid item xs={12} sm={6} md={4} key={car.id}>
+              {renderCarCard(car)}
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+          <MapView
+            cars={cars}
+            onCarSelect={(car) => {
+              setSelectedCar(car);
+              setBookingDialogOpen(true);
+            }}
+          />
+        </LoadScript>
+      )}
+
+      {selectedCar && (
+        <CarBookingDialog
+          open={bookingDialogOpen}
+          onClose={() => {
+            setBookingDialogOpen(false);
+            setSelectedCar(null);
+          }}
+          car={selectedCar}
+          startDate={filters.start_date}
+          endDate={filters.end_date}
+        />
+      )}
+    </Container>
+  );
+}

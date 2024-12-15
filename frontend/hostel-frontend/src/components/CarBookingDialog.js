@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import ReviewsSection from './reviews/ReviewsSection';
+
 import {
     Dialog,
     DialogTitle,
@@ -50,9 +52,9 @@ const CarBookingDialog = ({ open, onClose, car, startDate, endDate }) => {
         const start = new Date(startDate);
         const end = new Date(endDate);
         const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-        
+
         let total = car.price_per_day * days;
-        
+
         // Добавляем стоимость страховки если выбрана
         if (bookingData.include_insurance) {
             total += days * 500; // Предположим, страховка стоит 500р в день
@@ -117,8 +119,8 @@ const CarBookingDialog = ({ open, onClose, car, startDate, endDate }) => {
                 <Chip
                     icon={<FuelIcon />}
                     label={car.fuel_type === 'petrol' ? 'Бензин' :
-                           car.fuel_type === 'diesel' ? 'Дизель' :
-                           car.fuel_type === 'electric' ? 'Электро' : 'Гибрид'}
+                        car.fuel_type === 'diesel' ? 'Дизель' :
+                            car.fuel_type === 'electric' ? 'Электро' : 'Гибрид'}
                     size="small"
                 />
                 <Chip
@@ -180,9 +182,10 @@ const CarBookingDialog = ({ open, onClose, car, startDate, endDate }) => {
         );
     };
 
+
     return (
-        <Dialog 
-            open={open} 
+        <Dialog
+            open={open}
             onClose={onClose}
             maxWidth="md"
             fullWidth
@@ -206,7 +209,7 @@ const CarBookingDialog = ({ open, onClose, car, startDate, endDate }) => {
             </DialogTitle>
 
             {!user ? (
-                <Alert 
+                <Alert
                     severity="warning"
                     action={
                         <Button color="inherit" size="small">
@@ -217,120 +220,124 @@ const CarBookingDialog = ({ open, onClose, car, startDate, endDate }) => {
                     Для бронирования необходимо войти в систему
                 </Alert>
             ) : (
-                <form onSubmit={handleSubmit}>
-                    <DialogContent sx={{ p: 0 }}>
-                        {error && (
-                            <Alert severity="error" sx={{ mb: 2 }}>
-                                {error}
-                            </Alert>
-                        )}
-                        {success && (
-                            <Alert severity="success" sx={{ mb: 2 }}>
-                                Бронирование успешно создано!
-                            </Alert>
-                        )}
+                <>
+                    <form onSubmit={handleSubmit}>
+                        <DialogContent sx={{ p: 0 }}>
+                            {error && (
+                                <Alert severity="error" sx={{ mb: 2 }}>
+                                    {error}
+                                </Alert>
+                            )}
+                            {success && (
+                                <Alert severity="success" sx={{ mb: 2 }}>
+                                    Бронирование успешно создано!
+                                </Alert>
+                            )}
 
-                        {renderCarDetails()}
+                            {renderCarDetails()}
 
-                        <Divider sx={{ my: 3 }} />
+                            <Divider sx={{ my: 3 }} />
 
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                    <DateIcon sx={{ mr: 1, verticalAlign: 'bottom' }} />
-                                    Период аренды
-                                </Typography>
-                                <Box sx={{ display: 'flex', gap: 2 }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                        <DateIcon sx={{ mr: 1, verticalAlign: 'bottom' }} />
+                                        Период аренды
                                     </Typography>
-                                </Box>
-                            </Grid>
+                                    <Box sx={{ display: 'flex', gap: 2 }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
 
-                            <Grid item xs={12}>
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                    <LocationIcon sx={{ mr: 1, verticalAlign: 'bottom' }} />
-                                    Место получения и возврата
-                                </Typography>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Место получения"
-                                            fullWidth
-                                            size="small"
-                                            value={bookingData.pickup_location}
-                                            onChange={(e) => setBookingData({
-                                                ...bookingData,
-                                                pickup_location: e.target.value
-                                            })}
-                                            required
-                                        />
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                        <LocationIcon sx={{ mr: 1, verticalAlign: 'bottom' }} />
+                                        Место получения и возврата
+                                    </Typography>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="Место получения"
+                                                fullWidth
+                                                size="small"
+                                                value={bookingData.pickup_location}
+                                                onChange={(e) => setBookingData({
+                                                    ...bookingData,
+                                                    pickup_location: e.target.value
+                                                })}
+                                                required
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="Место возврата"
+                                                fullWidth
+                                                size="small"
+                                                value={bookingData.dropoff_location}
+                                                onChange={(e) => setBookingData({
+                                                    ...bookingData,
+                                                    dropoff_location: e.target.value
+                                                })}
+                                                required
+                                            />
+                                        </Grid>
                                     </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Место возврата"
-                                            fullWidth
-                                            size="small"
-                                            value={bookingData.dropoff_location}
-                                            onChange={(e) => setBookingData({
-                                                ...bookingData,
-                                                dropoff_location: e.target.value
-                                            })}
-                                            required
-                                        />
-                                    </Grid>
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={bookingData.include_insurance}
+                                                onChange={(e) => setBookingData({
+                                                    ...bookingData,
+                                                    include_insurance: e.target.checked
+                                                })}
+                                                icon={<InsuranceIcon />}
+                                                checkedIcon={<InsuranceIcon />}
+                                            />
+                                        }
+                                        label="Включить страховку (500₽ в день)"
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <TextField
+                                        label="Дополнительные пожелания"
+                                        fullWidth
+                                        multiline
+                                        rows={3}
+                                        value={bookingData.additional_notes}
+                                        onChange={(e) => setBookingData({
+                                            ...bookingData,
+                                            additional_notes: e.target.value
+                                        })}
+                                    />
                                 </Grid>
                             </Grid>
 
-                            <Grid item xs={12}>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={bookingData.include_insurance}
-                                            onChange={(e) => setBookingData({
-                                                ...bookingData,
-                                                include_insurance: e.target.checked
-                                            })}
-                                            icon={<InsuranceIcon />}
-                                            checkedIcon={<InsuranceIcon />}
-                                        />
-                                    }
-                                    label="Включить страховку (500₽ в день)"
-                                />
-                            </Grid>
+                            {renderPriceDetails()}
+                        </DialogContent>
 
-                            <Grid item xs={12}>
-                                <TextField
-                                    label="Дополнительные пожелания"
-                                    fullWidth
-                                    multiline
-                                    rows={3}
-                                    value={bookingData.additional_notes}
-                                    onChange={(e) => setBookingData({
-                                        ...bookingData,
-                                        additional_notes: e.target.value
-                                    })}
-                                />
-                            </Grid>
-                        </Grid>
+                        <DialogActions sx={{ p: 0, mt: 3 }}>
+                            <Button onClick={onClose} color="inherit">
+                                Отмена
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                disabled={loading || !startDate || !endDate}
+                                startIcon={<PaymentIcon />}
+                            >
+                                Забронировать
+                            </Button>
+                        </DialogActions>
+                    </form>
 
-                        {renderPriceDetails()}
-                    </DialogContent>
 
-                    <DialogActions sx={{ p: 0, mt: 3 }}>
-                        <Button onClick={onClose} color="inherit">
-                            Отмена
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={loading || !startDate || !endDate}
-                            startIcon={<PaymentIcon />}
-                        >
-                            Забронировать
-                        </Button>
-                    </DialogActions>
-                </form>
+                </>
             )}
         </Dialog>
     );

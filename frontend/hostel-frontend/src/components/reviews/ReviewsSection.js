@@ -5,13 +5,15 @@ import { PencilLine } from 'lucide-react';
 import { ReviewForm, ReviewCard, RatingStats } from './ReviewComponents';
 import axios from '../../api/axios';
 
+
 const ReviewsSection = ({
-    entityType, // тип сущности (listing, room, car)
-    entityId,   // ID сущности
-    entityTitle, // название сущности для отображения
+    entityType,
+    entityId,
+    entityTitle,
     canReview = true,
     onReviewsCountChange
 }) => {
+
     const [reviews, setReviews] = useState([]);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -19,7 +21,7 @@ const ReviewsSection = ({
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-    
+
 
     // Загрузка отзывов и статистики
     const fetchData = async () => {
@@ -36,8 +38,8 @@ const ReviewsSection = ({
             ]);
             console.log('Reviews response:', reviewsResponse.data);
             console.log('Stats response:', statsResponse.data);
-    
-            setReviews(reviewsResponse.data.data.data  || []); // Обновляем отзывы
+
+            setReviews(reviewsResponse.data.data.data || []); // Обновляем отзывы
             setStats(statsResponse.data.data); // Обновляем статистику
         } catch (err) {
             setError('Не удалось загрузить отзывы');
@@ -46,7 +48,7 @@ const ReviewsSection = ({
             setLoading(false);
         }
     };
-    
+
 
     useEffect(() => {
         fetchData();
@@ -57,25 +59,39 @@ const ReviewsSection = ({
         }
     }, [reviews, onReviewsCountChange]);
     // Обработка создания/редактирования отзыва
+    // frontend/hostel-frontend/src/components/reviews/ReviewsSection.js
+
     const handleReviewSubmit = async ({ reviewData, photosFormData }) => {
         try {
             console.log('Sending review data:', reviewData);
 
             // Сначала создаем отзыв
             const response = await axios.post('/api/v1/reviews', reviewData);
+            const reviewId = response.data.data.id; // Получаем ID созданного отзыва
 
-            // Если есть фотографии и отзыв успешно создан - загружаем их
-            if (photosFormData && response.data && response.data.id) {
-                await axios.post(`/api/v1/reviews/${response.data.id}/photos`, photosFormData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
+            // Если есть фотографии - загружаем их
+            if (photosFormData && photosFormData.getAll('photos').length > 0) {
+                try {
+                    await axios.post(`/api/v1/reviews/${reviewId}/photos`, photosFormData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+                } catch (photoErr) {
+                    console.error('Error uploading photos:', photoErr);
+                    // Показываем уведомление об ошибке загрузки фото
+                    setSnackbar({
+                        open: true,
+                        message: 'Отзыв создан, но возникла ошибка при загрузке фотографий',
+                        severity: 'warning'
+                    });
+                    return;
+                }
             }
 
             setShowReviewForm(false);
             setEditingReview(null);
-            fetchData();
+            fetchData(); // Обновляем список отзывов
             setSnackbar({
                 open: true,
                 message: 'Отзыв успешно создан',
@@ -94,7 +110,7 @@ const ReviewsSection = ({
     const handleVote = async (reviewId, voteType) => {
         // Сохраняем старые данные для отката в случае ошибки
         const oldReviews = [...reviews];
-        
+
         // Оптимистично обновляем UI
         setReviews((prevReviews) =>
             prevReviews.map((review) =>
@@ -110,19 +126,19 @@ const ReviewsSection = ({
                     : review
             )
         );
-    
+
         try {
             // Отправляем голос на сервер
             await axios.post(`/api/v1/reviews/${reviewId}/vote`, {
                 vote_type: voteType,
             });
-            
+
             // Важно! Убираем немедленный fetchData()
             // Вместо этого подождем некоторое время перед обновлением данных
             setTimeout(() => {
                 fetchData();
             }, 1000);
-            
+
         } catch (err) {
             // В случае ошибки возвращаем старые данные
             setReviews(oldReviews);
@@ -133,9 +149,9 @@ const ReviewsSection = ({
             });
         }
     };
-    
-    
-    
+
+
+
 
     // Обработка ответа на отзыв
     const handleReply = async (reviewId, response) => {
@@ -212,7 +228,7 @@ const ReviewsSection = ({
 
             {/* Список отзывов */}
             {Array.isArray(reviews) && reviews.map(review => {
-                console.log('Review data:', review); // Добавляем это
+                console.log('Review data:', review);
                 return (
                     <ReviewCard
                         key={review.id}

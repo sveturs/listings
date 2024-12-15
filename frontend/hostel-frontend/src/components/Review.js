@@ -1,5 +1,5 @@
 //frontend/hostel-frontend/src/components/Review.js
-import React, { useState } from 'react';
+/*import React, { useState } from 'react';
 import {
     Box,
     Card,
@@ -38,8 +38,7 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
         <Card sx={{ mb: 2, borderRadius: 2 }}>
             <CardContent>
                 <Stack spacing={2}>
-                    {/* Заголовок с информацией о пользователе */}
-                    <Stack direction="row" spacing={2} alignItems="center">
+                     <Stack direction="row" spacing={2} alignItems="center">
                         <Avatar src={review.user?.picture_url} />
                         <Box>
                             <Typography variant="subtitle1" fontWeight="bold">
@@ -59,13 +58,11 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
                         )}
                     </Stack>
 
-                    {/* Рейтинг */}
-                    <Box>
+                     <Box>
                         <Rating value={review.rating} readOnly precision={1} />
                     </Box>
 
-                    {/* Основной контент */}
-                    <Box>
+                     <Box>
                         {review.comment && (
                             <Typography variant="body1" paragraph>
                                 {review.comment}
@@ -91,27 +88,26 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
                         )}
                     </Box>
 
-                    {/* Фотографии */}
-                    {review.photos && review.photos.length > 0 && (
+                     {review.photos && review.photos.length > 0 && (
                         <Stack direction="row" spacing={1} sx={{ overflowX: 'auto' }}>
                             {review.photos.map((photo, index) => (
                                 <Box
                                     key={index}
                                     component="img"
-                                    src={photo}
-                                    sx={{
-                                        height: 100,
+                                    src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${photo}`}
+                                    alt={`Review ${index + 1}`}
+                                    style={{
                                         width: 100,
+                                        height: 100,
                                         objectFit: 'cover',
-                                        borderRadius: 1
+                                        borderRadius: '4px'
                                     }}
                                 />
                             ))}
                         </Stack>
                     )}
 
-                    {/* Действия */}
-                    <Stack direction="row" spacing={2} alignItems="center">
+                     <Stack direction="row" spacing={2} alignItems="center">
                         <Button
                             size="small"
                             startIcon={<ThumbsUp />}
@@ -133,15 +129,14 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
                             startIcon={<MessageSquare />}
                             onClick={() => setShowResponseForm(!showResponseForm)}
                         >
-                            Ответить
+                            Ответккккккккккккккккить
                         </Button>
                         <IconButton onClick={() => onReport(review.id)}>
                             <Flag size={20} />
                         </IconButton>
                     </Stack>
 
-                    {/* Форма ответа */}
-                    {showResponseForm && (
+                     {showResponseForm && (
                         <Box sx={{ mt: 2 }}>
                             <TextField
                                 fullWidth
@@ -169,8 +164,7 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
                         </Box>
                     )}
 
-                    {/* Ответы */}
-                    {review.responses && review.responses.length > 0 && (
+                     {review.responses && review.responses.length > 0 && (
                         <List>
                             {review.responses.map((response) => (
                                 <ListItem key={response.id} sx={{ pl: 4 }}>
@@ -202,4 +196,4 @@ const ReviewCard = ({ review, onVote, onRespond, onReport, currentUserId }) => {
 };
 
 
-export default ReviewForm;
+export default ReviewForm; */

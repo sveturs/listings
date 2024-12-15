@@ -58,29 +58,27 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
 
         setPhotoFiles(prev => [...prev, ...validFiles]);
     };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Создаем объект с данными отзыва
         const reviewData = {
             entity_type: entityType,
             entity_id: entityId,
-            rating: parseInt(formData.rating), // преобразуем в число
+            rating: parseInt(formData.rating),
             comment: formData.comment,
             pros: formData.pros,
             cons: formData.cons
         };
 
-        // Если есть фотографии, создаем FormData для них
         let photosFormData = null;
         if (photoFiles.length > 0) {
             photosFormData = new FormData();
-            photoFiles.forEach(file => {
+            photoFiles.forEach((file, index) => {
                 photosFormData.append('photos', file);
             });
         }
 
-        // Отправляем данные
         onSubmit({ reviewData, photosFormData });
     };
 
@@ -316,9 +314,10 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                     {review.photos && review.photos.length > 0 && (
                         <Stack direction="row" spacing={1} sx={{ overflowX: 'auto' }}>
                             {review.photos.map((photo, index) => (
-                                <img
+                                <Box
                                     key={index}
-                                    src={photo}
+                                    component="img"
+                                    src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${photo}`}
                                     alt={`Review ${index + 1}`}
                                     style={{
                                         width: 100,

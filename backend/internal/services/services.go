@@ -44,7 +44,7 @@ func NewServices(storage storage.Storage, cfg *config.Config) *Services {
     }
 }
 type ReviewServiceInterface interface {
-    CreateReview(ctx context.Context, userId int, review *models.CreateReviewRequest) error
+    CreateReview(ctx context.Context, userId int, review *models.CreateReviewRequest) (*models.Review, error)
     GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
     GetReviewByID(ctx context.Context, id int) (*models.Review, error)
     UpdateReview(ctx context.Context, userId int, reviewId int, review *models.Review) error
@@ -54,7 +54,6 @@ type ReviewServiceInterface interface {
     GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error)
     GetReviewStats(ctx context.Context, entityType string, entityId int) (*models.ReviewStats, error)
     UpdateReviewPhotos(ctx context.Context, reviewId int, photoUrls []string) error
-
 }
 func (s *Services) Auth() AuthServiceInterface { 
     return s.auth

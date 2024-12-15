@@ -26,8 +26,8 @@ type Storage interface {
 	GetCarWithFeatures(ctx context.Context, carID int) (*models.Car, error)
 
 	// Reviews
-	CreateReview(ctx context.Context, review *models.Review) error
-	GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
+    CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)
+ 	GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
 	GetReviewByID(ctx context.Context, id int) (*models.Review, error)
 	UpdateReview(ctx context.Context, review *models.Review) error
 	DeleteReview(ctx context.Context, id int) error

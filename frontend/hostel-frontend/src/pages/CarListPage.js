@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { LoadScript } from '@react-google-maps/api';
 import MapView from '../components/CarMapView';
 import CarBookingDialog from '../components/CarBookingDialog';
+import CarDetailsDialog from '../components/CarDetailsDialog';
 import {
   Box,
   Button,
   Card,
+  Rating,
   CardContent,
   CardMedia,
   Chip,
@@ -37,7 +39,9 @@ import {
   Clear as ClearIcon
 } from '@mui/icons-material';
 import { debounce } from 'lodash';
+
 import axios from '../api/axios';
+
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -45,8 +49,9 @@ export default function CarListPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   const [viewMode, setViewMode] = useState('list');
+  const [selectedCarDetails, setSelectedCarDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(!isMobile);
   const [cars, setCars] = useState([]);
@@ -102,9 +107,9 @@ export default function CarListPage() {
   };
 
   const renderFilters = () => (
-    <Paper 
-      elevation={0} 
-      sx={{ 
+    <Paper
+      elevation={0}
+      sx={{
         p: 2,
         border: 1,
         borderColor: 'divider',
@@ -113,8 +118,8 @@ export default function CarListPage() {
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
         <Typography variant="h6">Фильтры</Typography>
-        <Button 
-          size="small" 
+        <Button
+          size="small"
           startIcon={<ClearIcon />}
           onClick={clearFilters}
         >
@@ -134,7 +139,7 @@ export default function CarListPage() {
             InputLabelProps={{ shrink: true }}
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <TextField
             label="Дата окончания"
@@ -205,9 +210,11 @@ export default function CarListPage() {
   );
 
   const renderCarCard = (car) => (
-    <Card 
+    <Card
+      onClick={() => setSelectedCarDetails(car)}
       elevation={0}
       sx={{
+        cursor: 'pointer',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -231,8 +238,8 @@ export default function CarListPage() {
             height: '100%',
             objectFit: 'cover'
           }}
-          image={car.images?.[0] ? 
-            `${BACKEND_URL}/uploads/${car.images[0].file_path}` : 
+          image={car.images?.[0] ?
+            `${BACKEND_URL}/uploads/${car.images[0].file_path}` :
             '/placeholder-car.jpg'
           }
           alt={`${car.make} ${car.model}`}
@@ -257,9 +264,9 @@ export default function CarListPage() {
       <CardContent sx={{ flexGrow: 1, p: 2 }}>
         <Typography variant="h6" gutterBottom>
           {car.make} {car.model}
-          <Typography 
-            component="span" 
-            color="text.secondary" 
+          <Typography
+            component="span"
+            color="text.secondary"
             sx={{ ml: 1 }}
           >
             {car.year}
@@ -271,8 +278,8 @@ export default function CarListPage() {
             icon={<FuelIcon />}
             label={
               car.fuel_type === 'petrol' ? 'Бензин' :
-              car.fuel_type === 'diesel' ? 'Дизель' :
-              car.fuel_type === 'electric' ? 'Электро' : 'Гибрид'
+                car.fuel_type === 'diesel' ? 'Дизель' :
+                  car.fuel_type === 'electric' ? 'Электро' : 'Гибрид'
             }
             size="small"
           />
@@ -294,8 +301,8 @@ export default function CarListPage() {
         </Typography>
 
         {car.features?.length > 0 && (
-          <Typography 
-            variant="body2" 
+          <Typography
+            variant="body2"
             color="text.secondary"
             sx={{
               display: '-webkit-box',
@@ -307,6 +314,15 @@ export default function CarListPage() {
           >
             {car.features.join(' • ')}
           </Typography>
+        )}
+        {car.rating > 0 && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <Rating value={car.rating} precision={0.1} readOnly size="small" />
+            <Typography variant="body2" color="text.secondary">
+              {car.reviews_count} {car.reviews_count === 1 ? 'отзыв' :
+                car.reviews_count < 5 ? 'отзыва' : 'отзывов'}
+            </Typography>
+          </Box>
         )}
       </CardContent>
 
@@ -323,7 +339,8 @@ export default function CarListPage() {
         </Box>
         <Button
           variant="contained"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation(); // Предотвращаем открытие CarDetailsDialog
             setSelectedCar(car);
             setBookingDialogOpen(true);
           }}
@@ -338,8 +355,8 @@ export default function CarListPage() {
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ 
-          display: 'flex', 
+        <Box sx={{
+          display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           mb: 3,
@@ -408,6 +425,8 @@ export default function CarListPage() {
               setSelectedCar(car);
               setBookingDialogOpen(true);
             }}
+            onViewDetails={(car) => setSelectedCarDetails(car)} // Добавьте этот обработчик
+            onOpenGallery={(car) => setSelectedCarDetails(car)}
           />
         </LoadScript>
       )}
@@ -424,6 +443,18 @@ export default function CarListPage() {
           endDate={filters.end_date}
         />
       )}
+
+      {/* Добавляем диалог с подробной информацией */}
+      <CarDetailsDialog
+        open={Boolean(selectedCarDetails)}
+        onClose={() => setSelectedCarDetails(null)}
+        car={selectedCarDetails}
+        onBook={(car) => {
+          setSelectedCarDetails(null);
+          setSelectedCar(car);
+          setBookingDialogOpen(true);
+        }}
+      />
     </Container>
   );
 }

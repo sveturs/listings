@@ -10,8 +10,8 @@ import (
     "database/sql"
 )
 
-func (db *Database) CreateReview(ctx context.Context, review *models.Review) error {
-    return db.pool.QueryRow(ctx, `
+func (db *Database) CreateReview(ctx context.Context, review *models.Review) (*models.Review, error) {
+    err := db.pool.QueryRow(ctx, `
         INSERT INTO reviews (
             user_id, entity_type, entity_id, rating, comment, 
             pros, cons, photos, is_verified_purchase, status
@@ -22,8 +22,13 @@ func (db *Database) CreateReview(ctx context.Context, review *models.Review) err
         review.Comment, review.Pros, review.Cons, review.Photos,
         review.IsVerifiedPurchase, review.Status,
     ).Scan(&review.ID, &review.CreatedAt, &review.UpdatedAt)
-}
 
+    if err != nil {
+        return nil, err
+    }
+
+    return review, nil
+}
 func (db *Database) AddReviewResponse(ctx context.Context, response *models.ReviewResponse) error {
     return db.pool.QueryRow(ctx, `
         INSERT INTO review_responses (review_id, user_id, response)

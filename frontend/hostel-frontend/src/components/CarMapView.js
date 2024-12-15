@@ -7,6 +7,7 @@ import {
     Box,
     Button,
     Chip,
+    Rating,
     CardMedia,
 } from '@mui/material';
 import {
@@ -26,8 +27,8 @@ const defaultCenter = {
     lat: 45.2671, // Нови-Сад
     lng: 19.8335
 };
+const CarMapView = ({ cars, onCarSelect, onOpenGallery, onViewDetails }) => { 
 
-const CarMapView = ({ cars, onCarSelect, onOpenGallery }) => {
     const [map, setMap] = useState(null);
     const [selectedCar, setSelectedCar] = useState(null);
 
@@ -70,6 +71,7 @@ const CarMapView = ({ cars, onCarSelect, onOpenGallery }) => {
     }, [cars]);
 
     const InfoWindowContent = ({ car }) => {
+        
         const hasImages = car.images && car.images.length > 0;
         const mainImage = hasImages ? car.images[0] : null;
 
@@ -89,6 +91,7 @@ const CarMapView = ({ cars, onCarSelect, onOpenGallery }) => {
                         onClick={(e) => {
                             e.stopPropagation();
                             onOpenGallery(car);
+                            onViewDetails(car);
                         }}
                     >
                         <CardMedia
@@ -166,6 +169,15 @@ const CarMapView = ({ cars, onCarSelect, onOpenGallery }) => {
                         Забронировать
                     </Button>
                 </CardContent>
+                {car.rating > 0 && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+          <Rating value={car.rating} precision={0.1} readOnly size="small" />
+          <Typography variant="body2" color="text.secondary">
+            {car.reviews_count} {car.reviews_count === 1 ? 'отзыв' : 
+             car.reviews_count < 5 ? 'отзыва' : 'отзывов'}
+          </Typography>
+        </Box>
+      )}
             </Card>
         );
     };
