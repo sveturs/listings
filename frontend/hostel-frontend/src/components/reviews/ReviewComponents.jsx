@@ -1,5 +1,6 @@
 //frontend/hostel-frontend/src/components/reviews/ReviewComponents.jsx
 import React, { useState } from 'react';
+import PhotoViewer from '../PhotoViewer';
 import { useMediaQuery } from '@mui/material';
 import {
     Box,
@@ -211,6 +212,8 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
 // Компонент отдельного отзыва
 const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, onReport }) => {
     const [showReplyForm, setShowReplyForm] = useState(false);
+    const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
+    const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
     const [replyText, setReplyText] = useState('');
     const [menuAnchor, setMenuAnchor] = useState(null);
 
@@ -312,22 +315,41 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                     )}
 
                     {review.photos && review.photos.length > 0 && (
-                        <Stack direction="row" spacing={1} sx={{ overflowX: 'auto' }}>
-                            {review.photos.map((photo, index) => (
-                                <Box
-                                    key={index}
-                                    component="img"
-                                    src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${photo}`}
-                                    alt={`Review ${index + 1}`}
-                                    style={{
-                                        width: 100,
-                                        height: 100,
-                                        objectFit: 'cover',
-                                        borderRadius: '4px'
-                                    }}
-                                />
-                            ))}
-                        </Stack>
+                        <>
+                            <Stack direction="row" spacing={1} sx={{ overflowX: 'auto' }}>
+                                {review.photos.map((photo, index) => (
+                                    <Box
+                                        key={index}
+                                        component="img"
+                                        src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${photo}`}
+                                        alt={`Review ${index + 1}`}
+                                        onClick={() => {
+                                            setCurrentPhotoIndex(index);
+                                            setPhotoViewerOpen(true);
+                                        }}
+                                        sx={{
+                                            width: 100,
+                                            height: 100,
+                                            objectFit: 'cover',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            transition: 'transform 0.2s',
+                                            '&:hover': {
+                                                transform: 'scale(1.05)'
+                                            }
+                                        }}
+                                    />
+                                ))}
+                            </Stack>
+
+                            {/* Добавляем просмотрщик фотографий */}
+                            <PhotoViewer
+                                open={photoViewerOpen}
+                                onClose={() => setPhotoViewerOpen(false)}
+                                photos={review.photos}
+                                currentIndex={currentPhotoIndex}
+                            />
+                        </>
                     )}
 
                     {/* Кнопки голосования */}
