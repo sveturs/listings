@@ -9,7 +9,8 @@ const ReviewsSection = ({
     entityType, // тип сущности (listing, room, car)
     entityId,   // ID сущности
     entityTitle, // название сущности для отображения
-    canReview = true // может ли пользователь оставлять отзывы
+    canReview = true,
+    onReviewsCountChange
 }) => {
     const [reviews, setReviews] = useState([]);
     const [stats, setStats] = useState(null);
@@ -18,6 +19,7 @@ const ReviewsSection = ({
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    
 
     // Загрузка отзывов и статистики
     const fetchData = async () => {
@@ -32,9 +34,10 @@ const ReviewsSection = ({
                 }),
                 axios.get(`/api/v1/entity/${entityType}/${entityId}/stats`)
             ]);
-
-            // Добавим проверку данных
-            setReviews(reviewsResponse.data.data || []);  // Если нет данных, используем пустой массив
+            console.log('Reviews response:', reviewsResponse.data);
+            console.log('Stats response:', statsResponse.data);
+            
+            setReviews(reviewsResponse.data.data.data || []); // Изменена эта строка
             setStats(statsResponse.data.data);
         } catch (err) {
             setError('Не удалось загрузить отзывы');
@@ -47,15 +50,19 @@ const ReviewsSection = ({
     useEffect(() => {
         fetchData();
     }, [entityType, entityId]);
-
+    useEffect(() => {
+        if (reviews && onReviewsCountChange) {
+            onReviewsCountChange(reviews.length);
+        }
+    }, [reviews, onReviewsCountChange]);
     // Обработка создания/редактирования отзыва
     const handleReviewSubmit = async ({ reviewData, photosFormData }) => {
         try {
             console.log('Sending review data:', reviewData);
-            
+
             // Сначала создаем отзыв
             const response = await axios.post('/api/v1/reviews', reviewData);
-            
+
             // Если есть фотографии и отзыв успешно создан - загружаем их
             if (photosFormData && response.data && response.data.id) {
                 await axios.post(`/api/v1/reviews/${response.data.id}/photos`, photosFormData, {
@@ -64,7 +71,7 @@ const ReviewsSection = ({
                     }
                 });
             }
-    
+
             setShowReviewForm(false);
             setEditingReview(null);
             fetchData();
@@ -170,20 +177,23 @@ const ReviewsSection = ({
             )}
 
             {/* Список отзывов */}
-            {Array.isArray(reviews) && reviews.map(review => (
-                <ReviewCard
-                    key={review.id}
-                    review={review}
-                    onVote={handleVote}
-                    onReply={handleReply}
-                    onEdit={(review) => {
-                        setEditingReview(review);
-                        setShowReviewForm(true);
-                    }}
-                    onDelete={handleDelete}
-                    onReport={handleReport}
-                />
-            ))}
+            {Array.isArray(reviews) && reviews.map(review => {
+                console.log('Review data:', review); // Добавляем это
+                return (
+                    <ReviewCard
+                        key={review.id}
+                        review={review}
+                        onVote={handleVote}
+                        onReply={handleReply}
+                        onEdit={(review) => {
+                            setEditingReview(review);
+                            setShowReviewForm(true);
+                        }}
+                        onDelete={handleDelete}
+                        onReport={handleReport}
+                    />
+                );
+            })}
 
             {/* Диалог создания/редактирования отзыва */}
             <Dialog

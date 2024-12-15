@@ -1,5 +1,5 @@
 //frontend/hostel-frontend/src/pages/ListingDetailsPage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import ReviewsSection from '../components/reviews/ReviewsSection';
 import {
@@ -31,17 +31,19 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from '../api/axios';
-
 const ListingDetailsPage = () => {
     const { id } = useParams();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const { user } = useAuth();
+    const reviewsRef = useRef(null);
 
     const [listing, setListing] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [reviewsCount, setReviewsCount] = useState(0);
+
 
     useEffect(() => {
         const fetchListing = async () => {
@@ -59,7 +61,15 @@ const ListingDetailsPage = () => {
 
         fetchListing();
     }, [id]);
-
+    const scrollToReviews = () => {
+        const reviewsSection = document.getElementById('reviews-section');
+        if (reviewsSection) {
+            reviewsSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    };
     const handleFavoriteClick = async () => {
         if (!user) {
             // Можно показать сообщение о необходимости авторизации
@@ -236,19 +246,38 @@ const ListingDetailsPage = () => {
                                     {new Date(listing.created_at).toLocaleDateString()}
                                 </Typography>
                             </Box>
+                            <Box
+                                component="button"
+                                onClick={scrollToReviews}
+                                sx={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'primary.main',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    padding: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    '&:hover': {
+                                        color: 'primary.dark'
+                                    }
+                                }}
+                            >
+                                {reviewsCount} отзывов
+                            </Box>
                         </Stack>
-
                         <Typography variant="body1" sx={{ mb: 4 }}>
                             {listing.description}
                         </Typography>
 
                         {/* Отзывы */}
-                        <Box sx={{ mt: 4 }}>
+                        <Box id="reviews-section" ref={reviewsRef} sx={{ mt: 4 }}>
                             <ReviewsSection
                                 entityType="listing"
                                 entityId={parseInt(id)}
                                 entityTitle={listing.title}
                                 canReview={user && user.id !== listing.user_id}
+                                onReviewsCountChange={setReviewsCount}
                             />
                         </Box>
                     </Box>
