@@ -92,9 +92,13 @@ const ReviewsSection = ({
     // Обработка голосования за отзыв
     const handleVote = async (reviewId, voteType) => {
         try {
+            console.log('Voting for review:', reviewId, voteType);
             await axios.post(`/api/v1/reviews/${reviewId}/vote`, { vote_type: voteType });
-            fetchData();
+            console.log('Vote successful, fetching new data...');
+            await fetchData();
+            console.log('Data updated after vote');
         } catch (err) {
+            console.error('Vote error:', err);
             setSnackbar({
                 open: true,
                 message: 'Ошибка при голосовании',

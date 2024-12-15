@@ -16,8 +16,8 @@ import {
     Menu,
     MenuItem
 } from '@mui/material';
-import { 
-    ThumbsUp, 
+import {
+    ThumbsUp,
     ThumbsDown,
     MessageSquare,
     MoreVertical,
@@ -38,28 +38,28 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
         photos: initialData?.photos || []
     });
     const [photoFiles, setPhotoFiles] = useState([]);
-// В компоненте ReviewForm, перед handleSubmit добавляем:
+    // В компоненте ReviewForm, перед handleSubmit добавляем:
 
-const handlePhotoAdd = (event) => {
-    const files = Array.from(event.target.files);
-    
-    // Валидация файлов
-    const validFiles = files.filter(file => {
-        const isValidType = file.type.startsWith('image/');
-        const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
-        return isValidType && isValidSize;
-    });
+    const handlePhotoAdd = (event) => {
+        const files = Array.from(event.target.files);
 
-    if (validFiles.length + photoFiles.length > 10) {
-        alert('Можно загрузить максимум 10 фотографий');
-        return;
-    }
+        // Валидация файлов
+        const validFiles = files.filter(file => {
+            const isValidType = file.type.startsWith('image/');
+            const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
+            return isValidType && isValidSize;
+        });
 
-    setPhotoFiles(prev => [...prev, ...validFiles]);
-};
+        if (validFiles.length + photoFiles.length > 10) {
+            alert('Можно загрузить максимум 10 фотографий');
+            return;
+        }
+
+        setPhotoFiles(prev => [...prev, ...validFiles]);
+    };
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         // Создаем объект с данными отзыва
         const reviewData = {
             entity_type: entityType,
@@ -174,7 +174,7 @@ const handlePhotoAdd = (event) => {
                                         right: -10,
                                         bgcolor: 'background.paper'
                                     }}
-                                    onClick={() => setPhotoFiles(prev => 
+                                    onClick={() => setPhotoFiles(prev =>
                                         prev.filter((_, i) => i !== index)
                                     )}
                                 >
@@ -226,9 +226,9 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
             <CardContent>
                 <Stack spacing={2}>
                     {/* Заголовок с информацией о пользователе */}
-                    <Stack 
-                        direction="row" 
-                        alignItems="center" 
+                    <Stack
+                        direction="row"
+                        alignItems="center"
                         justifyContent="space-between"
                     >
                         <Stack direction="row" spacing={2} alignItems="center">
@@ -250,7 +250,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                 />
                             )}
                         </Stack>
-                        
+
                         {(currentUserId === review.user_id) && (
                             <>
                                 <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
@@ -424,10 +424,10 @@ const RatingStats = ({ stats }) => {
                 <Typography variant="h3" fontWeight="bold">
                     {stats.average_rating?.toFixed(1) || "0.0"}
                 </Typography>
-                <Rating 
-                    value={stats.average_rating || 0} 
-                    readOnly 
-                    precision={0.1} 
+                <Rating
+                    value={stats.average_rating || 0}
+                    readOnly
+                    precision={0.1}
                 />
                 <Typography color="text.secondary">
                     {stats.total_reviews || 0} отзывов
@@ -436,17 +436,17 @@ const RatingStats = ({ stats }) => {
 
             <Box flex={1}>
                 {[5, 4, 3, 2, 1].map(rating => (
-                    <Stack 
-                        key={rating} 
-                        direction="row" 
-                        spacing={2} 
-                        alignItems="center" 
+                    <Stack
+                        key={rating}
+                        direction="row"
+                        spacing={2}
+                        alignItems="center"
                         sx={{ mb: 1 }}
                     >
                         <Typography minWidth={20}>{rating}</Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={((stats.rating_distribution?.[rating] || 0) / 
+                            value={((stats.rating_distribution?.[rating] || 0) /
                                 (stats.total_reviews || 1)) * 100}
                             sx={{ flex: 1, height: 8, borderRadius: 1 }}
                         />
