@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 import ReviewsSection from './reviews/ReviewsSection';
 import { useAuth } from '../contexts/AuthContext';
+import ImageGallery from './ImageGallery';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -57,9 +58,9 @@ const RoomDetailsDialog = ({ open, onClose, room, onBook }) => {
             maxWidth="md"
             fullWidth
         >
-            <DialogTitle sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+            <DialogTitle sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 pb: 1
             }}>
@@ -83,22 +84,7 @@ const RoomDetailsDialog = ({ open, onClose, room, onBook }) => {
                 <Grid container spacing={3}>
                     {/* Галерея изображений */}
                     <Grid item xs={12}>
-                        <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 2 }}>
-                            {room?.images?.map((image, index) => (
-                                <Box
-                                    key={index}
-                                    component="img"
-                                    src={`${BACKEND_URL}/uploads/${image.file_path}`}
-                                    alt={room.name}
-                                    sx={{
-                                        height: 300,
-                                        minWidth: 400,
-                                        objectFit: 'cover',
-                                        borderRadius: 1,
-                                    }}
-                                />
-                            ))}
-                        </Box>
+                        <ImageGallery images={room?.images || []} />
                     </Grid>
 
                     {/* Основная информация */}
