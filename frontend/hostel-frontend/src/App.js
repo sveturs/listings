@@ -13,6 +13,8 @@ import AddCarPage from "./pages/AddCarPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import CreateListingPage from "./pages/CreateListingPage";
 import ListingDetailsPage from './pages/ListingDetailsPage';
+import UserProfile from './components/UserProfile';
+
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
             <Route path="/marketplace" element={<MarketplacePage />} />
             <Route path="/marketplace/create" element={<CreateListingPage />} />
             <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
+            <Route path="/profile" element={<UserProfile />} />
+
           
           </Routes>
         </Layout>

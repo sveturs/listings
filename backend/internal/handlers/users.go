@@ -3,7 +3,7 @@ package handlers
 import (
     "github.com/gofiber/fiber/v2"
     "backend/internal/services"
-    "backend/internal/types"
+//    "backend/internal/types"
     "backend/pkg/utils"
     "backend/internal/domain/models"
 )
@@ -19,45 +19,32 @@ func NewUserHandler(services services.ServicesInterface) *UserHandler {  // Из
 }
 
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
-    sessionData := c.Locals("user").(*types.SessionData)
-    if sessionData == nil {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Необходима авторизация")
-    }
-
-    user, err := h.services.User().GetUserByID(c.Context(), sessionData.UserID)
+    userID := c.Locals("user_id").(int)
+    
+    profile, err := h.services.User().GetUserProfile(c.Context(), userID)
     if err != nil {
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка получения профиля")
     }
 
-    return utils.SuccessResponse(c, user)
+    return utils.SuccessResponse(c, profile)
 }
 
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
-    sessionData := c.Locals("user").(*types.SessionData)
-    if sessionData == nil {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Необходима авторизация")
-    }
+    userID := c.Locals("user_id").(int)
 
-    var updateData struct {
-        Name string `json:"name"`
-    }
-
-    if err := c.BodyParser(&updateData); err != nil {
+    var update models.UserProfileUpdate
+    if err := c.BodyParser(&update); err != nil {
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
     }
 
-    user, err := h.services.User().GetUserByID(c.Context(), sessionData.UserID)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка получения профиля")
-    }
-
-    user.Name = updateData.Name
-    err = h.services.User().UpdateUser(c.Context(), user)
+    err := h.services.User().UpdateUserProfile(c.Context(), userID, &update)
     if err != nil {
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка обновления профиля")
     }
 
-    return utils.SuccessResponse(c, user)
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Профиль успешно обновлен",
+    })
 }
 
 func (h *UserHandler) Register(c *fiber.Ctx) error {

@@ -91,7 +91,7 @@ func (s *Server) setupRoutes() {
     reviews.Get("/", s.handlers.Reviews.GetReviews)  // Получение списка отзывов
     reviews.Get("/:id", s.handlers.Reviews.GetReviewByID)  // Получение отдельного отзыва
     reviews.Get("/stats", s.handlers.Reviews.GetStats)  // Статистика по отзывам
-	
+
 	// Auth routes
 	auth := s.app.Group("/auth")
 	auth.Get("/session", s.handlers.Auth.GetSession)
@@ -139,6 +139,8 @@ func (s *Server) setupRoutes() {
 	users.Post("/register", s.handlers.Users.Register)
 	users.Get("/me", s.handlers.Users.GetProfile)
 	users.Put("/me", s.handlers.Users.UpdateProfile)
+    users.Get("/profile", s.handlers.Users.GetProfile)
+    users.Put("/profile", s.handlers.Users.UpdateProfile)
 
 	// Защищенные маршруты маркетплейса
 	marketplaceProtected := api.Group("/marketplace")

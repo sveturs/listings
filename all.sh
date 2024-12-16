@@ -58,6 +58,7 @@ exclude_files=(
     "/data/proj/hostel-booking-system/backend/main.go"
     "/data/proj/hostel-booking-system/backend/database/db.go"
     "/data/proj/hostel-booking-system/package-lock.json"
+    "/data/proj/hostel-booking-system/test/main_test.go"
     
 
 

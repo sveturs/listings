@@ -104,7 +104,7 @@ const ListingCard = ({ listing, isMobile }) => {
                     {listing.title || 'Без названия'}
                 </Typography>
 
-                {/* Добавляем рейтинг */}
+                {/*  рейтинг */}
                 {listing.rating > 0 && (
                     <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 1 }}>
                         <Rating 

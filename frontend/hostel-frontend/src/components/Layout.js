@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   AppBar,
@@ -14,6 +14,7 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
+  Modal,
 } from "@mui/material";
 import {
   HomeWork,
@@ -26,6 +27,7 @@ import {
   AccountCircle,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
+import UserProfile from "../components/UserProfile";
 
 const Layout = ({ children }) => {
   const theme = useTheme();
@@ -37,7 +39,8 @@ const Layout = ({ children }) => {
 
   const { user, login, logout } = useAuth();
 
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const handleOpenMenu = (e) => {
     setAnchorEl(e.currentTarget);
@@ -45,6 +48,15 @@ const Layout = ({ children }) => {
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
+  };
+
+  const handleOpenProfile = () => {
+    setIsProfileOpen(true);
+    handleCloseMenu();
+  };
+
+  const handleCloseProfile = () => {
+    setIsProfileOpen(false);
   };
 
   const menuItems = [
@@ -147,7 +159,10 @@ const Layout = ({ children }) => {
                     transformOrigin={{ horizontal: "right", vertical: "top" }}
                     anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
                   >
-                    <MenuItem disabled sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0.5 }}>
+                    <MenuItem
+                      onClick={handleOpenProfile}
+                      sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0.5 }}
+                    >
                       <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600 }}>
                         {user.name}
                       </Typography>
@@ -180,6 +195,26 @@ const Layout = ({ children }) => {
           </Toolbar>
         </Container>
       </AppBar>
+
+      {/* Модальное окно для редактирования профиля */}
+      <Modal open={isProfileOpen} onClose={handleCloseProfile}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "90%",
+            maxWidth: 600,
+            bgcolor: "background.paper",
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <UserProfile onClose={handleCloseProfile} />
+        </Box>
+      </Modal>
 
       {/* Основной контент */}
       <Container maxWidth="lg" sx={{ py: 3 }}>

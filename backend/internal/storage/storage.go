@@ -13,6 +13,9 @@ type Storage interface {
 	GetUserByID(ctx context.Context, id int) (*models.User, error)
 	CreateUser(ctx context.Context, user *models.User) error
 	UpdateUser(ctx context.Context, user *models.User) error
+    GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error)
+    UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error
+    UpdateLastSeen(ctx context.Context, id int) error
 
 	// Методы для работы с автомобилями
 	CreateCarBooking(ctx context.Context, booking *models.CarBooking) error

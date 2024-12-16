@@ -1,3 +1,4 @@
+//backend/internal/services/user.go
 package services
 
 import (
@@ -15,7 +16,22 @@ func NewUserService(storage storage.Storage) *UserService {
         storage: storage,
     }
 }
+func (s *UserService) GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error) {
+    return s.storage.GetUserProfile(ctx, id)
+}
 
+func (s *UserService) UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error {
+    // Валидация данных
+    if err := update.Validate(); err != nil {
+        return err
+    }
+    
+    return s.storage.UpdateUserProfile(ctx, id, update)
+}
+
+func (s *UserService) UpdateLastSeen(ctx context.Context, id int) error {
+    return s.storage.UpdateLastSeen(ctx, id)
+}
 
 func (s *UserService) GetUserByID(ctx context.Context, id int) (*models.User, error) {
 	return s.storage.GetUserByID(ctx, id)
