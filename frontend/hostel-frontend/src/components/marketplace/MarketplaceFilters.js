@@ -1,204 +1,141 @@
-import React, { useState, useEffect } from 'react';
+//frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
+import React from 'react';
 import {
     Paper,
-    Typography,
-    TextField,
     Box,
-    Slider,
-    FormControl,
+    TextField,
     Select,
     MenuItem,
+    InputAdornment,
+    IconButton,
+    Typography,
     Divider,
-    FormControlLabel,
-    Switch,
-    CircularProgress,
-    Alert,
-    InputLabel  
 } from '@mui/material';
-import CategoryTree from './CategoryTree';
-import axios from '../../api/axios';
+import { Search, X } from 'lucide-react';
+import CompactCategoryTree from './CategoryTree';
 
-const MarketplaceFilters = ({ filters, onFilterChange }) => {
-    const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        const fetchCategories = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const response = await axios.get('/api/v1/marketplace/category-tree');
-                setCategories(response.data.data || []);
-            } catch (err) {
-                console.error('Error fetching categories:', err);
-                setError('Не удалось загрузить категории');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCategories();
-    }, []);
-
-    const handlePriceChange = (event, newValue) => {
-        onFilterChange({
-            min_price: newValue[0],
-            max_price: newValue[1]
-        });
-    };
-
-    const conditions = [
-        { value: '', label: 'Все' },
-        { value: 'new', label: 'Новое' },
-        { value: 'used', label: 'Б/у' }
-    ];
-
-    const sortOptions = [
-        { value: 'date_desc', label: 'Сначала новые' },
-        { value: 'date_asc', label: 'Сначала старые' },
-        { value: 'price_asc', label: 'Сначала дешевле' },
-        { value: 'price_desc', label: 'Сначала дороже' },
-        { value: 'views', label: 'По популярности' }
-    ];
-
+const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, selectedCategoryId }) => {
     return (
-        <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-                Фильтры
-            </Typography>
-
+        <Paper 
+            variant="outlined" 
+            sx={{ 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             {/* Поиск */}
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
                 <TextField
-                    label="Поиск по объявлениям"
                     fullWidth
+                    size="small"
+                    placeholder="Поиск"
                     value={filters.query || ''}
                     onChange={(e) => onFilterChange({ query: e.target.value })}
-                    size="small"
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Search size={16} />
+                            </InputAdornment>
+                        ),
+                        endAdornment: filters.query && (
+                            <InputAdornment position="end">
+                                <IconButton edge="end" size="small" onClick={() => onFilterChange({ query: '' })}>
+                                    <X size={14} />
+                                </IconButton>
+                            </InputAdornment>
+                        )
+                    }}
+                    sx={{ 
+                        '& .MuiInputBase-root': {
+                            height: 36
+                        }
+                    }}
                 />
             </Box>
-
-            <Divider sx={{ my: 2 }} />
 
             {/* Категории */}
-            {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                    <CircularProgress size={24} />
-                </Box>
-            ) : error ? (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            ) : (
-                <CategoryTree
+            <Box sx={{ 
+                flex: 1, 
+                overflow: 'auto',
+                '&::-webkit-scrollbar': {
+                    width: 6,
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    bgcolor: 'rgba(0,0,0,0.1)',
+                    borderRadius: 3,
+                }
+            }}>
+                <CompactCategoryTree
                     categories={categories}
-                    selectedId={filters.category_id}
+                    selectedId={selectedCategoryId}
                     onSelectCategory={(id) => onFilterChange({ category_id: id })}
                 />
-            )}
+            </Box>
 
-            <Divider sx={{ my: 2 }} />
-
-            {/* Цена */}
-            <Box sx={{ mb: 3 }}>
-                <Typography gutterBottom>Цена</Typography>
-                <Box sx={{ px: 1 }}>
-                    <Slider
-                        value={[
-                            Number(filters.min_price) || 0,
-                            Number(filters.max_price) || 10000000
-                        ]}
-                        onChange={handlePriceChange}
-                        valueLabelDisplay="auto"
-                        min={0}
-                        max={10000000}
-                        step={1000}
+            {/* Фильтры */}
+            <Box sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}>
+                <Typography variant="caption" color="text.secondary" gutterBottom>
+                    Цена
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
+                    <TextField
+                        size="small"
+                        placeholder="От"
+                        type="number"
+                        value={filters.min_price || ''}
+                        onChange={(e) => onFilterChange({ min_price: e.target.value })}
+                        InputProps={{
+                            startAdornment: <InputAdornment position="start">₽</InputAdornment>,
+                        }}
+                        sx={{ 
+                            '& .MuiInputBase-root': {
+                                height: 32,
+                                fontSize: '0.875rem'
+                            }
+                        }}
                     />
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <TextField
-                            label="От"
-                            type="number"
-                            size="small"
-                            value={filters.min_price || ''}
-                            onChange={(e) => onFilterChange({ min_price: e.target.value })}
-                        />
-                        <TextField
-                            label="До"
-                            type="number"
-                            size="small"
-                            value={filters.max_price || ''}
-                            onChange={(e) => onFilterChange({ max_price: e.target.value })}
-                        />
-                    </Box>
+                    <TextField
+                        size="small"
+                        placeholder="До"
+                        type="number"
+                        value={filters.max_price || ''}
+                        onChange={(e) => onFilterChange({ max_price: e.target.value })}
+                        InputProps={{
+                            startAdornment: <InputAdornment position="start">₽</InputAdornment>,
+                        }}
+                        sx={{ 
+                            '& .MuiInputBase-root': {
+                                height: 32,
+                                fontSize: '0.875rem'
+                            }
+                        }}
+                    />
                 </Box>
-            </Box>
 
-            {/* Состояние */}
-            <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                <InputLabel>Состояние</InputLabel>
+                <Typography variant="caption" color="text.secondary" gutterBottom>
+                    Сортировка
+                </Typography>
                 <Select
-                    value={filters.condition || ''}
-                    onChange={(e) => onFilterChange({ condition: e.target.value })}
-                    label="Состояние"
-                >
-                    {conditions.map(({ value, label }) => (
-                        <MenuItem key={value} value={value}>
-                            {label}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-
-            {/* Местоположение */}
-            <Box sx={{ mb: 2 }}>
-                <TextField
-                    label="Город"
                     fullWidth
                     size="small"
-                    value={filters.city || ''}
-                    onChange={(e) => onFilterChange({ city: e.target.value })}
-                    sx={{ mb: 2 }}
-                />
-                <TextField
-                    label="Страна"
-                    fullWidth
-                    size="small"
-                    value={filters.country || ''}
-                    onChange={(e) => onFilterChange({ country: e.target.value })}
-                />
-            </Box>
-
-            {/* Только с фото */}
-            <FormControlLabel
-                control={
-                    <Switch
-                        checked={filters.with_photos || false}
-                        onChange={(e) => onFilterChange({ with_photos: e.target.checked })}
-                    />
-                }
-                label="Только с фото"
-            />
-
-            <Divider sx={{ my: 2 }} />
-
-            {/* Сортировка */}
-            <FormControl fullWidth size="small">
-                <InputLabel>Сортировка</InputLabel>
-                <Select
                     value={filters.sort_by || 'date_desc'}
                     onChange={(e) => onFilterChange({ sort_by: e.target.value })}
-                    label="Сортировка"
+                    sx={{ 
+                        '& .MuiSelect-select': {
+                            py: 0.75,
+                            fontSize: '0.875rem'
+                        }
+                    }}
                 >
-                    {sortOptions.map(({ value, label }) => (
-                        <MenuItem key={value} value={value}>
-                            {label}
-                        </MenuItem>
-                    ))}
+                    <MenuItem value="date_desc">Сначала новые</MenuItem>
+                    <MenuItem value="price_asc">Сначала дешевле</MenuItem>
+                    <MenuItem value="price_desc">Сначала дороже</MenuItem>
+                    <MenuItem value="views">По популярности</MenuItem>
                 </Select>
-            </FormControl>
+            </Box>
         </Paper>
     );
 };
 
-export default MarketplaceFilters;
+export default CompactMarketplaceFilters;

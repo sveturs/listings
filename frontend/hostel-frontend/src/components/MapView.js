@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react'; // добавляем useEffect
 import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
 import {
     Card,
@@ -25,7 +25,7 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = {
-    lat: 45.2671, // Нови-Сад
+    lat: 45.2671,
     lng: 19.8335
 };
 
@@ -38,7 +38,7 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
         scrollwheel: true,
         mapTypeControl: true,
         mapTypeControlOptions: {
-            style: 'DEFAULT', // Убираем прямую ссылку на google.maps
+            style: 'DEFAULT',
             mapTypeIds: ["roadmap", "satellite", "hybrid"]
         },
         styles: [

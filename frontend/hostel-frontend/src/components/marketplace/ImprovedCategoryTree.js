@@ -1,4 +1,4 @@
-//frontend/hostel-frontend/src/components/marketplace/CategoryTree.js
+//frontend/hostel-frontend/src/components/marketplace/ImprovedCategoryTree.js
 import React, { useState } from 'react';
 import {
   List,
@@ -10,7 +10,10 @@ import {
   Box,
   useTheme
 } from '@mui/material';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import {
+  ChevronRight,
+  ChevronDown,
+} from 'lucide-react';
 
 const CategoryTreeItem = ({ 
   category, 
@@ -45,10 +48,13 @@ const CategoryTreeItem = ({
         }}
         selected={isSelected}
         sx={{
-          pl: level * 1.5 + 1,
+          pl: level * 2 + 1,
           py: 0.5,
           minHeight: 32,
           color: isSelected ? 'primary.main' : 'text.primary',
+          '&:hover': {
+            color: 'primary.main',
+          },
           '&.Mui-selected': {
             backgroundColor: theme.palette.primary.main + '08',
             '&:hover': {
@@ -57,20 +63,25 @@ const CategoryTreeItem = ({
           }
         }}
       >
-        <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
+        <ListItemIcon 
+          sx={{ 
+            minWidth: 24,
+            color: 'inherit'
+          }}
+        >
           {hasChildren && (
-            isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+            isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />
           )}
         </ListItemIcon>
 
         <ListItemText
           primary={
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography
                 variant="body2"
                 sx={{
-                  fontSize: '0.8125rem',
                   fontWeight: isSelected ? 500 : 400,
+                  fontSize: '0.875rem',
                 }}
               >
                 {category.name}
@@ -78,8 +89,10 @@ const CategoryTreeItem = ({
               {totalListings > 0 && (
                 <Typography
                   variant="caption"
-                  color={isSelected ? 'primary' : 'text.secondary'}
-                  sx={{ fontSize: '0.75rem' }}
+                  sx={{
+                    ml: 0.5,
+                    color: isSelected ? 'primary.main' : 'text.secondary',
+                  }}
                 >
                   {totalListings}
                 </Typography>
@@ -91,7 +104,7 @@ const CategoryTreeItem = ({
 
       {hasChildren && (
         <Collapse in={isOpen} timeout="auto">
-          <List disablePadding>
+          <List component="div" disablePadding>
             {category.children.map((child) => (
               <CategoryTreeItem
                 key={child.id}
