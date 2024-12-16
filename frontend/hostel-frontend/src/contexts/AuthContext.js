@@ -24,8 +24,9 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = () => {
-    window.location.href = `${process.env.REACT_APP_BACKEND_URL}/auth/google`;
+  // Объединяем функциональность в одной функции login
+  const login = (params = '') => {
+    window.location.href = `${process.env.REACT_APP_BACKEND_URL}/auth/google${params}`;
   };
 
   const logout = async () => {

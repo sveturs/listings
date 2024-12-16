@@ -4,6 +4,7 @@ import (
     "github.com/gofiber/fiber/v2"
     "backend/internal/services"
     "backend/pkg/utils"
+   
 )
 
 type AuthHandler struct {
@@ -17,37 +18,69 @@ func NewAuthHandler(services services.ServicesInterface) *AuthHandler {
 }
 
 func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
+    // Получаем returnTo из query параметров
+    returnTo := c.Query("returnTo")
+    if returnTo != "" {
+        // Сохраняем в cookie
+        c.Cookie(&fiber.Cookie{
+            Name:     "returnTo",
+            Value:    returnTo,
+            Path:     "/",
+            MaxAge:   300, // 5 минут
+            Secure:   true,
+            HTTPOnly: true,
+        })
+    }
     url := h.services.Auth().GetGoogleAuthURL()
     return c.Redirect(url)
 }
 
 func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	code := c.Query("code")
-	if code == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Missing code")
-	}
 
-	sessionData, err := h.services.Auth().HandleGoogleCallback(c.Context(), code)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Authentication failed")
-	}
+    sessionData, err := h.services.Auth().HandleGoogleCallback(c.Context(), code)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Authentication failed")
+    }
 
-	// Генерация токена сессии
-	sessionToken := utils.GenerateSessionToken()
-	h.services.Auth().SaveSession(sessionToken, sessionData)
+    // Генерация токена сессии
+    sessionToken := utils.GenerateSessionToken()
+    h.services.Auth().SaveSession(sessionToken, sessionData)
 
-	// Установка cookie
-	c.Cookie(&fiber.Cookie{
-		Name:     "session_token",
-		Value:    sessionToken,
-		Path:     "/",
-		MaxAge:   3600 * 24, // 24 часа
-		Secure:   true,
-		HTTPOnly: true,
-		SameSite: "Lax",
-	})
+    // Установка cookie
+    c.Cookie(&fiber.Cookie{
+        Name:     "session_token",
+        Value:    sessionToken,
+        Path:     "/",
+        MaxAge:   3600 * 24,
+        Secure:   true,
+        HTTPOnly: true,
+        SameSite: "Lax",
+    })
+    returnTo := h.services.Config().FrontendURL // значение по умолчанию
+    if saved := c.Cookies("returnTo"); saved != "" {
+        returnTo = h.services.Config().FrontendURL + saved
+        // Удаляем cookie
+        c.Cookie(&fiber.Cookie{
+            Name:   "returnTo",
+            Value:  "",
+            Path:   "/",
+            MaxAge: -1,
+        })
+    }
 
-    return c.Redirect(h.services.Config().FrontendURL)
+    // Устанавливаем cookie с токеном
+    c.Cookie(&fiber.Cookie{
+        Name:     "session_token",
+        Value:    sessionToken,
+        Path:     "/",
+        MaxAge:   3600 * 24,
+        Secure:   true,
+        HTTPOnly: true,
+        SameSite: "Lax",
+    })
+
+    return c.Redirect(returnTo)
 }
 
 func (h *AuthHandler) GetSession(c *fiber.Ctx) error {

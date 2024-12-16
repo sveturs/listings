@@ -136,7 +136,11 @@ const Layout = ({ children }) => {
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               {!user ? (
                 <Tooltip title="Войти">
-                  <IconButton onClick={login} color="primary">
+                  <IconButton onClick={() => {
+                    const returnUrl = window.location.pathname + window.location.search;
+                     const encodedReturnUrl = encodeURIComponent(returnUrl);
+                     login(`?returnTo=${encodedReturnUrl}`);
+                  }} color="primary">
                     <Key />
                   </IconButton>
                 </Tooltip>

@@ -17,6 +17,8 @@ type AuthService struct {
     storage      storage.Storage
 }
 
+// backend/internal/services/auth.go
+
 func NewAuthService(googleClientID, googleClientSecret, googleRedirectURL string, storage storage.Storage) *AuthService {
     googleConfig := &oauth2.Config{
         ClientID:     googleClientID,
@@ -36,7 +38,12 @@ func NewAuthService(googleClientID, googleClientSecret, googleRedirectURL string
 }
 
 func (s *AuthService) GetGoogleAuthURL() string {
-    return s.googleConfig.AuthCodeURL("state")
+    // Добавляем параметры для оптимизации входа
+    return s.googleConfig.AuthCodeURL("state",
+        oauth2.SetAuthURLParam("prompt", "select_account"),
+        oauth2.SetAuthURLParam("access_type", "offline"),
+        oauth2.SetAuthURLParam("include_granted_scopes", "true"),
+    )
 }
 
 func (s *AuthService) HandleGoogleCallback(ctx context.Context, code string) (*types.SessionData, error) {
