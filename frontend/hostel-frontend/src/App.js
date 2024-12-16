@@ -1,5 +1,9 @@
+//frontend/hostel-frontend/src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { future } from "@remix-run/router";
+
+
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
@@ -14,6 +18,7 @@ import MarketplacePage from "./pages/MarketplacePage";
 import CreateListingPage from "./pages/CreateListingPage";
 import ListingDetailsPage from './pages/ListingDetailsPage';
 import UserProfile from './components/UserProfile';
+import MyListingsPage from './pages/MyListingsPage';
 
 
 function App() {
@@ -34,6 +39,11 @@ function App() {
             <Route path="/marketplace/create" element={<CreateListingPage />} />
             <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/marketplace" element={<MarketplacePage />} />
+            
+            
+            <Route path="/my-listings" element={<MyListingsPage />} />
+            
 
           
           </Routes>

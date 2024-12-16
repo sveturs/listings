@@ -9,37 +9,58 @@ import {
   Paper,
   Typography,
   Chip,
-  Box
+  Box,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   Apartment as ApartmentIcon,
   Hotel as HotelIcon,
   SingleBed as SingleBedIcon
 } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 import axios from '../api/axios';
 
 const BookingsList = () => {
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchBookings = async () => {
         try {
-            const response = await axios.get('/api/v1/bookings'); // Используем /api/v1
-            if (Array.isArray(response.data.data)) { // Проверяем структуру ответа
-                setBookings(response.data.data);
-            } else {
-                console.error('Unexpected data format:', response.data);
-                setBookings([]);
+            setLoading(true);
+            
+            const response = await axios.get('/api/v1/bookings', {
+                withCredentials: true
+            });
+            
+            console.log('User ID:', user?.id);
+            console.log('API Response:', response.data);
+
+            if (response.data?.data) {
+                // Преобразуем ID в строки для сравнения
+                const userBookings = response.data.data.filter(booking => 
+                    String(booking.user_id) === String(user?.id)
+                );
+                setBookings(userBookings);
             }
+            
         } catch (error) {
-            console.error('Error fetching bookings:', error);
-            setBookings([]);
+            console.error('Error:', error);
+            setError('Не удалось загрузить бронирования');
+        } finally {
+            setLoading(false);
         }
     };
 
-    fetchBookings();
-}, []);
-
+    if (user?.id) {
+        fetchBookings();
+    } else {
+        setLoading(false);
+    }
+}, [user]);
 
   const getAccommodationIcon = (type) => {
     switch (type) {
@@ -62,10 +83,37 @@ const BookingsList = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" p={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+    );
+  }
+
+  if (!bookings || bookings.length === 0) {
+    return (
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="h5" gutterBottom>
+          Мои бронирования
+        </Typography>
+        <Alert severity="info">
+          У вас пока нет бронирований
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Список бронирований
+        Мои бронирования
       </Typography>
       <TableContainer component={Paper}>
         <Table>
@@ -73,7 +121,6 @@ const BookingsList = () => {
             <TableRow>
               <TableCell>Тип размещения</TableCell>
               <TableCell>Комната</TableCell>
-              <TableCell>Клиент</TableCell>
               <TableCell>Даты проживания</TableCell>
               <TableCell>Статус</TableCell>
             </TableRow>
@@ -101,14 +148,6 @@ const BookingsList = () => {
                         Место {booking.bed_id}
                       </Typography>
                     )}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {booking.user_name}
-                    <Typography variant="caption" display="block" color="text.secondary">
-                      {booking.user_email}
-                    </Typography>
                   </Typography>
                 </TableCell>
                 <TableCell>

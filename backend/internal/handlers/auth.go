@@ -65,14 +65,16 @@ func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
         })
     }
 
-	return c.JSON(fiber.Map{
-		"authenticated": true,
-		"user": fiber.Map{
-			"name":     sessionData.Name,
-			"email":    sessionData.Email,
-			"provider": sessionData.Provider,
-		},
-	})
+    return c.JSON(fiber.Map{
+        "authenticated": true,
+        "user": fiber.Map{
+            "id": sessionData.UserID,      // Добавляем ID пользователя
+            "name": sessionData.Name,
+            "email": sessionData.Email,
+            "provider": sessionData.Provider,
+            "picture_url": sessionData.PictureURL, // Добавляем URL изображения
+        },
+    })
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {

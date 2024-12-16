@@ -1,4 +1,6 @@
+//frontend/hostel-frontend/src/components/Layout.js
 import React, { useState } from "react";
+import { ShoppingBag } from '@mui/icons-material';
 import { Link, useLocation } from "react-router-dom";
 import {
   AppBar,
@@ -174,6 +176,10 @@ const Layout = ({ children }) => {
                     <MenuItem component={Link} to="/bookings">
                       <ListAlt fontSize="small" sx={{ mr: 1 }} />
                       Мои бронирования
+                    </MenuItem>
+                    <MenuItem component={Link} to="/my-listings">
+                      <ShoppingBag fontSize="small" sx={{ mr: 1 }} />
+                      Мои объявления
                     </MenuItem>
                     <MenuItem component={Link} to="/add-room">
                       <AddHome fontSize="small" sx={{ mr: 1 }} />
