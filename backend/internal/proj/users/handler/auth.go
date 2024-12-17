@@ -1,4 +1,5 @@
-package handlers
+//backend/internal/proj/users/handler/auth.go
+package handler
 
 import (
     "github.com/gofiber/fiber/v2"

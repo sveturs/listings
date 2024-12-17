@@ -1,7 +1,12 @@
-// backend/internal/server/server.go
+//backend/internal/server/server.go
 package server
 
 import (
+
+	userHandler 			"backend/internal/proj/users/handler"
+	accommodationHandler 	"backend/internal/proj/accommodation/handler"
+
+
 	"backend/internal/config"
 	"backend/internal/handlers"
 	"backend/internal/middleware"
@@ -14,13 +19,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Определяем структуру Server перед использованием
 type Server struct {
-	app        *fiber.App
-	cfg        *config.Config
-	handlers   *handlers.Handler
-	middleware *middleware.Middleware
+	app        		*fiber.App
+	cfg        		*config.Config
+	handlers   		*handlers.Handler
+	users      		*userHandler.Handler
+	accommodation 	*accommodationHandler.Handler
+	middleware 		*middleware.Middleware
 }
 
+// NewServer создает новый сервер
 func NewServer(cfg *config.Config) (*Server, error) {
 	// Инициализация базы данных
 	db, err := postgres.NewDatabase(cfg.DatabaseURL)
@@ -30,6 +39,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	// Инициализация сервисов
 	services := services.NewServices(db, cfg)
+	usersHandler := userHandler.NewHandler(services)
+	accommodationHandler := accommodationHandler.NewHandler(services)
+
 
 	// Инициализация обработчиков
 	handlers := handlers.NewHandler(services)
@@ -45,18 +57,25 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	// Применение middleware
 	middleware.Setup(app)
 
+	// Инициализация сервера
 	server := &Server{
 		app:        app,
 		cfg:        cfg,
 		handlers:   handlers,
+		users:      usersHandler, // Исправлено здесь
 		middleware: middleware,
+		accommodation: accommodationHandler,
 	}
 
+ 
+
+	// Настройка маршрутов
 	server.setupRoutes()
 
 	return server, nil
 }
 
+// setupRoutes настраивает маршруты сервера
 func (s *Server) setupRoutes() {
 	// Root path
 	s.app.Get("/", func(c *fiber.Ctx) error {
@@ -67,12 +86,12 @@ func (s *Server) setupRoutes() {
 	s.app.Static("/uploads", "./uploads")
 	os.MkdirAll("./uploads", os.ModePerm)
 
-	// Public routes
-	s.app.Get("/rooms", s.handlers.Rooms.List)
-	s.app.Get("/rooms/:id", s.handlers.Rooms.Get)
-	s.app.Get("/rooms/:id/images", s.handlers.Rooms.ListImages)
-	s.app.Get("/rooms/:id/available-beds", s.handlers.Rooms.GetAvailableBeds)
-	s.app.Get("/beds/:id/images", s.handlers.Rooms.ListBedImages)
+	// Пример маршрутов
+	s.app.Get("/rooms", s.accommodation.Room.List)
+	s.app.Get("/rooms/:id", s.accommodation.Room.Get)
+	s.app.Get("/rooms/:id/images", s.accommodation.Room.ListImages)
+	s.app.Get("/rooms/:id/available-beds", s.accommodation.Room.GetAvailableBeds)
+	s.app.Get("/beds/:id/images", s.accommodation.Room.ListBedImages)
 
 	// Публичные маршруты для автомобилей
 	s.app.Get("/api/v1/cars/available", s.handlers.Cars.GetAvailableCars)
@@ -94,10 +113,10 @@ func (s *Server) setupRoutes() {
 
 	// Auth routes
 	auth := s.app.Group("/auth")
-	auth.Get("/session", s.handlers.Auth.GetSession)
-	auth.Get("/google", s.handlers.Auth.GoogleAuth)
-	auth.Get("/google/callback", s.handlers.Auth.GoogleCallback)
-	auth.Get("/logout", s.handlers.Auth.Logout)
+	auth.Get("/session", s.users.Auth.GetSession) // Исправлено
+	auth.Get("/google", s.users.Auth.GoogleAuth)
+	auth.Get("/google/callback", s.users.Auth.GoogleCallback)
+	auth.Get("/logout", s.users.Auth.Logout)
 
 	// Protected API routes
 	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
@@ -122,25 +141,24 @@ func (s *Server) setupRoutes() {
 
 	// Protected room routes
 	rooms := api.Group("/rooms")
-	rooms.Post("/", s.handlers.Rooms.Create)
-	rooms.Post("/:id/images", s.handlers.Rooms.UploadImages)
-	rooms.Delete("/:id/images/:imageId", s.handlers.Rooms.DeleteImage)
-	rooms.Post("/:id/beds", s.handlers.Rooms.AddBed)
-	rooms.Post("/:roomId/beds/:bedId/images", s.handlers.Rooms.UploadBedImages)
+	rooms.Post("/", s.accommodation.Room.Create)
+	rooms.Post("/:id/images", s.accommodation.Room.UploadImages)
+	rooms.Delete("/:id/images/:imageId", s.accommodation.Room.DeleteImage)
+	rooms.Post("/:id/beds", s.accommodation.Room.AddBed)
+	rooms.Post("/:roomId/beds/:bedId/images", s.accommodation.Room.UploadBedImages)
 
 	// Protected booking routes
 	bookings := api.Group("/bookings")
-	bookings.Post("/", s.handlers.Bookings.Create)
-	bookings.Get("/", s.handlers.Bookings.List)
-	bookings.Delete("/:id", s.handlers.Bookings.Delete)
-
+	bookings.Post("/", s.accommodation.Booking.Create)
+	bookings.Get("/", s.accommodation.Booking.List)
+	bookings.Delete("/:id", s.accommodation.Booking.Delete)
 	// Protected user routes
-	users := api.Group("/users")
-	users.Post("/register", s.handlers.Users.Register)
-	users.Get("/me", s.handlers.Users.GetProfile)
-	users.Put("/me", s.handlers.Users.UpdateProfile)
-    users.Get("/profile", s.handlers.Users.GetProfile)
-    users.Put("/profile", s.handlers.Users.UpdateProfile)
+	users := s.app.Group("/api/v1/users")
+	users.Post("/register", s.users.User.Register)      // Исправлено
+	users.Get("/me", s.users.User.GetProfile)           // Исправлено
+	users.Put("/me", s.users.User.UpdateProfile)        // Исправлено
+	users.Get("/profile", s.users.User.GetProfile)      // Исправлено
+	users.Put("/profile", s.users.User.UpdateProfile)   // Исправлено
 
 	// Защищенные маршруты маркетплейса
 	marketplaceProtected := api.Group("/marketplace")
@@ -155,6 +173,7 @@ func (s *Server) Start() error {
 	return s.app.Listen(fmt.Sprintf(":%s", s.cfg.Port))
 }
 
+// Shutdown останавливает сервер
 func (s *Server) Shutdown(ctx context.Context) error {
 	return s.app.Shutdown()
 }

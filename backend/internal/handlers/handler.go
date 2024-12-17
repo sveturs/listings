@@ -6,10 +6,6 @@ import (
 )
 
 type Handler struct {
-    Auth     *AuthHandler
-    Rooms    *RoomHandler
-    Bookings *BookingHandler
-    Users    *UserHandler
     Cars     *CarHandler 
     Marketplace *MarketplaceHandler
     Reviews     *ReviewHandler
@@ -17,10 +13,6 @@ type Handler struct {
 
 func NewHandler(services services.ServicesInterface) *Handler {
     return &Handler{
-        Auth:     NewAuthHandler(services),
-        Rooms:    NewRoomHandler(services),
-        Bookings: NewBookingHandler(services),
-        Users:    NewUserHandler(services),
         Cars:     NewCarHandler(services),
         Marketplace: NewMarketplaceHandler(services),
         Reviews:     NewReviewHandler(services),

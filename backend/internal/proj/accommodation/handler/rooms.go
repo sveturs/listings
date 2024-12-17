@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"backend/internal/domain/models"
