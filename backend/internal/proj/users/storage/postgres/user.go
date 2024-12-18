@@ -1,3 +1,4 @@
+
 // backend/internal/proj/users/storage/postgres/user.go
 package postgres
 
@@ -6,15 +7,13 @@ import (
     "backend/internal/domain/models"
 )
 
-func (s *UserStorage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
+func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
     var userID int
-    // Пробуем найти пользователя по google_id
     err := s.pool.QueryRow(ctx, `
         SELECT id FROM users WHERE google_id = $1
     `, user.GoogleID).Scan(&userID)
 
     if err == nil {
-        // Пользователь найден, обновляем информацию
         _, err = s.pool.Exec(ctx, `
             UPDATE users 
             SET name = $1, email = $2, picture_url = $3
@@ -27,7 +26,6 @@ func (s *UserStorage) GetOrCreateGoogleUser(ctx context.Context, user *models.Us
         return user, nil
     }
 
-    // Пользователь не найден, создаём нового
     err = s.pool.QueryRow(ctx, `
         INSERT INTO users (name, email, google_id, picture_url)
         VALUES ($1, $2, $3, $4)
@@ -46,7 +44,7 @@ func (s *UserStorage) GetOrCreateGoogleUser(ctx context.Context, user *models.Us
     return user, nil
 }
 
-func (s *UserStorage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
     user := &models.User{}
     err := s.pool.QueryRow(ctx, `
         SELECT id, name, email, google_id, picture_url, created_at
@@ -58,7 +56,7 @@ func (s *UserStorage) GetUserByEmail(ctx context.Context, email string) (*models
     return user, nil
 }
 
-func (s *UserStorage) GetUserByID(ctx context.Context, id int) (*models.User, error) {
+func (s *Storage) GetUserByID(ctx context.Context, id int) (*models.User, error) {
     user := &models.User{}
     err := s.pool.QueryRow(ctx, `
         SELECT id, name, email, google_id, picture_url, created_at
@@ -70,7 +68,7 @@ func (s *UserStorage) GetUserByID(ctx context.Context, id int) (*models.User, er
     return user, nil
 }
 
-func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) error {
+func (s *Storage) CreateUser(ctx context.Context, user *models.User) error {
     return s.pool.QueryRow(ctx, `
         INSERT INTO users (name, email, google_id, picture_url)
         VALUES ($1, $2, $3, $4)
@@ -78,7 +76,7 @@ func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) error {
     `, user.Name, user.Email, user.GoogleID, user.PictureURL).Scan(&user.ID)
 }
 
-func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User) error {
+func (s *Storage) UpdateUser(ctx context.Context, user *models.User) error {
     _, err := s.pool.Exec(ctx, `
         UPDATE users 
         SET name = $1, email = $2, picture_url = $3

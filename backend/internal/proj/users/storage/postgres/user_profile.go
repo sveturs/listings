@@ -4,10 +4,12 @@ package postgres
 
 import (
     "context"
+    "fmt"
+    "strings"
     "backend/internal/domain/models"
 )
 
-func (s *UserStorage) GetUserProfile(ctx context.Context, userID int) (*models.UserProfile, error) {
+func (s *Storage) GetUserProfile(ctx context.Context, userID int) (*models.UserProfile, error) {
     profile := &models.UserProfile{}
     err := s.pool.QueryRow(ctx, `
         SELECT 
@@ -28,36 +30,34 @@ func (s *UserStorage) GetUserProfile(ctx context.Context, userID int) (*models.U
     return profile, nil
 }
 
-func (s *UserStorage) UpdateUserProfile(ctx context.Context, userID int, update *models.UserProfileUpdate) error {
-    // Создаем слайс для параметров и строки обновления
-    setFields := make([]string, 0)
-    params := make([]interface{}, 0)
+func (s *Storage) UpdateUserProfile(ctx context.Context, userID int, update *models.UserProfileUpdate) error {
+    var setFields []string
+    var params []interface{}
     paramCount := 1
 
-    // Добавляем только не-nil поля в обновление
     if update.Phone != nil {
         setFields = append(setFields, fmt.Sprintf("phone = $%d", paramCount))
-        params = append(params, *update.Phone)
+        params = append(params, update.Phone)
         paramCount++
     }
     if update.Bio != nil {
         setFields = append(setFields, fmt.Sprintf("bio = $%d", paramCount))
-        params = append(params, *update.Bio)
+        params = append(params, update.Bio)
         paramCount++
     }
     if update.NotificationEmail != nil {
         setFields = append(setFields, fmt.Sprintf("notification_email = $%d", paramCount))
-        params = append(params, *update.NotificationEmail)
+        params = append(params, update.NotificationEmail)
         paramCount++
     }
     if update.NotificationPush != nil {
         setFields = append(setFields, fmt.Sprintf("notification_push = $%d", paramCount))
-        params = append(params, *update.NotificationPush)
+        params = append(params, update.NotificationPush)
         paramCount++
     }
     if update.Timezone != nil {
         setFields = append(setFields, fmt.Sprintf("timezone = $%d", paramCount))
-        params = append(params, *update.Timezone)
+        params = append(params, update.Timezone)
         paramCount++
     }
     if update.Settings != nil {
@@ -81,7 +81,7 @@ func (s *UserStorage) UpdateUserProfile(ctx context.Context, userID int, update 
     return err
 }
 
-func (s *UserStorage) UpdateLastSeen(ctx context.Context, userID int) error {
+func (s *Storage) UpdateLastSeen(ctx context.Context, userID int) error {
     _, err := s.pool.Exec(ctx, `
         UPDATE users 
         SET last_seen = CURRENT_TIMESTAMP

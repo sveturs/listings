@@ -1,3 +1,4 @@
+// backend/internal/proj/global/service/interface.go
 package service
 
 import (
@@ -12,6 +13,7 @@ import (
 type ServicesInterface interface {
     Auth() userService.AuthServiceInterface
     Room() accommodationService.RoomServiceInterface
+    Bed() accommodationService.BedServiceInterface  // Добавляем метод Bed()
     Booking() accommodationService.BookingServiceInterface
     User() userService.UserServiceInterface
     Car() carService.CarServiceInterface

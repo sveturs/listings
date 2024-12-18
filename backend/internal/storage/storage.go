@@ -13,24 +13,26 @@ type Storage interface {
 	GetUserByID(ctx context.Context, id int) (*models.User, error)
 	CreateUser(ctx context.Context, user *models.User) error
 	UpdateUser(ctx context.Context, user *models.User) error
-    GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error)
-    UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error
-    UpdateLastSeen(ctx context.Context, id int) error
+	GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error)
+	UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error
+	UpdateLastSeen(ctx context.Context, id int) error
 
-	// Методы для работы с автомобилями
-	CreateCarBooking(ctx context.Context, booking *models.CarBooking) error
+	// Car methods
 	AddCar(ctx context.Context, car *models.Car) (int, error)
 	GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error)
+	GetCarWithFeatures(ctx context.Context, carID int) (*models.Car, error)
+	GetCarFeatures(ctx context.Context) ([]models.CarFeature, error)
+	GetCarCategories(ctx context.Context) ([]models.CarCategory, error)
+	CreateCarBooking(ctx context.Context, booking *models.CarBooking) error
+
+	// Car image methods
 	AddCarImage(ctx context.Context, image *models.CarImage) (int, error)
 	GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error)
 	DeleteCarImage(ctx context.Context, imageID string) (string, error)
-	GetCarFeatures(ctx context.Context) ([]models.CarFeature, error)
-	GetCarCategories(ctx context.Context) ([]models.CarCategory, error)
-	GetCarWithFeatures(ctx context.Context, carID int) (*models.Car, error)
 
 	// Reviews
-    CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)
- 	GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
+	CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)
+	GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
 	GetReviewByID(ctx context.Context, id int) (*models.Review, error)
 	UpdateReview(ctx context.Context, review *models.Review) error
 	DeleteReview(ctx context.Context, id int) error
@@ -39,17 +41,25 @@ type Storage interface {
 	GetReviewVotes(ctx context.Context, reviewId int) (helpful int, notHelpful int, err error)
 	GetUserReviewVote(ctx context.Context, userId int, reviewId int) (string, error)
 	GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error)
-    QueryRow(ctx context.Context, sql string, args ...interface{}) Row
-    Query(ctx context.Context, sql string, args ...interface{}) (Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...interface{}) Row
+	Query(ctx context.Context, sql string, args ...interface{}) (Rows, error)
 
 	// Room methods
 	AddRoom(ctx context.Context, room *models.Room) (int, error)
-	AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error)
 	GetRooms(ctx context.Context, filters map[string]string, sortBy string, sortDirection string, limit int, offset int) ([]models.Room, int64, error)
 	GetRoomByID(ctx context.Context, id int) (*models.Room, error)
 	AddRoomImage(ctx context.Context, image *models.RoomImage) (int, error)
 	GetRoomImages(ctx context.Context, roomID string) ([]models.RoomImage, error)
 	DeleteRoomImage(ctx context.Context, imageID string) (string, error)
+
+	// Bed methods - добавляем новые методы
+	AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error)
+	GetBedByID(ctx context.Context, id int) (*models.Bed, error)
+	GetBedsByRoomID(ctx context.Context, roomID int) ([]models.Bed, error)
+	UpdateBedAttributes(ctx context.Context, bedID int, bedReq *models.BedRequest) error
+	UpdateBedAvailability(ctx context.Context, bedID int, isAvailable bool) error
+	UpdateBedPrice(ctx context.Context, bedID int, price float64) error
+	GetAvailableBeds(ctx context.Context, roomID string, startDate string, endDate string) ([]models.Bed, error)
 	GetBedImages(ctx context.Context, bedID string) ([]models.RoomImage, error)
 	AddBedImage(ctx context.Context, image *models.RoomImage) (int, error)
 
@@ -57,7 +67,6 @@ type Storage interface {
 	CreateBooking(ctx context.Context, booking *models.BookingRequest) error
 	GetAllBookings(ctx context.Context) ([]models.Booking, error)
 	DeleteBooking(ctx context.Context, bookingID string, bookingType string) error
-	GetAvailableBeds(ctx context.Context, roomID string, startDate string, endDate string) ([]models.Bed, error)
 
 	// Marketplace methods
 	CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error)
@@ -82,11 +91,13 @@ type Storage interface {
 	Close()
 	Ping(ctx context.Context) error
 }
+
 type Row interface {
-    Scan(dest ...interface{}) error
+	Scan(dest ...interface{}) error
 }
+
 type Rows interface {
-    Next() bool
-    Scan(dest ...interface{}) error
-    Close() error
+	Next() bool
+	Scan(dest ...interface{}) error
+	Close() error
 }

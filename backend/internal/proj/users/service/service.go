@@ -1,8 +1,8 @@
+// backend/internal/proj/users/service/service.go
 package service
 
 import (
     "backend/internal/storage"
-    
 )
 
 type Service struct {
@@ -10,9 +10,9 @@ type Service struct {
     User UserServiceInterface
 }
 
-func NewService(storage storage.Storage, googleClientID, googleClientSecret, googleRedirectURL string) *Service {
+func NewService(store storage.Storage, googleClientID, googleClientSecret, googleRedirectURL string) *Service {
     return &Service{
-        Auth: NewAuthService(googleClientID, googleClientSecret, googleRedirectURL, storage),
-        User: NewUserService(storage),
+        Auth: NewAuthService(googleClientID, googleClientSecret, googleRedirectURL, store),
+        User: NewUserService(store),
     }
 }

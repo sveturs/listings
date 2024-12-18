@@ -10,7 +10,7 @@ import (
     "strings"
 )
 
-func (db *Database) AddCar(ctx context.Context, car *models.Car) (int, error) {
+func (db *Storage) AddCar(ctx context.Context, car *models.Car) (int, error) {
     log.Printf("Starting AddCar with data: %+v", car)
 
     tx, err := db.pool.Begin(ctx)
@@ -87,7 +87,7 @@ for _, featureName := range car.Features {
     log.Printf("Successfully added car with ID: %d", carID)
     return carID, nil
 }
-func (db *Database) CreateCarBooking(ctx context.Context, booking *models.CarBooking) error {
+func (db *Storage) CreateCarBooking(ctx context.Context, booking *models.CarBooking) error {
     tx, err := db.pool.Begin(ctx)
     if err != nil {
         return err
@@ -141,7 +141,7 @@ func (db *Database) CreateCarBooking(ctx context.Context, booking *models.CarBoo
 
     return tx.Commit(ctx)
 }
-func (db *Database) GetCarWithFeatures(ctx context.Context, carID int) (*models.Car, error) {
+func (db *Storage) GetCarWithFeatures(ctx context.Context, carID int) (*models.Car, error) {
     var car models.Car
     err := db.pool.QueryRow(ctx, `
         SELECT 
@@ -176,7 +176,7 @@ func (db *Database) GetCarWithFeatures(ctx context.Context, carID int) (*models.
     )
     return &car, err
 }
-func (db *Database) GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error) {
+func (db *Storage) GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error) {
     var count int
     err := db.pool.QueryRow(ctx, "SELECT COUNT(*) FROM cars WHERE availability = true").Scan(&count)
     if err != nil {
@@ -299,7 +299,7 @@ func (db *Database) GetAvailableCars(ctx context.Context, filters map[string]str
     return cars, nil
 }
 
-func (db *Database) GetCarFeatures(ctx context.Context) ([]models.CarFeature, error) {
+func (db *Storage) GetCarFeatures(ctx context.Context) ([]models.CarFeature, error) {
     rows, err := db.pool.Query(ctx, `
         SELECT id, name, category, description 
         FROM car_features 
@@ -322,7 +322,7 @@ func (db *Database) GetCarFeatures(ctx context.Context) ([]models.CarFeature, er
 }
 
 
-func (db *Database) GetCarCategories(ctx context.Context) ([]models.CarCategory, error) {
+func (db *Storage) GetCarCategories(ctx context.Context) ([]models.CarCategory, error) {
     rows, err := db.pool.Query(ctx, `
         SELECT id, name, description
         FROM car_categories

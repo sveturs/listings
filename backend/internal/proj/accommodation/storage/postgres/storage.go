@@ -1,11 +1,10 @@
-// backend/internal/proj/users/storage/postgres/storage.go
+// backend/internal/proj/accommodation/storage/postgres/storage.go
 package postgres
 
 import (
     "github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Storage реализует интерфейс Repository для PostgreSQL
 type Storage struct {
     pool *pgxpool.Pool
 }

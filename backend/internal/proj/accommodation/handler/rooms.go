@@ -2,19 +2,20 @@ package handler
 
 import (
 	"backend/internal/domain/models"
-    globalService "backend/internal/proj/global/service"
+	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
-    "strings"
-	"github.com/gofiber/fiber/v2"
+	"strings"
+
+    "github.com/gofiber/fiber/v2"
 )
 
 type RoomHandler struct {
-    services globalService.ServicesInterface
+	services globalService.ServicesInterface
 }
 
 func NewRoomHandler(services globalService.ServicesInterface) *RoomHandler {
@@ -26,132 +27,134 @@ func NewRoomHandler(services globalService.ServicesInterface) *RoomHandler {
 // Create создает новую комнату
 // Create создает новую комнату
 func (h *RoomHandler) Create(c *fiber.Ctx) error {
-    var room models.Room
-    if err := c.BodyParser(&room); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
-    }
+	var room models.Room
+	if err := c.BodyParser(&room); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
+	}
 
-    // Установим значения по умолчанию для nullable полей
-    if room.AccommodationType == "bed" && room.TotalBeds == nil {
-        defaultBeds := 1
-        room.TotalBeds = &defaultBeds
-    }
+	// Установим значения по умолчанию для nullable полей
+	if room.AccommodationType == "bed" && room.TotalBeds == nil {
+		defaultBeds := 1
+		room.TotalBeds = &defaultBeds
+	}
 
-    roomID, err := h.services.Room().CreateRoom(c.Context(), &room)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка создания комнаты")
-    }
+	roomID, err := h.services.Room().CreateRoom(c.Context(), &room)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка создания комнаты")
+	}
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "id": roomID,
-        "message": "Room created successfully",
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"id":      roomID,
+		"message": "Room created successfully",
+	})
 }
+
 // UploadBedImages загружает изображения для койко-места
 func (h *RoomHandler) UploadBedImages(c *fiber.Ctx) error {
-    roomID, err := strconv.Atoi(c.Params("roomId"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID комнаты")
-    }
-    
-    bedID, err := strconv.Atoi(c.Params("bedId"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID койко-места")
-    }
+	roomID, err := strconv.Atoi(c.Params("roomId"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID комнаты")
+	}
 
-    form, err := c.MultipartForm()
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Ошибка получения файлов")
-    }
+	bedID, err := strconv.Atoi(c.Params("bedId"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID койко-места")
+	}
 
-    files := form.File["images"]
-    isMain := len(files) > 0
+	form, err := c.MultipartForm()
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Ошибка получения файлов")
+	}
 
-    var uploadedImages []models.RoomImage
-    for _, file := range files {
-        fileName, err := h.services.Room().ProcessImage(file)
-        if err != nil {
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка обработки изображения")
-        }
+	files := form.File["images"]
+	isMain := len(files) > 0
 
-        image := models.RoomImage{
-            RoomID:      roomID,
-            BedID:       bedID,
-            FilePath:    fileName,
-            FileName:    file.Filename,
-            FileSize:    int(file.Size),
-            ContentType: file.Header.Get("Content-Type"),
-            IsMain:      isMain,
-        }
+	var uploadedImages []models.RoomImage
+	for _, file := range files {
+		fileName, err := h.services.Room().ProcessImage(file)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка обработки изображения")
+		}
 
-        imageID, err := h.services.Room().AddBedImage(c.Context(), &image)
-        if err != nil {
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка сохранения информации об изображении")
-        }
+		image := models.RoomImage{
+			RoomID:      roomID,
+			BedID:       bedID,
+			FilePath:    fileName,
+			FileName:    file.Filename,
+			FileSize:    int(file.Size),
+			ContentType: file.Header.Get("Content-Type"),
+			IsMain:      isMain,
+		}
 
-        image.ID = imageID
-        uploadedImages = append(uploadedImages, image)
-        isMain = false
-    }
+		imageID, err := h.services.Bed().AddBedImage(c.Context(), &image)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка сохранения информации об изображении")
+		}
 
-    return utils.SuccessResponse(c, uploadedImages)
+		image.ID = imageID
+		uploadedImages = append(uploadedImages, image)
+		isMain = false
+	}
+
+	return utils.SuccessResponse(c, uploadedImages)
 }
+
 // List получает список комнат
 func (h *RoomHandler) List(c *fiber.Ctx) error {
-    filters := map[string]string{
-        "capacity":           c.Query("capacity"),
-        "start_date":         c.Query("start_date"),
-        "end_date":           c.Query("end_date"),
-        "min_price":          c.Query("min_price"),
-        "max_price":          c.Query("max_price"),
-        "city":               c.Query("city"),
-        "country":            c.Query("country"),
-        "accommodation_type": c.Query("accommodation_type"),
-        "has_private_rooms":  c.Query("has_private_rooms"),
-    }
+	filters := map[string]string{
+		"capacity":           c.Query("capacity"),
+		"start_date":         c.Query("start_date"),
+		"end_date":           c.Query("end_date"),
+		"min_price":          c.Query("min_price"),
+		"max_price":          c.Query("max_price"),
+		"city":               c.Query("city"),
+		"country":            c.Query("country"),
+		"accommodation_type": c.Query("accommodation_type"),
+		"has_private_rooms":  c.Query("has_private_rooms"),
+	}
 
-    // Параметры сортировки
-    sortBy := c.Query("sort_by")
-    sortDirection := c.Query("sort_direction", "asc")
+	// Параметры сортировки
+	sortBy := c.Query("sort_by")
+	sortDirection := c.Query("sort_direction", "asc")
 
-    // Параметры пагинации
-    page, _ := strconv.ParseInt(c.Query("page", "1"), 10, 64)
-    limit, _ := strconv.ParseInt(c.Query("limit", "12"), 10, 64)
-    offset := (page - 1) * limit
+	// Параметры пагинации
+	page, _ := strconv.ParseInt(c.Query("page", "1"), 10, 64)
+	limit, _ := strconv.ParseInt(c.Query("limit", "12"), 10, 64)
+	offset := (page - 1) * limit
 
-    // Получаем комнаты с учетом всех параметров
-    rooms, total, err := h.services.Room().GetRooms(c.Context(), filters, sortBy, sortDirection, int(limit), int(offset))
-    if err != nil {
-        log.Printf("Error getting rooms: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Ошибка получения списка комнат: %v", err))
-    }
+	// Получаем комнаты с учетом всех параметров
+	rooms, total, err := h.services.Room().GetRooms(c.Context(), filters, sortBy, sortDirection, int(limit), int(offset))
+	if err != nil {
+		log.Printf("Error getting rooms: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Ошибка получения списка комнат: %v", err))
+	}
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "data": rooms,
-        "meta": fiber.Map{
-            "total": total,
-            "page": page,
-            "limit": limit,
-            "has_more": total > page*limit,
-        },
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"data": rooms,
+		"meta": fiber.Map{
+			"total":    total,
+			"page":     page,
+			"limit":    limit,
+			"has_more": total > page*limit,
+		},
+	})
 }
 
 // В RoomHandler struct (handlers/rooms.go)
 func (h *RoomHandler) ListBedImages(c *fiber.Ctx) error {
-    bedID := c.Params("id")
-    if bedID == "" {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "ID койко-места не указан")
-    }
+	bedID := c.Params("id")
+	if bedID == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "ID койко-места не указан")
+	}
 
-    images, err := h.services.Room().GetBedImages(c.Context(), bedID)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка получения изображений")
-    }
+	images, err := h.services.Bed().GetBedImages(c.Context(), bedID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка получения изображений")
+	}
 
-    return utils.SuccessResponse(c, images)
-}
-// Get получает информацию о конкретной комнате
+	return utils.SuccessResponse(c, images)
+} // Get получает информацию о конкретной комнате
+
 func (h *RoomHandler) Get(c *fiber.Ctx) error {
 	roomID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -169,16 +172,16 @@ func (h *RoomHandler) Get(c *fiber.Ctx) error {
 // UploadImages загружает изображения для комнаты
 func (h *RoomHandler) UploadImages(c *fiber.Ctx) error {
 	log.Println("UploadImages handler called")
-    roomID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
+	roomID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
 		log.Printf("Invalid room ID: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID комнаты")
-    }
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID комнаты")
+	}
 
-    form, err := c.MultipartForm()
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Ошибка получения файлов")
-    }
+	form, err := c.MultipartForm()
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Ошибка получения файлов")
+	}
 
 	files := form.File["images"]
 	isMain := len(files) > 0
@@ -208,19 +211,19 @@ func (h *RoomHandler) UploadImages(c *fiber.Ctx) error {
 		image.ID = imageID
 		uploadedImages = append(uploadedImages, image)
 		isMain = false
-        for _, file := range files {
-            contentType := file.Header.Get("Content-Type")
-            if !strings.HasPrefix(contentType, "image/") {
-                return utils.ErrorResponse(c, fiber.StatusBadRequest, "Поддерживаются только изображения")
-            }
-        
-            if contentType != "image/jpeg" && contentType != "image/png" {
-                return utils.ErrorResponse(c, fiber.StatusBadRequest, "Формат изображения неподдерживается")
-            }
-        }
+		for _, file := range files {
+			contentType := file.Header.Get("Content-Type")
+			if !strings.HasPrefix(contentType, "image/") {
+				return utils.ErrorResponse(c, fiber.StatusBadRequest, "Поддерживаются только изображения")
+			}
+
+			if contentType != "image/jpeg" && contentType != "image/png" {
+				return utils.ErrorResponse(c, fiber.StatusBadRequest, "Формат изображения неподдерживается")
+			}
+		}
 	}
-    log.Println("UploadImages handler completed successfully")
-    return utils.SuccessResponse(c, uploadedImages)
+	log.Println("UploadImages handler completed successfully")
+	return utils.SuccessResponse(c, uploadedImages)
 }
 
 // ListImages получает список изображений комнаты
@@ -246,35 +249,35 @@ func (h *RoomHandler) DeleteImage(c *fiber.Ctx) error {
 
 // AddBed добавляет кровать в комнату
 func (h *RoomHandler) AddBed(c *fiber.Ctx) error {
-    roomID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID комнаты")
-    }
+	roomID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID комнаты")
+	}
 
-    var bedReq models.BedRequest
-    if err := c.BodyParser(&bedReq); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
-    }
+	var bedReq models.BedRequest
+	if err := c.BodyParser(&bedReq); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
+	}
 
-    bedID, err := h.services.Room().AddBed(c.Context(), roomID, bedReq.BedNumber, bedReq.PricePerNight, bedReq.HasOutlet, bedReq.HasLight, bedReq.HasShelf, bedReq.BedType)
-    if err != nil {
-        if err.Error() == "room not found" {
-            return utils.ErrorResponse(c, fiber.StatusNotFound, "Комната не найдена")
-        }
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка добавления кровати")
-    }
+	bedID, err := h.services.Bed().AddBed(c.Context(), roomID, bedReq.BedNumber, bedReq.PricePerNight, bedReq.HasOutlet, bedReq.HasLight, bedReq.HasShelf, bedReq.BedType)
+	if err != nil {
+		if err.Error() == "room not found" {
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "Комната не найдена")
+		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка добавления кровати")
+	}
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "id":              bedID,
-        "room_id":         roomID,
-        "bed_number":      bedReq.BedNumber,
-        "price_per_night": bedReq.PricePerNight,
-        "has_outlet":      bedReq.HasOutlet,
-        "has_light":       bedReq.HasLight,
-        "has_shelf":       bedReq.HasShelf,
-        "bed_type":        bedReq.BedType,
-        "is_available":    true,
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"id":              bedID,
+		"room_id":         roomID,
+		"bed_number":      bedReq.BedNumber,
+		"price_per_night": bedReq.PricePerNight,
+		"has_outlet":      bedReq.HasOutlet,
+		"has_light":       bedReq.HasLight,
+		"has_shelf":       bedReq.HasShelf,
+		"bed_type":        bedReq.BedType,
+		"is_available":    true,
+	})
 }
 
 // GetAvailableBeds получает список доступных кроватей
@@ -286,7 +289,7 @@ func (h *RoomHandler) GetAvailableBeds(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Необходимо указать даты")
 	}
 
-	beds, err := h.services.Room().GetAvailableBeds(c.Context(), c.Params("id"), startDate, endDate)
+	beds, err := h.services.Bed().GetAvailableBeds(c.Context(), c.Params("id"), startDate, endDate)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка получения списка кроватей")
 	}

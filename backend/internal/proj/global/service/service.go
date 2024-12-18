@@ -20,6 +20,8 @@ type Service struct {
     config       *config.Config
 }
 
+
+
 func NewService(storage storage.Storage, cfg *config.Config) *Service {
     return &Service{
         users:         userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
@@ -62,4 +64,8 @@ func (s *Service) Marketplace() marketplaceService.MarketplaceServiceInterface {
 
 func (s *Service) Review() reviewService.ReviewServiceInterface {
     return s.review.Review
+}
+
+func (s *Service) Bed() accommodationService.BedServiceInterface {
+    return s.accommodation.Bed
 }

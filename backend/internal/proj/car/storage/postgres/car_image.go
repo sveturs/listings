@@ -3,10 +3,11 @@ package postgres
 
 import (
     "backend/internal/domain/models"
+	
     "context"
 )
 
-func (db *Database) AddCarImage(ctx context.Context, image *models.CarImage) (int, error) {
+func (db *Storage) AddCarImage(ctx context.Context, image *models.CarImage) (int, error) {
     var imageID int
     err := db.pool.QueryRow(ctx, `
         INSERT INTO car_images (car_id, file_path, file_name, file_size, content_type, is_main)
@@ -20,7 +21,7 @@ func (db *Database) AddCarImage(ctx context.Context, image *models.CarImage) (in
     return imageID, err
 }
 
-func (db *Database) GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error) {
+func (db *Storage) GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error) {
     rows, err := db.pool.Query(ctx, `
         SELECT id, car_id, file_path, file_name, file_size, content_type, is_main, created_at
         FROM car_images
@@ -49,7 +50,7 @@ func (db *Database) GetCarImages(ctx context.Context, carID string) ([]models.Ca
     return images, rows.Err()
 }
 
-func (db *Database) DeleteCarImage(ctx context.Context, imageID string) (string, error) {
+func (db *Storage) DeleteCarImage(ctx context.Context, imageID string) (string, error) {
     var filePath string
     err := db.pool.QueryRow(ctx,
         "DELETE FROM car_images WHERE id = $1 RETURNING file_path", imageID,
