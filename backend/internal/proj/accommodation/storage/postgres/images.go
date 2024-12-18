@@ -1,9 +1,8 @@
-// backend/internal/proj/accommodation/storage/postgres/images.go
 package postgres
 
 import (
-    "backend/internal/domain/models"
     "context"
+    "backend/internal/domain/models"
 )
 
 func (s *Storage) AddRoomImage(ctx context.Context, image *models.RoomImage) (int, error) {
@@ -45,7 +44,6 @@ func (s *Storage) GetRoomImages(ctx context.Context, roomID string) ([]models.Ro
         }
         images = append(images, img)
     }
-
     return images, rows.Err()
 }
 
@@ -56,6 +54,20 @@ func (s *Storage) DeleteRoomImage(ctx context.Context, imageID string) (string, 
         imageID,
     ).Scan(&filePath)
     return filePath, err
+}
+
+func (s *Storage) AddBedImage(ctx context.Context, image *models.RoomImage) (int, error) {
+    var imageID int
+    err := s.pool.QueryRow(ctx, `
+        INSERT INTO bed_images (bed_id, file_path, file_name, file_size, content_type, is_main)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
+    `,
+        image.BedID, image.FilePath, image.FileName,
+        image.FileSize, image.ContentType, image.IsMain,
+    ).Scan(&imageID)
+
+    return imageID, err
 }
 
 func (s *Storage) GetBedImages(ctx context.Context, bedID string) ([]models.RoomImage, error) {
@@ -85,18 +97,4 @@ func (s *Storage) GetBedImages(ctx context.Context, bedID string) ([]models.Room
         images = append(images, img)
     }
     return images, rows.Err()
-}
-
-func (s *Storage) AddBedImage(ctx context.Context, image *models.RoomImage) (int, error) {
-    var imageID int
-    err := s.pool.QueryRow(ctx, `
-        INSERT INTO bed_images (bed_id, file_path, file_name, file_size, content_type, is_main)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id
-    `,
-        image.BedID, image.FilePath, image.FileName,
-        image.FileSize, image.ContentType, image.IsMain,
-    ).Scan(&imageID)
-
-    return imageID, err
 }

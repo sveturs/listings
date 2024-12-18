@@ -9,18 +9,21 @@ import (
     "backend/internal/domain/models" 
     "fmt"
     //"log"
-    "strconv"
+    //"strconv"
 
     carStorage "backend/internal/proj/car/storage/postgres"
     marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
     reviewStorage "backend/internal/proj/reviews/storage/postgres"
+    accommodationStorage "backend/internal/proj/accommodation/storage/postgres"
 )
 
 type Database struct {
     pool *pgxpool.Pool
     carDB *carStorage.Storage
     marketplaceDB *marketplaceStorage.Storage
-    reviewDB *reviewStorage.Storage  // добавляем
+    reviewDB *reviewStorage.Storage
+    accommodationDB *accommodationStorage.Storage
+    
 }
 
 func NewDatabase(dbURL string) (*Database, error) {
@@ -33,18 +36,9 @@ func NewDatabase(dbURL string) (*Database, error) {
         pool:          pool,
         carDB:         carStorage.NewStorage(pool),
         marketplaceDB: marketplaceStorage.NewStorage(pool),
-        reviewDB:      reviewStorage.NewStorage(pool), // добавляем
+        reviewDB:      reviewStorage.NewStorage(pool),
+        accommodationDB: accommodationStorage.NewStorage(pool),
     }, nil
-}
-func (db *Database) AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error) {
-    var bedID int
-    err := db.pool.QueryRow(ctx, `
-        INSERT INTO beds (room_id, bed_number, price_per_night, is_available, has_outlet, has_light, has_shelf, bed_type)
-        VALUES ($1, $2, $3, true, $4, $5, $6, $7)
-        RETURNING id`,
-        roomID, bedNumber, pricePerNight, hasOutlet, hasLight, hasShelf, bedType).Scan(&bedID)
-
-    return bedID, err
 }
 
 var _ storage.Storage = (*Database)(nil) 
@@ -87,58 +81,7 @@ func (db *Database) Query(ctx context.Context, sql string, args ...interface{}) 
 func (db *Database) QueryRow(ctx context.Context, sql string, args ...interface{}) storage.Row {
     return db.pool.QueryRow(ctx, sql, args...)
 }
-func (db *Database) GetAvailableBeds(ctx context.Context, roomID string, startDate string, endDate string) ([]models.Bed, error) {
-    query := `
-    SELECT b.id, b.bed_number, b.price_per_night, b.has_outlet, b.has_light, b.has_shelf, b.bed_type
-    FROM beds b
-    WHERE b.room_id = $1
-    AND b.is_available = true
-    AND NOT EXISTS (
-        SELECT 1
-        FROM bed_bookings bb
-        WHERE bb.bed_id = b.id
-        AND bb.status = 'confirmed'
-        AND (
-            (bb.start_date <= $3 AND bb.end_date >= $2)
-        )
-    )
-    ORDER BY b.bed_number
-    `
 
-    rows, err := db.pool.Query(ctx, query, roomID, startDate, endDate)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
-
-    var beds []models.Bed
-    for rows.Next() {
-        var bed models.Bed
-        if err := rows.Scan(
-            &bed.ID, 
-            &bed.BedNumber, 
-            &bed.PricePerNight, 
-            &bed.HasOutlet,
-            &bed.HasLight,
-            &bed.HasShelf,
-            &bed.BedType,
-        ); err != nil {
-            continue
-        }
-        bed.RoomID, _ = strconv.Atoi(roomID)
-        bed.IsAvailable = true
-        beds = append(beds, bed)
-    }
-
-    // Обновляем количество доступных кроватей в комнате
-    _, err = db.pool.Exec(ctx, `
-        UPDATE rooms 
-        SET available_beds = $1
-        WHERE id = $2
-    `, len(beds), roomID)
-
-    return beds, rows.Err()
-}
 // Car methods
 func (db *Database) AddCar(ctx context.Context, car *models.Car) (int, error) {
     return db.carDB.AddCar(ctx, car)
@@ -271,4 +214,79 @@ func (db *Database) GetUserReviewVote(ctx context.Context, userId int, reviewId 
 
 func (db *Database) GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error) {
     return db.reviewDB.GetEntityRating(ctx, entityType, entityId)
+}
+// Методы для работы с images
+func (db *Database) AddBedImage(ctx context.Context, image *models.RoomImage) (int, error) {
+    return db.accommodationDB.AddBedImage(ctx, image)
+}
+
+func (db *Database) GetBedImages(ctx context.Context, bedID string) ([]models.RoomImage, error) {
+    return db.accommodationDB.GetBedImages(ctx, bedID)
+}
+
+func (db *Database) AddRoomImage(ctx context.Context, image *models.RoomImage) (int, error) {
+    return db.accommodationDB.AddRoomImage(ctx, image)
+}
+
+func (db *Database) GetRoomImages(ctx context.Context, roomID string) ([]models.RoomImage, error) {
+    return db.accommodationDB.GetRoomImages(ctx, roomID)
+}
+
+func (db *Database) DeleteRoomImage(ctx context.Context, imageID string) (string, error) {
+    return db.accommodationDB.DeleteRoomImage(ctx, imageID)
+}
+
+// Методы для работы с rooms
+func (db *Database) AddRoom(ctx context.Context, room *models.Room) (int, error) {
+    return db.accommodationDB.AddRoom(ctx, room)
+}
+
+func (db *Database) GetRooms(ctx context.Context, filters map[string]string, sortBy string, sortDirection string, limit int, offset int) ([]models.Room, int64, error) {
+    return db.accommodationDB.GetRooms(ctx, filters, sortBy, sortDirection, limit, offset)
+}
+
+func (db *Database) GetRoomByID(ctx context.Context, id int) (*models.Room, error) {
+    return db.accommodationDB.GetRoomByID(ctx, id)
+}
+
+// Методы для работы с beds
+func (db *Database) AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error) {
+    return db.accommodationDB.AddBed(ctx, roomID, bedNumber, pricePerNight, hasOutlet, hasLight, hasShelf, bedType)
+}
+
+func (db *Database) GetBedByID(ctx context.Context, id int) (*models.Bed, error) {
+    return db.accommodationDB.GetBedByID(ctx, id)
+}
+
+func (db *Database) GetBedsByRoomID(ctx context.Context, roomID int) ([]models.Bed, error) {
+    return db.accommodationDB.GetBedsByRoomID(ctx, roomID)
+}
+
+func (db *Database) GetAvailableBeds(ctx context.Context, roomID string, startDate string, endDate string) ([]models.Bed, error) {
+    return db.accommodationDB.GetAvailableBeds(ctx, roomID, startDate, endDate)
+}
+
+func (db *Database) UpdateBedAvailability(ctx context.Context, bedID int, isAvailable bool) error {
+    return db.accommodationDB.UpdateBedAvailability(ctx, bedID, isAvailable)
+}
+
+func (db *Database) UpdateBedPrice(ctx context.Context, bedID int, price float64) error {
+    return db.accommodationDB.UpdateBedPrice(ctx, bedID, price)
+}
+
+func (db *Database) UpdateBedAttributes(ctx context.Context, bedID int, bedReq *models.BedRequest) error {
+    return db.accommodationDB.UpdateBedAttributes(ctx, bedID, bedReq)
+}
+
+// Методы для работы с bookings
+func (db *Database) CreateBooking(ctx context.Context, booking *models.BookingRequest) error {
+    return db.accommodationDB.CreateBooking(ctx, booking)
+}
+
+func (db *Database) GetAllBookings(ctx context.Context) ([]models.Booking, error) {
+    return db.accommodationDB.GetAllBookings(ctx)
+}
+
+func (db *Database) DeleteBooking(ctx context.Context, bookingID string, bookingType string) error {
+    return db.accommodationDB.DeleteBooking(ctx, bookingID, bookingType)
 }
