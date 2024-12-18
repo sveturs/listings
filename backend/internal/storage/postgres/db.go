@@ -12,12 +12,14 @@ import (
     "strconv"
 
     carStorage "backend/internal/proj/car/storage/postgres"
+    marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
 
 )
 
 type Database struct {
     pool *pgxpool.Pool
     carDB *carStorage.Storage
+    marketplaceDB *marketplaceStorage.Storage
 }
 func NewDatabase(dbURL string) (*Database, error) {
     pool, err := pgxpool.New(context.Background(), dbURL)
@@ -25,12 +27,11 @@ func NewDatabase(dbURL string) (*Database, error) {
         return nil, fmt.Errorf("error creating connection pool: %w", err)
     }
 
-    db := &Database{
-        pool:  pool,
-        carDB: carStorage.NewStorage(pool),
-    }
-
-    return db, nil
+    return &Database{
+        pool:          pool,
+        carDB:         carStorage.NewStorage(pool),
+        marketplaceDB: marketplaceStorage.NewStorage(pool),
+    }, nil
 }
 func (db *Database) AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error) {
     var bedID int
@@ -171,4 +172,60 @@ func (db *Database) GetCarImages(ctx context.Context, carID string) ([]models.Ca
 
 func (db *Database) DeleteCarImage(ctx context.Context, imageID string) (string, error) {
     return db.carDB.DeleteCarImage(ctx, imageID)
+}
+// Marketplace methods
+func (db *Database) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
+    return db.marketplaceDB.CreateListing(ctx, listing)
+}
+
+func (db *Database) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
+    return db.marketplaceDB.GetListings(ctx, filters, limit, offset)
+}
+
+func (db *Database) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
+    return db.marketplaceDB.GetListingByID(ctx, id)
+}
+
+func (db *Database) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
+    return db.marketplaceDB.UpdateListing(ctx, listing)
+}
+
+func (db *Database) DeleteListing(ctx context.Context, id int, userID int) error {
+    return db.marketplaceDB.DeleteListing(ctx, id, userID)
+}
+
+func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
+    return db.marketplaceDB.GetCategories(ctx)
+}
+
+func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
+    return db.marketplaceDB.GetCategoryByID(ctx, id)
+}
+
+func (db *Database) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
+    return db.marketplaceDB.GetCategoryTree(ctx)
+}
+
+func (db *Database) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
+    return db.marketplaceDB.AddListingImage(ctx, image)
+}
+
+func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
+    return db.marketplaceDB.GetListingImages(ctx, listingID)
+}
+
+func (db *Database) DeleteListingImage(ctx context.Context, imageID string) (string, error) {
+    return db.marketplaceDB.DeleteListingImage(ctx, imageID)
+}
+
+func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {
+    return db.marketplaceDB.AddToFavorites(ctx, userID, listingID)
+}
+
+func (db *Database) RemoveFromFavorites(ctx context.Context, userID int, listingID int) error {
+    return db.marketplaceDB.RemoveFromFavorites(ctx, userID, listingID)
+}
+
+func (db *Database) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
+    return db.marketplaceDB.GetUserFavorites(ctx, userID)
 }

@@ -13,9 +13,9 @@ import (
     "github.com/jackc/pgx/v5"  // добавляем импорт pgx
 )
 
-func (db *Database) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
+func (s *Storage) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
 	var listingID int
-	err := db.pool.QueryRow(ctx, `
+	err := s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
@@ -30,9 +30,9 @@ func (db *Database) CreateListing(ctx context.Context, listing *models.Marketpla
 
 	return listingID, err
 }
-func (db *Database) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
+func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
 	var imageID int
-	err := db.pool.QueryRow(ctx, `
+	err := s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_images (
             listing_id, file_path, file_name, file_size, 
             content_type, is_main
@@ -46,8 +46,8 @@ func (db *Database) AddListingImage(ctx context.Context, image *models.Marketpla
 	return imageID, err
 }
 
-func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-	rows, err := db.pool.Query(ctx, `
+func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
+	rows, err := s.pool.Query(ctx, `
         SELECT id, listing_id, file_path, file_name, 
                file_size, content_type, is_main, created_at
         FROM marketplace_images
@@ -76,9 +76,9 @@ func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]m
 	return images, rows.Err()
 }
 
-func (db *Database) DeleteListingImage(ctx context.Context, imageID string) (string, error) {
+func (s *Storage) DeleteListingImage(ctx context.Context, imageID string) (string, error) {
 	var filePath string
-	err := db.pool.QueryRow(ctx,
+	err := s.pool.QueryRow(ctx,
 		"SELECT file_path FROM marketplace_images WHERE id = $1",
 		imageID,
 	).Scan(&filePath)
@@ -86,7 +86,7 @@ func (db *Database) DeleteListingImage(ctx context.Context, imageID string) (str
 		return "", err
 	}
 
-	_, err = db.pool.Exec(ctx,
+	_, err = s.pool.Exec(ctx,
 		"DELETE FROM marketplace_images WHERE id = $1",
 		imageID,
 	)
@@ -97,7 +97,7 @@ func (db *Database) DeleteListingImage(ctx context.Context, imageID string) (str
 	return filePath, nil
 }
 
-func (db *Database) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
+func (s *Storage) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
     // Сначала создаем CTE для получения ID всех подкатегорий
     baseQuery := `
         WITH RECURSIVE category_tree AS (
@@ -190,7 +190,7 @@ func (db *Database) GetListings(ctx context.Context, filters map[string]string, 
 
 
     // Выполняем запрос
-    rows, err := db.pool.Query(ctx, baseQuery, args...)
+    rows, err := s.pool.Query(ctx, baseQuery, args...)
     if err != nil {
         return nil, 0, fmt.Errorf("error querying listings: %w", err)
     }
@@ -237,7 +237,7 @@ func (db *Database) GetListings(ctx context.Context, filters map[string]string, 
 
 	return listings, totalCount, nil
 }
-func (db *Database) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
+func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
     query := `
         WITH RECURSIVE category_tree AS (
             -- Корневые категории
@@ -277,7 +277,7 @@ func (db *Database) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeN
     `
 
 
-    rows, err := db.pool.Query(ctx, query)
+    rows, err := s.pool.Query(ctx, query)
     if err != nil {
         return nil, fmt.Errorf("error querying category tree: %w", err)
     }
@@ -298,8 +298,8 @@ func (db *Database) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeN
 
     return categories, rows.Err()
 }
-func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {
-	_, err := db.pool.Exec(ctx, `
+func (s *Storage) AddToFavorites(ctx context.Context, userID int, listingID int) error {
+	_, err := s.pool.Exec(ctx, `
         INSERT INTO marketplace_favorites (user_id, listing_id)
         VALUES ($1, $2)
         ON CONFLICT (user_id, listing_id) DO NOTHING
@@ -307,15 +307,15 @@ func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID in
 	return err
 }
 
-func (db *Database) RemoveFromFavorites(ctx context.Context, userID int, listingID int) error {
-	_, err := db.pool.Exec(ctx, `
+func (s *Storage) RemoveFromFavorites(ctx context.Context, userID int, listingID int) error {
+	_, err := s.pool.Exec(ctx, `
         DELETE FROM marketplace_favorites
         WHERE user_id = $1 AND listing_id = $2
     `, userID, listingID)
 	return err
 }
 
-func (db *Database) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
+func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
 	query := `
         SELECT 
             l.id, l.user_id, l.category_id, l.title, l.description,
@@ -327,7 +327,7 @@ func (db *Database) GetUserFavorites(ctx context.Context, userID int) ([]models.
         WHERE f.user_id = $1
     `
 
-	rows, err := db.pool.Query(ctx, query, userID)
+	rows, err := s.pool.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -350,8 +350,8 @@ func (db *Database) GetUserFavorites(ctx context.Context, userID int) ([]models.
 
 	return listings, rows.Err()
 }
-func (db *Database) DeleteListing(ctx context.Context, id int, userID int) error {
-	result, err := db.pool.Exec(ctx, `
+func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
+	result, err := s.pool.Exec(ctx, `
         DELETE FROM marketplace_listings
         WHERE id = $1 AND user_id = $2
     `, id, userID)
@@ -368,8 +368,8 @@ func (db *Database) DeleteListing(ctx context.Context, id int, userID int) error
 	return nil
 }
 
-func (db *Database) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	result, err := db.pool.Exec(ctx, `
+func (s *Storage) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
+	result, err := s.pool.Exec(ctx, `
         UPDATE marketplace_listings
         SET 
             title = $1,
@@ -410,8 +410,8 @@ func (db *Database) UpdateListing(ctx context.Context, listing *models.Marketpla
 
 	return nil
 }
-func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	rows, err := db.pool.Query(ctx, `
+func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
+	rows, err := s.pool.Query(ctx, `
         SELECT 
             id, name, slug, parent_id, icon, created_at
         FROM marketplace_categories
@@ -444,9 +444,9 @@ func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCate
 	return categories, rows.Err()
 }
 
-func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
+func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
 	cat := &models.MarketplaceCategory{}
-	err := db.pool.QueryRow(ctx, `
+	err := s.pool.QueryRow(ctx, `
         SELECT 
             id, name, slug, parent_id, icon, created_at
         FROM marketplace_categories
@@ -465,15 +465,15 @@ func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.Market
 
 	return cat, nil
 }
-// backend/internal/storage/postgres/marketplace.go
 
-func (db *Database) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
+
+func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
     listing := &models.MarketplaceListing{
         User:     &models.User{},
         Category: &models.MarketplaceCategory{},
     }
 
-    err := db.pool.QueryRow(ctx, `
+    err := s.pool.QueryRow(ctx, `
         SELECT 
             l.id, l.user_id, l.category_id, l.title, l.description,
             l.price, l.condition, l.status, l.location, l.latitude,
@@ -506,7 +506,7 @@ func (db *Database) GetListingByID(ctx context.Context, id int) (*models.Marketp
         timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
         defer cancel()
         
-        _, err = db.pool.Exec(timeoutCtx, `
+        _, err = s.pool.Exec(timeoutCtx, `
             UPDATE marketplace_listings 
             SET views_count = views_count + 1 
             WHERE id = $1
@@ -517,7 +517,7 @@ func (db *Database) GetListingByID(ctx context.Context, id int) (*models.Marketp
     }()
 
     // Получаем изображения
-    images, err := db.GetListingImages(ctx, fmt.Sprintf("%d", id))
+    images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", id))
     if err != nil {
         log.Printf("Error getting images for listing %d: %v", id, err)
     } else {
