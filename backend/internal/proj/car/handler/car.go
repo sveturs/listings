@@ -1,22 +1,25 @@
 //backend/internal/handlers/car.go
-package handlers
+package handler
 
 import (
 	"backend/internal/domain/models"
 	"backend/pkg/utils"
 	"github.com/gofiber/fiber/v2"
-    "backend/internal/services"
+    globalService "backend/internal/proj/global/service"
+    "backend/internal/proj/car/service"
     "strconv"
     "log"
 
 )
 type CarHandler struct {
-    services services.ServicesInterface
+    services globalService.ServicesInterface
+    carService service.CarServiceInterface
 }
 
-func NewCarHandler(services services.ServicesInterface) *CarHandler {
+func NewCarHandler(services globalService.ServicesInterface) *CarHandler {
     return &CarHandler{
         services: services,
+        carService: services.Car(),
     }
 }
 func (h *CarHandler) AddCar(c *fiber.Ctx) error {

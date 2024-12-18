@@ -2,7 +2,7 @@ package handler
 
 import (
     "github.com/gofiber/fiber/v2"
-    "backend/internal/services"
+    globalService "backend/internal/proj/global/service"
     "backend/internal/types"
     "backend/internal/domain/models"
     "backend/pkg/utils"
@@ -10,10 +10,11 @@ import (
 
 
 type BookingHandler struct {
-    services services.ServicesInterface
+    services globalService.ServicesInterface
 }
 
-func NewBookingHandler(services services.ServicesInterface) *BookingHandler {
+
+func NewBookingHandler(services globalService.ServicesInterface) *BookingHandler {
     return &BookingHandler{
         services: services,
     }

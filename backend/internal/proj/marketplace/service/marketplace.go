@@ -1,12 +1,13 @@
-package services
+// backend/internal/proj/marketplace/service/marketplace.go
+package service
 
 import (
     "backend/internal/domain/models"
     "backend/internal/storage"
     "context"
-    "fmt"
     "mime/multipart"
     "path/filepath"
+    "fmt"
     "time"
 )
 
@@ -14,7 +15,7 @@ type MarketplaceService struct {
     storage storage.Storage
 }
 
-func NewMarketplaceService(storage storage.Storage) *MarketplaceService {
+func NewMarketplaceService(storage storage.Storage) MarketplaceServiceInterface {
     return &MarketplaceService{
         storage: storage,
     }

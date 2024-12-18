@@ -1,5 +1,5 @@
 //backend/internal/services/room.go
-package services
+package service
 
 import (
     "backend/internal/domain/models"

@@ -3,21 +3,23 @@ package middleware
 
 import (
 	"backend/internal/config"
-	"backend/internal/services"
+
 
 	"github.com/gofiber/fiber/v2"
+
+	globalService "backend/internal/proj/global/service" 
 )
 
 type Middleware struct {
 	config   *config.Config
-	services *services.Services
+    services globalService.ServicesInterface 
 }
 
-func NewMiddleware(cfg *config.Config, services *services.Services) *Middleware {
-	return &Middleware{
-		config:   cfg,
-		services: services,
-	}
+func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface) *Middleware {
+    return &Middleware{
+        config:   cfg,
+        services: services,
+    }
 }
 
 func (m *Middleware) Setup(app *fiber.App) {

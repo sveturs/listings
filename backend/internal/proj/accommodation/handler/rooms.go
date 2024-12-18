@@ -2,7 +2,7 @@ package handler
 
 import (
 	"backend/internal/domain/models"
-	"backend/internal/services"
+    globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 	"fmt"
 	"log"
@@ -14,10 +14,10 @@ import (
 )
 
 type RoomHandler struct {
-	services services.ServicesInterface
+    services globalService.ServicesInterface
 }
 
-func NewRoomHandler(services services.ServicesInterface) *RoomHandler {
+func NewRoomHandler(services globalService.ServicesInterface) *RoomHandler {
 	return &RoomHandler{
 		services: services,
 	}

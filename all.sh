@@ -11,10 +11,10 @@ project_dirs=(
 # Массив расширений файлов для поиска
 file_extensions=(
     "go"
-    "js"
+#    "js"
     "sql"
 #    "jsx"
-#    "ts"
+    "env"
 #    "tsx"
     "json"
     "yml"
@@ -27,8 +27,9 @@ specific_files=(
     "/data/proj/hostel-booking-system/backend/Dockerfile"
 #   "/data/proj/hostel-booking-system/backend/docker-compose.yml"
     "nginx.conf"
-    "/data/proj/hostel-booking-system/frontend/hostel-frontend/.env"
-    "/data/proj/hostel-booking-system/frontend/hostel-frontend/.env.local"
+    "deploy.sh"
+#    "/data/proj/hostel-booking-system/frontend/hostel-frontend/.env"
+#    "/data/proj/hostel-booking-system/frontend/hostel-frontend/.env.local"
     "/data/proj/hostel-booking-system/backend/.env"
 )
 
@@ -40,9 +41,12 @@ exclude_dirs=(
     "build"
     ".git"
     "uploads"
-    "/data/proj/hostel-booking-system/frontend/node_modules/"
-    "/data/proj/hostel-booking-system/frontend/hostel-frontend/build/"
+    "/data/proj/hostel-booking-system/frontend/"
+    "/data/proj/hostel-booking-system/frontend/hostel-frontend/"
+#    "/data/proj/hostel-booking-system/frontend/node_modules/"
+#    "/data/proj/hostel-booking-system/frontend/hostel-frontend/build/"
     "/data/proj/hostel-booking-system/node_modules/"
+#   "/data/proj/hostel-booking-system/frontend/"
 
 )
 

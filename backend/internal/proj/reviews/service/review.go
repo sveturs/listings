@@ -1,6 +1,6 @@
 // internal/services/review.go
 
-package services
+package service
 
 import (
     "context"
@@ -13,7 +13,7 @@ type ReviewService struct {
     storage storage.Storage
 }
 
-func NewReviewService(storage storage.Storage) ReviewServiceInterface {
+func NewReviewService(storage storage.Storage) *ReviewService {
     return &ReviewService{
         storage: storage,
     }

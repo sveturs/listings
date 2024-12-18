@@ -1,7 +1,9 @@
 package handler
 
 import (
-    "backend/internal/services"
+    globalService "backend/internal/proj/global/service"
+    
+    
 )
 
 type Handler struct {
@@ -9,7 +11,7 @@ type Handler struct {
     Booking *BookingHandler
 }
 
-func NewHandler(services services.ServicesInterface) *Handler {
+func NewHandler(services globalService.ServicesInterface) *Handler {
     return &Handler{
         Room:    NewRoomHandler(services),
         Booking: NewBookingHandler(services), 

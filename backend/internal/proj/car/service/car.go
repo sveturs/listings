@@ -1,5 +1,5 @@
 // backend/internal/services/car.go
-package services
+package service
 
 import (
 	"backend/internal/domain/models"
@@ -20,11 +20,13 @@ import (
 )
 
 type CarService struct {
-	storage storage.Storage
+    storage storage.Storage
 }
 
-func NewCarService(storage storage.Storage) *CarService {
-	return &CarService{storage: storage}
+func NewCarService(storage storage.Storage) CarServiceInterface {
+    return &CarService{
+        storage: storage,
+    }
 }
 
 func (s *CarService) AddCar(ctx context.Context, car *models.Car) (int, error) {
