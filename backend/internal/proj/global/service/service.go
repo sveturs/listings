@@ -1,3 +1,4 @@
+// backend/internal/proj/global/service/service.go
 package service
 
 import (
@@ -13,24 +14,24 @@ import (
 type Service struct {
     users         *userService.Service
     accommodation *accommodationService.Service
-    car           *carService.Service
-    marketplace   *marketplaceService.Service
-    review        *reviewService.Service
-    config        *config.Config
+    car          *carService.Service
+    marketplace  *marketplaceService.Service
+    review       *reviewService.Service
+    config       *config.Config
 }
 
 func NewService(storage storage.Storage, cfg *config.Config) *Service {
     return &Service{
         users:         userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
         accommodation: accommodationService.NewService(storage),
-        car:           carService.NewService(storage),
-        marketplace:   marketplaceService.NewService(storage),
-        review:        reviewService.NewService(storage),
-        config:        cfg,
+        car:          carService.NewService(storage),
+        marketplace:  marketplaceService.NewService(storage),
+        review:       reviewService.NewService(storage),
+        config:       cfg,
     }
 }
 
-// Реализация всех методов интерфейса
+// Реализация методов интерфейса
 func (s *Service) Auth() userService.AuthServiceInterface {
     return s.users.Auth
 }

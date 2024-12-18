@@ -4,14 +4,14 @@ package service
 import (
     "context"
     "backend/internal/domain/models"
-    "backend/internal/storage"
+    userStorage "backend/internal/proj/users/storage"
 )
 
 type UserService struct {
-    storage storage.Storage
+    storage userStorage.UserStorage
 }
 
-func NewUserService(storage storage.Storage) *UserService {
+func NewUserService(storage userStorage.UserStorage) *UserService {
     return &UserService{
         storage: storage,
     }

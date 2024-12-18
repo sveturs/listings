@@ -2,40 +2,42 @@ package service
 
 import (
 	"backend/internal/domain/models"
-	"backend/internal/storage"
-	"backend/internal/types"
+ 	"backend/internal/types"
 	"context"
 	"sync"
-
+    userStorage "backend/internal/proj/users/storage"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	oauth2v2 "google.golang.org/api/oauth2/v2"
 )
 
 type AuthService struct {
-	googleConfig *oauth2.Config
-	sessions     sync.Map
-	storage      storage.Storage
+    googleConfig *oauth2.Config
+    sessions     sync.Map
+    storage      userStorage.UserStorage
 }
 
-// backend/internal/services/auth.go
+func NewAuthService(
+    googleClientID, 
+    googleClientSecret, 
+    googleRedirectURL string, 
+    storage userStorage.UserStorage,
+) *AuthService {
+    googleConfig := &oauth2.Config{
+        ClientID:     googleClientID,
+        ClientSecret: googleClientSecret,
+        RedirectURL:  googleRedirectURL,
+        Scopes: []string{
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/userinfo.email",
+        },
+        Endpoint: google.Endpoint,
+    }
 
-func NewAuthService(googleClientID, googleClientSecret, googleRedirectURL string, storage storage.Storage) *AuthService {
-	googleConfig := &oauth2.Config{
-		ClientID:     googleClientID,
-		ClientSecret: googleClientSecret,
-		RedirectURL:  googleRedirectURL,
-		Scopes: []string{
-			"https://www.googleapis.com/auth/userinfo.profile",
-			"https://www.googleapis.com/auth/userinfo.email",
-		},
-		Endpoint: google.Endpoint,
-	}
-
-	return &AuthService{
-		googleConfig: googleConfig,
-		storage:      storage,
-	}
+    return &AuthService{
+        googleConfig: googleConfig,
+        storage:     storage,
+    }
 }
 
 func (s *AuthService) GetGoogleAuthURL() string {
