@@ -13,14 +13,16 @@ import (
 
     carStorage "backend/internal/proj/car/storage/postgres"
     marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
-
+    reviewStorage "backend/internal/proj/reviews/storage/postgres"
 )
 
 type Database struct {
     pool *pgxpool.Pool
     carDB *carStorage.Storage
     marketplaceDB *marketplaceStorage.Storage
+    reviewDB *reviewStorage.Storage  // добавляем
 }
+
 func NewDatabase(dbURL string) (*Database, error) {
     pool, err := pgxpool.New(context.Background(), dbURL)
     if err != nil {
@@ -31,6 +33,7 @@ func NewDatabase(dbURL string) (*Database, error) {
         pool:          pool,
         carDB:         carStorage.NewStorage(pool),
         marketplaceDB: marketplaceStorage.NewStorage(pool),
+        reviewDB:      reviewStorage.NewStorage(pool), // добавляем
     }, nil
 }
 func (db *Database) AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error) {
@@ -228,4 +231,44 @@ func (db *Database) RemoveFromFavorites(ctx context.Context, userID int, listing
 
 func (db *Database) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
     return db.marketplaceDB.GetUserFavorites(ctx, userID)
+}
+// Добавляем делегирующие методы
+func (db *Database) CreateReview(ctx context.Context, review *models.Review) (*models.Review, error) {
+    return db.reviewDB.CreateReview(ctx, review)
+}
+
+func (db *Database) GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error) {
+    return db.reviewDB.GetReviews(ctx, filter)
+}
+
+func (db *Database) GetReviewByID(ctx context.Context, id int) (*models.Review, error) {
+    return db.reviewDB.GetReviewByID(ctx, id)
+}
+
+func (db *Database) UpdateReview(ctx context.Context, review *models.Review) error {
+    return db.reviewDB.UpdateReview(ctx, review)
+}
+
+func (db *Database) DeleteReview(ctx context.Context, id int) error {
+    return db.reviewDB.DeleteReview(ctx, id)
+}
+
+func (db *Database) AddReviewResponse(ctx context.Context, response *models.ReviewResponse) error {
+    return db.reviewDB.AddReviewResponse(ctx, response)
+}
+
+func (db *Database) AddReviewVote(ctx context.Context, vote *models.ReviewVote) error {
+    return db.reviewDB.AddReviewVote(ctx, vote)
+}
+
+func (db *Database) GetReviewVotes(ctx context.Context, reviewId int) (helpful int, notHelpful int, err error) {
+    return db.reviewDB.GetReviewVotes(ctx, reviewId)
+}
+
+func (db *Database) GetUserReviewVote(ctx context.Context, userId int, reviewId int) (string, error) {
+    return db.reviewDB.GetUserReviewVote(ctx, userId, reviewId)
+}
+
+func (db *Database) GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error) {
+    return db.reviewDB.GetEntityRating(ctx, entityType, entityId)
 }
