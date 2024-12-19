@@ -1,5 +1,3 @@
-
-// backend/internal/proj/users/storage/postgres/user_profile.go
 package postgres
 
 import (
@@ -71,6 +69,7 @@ func (s *Storage) UpdateUserProfile(ctx context.Context, userID int, update *mod
     }
 
     params = append(params, userID)
+
     query := fmt.Sprintf(`
         UPDATE users 
         SET %s, updated_at = CURRENT_TIMESTAMP

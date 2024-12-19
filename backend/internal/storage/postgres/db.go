@@ -15,6 +15,7 @@ import (
     marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
     reviewStorage "backend/internal/proj/reviews/storage/postgres"
     accommodationStorage "backend/internal/proj/accommodation/storage/postgres"
+    userStorage             "backend/internal/proj/users/storage/postgres"
 )
 
 type Database struct {
@@ -23,6 +24,7 @@ type Database struct {
     marketplaceDB *marketplaceStorage.Storage
     reviewDB *reviewStorage.Storage
     accommodationDB *accommodationStorage.Storage
+    usersDB *userStorage.Storage 
     
 }
 
@@ -38,6 +40,7 @@ func NewDatabase(dbURL string) (*Database, error) {
         marketplaceDB: marketplaceStorage.NewStorage(pool),
         reviewDB:      reviewStorage.NewStorage(pool),
         accommodationDB: accommodationStorage.NewStorage(pool),
+        usersDB:        userStorage.NewStorage(pool),
     }, nil
 }
 
@@ -289,4 +292,38 @@ func (db *Database) GetAllBookings(ctx context.Context) ([]models.Booking, error
 
 func (db *Database) DeleteBooking(ctx context.Context, bookingID string, bookingType string) error {
     return db.accommodationDB.DeleteBooking(ctx, bookingID, bookingType)
+}
+
+
+// User methods
+func (db *Database) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+    return db.usersDB.GetUserByEmail(ctx, email)
+}
+
+func (db *Database) GetUserByID(ctx context.Context, id int) (*models.User, error) {
+    return db.usersDB.GetUserByID(ctx, id)
+}
+
+func (db *Database) CreateUser(ctx context.Context, user *models.User) error {
+    return db.usersDB.CreateUser(ctx, user)
+}
+
+func (db *Database) UpdateUser(ctx context.Context, user *models.User) error {
+    return db.usersDB.UpdateUser(ctx, user)
+}
+
+func (db *Database) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
+    return db.usersDB.GetOrCreateGoogleUser(ctx, user)
+}
+
+func (db *Database) GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error) {
+    return db.usersDB.GetUserProfile(ctx, id)
+}
+
+func (db *Database) UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error {
+    return db.usersDB.UpdateUserProfile(ctx, id, update)
+}
+
+func (db *Database) UpdateLastSeen(ctx context.Context, id int) error {
+    return db.usersDB.UpdateLastSeen(ctx, id)
 }

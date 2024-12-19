@@ -1,5 +1,3 @@
-
-// backend/internal/proj/users/storage/postgres/user.go
 package postgres
 
 import (
@@ -9,11 +7,13 @@ import (
 
 func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
     var userID int
+    
     err := s.pool.QueryRow(ctx, `
         SELECT id FROM users WHERE google_id = $1
     `, user.GoogleID).Scan(&userID)
 
     if err == nil {
+        // Пользователь найден, обновляем информацию
         _, err = s.pool.Exec(ctx, `
             UPDATE users 
             SET name = $1, email = $2, picture_url = $3
@@ -26,6 +26,7 @@ func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) 
         return user, nil
     }
 
+    // Пользователь не найден, создаём нового
     err = s.pool.QueryRow(ctx, `
         INSERT INTO users (name, email, google_id, picture_url)
         VALUES ($1, $2, $3, $4)
