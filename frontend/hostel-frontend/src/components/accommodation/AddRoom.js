@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import LocationPicker from './LocationPicker';
+import LocationPicker from '../global/LocationPicker';
 import {
     TextField,
     Button,
@@ -20,7 +20,7 @@ import {
     Checkbox
 } from "@mui/material";
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
-import axios from "../api/axios";
+import axios from "../../api/axios";
 
 const AddRoom = () => {
     const [room, setRoom] = useState({
@@ -54,7 +54,7 @@ const AddRoom = () => {
             imagePreviewUrls: []
         }
     ]);
-    
+
     const [images, setImages] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
     const [errorMessage, setErrorMessage] = useState("");
@@ -366,7 +366,7 @@ const AddRoom = () => {
                                                         fullWidth
                                                     />
                                                 </Grid>
-                                                
+
                                                 <Grid item xs={12} sm={6} md={3}>
                                                     <TextField
                                                         label="Цена за ночь"
@@ -426,263 +426,263 @@ const AddRoom = () => {
                                                                 />
                                                             }
                                                             label="Светильник"
-                                                            />
-                                                            <FormControlLabel
-                                                                control={
-                                                                    <Checkbox
-                                                                        checked={bed.has_shelf}
-                                                                        onChange={(e) => {
-                                                                            const newBeds = [...beds];
-                                                                            newBeds[index].has_shelf = e.target.checked;
-                                                                            setBeds(newBeds);
-                                                                        }}
-                                                                    />
-                                                                }
-                                                                label="Полка"
-                                                            />
-                                                        </FormGroup>
-                                                    </Grid>
-    
-                                                    <Grid item xs={12}>
-                                                        <Box>
-                                                            <Button
-                                                                variant="contained"
-                                                                component="label"
-                                                                size="small"
-                                                                startIcon={<CloudUploadIcon />}
-                                                            >
-                                                                Фото кровати
-                                                                <input
-                                                                    type="file"
-                                                                    hidden
-                                                                    multiple
-                                                                    accept="image/*"
-                                                                    onChange={(e) => handleBedImageChange(index, e)}
+                                                        />
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox
+                                                                    checked={bed.has_shelf}
+                                                                    onChange={(e) => {
+                                                                        const newBeds = [...beds];
+                                                                        newBeds[index].has_shelf = e.target.checked;
+                                                                        setBeds(newBeds);
+                                                                    }}
                                                                 />
-                                                            </Button>
-                                                            {bed.imagePreviewUrls && bed.imagePreviewUrls.length > 0 && (
-                                                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
-                                                                    {bed.imagePreviewUrls.map((url, imgIndex) => (
-                                                                        <Box
-                                                                            key={imgIndex}
+                                                            }
+                                                            label="Полка"
+                                                        />
+                                                    </FormGroup>
+                                                </Grid>
+
+                                                <Grid item xs={12}>
+                                                    <Box>
+                                                        <Button
+                                                            variant="contained"
+                                                            component="label"
+                                                            size="small"
+                                                            startIcon={<CloudUploadIcon />}
+                                                        >
+                                                            Фото кровати
+                                                            <input
+                                                                type="file"
+                                                                hidden
+                                                                multiple
+                                                                accept="image/*"
+                                                                onChange={(e) => handleBedImageChange(index, e)}
+                                                            />
+                                                        </Button>
+                                                        {bed.imagePreviewUrls && bed.imagePreviewUrls.length > 0 && (
+                                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+                                                                {bed.imagePreviewUrls.map((url, imgIndex) => (
+                                                                    <Box
+                                                                        key={imgIndex}
+                                                                        sx={{
+                                                                            position: 'relative',
+                                                                            width: 60,
+                                                                            height: 60
+                                                                        }}
+                                                                    >
+                                                                        <img
+                                                                            src={url}
+                                                                            alt={`Preview ${imgIndex}`}
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                height: '100%',
+                                                                                objectFit: 'cover',
+                                                                                borderRadius: '4px'
+                                                                            }}
+                                                                        />
+                                                                        <IconButton
+                                                                            size="small"
                                                                             sx={{
-                                                                                position: 'relative',
-                                                                                width: 60,
-                                                                                height: 60
+                                                                                position: 'absolute',
+                                                                                top: -8,
+                                                                                right: -8,
+                                                                                bgcolor: 'background.paper'
+                                                                            }}
+                                                                            onClick={() => {
+                                                                                const newBeds = [...beds];
+                                                                                newBeds[index].images.splice(imgIndex, 1);
+                                                                                newBeds[index].imagePreviewUrls.splice(imgIndex, 1);
+                                                                                setBeds(newBeds);
                                                                             }}
                                                                         >
-                                                                            <img
-                                                                                src={url}
-                                                                                alt={`Preview ${imgIndex}`}
-                                                                                style={{
-                                                                                    width: '100%',
-                                                                                    height: '100%',
-                                                                                    objectFit: 'cover',
-                                                                                    borderRadius: '4px'
-                                                                                }}
-                                                                            />
-                                                                            <IconButton
-                                                                                size="small"
-                                                                                sx={{
-                                                                                    position: 'absolute',
-                                                                                    top: -8,
-                                                                                    right: -8,
-                                                                                    bgcolor: 'background.paper'
-                                                                                }}
-                                                                                onClick={() => {
-                                                                                    const newBeds = [...beds];
-                                                                                    newBeds[index].images.splice(imgIndex, 1);
-                                                                                    newBeds[index].imagePreviewUrls.splice(imgIndex, 1);
-                                                                                    setBeds(newBeds);
-                                                                                }}
-                                                                            >
-                                                                                <DeleteIcon fontSize="small" />
-                                                                            </IconButton>
-                                                                        </Box>
-                                                                    ))}
-                                                                </Box>
-                                                            )}
-                                                        </Box>
-                                                    </Grid>
+                                                                            <DeleteIcon fontSize="small" />
+                                                                        </IconButton>
+                                                                    </Box>
+                                                                ))}
+                                                            </Box>
+                                                        )}
+                                                    </Box>
                                                 </Grid>
-                                            </Paper>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </>
-                        ) : (
-                            <>
-                                <Grid item xs={12} md={6}>
-                                    <TextField
-                                        label="Вместимость"
-                                        type="number"
-                                        fullWidth
-                                        required
-                                        value={room.capacity}
-                                        onChange={(e) => setRoom({ ...room, capacity: parseInt(e.target.value) || 0 })}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <TextField
-                                        label="Цена за ночь"
-                                        type="number"
-                                        fullWidth
-                                        required
-                                        value={room.price_per_night}
-                                        onChange={(e) => setRoom({ ...room, price_per_night: parseFloat(e.target.value) || 0 })}
-                                    />
-                                </Grid>
-                            </>
-                        )}
-    
-                        <Grid item xs={12}>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={room.is_shared}
-                                        onChange={(e) => setRoom({ ...room, is_shared: e.target.checked })}
-                                    />
-                                }
-                                label="Общее помещение"
-                            />
-                        </Grid>
-    
-                        <Grid item xs={12}>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={room.has_private_bathroom}
-                                        onChange={(e) => setRoom({ ...room, has_private_bathroom: e.target.checked })}
-                                    />
-                                }
-                                label="Отдельная ванная комната"
-                            />
-                        </Grid>
-    
-                        <Grid item xs={12}>
-                            <LocationPicker onLocationSelect={handleLocationSelect} />
-                        </Grid>
-    
-                        <Grid item xs={12}>
-                            <Typography variant="h6">Адрес</Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Улица"
-                                fullWidth
-                                required
-                                value={room.address_street}
-                                onChange={(e) => setRoom({ ...room, address_street: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Город"
-                                fullWidth
-                                required
-                                value={room.address_city}
-                                onChange={(e) => setRoom({ ...room, address_city: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Область/Регион"
-                                fullWidth
-                                value={room.address_state}
-                                onChange={(e) => setRoom({ ...room, address_state: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Страна"
-                                fullWidth
-                                required
-                                value={room.address_country}
-                                onChange={(e) => setRoom({ ...room, address_country: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Почтовый индекс"
-                                fullWidth
-                                value={room.address_postal_code}
-                                onChange={(e) => setRoom({ ...room, address_postal_code: e.target.value })}
-                            />
-                        </Grid>
-    
-                        <Grid item xs={12}>
-                            <Typography variant="h6">Фотографии</Typography>
-                            <Box sx={{ mt: 1, mb: 2 }}>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    startIcon={<CloudUploadIcon />}
-                                >
-                                    Загрузить изображения
-                                    <input
-                                        type="file"
-                                        hidden
-                                        multiple
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                    />
-                                </Button>
-                            </Box>
-                            <Grid container spacing={2}>
-                                {previewUrls.map((url, index) => (
-                                    <Grid item xs={12} sm={4} key={index}>
-                                        <Box sx={{ position: 'relative' }}>
-                                            <img
-                                                src={url}
-                                                alt={`Preview ${index}`}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '200px',
-                                                    objectFit: 'cover',
-                                                    borderRadius: '4px'
-                                                }}
-                                            />
-                                            <IconButton
-                                                sx={{
-                                                    position: 'absolute',
-                                                    top: 8,
-                                                    right: 8,
-                                                    bgcolor: 'rgba(255, 255, 255, 0.8)'
-                                                }}
-                                                onClick={() => {
-                                                    setImages(prev => prev.filter((_, i) => i !== index));
-                                                    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-                                                }}
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Box>
+                                            </Grid>
+                                        </Paper>
                                     </Grid>
                                 ))}
                             </Grid>
-                        </Grid>
-    
-                        <Grid item xs={12}>
+                        </>
+                    ) : (
+                        <>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    label="Вместимость"
+                                    type="number"
+                                    fullWidth
+                                    required
+                                    value={room.capacity}
+                                    onChange={(e) => setRoom({ ...room, capacity: parseInt(e.target.value) || 0 })}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    label="Цена за ночь"
+                                    type="number"
+                                    fullWidth
+                                    required
+                                    value={room.price_per_night}
+                                    onChange={(e) => setRoom({ ...room, price_per_night: parseFloat(e.target.value) || 0 })}
+                                />
+                            </Grid>
+                        </>
+                    )}
+
+                    <Grid item xs={12}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={room.is_shared}
+                                    onChange={(e) => setRoom({ ...room, is_shared: e.target.checked })}
+                                />
+                            }
+                            label="Общее помещение"
+                        />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={room.has_private_bathroom}
+                                    onChange={(e) => setRoom({ ...room, has_private_bathroom: e.target.checked })}
+                                />
+                            }
+                            label="Отдельная ванная комната"
+                        />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <LocationPicker onLocationSelect={handleLocationSelect} />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <Typography variant="h6">Адрес</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            label="Улица"
+                            fullWidth
+                            required
+                            value={room.address_street}
+                            onChange={(e) => setRoom({ ...room, address_street: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            label="Город"
+                            fullWidth
+                            required
+                            value={room.address_city}
+                            onChange={(e) => setRoom({ ...room, address_city: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            label="Область/Регион"
+                            fullWidth
+                            value={room.address_state}
+                            onChange={(e) => setRoom({ ...room, address_state: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            label="Страна"
+                            fullWidth
+                            required
+                            value={room.address_country}
+                            onChange={(e) => setRoom({ ...room, address_country: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            label="Почтовый индекс"
+                            fullWidth
+                            value={room.address_postal_code}
+                            onChange={(e) => setRoom({ ...room, address_postal_code: e.target.value })}
+                        />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <Typography variant="h6">Фотографии</Typography>
+                        <Box sx={{ mt: 1, mb: 2 }}>
                             <Button
-                                type="submit"
                                 variant="contained"
-                                color="primary"
-                                fullWidth
-                                size="large"
-                                disabled={!room.name ||
-                                    !room.latitude ||
-                                    !room.longitude ||
-                                    !room.address_city ||
-                                    !room.address_country ||
-                                    (room.accommodation_type === 'bed' && (!room.total_beds || beds.length === 0))}
+                                component="label"
+                                startIcon={<CloudUploadIcon />}
                             >
-                                Добавить
+                                Загрузить изображения
+                                <input
+                                    type="file"
+                                    hidden
+                                    multiple
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                />
                             </Button>
+                        </Box>
+                        <Grid container spacing={2}>
+                            {previewUrls.map((url, index) => (
+                                <Grid item xs={12} sm={4} key={index}>
+                                    <Box sx={{ position: 'relative' }}>
+                                        <img
+                                            src={url}
+                                            alt={`Preview ${index}`}
+                                            style={{
+                                                width: '100%',
+                                                height: '200px',
+                                                objectFit: 'cover',
+                                                borderRadius: '4px'
+                                            }}
+                                        />
+                                        <IconButton
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 8,
+                                                right: 8,
+                                                bgcolor: 'rgba(255, 255, 255, 0.8)'
+                                            }}
+                                            onClick={() => {
+                                                setImages(prev => prev.filter((_, i) => i !== index));
+                                                setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+                                            }}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Box>
+                                </Grid>
+                            ))}
                         </Grid>
                     </Grid>
-                </form>
-            </Container>
-        );
-    };
-    
-    export default AddRoom;
+
+                    <Grid item xs={12}>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            size="large"
+                            disabled={!room.name ||
+                                !room.latitude ||
+                                !room.longitude ||
+                                !room.address_city ||
+                                !room.address_country ||
+                                (room.accommodation_type === 'bed' && (!room.total_beds || beds.length === 0))}
+                        >
+                            Добавить
+                        </Button>
+                    </Grid>
+                </Grid>
+            </form>
+        </Container>
+    );
+};
+
+export default AddRoom;

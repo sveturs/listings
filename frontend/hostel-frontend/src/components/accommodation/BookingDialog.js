@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { ReviewsSection } from './reviews'; 
+import { useAuth } from '../../contexts/AuthContext';
+import { ReviewsSection } from '../reviews'; 
 import {
   Dialog,
   DialogTitle,
@@ -28,7 +28,7 @@ import {
   LightbulbOutlined as LightIcon,
   Storage as ShelfIcon,
 } from '@mui/icons-material';
-import axios from "../api/axios";
+import axios from "../../api/axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 

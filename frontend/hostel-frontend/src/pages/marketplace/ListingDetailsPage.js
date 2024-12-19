@@ -1,7 +1,7 @@
 //frontend/hostel-frontend/src/pages/ListingDetailsPage.js
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import ReviewsSection from '../components/reviews/ReviewsSection';
+import ReviewsSection from '../../components/reviews/ReviewsSection';
 import {
     Container,
     Grid,
@@ -29,8 +29,8 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import axios from '../api/axios';
+import { useAuth } from '../../contexts/AuthContext';
+import axios from '../../api/axios';
 const ListingDetailsPage = () => {
     const { id } = useParams();
     const theme = useTheme();

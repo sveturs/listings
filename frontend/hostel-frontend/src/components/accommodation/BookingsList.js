@@ -18,8 +18,8 @@ import {
   Hotel as HotelIcon,
   SingleBed as SingleBedIcon
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import axios from '../api/axios';
+import { useAuth } from '../../contexts/AuthContext';
+import axios from '../../api/axios';
 
 const BookingsList = () => {
   const [bookings, setBookings] = useState([]);

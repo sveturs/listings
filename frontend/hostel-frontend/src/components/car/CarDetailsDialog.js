@@ -1,4 +1,4 @@
-// frontend/hostel-frontend/src/components/CarDetailsDialog.js
+// frontend/hostel-frontend/src/components/car/CarDetailsDialog.js
 import React from 'react';
 import {
     Dialog,
@@ -20,8 +20,8 @@ import {
     AirlineSeatReclineNormal as SeatsIcon,
     LocationOn as LocationIcon,
 } from '@mui/icons-material';
-import ReviewsSection from './reviews/ReviewsSection';
-import { useAuth } from '../contexts/AuthContext';
+import ReviewsSection from '../reviews/ReviewsSection';
+import { useAuth } from '../../contexts/AuthContext';
 
 const CarDetailsDialog = ({ open, onClose, car, onBook }) => {
     const { user } = useAuth();
@@ -157,7 +157,7 @@ const CarDetailsDialog = ({ open, onClose, car, onBook }) => {
                             entityType="car"
                             entityId={car.id}
                             entityTitle={`${car.make} ${car.model}`}
-                            canReview={Boolean(user)}  
+                            canReview={Boolean(user)}
                         />
                     </Grid>
                 </Grid>

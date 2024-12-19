@@ -20,8 +20,8 @@ import {
     Apartment as ApartmentIcon,
     LocationOn as LocationIcon
 } from '@mui/icons-material';
-import ReviewsSection from './reviews/ReviewsSection';
-import { useAuth } from '../contexts/AuthContext';
+import ReviewsSection from '../reviews/ReviewsSection';
+import { useAuth } from '../../contexts/AuthContext';
 import ImageGallery from './ImageGallery';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;

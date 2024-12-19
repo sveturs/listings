@@ -1,5 +1,5 @@
 import React from "react";
-import AddBooking from "../components/AddBooking";
+import AddBooking from "../../components/accommodation/AddBooking";
 
 const AddBookingPage = () => <AddBooking />;
 

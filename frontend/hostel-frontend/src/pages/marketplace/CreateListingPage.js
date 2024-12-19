@@ -15,8 +15,8 @@ import {
     Paper
 } from "@mui/material";
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
-import LocationPicker from '../components/LocationPicker'; // исправленный путь
-import axios from "../api/axios";
+import LocationPicker from '../../components/global/LocationPicker'; // исправленный путь
+import axios from "../../api/axios";
 
 const CreateListing = () => {
     const [listing, setListing] = useState({

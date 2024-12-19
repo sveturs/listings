@@ -28,7 +28,7 @@ import {
     Hotel as HotelIcon,
     Apartment as ApartmentIcon,
 } from '@mui/icons-material';
-import axios from '../api/axios';
+import axios from '../../api/axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 

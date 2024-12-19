@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    Box, 
-    TextField, 
-    Button, 
-    Switch, 
-    FormControlLabel, 
-    Paper, 
+import {
+    Box,
+    TextField,
+    Button,
+    Switch,
+    FormControlLabel,
+    Paper,
     Typography,
     Alert,
     Stack,
@@ -13,8 +13,8 @@ import {
     IconButton
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import axios from '../api/axios';
+import { useAuth } from '../../contexts/AuthContext';
+import axios from '../../api/axios';
 
 const UserProfile = ({ onClose }) => {
     const { user } = useAuth();
@@ -53,7 +53,7 @@ const UserProfile = ({ onClose }) => {
         e.preventDefault();
         setError('');
         setSuccess('');
-        
+
         try {
             await axios.put('/api/v1/users/profile', formData);
             setSuccess('Профиль успешно обновлен');
@@ -70,9 +70,9 @@ const UserProfile = ({ onClose }) => {
     return (
         <Box sx={{ maxWidth: 600, mx: 'auto', position: 'relative' }}>
             {/* Close button */}
-            <IconButton 
+            <IconButton
                 onClick={onClose}
-                sx={{ 
+                sx={{
                     position: 'absolute',
                     right: 8,
                     top: 8,
@@ -85,8 +85,8 @@ const UserProfile = ({ onClose }) => {
             <Paper sx={{ p: 3 }}>
                 <Stack spacing={3}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar 
-                            src={profile.picture_url} 
+                        <Avatar
+                            src={profile.picture_url}
                             alt={profile.name}
                             sx={{ width: 80, height: 80 }}
                         />
@@ -157,14 +157,14 @@ const UserProfile = ({ onClose }) => {
 
                             {isEditing ? (
                                 <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <Button 
-                                        type="submit" 
+                                    <Button
+                                        type="submit"
                                         variant="contained"
                                         fullWidth
                                     >
                                         Сохранить
                                     </Button>
-                                    <Button 
+                                    <Button
                                         onClick={() => setIsEditing(false)}
                                         variant="outlined"
                                         fullWidth
@@ -173,7 +173,7 @@ const UserProfile = ({ onClose }) => {
                                     </Button>
                                 </Box>
                             ) : (
-                                <Button 
+                                <Button
                                     onClick={() => setIsEditing(true)}
                                     variant="contained"
                                     fullWidth

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { LoadScript } from '@react-google-maps/api';
-import MapView from '../components/CarMapView';
-import CarBookingDialog from '../components/CarBookingDialog';
-import CarDetailsDialog from '../components/CarDetailsDialog';
+import MapView from '../../components/car/CarMapView';
+import CarBookingDialog from '../../components/car/CarBookingDialog';
+import CarDetailsDialog from '../../components/car/CarDetailsDialog';
 import {
   Box,
   Button,
@@ -40,7 +40,7 @@ import {
 } from '@mui/icons-material';
 import { debounce } from 'lodash';
 
-import axios from '../api/axios';
+import axios from '../../api/axios';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;

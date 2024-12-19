@@ -24,12 +24,12 @@ def collect_files_content(file_paths, output_file):
 # Пример использования
 file_paths = [
     "backend/main.go",
-    "frontend/src/components/RoomList.js",
+    "frontend/src/components/accommodation/RoomList.js",
     "frontend/hostel-frontend/src/components/AddRoom.js"
     "frontend/hostel-frontend/src/api/axios.js"
     "frontend/hostel-frontend/src/components/AddUser.js"
     "frontend/hostel-frontend/src/components/AdminPanel.js"
-    "frontend/hostel-frontend/src/components/RoomList.js"
+    "frontend/hostel-frontend/src/components/accommodation/RoomList.js"
     "frontend/hostel-frontend/src/pages/AddRoomPage.js"
     "frontend/hostel-frontend/src/pages/AddUserPage.js"
     "frontend/hostel-frontend/src/pages/HomePage.js"

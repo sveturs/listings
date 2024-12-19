@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import ReviewsSection from './reviews/ReviewsSection';
+import { useAuth } from '../../contexts/AuthContext';
+import ReviewsSection from '../reviews/ReviewsSection';
 
 import {
     Dialog,
@@ -29,7 +29,7 @@ import {
     Close as CloseIcon,
     Assignment as InsuranceIcon,
 } from '@mui/icons-material';
-import axios from '../api/axios';
+import axios from '../../api/axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 

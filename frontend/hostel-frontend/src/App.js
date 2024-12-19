@@ -5,20 +5,20 @@ import { future } from "@remix-run/router";
 
 
 import { AuthProvider } from "./contexts/AuthContext";
-import Layout from "./components/Layout";
+import Layout from "./components/global/Layout";
 import HomePage from "./pages/HomePage";
 import AddRoomPage from "./pages/AddRoomPage";
 import AddUserPage from "./pages/AddUserPage";
 import BookingsListPage from "./pages/BookingsListPage";
 import AdminPanelPage from "./pages/AdminPanelPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import CarListPage from "./pages/CarListPage";
-import AddCarPage from "./pages/AddCarPage";
-import MarketplacePage from "./pages/MarketplacePage";
-import CreateListingPage from "./pages/CreateListingPage";
-import ListingDetailsPage from './pages/ListingDetailsPage';
-import UserProfile from './components/UserProfile';
-import MyListingsPage from './pages/MyListingsPage';
+import CarListPage from "./pages/car/CarListPage";
+import AddCarPage from "./pages/car/AddCarPage";
+import MarketplacePage from "./pages/marketplace/MarketplacePage";
+import CreateListingPage from "./pages/marketplace/CreateListingPage";
+import ListingDetailsPage from './pages/marketplace/ListingDetailsPage';
+import UserProfile from './components/user/UserProfile';
+import MyListingsPage from './pages/marketplace/MyListingsPage';
 
 
 function App() {
@@ -40,12 +40,12 @@ function App() {
             <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/marketplace" element={<MarketplacePage />} />
-            
-            
-            <Route path="/my-listings" element={<MyListingsPage />} />
-            
 
-          
+
+            <Route path="/my-listings" element={<MyListingsPage />} />
+
+
+
           </Routes>
         </Layout>
       </Router>

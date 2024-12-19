@@ -21,8 +21,8 @@ import {
     CloudUpload as UploadIcon,
     AddLocation as LocationIcon,
 } from '@mui/icons-material';
-import axios from '../api/axios';
-import LocationPicker from '../components/LocationPicker';
+import axios from '../../api/axios';
+import LocationPicker from '../../components/global/LocationPicker';
 
 const FEATURES = [
     'Кондиционер',
@@ -77,7 +77,7 @@ const AddCarPage = () => {
 
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
-        
+
         // Проверяем только размер
         const validFiles = files.filter(file => {
             if (file.size > 15 * 1024 * 1024) { // Увеличим до 10MB
@@ -86,7 +86,7 @@ const AddCarPage = () => {
             }
             return true;
         });
-    
+
         if (validFiles.length) {
             setImages(prev => [...prev, ...validFiles]);
             // Создаем превью
@@ -100,7 +100,7 @@ const AddCarPage = () => {
         }
     };
 
-    
+
     const handleLocationSelect = (location) => {
         setFormData(prev => ({
             ...prev,

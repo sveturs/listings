@@ -28,8 +28,8 @@ import {
   AddHome,
   AccountCircle,
 } from "@mui/icons-material";
-import { useAuth } from "../contexts/AuthContext";
-import UserProfile from "../components/UserProfile";
+import { useAuth } from "../../contexts/AuthContext";
+import UserProfile from "../user/UserProfile";
 
 const Layout = ({ children }) => {
   const theme = useTheme();
@@ -138,8 +138,8 @@ const Layout = ({ children }) => {
                 <Tooltip title="Войти">
                   <IconButton onClick={() => {
                     const returnUrl = window.location.pathname + window.location.search;
-                     const encodedReturnUrl = encodeURIComponent(returnUrl);
-                     login(`?returnTo=${encodedReturnUrl}`);
+                    const encodedReturnUrl = encodeURIComponent(returnUrl);
+                    login(`?returnTo=${encodedReturnUrl}`);
                   }} color="primary">
                     <Key />
                   </IconButton>

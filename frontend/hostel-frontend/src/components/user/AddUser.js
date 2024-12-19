@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Container, Typography, Alert } from "@mui/material";
-import axios from "../api/axios";
-import { useAuth } from "../contexts/AuthContext";
+import axios from "../../api/axios";
+import { useAuth } from "../../contexts/AuthContext";
 
 const AddUser = () => {
   const { user } = useAuth();
@@ -65,9 +65,9 @@ const AddUser = () => {
           onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
           required
         />
-        <Button 
-          type="submit" 
-          variant="contained" 
+        <Button
+          type="submit"
+          variant="contained"
           color="primary"
           sx={{ mt: 2 }}
         >

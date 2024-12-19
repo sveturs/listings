@@ -1,7 +1,7 @@
 // frontend/hostel-frontend/src/pages/BookingsListPage.js
 import React from 'react';
 import { Container } from '@mui/material';
-import BookingsList from '../components/BookingsList';
+import BookingsList from '../components/accommodation/BookingsList';
 
 const BookingsListPage = () => {
   return (

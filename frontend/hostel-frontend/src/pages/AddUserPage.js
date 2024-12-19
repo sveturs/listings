@@ -1,5 +1,5 @@
 import React from "react";
-import AddUser from "../components/AddUser";
+import AddUser from "../components/user/AddUser";
 
 const AddUserPage = () => <AddUser />;
 

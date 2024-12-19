@@ -1,6 +1,6 @@
 //frontend/hostel-frontend/src/components/reviews/ReviewComponents.jsx
 import React, { useState } from 'react';
-import PhotoViewer from '../PhotoViewer';
+import PhotoViewer from './PhotoViewer';
 import { useMediaQuery } from '@mui/material';
 import {
     Box,

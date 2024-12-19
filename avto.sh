@@ -31,10 +31,10 @@ specific_files=(
 "backend/internal/storage/postgres/car.go"
 
 "backend/internal/storage/postgres/image.go"
-"frontend/hostel-frontend/src/components/CarBookingDialog.js"
+"frontend/hostel-frontend/src/components/Car/BookingDialog.js"
 "frontend/hostel-frontend/src/components/CarMapView.js"
-"frontend/hostel-frontend/src/pages/AddCarPage.js"
-"frontend/hostel-frontend/src/pages/CarListPage.js"
+"frontend/hostel-frontend/src/pages/car/AddCarPage.js"
+"frontend/hostel-frontend/src/pages/car/CarListPage.js"
 
 )
 

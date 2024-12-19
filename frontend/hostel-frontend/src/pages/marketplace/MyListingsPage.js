@@ -1,4 +1,4 @@
-// frontend/hostel-frontend/src/pages/MyListingsPage.js
+// frontend/hostel-frontend/src/pages/marketplace/MyListingsPage.js
 import React, { useState, useEffect } from 'react';
 import {
     Container,
@@ -11,9 +11,9 @@ import {
 } from '@mui/material';
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import ListingCard from '../components/marketplace/ListingCard';
-import axios from '../api/axios';
+import { useAuth } from '../../contexts/AuthContext';
+import ListingCard from '../../components/marketplace/ListingCard';
+import axios from '../../api/axios';
 
 const MyListingsPage = () => {
     const [listings, setListings] = useState([]);
@@ -24,38 +24,38 @@ const MyListingsPage = () => {
     useEffect(() => {
         const fetchMyListings = async () => {
             try {
-              setLoading(true);
-              const response = await axios.get('/api/v1/marketplace/listings', {
-                withCredentials: true // Added this to ensure authentication
-              });
-              
-              console.log('Listings API Response:', response);
-              
-              if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
-                // Filter listings by user ID
-                const userListings = response.data.data.data.filter(listing => 
-                  String(listing.user_id) === String(user?.id)
-                );
-                setListings(userListings);
-              } else {
-                console.log('Unexpected listings data structure:', response.data);
-                setListings([]);
-              }
+                setLoading(true);
+                const response = await axios.get('/api/v1/marketplace/listings', {
+                    withCredentials: true // Added this to ensure authentication
+                });
+
+                console.log('Listings API Response:', response);
+
+                if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
+                    // Filter listings by user ID
+                    const userListings = response.data.data.data.filter(listing =>
+                        String(listing.user_id) === String(user?.id)
+                    );
+                    setListings(userListings);
+                } else {
+                    console.log('Unexpected listings data structure:', response.data);
+                    setListings([]);
+                }
             } catch (err) {
-              console.error('Error fetching listings:', err);
-              setError('Не удалось загрузить объявления');
+                console.error('Error fetching listings:', err);
+                setError('Не удалось загрузить объявления');
             } finally {
-              setLoading(false);
+                setLoading(false);
             }
-          };
-      
+        };
+
         if (user?.id) {
-          fetchMyListings();
+            fetchMyListings();
         } else {
-          setLoading(false); // Останавливаем загрузку, если нет пользователя
+            setLoading(false); // Останавливаем загрузку, если нет пользователя
         }
-      }, [user]);
-      
+    }, [user]);
+
     if (loading) {
         return (
             <Box display="flex" justifyContent="center" p={4}>

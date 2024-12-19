@@ -16,17 +16,17 @@ import {
     Fab,
     Alert,
     Paper,
-    Chip, 
+    Chip,
 } from '@mui/material';
 import { Plus, Filter, X } from 'lucide-react';
-import ListingCard from '../components/marketplace/ListingCard';
-import { 
-    MobileFilters, 
-    MobileHeader, 
-    MobileListingCard 
-  } from '../components/marketplace/mobile/MobileComponents';
-  import CompactMarketplaceFilters from '../components/marketplace/MarketplaceFilters';
-  import axios from '../api/axios';
+import ListingCard from '../../components/marketplace/ListingCard';
+import {
+    MobileFilters,
+    MobileHeader,
+    MobileListingCard
+} from '../../components/marketplace/MobileComponents';
+import CompactMarketplaceFilters from '../../components/marketplace/MarketplaceFilters';
+import axios from '../../api/axios';
 import { debounce } from 'lodash';
 
 const MarketplacePage = () => {
@@ -110,7 +110,7 @@ const MarketplacePage = () => {
     };
     if (isMobile) {
         return (
-            <Box sx={{ 
+            <Box sx={{
                 minHeight: '100vh',
                 display: 'flex',
                 flexDirection: 'column'
@@ -121,8 +121,8 @@ const MarketplacePage = () => {
                 />
 
                 {error && (
-                    <Alert 
-                        severity="error" 
+                    <Alert
+                        severity="error"
                         sx={{ mx: 2, my: 1 }}
                         action={
                             <IconButton
@@ -137,7 +137,7 @@ const MarketplacePage = () => {
                     </Alert>
                 )}
 
-                <Box sx={{ 
+                <Box sx={{
                     flex: 1,
                     p: 1,
                     bgcolor: 'grey.50'
@@ -157,7 +157,7 @@ const MarketplacePage = () => {
                                     />
                                 </Box>
                             )}
-                            
+
                             <Grid container spacing={1}>
                                 {listings.map((listing) => (
                                     <Grid item xs={6} key={listing.id}>
@@ -171,8 +171,8 @@ const MarketplacePage = () => {
                                 ))}
                                 {listings.length === 0 && !loading && (
                                     <Grid item xs={12}>
-                                        <Box 
-                                            sx={{ 
+                                        <Box
+                                            sx={{
                                                 textAlign: 'center',
                                                 py: 4,
                                                 color: 'text.secondary'
@@ -220,69 +220,69 @@ const MarketplacePage = () => {
         );
     }
 
-// Десктопная версия
-return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h4">
-                Объявления
-            </Typography>
-            <Button
-                variant="contained"
-                onClick={() => navigate('/marketplace/create')}
-                startIcon={<Plus />}
-            >
-                Создать объявление
-            </Button>
-        </Box>
+    // Десктопная версия
+    return (
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h4">
+                    Объявления
+                </Typography>
+                <Button
+                    variant="contained"
+                    onClick={() => navigate('/marketplace/create')}
+                    startIcon={<Plus />}
+                >
+                    Создать объявление
+                </Button>
+            </Box>
 
-        {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-            </Alert>
-        )}
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
 
-        {/* Оборачиваем всё в контейнер Grid */}
-        <Grid container spacing={3}>
-            <Grid item xs={12} md={3}>
-                <CompactMarketplaceFilters
-                    filters={filters}
-                    onFilterChange={handleFilterChange}
-                    categories={categories}
-                    selectedCategoryId={filters.category_id}
-                    isLoading={loading}
-                />
+            {/* Оборачиваем всё в контейнер Grid */}
+            <Grid container spacing={3}>
+                <Grid item xs={12} md={3}>
+                    <CompactMarketplaceFilters
+                        filters={filters}
+                        onFilterChange={handleFilterChange}
+                        categories={categories}
+                        selectedCategoryId={filters.category_id}
+                        isLoading={loading}
+                    />
+                </Grid>
+                <Grid item xs={12} md={9}>
+                    {loading ? (
+                        <Box display="flex" justifyContent="center" p={4}>
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        <Grid container spacing={3}>
+                            {listings.map((listing) => (
+                                <Grid item xs={12} sm={6} md={4} key={listing.id}>
+                                    <Link
+                                        to={`/marketplace/listings/${listing.id}`}
+                                        style={{ textDecoration: 'none' }}
+                                    >
+                                        <ListingCard listing={listing} />
+                                    </Link>
+                                </Grid>
+                            ))}
+                            {listings.length === 0 && !loading && (
+                                <Grid item xs={12}>
+                                    <Alert severity="info">
+                                        По вашему запросу ничего не найдено
+                                    </Alert>
+                                </Grid>
+                            )}
+                        </Grid>
+                    )}
+                </Grid>
             </Grid>
-            <Grid item xs={12} md={9}>
-                {loading ? (
-                    <Box display="flex" justifyContent="center" p={4}>
-                        <CircularProgress />
-                    </Box>
-                ) : (
-                    <Grid container spacing={3}>
-                        {listings.map((listing) => (
-                            <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                                <Link
-                                    to={`/marketplace/listings/${listing.id}`}
-                                    style={{ textDecoration: 'none' }}
-                                >
-                                    <ListingCard listing={listing} />
-                                </Link>
-                            </Grid>
-                        ))}
-                        {listings.length === 0 && !loading && (
-                            <Grid item xs={12}>
-                                <Alert severity="info">
-                                    По вашему запросу ничего не найдено
-                                </Alert>
-                            </Grid>
-                        )}
-                    </Grid>
-                )}
-            </Grid>
-        </Grid>
-    </Container>
-);
+        </Container>
+    );
 };
 
 export default MarketplacePage;
