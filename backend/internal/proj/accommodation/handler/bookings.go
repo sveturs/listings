@@ -1,3 +1,4 @@
+//backend/internal/proj/accommodation/handler/bookings.go
 package handler
 
 import (

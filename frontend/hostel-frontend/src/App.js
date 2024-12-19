@@ -6,12 +6,12 @@ import { future } from "@remix-run/router";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/global/Layout";
-import HomePage from "./pages/HomePage";
-import AddRoomPage from "./pages/AddRoomPage";
-import AddUserPage from "./pages/AddUserPage";
-import BookingsListPage from "./pages/BookingsListPage";
-import AdminPanelPage from "./pages/AdminPanelPage";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
+import HomePage from "./pages/global/HomePage";
+import AddRoomPage from "./pages/accommodation/AddRoomPage";
+import AddUserPage from "./pages/user/AddUserPage";
+import BookingsListPage from "./pages/accommodation/BookingsListPage";
+import AdminPanelPage from "./pages/global/AdminPanelPage";
+import PrivacyPolicy from "./pages/accommodation/PrivacyPolicy";
 import CarListPage from "./pages/car/CarListPage";
 import AddCarPage from "./pages/car/AddCarPage";
 import MarketplacePage from "./pages/marketplace/MarketplacePage";

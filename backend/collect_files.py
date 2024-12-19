@@ -32,7 +32,7 @@ file_paths = [
     "frontend/hostel-frontend/src/components/accommodation/RoomList.js"
     "frontend/hostel-frontend/src/pages/AddRoomPage.js"
     "frontend/hostel-frontend/src/pages/AddUserPage.js"
-    "frontend/hostel-frontend/src/pages/HomePage.js"
+    "frontend/hostel-frontend/src/pages/global/HomePage.js"
     "frontend/hostel-frontend/src/App.css"
     "frontend/hostel-frontend/src/App.js"
     "frontend/hostel-frontend/src/index.js"

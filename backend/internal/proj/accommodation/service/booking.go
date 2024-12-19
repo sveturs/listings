@@ -1,3 +1,4 @@
+//backend/internal/proj/accommodation/service/booking.go
 package service
 
 import (

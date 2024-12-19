@@ -1,3 +1,4 @@
+//backend/internal/proj/accommodation/handler/handler.go
 package handler
 
 import (
