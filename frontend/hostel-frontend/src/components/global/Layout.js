@@ -30,6 +30,7 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "../../contexts/AuthContext";
 import UserProfile from "../user/UserProfile";
+import { Bookmark } from '@mui/icons-material';
 
 const Layout = ({ children }) => {
   const theme = useTheme();
@@ -184,6 +185,10 @@ const Layout = ({ children }) => {
                     <MenuItem component={Link} to="/my-listings">
                       <ShoppingBag fontSize="small" sx={{ mr: 1 }} />
                       Мои объявления
+                    </MenuItem>
+                    <MenuItem component={Link} to="/favorites">
+                      <Bookmark fontSize="small" sx={{ mr: 1 }} />
+                      Избранное
                     </MenuItem>
                     <MenuItem component={Link} to="/add-room">
                       <AddHome fontSize="small" sx={{ mr: 1 }} />

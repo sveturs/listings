@@ -20,4 +20,6 @@ type MarketplaceServiceInterface interface {
     AddToFavorites(ctx context.Context, userID int, listingID int) error
     RemoveFromFavorites(ctx context.Context, userID int, listingID int) error
     GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error)
+    GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error)
+    
 }

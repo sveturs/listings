@@ -340,39 +340,102 @@ func (s *Storage) RemoveFromFavorites(ctx context.Context, userID int, listingID
 }
 
 func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
-	query := `
+    query := `
         SELECT 
-            l.id, l.user_id, l.category_id, l.title, l.description,
-            l.price, l.condition, l.status, l.location, l.latitude,
-            l.longitude, l.address_city, l.address_country, l.views_count,
-            l.created_at, l.updated_at
+            l.id, 
+            l.user_id, 
+            l.category_id, 
+            l.title, 
+            l.description,
+            l.price, 
+            l.condition, 
+            l.status, 
+            l.location, 
+            l.latitude,
+            l.longitude, 
+            l.address_city, 
+            l.address_country, 
+            l.views_count,
+            l.created_at, 
+            l.updated_at,
+            u.name, 
+            u.email, 
+            COALESCE(u.picture_url, ''),
+            c.name as category_name, 
+            c.slug as category_slug,
+            true as is_favorite
         FROM marketplace_listings l
         JOIN marketplace_favorites f ON l.id = f.listing_id
+        LEFT JOIN users u ON l.user_id = u.id
+        LEFT JOIN marketplace_categories c ON l.category_id = c.id
         WHERE f.user_id = $1
+        ORDER BY f.created_at DESC
     `
 
-	rows, err := s.pool.Query(ctx, query, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    rows, err := s.pool.Query(ctx, query, userID)
+    if err != nil {
+        return nil, fmt.Errorf("error querying favorites: %w", err)
+    }
+    defer rows.Close()
 
-	var listings []models.MarketplaceListing
-	for rows.Next() {
-		var l models.MarketplaceListing
-		err := rows.Scan(
-			&l.ID, &l.UserID, &l.CategoryID, &l.Title, &l.Description,
-			&l.Price, &l.Condition, &l.Status, &l.Location, &l.Latitude,
-			&l.Longitude, &l.City, &l.Country, &l.ViewsCount,
-			&l.CreatedAt, &l.UpdatedAt,
-		)
-		if err != nil {
-			continue
-		}
-		listings = append(listings, l)
-	}
+    var listings []models.MarketplaceListing
+    for rows.Next() {
+        listing := models.MarketplaceListing{
+            User:     &models.User{},
+            Category: &models.MarketplaceCategory{},
+        }
+        var userPictureURL string
 
-	return listings, rows.Err()
+        err := rows.Scan(
+            &listing.ID,
+            &listing.UserID,
+            &listing.CategoryID,
+            &listing.Title,
+            &listing.Description,
+            &listing.Price,
+            &listing.Condition,
+            &listing.Status,
+            &listing.Location,
+            &listing.Latitude,
+            &listing.Longitude,
+            &listing.City,
+            &listing.Country,
+            &listing.ViewsCount,
+            &listing.CreatedAt,
+            &listing.UpdatedAt,
+            &listing.User.Name,
+            &listing.User.Email,
+            &userPictureURL,
+            &listing.Category.Name,
+            &listing.Category.Slug,
+            &listing.IsFavorite,
+        )
+        if err != nil {
+            log.Printf("Error scanning listing: %v", err)
+            continue
+        }
+
+        // Присваиваем отдельно
+        listing.User.PictureURL = userPictureURL
+        listing.User.ID = listing.UserID
+
+        // Получаем изображения для каждого объявления
+        images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
+        if err != nil {
+            log.Printf("Error getting images for listing %d: %v", listing.ID, err)
+            listing.Images = []models.MarketplaceImage{} // Пустой массив вместо nil
+        } else {
+            listing.Images = images
+        }
+
+        listings = append(listings, listing)
+    }
+
+    if err = rows.Err(); err != nil {
+        return nil, fmt.Errorf("error iterating rows: %w", err)
+    }
+
+    return listings, nil
 }
 func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 	result, err := s.pool.Exec(ctx, `

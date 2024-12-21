@@ -20,7 +20,9 @@ func NewMarketplaceService(storage storage.Storage) MarketplaceServiceInterface 
         storage: storage,
     }
 }
-
+func (s *MarketplaceService) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
+    return s.storage.GetUserFavorites(ctx, userID)
+}
 func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
     // Устанавливаем начальные значения
     listing.Status = "active"

@@ -171,6 +171,8 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Post("/listings/:id/images", s.marketplace.Marketplace.UploadImages)
 	marketplaceProtected.Post("/listings/:id/favorite", s.marketplace.Marketplace.AddToFavorites)
 	marketplaceProtected.Delete("/listings/:id/favorite", s.marketplace.Marketplace.RemoveFromFavorites)
+	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
+	
 }
 func (s *Server) Start() error {
 	return s.app.Listen(fmt.Sprintf(":%s", s.cfg.Port))

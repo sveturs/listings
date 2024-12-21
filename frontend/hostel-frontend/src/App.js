@@ -19,7 +19,7 @@ import CreateListingPage from "./pages/marketplace/CreateListingPage";
 import ListingDetailsPage from './pages/marketplace/ListingDetailsPage';
 import UserProfile from './components/user/UserProfile';
 import MyListingsPage from './pages/marketplace/MyListingsPage';
-
+import FavoriteListingsPage from './pages/marketplace/FavoriteListingsPage';
 
 function App() {
   return (
@@ -43,7 +43,7 @@ function App() {
 
 
             <Route path="/my-listings" element={<MyListingsPage />} />
-
+            <Route path="/favorites" element={<FavoriteListingsPage />} />
 
 
           </Routes>

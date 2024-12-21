@@ -319,3 +319,23 @@ func (h *MarketplaceHandler) GetCategories(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, categories)
 }
+func (h *MarketplaceHandler) GetFavorites(c *fiber.Ctx) error {
+    userID, ok := c.Locals("user_id").(int)
+    if !ok {
+        log.Printf("GetFavorites: no user_id in context")
+        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+    }
+
+    log.Printf("GetFavorites: fetching favorites for userID=%d", userID)
+
+    ctx := context.WithValue(c.Context(), "user_id", userID)
+
+    favorites, err := h.marketplaceService.GetUserFavorites(ctx, userID)
+    if err != nil {
+        log.Printf("GetFavorites error: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении избранных объявлений")
+    }
+
+    log.Printf("GetFavorites: found %d favorites for userID=%d", len(favorites), userID)
+    return utils.SuccessResponse(c, favorites)
+}
