@@ -7,15 +7,20 @@ import {
     Box,
     Alert,
     Grid,
+    FormControlLabel,
+    Switch,
     IconButton,
     FormControl,
     InputLabel,
     Select,
     MenuItem,
-    Paper
+    Paper,
+    Modal
 } from "@mui/material";
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
-import LocationPicker from '../../components/global/LocationPicker'; // исправленный путь
+import LocationPicker from '../../components/global/LocationPicker';
+import MiniMap from '../../components/maps/MiniMap';
+import { GoogleMap, Marker } from '@react-google-maps/api';
 import axios from "../../api/axios";
 
 const CreateListing = () => {
@@ -28,6 +33,7 @@ const CreateListing = () => {
         location: "",
         city: "",
         country: "",
+        show_on_map: true,
         latitude: null,
         longitude: null
     });
@@ -37,9 +43,9 @@ const CreateListing = () => {
     const [categories, setCategories] = useState([]);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
+    const [showExpandedMap, setShowExpandedMap] = useState(false);
 
     useEffect(() => {
-        // Загрузка категорий при монтировании
         const fetchCategories = async () => {
             try {
                 const response = await axios.get("/api/v1/marketplace/categories");
@@ -97,17 +103,14 @@ const CreateListing = () => {
         setSuccess(false);
 
         try {
-            // Преобразуем цену в число
             const listingData = {
                 ...listing,
                 price: parseFloat(listing.price)
             };
 
-            // Создаем объявление
             const response = await axios.post("/api/v1/marketplace/listings", listingData);
             const listingId = response.data.data.id;
 
-            // Загружаем изображения
             if (images.length > 0) {
                 const formData = new FormData();
                 images.forEach((image, index) => {
@@ -125,7 +128,6 @@ const CreateListing = () => {
             }
 
             setSuccess(true);
-            // Очищаем форму
             setListing({
                 title: "",
                 description: "",
@@ -236,6 +238,79 @@ const CreateListing = () => {
                                     Местоположение
                                 </Typography>
                                 <LocationPicker onLocationSelect={handleLocationSelect} />
+                                
+                                {listing.latitude && listing.longitude && (
+                                    <Box sx={{ mt: 2 }}>
+                                        <MiniMap
+                                            latitude={listing.latitude}
+                                            longitude={listing.longitude}
+                                            address={listing.location}
+                                            onExpand={() => setShowExpandedMap(true)}
+                                        />
+                                    </Box>
+                                )}
+
+                                {showExpandedMap && listing.latitude && listing.longitude && (
+                                    <Modal
+                                        open={showExpandedMap}
+                                        onClose={() => setShowExpandedMap(false)}
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            p: 2
+                                        }}
+                                    >
+                                        <Paper
+                                            sx={{
+                                                position: 'relative',
+                                                width: '100%',
+                                                maxWidth: 1200,
+                                                maxHeight: '90vh',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            <GoogleMap
+                                                mapContainerStyle={{
+                                                    width: '100%',
+                                                    height: '80vh'
+                                                }}
+                                                center={{
+                                                    lat: listing.latitude,
+                                                    lng: listing.longitude
+                                                }}
+                                                zoom={15}
+                                                options={{
+                                                    zoomControl: true,
+                                                    mapTypeControl: true,
+                                                    streetViewControl: true,
+                                                }}
+                                            >
+                                                <Marker
+                                                    position={{
+                                                        lat: listing.latitude,
+                                                        lng: listing.longitude
+                                                    }}
+                                                    title={listing.title}
+                                                />
+                                            </GoogleMap>
+                                        </Paper>
+                                    </Modal>
+                                )}
+                                
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={listing.show_on_map}
+                                            onChange={(e) => setListing(prev => ({
+                                                ...prev,
+                                                show_on_map: e.target.checked
+                                            }))}
+                                        />
+                                    }
+                                    label="Показывать местоположение на карте"
+                                    sx={{ mt: 1 }}
+                                />
                             </Grid>
 
                             <Grid item xs={12}>

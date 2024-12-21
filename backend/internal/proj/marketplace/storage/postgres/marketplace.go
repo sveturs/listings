@@ -15,21 +15,21 @@ import (
 )
 
 func (s *Storage) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
-	var listingID int
-	err := s.pool.QueryRow(ctx, `
+    var listingID int
+    err := s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
-            address_city, address_country
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            address_city, address_country, show_on_map
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING id
     `,
-		listing.UserID, listing.CategoryID, listing.Title, listing.Description,
-		listing.Price, listing.Condition, listing.Status, listing.Location,
-		listing.Latitude, listing.Longitude, listing.City, listing.Country,
-	).Scan(&listingID)
+        listing.UserID, listing.CategoryID, listing.Title, listing.Description,
+        listing.Price, listing.Condition, listing.Status, listing.Location,
+        listing.Latitude, listing.Longitude, listing.City, listing.Country, listing.ShowOnMap,
+    ).Scan(&listingID)
 
-	return listingID, err
+    return listingID, err
 }
 func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
 	var imageID int
@@ -235,7 +235,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			&listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title,
 			&listing.Description, &listing.Price, &listing.Condition, &listing.Status,
 			&listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
-			&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
+			&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt, &listing.ShowOnMap,
 			&listing.User.Name, &listing.User.Email,
 			&listing.Category.Name, &listing.Category.Slug,
 			&imagesJSON, &totalCount,
@@ -482,6 +482,7 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 		listing.Longitude,
 		listing.City,
 		listing.Country,
+        listing.ShowOnMap,
 		listing.ID,
 		listing.UserID,
 	)
@@ -575,6 +576,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             l.views_count,
             l.created_at, 
             l.updated_at,
+            l.show_on_map,
             u.name, 
             u.email, 
             COALESCE(u.picture_url, ''),
@@ -594,7 +596,9 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
     listing := &models.MarketplaceListing{
         User:     &models.User{},
         Category: &models.MarketplaceCategory{},
+        ShowOnMap: true,
     }
+    
 
     var userPictureURL string
     err := s.pool.QueryRow(ctx, query, id, userID).Scan(
@@ -614,6 +618,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
         &listing.ViewsCount,
         &listing.CreatedAt,
         &listing.UpdatedAt,
+        &listing.ShowOnMap,
         &listing.User.Name,
         &listing.User.Email,
         &userPictureURL,

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker } from '@react-google-maps/api';
 import {
     Box,
     TextField,
@@ -9,8 +9,6 @@ import {
     IconButton,
 } from '@mui/material';
 import { Search as SearchIcon, MyLocation as MyLocationIcon } from '@mui/icons-material';
-
-const libraries = ["places", "geometry"];
 
 const LocationPicker = ({ onLocationSelect }) => {
     const [map, setMap] = useState(null);
@@ -39,7 +37,6 @@ const LocationPicker = ({ onLocationSelect }) => {
         fullscreenControl: false,
     };
 
-    // Добавьте новую функцию handleLocationSelect перед onMapLoad
     const handleLocationSelect = (location) => {
         const getAddressComponent = (type) => {
             return location.address_components?.find(
@@ -47,21 +44,17 @@ const LocationPicker = ({ onLocationSelect }) => {
             )?.long_name || '';
         };
 
-        // Получаем номер дома и улицу отдельно
         const streetNumber = getAddressComponent('street_number');
         const route = getAddressComponent('route');
 
-        // Формируем полный адрес улицы с номером дома
         const fullStreetAddress = route
             ? (streetNumber ? `${route}, ${streetNumber}` : route)
             : '';
 
-        // Передаем данные в родительский компонент
         onLocationSelect({
             latitude: location.latitude,
             longitude: location.longitude,
             formatted_address: location.formatted_address,
-            // Передаем сформированный адрес с номером дома
             address_components: {
                 street: fullStreetAddress || getAddressComponent('sublocality') || '',
                 city: getAddressComponent('locality'),
@@ -74,7 +67,6 @@ const LocationPicker = ({ onLocationSelect }) => {
 
     const onMapLoad = useCallback((map) => {
         setMap(map);
-        // Инициализируем поисковую строку после загрузки карты
         const searchInput = document.getElementById('location-search');
         if (searchInput && window.google) {
             const searchBoxInstance = new window.google.maps.places.SearchBox(searchInput);
@@ -87,20 +79,16 @@ const LocationPicker = ({ onLocationSelect }) => {
                 const place = places[0];
                 if (!place.geometry) return;
 
-                // Центрируем карту на найденном месте
                 map.setCenter(place.geometry.location);
                 map.setZoom(17);
 
-                // Устанавливаем маркер
                 setMarker({
                     lat: place.geometry.location.lat(),
                     lng: place.geometry.location.lng()
                 });
 
-                // Обновляем адрес
                 setAddress(place.formatted_address);
 
-                // Вызываем обработчик с данными места
                 handleLocationSelect({
                     latitude: place.geometry.location.lat(),
                     longitude: place.geometry.location.lng(),
@@ -145,14 +133,12 @@ const LocationPicker = ({ onLocationSelect }) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
 
-                    // Центрируем карту и устанавливаем маркер
                     if (map) {
                         map.setCenter({ lat, lng });
                         map.setZoom(17);
                         setMarker({ lat, lng });
                     }
 
-                    // Получаем адрес по координатам
                     if (window.google) {
                         const geocoder = new window.google.maps.Geocoder();
                         geocoder.geocode(
@@ -213,27 +199,22 @@ const LocationPicker = ({ onLocationSelect }) => {
                     }}
                 />
             </Box>
-            <LoadScript
-                googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
-                libraries={libraries}
+            <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={defaultCenter}
+                zoom={13}
+                onLoad={onMapLoad}
+                onClick={handleMapClick}
+                options={mapOptions}
             >
-                <GoogleMap
-                    mapContainerStyle={mapContainerStyle}
-                    center={defaultCenter}
-                    zoom={13}
-                    onLoad={onMapLoad}
-                    onClick={handleMapClick}
-                    options={mapOptions}
-                >
-                    {marker && (
-                        <Marker
-                            position={marker}
-                            draggable={true}
-                            onDragEnd={(e) => handleMapClick(e)}
-                        />
-                    )}
-                </GoogleMap>
-            </LoadScript>
+                {marker && (
+                    <Marker
+                        position={marker}
+                        draggable={true}
+                        onDragEnd={(e) => handleMapClick(e)}
+                    />
+                )}
+            </GoogleMap>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 Кликните по карте или введите адрес для выбора местоположения
             </Typography>

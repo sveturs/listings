@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react'; // добавляем useEffect
+import React, { useState, useCallback } from 'react';
 import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
+import { useMap } from '../../components/maps/MapProvider';
 import {
     Card,
     CardContent,
@@ -8,6 +9,7 @@ import {
     Button,
     Chip,
     CardMedia,
+    CircularProgress
 } from '@mui/material';
 import {
     SingleBed as SingleBedIcon,
@@ -30,10 +32,10 @@ const defaultCenter = {
 };
 
 const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
+    const mapContext = useMap();
     const [map, setMap] = useState(null);
     const [selectedRoom, setSelectedRoom] = useState(null);
 
-    // Выносим опции карты в отдельную функцию для предотвращения проблем с window.google
     const getMapOptions = useCallback(() => ({
         scrollwheel: true,
         mapTypeControl: true,
@@ -55,7 +57,6 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
 
     const onMapLoad = useCallback((map) => {
         setMap(map);
-        console.log('Map loaded, rooms:', rooms); // Отладка
         if (rooms?.length > 0) {
             const bounds = new window.google.maps.LatLngBounds();
             let hasValidCoords = false;
@@ -68,7 +69,6 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                     if (!isNaN(lat) && !isNaN(lng)) {
                         bounds.extend({ lat, lng });
                         hasValidCoords = true;
-                        console.log(`Added to bounds: ${room.name}, lat: ${lat}, lng: ${lng}`); // Отладка
                     }
                 }
             });
@@ -205,6 +205,24 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
         );
     };
 
+    // Показываем индикатор загрузки, если карта ещё не готова
+    if (!mapContext || !mapContext.isLoaded) {
+        return (
+            <Box 
+                sx={{ 
+                    width: '100%',
+                    height: '700px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    bgcolor: 'background.paper'
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
+    }
+
     return (
         <Box sx={{ position: 'relative' }}>
             <GoogleMap
@@ -221,7 +239,7 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
 
                         if (!isNaN(lat) && !isNaN(lng)) {
                             const icon = {
-                                path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",  // SVG path для капли
+                                path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
                                 fillColor: room.accommodation_type === 'bed'
                                     ? '#1976d2'
                                     : room.accommodation_type === 'apartment'
@@ -287,7 +305,6 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                     boxShadow: '0 2px 6px rgba(0,0,0,.3)',
                 }}
             >
-
             </Button>
         </Box>
     );

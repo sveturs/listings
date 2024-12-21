@@ -3,7 +3,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import ReviewsSection from '../../components/reviews/ReviewsSection';
 import { useAuth } from '../../contexts/AuthContext';
-import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api';
+import MiniMap from '../../components/maps/MiniMap';
+
+//import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker } from '@react-google-maps/api';
+
 import {
     Container,
     Modal,
@@ -363,96 +367,41 @@ const ListingDetailsPage = () => {
                                 </Stack>
                             </CardContent>
                         </Card>
-                        {listing.latitude && listing.longitude && (
-                            <>
-                                <Card elevation={2} sx={{ mt: 2 }}>
-                                    <CardContent sx={{ p: 1 }}>
-                                        <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
-                                            <Box sx={{ position: 'relative' }}>
-                                                <GoogleMap
-                                                    mapContainerStyle={{
-                                                        width: '100%',
-                                                        height: '200px',
-                                                        borderRadius: 1
-                                                    }}
-                                                    center={{
-                                                        lat: listing.latitude,
-                                                        lng: listing.longitude
-                                                    }}
-                                                    zoom={14}
-                                                    options={{
-                                                        disableDefaultUI: true,
-                                                        zoomControl: true,
-                                                    }}
-                                                    onClick={() => setIsMapExpanded(true)}
-                                                >
-                                                    <Marker
-                                                        position={{
-                                                            lat: listing.latitude,
-                                                            lng: listing.longitude
-                                                        }}
-                                                        title={listing.title}
-                                                    />
-                                                </GoogleMap>
+                        {listing.latitude && listing.longitude ? (
+                            listing.show_on_map ? (
+                                <>
+                                    <Card elevation={2} sx={{ mt: 2 }}>
+                                        <CardContent sx={{ p: 1 }}>
+                                            <MiniMap
+                                                latitude={listing.latitude}
+                                                longitude={listing.longitude}
+                                                title={listing.title}
+                                                address={listing.location}
+                                                onClick={() => setIsMapExpanded(true)}
+                                                onExpand={() => setIsMapExpanded(true)}
+                                            />
+                                        </CardContent>
+                                    </Card>
 
-                                                <IconButton
-                                                    onClick={() => setIsMapExpanded(true)}
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        top: 8,
-                                                        right: 8,
-                                                        bgcolor: 'background.paper',
-                                                        '&:hover': {
-                                                            bgcolor: 'background.paper',
-                                                        }
-                                                    }}
-                                                >
-                                                    <Maximize2 size={20} />
-                                                </IconButton>
-
-                                                <Box
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        bottom: 0,
-                                                        left: 0,
-                                                        right: 0,
-                                                        bgcolor: 'rgba(255, 255, 255, 0.9)',
-                                                        p: 1,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: 1
-                                                    }}
-                                                >
-                                                    <MapPin size={16} />
-                                                    <Typography variant="body2" noWrap>
-                                                        {listing.location}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </LoadScript>
-                                    </CardContent>
-                                </Card>
-
-                                <Modal
-                                    open={isMapExpanded}
-                                    onClose={() => setIsMapExpanded(false)}
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        p: 2
-                                    }}
-                                >
-                                    <Paper
+                                    <Modal
+                                        open={isMapExpanded}
+                                        onClose={() => setIsMapExpanded(false)}
                                         sx={{
-                                            position: 'relative',
-                                            width: '100%',
-                                            maxWidth: 1200,
-                                            maxHeight: '90vh',
-                                            overflow: 'hidden'
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            p: 2
                                         }}
                                     >
-                                        <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+                                        <Paper
+                                            sx={{
+                                                position: 'relative',
+                                                width: '100%',
+                                                maxWidth: 1200,
+                                                maxHeight: '90vh',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
                                             <GoogleMap
                                                 mapContainerStyle={{
                                                     width: '100%',
@@ -477,11 +426,22 @@ const ListingDetailsPage = () => {
                                                     title={listing.title}
                                                 />
                                             </GoogleMap>
-                                        </LoadScript>
-                                    </Paper>
-                                </Modal>
-                            </>
-                        )}
+                                        </Paper>
+                                    </Modal>
+                                </>
+                            ) : (
+                                <Card elevation={2} sx={{ mt: 2 }}>
+                                    <CardContent>
+                                        <Stack direction="row" spacing={1} alignItems="center">
+                                            <MapPin size={18} />
+                                            <Typography>
+                                                {`${listing.city}, ${listing.country}`}
+                                            </Typography>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            )
+                        ) : null}
                         {/* Карточка продавца */}
                         <Card elevation={2} sx={{ mt: 2 }}>
                             <CardContent>

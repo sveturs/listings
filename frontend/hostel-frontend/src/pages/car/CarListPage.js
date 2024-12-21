@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LoadScript } from '@react-google-maps/api';
 import MapView from '../../components/car/CarMapView';
 import CarBookingDialog from '../../components/car/CarBookingDialog';
 import CarDetailsDialog from '../../components/car/CarDetailsDialog';
@@ -418,7 +417,6 @@ export default function CarListPage() {
           ))}
         </Grid>
       ) : (
-        <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
           <MapView
             cars={cars}
             onCarSelect={(car) => {
@@ -428,7 +426,6 @@ export default function CarListPage() {
             onViewDetails={(car) => setSelectedCarDetails(car)} // Добавьте этот обработчик
             onOpenGallery={(car) => setSelectedCarDetails(car)}
           />
-        </LoadScript>
       )}
 
       {selectedCar && (

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LoadScript } from '@react-google-maps/api';
 import MapView from './MapView';
 import BookingDialog from './BookingDialog';
 import RoomDetailsDialog from './RoomDetailsDialog';
@@ -317,16 +316,14 @@ const RoomList = () => {
                     )}
                 </>
             ) : (
-                <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
-                    <MapView
-                        rooms={rooms}
-                        onRoomSelect={handleBooking}
-                        onOpenGallery={(room) => {
-                            setSelectedRoom(room);
-                            setGalleryOpen(true);
-                        }}
-                    />
-                </LoadScript>
+                <MapView
+                    rooms={rooms}
+                    onRoomSelect={handleBooking}
+                    onOpenGallery={(room) => {
+                        setSelectedRoom(room);
+                        setGalleryOpen(true);
+                    }}
+                />
             )}
 
             {selectedRoom && (

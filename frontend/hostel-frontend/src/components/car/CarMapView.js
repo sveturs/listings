@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
+import { useMap } from '../../components/maps/MapProvider';
 import {
     Card,
     CardContent,
@@ -9,6 +10,7 @@ import {
     Chip,
     Rating,
     CardMedia,
+    CircularProgress,
 } from '@mui/material';
 import {
     LocalGasStation as FuelIcon,
@@ -24,11 +26,12 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = {
-    lat: 45.2671, // Нови-Сад
+    lat: 45.2671,
     lng: 19.8335
 };
-const CarMapView = ({ cars, onCarSelect, onOpenGallery, onViewDetails }) => { 
 
+const CarMapView = ({ cars, onCarSelect, onOpenGallery, onViewDetails }) => { 
+    const mapContext = useMap();
     const [map, setMap] = useState(null);
     const [selectedCar, setSelectedCar] = useState(null);
 
@@ -71,7 +74,6 @@ const CarMapView = ({ cars, onCarSelect, onOpenGallery, onViewDetails }) => {
     }, [cars]);
 
     const InfoWindowContent = ({ car }) => {
-        
         const hasImages = car.images && car.images.length > 0;
         const mainImage = hasImages ? car.images[0] : null;
 
@@ -170,17 +172,35 @@ const CarMapView = ({ cars, onCarSelect, onOpenGallery, onViewDetails }) => {
                     </Button>
                 </CardContent>
                 {car.rating > 0 && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-          <Rating value={car.rating} precision={0.1} readOnly size="small" />
-          <Typography variant="body2" color="text.secondary">
-            {car.reviews_count} {car.reviews_count === 1 ? 'отзыв' : 
-             car.reviews_count < 5 ? 'отзыва' : 'отзывов'}
-          </Typography>
-        </Box>
-      )}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                        <Rating value={car.rating} precision={0.1} readOnly size="small" />
+                        <Typography variant="body2" color="text.secondary">
+                            {car.reviews_count} {car.reviews_count === 1 ? 'отзыв' : 
+                            car.reviews_count < 5 ? 'отзыва' : 'отзывов'}
+                        </Typography>
+                    </Box>
+                )}
             </Card>
         );
     };
+
+    // Показываем индикатор загрузки, если карта ещё не готова
+    if (!mapContext || !mapContext.isLoaded) {
+        return (
+            <Box 
+                sx={{ 
+                    width: '100%',
+                    height: '700px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    bgcolor: 'background.paper'
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ position: 'relative' }}>
