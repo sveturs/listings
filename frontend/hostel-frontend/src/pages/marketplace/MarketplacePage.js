@@ -34,9 +34,9 @@ const MarketplacePage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
 
-    const [listings, setListings] = useState([]);
+    const [listings, setListings] = useState(null);
     const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filters, setFilters] = useState({
@@ -50,21 +50,13 @@ const MarketplacePage = () => {
         sort_by: 'date_desc'
     });
 
-    // Загрузка категорий
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await axios.get('/api/v1/marketplace/category-tree');
-                setCategories(response.data.data || []);
-            } catch (err) {
-                console.error('Error fetching categories:', err);
-                setError('Не удалось загрузить категории');
-            }
-        };
-        fetchCategories();
+    const handleFilterChange = useCallback((newFilters) => {
+        setFilters(prev => ({
+            ...prev,
+            ...newFilters
+        }));
     }, []);
 
-    // Загрузка объявлений
     const fetchListings = useCallback(async (currentFilters) => {
         try {
             setLoading(true);
@@ -88,18 +80,27 @@ const MarketplacePage = () => {
         }
     }, []);
 
-    const handleFilterChange = useCallback((newFilters) => {
-        setFilters(prev => ({
-            ...prev,
-            ...newFilters
-        }));
+    // Эффект для загрузки категорий
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await axios.get('/api/v1/marketplace/category-tree');
+                setCategories(response.data.data || []);
+            } catch (err) {
+                console.error('Error fetching categories:', err);
+                setError('Не удалось загрузить категории');
+            }
+        };
+        fetchCategories();
     }, []);
 
+    // Эффект для обработки фильтров
     useEffect(() => {
         const debouncedFetch = debounce(() => fetchListings(filters), 500);
         debouncedFetch();
         return () => debouncedFetch.cancel();
     }, [fetchListings, filters]);
+
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
             if (key !== 'sort_by' && value !== '') {
@@ -108,6 +109,22 @@ const MarketplacePage = () => {
             return count;
         }, 0);
     };
+
+    if (loading) {
+        return (
+            <Box display="flex" justifyContent="center" p={4}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (!loading && listings && listings.length === 0) {
+        return (
+            <Alert severity="info">
+                По вашему запросу ничего не найдено
+            </Alert>
+        );
+    }
     if (isMobile) {
         return (
             <Box sx={{
