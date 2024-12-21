@@ -6,11 +6,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
-	"strings"
 	"log"
-    "time"  // добавляем импорт time
-    "github.com/jackc/pgx/v5"  // добавляем импорт pgx
+	"strings"
+	"time" // добавляем импорт time
+	// "github.com/jackc/pgx/v5"  // добавляем импорт pgx
 )
 
 func (s *Storage) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
@@ -47,15 +48,30 @@ func (s *Storage) AddListingImage(ctx context.Context, image *models.Marketplace
 }
 
 func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-	rows, err := s.pool.Query(ctx, `
-        SELECT id, listing_id, file_path, file_name, 
-               file_size, content_type, is_main, created_at
+	// Преобразуем listingID в int, так как принимаем строку
+	id, err := strconv.Atoi(listingID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid listing ID: %w", err)
+	}
+
+	query := `
+        SELECT 
+            id, 
+            listing_id,
+            file_path,
+            file_name,
+            file_size,
+            content_type,
+            is_main,
+            created_at
         FROM marketplace_images
         WHERE listing_id = $1
         ORDER BY is_main DESC, created_at DESC
-    `, listingID)
+    `
+
+	rows, err := s.pool.Query(ctx, query, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error querying images: %w", err)
 	}
 	defer rows.Close()
 
@@ -63,17 +79,27 @@ func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]mod
 	for rows.Next() {
 		var img models.MarketplaceImage
 		err := rows.Scan(
-			&img.ID, &img.ListingID, &img.FilePath,
-			&img.FileName, &img.FileSize, &img.ContentType,
-			&img.IsMain, &img.CreatedAt,
+			&img.ID,
+			&img.ListingID,
+			&img.FilePath,
+			&img.FileName,
+			&img.FileSize,
+			&img.ContentType,
+			&img.IsMain,
+			&img.CreatedAt,
 		)
 		if err != nil {
+			log.Printf("Error scanning image row: %v", err)
 			continue
 		}
 		images = append(images, img)
 	}
 
-	return images, rows.Err()
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over images: %w", err)
+	}
+
+	return images, nil
 }
 
 func (s *Storage) DeleteListingImage(ctx context.Context, imageID string) (string, error) {
@@ -98,8 +124,8 @@ func (s *Storage) DeleteListingImage(ctx context.Context, imageID string) (strin
 }
 
 func (s *Storage) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-    // Сначала создаем CTE для получения ID всех подкатегорий
-    baseQuery := `
+	// Сначала создаем CTE для получения ID всех подкатегорий
+	baseQuery := `
         WITH RECURSIVE category_tree AS (
             -- Базовый случай: выбранная категория
             SELECT id, parent_id, name
@@ -144,57 +170,56 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
             WHERE 1=1
     `
 
-    var conditions []string
-    var args []interface{}
-    argCount := 1 // Начинаем с 1 для category_id
+	var conditions []string
+	var args []interface{}
+	argCount := 1 // Начинаем с 1 для category_id
 
-    // Добавляем фильтр по категории
-    if v := filters["category_id"]; v != "" {
-        args = append(args, v)
-        conditions = append(conditions, "AND l.category_id IN (SELECT id FROM category_tree)")
-    } else {
-        args = append(args, nil) // nil для COALESCE в CTE
-    }
+	// Добавляем фильтр по категории
+	if v := filters["category_id"]; v != "" {
+		args = append(args, v)
+		conditions = append(conditions, "AND l.category_id IN (SELECT id FROM category_tree)")
+	} else {
+		args = append(args, nil) // nil для COALESCE в CTE
+	}
 
-    // Добавляем условия фильтрации
-    if v := filters["min_price"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
-        args = append(args, v)
-    }
-    if v := filters["max_price"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND l.price <= $%d", argCount))
-        args = append(args, v)
-    }
-    if v := filters["query"]; v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND (LOWER(l.title) LIKE LOWER($%d) OR LOWER(l.description) LIKE LOWER($%d))", argCount, argCount+1))
-        args = append(args, "%"+v+"%", "%"+v+"%")
-        argCount++
-    }
+	// Добавляем условия фильтрации
+	if v := filters["min_price"]; v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
+		args = append(args, v)
+	}
+	if v := filters["max_price"]; v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("AND l.price <= $%d", argCount))
+		args = append(args, v)
+	}
+	if v := filters["query"]; v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("AND (LOWER(l.title) LIKE LOWER($%d) OR LOWER(l.description) LIKE LOWER($%d))", argCount, argCount+1))
+		args = append(args, "%"+v+"%", "%"+v+"%")
+		argCount++
+	}
 
-    // Добавляем условия в запрос
-    if len(conditions) > 0 {
-        baseQuery += " " + strings.Join(conditions, " ")
-    }
+	// Добавляем условия в запрос
+	if len(conditions) > 0 {
+		baseQuery += " " + strings.Join(conditions, " ")
+	}
 
-    // Закрываем CTE и добавляем основной запрос
-    baseQuery += `)
+	// Закрываем CTE и добавляем основной запрос
+	baseQuery += `)
         SELECT *, COUNT(*) OVER() as total_count 
         FROM listing_data 
         ORDER BY created_at DESC 
         LIMIT $` + fmt.Sprintf("%d", argCount+1) + ` OFFSET $` + fmt.Sprintf("%d", argCount+2)
 
-    args = append(args, limit, offset)
+	args = append(args, limit, offset)
 
-
-    // Выполняем запрос
-    rows, err := s.pool.Query(ctx, baseQuery, args...)
-    if err != nil {
-        return nil, 0, fmt.Errorf("error querying listings: %w", err)
-    }
-    defer rows.Close()
+	// Выполняем запрос
+	rows, err := s.pool.Query(ctx, baseQuery, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error querying listings: %w", err)
+	}
+	defer rows.Close()
 
 	var listings []models.MarketplaceListing
 	var totalCount int64
@@ -238,7 +263,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 	return listings, totalCount, nil
 }
 func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
-    query := `
+	query := `
         WITH RECURSIVE category_tree AS (
             -- Корневые категории
             SELECT 
@@ -276,27 +301,26 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
         ORDER BY path;
     `
 
+	rows, err := s.pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error querying category tree: %w", err)
+	}
+	defer rows.Close()
 
-    rows, err := s.pool.Query(ctx, query)
-    if err != nil {
-        return nil, fmt.Errorf("error querying category tree: %w", err)
-    }
-    defer rows.Close()
+	var categories []models.CategoryTreeNode
+	for rows.Next() {
+		var cat models.CategoryTreeNode
+		err := rows.Scan(
+			&cat.ID, &cat.Name, &cat.Slug, &cat.Icon, &cat.ParentID,
+			&cat.CreatedAt, &cat.Level, &cat.Path, &cat.ListingCount,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning category: %w", err)
+		}
+		categories = append(categories, cat)
+	}
 
-    var categories []models.CategoryTreeNode
-    for rows.Next() {
-        var cat models.CategoryTreeNode
-        err := rows.Scan(
-            &cat.ID, &cat.Name, &cat.Slug, &cat.Icon, &cat.ParentID,
-            &cat.CreatedAt, &cat.Level, &cat.Path, &cat.ListingCount,
-        )
-        if err != nil {
-            return nil, fmt.Errorf("error scanning category: %w", err)
-        }
-        categories = append(categories, cat)
-    }
-
-    return categories, rows.Err()
+	return categories, rows.Err()
 }
 func (s *Storage) AddToFavorites(ctx context.Context, userID int, listingID int) error {
 	_, err := s.pool.Exec(ctx, `
@@ -466,46 +490,89 @@ func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.Marketpl
 	return cat, nil
 }
 
-
 func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
+    userID, _ := ctx.Value("user_id").(int)
+    
+    // Используем COALESCE для NULL значений
+    query := `
+        SELECT 
+            l.id, 
+            l.user_id, 
+            l.category_id, 
+            l.title, 
+            l.description,
+            l.price, 
+            l.condition, 
+            l.status, 
+            l.location, 
+            l.latitude,
+            l.longitude, 
+            l.address_city, 
+            l.address_country, 
+            l.views_count,
+            l.created_at, 
+            l.updated_at,
+            u.name, 
+            u.email, 
+            COALESCE(u.picture_url, ''),
+            c.name as category_name, 
+            c.slug as category_slug,
+            EXISTS (
+                SELECT 1 
+                FROM marketplace_favorites mf 
+                WHERE mf.listing_id = l.id 
+                AND mf.user_id = $2
+            ) as is_favorite
+        FROM marketplace_listings l
+        LEFT JOIN users u ON l.user_id = u.id
+        LEFT JOIN marketplace_categories c ON l.category_id = c.id
+        WHERE l.id = $1`
+
     listing := &models.MarketplaceListing{
         User:     &models.User{},
         Category: &models.MarketplaceCategory{},
     }
 
-    err := s.pool.QueryRow(ctx, `
-        SELECT 
-            l.id, l.user_id, l.category_id, l.title, l.description,
-            l.price, l.condition, l.status, l.location, l.latitude,
-            l.longitude, l.address_city, l.address_country, l.views_count,
-            l.created_at, l.updated_at,
-            u.name as user_name, u.email as user_email,
-            c.name as category_name, c.slug as category_slug
-        FROM marketplace_listings l
-        LEFT JOIN users u ON l.user_id = u.id
-        LEFT JOIN marketplace_categories c ON l.category_id = c.id
-        WHERE l.id = $1
-    `, id).Scan(
-        &listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title, &listing.Description,
-        &listing.Price, &listing.Condition, &listing.Status, &listing.Location, &listing.Latitude,
-        &listing.Longitude, &listing.City, &listing.Country, &listing.ViewsCount,
-        &listing.CreatedAt, &listing.UpdatedAt,
-        &listing.User.Name, &listing.User.Email,
-        &listing.Category.Name, &listing.Category.Slug,
+    var userPictureURL string
+    err := s.pool.QueryRow(ctx, query, id, userID).Scan(
+        &listing.ID,
+        &listing.UserID,
+        &listing.CategoryID,
+        &listing.Title,
+        &listing.Description,
+        &listing.Price,
+        &listing.Condition,
+        &listing.Status,
+        &listing.Location,
+        &listing.Latitude,
+        &listing.Longitude,
+        &listing.City,
+        &listing.Country,
+        &listing.ViewsCount,
+        &listing.CreatedAt,
+        &listing.UpdatedAt,
+        &listing.User.Name,
+        &listing.User.Email,
+        &userPictureURL,
+        &listing.Category.Name,
+        &listing.Category.Slug,
+        &listing.IsFavorite,
     )
 
     if err != nil {
-        if err == pgx.ErrNoRows {
-            return nil, fmt.Errorf("listing not found")
-        }
         return nil, fmt.Errorf("error fetching listing: %w", err)
     }
+
+    // Присваиваем picture_url после сканирования
+    listing.User.PictureURL = userPictureURL
+
+    // Копируем ID пользователя
+    listing.User.ID = listing.UserID
 
     // Увеличиваем счетчик просмотров в отдельной горутине
     go func() {
         timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
         defer cancel()
-        
         _, err = s.pool.Exec(timeoutCtx, `
             UPDATE marketplace_listings 
             SET views_count = views_count + 1 
@@ -520,6 +587,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
     images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", id))
     if err != nil {
         log.Printf("Error getting images for listing %d: %v", id, err)
+        listing.Images = []models.MarketplaceImage{} // Пустой массив вместо nil
     } else {
         listing.Images = images
     }

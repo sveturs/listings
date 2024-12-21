@@ -158,6 +158,8 @@ type MarketplaceListing struct {
 	Category        *MarketplaceCategory `json:"category,omitempty"`
 	HelpfulVotes    int                  `json:"helpful_votes"`
 	NotHelpfulVotes int                  `json:"not_helpful_votes"`
+	IsFavorite bool `json:"is_favorite"`
+	
 }
 
 type MarketplaceCategory struct {

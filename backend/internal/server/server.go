@@ -104,7 +104,6 @@ func (s *Server) setupRoutes() {
 	// Публичные маршруты маркетплейса
 	marketplace := s.app.Group("/api/v1/marketplace")
 	marketplace.Get("/listings", s.marketplace.Marketplace.GetListings)
-	marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)
 	marketplace.Get("/categories", s.marketplace.Marketplace.GetCategories)
 	marketplace.Get("/category-tree", s.marketplace.Marketplace.GetCategoryTree)
  
@@ -166,6 +165,7 @@ func (s *Server) setupRoutes() {
 	// Защищенные маршруты маркетплейса
 	marketplaceProtected := api.Group("/marketplace")
 	marketplaceProtected.Post("/listings", s.marketplace.Marketplace.CreateListing)
+	marketplaceProtected.Get("/listings/:id", s.marketplace.Marketplace.GetListing) 
 	marketplaceProtected.Put("/listings/:id", s.marketplace.Marketplace.UpdateListing)
 	marketplaceProtected.Delete("/listings/:id", s.marketplace.Marketplace.DeleteListing)
 	marketplaceProtected.Post("/listings/:id/images", s.marketplace.Marketplace.UploadImages)

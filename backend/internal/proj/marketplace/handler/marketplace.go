@@ -8,6 +8,7 @@ import (
 	"backend/pkg/utils"
 	"log"
 	"strconv"
+    "context"
     "backend/internal/proj/marketplace/service"
 	"github.com/gofiber/fiber/v2"
 )
@@ -229,21 +230,40 @@ func (h *MarketplaceHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 // backend/internal/handlers/marketplace.go
 
 func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-	}
+    // Получаем user_id из контекста, если пользователь авторизован
+    var userID int
+    if uid := c.Locals("user_id"); uid != nil {
+        var ok bool
+        userID, ok = uid.(int)
+        if !ok {
+            log.Printf("Invalid user_id type in context: %T", uid)
+            userID = 0
+        }
+    }
 
-	listing, err := h.marketplaceService.GetListingByID(c.Context(), id)
-	if err != nil {
-		log.Printf("Error getting listing %d: %v", id, err)
-		if err.Error() == "listing not found" {
-			return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
-		}
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listing")
-	}
+    id, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+    }
 
-	return utils.SuccessResponse(c, listing)
+    log.Printf("GetListing: userID=%d, listingID=%d", userID, id)
+
+    // Создаем контекст с user_id
+    ctx := context.WithValue(c.Context(), "user_id", userID)
+
+    listing, err := h.marketplaceService.GetListingByID(ctx, id)
+    if err != nil {
+        log.Printf("Error getting listing %d: %v", id, err)
+        if err.Error() == "listing not found" {
+            return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+        }
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listing")
+    }
+
+    // Добавляем логирование для отладки
+    log.Printf("GetListing result: listingID=%d, isFavorite=%v, userID=%d", id, listing.IsFavorite, userID)
+
+    return utils.SuccessResponse(c, listing)
 }
 
 // UpdateListing - обновление объявления

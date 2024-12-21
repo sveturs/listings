@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import ReviewsSection from '../../components/reviews/ReviewsSection';
+import { useAuth } from '../../contexts/AuthContext';
 import {
     Container,
     Grid,
@@ -29,13 +30,12 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
 import axios from '../../api/axios';
 const ListingDetailsPage = () => {
+    const [isFavorite, setIsFavorite] = useState(false);
     const { id } = useParams();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const { user } = useAuth();
     const reviewsRef = useRef(null);
 
     const [listing, setListing] = useState(null);
@@ -43,7 +43,7 @@ const ListingDetailsPage = () => {
     const [error, setError] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [reviewsCount, setReviewsCount] = useState(0);
-
+    const { user, login } = useAuth();
 
     useEffect(() => {
         const fetchListing = async () => {
@@ -51,6 +51,7 @@ const ListingDetailsPage = () => {
                 setLoading(true);
                 const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
                 setListing(response.data.data);
+                setIsFavorite(response.data.data.is_favorite || false);
             } catch (err) {
                 console.error('Error fetching listing:', err);
                 setError('Не удалось загрузить объявление');
@@ -72,22 +73,36 @@ const ListingDetailsPage = () => {
     };
     const handleFavoriteClick = async () => {
         if (!user) {
-            // Можно показать сообщение о необходимости авторизации
+            const returnUrl = window.location.pathname;
+            const encodedReturnUrl = encodeURIComponent(returnUrl);
+            login(`?returnTo=${encodedReturnUrl}`);
             return;
         }
-
+    
         try {
+            // Оптимистично обновляем UI
+            setListing(prev => ({
+                ...prev,
+                is_favorite: !prev.is_favorite
+            }));
+    
             if (listing.is_favorite) {
                 await axios.delete(`/api/v1/marketplace/listings/${id}/favorite`);
             } else {
                 await axios.post(`/api/v1/marketplace/listings/${id}/favorite`);
             }
+            // Получаем реальные данные с сервера
+            const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
+            console.log('Обновленные данные объявления:', response.data.data);
+            setListing(response.data.data);
+        } catch (err) {
+            // В случае ошибки возвращаем предыдущее состояние
             setListing(prev => ({
                 ...prev,
                 is_favorite: !prev.is_favorite
             }));
-        } catch (err) {
-            console.error('Error toggling favorite:', err);
+            console.error('Ошибка при обновлении избранного:', err);
+            alert('Произошла ошибка при обновлении избранного');
         }
     };
 
@@ -321,15 +336,15 @@ const ListingDetailsPage = () => {
                                     <Button
                                         variant="outlined"
                                         fullWidth
-                                        startIcon={!isMobile && <Heart fill={listing.is_favorite ? 'currentColor' : 'none'} />}
+                                        startIcon={!isMobile && <Heart fill={listing?.is_favorite ? 'currentColor' : 'none'} />}
                                         onClick={handleFavoriteClick}
                                     >
                                         {isMobile ? (
                                             <Heart
                                                 size={20}
-                                                fill={listing.is_favorite ? 'currentColor' : 'none'}
+                                                fill={listing?.is_favorite ? 'currentColor' : 'none'}
                                             />
-                                        ) : listing.is_favorite ? 'В избранном' : 'В избранное'}
+                                        ) : listing?.is_favorite ? 'В избранном' : 'В избранное'}
                                     </Button>
                                     <Button
                                         variant="outlined"

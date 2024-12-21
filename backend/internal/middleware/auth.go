@@ -3,6 +3,7 @@ package middleware
 import (
     "github.com/gofiber/fiber/v2"
     "backend/pkg/utils"
+    "log"
 )
 
 func (m *Middleware) AuthRequired(c *fiber.Ctx) error {
@@ -16,10 +17,11 @@ func (m *Middleware) AuthRequired(c *fiber.Ctx) error {
         return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Invalid or expired session")
     }
 
+    log.Printf("AuthRequired: setting userID=%d for session token %s", sessionData.UserID, sessionToken)
+
     // Устанавливаем user_id в контекст
     c.Locals("user_id", sessionData.UserID)
-    // Для обратной совместимости оставляем и полный объект сессии
     c.Locals("user", sessionData)
-    
+
     return c.Next()
 }

@@ -5,7 +5,7 @@ output_file="project_code.txt"
 
 # Массив директорий для поиска
 project_dirs=(
-    "/data/proj/hostel-booking-system/frontend/hostel-frontend/"
+    "/data/proj/hostel-booking-system/"
 )
 
 # Массив расширений файлов для поиска
@@ -42,9 +42,9 @@ exclude_dirs=(
     ".git"
     "uploads"
 
-#    "/data/proj/hostel-booking-system/frontend/node_modules/"
+    "/data/proj/hostel-booking-system/frontend/node_modules/"
     "/data/proj/hostel-booking-system/frontend/hostel-frontend/build/"
-#    "/data/proj/hostel-booking-system/node_modules/"
+    "/data/proj/hostel-booking-system/node_modules/"
 #   "/data/proj/hostel-booking-system/frontend/"
 
 )
