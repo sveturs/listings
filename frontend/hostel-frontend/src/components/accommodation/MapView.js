@@ -1,3 +1,4 @@
+//hostel-booking-system/frontend/hostel-frontend/src/components/accommodation/MapView.js
 import React, { useState, useCallback } from 'react';
 import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
 import { useMap } from '../../components/maps/MapProvider';

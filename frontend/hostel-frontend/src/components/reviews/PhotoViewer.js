@@ -1,4 +1,4 @@
-// frontend/hostel-frontend/src/components/PhotoViewer.js
+//frontend/hostel-frontend/src/components/reviews/PhotoViewer.js
 import React from 'react';
 import {
     Dialog,

@@ -1,10 +1,9 @@
-//frontend/hostel-frontend/src/components/reviews/ReviewsSection.js
+// frontend/hostel-frontend/src/components/reviews/ReviewsSection.js
 import React, { useState, useEffect } from 'react';
 import { Box, Button, Dialog, DialogTitle, DialogContent, Alert, Snackbar } from '@mui/material';
 import { PencilLine } from 'lucide-react';
 import { ReviewForm, ReviewCard, RatingStats } from './ReviewComponents';
 import axios from '../../api/axios';
-
 
 const ReviewsSection = ({
     entityType,
@@ -13,7 +12,6 @@ const ReviewsSection = ({
     canReview = true,
     onReviewsCountChange
 }) => {
-
     const [reviews, setReviews] = useState([]);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -21,7 +19,6 @@ const ReviewsSection = ({
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-
 
     // Загрузка отзывов и статистики
     const fetchData = async () => {
@@ -36,11 +33,9 @@ const ReviewsSection = ({
                 }),
                 axios.get(`/api/v1/entity/${entityType}/${entityId}/stats`)
             ]);
-            console.log('Reviews response:', reviewsResponse.data);
-            console.log('Stats response:', statsResponse.data);
 
-            setReviews(reviewsResponse.data.data.data || []); // Обновляем отзывы
-            setStats(statsResponse.data.data); // Обновляем статистику
+            setReviews(reviewsResponse.data.data.data || []);
+            setStats(statsResponse.data.data);
         } catch (err) {
             setError('Не удалось загрузить отзывы');
             console.error('Error fetching reviews:', err);
@@ -49,27 +44,21 @@ const ReviewsSection = ({
         }
     };
 
-
     useEffect(() => {
         fetchData();
     }, [entityType, entityId]);
+
     useEffect(() => {
         if (reviews && onReviewsCountChange) {
             onReviewsCountChange(reviews.length);
         }
     }, [reviews, onReviewsCountChange]);
-    // Обработка создания/редактирования отзыва
-    // frontend/hostel-frontend/src/components/reviews/ReviewsSection.js
 
     const handleReviewSubmit = async ({ reviewData, photosFormData }) => {
         try {
-            console.log('Sending review data:', reviewData);
-
-            // Сначала создаем отзыв
             const response = await axios.post('/api/v1/reviews', reviewData);
-            const reviewId = response.data.data.id; // Получаем ID созданного отзыва
+            const reviewId = response.data.data.id;
 
-            // Если есть фотографии - загружаем их
             if (photosFormData && photosFormData.getAll('photos').length > 0) {
                 try {
                     await axios.post(`/api/v1/reviews/${reviewId}/photos`, photosFormData, {
@@ -79,7 +68,6 @@ const ReviewsSection = ({
                     });
                 } catch (photoErr) {
                     console.error('Error uploading photos:', photoErr);
-                    // Показываем уведомление об ошибке загрузки фото
                     setSnackbar({
                         open: true,
                         message: 'Отзыв создан, но возникла ошибка при загрузке фотографий',
@@ -91,7 +79,7 @@ const ReviewsSection = ({
 
             setShowReviewForm(false);
             setEditingReview(null);
-            fetchData(); // Обновляем список отзывов
+            fetchData();
             setSnackbar({
                 open: true,
                 message: 'Отзыв успешно создан',
@@ -106,12 +94,10 @@ const ReviewsSection = ({
             });
         }
     };
-    // Обработка голосования за отзыв
+
     const handleVote = async (reviewId, voteType) => {
-        // Сохраняем старые данные для отката в случае ошибки
         const oldReviews = [...reviews];
 
-        // Оптимистично обновляем UI
         setReviews((prevReviews) =>
             prevReviews.map((review) =>
                 review.id === reviewId
@@ -128,19 +114,14 @@ const ReviewsSection = ({
         );
 
         try {
-            // Отправляем голос на сервер
             await axios.post(`/api/v1/reviews/${reviewId}/vote`, {
                 vote_type: voteType,
             });
 
-            // Важно! Убираем немедленный fetchData()
-            // Вместо этого подождем некоторое время перед обновлением данных
             setTimeout(() => {
                 fetchData();
             }, 1000);
-
         } catch (err) {
-            // В случае ошибки возвращаем старые данные
             setReviews(oldReviews);
             setSnackbar({
                 open: true,
@@ -150,10 +131,6 @@ const ReviewsSection = ({
         }
     };
 
-
-
-
-    // Обработка ответа на отзыв
     const handleReply = async (reviewId, response) => {
         try {
             await axios.post(`/api/v1/reviews/${reviewId}/response`, { response });
@@ -172,7 +149,6 @@ const ReviewsSection = ({
         }
     };
 
-    // Обработка удаления отзыва
     const handleDelete = async (reviewId) => {
         try {
             await axios.delete(`/api/v1/reviews/${reviewId}`);
@@ -191,7 +167,6 @@ const ReviewsSection = ({
         }
     };
 
-    // Обработка жалобы на отзыв
     const handleReport = async (reviewId) => {
         try {
             await axios.post(`/api/v1/reviews/${reviewId}/report`);
@@ -211,10 +186,8 @@ const ReviewsSection = ({
 
     return (
         <Box>
-            {/* Статистика рейтингов */}
             {stats && <RatingStats stats={stats} />}
 
-            {/* Кнопка добавления отзыва */}
             {canReview && (
                 <Button
                     variant="contained"
@@ -226,26 +199,21 @@ const ReviewsSection = ({
                 </Button>
             )}
 
-            {/* Список отзывов */}
-            {Array.isArray(reviews) && reviews.map(review => {
-                console.log('Review data:', review);
-                return (
-                    <ReviewCard
-                        key={review.id}
-                        review={review}
-                        onVote={handleVote}
-                        onReply={handleReply}
-                        onEdit={(review) => {
-                            setEditingReview(review);
-                            setShowReviewForm(true);
-                        }}
-                        onDelete={handleDelete}
-                        onReport={handleReport}
-                    />
-                );
-            })}
+            {Array.isArray(reviews) && reviews.map(review => (
+                <ReviewCard
+                    key={review.id}
+                    review={review}
+                    onVote={handleVote}
+                    onReply={handleReply}
+                    onEdit={(review) => {
+                        setEditingReview(review);
+                        setShowReviewForm(true);
+                    }}
+                    onDelete={handleDelete}
+                    onReport={handleReport}
+                />
+            ))}
 
-            {/* Диалог создания/редактирования отзыва */}
             <Dialog
                 open={showReviewForm}
                 onClose={() => {
@@ -272,7 +240,6 @@ const ReviewsSection = ({
                 </DialogContent>
             </Dialog>
 
-            {/* Уведомления */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={6000}

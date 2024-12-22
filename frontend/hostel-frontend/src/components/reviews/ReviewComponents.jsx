@@ -1,7 +1,7 @@
-//frontend/hostel-frontend/src/components/reviews/ReviewComponents.jsx
+// frontend/hostel-frontend/src/components/reviews/ReviewComponents.jsx
 import React, { useState } from 'react';
-import PhotoViewer from './PhotoViewer';
 import { useMediaQuery } from '@mui/material';
+import GalleryViewer from '../shared/GalleryViewer';
 import {
     Box,
     Typography,
@@ -27,7 +27,8 @@ import {
     Flag,
     Edit,
     Trash2,
-    CheckCircle2
+    CheckCircle2,
+    PencilLine
 } from 'lucide-react';
 
 // Компонент формы создания/редактирования отзыва
@@ -36,19 +37,25 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
         rating: initialData?.rating || 0,
         comment: initialData?.comment || '',
         pros: initialData?.pros || '',
-        cons: initialData?.cons || '',
-        photos: initialData?.photos || []
+        cons: initialData?.cons || ''
     });
+
     const [photoFiles, setPhotoFiles] = useState([]);
-    // В компоненте ReviewForm, перед handleSubmit добавляем:
+    const [previewUrls, setPreviewUrls] = useState([]);
+
+    const handleChange = (field) => (event) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: event.target.value
+        }));
+    };
 
     const handlePhotoAdd = (event) => {
         const files = Array.from(event.target.files);
-
-        // Валидация файлов
+        
         const validFiles = files.filter(file => {
             const isValidType = file.type.startsWith('image/');
-            const isValidSize = file.size <= 15 * 1024 * 1024; // 5MB
+            const isValidSize = file.size <= 15 * 1024 * 1024; // 15MB
             return isValidType && isValidSize;
         });
 
@@ -58,6 +65,17 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
         }
 
         setPhotoFiles(prev => [...prev, ...validFiles]);
+
+        // Создаем URL для предпросмотра
+        validFiles.forEach(file => {
+            const url = URL.createObjectURL(file);
+            setPreviewUrls(prev => [...prev, url]);
+        });
+    };
+
+    const handleRemovePhoto = (index) => {
+        setPhotoFiles(prev => prev.filter((_, i) => i !== index));
+        setPreviewUrls(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleSubmit = (e) => {
@@ -75,7 +93,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
         let photosFormData = null;
         if (photoFiles.length > 0) {
             photosFormData = new FormData();
-            photoFiles.forEach((file, index) => {
+            photoFiles.forEach(file => {
                 photosFormData.append('photos', file);
             });
         }
@@ -90,10 +108,9 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                     <Typography gutterBottom>Общая оценка</Typography>
                     <Rating
                         value={formData.rating}
-                        onChange={(_, value) => setFormData(prev => ({
-                            ...prev,
-                            rating: value
-                        }))}
+                        onChange={(_, newValue) => {
+                            setFormData(prev => ({ ...prev, rating: newValue }));
+                        }}
                         size="large"
                     />
                 </Box>
@@ -103,10 +120,8 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                     multiline
                     rows={4}
                     value={formData.comment}
-                    onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        comment: e.target.value
-                    }))}
+                    onChange={handleChange('comment')}
+                    fullWidth
                 />
 
                 <TextField
@@ -114,10 +129,8 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                     multiline
                     rows={2}
                     value={formData.pros}
-                    onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        pros: e.target.value
-                    }))}
+                    onChange={handleChange('pros')}
+                    fullWidth
                 />
 
                 <TextField
@@ -125,17 +138,15 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                     multiline
                     rows={2}
                     value={formData.cons}
-                    onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        cons: e.target.value
-                    }))}
+                    onChange={handleChange('cons')}
+                    fullWidth
                 />
 
                 <Box>
                     <Button
-                        variant="outlined"
                         component="label"
                         startIcon={<Camera />}
+                        variant="outlined"
                     >
                         Добавить фото
                         <input
@@ -146,63 +157,30 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                             onChange={handlePhotoAdd}
                         />
                     </Button>
-                    <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-                        {photoFiles.map((file, index) => (
-                            <Box
-                                key={index}
-                                sx={{
-                                    width: 100,
-                                    height: 100,
-                                    position: 'relative'
-                                }}
-                            >
-                                <img
-                                    src={URL.createObjectURL(file)}
-                                    alt={`Preview ${index}`}
-                                    style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        objectFit: 'cover',
-                                        borderRadius: '4px'
-                                    }}
-                                />
-                                <IconButton
-                                    size="small"
-                                    sx={{
-                                        position: 'absolute',
-                                        top: -10,
-                                        right: -10,
-                                        bgcolor: 'background.paper'
-                                    }}
-                                    onClick={() => setPhotoFiles(prev =>
-                                        prev.filter((_, i) => i !== index)
-                                    )}
-                                >
-                                    <Trash2 size={16} />
-                                </IconButton>
-                            </Box>
-                        ))}
-                    </Stack>
+
+                    {previewUrls.length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                            <GalleryViewer
+                                images={previewUrls}
+                                galleryMode="thumbnails"
+                                thumbnailSize={{ width: '100%', height: '100px' }}
+                                gridColumns={{ xs: 4, sm: 3, md: 2 }}
+                            />
+                        </Box>
+                    )}
                 </Box>
 
-                <Stack direction="row" spacing={2}>
+                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                    <Button onClick={onCancel}>
+                        Отмена
+                    </Button>
                     <Button
                         type="submit"
                         variant="contained"
                         disabled={!formData.rating || !formData.comment}
-                        fullWidth
                     >
-                        {initialData ? 'Сохранить изменения' : 'Опубликовать отзыв'}
+                        {initialData ? 'Сохранить' : 'Опубликовать'}
                     </Button>
-                    {onCancel && (
-                        <Button
-                            variant="outlined"
-                            onClick={onCancel}
-                            fullWidth
-                        >
-                            Отмена
-                        </Button>
-                    )}
                 </Stack>
             </Stack>
         </Box>
@@ -211,19 +189,20 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
 
 // Компонент отдельного отзыва
 const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, onReport }) => {
-    const [showReplyForm, setShowReplyForm] = useState(false);
-    const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
-    const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+    const [showGallery, setShowGallery] = useState(false);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+     const [showReplyForm, setShowReplyForm] = useState(false);
+ 
     const [replyText, setReplyText] = useState('');
     const [menuAnchor, setMenuAnchor] = useState(null);
+
+    const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     const handleReplySubmit = () => {
         onReply(review.id, replyText);
         setReplyText('');
         setShowReplyForm(false);
     };
-
-    const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm')); // Проверка мобильного устройства
 
     return (
         <Card sx={{ mb: 2 }}>
@@ -246,10 +225,9 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                 </Typography>
                             </Box>
 
-                            {/* Проверенная покупка */}
                             {review.is_verified_purchase && (
                                 isMobile ? (
-                                    <CheckCircle2 size={20} color="green" /> // Только значок для мобильной версии
+                                    <CheckCircle2 size={20} color="green" />
                                 ) : (
                                     <Chip
                                         icon={<CheckCircle2 size={16} />}
@@ -314,40 +292,30 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                         </Box>
                     )}
 
-                    {review.photos && review.photos.length > 0 && (
+                    {/* Галерея фотографий */}
+                    {review.photos?.length > 0 && (
                         <>
-                            <Stack direction="row" spacing={1} sx={{ overflowX: 'auto' }}>
-                                {review.photos.map((photo, index) => (
-                                    <Box
-                                        key={index}
-                                        component="img"
-                                        src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${photo}`}
-                                        alt={`Review ${index + 1}`}
-                                        onClick={() => {
-                                            setCurrentPhotoIndex(index);
-                                            setPhotoViewerOpen(true);
-                                        }}
-                                        sx={{
-                                            width: 100,
-                                            height: 100,
-                                            objectFit: 'cover',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer',
-                                            transition: 'transform 0.2s',
-                                            '&:hover': {
-                                                transform: 'scale(1.05)'
-                                            }
-                                        }}
-                                    />
-                                ))}
-                            </Stack>
+                            {/* Превью фотографий */}
+                            <Box sx={{ mt: 2 }}>
+                                <GalleryViewer
+                                    images={review.photos}
+                                    galleryMode="thumbnails"
+                                    thumbnailSize={{ width: '100%', height: '100px' }}
+                                    gridColumns={{ xs: 4, sm: 3, md: 2 }}
+                                    onClick={(index) => {
+                                        setSelectedImageIndex(index);
+                                        setShowGallery(true);
+                                    }}
+                                />
+                            </Box>
 
-                            {/* Добавляем просмотрщик фотографий */}
-                            <PhotoViewer
-                                open={photoViewerOpen}
-                                onClose={() => setPhotoViewerOpen(false)}
-                                photos={review.photos}
-                                currentIndex={currentPhotoIndex}
+                            {/* Полноэкранный просмотр */}
+                            <GalleryViewer
+                                images={review.photos}
+                                open={showGallery}
+                                onClose={() => setShowGallery(false)}
+                                initialIndex={selectedImageIndex}
+                                galleryMode="fullscreen"
                             />
                         </>
                     )}
@@ -361,9 +329,9 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                             variant={review.current_user_vote === 'helpful' ? 'contained' : 'outlined'}
                         >
                             {isMobile ? (
-                                `(${review.helpful_votes || 0})`
+                                `(${review.votes_count?.helpful || 0})`
                             ) : (
-                                `ЗА (${review.helpful_votes || 0})`
+                                `Полезно (${review.votes_count?.helpful || 0})`
                             )}
                         </Button>
                         <Button
@@ -373,13 +341,12 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                             variant={review.current_user_vote === 'not_helpful' ? 'contained' : 'outlined'}
                         >
                             {isMobile ? (
-                                `(${review.not_helpful_votes || 0})`
+                                `(${review.votes_count?.not_helpful || 0})`
                             ) : (
-                                `НЕ ЗА (${review.not_helpful_votes || 0})`
+                                `Не полезно (${review.votes_count?.not_helpful || 0})`
                             )}
                         </Button>
 
-                        {/* Ответить и пожаловаться */}
                         {isMobile ? (
                             <>
                                 <IconButton onClick={() => setShowReplyForm(!showReplyForm)}>

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
 import { useMap } from '../../components/maps/MapProvider';
+import GalleryViewer from '../shared/GalleryViewer';
 import {
     Card,
     CardContent,
@@ -75,20 +76,14 @@ const CarMapView = ({ cars, onCarSelect, onOpenGallery, onViewDetails }) => {
 
     const InfoWindowContent = ({ car }) => {
         const hasImages = car.images && car.images.length > 0;
-        const mainImage = hasImages ? car.images[0] : null;
-
+    
         return (
             <Card sx={{ width: 300, border: 'none', boxShadow: 'none' }}>
-                {mainImage && (
+                {hasImages && (
                     <Box
                         sx={{
                             position: 'relative',
-                            cursor: 'pointer',
-                            '&:hover': {
-                                '& .overlay': {
-                                    opacity: 1
-                                }
-                            }
+                            cursor: 'pointer'
                         }}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -96,15 +91,11 @@ const CarMapView = ({ cars, onCarSelect, onOpenGallery, onViewDetails }) => {
                             onViewDetails(car);
                         }}
                     >
-                        <CardMedia
-                            component="img"
-                            height="160"
-                            image={`${process.env.REACT_APP_BACKEND_URL}/uploads/${mainImage.file_path}`}
-                            alt={`${car.make} ${car.model}`}
-                            sx={{
-                                borderRadius: '4px 4px 0 0',
-                                objectFit: 'cover'
-                            }}
+                        <GalleryViewer
+                            images={[car.images[0]]} // Показываем только первое изображение
+                            galleryMode="thumbnails"
+                            thumbnailSize={{ width: '100%', height: '160px' }}
+                            gridColumns={{ xs: 12 }}
                         />
                         {car.images.length > 1 && (
                             <Box
@@ -120,7 +111,8 @@ const CarMapView = ({ cars, onCarSelect, onOpenGallery, onViewDetails }) => {
                                     borderRadius: '4px 0 0 0',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: 0.5
+                                    gap: 0.5,
+                                    zIndex: 1
                                 }}
                             >
                                 <PhotoLibraryIcon fontSize="small" />

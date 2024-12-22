@@ -1,3 +1,4 @@
+//hostel-booking-system/frontend/hostel-frontend/src/components/accommodation/BookingDialog.js
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ReviewsSection } from '../reviews'; 

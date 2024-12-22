@@ -1,4 +1,4 @@
-// backend/internal/storage/postgres/car_image.go
+//backend/internal/proj/car/storage/postgres/car_image.go
 package postgres
 
 import (

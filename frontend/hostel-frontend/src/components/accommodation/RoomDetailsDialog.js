@@ -23,6 +23,7 @@ import {
 import ReviewsSection from '../reviews/ReviewsSection';
 import { useAuth } from '../../contexts/AuthContext';
 import ImageGallery from './ImageGallery';
+import GalleryViewer from '../shared/GalleryViewer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -84,7 +85,14 @@ const RoomDetailsDialog = ({ open, onClose, room, onBook }) => {
                 <Grid container spacing={3}>
                     {/* Галерея изображений */}
                     <Grid item xs={12}>
-                        <ImageGallery images={room?.images || []} />
+                        {room.images?.length > 0 && (
+                            <GalleryViewer
+                                images={room.images}
+                                galleryMode="thumbnails"
+                                thumbnailSize={{ width: '100%', height: '300px' }}
+                                gridColumns={{ xs: 12 }}
+                            />
+                        )}
                     </Grid>
 
                     {/* Основная информация */}

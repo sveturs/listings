@@ -1,3 +1,4 @@
+//hostel-booking-system/frontend/hostel-frontend/src/components/accommodation/RoomList.js
 import React, { useState, useEffect, useCallback } from 'react';
 import MapView from './MapView';
 import BookingDialog from './BookingDialog';

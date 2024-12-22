@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 import ReviewsSection from '../reviews/ReviewsSection';
 import { useAuth } from '../../contexts/AuthContext';
+import GalleryViewer from '../shared/GalleryViewer';
 
 const CarDetailsDialog = ({ open, onClose, car, onBook }) => {
     const { user } = useAuth();
@@ -64,22 +65,14 @@ const CarDetailsDialog = ({ open, onClose, car, onBook }) => {
                 <Grid container spacing={3}>
                     {/* Галерея изображений */}
                     <Grid item xs={12}>
-                        <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 2 }}>
-                            {car.images?.map((image, index) => (
-                                <Box
-                                    key={index}
-                                    component="img"
-                                    src={`${BACKEND_URL}/uploads/${image.file_path}`}
-                                    alt={`${car.make} ${car.model}`}
-                                    sx={{
-                                        height: 300,
-                                        minWidth: 400,
-                                        objectFit: 'cover',
-                                        borderRadius: 1,
-                                    }}
-                                />
-                            ))}
-                        </Box>
+                        {car.images?.length > 0 && (
+                            <GalleryViewer
+                                images={car.images}
+                                galleryMode="thumbnails"
+                                thumbnailSize={{ width: '100%', height: '300px' }}
+                                gridColumns={{ xs: 12 }}
+                            />
+                        )}
                     </Grid>
 
                     {/* Основная информация */}

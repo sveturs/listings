@@ -1,4 +1,4 @@
-// src/components/ImageGallery.js
+//frontend/hostel-frontend/src/components/accommodation/ImageGallery.js
 import React, { useState } from 'react';
 import {
     Dialog,
