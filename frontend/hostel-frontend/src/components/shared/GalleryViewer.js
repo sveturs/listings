@@ -16,8 +16,8 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-const GalleryViewer = ({ 
-    images, 
+const GalleryViewer = ({
+    images,
     open: externalOpen,
     onClose: externalClose,
     initialIndex = 0,
@@ -104,9 +104,9 @@ const GalleryViewer = ({
                     }
                 }}
             >
-                <DialogContent 
-                    sx={{ 
-                        position: 'relative', 
+                <DialogContent
+                    sx={{
+                        position: 'relative',
                         p: 0,
                         height: '100vh',
                         display: 'flex',
@@ -116,10 +116,10 @@ const GalleryViewer = ({
                     }}
                 >
                     {/* Основное изображение */}
-                    <Box sx={{ 
-                        flex: 1, 
-                        width: '100%', 
-                        display: 'flex', 
+                    <Box sx={{
+                        flex: 1,
+                        width: '100%',
+                        display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         position: 'relative'
@@ -167,7 +167,7 @@ const GalleryViewer = ({
                             </>
                         )}
 
-<Box
+                        <Box
                             component="img"
                             src={getImageUrl(images[selectedIndex || 0])}
                             alt={`Image ${(selectedIndex || 0) + 1}`}

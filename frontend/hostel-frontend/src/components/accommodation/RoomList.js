@@ -164,12 +164,6 @@ const RoomList = () => {
                         `${BACKEND_URL}/uploads/${room.images[0].file_path}` :
                         '/placeholder-room.jpg'}
                     alt={room.name}
-                    onClick={() => {
-                        if (room.images?.length) {
-                            setSelectedRoom(room);
-                            setGalleryOpen(true);
-                        }
-                    }}
                 />
                 {room.images?.length > 1 && (
                     <Button
@@ -182,16 +176,12 @@ const RoomList = () => {
                             right: 8,
                             bgcolor: 'rgba(0, 0, 0, 0.7)',
                         }}
-                        onClick={() => {
-                            setSelectedRoom(room);
-                            setGalleryOpen(true);
-                        }}
                     >
                         {room.images.length} фото
                     </Button>
                 )}
             </Box>
-
+    
             <CardContent sx={{ flexGrow: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                     {room.accommodation_type === 'bed' ? (
@@ -205,7 +195,7 @@ const RoomList = () => {
                         {room.name}
                     </Typography>
                 </Box>
-
+    
                 <Typography variant="body2" color="text.secondary" sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -214,7 +204,7 @@ const RoomList = () => {
                     <LocationIcon sx={{ fontSize: 18, mr: 0.5 }} />
                     {room.address_street}, {room.address_city}
                 </Typography>
-
+    
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
                     <Chip
                         label={`${room.price_per_night} ₽/ночь`}
@@ -237,14 +227,17 @@ const RoomList = () => {
                     )}
                 </Box>
             </CardContent>
-
+    
             <Divider />
-
+    
             <Box sx={{ p: 2 }}>
                 <Button
                     fullWidth
                     variant="contained"
-                    onClick={() => handleBooking(room)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleBooking(room);
+                    }}
                     disabled={!filters.start_date || !filters.end_date}
                 >
                     Забронировать
@@ -252,7 +245,6 @@ const RoomList = () => {
             </Box>
         </Card>
     );
-
 
     return (
         <Box>
