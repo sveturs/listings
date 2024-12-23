@@ -54,6 +54,7 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
         fullscreenControl: true,
         streetViewControl: false,
         zoomControl: true,
+        gestureHandling: "greedy"
     }), []);
 
     const onMapLoad = useCallback((map) => {

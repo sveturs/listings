@@ -284,6 +284,7 @@ const CreateListing = () => {
                                                     zoomControl: true,
                                                     mapTypeControl: true,
                                                     streetViewControl: true,
+                                                    gestureHandling: "greedy"
                                                 }}
                                             >
                                                 <Marker
