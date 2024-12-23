@@ -1,4 +1,4 @@
-// frontend/hostel-frontend/src/components/maps/MiniMap.js
+//frontend/hostel-frontend/src/components/maps/MiniMap.js
 import React from 'react';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { Box, IconButton, Typography } from '@mui/material';
@@ -20,7 +20,8 @@ const MiniMap = ({ latitude, longitude, title, address, onClick, onExpand }) => 
         disableDefaultUI: true,
         zoomControl: true,
         clickableIcons: false,
-        scrollwheel: false
+        scrollwheel: false,
+        gestureHandling: "greedy"
     };
 
     return (
