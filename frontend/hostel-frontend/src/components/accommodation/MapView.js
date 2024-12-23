@@ -1,6 +1,5 @@
-//hostel-booking-system/frontend/hostel-frontend/src/components/accommodation/MapView.js
 import React, { useState, useCallback } from 'react';
-import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, InfoWindow, MarkerClusterer, Marker } from '@react-google-maps/api';
 import { useMap } from '../../components/maps/MapProvider';
 import {
     Card,
@@ -57,27 +56,51 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
         gestureHandling: "greedy"
     }), []);
 
-    const onMapLoad = useCallback((map) => {
-        setMap(map);
+    const onMapLoad = useCallback((loadedMap) => {
+        console.log('Map loading...');
+        setMap(loadedMap);
+        
         if (rooms?.length > 0) {
+            console.log('Creating markers for rooms:', rooms.length);
             const bounds = new window.google.maps.LatLngBounds();
-            let hasValidCoords = false;
-
+            
             rooms.forEach(room => {
                 if (room.latitude && room.longitude) {
                     const lat = parseFloat(room.latitude);
                     const lng = parseFloat(room.longitude);
 
                     if (!isNaN(lat) && !isNaN(lng)) {
+                        // Создаем маркер с кастомной иконкой
+                        const marker = new window.google.maps.Marker({
+                            position: { lat, lng },
+                            map: loadedMap,
+                            title: room.name,
+                            icon: {
+                                path: 'M 0,0 C -2,-10 -10,-12 -10,-15 A 10,10 0 1,1 10,-15 C 10,-12 2,-10 0,0 z',
+                                fillColor: room.accommodation_type === 'bed'
+                                    ? '#1976d2'
+                                    : room.accommodation_type === 'apartment'
+                                        ? '#dc004e'
+                                        : '#4caf50',
+                                fillOpacity: 1,
+                                strokeColor: '#FFFFFF',
+                                strokeWeight: 2,
+                                scale: 1.5,
+                                anchor: new window.google.maps.Point(0, 0)
+                            }
+                        });
+
+                        // Добавляем обработчик клика
+                        marker.addListener('click', () => {
+                            setSelectedRoom(room);
+                        });
+
                         bounds.extend({ lat, lng });
-                        hasValidCoords = true;
                     }
                 }
             });
 
-            if (hasValidCoords) {
-                map.fitBounds(bounds);
-            }
+            loadedMap.fitBounds(bounds);
         }
     }, [rooms]);
 
@@ -207,7 +230,6 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
         );
     };
 
-    // Показываем индикатор загрузки, если карта ещё не готова
     if (!mapContext || !mapContext.isLoaded) {
         return (
             <Box 
@@ -234,51 +256,6 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                 onLoad={onMapLoad}
                 options={getMapOptions()}
             >
-                {rooms?.map((room) => {
-                    if (room.latitude && room.longitude) {
-                        const lat = parseFloat(room.latitude);
-                        const lng = parseFloat(room.longitude);
-
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            const icon = {
-                                path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
-                                fillColor: room.accommodation_type === 'bed'
-                                    ? '#1976d2'
-                                    : room.accommodation_type === 'apartment'
-                                        ? '#dc004e'
-                                        : '#4caf50',
-                                fillOpacity: 1,
-                                strokeWeight: 1,
-                                strokeColor: '#ffffff',
-                                scale: 2,
-                                anchor: new window.google.maps.Point(12, 22),
-                                labelOrigin: new window.google.maps.Point(12, 9)
-                            };
-
-                            const label = {
-                                text: room.accommodation_type === 'bed'
-                                    ? '🛏️'
-                                    : room.accommodation_type === 'apartment'
-                                        ? '🏢'
-                                        : '🏠',
-                                color: '#FFFFFF',
-                                fontSize: '14px'
-                            };
-
-                            return (
-                                <Marker
-                                    key={room.id}
-                                    position={{ lat, lng }}
-                                    onClick={() => setSelectedRoom(room)}
-                                    icon={icon}
-                                    label={label}
-                                />
-                            );
-                        }
-                    }
-                    return null;
-                })}
-
                 {selectedRoom && (
                     <InfoWindow
                         position={{
@@ -307,6 +284,7 @@ const MapView = ({ rooms, onRoomSelect, onOpenGallery }) => {
                     boxShadow: '0 2px 6px rgba(0,0,0,.3)',
                 }}
             >
+                Моё местоположение
             </Button>
         </Box>
     );

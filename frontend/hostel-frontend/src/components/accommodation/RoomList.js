@@ -1,5 +1,6 @@
 //hostel-booking-system/frontend/hostel-frontend/src/components/accommodation/RoomList.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { debounce } from 'lodash';
 import MapView from './MapView';
 import BookingDialog from './BookingDialog';
 import RoomDetailsDialog from './RoomDetailsDialog';
@@ -68,7 +69,7 @@ const RoomList = () => {
 
             const params = new URLSearchParams();
 
-            // Добавляем все фильтры
+            // Добавляем только непустые фильтры
             Object.entries(filters).forEach(([key, value]) => {
                 if (value) params.append(key, value);
             });
@@ -77,13 +78,9 @@ const RoomList = () => {
             params.append('page', isLoadMore ? page + 1 : 1);
             params.append('limit', 12);
 
-            const response = await axios.get(`${BACKEND_URL}/rooms`, { params: filters });
+            const response = await axios.get(`${BACKEND_URL}/rooms`, { params });
 
             const { data, meta } = response.data.data;
-            const roomsData = response.data?.data || [];
-            setRooms(roomsData);
-            setTotalCount(response.data?.meta?.total || 0);
-            setHasMore(response.data?.meta?.has_more || false);
             setRooms(prev => isLoadMore ? [...prev, ...data] : data);
             setTotalCount(meta.total);
             setHasMore(meta.has_more);
@@ -97,16 +94,27 @@ const RoomList = () => {
         } catch (error) {
             console.error("Ошибка при получении списка комнат:", error);
             setError(error.response?.data?.error || "Ошибка при загрузке комнат");
-            setRooms([]); // Устанавливаем пустой массив в случае ошибки
+            setRooms([]); 
         } finally {
             setLoading(false);
         }
-    }, [filters]);
+    }, [filters, page]);
 
+    // Используем debounce для fetchRooms
+    const debouncedFetchRooms = useMemo(
+        () => debounce(fetchRooms, 300),
+        [fetchRooms]
+    );
 
     useEffect(() => {
-        fetchRooms();
-    }, [fetchRooms]);
+        // Вызываем функцию загрузки данных
+        debouncedFetchRooms();
+        
+        // Возвращаем функцию очистки, которая будет вызвана при размонтировании компонента
+        return () => {
+            debouncedFetchRooms.cancel();
+        };
+    }, [debouncedFetchRooms]); // Зависимость указывает, что эффект должен перезапускаться при изменении debouncedFetchRooms
 
     const handleFilterChange = (newFilters) => {
         setFilters(newFilters);

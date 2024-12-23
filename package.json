@@ -9,5 +9,9 @@
   "scripts": {
     "start": "cd frontend/hostel-frontend && npm start",
     "build": "cd frontend/hostel-frontend && npm run build"
+  },
+  "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.8",
+    "@googlemaps/markerclusterer": "^2.5.3"
   }
 }

@@ -23,7 +23,12 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
-
+.marker-label {
+  color: white;
+  background: none;
+  border: none;
+  margin-top: -2px;
+}
 .App-link {
   color: #61dafb;
 }
