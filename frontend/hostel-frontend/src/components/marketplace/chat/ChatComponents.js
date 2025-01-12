@@ -68,7 +68,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
             }}>
                 {messages.map((message) => (
                     <Box
-                        key={message.id}
+                    key={`${message.id}-${message.chat_id}`}
                         sx={{
                             mb: 2,
                             display: 'flex',

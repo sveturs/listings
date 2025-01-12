@@ -45,11 +45,25 @@ const ChatPage = () => {
         }
 
         chatServiceRef.current = new ChatService(user.id);
+        let messageHandler = null; // Функция-обработчик сообщений
 
         const initChat = async () => {
             try {
                 await fetchChats();
                 chatServiceRef.current.connect();
+
+                // Сохраняем функцию отписки
+                messageHandler = chatServiceRef.current.onMessage((message) => {
+                    if (message.error) {
+                        console.error('Ошибка сообщения:', message.error);
+                        return;
+                    }
+                    console.log('Получено новое сообщение:', message);
+                    setMessages(prev => [...prev, message].sort((a, b) =>
+                        new Date(a.created_at) - new Date(b.created_at)
+                    ));
+                });
+
             } catch (error) {
                 console.error('Error initializing chat:', error);
                 setError('Ошибка при инициализации чата');
@@ -58,7 +72,11 @@ const ChatPage = () => {
 
         initChat();
 
+        // Очистка при размонтировании
         return () => {
+            if (messageHandler) {
+                messageHandler(); // Отписываемся от сообщений
+            }
             if (chatServiceRef.current) {
                 chatServiceRef.current.disconnect();
             }
@@ -89,11 +107,17 @@ const ChatPage = () => {
     // Загрузка сообщений для выбранного чата
     const fetchMessages = useCallback(async (chatId) => {
         try {
-            // Сообщения теперь запрашиваем через chat_id, а не listing_id
             const response = await axios.get(`/api/v1/marketplace/chat/${chatId}/messages`);
             const messages = response.data?.data || [];
-            console.log('Fetched messages:', messages); // Для отладки
-            setMessages(messages.reverse()); // Переворачиваем сообщения для правильного отображения
+            console.log('Получены сообщения с сервера:', messages);
+            if (Array.isArray(messages)) {
+                setMessages(messages.sort((a, b) =>
+                    new Date(a.created_at) - new Date(b.created_at)
+                ));
+            } else {
+                console.error('Неверный формат данных:', messages);
+                setMessages([]);
+            }
         } catch (error) {
             console.error('Error fetching messages:', error);
             setError('Не удалось загрузить сообщения');
@@ -147,6 +171,16 @@ const ChatPage = () => {
             };
 
             await chatServiceRef.current.sendMessage(message);
+
+            // Добавляем сообщение локально
+            const newMessage = {
+                ...message,
+                sender_id: user.id,
+                created_at: new Date().toISOString(),
+                is_read: false
+            };
+            setMessages(prev => [...prev, newMessage]);
+
         } catch (error) {
             console.error('Error sending message:', error);
             setError('Не удалось отправить сообщение');
@@ -223,7 +257,7 @@ const ChatPage = () => {
                         <ChatList
                             chats={chats}
                             selectedChatId={selectedChat?.id}
-                            onSelectChat={setSelectedChat}
+                            onSelectChat={handleSelectChat}
                             onArchiveChat={handleArchiveChat}
                         />
                         {chats.length === 0 && (
@@ -244,7 +278,7 @@ const ChatPage = () => {
                     <ChatList
                         chats={chats}
                         selectedChatId={selectedChat?.id}
-                        onSelectChat={setSelectedChat}
+                        onSelectChat={handleSelectChat}
                         onArchiveChat={handleArchiveChat}
                     />
                     {chats.length === 0 && (

@@ -81,17 +81,7 @@ class ChatService {
             this.ws = null;
         }
     }
-    onMessage(handler) {
-        this.messageHandlers.add(handler);
-        // При добавлении нового обработчика можно обновить сообщения
-        if (this.ws?.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({
-                type: 'get_messages',
-                chat_id: this.currentChatId // Добавьте это свойство при выборе чата
-            }));
-        }
-        return () => this.messageHandlers.delete(handler);
-    }
+
     
     // Добавьте метод для установки текущего чата
     setCurrentChat(chatId) {

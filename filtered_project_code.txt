@@ -159,7 +159,19 @@ server {
         error_log /var/log/nginx/cars_api_error.log debug;
         access_log /var/log/nginx/cars_api_access.log;
     }
-
+location /ws/chat {
+    proxy_pass http://api_backend/ws/chat;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 86400;
+    proxy_send_timeout 86400;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_buffering off;
+}
     # Статические файлы после API маршрутов
     location /uploads/ {
         alias /usr/share/nginx/uploads/;
@@ -1068,6 +1080,7 @@ func (s *Server) setupRoutes() {
 	chat.Get("/:listing_id/messages", s.marketplace.Chat.GetMessages)
 	chat.Post("/messages", s.marketplace.Chat.SendMessage)
 	chat.Put("/messages/read", s.marketplace.Chat.MarkAsRead)
+	chat.Post("/:chat_id/archive", s.marketplace.Chat.ArchiveChat) 
 
 	// WebSocket эндпоинт
 	s.app.Use("/ws/chat", s.middleware.AuthRequired) // Защищаем WebSocket
@@ -3540,6 +3553,8 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 }
 
 func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
+    messages := []models.MarketplaceMessage{} // Инициализируем пустой массив
+
     rows, err := s.pool.Query(ctx, `
         SELECT 
             m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
@@ -3554,24 +3569,23 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
         LIMIT $3 OFFSET $4
     `, listingID, userID, limit, offset)
     if err != nil {
-        return nil, fmt.Errorf("error querying messages: %w", err)
+        return messages, fmt.Errorf("error querying messages: %w", err)
     }
     defer rows.Close()
 
-    var messages []models.MarketplaceMessage
     for rows.Next() {
         var msg models.MarketplaceMessage
         msg.Sender = &models.User{}
-
+        
         err := rows.Scan(
-            &msg.ID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
+            &msg.ID, &msg.ChatID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
             &msg.Content, &msg.IsRead, &msg.CreatedAt,
             &msg.Sender.Name, &msg.Sender.PictureURL,
         )
         if err != nil {
-            return nil, fmt.Errorf("error scanning message: %w", err)
+            return messages, fmt.Errorf("error scanning message: %w", err)
         }
-
+        
         messages = append(messages, msg)
     }
 
@@ -4299,6 +4313,7 @@ import (
     globalService "backend/internal/proj/global/service"
     "backend/pkg/utils"
     "context"
+	"log"
     "encoding/json"
     "github.com/gofiber/fiber/v2"
     "github.com/gofiber/websocket/v2"
@@ -4380,9 +4395,28 @@ func (h *ChatHandler) MarkAsRead(c *fiber.Ctx) error {
     
     return utils.SuccessResponse(c, fiber.Map{"message": "Messages marked as read"})
 }
+func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
+    userID := c.Locals("user_id").(int)
+    chatID, err := c.ParamsInt("chat_id")
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID чата")
+    }
 
+    err = h.services.Chat().ArchiveChat(c.Context(), chatID, userID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при архивировании чата")
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Чат архивирован", 
+    })
+}
 // WebSocket хендлер
 func (h *ChatHandler) HandleWebSocket(c *websocket.Conn) {
+    if c == nil {
+        return // Защита от nil pointer
+    }
+
     userID := c.Locals("user_id").(int)
     
     // Подписываемся на сообщения
@@ -4399,7 +4433,10 @@ func (h *ChatHandler) HandleWebSocket(c *websocket.Conn) {
         for {
             messageType, message, err := c.ReadMessage()
             if err != nil {
-                return // Соединение закрыто
+                if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+                    log.Printf("error reading message: %v", err)
+                }
+                return
             }
             
             if messageType == websocket.TextMessage {
@@ -4410,7 +4447,6 @@ func (h *ChatHandler) HandleWebSocket(c *websocket.Conn) {
                 
                 msg.SenderID = userID
                 if err := h.services.Chat().SendMessage(ctx, &msg); err != nil {
-                    // Отправляем ошибку клиенту
                     errMsg := fiber.Map{"error": err.Error()}
                     if errBytes, err := json.Marshal(errMsg); err == nil {
                         c.WriteMessage(websocket.TextMessage, errBytes)
@@ -4423,12 +4459,15 @@ func (h *ChatHandler) HandleWebSocket(c *websocket.Conn) {
     // Основной цикл для отправки сообщений клиенту
     for {
         select {
-        case msg := <-msgChan:
+        case msg, ok := <-msgChan:
+            if !ok {
+                return
+            }
             // Отправляем только сообщения, относящиеся к этому пользователю
             if msg.SenderID == userID || msg.ReceiverID == userID {
                 if data, err := json.Marshal(msg); err == nil {
                     if err := c.WriteMessage(websocket.TextMessage, data); err != nil {
-                        return // Соединение закрыто
+                        return
                     }
                 }
             }
@@ -6444,7 +6483,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 // Компонент окна чата с сообщениями
-export const ChatWindow = ({ messages, onSendMessage, currentUser }) => {
+export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
+    console.log('ChatWindow messages:', messages); 
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
     const theme = useTheme();
@@ -6474,7 +6514,6 @@ export const ChatWindow = ({ messages, onSendMessage, currentUser }) => {
             border: 1,
             borderColor: 'divider',
         }}>
-            {/* Сообщения */}
             <Box sx={{ 
                 flex: 1, 
                 overflowY: 'auto',
@@ -6519,18 +6558,11 @@ export const ChatWindow = ({ messages, onSendMessage, currentUser }) => {
                                     opacity: 0.8,
                                 }}
                             >
-                                {formatDistanceToNow(new Date(message.created_at), { 
-                                    addSuffix: true,
-                                    locale: ru 
-                                })}
-                                {message.is_read && message.sender_id === currentUser.id && (
-                                    <span style={{ marginLeft: 8 }}>✓✓</span>
-                                )}
+                                {new Date(message.created_at).toLocaleTimeString()}
                             </Typography>
                         </Box>
                     </Box>
                 ))}
-                <div ref={messagesEndRef} />
             </Box>
 
             {/* Форма отправки */}
@@ -6708,7 +6740,6 @@ export const EmptyState = ({ text }) => (
 );
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/components/marketplace/chat/ChatService.js ===
 
-// ChatService.js
 class ChatService {
     constructor(userId) {
         this.userId = userId;
@@ -6716,82 +6747,137 @@ class ChatService {
         this.messageHandlers = new Set();
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
+        this.backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+        this.isConnecting = false;
     }
 
     connect() {
-        if (this.ws?.readyState === WebSocket.OPEN) return;
+        if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) return;
+        
+        this.isConnecting = true;
 
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = process.env.REACT_APP_WS_HOST || window.location.host;
-        this.ws = new WebSocket(`${protocol}//${host}/ws/chat`);
+        let wsUrl;
+        if (process.env.NODE_ENV === 'development') {
+            wsUrl = 'ws://localhost:3000/ws/chat';
+        } else {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            wsUrl = `${protocol}//${host}/ws/chat`;
+        }
 
-        this.ws.onopen = () => {
-            console.log('WebSocket соединение установлено');
-            this.reconnectAttempts = 0;
-            
-            // Отправляем идентификацию пользователя
-            this.ws.send(JSON.stringify({
-                type: 'auth',
-                user_id: this.userId
-            }));
-        };
+        console.log('Connecting to WebSocket:', wsUrl);
 
-        this.ws.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data);
-                this.messageHandlers.forEach(handler => handler(message));
-            } catch (error) {
-                console.error('Ошибка при обработке сообщения:', error);
-            }
-        };
+        try {
+            this.ws = new WebSocket(wsUrl);
 
-        this.ws.onclose = () => {
-            console.log('WebSocket соединение закрыто');
-            if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                this.reconnectAttempts++;
-                setTimeout(() => this.connect(), 3000 * this.reconnectAttempts);
-            }
-        };
+            this.ws.onopen = () => {
+                console.log('WebSocket соединение установлено');
+                this.isConnecting = false;
+                this.reconnectAttempts = 0;
+                
+                // Небольшая задержка перед отправкой авторизации
+                setTimeout(() => {
+                    if (this.ws?.readyState === WebSocket.OPEN) {
+                        this.ws.send(JSON.stringify({
+                            type: 'auth',
+                            user_id: this.userId
+                        }));
+                    }
+                }, 100);
+            };
 
-        this.ws.onerror = (error) => {
-            console.error('WebSocket ошибка:', error);
-        };
+            this.ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    this.messageHandlers.forEach(handler => handler(message));
+                } catch (error) {
+                    console.error('Ошибка при обработке сообщения:', error);
+                }
+            };
+
+            this.ws.onclose = () => {
+                console.log('WebSocket соединение закрыто');
+                this.isConnecting = false;
+                if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+                    setTimeout(() => this.connect(), delay);
+                    this.reconnectAttempts++;
+                }
+            };
+
+            this.ws.onerror = (error) => {
+                console.error('WebSocket ошибка:', error);
+                this.isConnecting = false;
+            };
+
+        } catch (error) {
+            console.error('Ошибка при создании WebSocket:', error);
+            this.isConnecting = false;
+        }
     }
 
     disconnect() {
+        this.isConnecting = false;
         if (this.ws) {
             this.ws.close();
             this.ws = null;
         }
     }
-
-    async sendMessage(message) {
-        const url = '/api/v1/marketplace/chat/messages';
-        
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    listing_id: message.listing_id,
-                    receiver_id: message.receiver_id,
-                    content: message.content
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Ошибка отправки сообщения');
-            }
-
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Ошибка при отправке сообщения:', error);
-            throw error;
+    onMessage(handler) {
+        this.messageHandlers.add(handler);
+        // При добавлении нового обработчика можно обновить сообщения
+        if (this.ws?.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({
+                type: 'get_messages',
+                chat_id: this.currentChatId // Добавьте это свойство при выборе чата
+            }));
         }
+        return () => this.messageHandlers.delete(handler);
+    }
+    
+    // Добавьте метод для установки текущего чата
+    setCurrentChat(chatId) {
+        this.currentChatId = chatId;
+        if (this.ws?.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({
+                type: 'get_messages',
+                chat_id: chatId
+            }));
+        }
+    }
+    async sendMessage(message) {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            this.connect();
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        try {
+            if (this.ws?.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify(message));
+            } else {
+                throw new Error('WebSocket не подключен');
+            }
+        } catch (error) {
+            console.error('Ошибка при отправке через WebSocket:', error);
+            await this.sendMessageHTTP(message);
+        }
+    }
+
+    async sendMessageHTTP(message) {
+        const response = await fetch('/api/v1/marketplace/chat/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(message)
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка отправки сообщения');
+        }
+
+        return response.json();
     }
 
     onMessage(handler) {
@@ -9669,6 +9755,7 @@ const ChatPage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     const [chats, setChats] = useState([]);
+
     const [selectedChat, setSelectedChat] = useState(null);
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -9679,30 +9766,27 @@ const ChatPage = () => {
 
     // Инициализация ChatService
     useEffect(() => {
-        if (!user?.id) return;
+        if (!user?.id) {
+            setError('Необходима авторизация');
+            setLoading(false);
+            return;
+        }
 
         chatServiceRef.current = new ChatService(user.id);
-        chatServiceRef.current.connect();
 
-        // Подписываемся на сообщения
-        const unsubscribe = chatServiceRef.current.onMessage((message) => {
-            if (selectedChat && (
-                message.chat_id === selectedChat.id ||
-                message.listing_id === selectedChat.listing_id
-            )) {
-                setMessages(prev => [...prev, message]);
-                
-                // Отмечаем сообщение как прочитанное, если мы получатель
-                if (message.receiver_id === user.id) {
-                    markMessageAsRead([message.id]);
-                }
+        const initChat = async () => {
+            try {
+                await fetchChats();
+                chatServiceRef.current.connect();
+            } catch (error) {
+                console.error('Error initializing chat:', error);
+                setError('Ошибка при инициализации чата');
             }
-            // Обновляем список чатов в любом случае
-            fetchChats();
-        });
+        };
+
+        initChat();
 
         return () => {
-            unsubscribe();
             if (chatServiceRef.current) {
                 chatServiceRef.current.disconnect();
             }
@@ -9714,7 +9798,7 @@ const ChatPage = () => {
         try {
             const response = await axios.get('/api/v1/marketplace/chat');
             setChats(response.data.data);
-            
+
             // Если есть listingId в URL, находим соответствующий чат
             if (listingId) {
                 const chat = response.data.data.find(c => c.listing_id === parseInt(listingId));
@@ -9733,18 +9817,41 @@ const ChatPage = () => {
     // Загрузка сообщений для выбранного чата
     const fetchMessages = useCallback(async (chatId) => {
         try {
+            // Сообщения теперь запрашиваем через chat_id, а не listing_id
             const response = await axios.get(`/api/v1/marketplace/chat/${chatId}/messages`);
-            setMessages(response.data.data.reverse());
+            const messages = response.data?.data || [];
+            console.log('Fetched messages:', messages); // Для отладки
+            setMessages(messages.reverse()); // Переворачиваем сообщения для правильного отображения
         } catch (error) {
             console.error('Error fetching messages:', error);
             setError('Не удалось загрузить сообщения');
+            setMessages([]);
         }
     }, []);
+
+    const handleSelectChat = useCallback((chat) => {
+        setSelectedChat(chat);
+        if (chatServiceRef.current) {
+            chatServiceRef.current.setCurrentChat(chat.id);
+        }
+        fetchMessages(chat.id);
+    }, [fetchMessages]);
+
 
     useEffect(() => {
         fetchChats();
     }, [fetchChats]);
-
+    useEffect(() => {
+        if (selectedChat && messages.length > 0) {
+            const unreadMessages = messages.filter(
+                msg => !msg.is_read && msg.receiver_id === user.id
+            );
+            if (unreadMessages.length > 0) {
+                const messageIds = unreadMessages.map(msg => msg.id);
+                markMessageAsRead(messageIds);
+            }
+        }
+    }, [selectedChat, messages, user.id]);
     useEffect(() => {
         if (selectedChat) {
             fetchMessages(selectedChat.id);
@@ -9762,7 +9869,7 @@ const ChatPage = () => {
             const message = {
                 chat_id: selectedChat.id,
                 listing_id: selectedChat.listing_id,
-                receiver_id: selectedChat.seller_id === user.id ? 
+                receiver_id: selectedChat.seller_id === user.id ?
                     selectedChat.buyer_id : selectedChat.seller_id,
                 content: content
             };
@@ -9779,7 +9886,7 @@ const ChatPage = () => {
             await axios.put('/api/v1/marketplace/chat/messages/read', {
                 message_ids: messageIds
             });
-            setMessages(prev => prev.map(msg => 
+            setMessages(prev => prev.map(msg =>
                 messageIds.includes(msg.id) ? { ...msg, is_read: true } : msg
             ));
         } catch (error) {
@@ -9827,9 +9934,9 @@ const ChatPage = () => {
             <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
                 {selectedChat ? (
                     <>
-                        <ChatHeader 
-                            chat={selectedChat} 
-                            onBack={() => setSelectedChat(null)} 
+                        <ChatHeader
+                            chat={selectedChat}
+                            onBack={() => setSelectedChat(null)}
                         />
                         <Box sx={{ flex: 1, overflow: 'hidden' }}>
                             <ChatWindow
@@ -12411,8 +12518,13 @@ services:
     environment:
       - APP_MODE=production
       - ENV_FILE=.env
+      - WS_ENABLED=true      
     volumes:
       - ./backend/uploads:/app/uploads
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
     depends_on:
       db:
         condition: service_healthy
