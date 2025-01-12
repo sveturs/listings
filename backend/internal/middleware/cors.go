@@ -1,4 +1,4 @@
-//backend/internal/middleware/cors.go
+// backend/internal/middleware/cors.go
 package middleware
 
 import (
@@ -16,10 +16,10 @@ func (m *Middleware) CORS() fiber.Handler {
             "http://landhub.rs",
             "https://landhub.rs",
         }, ","),
-        AllowMethods:     "GET,POST,DELETE,PUT,OPTIONS",
-        AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+        AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
+        AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-Requested-With",
+        ExposeHeaders:    "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type",
         AllowCredentials: true,
-        ExposeHeaders:    "Content-Length",
-        MaxAge:           86400, // 24 часов
+        MaxAge:          300, // 5 минут в секундах
     })
 }

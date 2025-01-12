@@ -1,3 +1,5 @@
+// backend/internal/proj/marketplace/handler/chat.go
+
 package handler
 
 import (
@@ -51,6 +53,8 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
     return utils.SuccessResponse(c, messages)
 }
 
+// backend/internal/proj/marketplace/handler/chat.go
+
 func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     
@@ -58,15 +62,23 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
     if err := c.BodyParser(&req); err != nil {
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
     }
+
+    // Валидация входных данных
+    if req.ListingID == 0 || req.ReceiverID == 0 || req.Content == "" {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Missing required fields")
+    }
     
     msg := &models.MarketplaceMessage{
         ListingID:  req.ListingID,
         SenderID:   userID,
         ReceiverID: req.ReceiverID,
         Content:    req.Content,
+        Sender:     &models.User{},    // Инициализируем структуры
+        Receiver:   &models.User{},
     }
     
     if err := h.services.Chat().SendMessage(c.Context(), msg); err != nil {
+        log.Printf("Error sending message: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error sending message")
     }
     

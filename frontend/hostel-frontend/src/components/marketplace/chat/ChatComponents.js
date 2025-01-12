@@ -27,13 +27,23 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
-// Компонент окна чата с сообщениями
-export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
-    console.log('ChatWindow messages:', messages); 
+export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const [processedMessages, setProcessedMessages] = useState([]);
+    
+    // Дедупликация сообщений по ID
+    useEffect(() => {
+        const uniqueMessages = Object.values(
+            messages.reduce((acc, message) => {
+                // Используем ID сообщения как ключ для дедупликации
+                acc[message.id] = message;
+                return acc;
+            }, {})
+        ).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        
+        setProcessedMessages(uniqueMessages);
+    }, [messages]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -41,7 +51,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [processedMessages]);
 
     const handleSend = (e) => {
         e.preventDefault();
@@ -51,24 +61,20 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
         }
     };
 
+    const formatTime = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
     return (
-        <Paper sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column',
-            border: 1,
-            borderColor: 'divider',
-        }}>
-            <Box sx={{ 
-                flex: 1, 
-                overflowY: 'auto',
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-            }}>
-                {messages.map((message) => (
+        <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+                {processedMessages.map((message) => (
                     <Box
-                    key={`${message.id}-${message.chat_id}`}
+                        key={message.id}
                         sx={{
                             mb: 2,
                             display: 'flex',
@@ -76,14 +82,23 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
                             alignItems: 'flex-start',
                         }}
                     >
-                        <Avatar
-                            src={message.sender?.picture_url}
-                            sx={{ 
-                                width: 32, 
-                                height: 32, 
-                                mx: 1,
-                            }}
-                        />
+                        <Box sx={{ mx: 1 }}>
+                            <Avatar
+                                src={message.sender?.picture_url}
+                                sx={{ width: 32, height: 32 }}
+                            />
+                            <Typography 
+                                variant="caption" 
+                                sx={{ 
+                                    display: 'block',
+                                    textAlign: message.sender_id === currentUser.id ? 'right' : 'left',
+                                    mt: 0.5,
+                                }}
+                            >
+                                {message.sender?.name || 'Пользователь'}
+                            </Typography>
+                        </Box>
+                        
                         <Box
                             sx={{
                                 maxWidth: '70%',
@@ -103,14 +118,14 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
                                     opacity: 0.8,
                                 }}
                             >
-                                {new Date(message.created_at).toLocaleTimeString()}
+                                {formatTime(message.created_at)}
                             </Typography>
                         </Box>
                     </Box>
                 ))}
+                <div ref={messagesEndRef} />
             </Box>
 
-            {/* Форма отправки */}
             <Box
                 component="form"
                 onSubmit={handleSend}
@@ -143,7 +158,6 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
         </Paper>
     );
 };
-
 // Компонент списка чатов
 export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat }) => {
     return (

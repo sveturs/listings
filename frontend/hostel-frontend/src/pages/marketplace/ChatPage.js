@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/pages/marketplace/ChatPage.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -26,17 +27,13 @@ const ChatPage = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-    const [chats, setChats] = useState([]);
-
+    const [chats, setChats] = useState([]);  // Инициализируем пустым массивом вместо null
     const [selectedChat, setSelectedChat] = useState(null);
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState([]); // Инициализируем пустым массивом
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // Используем useRef для хранения экземпляра ChatService
     const chatServiceRef = useRef(null);
 
-    // Инициализация ChatService
     useEffect(() => {
         if (!user?.id) {
             setError('Необходима авторизация');
@@ -45,25 +42,31 @@ const ChatPage = () => {
         }
 
         chatServiceRef.current = new ChatService(user.id);
-        let messageHandler = null; // Функция-обработчик сообщений
-
+        
         const initChat = async () => {
             try {
                 await fetchChats();
                 chatServiceRef.current.connect();
 
-                // Сохраняем функцию отписки
-                messageHandler = chatServiceRef.current.onMessage((message) => {
+                const messageHandler = chatServiceRef.current.onMessage((message) => {
                     if (message.error) {
                         console.error('Ошибка сообщения:', message.error);
                         return;
                     }
-                    console.log('Получено новое сообщение:', message);
-                    setMessages(prev => [...prev, message].sort((a, b) =>
-                        new Date(a.created_at) - new Date(b.created_at)
-                    ));
+                    
+                    setMessages(prev => {
+                        // Проверяем, нет ли уже такого сообщения
+                        if (prev.some(m => m.id === message.id)) {
+                            return prev;
+                        }
+                        // Добавляем новое сообщение и сортируем по дате
+                        return [...prev, message].sort((a, b) =>
+                            new Date(a.created_at) - new Date(b.created_at)
+                        );
+                    });
                 });
 
+                return () => messageHandler(); // Отписываемся при размонтировании
             } catch (error) {
                 console.error('Error initializing chat:', error);
                 setError('Ошибка при инициализации чата');
@@ -72,11 +75,7 @@ const ChatPage = () => {
 
         initChat();
 
-        // Очистка при размонтировании
         return () => {
-            if (messageHandler) {
-                messageHandler(); // Отписываемся от сообщений
-            }
             if (chatServiceRef.current) {
                 chatServiceRef.current.disconnect();
             }
@@ -87,11 +86,11 @@ const ChatPage = () => {
     const fetchChats = useCallback(async () => {
         try {
             const response = await axios.get('/api/v1/marketplace/chat');
-            setChats(response.data.data);
+            const chatsData = response.data?.data || [];
+            setChats(chatsData);
 
-            // Если есть listingId в URL, находим соответствующий чат
-            if (listingId) {
-                const chat = response.data.data.find(c => c.listing_id === parseInt(listingId));
+            if (listingId && chatsData.length > 0) {
+                const chat = chatsData.find(c => c.listing_id === parseInt(listingId));
                 if (chat) {
                     setSelectedChat(chat);
                 }
@@ -140,24 +139,28 @@ const ChatPage = () => {
     useEffect(() => {
         if (selectedChat && messages.length > 0) {
             const unreadMessages = messages.filter(
-                msg => !msg.is_read && msg.receiver_id === user.id
+                msg => !msg.is_read && msg.receiver_id === user?.id  
             );
-            if (unreadMessages.length > 0) {
+            if (unreadMessages.length > 0 && user?.id) {  
                 const messageIds = unreadMessages.map(msg => msg.id);
                 markMessageAsRead(messageIds);
             }
         }
-    }, [selectedChat, messages, user.id]);
+    }, [selectedChat, messages, user?.id]);  
     useEffect(() => {
         if (selectedChat) {
             fetchMessages(selectedChat.id);
         }
     }, [selectedChat, fetchMessages]);
 
-    // Отправка сообщения через ChatService
     const handleSendMessage = async (content) => {
         if (!chatServiceRef.current) {
             setError('Соединение не установлено');
+            return;
+        }
+
+        if (!selectedChat || !user?.id) {  // Добавляем проверку user?.id
+            setError('Недостаточно данных для отправки сообщения');
             return;
         }
 
@@ -172,12 +175,16 @@ const ChatPage = () => {
 
             await chatServiceRef.current.sendMessage(message);
 
-            // Добавляем сообщение локально
             const newMessage = {
                 ...message,
                 sender_id: user.id,
                 created_at: new Date().toISOString(),
-                is_read: false
+                is_read: false,
+                sender: {  // Добавляем информацию об отправителе
+                    id: user.id,
+                    name: user.name,
+                    picture_url: user.picture_url
+                }
             };
             setMessages(prev => [...prev, newMessage]);
 
@@ -222,28 +229,20 @@ const ChatPage = () => {
         );
     }
 
-    // Отображение ошибок
     if (error) {
         return (
-            <Box p={2}>
-                <Alert severity="error" onClose={() => setError(null)}>
-                    {error}
-                </Alert>
-            </Box>
+            <Alert severity="error" sx={{ m: 2 }} onClose={() => setError(null)}>
+                {error}
+            </Alert>
         );
     }
 
-
-    // Мобильная версия
     if (isMobile) {
         return (
             <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
                 {selectedChat ? (
                     <>
-                        <ChatHeader
-                            chat={selectedChat}
-                            onBack={() => setSelectedChat(null)}
-                        />
+                        <ChatHeader chat={selectedChat} onBack={() => setSelectedChat(null)} />
                         <Box sx={{ flex: 1, overflow: 'hidden' }}>
                             <ChatWindow
                                 messages={messages}
@@ -260,7 +259,7 @@ const ChatPage = () => {
                             onSelectChat={handleSelectChat}
                             onArchiveChat={handleArchiveChat}
                         />
-                        {chats.length === 0 && (
+                        {!loading && chats.length === 0 && (
                             <EmptyState text="У вас пока нет сообщений" />
                         )}
                     </>
@@ -273,7 +272,6 @@ const ChatPage = () => {
     return (
         <Container maxWidth="xl" sx={{ py: 4, height: 'calc(100vh - 64px)' }}>
             <Grid container spacing={2} sx={{ height: '100%' }}>
-                {/* Список чатов */}
                 <Grid item xs={12} md={4} sx={{ height: '100%' }}>
                     <ChatList
                         chats={chats}
@@ -281,12 +279,10 @@ const ChatPage = () => {
                         onSelectChat={handleSelectChat}
                         onArchiveChat={handleArchiveChat}
                     />
-                    {chats.length === 0 && (
+                    {!loading && chats.length === 0 && (
                         <EmptyState text="У вас пока нет сообщений" />
                     )}
                 </Grid>
-
-                {/* Окно чата */}
                 <Grid item xs={12} md={8} sx={{ height: '100%' }}>
                     {selectedChat ? (
                         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

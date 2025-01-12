@@ -34,7 +34,7 @@ const MarketplacePage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
 
-    const [listings, setListings] = useState(null);
+    const [listings, setListings] = useState([]); 
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -49,6 +49,7 @@ const MarketplacePage = () => {
         condition: '',
         sort_by: 'date_desc'
     });
+
 
     const handleFilterChange = useCallback((newFilters) => {
         setFilters(prev => ({
@@ -82,24 +83,37 @@ const MarketplacePage = () => {
 
     // Эффект для загрузки категорий
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchData = async () => {
             try {
-                const response = await axios.get('/api/v1/marketplace/category-tree');
-                setCategories(response.data.data || []);
+                setLoading(true);
+                // Параллельная загрузка категорий и листингов
+                const [categoriesResponse, listingsResponse] = await Promise.all([
+                    axios.get('/api/v1/marketplace/category-tree'),
+                    axios.get('/api/v1/marketplace/listings', {
+                        params: Object.entries(filters).reduce((acc, [key, value]) => {
+                            if (value !== '' && value !== null && value !== undefined) {
+                                acc[key] = value;
+                            }
+                            return acc;
+                        }, {})
+                    })
+                ]);
+
+                if (categoriesResponse.data?.data) {
+                    setCategories(categoriesResponse.data.data);
+                }
+                setListings(listingsResponse.data?.data?.data || []);
+                setError(null);
             } catch (err) {
-                console.error('Error fetching categories:', err);
-                setError('Не удалось загрузить категории');
+                console.error('Error fetching data:', err);
+                setError('Произошла ошибка при загрузке данных');
+            } finally {
+                setLoading(false);
             }
         };
-        fetchCategories();
-    }, []);
 
-    // Эффект для обработки фильтров
-    useEffect(() => {
-        const debouncedFetch = debounce(() => fetchListings(filters), 500);
-        debouncedFetch();
-        return () => debouncedFetch.cancel();
-    }, [fetchListings, filters]);
+        fetchData();
+    }, [filters]); // Убираем лишний useEffect и объединяем загрузку данных
 
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
@@ -110,100 +124,78 @@ const MarketplacePage = () => {
         }, 0);
     };
 
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" p={4}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+    const renderContent = () => {
+        if (loading) {
+            return (
+                <Box display="flex" justifyContent="center" p={4}>
+                    <CircularProgress />
+                </Box>
+            );
+        }
 
-    if (!loading && listings && listings.length === 0) {
+        if (error) {
+            return (
+                <Alert 
+                    severity="error" 
+                    sx={{ m: 2 }}
+                    action={
+                        <IconButton size="small" onClick={() => setError(null)}>
+                            <X size={16} />
+                        </IconButton>
+                    }
+                >
+                    {error}
+                </Alert>
+            );
+        }
+
+        if (listings.length === 0) {
+            return (
+                <Alert severity="info" sx={{ m: 2 }}>
+                    По вашему запросу ничего не найдено
+                </Alert>
+            );
+        }
+
         return (
-            <Alert severity="info">
-                По вашему запросу ничего не найдено
-            </Alert>
+            <Grid container spacing={isMobile ? 1 : 3}>
+                {listings.map((listing) => (
+                    <Grid item xs={isMobile ? 6 : 12} sm={6} md={4} key={listing.id}>
+                        <Link
+                            to={`/marketplace/listings/${listing.id}`}
+                            style={{ textDecoration: 'none' }}
+                        >
+                            {isMobile ? (
+                                <MobileListingCard listing={listing} />
+                            ) : (
+                                <ListingCard listing={listing} />
+                            )}
+                        </Link>
+                    </Grid>
+                ))}
+            </Grid>
         );
-    }
+    };
+
     if (isMobile) {
         return (
-            <Box sx={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
+            <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
                 <MobileHeader
                     onOpenFilters={() => setIsFilterOpen(true)}
                     filtersCount={getActiveFiltersCount()}
                 />
 
-                {error && (
-                    <Alert
-                        severity="error"
-                        sx={{ mx: 2, my: 1 }}
-                        action={
-                            <IconButton
+                <Box sx={{ flex: 1, p: 1, bgcolor: 'grey.50' }}>
+                    {filters.category_id && (
+                        <Box sx={{ px: 1, mb: 1 }}>
+                            <Chip
+                                label={categories.find(c => c.id === filters.category_id)?.name}
+                                onDelete={() => handleFilterChange({ category_id: '' })}
                                 size="small"
-                                onClick={() => setError(null)}
-                            >
-                                <X size={16} />
-                            </IconButton>
-                        }
-                    >
-                        {error}
-                    </Alert>
-                )}
-
-                <Box sx={{
-                    flex: 1,
-                    p: 1,
-                    bgcolor: 'grey.50'
-                }}>
-                    {loading ? (
-                        <Box display="flex" justifyContent="center" p={4}>
-                            <CircularProgress />
+                            />
                         </Box>
-                    ) : (
-                        <>
-                            {filters.category_id && (
-                                <Box sx={{ px: 1, mb: 1 }}>
-                                    <Chip
-                                        label={categories.find(c => c.id === filters.category_id)?.name}
-                                        onDelete={() => handleFilterChange({ category_id: '' })}
-                                        size="small"
-                                    />
-                                </Box>
-                            )}
-
-                            <Grid container spacing={1}>
-                                {listings.map((listing) => (
-                                    <Grid item xs={6} key={listing.id}>
-                                        <Link
-                                            to={`/marketplace/listings/${listing.id}`}
-                                            style={{ textDecoration: 'none' }}
-                                        >
-                                            <MobileListingCard listing={listing} />
-                                        </Link>
-                                    </Grid>
-                                ))}
-                                {listings.length === 0 && !loading && (
-                                    <Grid item xs={12}>
-                                        <Box
-                                            sx={{
-                                                textAlign: 'center',
-                                                py: 4,
-                                                color: 'text.secondary'
-                                            }}
-                                        >
-                                            <Typography variant="body2">
-                                                По вашему запросу ничего не найдено
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                )}
-                            </Grid>
-                        </>
                     )}
+                    {renderContent()}
                 </Box>
 
                 <MobileFilters
@@ -237,7 +229,6 @@ const MarketplacePage = () => {
         );
     }
 
-    // Десктопная версия
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -253,13 +244,6 @@ const MarketplacePage = () => {
                 </Button>
             </Box>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
-
-            {/* Оборачиваем всё в контейнер Grid */}
             <Grid container spacing={3}>
                 <Grid item xs={12} md={3}>
                     <CompactMarketplaceFilters
@@ -271,31 +255,7 @@ const MarketplacePage = () => {
                     />
                 </Grid>
                 <Grid item xs={12} md={9}>
-                    {loading ? (
-                        <Box display="flex" justifyContent="center" p={4}>
-                            <CircularProgress />
-                        </Box>
-                    ) : (
-                        <Grid container spacing={3}>
-                            {listings.map((listing) => (
-                                <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                                    <Link
-                                        to={`/marketplace/listings/${listing.id}`}
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                        <ListingCard listing={listing} />
-                                    </Link>
-                                </Grid>
-                            ))}
-                            {listings.length === 0 && !loading && (
-                                <Grid item xs={12}>
-                                    <Alert severity="info">
-                                        По вашему запросу ничего не найдено
-                                    </Alert>
-                                </Grid>
-                            )}
-                        </Grid>
-                    )}
+                    {renderContent()}
                 </Grid>
             </Grid>
         </Container>

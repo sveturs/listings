@@ -1,4 +1,4 @@
-// ChatButton.js
+// frontend/hostel-frontend/src/components/marketplace/chat/ChatButton.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -43,12 +43,14 @@ const ChatButton = ({ listing, isMobile }) => {
         
         setLoading(true);
         setError('');
-
+    
         try {
             await axios.post('/api/v1/marketplace/chat/messages', {
                 listing_id: listing.id,
                 receiver_id: listing.user_id,
                 content: message.trim()
+            }, {
+                withCredentials: true  
             });
             
             setOpen(false);

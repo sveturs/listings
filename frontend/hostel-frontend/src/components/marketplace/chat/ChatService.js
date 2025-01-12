@@ -1,3 +1,5 @@
+// frontend/hostel-frontend/src/components/marketplace/chat/ChatService.js
+import axios from '../../../api/axios'; 
 class ChatService {
     constructor(userId) {
         this.userId = userId;
@@ -11,7 +13,7 @@ class ChatService {
 
     connect() {
         if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) return;
-        
+
         this.isConnecting = true;
 
         let wsUrl;
@@ -32,7 +34,7 @@ class ChatService {
                 console.log('WebSocket соединение установлено');
                 this.isConnecting = false;
                 this.reconnectAttempts = 0;
-                
+
                 // Небольшая задержка перед отправкой авторизации
                 setTimeout(() => {
                     if (this.ws?.readyState === WebSocket.OPEN) {
@@ -82,8 +84,7 @@ class ChatService {
         }
     }
 
-    
-    // Добавьте метод для установки текущего чата
+
     setCurrentChat(chatId) {
         this.currentChatId = chatId;
         if (this.ws?.readyState === WebSocket.OPEN) {
@@ -93,39 +94,48 @@ class ChatService {
             }));
         }
     }
-    async sendMessage(message) {
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-            this.connect();
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
+ 
+    async sendMessageHTTP(message) {
         try {
-            if (this.ws?.readyState === WebSocket.OPEN) {
-                this.ws.send(JSON.stringify(message));
-            } else {
-                throw new Error('WebSocket не подключен');
-            }
+            const response = await axios.post('/api/v1/marketplace/chat/messages', message, {
+                withCredentials: true
+            });
+            return response.data;
         } catch (error) {
-            console.error('Ошибка при отправке через WebSocket:', error);
-            await this.sendMessageHTTP(message);
+            console.error('Error sending message via HTTP:', error);
+            throw error;
         }
     }
-
-    async sendMessageHTTP(message) {
-        const response = await fetch('/api/v1/marketplace/chat/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify(message)
-        });
-
-        if (!response.ok) {
-            throw new Error('Ошибка отправки сообщения');
+    async sendMessage(message) {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            try {
+                this.connect();
+                // Ждем подключения
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
+                    const checkConnection = setInterval(() => {
+                        if (this.ws?.readyState === WebSocket.OPEN) {
+                            clearTimeout(timeout);
+                            clearInterval(checkConnection);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            } catch (error) {
+                console.error('WebSocket connection failed:', error);
+                return this.sendMessageHTTP(message);
+            }
         }
-
-        return response.json();
+    
+        try {
+            this.ws.send(JSON.stringify({
+                type: 'message',
+                ...message
+            }));
+        } catch (error) {
+            console.error('WebSocket send failed:', error);
+            return this.sendMessageHTTP(message);
+        }
     }
 
     onMessage(handler) {

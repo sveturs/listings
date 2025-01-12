@@ -1,3 +1,4 @@
+// backend/internal/domain/models/marketplace_chat.go
 package models
 
 import "time"
