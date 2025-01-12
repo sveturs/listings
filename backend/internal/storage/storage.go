@@ -87,6 +87,14 @@ type Storage interface {
 	RemoveFromFavorites(ctx context.Context, userID int, listingID int) error
 	GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error)
 
+	// Marketplace Chat methods
+	CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error
+	GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error)
+	GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error)
+	GetChat(ctx context.Context, chatID int, userID int) (*models.MarketplaceChat, error)
+	MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error
+	ArchiveChat(ctx context.Context, chatID int, userID int) error
+
 	// Database connection
 	Close()
 	Ping(ctx context.Context) error

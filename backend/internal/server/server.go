@@ -1,16 +1,16 @@
-//backend/internal/server/server.go
+// backend/internal/server/server.go
 package server
 
 import (
+	accommodationHandler "backend/internal/proj/accommodation/handler"
+	carHandler "backend/internal/proj/car/handler"
+	marketplaceHandler "backend/internal/proj/marketplace/handler"
+	reviewHandler "backend/internal/proj/reviews/handler"
+	userHandler "backend/internal/proj/users/handler"
 
-	userHandler 			"backend/internal/proj/users/handler"
-	accommodationHandler 	"backend/internal/proj/accommodation/handler"
-	carHandler				"backend/internal/proj/car/handler"
-	reviewHandler			"backend/internal/proj/reviews/handler"
-	marketplaceHandler		"backend/internal/proj/marketplace/handler"
+	"github.com/gofiber/websocket/v2"
 
-	globalService 			"backend/internal/proj/global/service"
-
+	globalService "backend/internal/proj/global/service"
 
 	"backend/internal/config"
 	"backend/internal/middleware"
@@ -24,30 +24,30 @@ import (
 
 // Определяем структуру Server перед использованием
 type Server struct {
-    app        		*fiber.App
-    cfg        		*config.Config
-    users      		*userHandler.Handler
-    accommodation 	*accommodationHandler.Handler
-    car        		*carHandler.Handler
-    middleware 		*middleware.Middleware
-    review     		*reviewHandler.Handler
-    marketplace 	*marketplaceHandler.Handler
+	app           *fiber.App
+	cfg           *config.Config
+	users         *userHandler.Handler
+	accommodation *accommodationHandler.Handler
+	car           *carHandler.Handler
+	middleware    *middleware.Middleware
+	review        *reviewHandler.Handler
+	marketplace   *marketplaceHandler.Handler
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
-    db, err := postgres.NewDatabase(cfg.DatabaseURL)
-    if err != nil {
-        return nil, fmt.Errorf("failed to initialize database: %w", err)
-    }
+	db, err := postgres.NewDatabase(cfg.DatabaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize database: %w", err)
+	}
 
 	services := globalService.NewService(db, cfg)
-	usersHandler 			:= userHandler.NewHandler(services)
-	accommodationHandler 	:= accommodationHandler.NewHandler(services)
-	carHandler				:= carHandler.NewHandler(services)
-	reviewHandler			:= reviewHandler.NewHandler(services)
-	marketplaceHandler		:= marketplaceHandler.NewHandler(services)
+	usersHandler := userHandler.NewHandler(services)
+	accommodationHandler := accommodationHandler.NewHandler(services)
+	carHandler := carHandler.NewHandler(services)
+	reviewHandler := reviewHandler.NewHandler(services)
+	marketplaceHandler := marketplaceHandler.NewHandler(services)
 
-    middleware := middleware.NewMiddleware(cfg, services)
+	middleware := middleware.NewMiddleware(cfg, services)
 
 	// Инициализация Fiber
 	app := fiber.New(fiber.Config{
@@ -59,18 +59,16 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	// Инициализация сервера
 	server := &Server{
-		app:        	app,
-		cfg:        	cfg,
-//		handlers:   	handlers,
-		users:      	usersHandler,
-		middleware: 	middleware,
-		accommodation: 	accommodationHandler,
-		car:			carHandler,
-		review:			reviewHandler,
-		marketplace:	marketplaceHandler,
+		app: app,
+		cfg: cfg,
+		//		handlers:   	handlers,
+		users:         usersHandler,
+		middleware:    middleware,
+		accommodation: accommodationHandler,
+		car:           carHandler,
+		review:        reviewHandler,
+		marketplace:   marketplaceHandler,
 	}
-
- 
 
 	// Настройка маршрутов
 	server.setupRoutes()
@@ -106,12 +104,12 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/listings", s.marketplace.Marketplace.GetListings)
 	marketplace.Get("/categories", s.marketplace.Marketplace.GetCategories)
 	marketplace.Get("/category-tree", s.marketplace.Marketplace.GetCategoryTree)
- 
+
 	// Публичные маршруты для отзывов
-    review := s.app.Group("/api/v1/reviews")
-    review.Get("/", s.review.Review.GetReviews)  // Получение списка отзывов
-    review.Get("/:id", s.review.Review.GetReviewByID)  // Получение отдельного отзыва
-    review.Get("/stats", s.review.Review.GetStats)  // Статистика по отзывам
+	review := s.app.Group("/api/v1/reviews")
+	review.Get("/", s.review.Review.GetReviews)       // Получение списка отзывов
+	review.Get("/:id", s.review.Review.GetReviewByID) // Получение отдельного отзыва
+	review.Get("/stats", s.review.Review.GetStats)    // Статистика по отзывам
 
 	// Auth routes
 	auth := s.app.Group("/auth")
@@ -126,20 +124,19 @@ func (s *Server) setupRoutes() {
 	cars.Post("/", s.car.Car.AddCar)
 	cars.Post("/:id/images", s.car.Car.UploadImages)
 
-    // Маршруты для отзывов, требующие авторизации
-    protectedReviews := s.app.Group("/api/v1/reviews", s.middleware.AuthRequired)
-    protectedReviews.Post("/", s.review.Review.CreateReview)  // Создание отзыва
-    protectedReviews.Put("/:id", s.review.Review.UpdateReview)  // Обновление отзыва
-    protectedReviews.Delete("/:id", s.review.Review.DeleteReview)  // Удаление отзыва
-    protectedReviews.Post("/:id/vote", s.review.Review.VoteForReview)  // Голосование за отзыв
-    protectedReviews.Post("/:id/response", s.review.Review.AddResponse)  // Добавление ответа на отзыв
-    protectedReviews.Post("/:id/photos", s.review.Review.UploadPhotos)  // Загрузка фотографий к отзыву
+	// Маршруты для отзывов, требующие авторизации
+	protectedReviews := s.app.Group("/api/v1/reviews", s.middleware.AuthRequired)
+	protectedReviews.Post("/", s.review.Review.CreateReview)            // Создание отзыва
+	protectedReviews.Put("/:id", s.review.Review.UpdateReview)          // Обновление отзыва
+	protectedReviews.Delete("/:id", s.review.Review.DeleteReview)       // Удаление отзыва
+	protectedReviews.Post("/:id/vote", s.review.Review.VoteForReview)   // Голосование за отзыв
+	protectedReviews.Post("/:id/response", s.review.Review.AddResponse) // Добавление ответа на отзыв
+	protectedReviews.Post("/:id/photos", s.review.Review.UploadPhotos)  // Загрузка фотографий к отзыву
 
-    // Маршруты для статистики по сущностям
-    entityStats := s.app.Group("/api/v1/entity")
-    entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating)  // Получение рейтинга сущности
-    entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)  // Получение статистики по отзывам сущности
-
+	// Маршруты для статистики по сущностям
+	entityStats := s.app.Group("/api/v1/entity")
+	entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating) // Получение рейтинга сущности
+	entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)   // Получение статистики по отзывам сущности
 
 	// Protected room routes
 	rooms := api.Group("/rooms")
@@ -156,23 +153,33 @@ func (s *Server) setupRoutes() {
 	bookings.Delete("/:id", s.accommodation.Booking.Delete)
 	// Protected user routes
 	users := s.app.Group("/api/v1/users")
-	users.Post("/register", s.users.User.Register)      // Исправлено
-	users.Get("/me", s.users.User.GetProfile)           // Исправлено
-	users.Put("/me", s.users.User.UpdateProfile)        // Исправлено
-	users.Get("/profile", s.users.User.GetProfile)      // Исправлено
-	users.Put("/profile", s.users.User.UpdateProfile)   // Исправлено
+	users.Post("/register", s.users.User.Register)    // Исправлено
+	users.Get("/me", s.users.User.GetProfile)         // Исправлено
+	users.Put("/me", s.users.User.UpdateProfile)      // Исправлено
+	users.Get("/profile", s.users.User.GetProfile)    // Исправлено
+	users.Put("/profile", s.users.User.UpdateProfile) // Исправлено
 
 	// Защищенные маршруты маркетплейса
 	marketplaceProtected := api.Group("/marketplace")
 	marketplaceProtected.Post("/listings", s.marketplace.Marketplace.CreateListing)
-	marketplaceProtected.Get("/listings/:id", s.marketplace.Marketplace.GetListing) 
+	marketplaceProtected.Get("/listings/:id", s.marketplace.Marketplace.GetListing)
 	marketplaceProtected.Put("/listings/:id", s.marketplace.Marketplace.UpdateListing)
 	marketplaceProtected.Delete("/listings/:id", s.marketplace.Marketplace.DeleteListing)
 	marketplaceProtected.Post("/listings/:id/images", s.marketplace.Marketplace.UploadImages)
 	marketplaceProtected.Post("/listings/:id/favorite", s.marketplace.Marketplace.AddToFavorites)
 	marketplaceProtected.Delete("/listings/:id/favorite", s.marketplace.Marketplace.RemoveFromFavorites)
 	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
-	
+	// Чат для маркетплейса
+	chat := api.Group("/marketplace/chat")
+	chat.Get("/", s.marketplace.Chat.GetChats)
+	chat.Get("/:listing_id/messages", s.marketplace.Chat.GetMessages)
+	chat.Post("/messages", s.marketplace.Chat.SendMessage)
+	chat.Put("/messages/read", s.marketplace.Chat.MarkAsRead)
+	chat.Post("/:chat_id/archive", s.marketplace.Chat.ArchiveChat) 
+
+	// WebSocket эндпоинт
+	s.app.Use("/ws/chat", s.middleware.AuthRequired) // Защищаем WebSocket
+	s.app.Get("/ws/chat", websocket.New(s.marketplace.Chat.HandleWebSocket))
 }
 func (s *Server) Start() error {
 	return s.app.Listen(fmt.Sprintf(":%s", s.cfg.Port))

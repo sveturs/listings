@@ -15,10 +15,10 @@ file_extensions=(
     "sql"
     "jsx"
     "env"
-#    "tsx"
+    "tsx"
     "json"
     "yml"
-#    "yaml"
+    "yaml"
 )
 
 # Массив конкретных файлов для добавления

@@ -1,4 +1,5 @@
 //frontend/hostel-frontend/src/pages/ListingDetailsPage.js
+import ChatButton from '../../components/marketplace/chat/ChatButton';
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import ReviewsSection from '../../components/reviews/ReviewsSection';
@@ -323,21 +324,12 @@ const ListingDetailsPage = () => {
                                         fullWidth
                                         startIcon={!isMobile && <Phone />}
                                         onClick={() => {
-                                            // Здесь можно добавить логику для звонка
+                                            // Логика для звонка
                                         }}
                                     >
                                         {isMobile ? <Phone size={20} /> : 'Позвонить'}
                                     </Button>
-                                    <Button
-                                        variant="outlined"
-                                        fullWidth
-                                        startIcon={!isMobile && <MessageCircle />}
-                                        onClick={() => {
-                                            // Здесь можно добавить логику для отправки сообщения
-                                        }}
-                                    >
-                                        {isMobile ? <MessageCircle size={20} /> : 'Написать'}
-                                    </Button>
+                                    <ChatButton listing={listing} isMobile={isMobile} />
                                 </Stack>
 
                                 <Stack direction="row" spacing={1}>

@@ -1,15 +1,16 @@
 package handler
 import (
-     globalService "backend/internal/proj/global/service"
+    globalService "backend/internal/proj/global/service"
 )
 
 type Handler struct {
-	Marketplace *MarketplaceHandler
-
+    Marketplace *MarketplaceHandler
+    Chat       *ChatHandler
 }
 
 func NewHandler(services globalService.ServicesInterface) *Handler {
-	return &Handler{
-		Marketplace: NewMarketplaceHandler(services),
-	}
+    return &Handler{
+        Marketplace: NewMarketplaceHandler(services),
+        Chat:       NewChatHandler(services),
+    }
 }

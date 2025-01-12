@@ -21,6 +21,7 @@ import UserProfile from './components/user/UserProfile';
 import MyListingsPage from './pages/marketplace/MyListingsPage';
 import FavoriteListingsPage from './pages/marketplace/FavoriteListingsPage';
 import { MapProvider } from './components/maps/MapProvider';
+import ChatPage from "./pages/marketplace/ChatPage";
  
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
               <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
               <Route path="/profile" element={<UserProfile />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
+              <Route path="/marketplace/chat" element={<ChatPage />} />
 
 
               <Route path="/my-listings" element={<MyListingsPage />} />

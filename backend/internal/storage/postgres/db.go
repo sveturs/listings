@@ -327,3 +327,29 @@ func (db *Database) UpdateUserProfile(ctx context.Context, id int, update *model
 func (db *Database) UpdateLastSeen(ctx context.Context, id int) error {
     return db.usersDB.UpdateLastSeen(ctx, id)
 }
+
+// Добавить следующие методы в структуру Database:
+
+func (db *Database) ArchiveChat(ctx context.Context, chatID int, userID int) error {
+    return db.marketplaceDB.ArchiveChat(ctx, chatID, userID)
+}
+
+func (db *Database) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
+    return db.marketplaceDB.CreateMessage(ctx, msg)
+}
+
+func (db *Database) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
+    return db.marketplaceDB.GetMessages(ctx, listingID, userID, offset, limit)
+}
+
+func (db *Database) GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error) {
+    return db.marketplaceDB.GetChats(ctx, userID)
+}
+
+func (db *Database) GetChat(ctx context.Context, chatID int, userID int) (*models.MarketplaceChat, error) {
+    return db.marketplaceDB.GetChat(ctx, chatID, userID)
+}
+
+func (db *Database) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
+    return db.marketplaceDB.MarkMessagesAsRead(ctx, messageIDs, userID)
+}

@@ -1,4 +1,3 @@
-// backend/internal/proj/global/service/service.go
 package service
 
 import (
@@ -17,10 +16,9 @@ type Service struct {
     car          *carService.Service
     marketplace  *marketplaceService.Service
     review       *reviewService.Service
+    chat         *marketplaceService.Service
     config       *config.Config
 }
-
-
 
 func NewService(storage storage.Storage, cfg *config.Config) *Service {
     return &Service{
@@ -29,6 +27,7 @@ func NewService(storage storage.Storage, cfg *config.Config) *Service {
         car:          carService.NewService(storage),
         marketplace:  marketplaceService.NewService(storage),
         review:       reviewService.NewService(storage),
+        chat:         marketplaceService.NewService(storage),
         config:       cfg,
     }
 }
@@ -46,15 +45,15 @@ func (s *Service) Car() carService.CarServiceInterface {
     return s.car.Car
 }
 
-func (s *Service) Room() accommodationService.RoomServiceInterface { 
+func (s *Service) Room() accommodationService.RoomServiceInterface {
     return s.accommodation.Room
 }
 
-func (s *Service) Booking() accommodationService.BookingServiceInterface { 
+func (s *Service) Booking() accommodationService.BookingServiceInterface {
     return s.accommodation.Booking
 }
 
-func (s *Service) Config() *config.Config { 
+func (s *Service) Config() *config.Config {
     return s.config
 }
 
@@ -64,6 +63,10 @@ func (s *Service) Marketplace() marketplaceService.MarketplaceServiceInterface {
 
 func (s *Service) Review() reviewService.ReviewServiceInterface {
     return s.review.Review
+}
+
+func (s *Service) Chat() marketplaceService.ChatServiceInterface {
+    return s.chat.Chat
 }
 
 func (s *Service) Bed() accommodationService.BedServiceInterface {
