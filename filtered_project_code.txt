@@ -1452,6 +1452,7 @@ type CategoryTreeNode struct {
 
 === /data/proj/hostel-booking-system/backend/internal/domain/models/marketplace_chat.go ===
 
+// backend/internal/domain/models/marketplace_chat.go
 package models
 
 import "time"
@@ -1746,6 +1747,7 @@ type Repository interface {
 }
 === /data/proj/hostel-booking-system/backend/internal/proj/users/storage/postgres/user_profile.go ===
 
+// backend/internal/proj/users/storage/postgres/user_profile.go
 package postgres
 
 import (
@@ -1838,6 +1840,7 @@ func (s *Storage) UpdateLastSeen(ctx context.Context, userID int) error {
 }
 === /data/proj/hostel-booking-system/backend/internal/proj/users/storage/postgres/storage.go ===
 
+// backend/internal/proj/users/storage/postgres/storage.go
 package postgres
 
 import (
@@ -1858,6 +1861,7 @@ func NewStorage(pool *pgxpool.Pool) *Storage {
 }
 === /data/proj/hostel-booking-system/backend/internal/proj/users/storage/postgres/user.go ===
 
+// backend/internal/proj/users/storage/postgres/user.go
 package postgres
 
 import (
@@ -3158,6 +3162,7 @@ type MarketplaceServiceInterface interface {
 }
 === /data/proj/hostel-booking-system/backend/internal/proj/marketplace/service/chat.go ===
 
+// backend/internal/proj/marketplace/service/chat.go
 package service
 
 import (
@@ -3345,6 +3350,7 @@ func (s *MarketplaceService) RemoveFromFavorites(ctx context.Context, userID int
 }
 === /data/proj/hostel-booking-system/backend/internal/proj/marketplace/service/chat_interface.go ===
 
+// backend/internal/proj/marketplace/service/chat_interface.go
 package service
 
 import (
@@ -3423,18 +3429,20 @@ type MarketplaceRepository interface {
 }
 === /data/proj/hostel-booking-system/backend/internal/proj/marketplace/storage/postgres/chat.go ===
 
+// backend/internal/proj/marketplace/storage/postgres/chat.go
 package postgres
 
 import (
-    "context"
-    "backend/internal/domain/models"
-    "fmt"
+	"backend/internal/domain/models"
+	"context"
+	"fmt"
+    "github.com/jackc/pgx/v5" 
 )
 
 // Реализуем методы хранилища
 func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.MarketplaceChat, error) {
-    chat := &models.MarketplaceChat{}
-    err := s.pool.QueryRow(ctx, `
+	chat := &models.MarketplaceChat{}
+	err := s.pool.QueryRow(ctx, `
         SELECT 
             c.id, c.listing_id, c.buyer_id, c.seller_id,
             c.last_message_at, c.created_at, c.updated_at, c.is_archived,
@@ -3448,19 +3456,19 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
         JOIN marketplace_listings l ON c.listing_id = l.id
         WHERE c.id = $1 AND (c.buyer_id = $2 OR c.seller_id = $2)
     `, chatID, userID).Scan(
-        &chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
-        &chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
-        &chat.Listing.Title,
-        &chat.UnreadCount,
-    )
-    if err != nil {
-        return nil, fmt.Errorf("error getting chat: %w", err)
-    }
-    return chat, nil
+		&chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
+		&chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
+		&chat.Listing.Title,
+		&chat.UnreadCount,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error getting chat: %w", err)
+	}
+	return chat, nil
 }
 
 func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error) {
-    rows, err := s.pool.Query(ctx, `
+	rows, err := s.pool.Query(ctx, `
         WITH unread_counts AS (
             SELECT 
                 c.id as chat_id,
@@ -3481,88 +3489,50 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
         WHERE c.buyer_id = $1 OR c.seller_id = $1
         ORDER BY c.last_message_at DESC
     `, userID)
-    if err != nil {
-        return nil, fmt.Errorf("error querying chats: %w", err)
-    }
-    defer rows.Close()
+	if err != nil {
+		return nil, fmt.Errorf("error querying chats: %w", err)
+	}
+	defer rows.Close()
 
-    var chats []models.MarketplaceChat
-    for rows.Next() {
-        var chat models.MarketplaceChat
-        chat.Listing = &models.MarketplaceListing{}
+	var chats []models.MarketplaceChat
+	for rows.Next() {
+		var chat models.MarketplaceChat
+		chat.Listing = &models.MarketplaceListing{}
 
-        err := rows.Scan(
-            &chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
-            &chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
-            &chat.Listing.Title,
-            &chat.UnreadCount,
-        )
-        if err != nil {
-            return nil, fmt.Errorf("error scanning chat: %w", err)
-        }
+		err := rows.Scan(
+			&chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
+			&chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
+			&chat.Listing.Title,
+			&chat.UnreadCount,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning chat: %w", err)
+		}
 
-        chats = append(chats, chat)
-    }
+		chats = append(chats, chat)
+	}
 
-    return chats, nil
+	return chats, nil
 }
 
-func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
-    tx, err := s.pool.Begin(ctx)
-    if err != nil {
-        return fmt.Errorf("error starting transaction: %w", err)
-    }
-    defer tx.Rollback(ctx)
-
-    // Создаем или получаем существующий чат
-    var chatID int
-    err = tx.QueryRow(ctx, `
-        INSERT INTO marketplace_chats (
-            listing_id, buyer_id, seller_id, last_message_at
-        ) VALUES (
-            $1, 
-            CASE WHEN $2 = (SELECT user_id FROM marketplace_listings WHERE id = $1) 
-            THEN $3 ELSE $2 END,
-            (SELECT user_id FROM marketplace_listings WHERE id = $1),
-            CURRENT_TIMESTAMP
-        )
-        ON CONFLICT (listing_id, buyer_id, seller_id) 
-        DO UPDATE SET 
-            last_message_at = CURRENT_TIMESTAMP
-        RETURNING id
-    `, msg.ListingID, msg.SenderID, msg.ReceiverID).Scan(&chatID)
-    if err != nil {
-        return fmt.Errorf("error creating/getting chat: %w", err)
-    }
-
-    // Создаем сообщение с chat_id
-    err = tx.QueryRow(ctx, `
-        INSERT INTO marketplace_messages (
-            chat_id, listing_id, sender_id, receiver_id, content
-        ) VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, created_at
-    `,
-        chatID, msg.ListingID, msg.SenderID, msg.ReceiverID, msg.Content,
-    ).Scan(&msg.ID, &msg.CreatedAt)
-    if err != nil {
-        return fmt.Errorf("error creating message: %w", err)
-    }
-
-    msg.ChatID = chatID
-    return tx.Commit(ctx)
-}
 
 func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
-    messages := []models.MarketplaceMessage{} // Инициализируем пустой массив
+    messages := []models.MarketplaceMessage{} 
 
     rows, err := s.pool.Query(ctx, `
         SELECT 
             m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
             m.content, m.is_read, m.created_at,
-            u.name as sender_name, u.picture_url as sender_picture
+            -- Информация об отправителе
+            sender.name as sender_name, 
+            sender.picture_url as sender_picture,
+            -- Информация о получателе
+            receiver.name as receiver_name,
+            receiver.picture_url as receiver_picture
         FROM marketplace_messages m
-        JOIN users u ON m.sender_id = u.id
         JOIN marketplace_chats c ON m.chat_id = c.id
+        JOIN users sender ON m.sender_id = sender.id
+        JOIN users receiver ON m.receiver_id = receiver.id
         WHERE m.listing_id = $1 
         AND (c.buyer_id = $2 OR c.seller_id = $2)
         ORDER BY m.created_at DESC
@@ -3576,11 +3546,13 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
     for rows.Next() {
         var msg models.MarketplaceMessage
         msg.Sender = &models.User{}
+        msg.Receiver = &models.User{}
         
         err := rows.Scan(
             &msg.ID, &msg.ChatID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
             &msg.Content, &msg.IsRead, &msg.CreatedAt,
             &msg.Sender.Name, &msg.Sender.PictureURL,
+            &msg.Receiver.Name, &msg.Receiver.PictureURL,
         )
         if err != nil {
             return messages, fmt.Errorf("error scanning message: %w", err)
@@ -3592,34 +3564,152 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
     return messages, nil
 }
 
+// backend/internal/proj/marketplace/storage/postgres/chat.go
+
+func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
+    if msg == nil {
+        return fmt.Errorf("message cannot be nil")
+    }
+
+    // Инициализируем структуры User, если они nil
+    if msg.Sender == nil {
+        msg.Sender = &models.User{}
+    }
+    if msg.Receiver == nil {
+        msg.Receiver = &models.User{}
+    }
+
+    tx, err := s.pool.Begin(ctx)
+    if err != nil {
+        return fmt.Errorf("error starting transaction: %w", err)
+    }
+    defer tx.Rollback(ctx)
+
+    // Проверяем тип данных
+    if msg.SenderID == 0 || msg.ReceiverID == 0 || msg.ListingID == 0 {
+        return fmt.Errorf("invalid message data: sender_id=%d, receiver_id=%d, listing_id=%d", 
+            msg.SenderID, msg.ReceiverID, msg.ListingID)
+    }
+
+    // Получаем ID продавца и проверяем существование объявления
+    var sellerID int
+    err = tx.QueryRow(ctx, `
+        SELECT user_id 
+        FROM marketplace_listings 
+        WHERE id = $1
+    `, msg.ListingID).Scan(&sellerID)
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            return fmt.Errorf("listing not found: %d", msg.ListingID)
+        }
+        return fmt.Errorf("error getting listing seller: %w", err)
+    }
+
+    // Определяем кто покупатель, а кто продавец
+    var buyerID int
+    if msg.SenderID == sellerID {
+        buyerID = msg.ReceiverID
+    } else {
+        buyerID = msg.SenderID
+    }
+
+    // Создаем или получаем существующий чат
+    var chatID int
+    err = tx.QueryRow(ctx, `
+        WITH user_info AS (
+            SELECT id, name, picture_url 
+            FROM users 
+            WHERE id IN ($1, $2)
+        ),
+        chat_insert AS (
+            INSERT INTO marketplace_chats (
+                listing_id, 
+                buyer_id, 
+                seller_id, 
+                last_message_at
+            ) VALUES ($3, $4, $5, CURRENT_TIMESTAMP)
+            ON CONFLICT (listing_id, buyer_id, seller_id) 
+            DO UPDATE SET 
+                last_message_at = CURRENT_TIMESTAMP
+            RETURNING id
+        )
+        SELECT 
+            ci.id,
+            (SELECT name FROM user_info WHERE id = $1) as sender_name,
+            (SELECT picture_url FROM user_info WHERE id = $1) as sender_picture,
+            (SELECT name FROM user_info WHERE id = $2) as receiver_name,
+            (SELECT picture_url FROM user_info WHERE id = $2) as receiver_picture
+        FROM chat_insert ci
+    `, 
+        msg.SenderID, msg.ReceiverID, 
+        msg.ListingID, buyerID, sellerID,
+    ).Scan(
+        &chatID,
+        &msg.Sender.Name,
+        &msg.Sender.PictureURL,
+        &msg.Receiver.Name,
+        &msg.Receiver.PictureURL,
+    )
+
+    if err != nil {
+        return fmt.Errorf("error creating/getting chat: %w", err)
+    }
+
+    // Создаем сообщение
+    err = tx.QueryRow(ctx, `
+        INSERT INTO marketplace_messages (
+            chat_id,
+            listing_id,
+            sender_id,
+            receiver_id,
+            content,
+            is_read
+        ) VALUES ($1, $2, $3, $4, $5, false)
+        RETURNING id, created_at
+    `,
+        chatID,
+        msg.ListingID,
+        msg.SenderID,
+        msg.ReceiverID,
+        msg.Content,
+    ).Scan(&msg.ID, &msg.CreatedAt)
+
+    if err != nil {
+        return fmt.Errorf("error creating message: %w", err)
+    }
+
+    msg.ChatID = chatID
+    return tx.Commit(ctx)
+}
 func (s *Storage) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
-    _, err := s.pool.Exec(ctx, `
+	_, err := s.pool.Exec(ctx, `
         UPDATE marketplace_messages
         SET is_read = true
         WHERE id = ANY($1) AND receiver_id = $2
     `, messageIDs, userID)
-    if err != nil {
-        return fmt.Errorf("error marking messages as read: %w", err)
-    }
-    return nil
+	if err != nil {
+		return fmt.Errorf("error marking messages as read: %w", err)
+	}
+	return nil
 }
 
 func (s *Storage) ArchiveChat(ctx context.Context, chatID int, userID int) error {
-    result, err := s.pool.Exec(ctx, `
+	result, err := s.pool.Exec(ctx, `
         UPDATE marketplace_chats
         SET is_archived = true
         WHERE id = $1 AND (buyer_id = $2 OR seller_id = $2)
     `, chatID, userID)
-    if err != nil {
-        return fmt.Errorf("error archiving chat: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("error archiving chat: %w", err)
+	}
 
-    if result.RowsAffected() == 0 {
-        return fmt.Errorf("chat not found or permission denied")
-    }
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("chat not found or permission denied")
+	}
 
-    return nil
+	return nil
 }
+
 === /data/proj/hostel-booking-system/backend/internal/proj/marketplace/storage/postgres/storage.go ===
 
 // internal/proj/marketplace/storage/postgres/storage.go
@@ -4306,6 +4396,8 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 }
 === /data/proj/hostel-booking-system/backend/internal/proj/marketplace/handler/chat.go ===
 
+// backend/internal/proj/marketplace/handler/chat.go
+
 package handler
 
 import (
@@ -4359,6 +4451,8 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
     return utils.SuccessResponse(c, messages)
 }
 
+// backend/internal/proj/marketplace/handler/chat.go
+
 func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     
@@ -4366,15 +4460,23 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
     if err := c.BodyParser(&req); err != nil {
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
     }
+
+    // Валидация входных данных
+    if req.ListingID == 0 || req.ReceiverID == 0 || req.Content == "" {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Missing required fields")
+    }
     
     msg := &models.MarketplaceMessage{
         ListingID:  req.ListingID,
         SenderID:   userID,
         ReceiverID: req.ReceiverID,
         Content:    req.Content,
+        Sender:     &models.User{},    // Инициализируем структуры
+        Receiver:   &models.User{},
     }
     
     if err := h.services.Chat().SendMessage(c.Context(), msg); err != nil {
+        log.Printf("Error sending message: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error sending message")
     }
     
@@ -4970,7 +5072,7 @@ func (m *Middleware) AuthRequired(c *fiber.Ctx) error {
 }
 === /data/proj/hostel-booking-system/backend/internal/middleware/cors.go ===
 
-//backend/internal/middleware/cors.go
+// backend/internal/middleware/cors.go
 package middleware
 
 import (
@@ -4988,11 +5090,11 @@ func (m *Middleware) CORS() fiber.Handler {
             "http://landhub.rs",
             "https://landhub.rs",
         }, ","),
-        AllowMethods:     "GET,POST,DELETE,PUT,OPTIONS",
-        AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+        AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
+        AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-Requested-With",
+        ExposeHeaders:    "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type",
         AllowCredentials: true,
-        ExposeHeaders:    "Content-Length",
-        MaxAge:           86400, // 24 часов
+        MaxAge:          300, // 5 минут в секундах
     })
 }
 === /data/proj/hostel-booking-system/backend/internal/middleware/logger.go ===
@@ -6482,13 +6584,23 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
-// Компонент окна чата с сообщениями
-export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
-    console.log('ChatWindow messages:', messages); 
+export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const [processedMessages, setProcessedMessages] = useState([]);
+    
+    // Дедупликация сообщений по ID
+    useEffect(() => {
+        const uniqueMessages = Object.values(
+            messages.reduce((acc, message) => {
+                // Используем ID сообщения как ключ для дедупликации
+                acc[message.id] = message;
+                return acc;
+            }, {})
+        ).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        
+        setProcessedMessages(uniqueMessages);
+    }, [messages]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -6496,7 +6608,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [processedMessages]);
 
     const handleSend = (e) => {
         e.preventDefault();
@@ -6506,22 +6618,18 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
         }
     };
 
+    const formatTime = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
     return (
-        <Paper sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column',
-            border: 1,
-            borderColor: 'divider',
-        }}>
-            <Box sx={{ 
-                flex: 1, 
-                overflowY: 'auto',
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-            }}>
-                {messages.map((message) => (
+        <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+                {processedMessages.map((message) => (
                     <Box
                         key={message.id}
                         sx={{
@@ -6531,14 +6639,23 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
                             alignItems: 'flex-start',
                         }}
                     >
-                        <Avatar
-                            src={message.sender?.picture_url}
-                            sx={{ 
-                                width: 32, 
-                                height: 32, 
-                                mx: 1,
-                            }}
-                        />
+                        <Box sx={{ mx: 1 }}>
+                            <Avatar
+                                src={message.sender?.picture_url}
+                                sx={{ width: 32, height: 32 }}
+                            />
+                            <Typography 
+                                variant="caption" 
+                                sx={{ 
+                                    display: 'block',
+                                    textAlign: message.sender_id === currentUser.id ? 'right' : 'left',
+                                    mt: 0.5,
+                                }}
+                            >
+                                {message.sender?.name || 'Пользователь'}
+                            </Typography>
+                        </Box>
+                        
                         <Box
                             sx={{
                                 maxWidth: '70%',
@@ -6558,14 +6675,14 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
                                     opacity: 0.8,
                                 }}
                             >
-                                {new Date(message.created_at).toLocaleTimeString()}
+                                {formatTime(message.created_at)}
                             </Typography>
                         </Box>
                     </Box>
                 ))}
+                <div ref={messagesEndRef} />
             </Box>
 
-            {/* Форма отправки */}
             <Box
                 component="form"
                 onSubmit={handleSend}
@@ -6598,7 +6715,6 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser })  => {
         </Paper>
     );
 };
-
 // Компонент списка чатов
 export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat }) => {
     return (
@@ -6740,6 +6856,8 @@ export const EmptyState = ({ text }) => (
 );
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/components/marketplace/chat/ChatService.js ===
 
+// frontend/hostel-frontend/src/components/marketplace/chat/ChatService.js
+import axios from '../../../api/axios'; 
 class ChatService {
     constructor(userId) {
         this.userId = userId;
@@ -6753,7 +6871,7 @@ class ChatService {
 
     connect() {
         if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) return;
-        
+
         this.isConnecting = true;
 
         let wsUrl;
@@ -6774,7 +6892,7 @@ class ChatService {
                 console.log('WebSocket соединение установлено');
                 this.isConnecting = false;
                 this.reconnectAttempts = 0;
-                
+
                 // Небольшая задержка перед отправкой авторизации
                 setTimeout(() => {
                     if (this.ws?.readyState === WebSocket.OPEN) {
@@ -6823,19 +6941,8 @@ class ChatService {
             this.ws = null;
         }
     }
-    onMessage(handler) {
-        this.messageHandlers.add(handler);
-        // При добавлении нового обработчика можно обновить сообщения
-        if (this.ws?.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({
-                type: 'get_messages',
-                chat_id: this.currentChatId // Добавьте это свойство при выборе чата
-            }));
-        }
-        return () => this.messageHandlers.delete(handler);
-    }
-    
-    // Добавьте метод для установки текущего чата
+
+
     setCurrentChat(chatId) {
         this.currentChatId = chatId;
         if (this.ws?.readyState === WebSocket.OPEN) {
@@ -6845,39 +6952,48 @@ class ChatService {
             }));
         }
     }
-    async sendMessage(message) {
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-            this.connect();
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
+ 
+    async sendMessageHTTP(message) {
         try {
-            if (this.ws?.readyState === WebSocket.OPEN) {
-                this.ws.send(JSON.stringify(message));
-            } else {
-                throw new Error('WebSocket не подключен');
-            }
+            const response = await axios.post('/api/v1/marketplace/chat/messages', message, {
+                withCredentials: true
+            });
+            return response.data;
         } catch (error) {
-            console.error('Ошибка при отправке через WebSocket:', error);
-            await this.sendMessageHTTP(message);
+            console.error('Error sending message via HTTP:', error);
+            throw error;
         }
     }
-
-    async sendMessageHTTP(message) {
-        const response = await fetch('/api/v1/marketplace/chat/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify(message)
-        });
-
-        if (!response.ok) {
-            throw new Error('Ошибка отправки сообщения');
+    async sendMessage(message) {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            try {
+                this.connect();
+                // Ждем подключения
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
+                    const checkConnection = setInterval(() => {
+                        if (this.ws?.readyState === WebSocket.OPEN) {
+                            clearTimeout(timeout);
+                            clearInterval(checkConnection);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            } catch (error) {
+                console.error('WebSocket connection failed:', error);
+                return this.sendMessageHTTP(message);
+            }
         }
-
-        return response.json();
+    
+        try {
+            this.ws.send(JSON.stringify({
+                type: 'message',
+                ...message
+            }));
+        } catch (error) {
+            console.error('WebSocket send failed:', error);
+            return this.sendMessageHTTP(message);
+        }
     }
 
     onMessage(handler) {
@@ -6889,7 +7005,7 @@ class ChatService {
 export default ChatService;
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/components/marketplace/chat/ChatButton.js ===
 
-// ChatButton.js
+// frontend/hostel-frontend/src/components/marketplace/chat/ChatButton.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -6934,12 +7050,14 @@ const ChatButton = ({ listing, isMobile }) => {
         
         setLoading(true);
         setError('');
-
+    
         try {
             await axios.post('/api/v1/marketplace/chat/messages', {
                 listing_id: listing.id,
                 receiver_id: listing.user_id,
                 content: message.trim()
+            }, {
+                withCredentials: true  
             });
             
             setOpen(false);
@@ -7471,6 +7589,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
 export default CompactMarketplaceFilters;
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/components/marketplace/ItemDetails.js ===
 
+// frontend/hostel-frontend/src/components/marketplace/ItemDetails.js
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
@@ -8384,15 +8503,30 @@ reportWebVitals();
 
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/api/axios.js ===
 
+// frontend/hostel-frontend/src/api/axios.js
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL,
+  baseURL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000',
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+  },
+  validateStatus: function (status) {
+      return status >= 200 && status < 500;
   }
 });
+instance.interceptors.response.use(
+  response => response,
+  error => {
+      if (error.response?.status === 401) {
+          // Можно добавить редирект на страницу логина
+          window.location.href = '/login';
+      }
+      return Promise.reject(error);
+  }
+);
 
 export default instance;
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/contexts/AuthContext.js ===
@@ -8591,7 +8725,7 @@ const MarketplacePage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
 
-    const [listings, setListings] = useState(null);
+    const [listings, setListings] = useState([]); 
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -8606,6 +8740,7 @@ const MarketplacePage = () => {
         condition: '',
         sort_by: 'date_desc'
     });
+
 
     const handleFilterChange = useCallback((newFilters) => {
         setFilters(prev => ({
@@ -8639,24 +8774,37 @@ const MarketplacePage = () => {
 
     // Эффект для загрузки категорий
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchData = async () => {
             try {
-                const response = await axios.get('/api/v1/marketplace/category-tree');
-                setCategories(response.data.data || []);
+                setLoading(true);
+                // Параллельная загрузка категорий и листингов
+                const [categoriesResponse, listingsResponse] = await Promise.all([
+                    axios.get('/api/v1/marketplace/category-tree'),
+                    axios.get('/api/v1/marketplace/listings', {
+                        params: Object.entries(filters).reduce((acc, [key, value]) => {
+                            if (value !== '' && value !== null && value !== undefined) {
+                                acc[key] = value;
+                            }
+                            return acc;
+                        }, {})
+                    })
+                ]);
+
+                if (categoriesResponse.data?.data) {
+                    setCategories(categoriesResponse.data.data);
+                }
+                setListings(listingsResponse.data?.data?.data || []);
+                setError(null);
             } catch (err) {
-                console.error('Error fetching categories:', err);
-                setError('Не удалось загрузить категории');
+                console.error('Error fetching data:', err);
+                setError('Произошла ошибка при загрузке данных');
+            } finally {
+                setLoading(false);
             }
         };
-        fetchCategories();
-    }, []);
 
-    // Эффект для обработки фильтров
-    useEffect(() => {
-        const debouncedFetch = debounce(() => fetchListings(filters), 500);
-        debouncedFetch();
-        return () => debouncedFetch.cancel();
-    }, [fetchListings, filters]);
+        fetchData();
+    }, [filters]); // Убираем лишний useEffect и объединяем загрузку данных
 
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
@@ -8667,100 +8815,78 @@ const MarketplacePage = () => {
         }, 0);
     };
 
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" p={4}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+    const renderContent = () => {
+        if (loading) {
+            return (
+                <Box display="flex" justifyContent="center" p={4}>
+                    <CircularProgress />
+                </Box>
+            );
+        }
 
-    if (!loading && listings && listings.length === 0) {
+        if (error) {
+            return (
+                <Alert 
+                    severity="error" 
+                    sx={{ m: 2 }}
+                    action={
+                        <IconButton size="small" onClick={() => setError(null)}>
+                            <X size={16} />
+                        </IconButton>
+                    }
+                >
+                    {error}
+                </Alert>
+            );
+        }
+
+        if (listings.length === 0) {
+            return (
+                <Alert severity="info" sx={{ m: 2 }}>
+                    По вашему запросу ничего не найдено
+                </Alert>
+            );
+        }
+
         return (
-            <Alert severity="info">
-                По вашему запросу ничего не найдено
-            </Alert>
+            <Grid container spacing={isMobile ? 1 : 3}>
+                {listings.map((listing) => (
+                    <Grid item xs={isMobile ? 6 : 12} sm={6} md={4} key={listing.id}>
+                        <Link
+                            to={`/marketplace/listings/${listing.id}`}
+                            style={{ textDecoration: 'none' }}
+                        >
+                            {isMobile ? (
+                                <MobileListingCard listing={listing} />
+                            ) : (
+                                <ListingCard listing={listing} />
+                            )}
+                        </Link>
+                    </Grid>
+                ))}
+            </Grid>
         );
-    }
+    };
+
     if (isMobile) {
         return (
-            <Box sx={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
+            <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
                 <MobileHeader
                     onOpenFilters={() => setIsFilterOpen(true)}
                     filtersCount={getActiveFiltersCount()}
                 />
 
-                {error && (
-                    <Alert
-                        severity="error"
-                        sx={{ mx: 2, my: 1 }}
-                        action={
-                            <IconButton
+                <Box sx={{ flex: 1, p: 1, bgcolor: 'grey.50' }}>
+                    {filters.category_id && (
+                        <Box sx={{ px: 1, mb: 1 }}>
+                            <Chip
+                                label={categories.find(c => c.id === filters.category_id)?.name}
+                                onDelete={() => handleFilterChange({ category_id: '' })}
                                 size="small"
-                                onClick={() => setError(null)}
-                            >
-                                <X size={16} />
-                            </IconButton>
-                        }
-                    >
-                        {error}
-                    </Alert>
-                )}
-
-                <Box sx={{
-                    flex: 1,
-                    p: 1,
-                    bgcolor: 'grey.50'
-                }}>
-                    {loading ? (
-                        <Box display="flex" justifyContent="center" p={4}>
-                            <CircularProgress />
+                            />
                         </Box>
-                    ) : (
-                        <>
-                            {filters.category_id && (
-                                <Box sx={{ px: 1, mb: 1 }}>
-                                    <Chip
-                                        label={categories.find(c => c.id === filters.category_id)?.name}
-                                        onDelete={() => handleFilterChange({ category_id: '' })}
-                                        size="small"
-                                    />
-                                </Box>
-                            )}
-
-                            <Grid container spacing={1}>
-                                {listings.map((listing) => (
-                                    <Grid item xs={6} key={listing.id}>
-                                        <Link
-                                            to={`/marketplace/listings/${listing.id}`}
-                                            style={{ textDecoration: 'none' }}
-                                        >
-                                            <MobileListingCard listing={listing} />
-                                        </Link>
-                                    </Grid>
-                                ))}
-                                {listings.length === 0 && !loading && (
-                                    <Grid item xs={12}>
-                                        <Box
-                                            sx={{
-                                                textAlign: 'center',
-                                                py: 4,
-                                                color: 'text.secondary'
-                                            }}
-                                        >
-                                            <Typography variant="body2">
-                                                По вашему запросу ничего не найдено
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                )}
-                            </Grid>
-                        </>
                     )}
+                    {renderContent()}
                 </Box>
 
                 <MobileFilters
@@ -8794,7 +8920,6 @@ const MarketplacePage = () => {
         );
     }
 
-    // Десктопная версия
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -8810,13 +8935,6 @@ const MarketplacePage = () => {
                 </Button>
             </Box>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
-
-            {/* Оборачиваем всё в контейнер Grid */}
             <Grid container spacing={3}>
                 <Grid item xs={12} md={3}>
                     <CompactMarketplaceFilters
@@ -8828,31 +8946,7 @@ const MarketplacePage = () => {
                     />
                 </Grid>
                 <Grid item xs={12} md={9}>
-                    {loading ? (
-                        <Box display="flex" justifyContent="center" p={4}>
-                            <CircularProgress />
-                        </Box>
-                    ) : (
-                        <Grid container spacing={3}>
-                            {listings.map((listing) => (
-                                <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                                    <Link
-                                        to={`/marketplace/listings/${listing.id}`}
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                        <ListingCard listing={listing} />
-                                    </Link>
-                                </Grid>
-                            ))}
-                            {listings.length === 0 && !loading && (
-                                <Grid item xs={12}>
-                                    <Alert severity="info">
-                                        По вашему запросу ничего не найдено
-                                    </Alert>
-                                </Grid>
-                            )}
-                        </Grid>
-                    )}
+                    {renderContent()}
                 </Grid>
             </Grid>
         </Container>
@@ -9726,6 +9820,7 @@ const CreateListing = () => {
 export default CreateListing;
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/pages/marketplace/ChatPage.js ===
 
+// frontend/hostel-frontend/src/pages/marketplace/ChatPage.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -9754,17 +9849,13 @@ const ChatPage = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-    const [chats, setChats] = useState([]);
-
+    const [chats, setChats] = useState([]);  // Инициализируем пустым массивом вместо null
     const [selectedChat, setSelectedChat] = useState(null);
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState([]); // Инициализируем пустым массивом
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // Используем useRef для хранения экземпляра ChatService
     const chatServiceRef = useRef(null);
 
-    // Инициализация ChatService
     useEffect(() => {
         if (!user?.id) {
             setError('Необходима авторизация');
@@ -9773,11 +9864,31 @@ const ChatPage = () => {
         }
 
         chatServiceRef.current = new ChatService(user.id);
-
+        
         const initChat = async () => {
             try {
                 await fetchChats();
                 chatServiceRef.current.connect();
+
+                const messageHandler = chatServiceRef.current.onMessage((message) => {
+                    if (message.error) {
+                        console.error('Ошибка сообщения:', message.error);
+                        return;
+                    }
+                    
+                    setMessages(prev => {
+                        // Проверяем, нет ли уже такого сообщения
+                        if (prev.some(m => m.id === message.id)) {
+                            return prev;
+                        }
+                        // Добавляем новое сообщение и сортируем по дате
+                        return [...prev, message].sort((a, b) =>
+                            new Date(a.created_at) - new Date(b.created_at)
+                        );
+                    });
+                });
+
+                return () => messageHandler(); // Отписываемся при размонтировании
             } catch (error) {
                 console.error('Error initializing chat:', error);
                 setError('Ошибка при инициализации чата');
@@ -9797,11 +9908,11 @@ const ChatPage = () => {
     const fetchChats = useCallback(async () => {
         try {
             const response = await axios.get('/api/v1/marketplace/chat');
-            setChats(response.data.data);
+            const chatsData = response.data?.data || [];
+            setChats(chatsData);
 
-            // Если есть listingId в URL, находим соответствующий чат
-            if (listingId) {
-                const chat = response.data.data.find(c => c.listing_id === parseInt(listingId));
+            if (listingId && chatsData.length > 0) {
+                const chat = chatsData.find(c => c.listing_id === parseInt(listingId));
                 if (chat) {
                     setSelectedChat(chat);
                 }
@@ -9817,11 +9928,17 @@ const ChatPage = () => {
     // Загрузка сообщений для выбранного чата
     const fetchMessages = useCallback(async (chatId) => {
         try {
-            // Сообщения теперь запрашиваем через chat_id, а не listing_id
             const response = await axios.get(`/api/v1/marketplace/chat/${chatId}/messages`);
             const messages = response.data?.data || [];
-            console.log('Fetched messages:', messages); // Для отладки
-            setMessages(messages.reverse()); // Переворачиваем сообщения для правильного отображения
+            console.log('Получены сообщения с сервера:', messages);
+            if (Array.isArray(messages)) {
+                setMessages(messages.sort((a, b) =>
+                    new Date(a.created_at) - new Date(b.created_at)
+                ));
+            } else {
+                console.error('Неверный формат данных:', messages);
+                setMessages([]);
+            }
         } catch (error) {
             console.error('Error fetching messages:', error);
             setError('Не удалось загрузить сообщения');
@@ -9844,24 +9961,28 @@ const ChatPage = () => {
     useEffect(() => {
         if (selectedChat && messages.length > 0) {
             const unreadMessages = messages.filter(
-                msg => !msg.is_read && msg.receiver_id === user.id
+                msg => !msg.is_read && msg.receiver_id === user?.id  
             );
-            if (unreadMessages.length > 0) {
+            if (unreadMessages.length > 0 && user?.id) {  
                 const messageIds = unreadMessages.map(msg => msg.id);
                 markMessageAsRead(messageIds);
             }
         }
-    }, [selectedChat, messages, user.id]);
+    }, [selectedChat, messages, user?.id]);  
     useEffect(() => {
         if (selectedChat) {
             fetchMessages(selectedChat.id);
         }
     }, [selectedChat, fetchMessages]);
 
-    // Отправка сообщения через ChatService
     const handleSendMessage = async (content) => {
         if (!chatServiceRef.current) {
             setError('Соединение не установлено');
+            return;
+        }
+
+        if (!selectedChat || !user?.id) {  // Добавляем проверку user?.id
+            setError('Недостаточно данных для отправки сообщения');
             return;
         }
 
@@ -9875,6 +9996,20 @@ const ChatPage = () => {
             };
 
             await chatServiceRef.current.sendMessage(message);
+
+            const newMessage = {
+                ...message,
+                sender_id: user.id,
+                created_at: new Date().toISOString(),
+                is_read: false,
+                sender: {  // Добавляем информацию об отправителе
+                    id: user.id,
+                    name: user.name,
+                    picture_url: user.picture_url
+                }
+            };
+            setMessages(prev => [...prev, newMessage]);
+
         } catch (error) {
             console.error('Error sending message:', error);
             setError('Не удалось отправить сообщение');
@@ -9916,28 +10051,20 @@ const ChatPage = () => {
         );
     }
 
-    // Отображение ошибок
     if (error) {
         return (
-            <Box p={2}>
-                <Alert severity="error" onClose={() => setError(null)}>
-                    {error}
-                </Alert>
-            </Box>
+            <Alert severity="error" sx={{ m: 2 }} onClose={() => setError(null)}>
+                {error}
+            </Alert>
         );
     }
 
-
-    // Мобильная версия
     if (isMobile) {
         return (
             <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
                 {selectedChat ? (
                     <>
-                        <ChatHeader
-                            chat={selectedChat}
-                            onBack={() => setSelectedChat(null)}
-                        />
+                        <ChatHeader chat={selectedChat} onBack={() => setSelectedChat(null)} />
                         <Box sx={{ flex: 1, overflow: 'hidden' }}>
                             <ChatWindow
                                 messages={messages}
@@ -9951,10 +10078,10 @@ const ChatPage = () => {
                         <ChatList
                             chats={chats}
                             selectedChatId={selectedChat?.id}
-                            onSelectChat={setSelectedChat}
+                            onSelectChat={handleSelectChat}
                             onArchiveChat={handleArchiveChat}
                         />
-                        {chats.length === 0 && (
+                        {!loading && chats.length === 0 && (
                             <EmptyState text="У вас пока нет сообщений" />
                         )}
                     </>
@@ -9967,20 +10094,17 @@ const ChatPage = () => {
     return (
         <Container maxWidth="xl" sx={{ py: 4, height: 'calc(100vh - 64px)' }}>
             <Grid container spacing={2} sx={{ height: '100%' }}>
-                {/* Список чатов */}
                 <Grid item xs={12} md={4} sx={{ height: '100%' }}>
                     <ChatList
                         chats={chats}
                         selectedChatId={selectedChat?.id}
-                        onSelectChat={setSelectedChat}
+                        onSelectChat={handleSelectChat}
                         onArchiveChat={handleArchiveChat}
                     />
-                    {chats.length === 0 && (
+                    {!loading && chats.length === 0 && (
                         <EmptyState text="У вас пока нет сообщений" />
                     )}
                 </Grid>
-
-                {/* Окно чата */}
                 <Grid item xs={12} md={8} sx={{ height: '100%' }}>
                     {selectedChat ? (
                         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -10003,6 +10127,7 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
+
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/pages/marketplace/MyListingsPage.js ===
 
 // frontend/hostel-frontend/src/pages/marketplace/MyListingsPage.js

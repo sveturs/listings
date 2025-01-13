@@ -27,13 +27,16 @@ const ChatPage = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-    const [chats, setChats] = useState([]);  // Инициализируем пустым массивом вместо null
+    const [chats, setChats] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
-    const [messages, setMessages] = useState([]); // Инициализируем пустым массивом
+    const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
     const chatServiceRef = useRef(null);
+    const messageEndRef = useRef(null);
 
+    // Инициализация чат-сервиса
     useEffect(() => {
         if (!user?.id) {
             setError('Необходима авторизация');
@@ -43,38 +46,6 @@ const ChatPage = () => {
 
         chatServiceRef.current = new ChatService(user.id);
         
-        const initChat = async () => {
-            try {
-                await fetchChats();
-                chatServiceRef.current.connect();
-
-                const messageHandler = chatServiceRef.current.onMessage((message) => {
-                    if (message.error) {
-                        console.error('Ошибка сообщения:', message.error);
-                        return;
-                    }
-                    
-                    setMessages(prev => {
-                        // Проверяем, нет ли уже такого сообщения
-                        if (prev.some(m => m.id === message.id)) {
-                            return prev;
-                        }
-                        // Добавляем новое сообщение и сортируем по дате
-                        return [...prev, message].sort((a, b) =>
-                            new Date(a.created_at) - new Date(b.created_at)
-                        );
-                    });
-                });
-
-                return () => messageHandler(); // Отписываемся при размонтировании
-            } catch (error) {
-                console.error('Error initializing chat:', error);
-                setError('Ошибка при инициализации чата');
-            }
-        };
-
-        initChat();
-
         return () => {
             if (chatServiceRef.current) {
                 chatServiceRef.current.disconnect();
@@ -89,77 +60,90 @@ const ChatPage = () => {
             const chatsData = response.data?.data || [];
             setChats(chatsData);
 
-            if (listingId && chatsData.length > 0) {
+            // Если есть listingId в URL, выбираем соответствующий чат
+            if (listingId) {
                 const chat = chatsData.find(c => c.listing_id === parseInt(listingId));
                 if (chat) {
                     setSelectedChat(chat);
                 }
             }
         } catch (error) {
-            console.error('Error fetching chats:', error);
+            console.error('Ошибка загрузки чатов:', error);
             setError('Не удалось загрузить список чатов');
         } finally {
             setLoading(false);
         }
     }, [listingId]);
 
-    // Загрузка сообщений для выбранного чата
+    // Загрузка сообщений выбранного чата
     const fetchMessages = useCallback(async (chatId) => {
         try {
-            const response = await axios.get(`/api/v1/marketplace/chat/${chatId}/messages`);
-            const messages = response.data?.data || [];
-            console.log('Получены сообщения с сервера:', messages);
-            if (Array.isArray(messages)) {
-                setMessages(messages.sort((a, b) =>
-                    new Date(a.created_at) - new Date(b.created_at)
-                ));
-            } else {
-                console.error('Неверный формат данных:', messages);
-                setMessages([]);
-            }
+            const messages = await chatServiceRef.current.getMessageHistory(chatId);
+            setMessages(messages.sort((a, b) => 
+                new Date(a.created_at) - new Date(b.created_at)
+            ));
         } catch (error) {
-            console.error('Error fetching messages:', error);
+            console.error('Ошибка загрузки сообщений:', error);
             setError('Не удалось загрузить сообщения');
-            setMessages([]);
         }
     }, []);
 
+    // Обработка выбора чата
     const handleSelectChat = useCallback((chat) => {
         setSelectedChat(chat);
-        if (chatServiceRef.current) {
-            chatServiceRef.current.setCurrentChat(chat.id);
-        }
+        setMessages([]); // Очищаем сообщения перед загрузкой новых
         fetchMessages(chat.id);
     }, [fetchMessages]);
 
+    // Инициализация WebSocket и загрузка данных
+    useEffect(() => {
+        if (chatServiceRef.current) {
+            chatServiceRef.current.connect();
 
+            const unsubscribe = chatServiceRef.current.onMessage((message) => {
+                setMessages(prev => {
+                    // Проверяем, нет ли уже такого сообщения
+                    if (prev.some(m => m.id === message.id)) {
+                        return prev;
+                    }
+                    // Добавляем новое сообщение и сортируем
+                    return [...prev, message].sort((a, b) =>
+                        new Date(a.created_at) - new Date(b.created_at)
+                    );
+                });
+            });
+
+            return () => unsubscribe();
+        }
+    }, []);
+
+    // Загрузка чатов при монтировании
     useEffect(() => {
         fetchChats();
     }, [fetchChats]);
+
+    // Отметка сообщений как прочитанных
     useEffect(() => {
         if (selectedChat && messages.length > 0) {
             const unreadMessages = messages.filter(
-                msg => !msg.is_read && msg.receiver_id === user?.id  
+                msg => !msg.is_read && msg.receiver_id === user?.id
             );
-            if (unreadMessages.length > 0 && user?.id) {  
+            
+            if (unreadMessages.length > 0) {
                 const messageIds = unreadMessages.map(msg => msg.id);
-                markMessageAsRead(messageIds);
+                chatServiceRef.current?.markMessagesAsRead(messageIds);
             }
         }
-    }, [selectedChat, messages, user?.id]);  
+    }, [selectedChat, messages, user?.id]);
+
+    // Прокрутка к последнему сообщению
     useEffect(() => {
-        if (selectedChat) {
-            fetchMessages(selectedChat.id);
-        }
-    }, [selectedChat, fetchMessages]);
+        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
+    // Отправка сообщения
     const handleSendMessage = async (content) => {
-        if (!chatServiceRef.current) {
-            setError('Соединение не установлено');
-            return;
-        }
-
-        if (!selectedChat || !user?.id) {  // Добавляем проверку user?.id
+        if (!selectedChat || !user?.id) {
             setError('Недостаточно данных для отправки сообщения');
             return;
         }
@@ -174,49 +158,23 @@ const ChatPage = () => {
             };
 
             await chatServiceRef.current.sendMessage(message);
-
-            const newMessage = {
-                ...message,
-                sender_id: user.id,
-                created_at: new Date().toISOString(),
-                is_read: false,
-                sender: {  // Добавляем информацию об отправителе
-                    id: user.id,
-                    name: user.name,
-                    picture_url: user.picture_url
-                }
-            };
-            setMessages(prev => [...prev, newMessage]);
-
         } catch (error) {
-            console.error('Error sending message:', error);
+            console.error('Ошибка отправки сообщения:', error);
             setError('Не удалось отправить сообщение');
         }
     };
 
-    const markMessageAsRead = async (messageIds) => {
-        try {
-            await axios.put('/api/v1/marketplace/chat/messages/read', {
-                message_ids: messageIds
-            });
-            setMessages(prev => prev.map(msg =>
-                messageIds.includes(msg.id) ? { ...msg, is_read: true } : msg
-            ));
-        } catch (error) {
-            console.error('Error marking messages as read:', error);
-        }
-    };
-
+    // Архивация чата
     const handleArchiveChat = async (chatId) => {
         try {
             await axios.post(`/api/v1/marketplace/chat/${chatId}/archive`);
-            fetchChats();
+            await fetchChats();
             if (selectedChat?.id === chatId) {
                 setSelectedChat(null);
                 setMessages([]);
             }
         } catch (error) {
-            console.error('Error archiving chat:', error);
+            console.error('Ошибка архивации чата:', error);
             setError('Не удалось архивировать чат');
         }
     };
@@ -229,20 +187,26 @@ const ChatPage = () => {
         );
     }
 
-    if (error) {
+    if (!user) {
         return (
-            <Alert severity="error" sx={{ m: 2 }} onClose={() => setError(null)}>
-                {error}
-            </Alert>
+            <Container maxWidth="md" sx={{ mt: 4 }}>
+                <Alert severity="warning">
+                    Для доступа к чату необходимо авторизоваться
+                </Alert>
+            </Container>
         );
     }
 
+    // Мобильная версия
     if (isMobile) {
         return (
             <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
                 {selectedChat ? (
                     <>
-                        <ChatHeader chat={selectedChat} onBack={() => setSelectedChat(null)} />
+                        <ChatHeader 
+                            chat={selectedChat} 
+                            onBack={() => setSelectedChat(null)} 
+                        />
                         <Box sx={{ flex: 1, overflow: 'hidden' }}>
                             <ChatWindow
                                 messages={messages}
@@ -251,57 +215,76 @@ const ChatPage = () => {
                             />
                         </Box>
                     </>
-                ) : (
-                    <>
-                        <ChatList
-                            chats={chats}
-                            selectedChatId={selectedChat?.id}
-                            onSelectChat={handleSelectChat}
-                            onArchiveChat={handleArchiveChat}
-                        />
-                        {!loading && chats.length === 0 && (
-                            <EmptyState text="У вас пока нет сообщений" />
-                        )}
-                    </>
-                )}
-            </Box>
-        );
-    }
+) : (
+    <>
+        <ChatList
+            chats={chats}
+            selectedChatId={selectedChat?.id}
+            onSelectChat={handleSelectChat}
+            onArchiveChat={handleArchiveChat}
+        />
+        {!loading && chats.length === 0 && (
+            <EmptyState text="У вас пока нет сообщений" />
+        )}
+    </>
+)}
+</Box>
+);
+}
 
-    // Десктопная версия
-    return (
-        <Container maxWidth="xl" sx={{ py: 4, height: 'calc(100vh - 64px)' }}>
-            <Grid container spacing={2} sx={{ height: '100%' }}>
-                <Grid item xs={12} md={4} sx={{ height: '100%' }}>
-                    <ChatList
-                        chats={chats}
-                        selectedChatId={selectedChat?.id}
-                        onSelectChat={handleSelectChat}
-                        onArchiveChat={handleArchiveChat}
-                    />
-                    {!loading && chats.length === 0 && (
-                        <EmptyState text="У вас пока нет сообщений" />
-                    )}
-                </Grid>
-                <Grid item xs={12} md={8} sx={{ height: '100%' }}>
-                    {selectedChat ? (
-                        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <ChatHeader chat={selectedChat} />
-                            <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                                <ChatWindow
-                                    messages={messages}
-                                    onSendMessage={handleSendMessage}
-                                    currentUser={user}
-                                />
-                            </Box>
-                        </Box>
-                    ) : (
-                        <EmptyState text="Выберите чат для начала общения" />
-                    )}
-                </Grid>
-            </Grid>
-        </Container>
-    );
+// Десктопная версия
+return (
+<Container maxWidth="xl" sx={{ py: 4, height: 'calc(100vh - 64px)' }}>
+<Grid container spacing={2} sx={{ height: '100%' }}>
+{/* Список чатов */}
+<Grid item xs={12} md={4} sx={{ height: '100%' }}>
+    <ChatList
+        chats={chats}
+        selectedChatId={selectedChat?.id}
+        onSelectChat={handleSelectChat}
+        onArchiveChat={handleArchiveChat}
+    />
+    {!loading && chats.length === 0 && (
+        <EmptyState text="У вас пока нет сообщений" />
+    )}
+</Grid>
+
+{/* Окно чата */}
+<Grid item xs={12} md={8} sx={{ height: '100%' }}>
+    {selectedChat ? (
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <ChatHeader chat={selectedChat} />
+            <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                <ChatWindow
+                    messages={messages}
+                    onSendMessage={handleSendMessage}
+                    currentUser={user}
+                />
+                <div ref={messageEndRef} />
+            </Box>
+        </Box>
+    ) : (
+        <EmptyState text="Выберите чат для начала общения" />
+    )}
+</Grid>
+</Grid>
+
+{error && (
+<Alert 
+    severity="error" 
+    sx={{ 
+        position: 'fixed', 
+        bottom: 16, 
+        right: 16, 
+        maxWidth: 'calc(100% - 32px)' 
+    }}
+    onClose={() => setError(null)}
+>
+    {error}
+</Alert>
+)}
+</Container>
+);
 };
 
 export default ChatPage;

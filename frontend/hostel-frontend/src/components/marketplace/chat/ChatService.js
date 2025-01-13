@@ -1,5 +1,4 @@
-// frontend/hostel-frontend/src/components/marketplace/chat/ChatService.js
-import axios from '../../../api/axios'; 
+import axios from '../../../api/axios';
 class ChatService {
     constructor(userId) {
         this.userId = userId;
@@ -7,27 +6,27 @@ class ChatService {
         this.messageHandlers = new Set();
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
-        this.backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+        this.reconnectTimeout = null;
         this.isConnecting = false;
     }
 
-    connect() {
-        if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) return;
+    async connect() {
+        if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) {
+            console.log('WebSocket уже подключен или подключается');
+            return;
+        }
 
         this.isConnecting = true;
 
-        let wsUrl;
-        if (process.env.NODE_ENV === 'development') {
-            wsUrl = 'ws://localhost:3000/ws/chat';
-        } else {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = window.location.host;
-            wsUrl = `${protocol}//${host}/ws/chat`;
-        }
-
-        console.log('Connecting to WebSocket:', wsUrl);
-
         try {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = process.env.NODE_ENV === 'development' ? 
+                'localhost:3000' : 
+                window.location.host;
+            
+            const wsUrl = `${protocol}//${host}/ws/chat`;
+            console.log('Подключение к WebSocket:', wsUrl);
+
             this.ws = new WebSocket(wsUrl);
 
             this.ws.onopen = () => {
@@ -35,34 +34,29 @@ class ChatService {
                 this.isConnecting = false;
                 this.reconnectAttempts = 0;
 
-                // Небольшая задержка перед отправкой авторизации
-                setTimeout(() => {
-                    if (this.ws?.readyState === WebSocket.OPEN) {
-                        this.ws.send(JSON.stringify({
-                            type: 'auth',
-                            user_id: this.userId
-                        }));
-                    }
-                }, 100);
+                this.ws.send(JSON.stringify({
+                    type: 'auth',
+                    user_id: this.userId
+                }));
             };
 
             this.ws.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
+                    if (message.error) {
+                        console.error('Ошибка WebSocket:', message.error);
+                        return;
+                    }
                     this.messageHandlers.forEach(handler => handler(message));
                 } catch (error) {
-                    console.error('Ошибка при обработке сообщения:', error);
+                    console.error('Ошибка обработки сообщения:', error);
                 }
             };
 
-            this.ws.onclose = () => {
-                console.log('WebSocket соединение закрыто');
+            this.ws.onclose = (event) => {
+                console.log('WebSocket соединение закрыто:', event.code, event.reason);
                 this.isConnecting = false;
-                if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-                    setTimeout(() => this.connect(), delay);
-                    this.reconnectAttempts++;
-                }
+                this.handleReconnect();
             };
 
             this.ws.onerror = (error) => {
@@ -73,74 +67,88 @@ class ChatService {
         } catch (error) {
             console.error('Ошибка при создании WebSocket:', error);
             this.isConnecting = false;
+            this.handleReconnect();
         }
     }
 
+    handleReconnect() {
+        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.log('Достигнуто максимальное количество попыток переподключения');
+            return;
+        }
+
+        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+        console.log(`Попытка переподключения через ${delay}мс`);
+
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = setTimeout(() => {
+            this.reconnectAttempts++;
+            this.connect();
+        }, delay);
+    }
+
     disconnect() {
+        clearTimeout(this.reconnectTimeout);
         this.isConnecting = false;
+        this.reconnectAttempts = this.maxReconnectAttempts; // Предотвращаем автоматическое переподключение
+        
         if (this.ws) {
             this.ws.close();
             this.ws = null;
         }
     }
 
-
-    setCurrentChat(chatId) {
-        this.currentChatId = chatId;
-        if (this.ws?.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({
-                type: 'get_messages',
-                chat_id: chatId
-            }));
-        }
-    }
- 
-    async sendMessageHTTP(message) {
-        try {
-            const response = await axios.post('/api/v1/marketplace/chat/messages', message, {
-                withCredentials: true
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Error sending message via HTTP:', error);
-            throw error;
-        }
-    }
     async sendMessage(message) {
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-            try {
-                this.connect();
-                // Ждем подключения
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
-                    const checkConnection = setInterval(() => {
-                        if (this.ws?.readyState === WebSocket.OPEN) {
-                            clearTimeout(timeout);
-                            clearInterval(checkConnection);
-                            resolve();
-                        }
-                    }, 100);
-                });
-            } catch (error) {
-                console.error('WebSocket connection failed:', error);
-                return this.sendMessageHTTP(message);
-            }
-        }
-    
         try {
-            this.ws.send(JSON.stringify({
-                type: 'message',
-                ...message
-            }));
+            // Пробуем отправить через WebSocket
+            if (this.ws?.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify({
+                    type: 'message',
+                    ...message
+                }));
+                return;
+            }
+
+            // Если WebSocket недоступен, отправляем через HTTP
+            console.log('WebSocket недоступен, отправка через HTTP');
+            const response = await axios.post('/api/v1/marketplace/chat/messages', message);
+            
+            // После успешной отправки через HTTP пробуем переподключить WebSocket
+            if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                this.connect();
+            }
+            
+            return response.data;
+
         } catch (error) {
-            console.error('WebSocket send failed:', error);
-            return this.sendMessageHTTP(message);
+            console.error('Ошибка отправки сообщения:', error);
+            throw error;
         }
     }
 
     onMessage(handler) {
         this.messageHandlers.add(handler);
         return () => this.messageHandlers.delete(handler);
+    }
+
+    async getMessageHistory(chatId) {
+        try {
+            const response = await axios.get(`/api/v1/marketplace/chat/${chatId}/messages`);
+            return Array.isArray(response.data?.data) ? response.data.data : [];
+        } catch (error) {
+            console.error('Ошибка получения истории сообщений:', error);
+            return [];
+        }
+    }
+
+    async markMessagesAsRead(messageIds) {
+        try {
+            await axios.put('/api/v1/marketplace/chat/messages/read', {
+                message_ids: messageIds
+            });
+        } catch (error) {
+            console.error('Ошибка отметки сообщений как прочитанных:', error);
+        }
     }
 }
 
