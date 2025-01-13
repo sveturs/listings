@@ -6856,8 +6856,7 @@ export const EmptyState = ({ text }) => (
 );
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/components/marketplace/chat/ChatService.js ===
 
-// frontend/hostel-frontend/src/components/marketplace/chat/ChatService.js
-import axios from '../../../api/axios'; 
+import axios from '../../../api/axios';
 class ChatService {
     constructor(userId) {
         this.userId = userId;
@@ -6865,140 +6864,194 @@ class ChatService {
         this.messageHandlers = new Set();
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
-        this.backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+        this.reconnectTimeout = null;
         this.isConnecting = false;
     }
 
-    connect() {
-        if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) return;
-
-        this.isConnecting = true;
-
-        let wsUrl;
-        if (process.env.NODE_ENV === 'development') {
-            wsUrl = 'ws://localhost:3000/ws/chat';
-        } else {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = window.location.host;
-            wsUrl = `${protocol}//${host}/ws/chat`;
+    async connect() {
+        if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) {
+            console.log('WebSocket уже подключен или подключается');
+            return;
         }
-
-        console.log('Connecting to WebSocket:', wsUrl);
-
+    
+        this.isConnecting = true;
+    
         try {
+            // Сначала проверяем авторизацию через HTTP
+            try {
+                await axios.get('/api/v1/users/me');
+            } catch (error) {
+                console.error('Ошибка проверки авторизации:', error);
+                this.isConnecting = false;
+                return;
+            }
+    
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = process.env.NODE_ENV === 'development' ? 
+                'localhost:3000' : 
+                window.location.host;
+            
+            const wsUrl = `${protocol}//${host}/ws/chat`;
+            console.log('Подключение к WebSocket:', wsUrl);
+    
             this.ws = new WebSocket(wsUrl);
-
+    
             this.ws.onopen = () => {
                 console.log('WebSocket соединение установлено');
                 this.isConnecting = false;
                 this.reconnectAttempts = 0;
-
-                // Небольшая задержка перед отправкой авторизации
-                setTimeout(() => {
-                    if (this.ws?.readyState === WebSocket.OPEN) {
-                        this.ws.send(JSON.stringify({
-                            type: 'auth',
-                            user_id: this.userId
-                        }));
-                    }
-                }, 100);
+    
+                // Отправляем авторизационные данные
+                this.ws.send(JSON.stringify({
+                    type: 'auth',
+                    user_id: this.userId
+                }));
             };
-
+    
             this.ws.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
+                    if (message.error) {
+                        console.error('Ошибка WebSocket:', message.error);
+                        return;
+                    }
+                    if (message.type === 'auth_success') {
+                        console.log('WebSocket авторизация успешна');
+                        return;
+                    }
                     this.messageHandlers.forEach(handler => handler(message));
                 } catch (error) {
-                    console.error('Ошибка при обработке сообщения:', error);
+                    console.error('Ошибка обработки сообщения:', error);
                 }
             };
-
-            this.ws.onclose = () => {
-                console.log('WebSocket соединение закрыто');
+    
+            this.ws.onclose = (event) => {
+                console.log('WebSocket соединение закрыто:', event.code, event.reason);
                 this.isConnecting = false;
-                if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-                    setTimeout(() => this.connect(), delay);
-                    this.reconnectAttempts++;
-                }
+                this.handleReconnect();
             };
-
+    
             this.ws.onerror = (error) => {
                 console.error('WebSocket ошибка:', error);
                 this.isConnecting = false;
             };
-
+    
         } catch (error) {
             console.error('Ошибка при создании WebSocket:', error);
             this.isConnecting = false;
+            this.handleReconnect();
         }
     }
 
+    handleReconnect() {
+        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.log('Достигнуто максимальное количество попыток переподключения');
+            return;
+        }
+
+        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+        console.log(`Попытка переподключения через ${delay}мс`);
+
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = setTimeout(() => {
+            this.reconnectAttempts++;
+            this.connect();
+        }, delay);
+    }
+
     disconnect() {
+        clearTimeout(this.reconnectTimeout);
         this.isConnecting = false;
+        this.reconnectAttempts = this.maxReconnectAttempts; // Предотвращаем автоматическое переподключение
+        
         if (this.ws) {
             this.ws.close();
             this.ws = null;
         }
     }
 
-
-    setCurrentChat(chatId) {
-        this.currentChatId = chatId;
-        if (this.ws?.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({
-                type: 'get_messages',
-                chat_id: chatId
-            }));
-        }
-    }
- 
-    async sendMessageHTTP(message) {
-        try {
-            const response = await axios.post('/api/v1/marketplace/chat/messages', message, {
-                withCredentials: true
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Error sending message via HTTP:', error);
-            throw error;
-        }
-    }
     async sendMessage(message) {
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-            try {
-                this.connect();
-                // Ждем подключения
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
-                    const checkConnection = setInterval(() => {
-                        if (this.ws?.readyState === WebSocket.OPEN) {
-                            clearTimeout(timeout);
-                            clearInterval(checkConnection);
-                            resolve();
-                        }
-                    }, 100);
-                });
-            } catch (error) {
-                console.error('WebSocket connection failed:', error);
-                return this.sendMessageHTTP(message);
-            }
-        }
-    
         try {
-            this.ws.send(JSON.stringify({
-                type: 'message',
-                ...message
-            }));
+            // Пробуем отправить через WebSocket
+            if (this.ws?.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify({
+                    type: 'message',
+                    ...message
+                }));
+                return;
+            }
+
+            // Если WebSocket недоступен, отправляем через HTTP
+            console.log('WebSocket недоступен, отправка через HTTP');
+            const response = await axios.post('/api/v1/marketplace/chat/messages', message);
+            
+            // После успешной отправки через HTTP пробуем переподключить WebSocket
+            if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                this.connect();
+            }
+            
+            return response.data;
+
         } catch (error) {
-            console.error('WebSocket send failed:', error);
-            return this.sendMessageHTTP(message);
+            console.error('Ошибка отправки сообщения:', error);
+            throw error;
         }
     }
 
     onMessage(handler) {
         this.messageHandlers.add(handler);
         return () => this.messageHandlers.delete(handler);
+    }
+
+    async getMessageHistory(chatId) {
+        try {
+            console.log('Загрузка сообщений для чата:', chatId);
+            // Изменен путь запроса, убран лишний /chat/
+            const response = await axios.get(`/api/v1/marketplace/chat/messages`, {
+                params: {
+                    listing_id: chatId, // Изменяем параметр на listing_id
+                    limit: 100,
+                    offset: 0
+                }
+            });
+                
+            console.log('Получены сообщения:', response.data);
+                
+            if (response.data?.data) {
+                let messages = response.data.data;
+                if (!Array.isArray(messages)) {
+                    console.warn('Ответ сервера не является массивом:', messages);
+                    messages = [];
+                }
+    
+                return messages.map(message => ({
+                    ...message,
+                    sender: message.sender || {},
+                    receiver: message.receiver || {},
+                    is_read: message.is_read || false,
+                    created_at: message.created_at || new Date().toISOString()
+                })).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            }
+                
+            console.warn('Нет данных в ответе сервера:', response.data);
+            return [];
+        } catch (error) {
+            console.error('Ошибка получения истории сообщений:', error);
+            if (error.response) {
+                console.error('Ответ сервера:', error.response.data);
+            }
+            return [];
+        }
+    }
+
+    async markMessagesAsRead(messageIds) {
+        try {
+            await axios.put('/api/v1/marketplace/chat/messages/read', {
+                message_ids: messageIds
+            });
+        } catch (error) {
+            console.error('Ошибка отметки сообщений как прочитанных:', error);
+        }
     }
 }
 
@@ -9849,13 +9902,16 @@ const ChatPage = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-    const [chats, setChats] = useState([]);  // Инициализируем пустым массивом вместо null
+    const [chats, setChats] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
-    const [messages, setMessages] = useState([]); // Инициализируем пустым массивом
+    const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const chatServiceRef = useRef(null);
 
+    const chatServiceRef = useRef(null);
+    const messageEndRef = useRef(null);
+
+    // Инициализация чат-сервиса
     useEffect(() => {
         if (!user?.id) {
             setError('Необходима авторизация');
@@ -9864,38 +9920,6 @@ const ChatPage = () => {
         }
 
         chatServiceRef.current = new ChatService(user.id);
-        
-        const initChat = async () => {
-            try {
-                await fetchChats();
-                chatServiceRef.current.connect();
-
-                const messageHandler = chatServiceRef.current.onMessage((message) => {
-                    if (message.error) {
-                        console.error('Ошибка сообщения:', message.error);
-                        return;
-                    }
-                    
-                    setMessages(prev => {
-                        // Проверяем, нет ли уже такого сообщения
-                        if (prev.some(m => m.id === message.id)) {
-                            return prev;
-                        }
-                        // Добавляем новое сообщение и сортируем по дате
-                        return [...prev, message].sort((a, b) =>
-                            new Date(a.created_at) - new Date(b.created_at)
-                        );
-                    });
-                });
-
-                return () => messageHandler(); // Отписываемся при размонтировании
-            } catch (error) {
-                console.error('Error initializing chat:', error);
-                setError('Ошибка при инициализации чата');
-            }
-        };
-
-        initChat();
 
         return () => {
             if (chatServiceRef.current) {
@@ -9911,77 +9935,139 @@ const ChatPage = () => {
             const chatsData = response.data?.data || [];
             setChats(chatsData);
 
-            if (listingId && chatsData.length > 0) {
+            // Если есть listingId в URL, выбираем соответствующий чат
+            if (listingId) {
                 const chat = chatsData.find(c => c.listing_id === parseInt(listingId));
                 if (chat) {
                     setSelectedChat(chat);
                 }
             }
         } catch (error) {
-            console.error('Error fetching chats:', error);
+            console.error('Ошибка загрузки чатов:', error);
             setError('Не удалось загрузить список чатов');
         } finally {
             setLoading(false);
         }
     }, [listingId]);
 
-    // Загрузка сообщений для выбранного чата
+    // Загрузка сообщений выбранного чата
     const fetchMessages = useCallback(async (chatId) => {
+        if (!chatServiceRef.current) {
+            throw new Error('ChatService не инициализирован');
+        }
+
         try {
-            const response = await axios.get(`/api/v1/marketplace/chat/${chatId}/messages`);
-            const messages = response.data?.data || [];
-            console.log('Получены сообщения с сервера:', messages);
-            if (Array.isArray(messages)) {
-                setMessages(messages.sort((a, b) =>
-                    new Date(a.created_at) - new Date(b.created_at)
-                ));
-            } else {
-                console.error('Неверный формат данных:', messages);
-                setMessages([]);
-            }
+            const messages = await chatServiceRef.current.getMessageHistory(chatId);
+            return messages;
         } catch (error) {
-            console.error('Error fetching messages:', error);
-            setError('Не удалось загрузить сообщения');
-            setMessages([]);
+            console.error('Ошибка загрузки сообщений:', error);
+            throw error;
         }
     }, []);
 
+    // Обработка выбора чата
     const handleSelectChat = useCallback((chat) => {
+        console.log('Выбран чат:', chat);
         setSelectedChat(chat);
-        if (chatServiceRef.current) {
-            chatServiceRef.current.setCurrentChat(chat.id);
+        if (chat?.id) {
+            setLoading(true);
+            setMessages([]);
+
+            fetchMessages(chat.id)
+                .then(messages => {
+                    console.log('Загружены сообщения:', messages);
+                    if (Array.isArray(messages)) {
+                        setMessages(messages);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки сообщений:', error);
+                    setError('Не удалось загрузить сообщения');
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
         }
-        fetchMessages(chat.id);
     }, [fetchMessages]);
 
+    // Инициализация WebSocket и загрузка данных
+    useEffect(() => {
+        if (chatServiceRef.current) {
+            chatServiceRef.current.connect();
 
+            const unsubscribe = chatServiceRef.current.onMessage((message) => {
+                console.log('Получено новое сообщение:', message);
+
+                // Проверяем, относится ли сообщение к текущему чату
+                if (selectedChat && message.chat_id === selectedChat.id) {
+                    setMessages(prev => {
+                        // Проверяем наличие дубликата
+                        if (prev.some(m => m.id === message.id)) {
+                            return prev;
+                        }
+
+                        // Добавляем новое сообщение и сортируем
+                        const updatedMessages = [...prev, {
+                            ...message,
+                            sender: message.sender || {},
+                            receiver: message.receiver || {},
+                            is_read: message.is_read || false,
+                            created_at: message.created_at || new Date().toISOString()
+                        }];
+
+                        return updatedMessages.sort((a, b) =>
+                            new Date(a.created_at) - new Date(b.created_at)
+                        );
+                    });
+                }
+            });
+
+            return () => unsubscribe();
+        }
+    }, [selectedChat]);
+
+    // Загрузка чатов при монтировании
     useEffect(() => {
         fetchChats();
     }, [fetchChats]);
     useEffect(() => {
+        if (selectedChat?.id && messages.length === 0) {
+            console.log('Начальная загрузка сообщений для чата:', selectedChat.id);
+            fetchMessages(selectedChat.id)
+                .then(loadedMessages => {
+                    console.log('Загружены начальные сообщения:', loadedMessages);
+                    if (Array.isArray(loadedMessages)) {
+                        setMessages(loadedMessages);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка начальной загрузки сообщений:', error);
+                    setError('Не удалось загрузить сообщения');
+                });
+        }
+    }, [selectedChat?.id, fetchMessages]);
+    // Отметка сообщений как прочитанных
+    useEffect(() => {
         if (selectedChat && messages.length > 0) {
             const unreadMessages = messages.filter(
-                msg => !msg.is_read && msg.receiver_id === user?.id  
+                msg => !msg.is_read && msg.receiver_id === user?.id
             );
-            if (unreadMessages.length > 0 && user?.id) {  
+
+            if (unreadMessages.length > 0) {
                 const messageIds = unreadMessages.map(msg => msg.id);
-                markMessageAsRead(messageIds);
+                chatServiceRef.current?.markMessagesAsRead(messageIds);
             }
         }
-    }, [selectedChat, messages, user?.id]);  
+    }, [selectedChat, messages, user?.id]);
+
+    // Прокрутка к последнему сообщению
     useEffect(() => {
-        if (selectedChat) {
-            fetchMessages(selectedChat.id);
-        }
-    }, [selectedChat, fetchMessages]);
+        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
+    // Отправка сообщения
     const handleSendMessage = async (content) => {
-        if (!chatServiceRef.current) {
-            setError('Соединение не установлено');
-            return;
-        }
-
-        if (!selectedChat || !user?.id) {  // Добавляем проверку user?.id
+        if (!selectedChat || !user?.id) {
             setError('Недостаточно данных для отправки сообщения');
             return;
         }
@@ -9996,49 +10082,23 @@ const ChatPage = () => {
             };
 
             await chatServiceRef.current.sendMessage(message);
-
-            const newMessage = {
-                ...message,
-                sender_id: user.id,
-                created_at: new Date().toISOString(),
-                is_read: false,
-                sender: {  // Добавляем информацию об отправителе
-                    id: user.id,
-                    name: user.name,
-                    picture_url: user.picture_url
-                }
-            };
-            setMessages(prev => [...prev, newMessage]);
-
         } catch (error) {
-            console.error('Error sending message:', error);
+            console.error('Ошибка отправки сообщения:', error);
             setError('Не удалось отправить сообщение');
         }
     };
 
-    const markMessageAsRead = async (messageIds) => {
-        try {
-            await axios.put('/api/v1/marketplace/chat/messages/read', {
-                message_ids: messageIds
-            });
-            setMessages(prev => prev.map(msg =>
-                messageIds.includes(msg.id) ? { ...msg, is_read: true } : msg
-            ));
-        } catch (error) {
-            console.error('Error marking messages as read:', error);
-        }
-    };
-
+    // Архивация чата
     const handleArchiveChat = async (chatId) => {
         try {
             await axios.post(`/api/v1/marketplace/chat/${chatId}/archive`);
-            fetchChats();
+            await fetchChats();
             if (selectedChat?.id === chatId) {
                 setSelectedChat(null);
                 setMessages([]);
             }
         } catch (error) {
-            console.error('Error archiving chat:', error);
+            console.error('Ошибка архивации чата:', error);
             setError('Не удалось архивировать чат');
         }
     };
@@ -10051,20 +10111,26 @@ const ChatPage = () => {
         );
     }
 
-    if (error) {
+    if (!user) {
         return (
-            <Alert severity="error" sx={{ m: 2 }} onClose={() => setError(null)}>
-                {error}
-            </Alert>
+            <Container maxWidth="md" sx={{ mt: 4 }}>
+                <Alert severity="warning">
+                    Для доступа к чату необходимо авторизоваться
+                </Alert>
+            </Container>
         );
     }
 
+    // Мобильная версия
     if (isMobile) {
         return (
             <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
                 {selectedChat ? (
                     <>
-                        <ChatHeader chat={selectedChat} onBack={() => setSelectedChat(null)} />
+                        <ChatHeader
+                            chat={selectedChat}
+                            onBack={() => setSelectedChat(null)}
+                        />
                         <Box sx={{ flex: 1, overflow: 'hidden' }}>
                             <ChatWindow
                                 messages={messages}
@@ -10094,6 +10160,7 @@ const ChatPage = () => {
     return (
         <Container maxWidth="xl" sx={{ py: 4, height: 'calc(100vh - 64px)' }}>
             <Grid container spacing={2} sx={{ height: '100%' }}>
+                {/* Список чатов */}
                 <Grid item xs={12} md={4} sx={{ height: '100%' }}>
                     <ChatList
                         chats={chats}
@@ -10105,6 +10172,8 @@ const ChatPage = () => {
                         <EmptyState text="У вас пока нет сообщений" />
                     )}
                 </Grid>
+
+                {/* Окно чата */}
                 <Grid item xs={12} md={8} sx={{ height: '100%' }}>
                     {selectedChat ? (
                         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -10115,6 +10184,7 @@ const ChatPage = () => {
                                     onSendMessage={handleSendMessage}
                                     currentUser={user}
                                 />
+                                <div ref={messageEndRef} />
                             </Box>
                         </Box>
                     ) : (
@@ -10122,12 +10192,26 @@ const ChatPage = () => {
                     )}
                 </Grid>
             </Grid>
+
+            {error && (
+                <Alert
+                    severity="error"
+                    sx={{
+                        position: 'fixed',
+                        bottom: 16,
+                        right: 16,
+                        maxWidth: 'calc(100% - 32px)'
+                    }}
+                    onClose={() => setError(null)}
+                >
+                    {error}
+                </Alert>
+            )}
         </Container>
     );
 };
 
 export default ChatPage;
-
 === /data/proj/hostel-booking-system/frontend/hostel-frontend/src/pages/marketplace/MyListingsPage.js ===
 
 // frontend/hostel-frontend/src/pages/marketplace/MyListingsPage.js
@@ -12488,6 +12572,9 @@ PORT=3000
       "react-app",
       "react-app/jest"
     ]
+  },
+  "compilerOptions": {
+    "baseUrl": "src"
   },
   "browserslist": {
     "production": [
