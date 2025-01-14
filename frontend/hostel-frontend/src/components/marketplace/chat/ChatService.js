@@ -130,19 +130,30 @@ class ChatService {
     }
 
     async getMessageHistory(chatId, listingId) {
+        if (!chatId || !listingId) {
+            console.error('Отсутствует chatId или listingId:', { chatId, listingId });
+            return [];
+        }
+    
         try {
-            console.log('Загрузка сообщений для листинга:', listingId);
-            const response = await axios.get(`/api/v1/marketplace/chat/${listingId}/messages`); // listing_id в URL пути
-
-            console.log('Получены сообщения:', response.data);
-
-            if (response.data?.data) {
-                const messages = response.data.data;
-                return messages.sort((a, b) =>
-                    new Date(a.created_at) - new Date(b.created_at)
-                );
+            // Добавляем retry логику
+            let attempts = 3;
+            while (attempts > 0) {
+                try {
+                    const response = await axios.get(`/api/v1/marketplace/chat/${listingId}/messages`);
+                    
+                    if (response.data?.data) {
+                        return response.data.data.sort((a, b) =>
+                            new Date(a.created_at) - new Date(b.created_at)
+                        );
+                    }
+                    break;
+                } catch (error) {
+                    attempts--;
+                    if (attempts === 0) throw error;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
             }
-
             return [];
         } catch (error) {
             console.error('Ошибка получения истории сообщений:', error);

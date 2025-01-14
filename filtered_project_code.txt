@@ -6868,80 +6868,64 @@ class ChatService {
         this.isConnecting = false;
     }
 
-    async connect() {
+    connect() {
         if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) {
             console.log('WebSocket уже подключен или подключается');
             return;
         }
-    
+
         this.isConnecting = true;
-    
+
         try {
-            // Сначала проверяем авторизацию через HTTP
-            try {
-                await axios.get('/api/v1/users/me');
-            } catch (error) {
-                console.error('Ошибка проверки авторизации:', error);
-                this.isConnecting = false;
-                return;
-            }
-    
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = process.env.NODE_ENV === 'development' ? 
-                'localhost:3000' : 
+            const host = process.env.NODE_ENV === 'development' ?
+                'localhost:3000' :
                 window.location.host;
-            
+
             const wsUrl = `${protocol}//${host}/ws/chat`;
-            console.log('Подключение к WebSocket:', wsUrl);
-    
+
+            // Создаем WebSocket без дополнительных заголовков
             this.ws = new WebSocket(wsUrl);
-    
+
             this.ws.onopen = () => {
                 console.log('WebSocket соединение установлено');
                 this.isConnecting = false;
                 this.reconnectAttempts = 0;
-    
-                // Отправляем авторизационные данные
+
+                // После установки соединения отправляем авторизационные данные
                 this.ws.send(JSON.stringify({
                     type: 'auth',
                     user_id: this.userId
                 }));
             };
-    
+
             this.ws.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
-                    if (message.error) {
-                        console.error('Ошибка WebSocket:', message.error);
-                        return;
-                    }
-                    if (message.type === 'auth_success') {
-                        console.log('WebSocket авторизация успешна');
-                        return;
-                    }
                     this.messageHandlers.forEach(handler => handler(message));
                 } catch (error) {
                     console.error('Ошибка обработки сообщения:', error);
                 }
             };
-    
+
+            this.ws.onerror = (error) => {
+                console.error('WebSocket ошибка:', error);
+            };
+
             this.ws.onclose = (event) => {
                 console.log('WebSocket соединение закрыто:', event.code, event.reason);
                 this.isConnecting = false;
-                this.handleReconnect();
+                if (event.code !== 1000) {
+                    this.handleReconnect();
+                }
             };
-    
-            this.ws.onerror = (error) => {
-                console.error('WebSocket ошибка:', error);
-                this.isConnecting = false;
-            };
-    
+
         } catch (error) {
             console.error('Ошибка при создании WebSocket:', error);
             this.isConnecting = false;
-            this.handleReconnect();
         }
     }
+
 
     handleReconnect() {
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
@@ -6963,7 +6947,7 @@ class ChatService {
         clearTimeout(this.reconnectTimeout);
         this.isConnecting = false;
         this.reconnectAttempts = this.maxReconnectAttempts; // Предотвращаем автоматическое переподключение
-        
+
         if (this.ws) {
             this.ws.close();
             this.ws = null;
@@ -6984,12 +6968,12 @@ class ChatService {
             // Если WebSocket недоступен, отправляем через HTTP
             console.log('WebSocket недоступен, отправка через HTTP');
             const response = await axios.post('/api/v1/marketplace/chat/messages', message);
-            
+
             // После успешной отправки через HTTP пробуем переподключить WebSocket
             if (this.reconnectAttempts < this.maxReconnectAttempts) {
                 this.connect();
             }
-            
+
             return response.data;
 
         } catch (error) {
@@ -7003,47 +6987,26 @@ class ChatService {
         return () => this.messageHandlers.delete(handler);
     }
 
-    async getMessageHistory(chatId) {
+    async getMessageHistory(chatId, listingId) {
         try {
-            console.log('Загрузка сообщений для чата:', chatId);
-            // Изменен путь запроса, убран лишний /chat/
-            const response = await axios.get(`/api/v1/marketplace/chat/messages`, {
-                params: {
-                    listing_id: chatId, // Изменяем параметр на listing_id
-                    limit: 100,
-                    offset: 0
-                }
-            });
-                
+            console.log('Загрузка сообщений для листинга:', listingId);
+            const response = await axios.get(`/api/v1/marketplace/chat/${listingId}/messages`); // listing_id в URL пути
+
             console.log('Получены сообщения:', response.data);
-                
+
             if (response.data?.data) {
-                let messages = response.data.data;
-                if (!Array.isArray(messages)) {
-                    console.warn('Ответ сервера не является массивом:', messages);
-                    messages = [];
-                }
-    
-                return messages.map(message => ({
-                    ...message,
-                    sender: message.sender || {},
-                    receiver: message.receiver || {},
-                    is_read: message.is_read || false,
-                    created_at: message.created_at || new Date().toISOString()
-                })).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                const messages = response.data.data;
+                return messages.sort((a, b) =>
+                    new Date(a.created_at) - new Date(b.created_at)
+                );
             }
-                
-            console.warn('Нет данных в ответе сервера:', response.data);
+
             return [];
         } catch (error) {
             console.error('Ошибка получения истории сообщений:', error);
-            if (error.response) {
-                console.error('Ответ сервера:', error.response.data);
-            }
             return [];
         }
     }
-
     async markMessagesAsRead(messageIds) {
         try {
             await axios.put('/api/v1/marketplace/chat/messages/read', {
@@ -7996,7 +7959,8 @@ export default LocationPicker;
 
 //frontend/hostel-frontend/src/components/Layout.js
 import React, { useState } from "react";
-import { ShoppingBag } from '@mui/icons-material';
+import { ShoppingBag} from '@mui/icons-material';
+import MessageIcon from '@mui/icons-material/Message';
 import { Link, useLocation } from "react-router-dom";
 import {
   AppBar,
@@ -8174,6 +8138,12 @@ const Layout = ({ children }) => {
                       </Typography>
                     </MenuItem>
                     <Divider />
+                    
+                    <MenuItem component={Link} to="/marketplace/chat">
+                      <MessageIcon fontSize="small" sx={{ mr: 1 }} />
+                      Мои сообщения
+                    </MenuItem>
+                    
                     <MenuItem component={Link} to="/bookings">
                       <ListAlt fontSize="small" sx={{ mr: 1 }} />
                       Мои бронирования
@@ -9969,11 +9939,11 @@ const ChatPage = () => {
     const handleSelectChat = useCallback((chat) => {
         console.log('Выбран чат:', chat);
         setSelectedChat(chat);
-        if (chat?.id) {
+        if (chat?.listing_id) { // Используем listing_id
             setLoading(true);
             setMessages([]);
 
-            fetchMessages(chat.id)
+            fetchMessages(chat.id, chat.listing_id) // Передаем оба параметра
                 .then(messages => {
                     console.log('Загружены сообщения:', messages);
                     if (Array.isArray(messages)) {
@@ -10031,22 +10001,26 @@ const ChatPage = () => {
         fetchChats();
     }, [fetchChats]);
     useEffect(() => {
-        if (selectedChat?.id && messages.length === 0) {
+        if (selectedChat?.id && selectedChat?.listing_id && messages.length === 0) {
             console.log('Начальная загрузка сообщений для чата:', selectedChat.id);
-            fetchMessages(selectedChat.id)
+            
+            setLoading(true);
+            
+            chatServiceRef.current.getMessageHistory(selectedChat.id, selectedChat.listing_id)
                 .then(loadedMessages => {
                     console.log('Загружены начальные сообщения:', loadedMessages);
-                    if (Array.isArray(loadedMessages)) {
-                        setMessages(loadedMessages);
-                    }
+                    setMessages(loadedMessages || []);
                 })
                 .catch(error => {
                     console.error('Ошибка начальной загрузки сообщений:', error);
                     setError('Не удалось загрузить сообщения');
+                })
+                .finally(() => {
+                    setLoading(false);
                 });
         }
-    }, [selectedChat?.id, fetchMessages]);
-    // Отметка сообщений как прочитанных
+    }, [selectedChat?.id]);
+
     useEffect(() => {
         if (selectedChat && messages.length > 0) {
             const unreadMessages = messages.filter(

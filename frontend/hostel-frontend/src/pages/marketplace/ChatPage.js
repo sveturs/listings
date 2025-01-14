@@ -91,29 +91,29 @@ const ChatPage = () => {
     }, []);
 
     // Обработка выбора чата
-    const handleSelectChat = useCallback((chat) => {
-        console.log('Выбран чат:', chat);
-        setSelectedChat(chat);
-        if (chat?.listing_id) { // Используем listing_id
-            setLoading(true);
-            setMessages([]);
-
-            fetchMessages(chat.id, chat.listing_id) // Передаем оба параметра
-                .then(messages => {
-                    console.log('Загружены сообщения:', messages);
-                    if (Array.isArray(messages)) {
-                        setMessages(messages);
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка загрузки сообщений:', error);
-                    setError('Не удалось загрузить сообщения');
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
+    const handleSelectChat = useCallback(async (chat) => {
+        if (!chat?.id || !chat?.listing_id) {
+            console.error('Некорректные данные чата:', chat);
+            return;
         }
-    }, [fetchMessages]);
+    
+        setSelectedChat(chat);
+        setLoading(true);
+        setMessages([]);
+    
+        try {
+            // Загружаем сообщения сразу после установки чата
+            const loadedMessages = await chatServiceRef.current?.getMessageHistory(chat.id, chat.listing_id);
+            if (Array.isArray(loadedMessages) && loadedMessages.length > 0) {
+                setMessages(loadedMessages);
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке сообщений:', error);
+            setError('Не удалось загрузить сообщения');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     // Инициализация WebSocket и загрузка данных
     useEffect(() => {
@@ -156,23 +156,8 @@ const ChatPage = () => {
         fetchChats();
     }, [fetchChats]);
     useEffect(() => {
-        if (selectedChat?.id && selectedChat?.listing_id && messages.length === 0) {
-            console.log('Начальная загрузка сообщений для чата:', selectedChat.id);
-            
-            setLoading(true);
-            
-            chatServiceRef.current.getMessageHistory(selectedChat.id, selectedChat.listing_id)
-                .then(loadedMessages => {
-                    console.log('Загружены начальные сообщения:', loadedMessages);
-                    setMessages(loadedMessages || []);
-                })
-                .catch(error => {
-                    console.error('Ошибка начальной загрузки сообщений:', error);
-                    setError('Не удалось загрузить сообщения');
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
+        if (selectedChat?.id && chatServiceRef.current) {
+             chatServiceRef.current.connect();
         }
     }, [selectedChat?.id]);
 
