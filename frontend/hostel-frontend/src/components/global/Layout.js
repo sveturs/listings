@@ -1,6 +1,7 @@
 //frontend/hostel-frontend/src/components/Layout.js
 import React, { useState } from "react";
-import { ShoppingBag } from '@mui/icons-material';
+import { ShoppingBag} from '@mui/icons-material';
+import MessageIcon from '@mui/icons-material/Message';
 import { Link, useLocation } from "react-router-dom";
 import {
   AppBar,
@@ -178,6 +179,12 @@ const Layout = ({ children }) => {
                       </Typography>
                     </MenuItem>
                     <Divider />
+                    
+                    <MenuItem component={Link} to="/marketplace/chat">
+                      <MessageIcon fontSize="small" sx={{ mr: 1 }} />
+                      Мои сообщения
+                    </MenuItem>
+                    
                     <MenuItem component={Link} to="/bookings">
                       <ListAlt fontSize="small" sx={{ mr: 1 }} />
                       Мои бронирования
