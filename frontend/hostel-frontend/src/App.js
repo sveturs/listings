@@ -1,8 +1,5 @@
-//frontend/hostel-frontend/src/App.js
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { future } from "@remix-run/router";
-
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/global/Layout";
@@ -22,13 +19,17 @@ import MyListingsPage from './pages/marketplace/MyListingsPage';
 import FavoriteListingsPage from './pages/marketplace/FavoriteListingsPage';
 import { MapProvider } from './components/maps/MapProvider';
 import ChatPage from "./pages/marketplace/ChatPage";
- 
 
 function App() {
   return (
-    <MapProvider>
-      <AuthProvider>
-        <Router>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
+      <MapProvider>
+        <AuthProvider>
           <Layout>
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -37,24 +38,20 @@ function App() {
               <Route path="/add-user" element={<AddUserPage />} />
               <Route path="/admin" element={<AdminPanelPage />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/cars" element={<CarListPage />} /> {/* Список автомобилей */}
-              <Route path="/add-car" element={<AddCarPage />} /> {/* Добавление автомобиля */}
+              <Route path="/cars" element={<CarListPage />} />
+              <Route path="/add-car" element={<AddCarPage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/marketplace/create" element={<CreateListingPage />} />
               <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
               <Route path="/profile" element={<UserProfile />} />
-              <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/marketplace/chat" element={<ChatPage />} />
-
-
               <Route path="/my-listings" element={<MyListingsPage />} />
               <Route path="/favorites" element={<FavoriteListingsPage />} />
-
             </Routes>
           </Layout>
-        </Router>
-      </AuthProvider>
-    </MapProvider>
+        </AuthProvider>
+      </MapProvider>
+    </BrowserRouter>
   );
 }
 

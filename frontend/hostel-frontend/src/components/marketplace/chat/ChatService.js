@@ -12,35 +12,36 @@ class ChatService {
 
     connect() {
         if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) {
-            console.log('WebSocket уже подключен или подключается');
             return;
         }
-
+    
         this.isConnecting = true;
-
+        clearTimeout(this.reconnectTimer);
+    
         try {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = process.env.NODE_ENV === 'development' ?
-                'localhost:3000' :
-                window.location.host;
-
+            // Используем window.location.host для локальной разработки
+            const host = process.env.NODE_ENV === 'development' ? 
+                'localhost:3000' : // для разработки
+                window.location.host; // для продакшена
+    
             const wsUrl = `${protocol}//${host}/ws/chat`;
-
-            // Создаем WebSocket без дополнительных заголовков
+            console.log('Попытка подключения к WebSocket:', wsUrl);
+    
             this.ws = new WebSocket(wsUrl);
-
+    
             this.ws.onopen = () => {
                 console.log('WebSocket соединение установлено');
                 this.isConnecting = false;
                 this.reconnectAttempts = 0;
-
-                // После установки соединения отправляем авторизационные данные
+    
+                // После успешного подключения отправляем авторизационные данные
                 this.ws.send(JSON.stringify({
                     type: 'auth',
                     user_id: this.userId
                 }));
             };
-
+    
             this.ws.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
@@ -49,49 +50,50 @@ class ChatService {
                     console.error('Ошибка обработки сообщения:', error);
                 }
             };
-
+    
             this.ws.onerror = (error) => {
                 console.error('WebSocket ошибка:', error);
+                this.isConnecting = false;
             };
-
+    
             this.ws.onclose = (event) => {
                 console.log('WebSocket соединение закрыто:', event.code, event.reason);
                 this.isConnecting = false;
-                if (event.code !== 1000) {
+                if (event.code !== 1000 && event.code !== 1005) {
                     this.handleReconnect();
                 }
             };
-
+    
         } catch (error) {
             console.error('Ошибка при создании WebSocket:', error);
             this.isConnecting = false;
+            this.handleReconnect();
         }
     }
 
-
     handleReconnect() {
-        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            console.log('Достигнуто максимальное количество попыток переподключения');
+        if (this.reconnectAttempts >= this.maxReconnectAttempts || this.isConnecting) {
             return;
         }
 
-        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-        console.log(`Попытка переподключения через ${delay}мс`);
-
-        clearTimeout(this.reconnectTimeout);
-        this.reconnectTimeout = setTimeout(() => {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = setTimeout(() => {
             this.reconnectAttempts++;
             this.connect();
-        }, delay);
+        }, Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000));
     }
 
     disconnect() {
-        clearTimeout(this.reconnectTimeout);
+        clearTimeout(this.reconnectTimer);
+        this.reconnectAttempts = this.maxReconnectAttempts; 
         this.isConnecting = false;
-        this.reconnectAttempts = this.maxReconnectAttempts; // Предотвращаем автоматическое переподключение
 
         if (this.ws) {
-            this.ws.close();
+            try {
+                this.ws.close();
+            } catch (e) {
+                console.error('Ошибка при закрытии WebSocket:', e);
+            }
             this.ws = null;
         }
     }

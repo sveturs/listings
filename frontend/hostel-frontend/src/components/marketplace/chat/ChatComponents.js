@@ -1,5 +1,5 @@
 // frontend/hostel-frontend/src/components/marketplace/chat/ChatComponents.js
- 
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
     Box,
@@ -31,7 +31,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
     const [processedMessages, setProcessedMessages] = useState([]);
-    
+
     // Дедупликация сообщений по ID
     useEffect(() => {
         const uniqueMessages = Object.values(
@@ -41,7 +41,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
                 return acc;
             }, {})
         ).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        
+
         setProcessedMessages(uniqueMessages);
     }, [messages]);
 
@@ -87,9 +87,9 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
                                 src={message.sender?.picture_url}
                                 sx={{ width: 32, height: 32 }}
                             />
-                            <Typography 
-                                variant="caption" 
-                                sx={{ 
+                            <Typography
+                                variant="caption"
+                                sx={{
                                     display: 'block',
                                     textAlign: message.sender_id === currentUser.id ? 'right' : 'left',
                                     mt: 0.5,
@@ -98,7 +98,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
                                 {message.sender?.name || 'Пользователь'}
                             </Typography>
                         </Box>
-                        
+
                         <Box
                             sx={{
                                 maxWidth: '70%',
@@ -110,9 +110,9 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
                             }}
                         >
                             <Typography variant="body1">{message.content}</Typography>
-                            <Typography 
-                                variant="caption" 
-                                sx={{ 
+                            <Typography
+                                variant="caption"
+                                sx={{
                                     display: 'block',
                                     mt: 0.5,
                                     opacity: 0.8,
@@ -146,8 +146,8 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
                         multiline
                         maxRows={4}
                     />
-                    <IconButton 
-                        color="primary" 
+                    <IconButton
+                        color="primary"
                         type="submit"
                         disabled={!newMessage.trim()}
                     >
@@ -161,7 +161,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
 // Компонент списка чатов
 export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat }) => {
     return (
-        <Paper sx={{ 
+        <Paper sx={{
             height: '100%',
             border: 1,
             borderColor: 'divider',
@@ -205,35 +205,38 @@ export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat })
                             primary={
                                 <Typography
                                     variant="subtitle2"
+                                    component="div"
                                     noWrap
-                                    sx={{
-                                        fontWeight: chat.unread_count > 0 ? 600 : 400,
-                                    }}
+                                    sx={{ mb: 0.5 }}
                                 >
                                     {chat.listing?.title}
                                 </Typography>
                             }
                             secondary={
-                                <>
+                                <Box component="div" sx={{ mt: 0.5 }}>
                                     <Typography
                                         variant="body2"
+                                        component="div"
                                         color="text.secondary"
                                         noWrap
-                                        sx={{
-                                            fontWeight: chat.unread_count > 0 ? 600 : 400,
-                                        }}
+                                        sx={{ mb: 0.5 }}
                                     >
                                         {chat.last_message?.content}
                                     </Typography>
-                                    <Typography variant="caption" color="text.secondary">
+                                    <Typography
+                                        variant="caption"
+                                        component="div"
+                                        color="text.secondary"
+                                    >
                                         {formatDistanceToNow(new Date(chat.last_message_at), {
                                             addSuffix: true,
                                             locale: ru
                                         })}
                                     </Typography>
-                                </>
+                                </Box>
                             }
                         />
+
                     </ListItem>
                 ))}
             </List>

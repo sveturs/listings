@@ -9,6 +9,9 @@ import {
     useMediaQuery,
     CircularProgress,
     Alert,
+    Paper,         
+    Typography,    
+    Button        
 } from '@mui/material';
 import {
     ChatWindow,
@@ -23,7 +26,7 @@ import { useAuth } from '../../contexts/AuthContext';
 const ChatPage = () => {
     const { listingId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, loading: authLoading, login } = useAuth();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -217,7 +220,7 @@ const ChatPage = () => {
         }
     };
 
-    if (loading) {
+    if (authLoading) {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
                 <CircularProgress />
@@ -228,9 +231,24 @@ const ChatPage = () => {
     if (!user) {
         return (
             <Container maxWidth="md" sx={{ mt: 4 }}>
-                <Alert severity="warning">
-                    Для доступа к чату необходимо авторизоваться
-                </Alert>
+                <Paper sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography variant="h6" gutterBottom>
+                        Необходима авторизация
+                    </Typography>
+                    <Typography color="text.secondary" paragraph>
+                        Для доступа к чату необходимо войти в систему
+                    </Typography>
+                    <Button 
+                        variant="contained" 
+                        onClick={() => {
+                            const returnUrl = window.location.pathname;
+                            const encodedReturnUrl = encodeURIComponent(returnUrl);
+                            login(`?returnTo=${encodedReturnUrl}`);
+                        }}
+                    >
+                        Войти
+                    </Button>
+                </Paper>
             </Container>
         );
     }
