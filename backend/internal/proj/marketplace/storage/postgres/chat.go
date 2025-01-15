@@ -5,7 +5,8 @@ import (
 	"backend/internal/domain/models"
 	"context"
 	"fmt"
-    "github.com/jackc/pgx/v5" 
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Реализуем методы хранилища
@@ -38,26 +39,26 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
 
 func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error) {
 	rows, err := s.pool.Query(ctx, `
-        WITH unread_counts AS (
-            SELECT 
-                c.id as chat_id,
-                COUNT(*) as unread_count
-            FROM marketplace_chats c
-            JOIN marketplace_messages m ON m.chat_id = c.id
-            WHERE m.receiver_id = $1 AND NOT m.is_read
-            GROUP BY c.id
-        )
+    WITH unread_counts AS (
         SELECT 
-            c.id, c.listing_id, c.buyer_id, c.seller_id,
-            c.last_message_at, c.created_at, c.updated_at, c.is_archived,
-            l.title,
-            COALESCE(uc.unread_count, 0) as unread_count
+            c.id as chat_id,
+            COUNT(*) as unread_count
         FROM marketplace_chats c
-        JOIN marketplace_listings l ON c.listing_id = l.id
-        LEFT JOIN unread_counts uc ON c.id = uc.chat_id
-        WHERE c.buyer_id = $1 OR c.seller_id = $1
-        ORDER BY c.last_message_at DESC
-    `, userID)
+        JOIN marketplace_messages m ON m.chat_id = c.id
+        WHERE m.receiver_id = $1 AND NOT m.is_read
+        GROUP BY c.id
+    )
+    SELECT 
+        c.id, c.listing_id, c.buyer_id, c.seller_id,
+        c.last_message_at, c.created_at, c.updated_at, c.is_archived,
+        l.title, l.price, -- Добавляем price в SELECT
+        COALESCE(uc.unread_count, 0) as unread_count
+    FROM marketplace_chats c
+    JOIN marketplace_listings l ON c.listing_id = l.id
+    LEFT JOIN unread_counts uc ON c.id = uc.chat_id
+    WHERE c.buyer_id = $1 OR c.seller_id = $1
+    ORDER BY c.last_message_at DESC
+`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("error querying chats: %w", err)
 	}
@@ -68,12 +69,12 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 		var chat models.MarketplaceChat
 		chat.Listing = &models.MarketplaceListing{}
 
-		err := rows.Scan(
-			&chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
-			&chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
-			&chat.Listing.Title,
-			&chat.UnreadCount,
-		)
+        err := rows.Scan(
+            &chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
+            &chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
+            &chat.Listing.Title, &chat.Listing.Price,
+            &chat.UnreadCount,
+        )
 		if err != nil {
 			return nil, fmt.Errorf("error scanning chat: %w", err)
 		}
@@ -84,11 +85,10 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 	return chats, nil
 }
 
-
 func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
-    messages := []models.MarketplaceMessage{} 
+	messages := []models.MarketplaceMessage{}
 
-    rows, err := s.pool.Query(ctx, `
+	rows, err := s.pool.Query(ctx, `
         SELECT 
             m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
             m.content, m.is_read, m.created_at,
@@ -107,84 +107,82 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
         ORDER BY m.created_at DESC
         LIMIT $3 OFFSET $4
     `, listingID, userID, limit, offset)
-    if err != nil {
-        return messages, fmt.Errorf("error querying messages: %w", err)
-    }
-    defer rows.Close()
+	if err != nil {
+		return messages, fmt.Errorf("error querying messages: %w", err)
+	}
+	defer rows.Close()
 
-    for rows.Next() {
-        var msg models.MarketplaceMessage
-        msg.Sender = &models.User{}
-        msg.Receiver = &models.User{}
-        
-        err := rows.Scan(
-            &msg.ID, &msg.ChatID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
-            &msg.Content, &msg.IsRead, &msg.CreatedAt,
-            &msg.Sender.Name, &msg.Sender.PictureURL,
-            &msg.Receiver.Name, &msg.Receiver.PictureURL,
-        )
-        if err != nil {
-            return messages, fmt.Errorf("error scanning message: %w", err)
-        }
-        
-        messages = append(messages, msg)
-    }
+	for rows.Next() {
+		var msg models.MarketplaceMessage
+		msg.Sender = &models.User{}
+		msg.Receiver = &models.User{}
 
-    return messages, nil
+		err := rows.Scan(
+			&msg.ID, &msg.ChatID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
+			&msg.Content, &msg.IsRead, &msg.CreatedAt,
+			&msg.Sender.Name, &msg.Sender.PictureURL,
+			&msg.Receiver.Name, &msg.Receiver.PictureURL,
+		)
+		if err != nil {
+			return messages, fmt.Errorf("error scanning message: %w", err)
+		}
+
+		messages = append(messages, msg)
+	}
+
+	return messages, nil
 }
 
-// backend/internal/proj/marketplace/storage/postgres/chat.go
-
 func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
-    if msg == nil {
-        return fmt.Errorf("message cannot be nil")
-    }
+	if msg == nil {
+		return fmt.Errorf("message cannot be nil")
+	}
 
-    // Инициализируем структуры User, если они nil
-    if msg.Sender == nil {
-        msg.Sender = &models.User{}
-    }
-    if msg.Receiver == nil {
-        msg.Receiver = &models.User{}
-    }
+	// Инициализируем структуры User, если они nil
+	if msg.Sender == nil {
+		msg.Sender = &models.User{}
+	}
+	if msg.Receiver == nil {
+		msg.Receiver = &models.User{}
+	}
 
-    tx, err := s.pool.Begin(ctx)
-    if err != nil {
-        return fmt.Errorf("error starting transaction: %w", err)
-    }
-    defer tx.Rollback(ctx)
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
 
-    // Проверяем тип данных
-    if msg.SenderID == 0 || msg.ReceiverID == 0 || msg.ListingID == 0 {
-        return fmt.Errorf("invalid message data: sender_id=%d, receiver_id=%d, listing_id=%d", 
-            msg.SenderID, msg.ReceiverID, msg.ListingID)
-    }
+	// Проверяем тип данных
+	if msg.SenderID == 0 || msg.ReceiverID == 0 || msg.ListingID == 0 {
+		return fmt.Errorf("invalid message data: sender_id=%d, receiver_id=%d, listing_id=%d",
+			msg.SenderID, msg.ReceiverID, msg.ListingID)
+	}
 
-    // Получаем ID продавца и проверяем существование объявления
-    var sellerID int
-    err = tx.QueryRow(ctx, `
+	// Получаем ID продавца и проверяем существование объявления
+	var sellerID int
+	err = tx.QueryRow(ctx, `
         SELECT user_id 
         FROM marketplace_listings 
         WHERE id = $1
     `, msg.ListingID).Scan(&sellerID)
-    if err != nil {
-        if err == pgx.ErrNoRows {
-            return fmt.Errorf("listing not found: %d", msg.ListingID)
-        }
-        return fmt.Errorf("error getting listing seller: %w", err)
-    }
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return fmt.Errorf("listing not found: %d", msg.ListingID)
+		}
+		return fmt.Errorf("error getting listing seller: %w", err)
+	}
 
-    // Определяем кто покупатель, а кто продавец
-    var buyerID int
-    if msg.SenderID == sellerID {
-        buyerID = msg.ReceiverID
-    } else {
-        buyerID = msg.SenderID
-    }
+	// Определяем кто покупатель, а кто продавец
+	var buyerID int
+	if msg.SenderID == sellerID {
+		buyerID = msg.ReceiverID
+	} else {
+		buyerID = msg.SenderID
+	}
 
-    // Создаем или получаем существующий чат
-    var chatID int
-    err = tx.QueryRow(ctx, `
+	// Создаем или получаем существующий чат
+	var chatID int
+	err = tx.QueryRow(ctx, `
         WITH user_info AS (
             SELECT id, name, picture_url 
             FROM users 
@@ -209,23 +207,23 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
             (SELECT name FROM user_info WHERE id = $2) as receiver_name,
             (SELECT picture_url FROM user_info WHERE id = $2) as receiver_picture
         FROM chat_insert ci
-    `, 
-        msg.SenderID, msg.ReceiverID, 
-        msg.ListingID, buyerID, sellerID,
-    ).Scan(
-        &chatID,
-        &msg.Sender.Name,
-        &msg.Sender.PictureURL,
-        &msg.Receiver.Name,
-        &msg.Receiver.PictureURL,
-    )
+    `,
+		msg.SenderID, msg.ReceiverID,
+		msg.ListingID, buyerID, sellerID,
+	).Scan(
+		&chatID,
+		&msg.Sender.Name,
+		&msg.Sender.PictureURL,
+		&msg.Receiver.Name,
+		&msg.Receiver.PictureURL,
+	)
 
-    if err != nil {
-        return fmt.Errorf("error creating/getting chat: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("error creating/getting chat: %w", err)
+	}
 
-    // Создаем сообщение
-    err = tx.QueryRow(ctx, `
+	// Создаем сообщение
+	err = tx.QueryRow(ctx, `
         INSERT INTO marketplace_messages (
             chat_id,
             listing_id,
@@ -236,19 +234,19 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
         ) VALUES ($1, $2, $3, $4, $5, false)
         RETURNING id, created_at
     `,
-        chatID,
-        msg.ListingID,
-        msg.SenderID,
-        msg.ReceiverID,
-        msg.Content,
-    ).Scan(&msg.ID, &msg.CreatedAt)
+		chatID,
+		msg.ListingID,
+		msg.SenderID,
+		msg.ReceiverID,
+		msg.Content,
+	).Scan(&msg.ID, &msg.CreatedAt)
 
-    if err != nil {
-        return fmt.Errorf("error creating message: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("error creating message: %w", err)
+	}
 
-    msg.ChatID = chatID
-    return tx.Commit(ctx)
+	msg.ChatID = chatID
+	return tx.Commit(ctx)
 }
 func (s *Storage) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
 	_, err := s.pool.Exec(ctx, `
