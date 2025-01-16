@@ -1,4 +1,5 @@
 // frontend/hostel-frontend/src/components/marketplace/chat/ChatComponents.js
+// frontend/hostel-frontend/src/components/marketplace/chat/ChatComponents.js
 
 import React, { useState, useRef, useEffect } from 'react';
 import EmojiPicker from 'emoji-picker-react';
@@ -12,8 +13,6 @@ import {
     IconButton,
     List,
     ListItem,
-    ListItemAvatar,
-    ListItemText,
     Badge,
     Stack,
     Popover,
@@ -30,15 +29,14 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
-// Новый компонент для отображения сообщений с эмодзи
 const MessageContent = ({ content }) => {
     const isOnlyEmoji = (text) => {
-        const emojiRegex = /^[\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Component}]+$/u;
+        const emojiRegex = /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier})+$/u;
         return emojiRegex.test(text.trim());
     };
 
     const parseMessage = (text) => {
-        const emojiRegex = /([\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Component}]+)/u;
+        const emojiRegex = /((?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier})+)/u;
         return text.split(emojiRegex).filter(Boolean);
     };
 
@@ -51,7 +49,7 @@ const MessageContent = ({ content }) => {
             component="div"
             sx={{
                 '& .emoji': {
-                    fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", sans-serif',
+                    fontFamily: '-apple-system-emoji, "Apple Color Emoji", "Segoe UI Emoji", sans-serif',
                     fontSize: onlyEmoji ? '4rem' : '1.5rem',
                     lineHeight: 1,
                     verticalAlign: 'middle'
@@ -59,7 +57,7 @@ const MessageContent = ({ content }) => {
             }}
         >
             {parts.map((part, index) => {
-                const isEmoji = /[\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Component}]+/u.test(part);
+                const isEmoji = /(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier})+/u.test(part);
                 return (
                     <span
                         key={index}
@@ -284,6 +282,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                                 height={400}
                                 searchDisabled={true}
                                 skinTonesDisabled={true}
+                                emojiStyle="apple"
                                 style={{
                                     '--epr-bg-color': 'white',
                                     '--epr-category-label-bg-color': 'white'
@@ -310,7 +309,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
     );
 };
 
- 
+  
 // Компонент списка чатов
 export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat }) => {
     const formatPrice = (price) => {
