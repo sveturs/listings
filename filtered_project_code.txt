@@ -3436,7 +3436,8 @@ import (
 	"backend/internal/domain/models"
 	"context"
 	"fmt"
-    "github.com/jackc/pgx/v5" 
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Реализуем методы хранилища
@@ -3469,26 +3470,26 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
 
 func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error) {
 	rows, err := s.pool.Query(ctx, `
-        WITH unread_counts AS (
-            SELECT 
-                c.id as chat_id,
-                COUNT(*) as unread_count
-            FROM marketplace_chats c
-            JOIN marketplace_messages m ON m.chat_id = c.id
-            WHERE m.receiver_id = $1 AND NOT m.is_read
-            GROUP BY c.id
-        )
+    WITH unread_counts AS (
         SELECT 
-            c.id, c.listing_id, c.buyer_id, c.seller_id,
-            c.last_message_at, c.created_at, c.updated_at, c.is_archived,
-            l.title,
-            COALESCE(uc.unread_count, 0) as unread_count
+            c.id as chat_id,
+            COUNT(*) as unread_count
         FROM marketplace_chats c
-        JOIN marketplace_listings l ON c.listing_id = l.id
-        LEFT JOIN unread_counts uc ON c.id = uc.chat_id
-        WHERE c.buyer_id = $1 OR c.seller_id = $1
-        ORDER BY c.last_message_at DESC
-    `, userID)
+        JOIN marketplace_messages m ON m.chat_id = c.id
+        WHERE m.receiver_id = $1 AND NOT m.is_read
+        GROUP BY c.id
+    )
+    SELECT 
+        c.id, c.listing_id, c.buyer_id, c.seller_id,
+        c.last_message_at, c.created_at, c.updated_at, c.is_archived,
+        l.title, l.price, -- Добавляем price в SELECT
+        COALESCE(uc.unread_count, 0) as unread_count
+    FROM marketplace_chats c
+    JOIN marketplace_listings l ON c.listing_id = l.id
+    LEFT JOIN unread_counts uc ON c.id = uc.chat_id
+    WHERE c.buyer_id = $1 OR c.seller_id = $1
+    ORDER BY c.last_message_at DESC
+`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("error querying chats: %w", err)
 	}
@@ -3499,12 +3500,12 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 		var chat models.MarketplaceChat
 		chat.Listing = &models.MarketplaceListing{}
 
-		err := rows.Scan(
-			&chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
-			&chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
-			&chat.Listing.Title,
-			&chat.UnreadCount,
-		)
+        err := rows.Scan(
+            &chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
+            &chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
+            &chat.Listing.Title, &chat.Listing.Price,
+            &chat.UnreadCount,
+        )
 		if err != nil {
 			return nil, fmt.Errorf("error scanning chat: %w", err)
 		}
@@ -3515,11 +3516,10 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 	return chats, nil
 }
 
-
 func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
-    messages := []models.MarketplaceMessage{} 
+	messages := []models.MarketplaceMessage{}
 
-    rows, err := s.pool.Query(ctx, `
+	rows, err := s.pool.Query(ctx, `
         SELECT 
             m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
             m.content, m.is_read, m.created_at,
@@ -3538,84 +3538,82 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
         ORDER BY m.created_at DESC
         LIMIT $3 OFFSET $4
     `, listingID, userID, limit, offset)
-    if err != nil {
-        return messages, fmt.Errorf("error querying messages: %w", err)
-    }
-    defer rows.Close()
+	if err != nil {
+		return messages, fmt.Errorf("error querying messages: %w", err)
+	}
+	defer rows.Close()
 
-    for rows.Next() {
-        var msg models.MarketplaceMessage
-        msg.Sender = &models.User{}
-        msg.Receiver = &models.User{}
-        
-        err := rows.Scan(
-            &msg.ID, &msg.ChatID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
-            &msg.Content, &msg.IsRead, &msg.CreatedAt,
-            &msg.Sender.Name, &msg.Sender.PictureURL,
-            &msg.Receiver.Name, &msg.Receiver.PictureURL,
-        )
-        if err != nil {
-            return messages, fmt.Errorf("error scanning message: %w", err)
-        }
-        
-        messages = append(messages, msg)
-    }
+	for rows.Next() {
+		var msg models.MarketplaceMessage
+		msg.Sender = &models.User{}
+		msg.Receiver = &models.User{}
 
-    return messages, nil
+		err := rows.Scan(
+			&msg.ID, &msg.ChatID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
+			&msg.Content, &msg.IsRead, &msg.CreatedAt,
+			&msg.Sender.Name, &msg.Sender.PictureURL,
+			&msg.Receiver.Name, &msg.Receiver.PictureURL,
+		)
+		if err != nil {
+			return messages, fmt.Errorf("error scanning message: %w", err)
+		}
+
+		messages = append(messages, msg)
+	}
+
+	return messages, nil
 }
 
-// backend/internal/proj/marketplace/storage/postgres/chat.go
-
 func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
-    if msg == nil {
-        return fmt.Errorf("message cannot be nil")
-    }
+	if msg == nil {
+		return fmt.Errorf("message cannot be nil")
+	}
 
-    // Инициализируем структуры User, если они nil
-    if msg.Sender == nil {
-        msg.Sender = &models.User{}
-    }
-    if msg.Receiver == nil {
-        msg.Receiver = &models.User{}
-    }
+	// Инициализируем структуры User, если они nil
+	if msg.Sender == nil {
+		msg.Sender = &models.User{}
+	}
+	if msg.Receiver == nil {
+		msg.Receiver = &models.User{}
+	}
 
-    tx, err := s.pool.Begin(ctx)
-    if err != nil {
-        return fmt.Errorf("error starting transaction: %w", err)
-    }
-    defer tx.Rollback(ctx)
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
 
-    // Проверяем тип данных
-    if msg.SenderID == 0 || msg.ReceiverID == 0 || msg.ListingID == 0 {
-        return fmt.Errorf("invalid message data: sender_id=%d, receiver_id=%d, listing_id=%d", 
-            msg.SenderID, msg.ReceiverID, msg.ListingID)
-    }
+	// Проверяем тип данных
+	if msg.SenderID == 0 || msg.ReceiverID == 0 || msg.ListingID == 0 {
+		return fmt.Errorf("invalid message data: sender_id=%d, receiver_id=%d, listing_id=%d",
+			msg.SenderID, msg.ReceiverID, msg.ListingID)
+	}
 
-    // Получаем ID продавца и проверяем существование объявления
-    var sellerID int
-    err = tx.QueryRow(ctx, `
+	// Получаем ID продавца и проверяем существование объявления
+	var sellerID int
+	err = tx.QueryRow(ctx, `
         SELECT user_id 
         FROM marketplace_listings 
         WHERE id = $1
     `, msg.ListingID).Scan(&sellerID)
-    if err != nil {
-        if err == pgx.ErrNoRows {
-            return fmt.Errorf("listing not found: %d", msg.ListingID)
-        }
-        return fmt.Errorf("error getting listing seller: %w", err)
-    }
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return fmt.Errorf("listing not found: %d", msg.ListingID)
+		}
+		return fmt.Errorf("error getting listing seller: %w", err)
+	}
 
-    // Определяем кто покупатель, а кто продавец
-    var buyerID int
-    if msg.SenderID == sellerID {
-        buyerID = msg.ReceiverID
-    } else {
-        buyerID = msg.SenderID
-    }
+	// Определяем кто покупатель, а кто продавец
+	var buyerID int
+	if msg.SenderID == sellerID {
+		buyerID = msg.ReceiverID
+	} else {
+		buyerID = msg.SenderID
+	}
 
-    // Создаем или получаем существующий чат
-    var chatID int
-    err = tx.QueryRow(ctx, `
+	// Создаем или получаем существующий чат
+	var chatID int
+	err = tx.QueryRow(ctx, `
         WITH user_info AS (
             SELECT id, name, picture_url 
             FROM users 
@@ -3640,23 +3638,23 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
             (SELECT name FROM user_info WHERE id = $2) as receiver_name,
             (SELECT picture_url FROM user_info WHERE id = $2) as receiver_picture
         FROM chat_insert ci
-    `, 
-        msg.SenderID, msg.ReceiverID, 
-        msg.ListingID, buyerID, sellerID,
-    ).Scan(
-        &chatID,
-        &msg.Sender.Name,
-        &msg.Sender.PictureURL,
-        &msg.Receiver.Name,
-        &msg.Receiver.PictureURL,
-    )
+    `,
+		msg.SenderID, msg.ReceiverID,
+		msg.ListingID, buyerID, sellerID,
+	).Scan(
+		&chatID,
+		&msg.Sender.Name,
+		&msg.Sender.PictureURL,
+		&msg.Receiver.Name,
+		&msg.Receiver.PictureURL,
+	)
 
-    if err != nil {
-        return fmt.Errorf("error creating/getting chat: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("error creating/getting chat: %w", err)
+	}
 
-    // Создаем сообщение
-    err = tx.QueryRow(ctx, `
+	// Создаем сообщение
+	err = tx.QueryRow(ctx, `
         INSERT INTO marketplace_messages (
             chat_id,
             listing_id,
@@ -3667,19 +3665,19 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
         ) VALUES ($1, $2, $3, $4, $5, false)
         RETURNING id, created_at
     `,
-        chatID,
-        msg.ListingID,
-        msg.SenderID,
-        msg.ReceiverID,
-        msg.Content,
-    ).Scan(&msg.ID, &msg.CreatedAt)
+		chatID,
+		msg.ListingID,
+		msg.SenderID,
+		msg.ReceiverID,
+		msg.Content,
+	).Scan(&msg.ID, &msg.CreatedAt)
 
-    if err != nil {
-        return fmt.Errorf("error creating message: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("error creating message: %w", err)
+	}
 
-    msg.ChatID = chatID
-    return tx.Commit(ctx)
+	msg.ChatID = chatID
+	return tx.Commit(ctx)
 }
 func (s *Storage) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
 	_, err := s.pool.Exec(ctx, `
@@ -6558,6 +6556,8 @@ export default CompactCategoryTree;
 // frontend/hostel-frontend/src/components/marketplace/chat/ChatComponents.js
 
 import React, { useState, useRef, useEffect } from 'react';
+import EmojiPicker from 'emoji-picker-react';
+import { MessageCircle, Send, Smile, Paperclip, ChevronLeft, Phone } from 'lucide-react';
 import {
     Box,
     Paper,
@@ -6571,13 +6571,13 @@ import {
     ListItemText,
     Badge,
     Stack,
-     
+    Popover,
     Chip,
     Button,
     useTheme,
     useMediaQuery,
 } from '@mui/material';
-import {Phone, ArrowLeft } from '@mui/icons-material';
+import { ArrowLeft } from '@mui/icons-material';
 import {
     Send as SendIcon,
     Archive as ArchiveIcon,
@@ -6585,10 +6585,10 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
-
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
     const [processedMessages, setProcessedMessages] = useState([]);
+    const [anchorEl, setAnchorEl] = useState(null);
 
     useEffect(() => {
         const uniqueMessages = Object.values(
@@ -6617,186 +6617,215 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser }) => {
         }
     };
 
-    const formatTime = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleTimeString('ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+    const handleEmojiClick = (emojiObject) => {
+        setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
+        setAnchorEl(null);
     };
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        if (date.toDateString() === today.toDateString()) {
-            return 'Сегодня';
-        } else if (date.toDateString() === yesterday.toDateString()) {
-            return 'Вчера';
-        }
-        return date.toLocaleDateString('ru-RU', {
-            day: 'numeric',
-            month: 'long'
-        });
+    const handleEmojiButtonClick = (event) => {
+        setAnchorEl(anchorEl ? null : event.currentTarget);
     };
 
-    // Группируем сообщения по датам
-    const messagesByDate = processedMessages.reduce((acc, message) => {
-        const date = formatDate(message.created_at);
-        if (!acc[date]) {
-            acc[date] = [];
-        }
-        acc[date].push(message);
-        return acc;
-    }, {});
-
-    return (
-        <Paper
-            elevation={0}
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                bgcolor: 'grey.50',
-                borderRadius: 2,
-                overflow: 'hidden'
-            }}
-        >
-            <Box
+    const MessageContent = ({ content }) => {
+        // Функция для определения является ли символ эмодзи
+        const isEmojiCharacter = char => {
+            return char.match(/\p{Emoji}/u);
+        };
+    
+        // Функция для определения состоит ли сообщение только из эмодзи
+        const isOnlyEmoji = text => {
+            return text.split('').every(char => isEmojiCharacter(char) || char === ' ');
+        };
+    
+        // Определяем, содержит ли сообщение только эмодзи
+        const onlyEmoji = isOnlyEmoji(content);
+    
+        return (
+            <Typography
+                className="message-content"
+                variant="body2"
+                component="div"
                 sx={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    p: 2,
-                    '&::-webkit-scrollbar': {
-                        width: '8px',
-                    },
-                    '&::-webkit-scrollbar-track': {
-                        background: 'transparent'
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                        background: 'rgba(0,0,0,0.1)',
-                        borderRadius: '4px',
-                    },
+                    lineHeight: onlyEmoji ? '1' : '1.5',
+                    '& .emoji': {
+                        fontSize: onlyEmoji ? '4rem' : '2rem',
+                        lineHeight: '1',
+                        verticalAlign: 'middle',
+                        display: 'inline-block',
+                        margin: onlyEmoji ? '0.1em' : '0 0.1em'
+                    }
                 }}
             >
-                {Object.entries(messagesByDate).map(([date, dateMessages]) => (
-                    <Box key={date}>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'center',
-                                my: 2,
-                            }}
-                        >
+                {content.split('').map((char, i) => {
+                    if (isEmojiCharacter(char)) {
+                        return <span key={i} className="emoji">{char}</span>;
+                    }
+                    return char;
+                })}
+            </Typography>
+        );
+    };
+
+    return (
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100%',
+            bgcolor: 'grey.50'
+        }}>
+            {/* Область сообщений */}
+            <Box sx={{
+                flex: 1,
+                overflowY: 'auto',
+                p: 2,
+                '&::-webkit-scrollbar': {
+                    width: 8,
+                    borderRadius: 4,
+                },
+                '&::-webkit-scrollbar-track': {
+                    backgroundColor: 'transparent'
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    borderRadius: 4
+                }
+            }}>
+                {processedMessages.map((message) => (
+                    <Box
+                        key={message.id}
+                        sx={{
+                            display: 'flex',
+                            justifyContent: message.sender_id === currentUser.id ? 'flex-end' : 'flex-start',
+                            mb: 1.5
+                        }}
+                    >
+                        <Box sx={{
+                            maxWidth: '70%',
+                            px: 2,
+                            py: 1.5,
+                            bgcolor: message.sender_id === currentUser.id ? 'primary.main' : 'white',
+                            color: message.sender_id === currentUser.id ? 'white' : 'text.primary',
+                            borderRadius: 3,
+                            ...(message.sender_id === currentUser.id ? {
+                                borderBottomRightRadius: 0,
+                            } : {
+                                borderBottomLeftRadius: 0,
+                                boxShadow: 1
+                            })
+                        }}>
+                            <MessageContent content={message.content} />
                             <Typography
                                 variant="caption"
                                 sx={{
-                                    px: 2,
-                                    py: 0.5,
-                                    bgcolor: 'grey.200',
-                                    borderRadius: 5,
-                                    color: 'text.secondary'
+                                    display: 'block',
+                                    mt: 0.5,
+                                    textAlign: 'right',
+                                    opacity: 0.7
                                 }}
                             >
-                                {date}
+                                {new Date(message.created_at).toLocaleTimeString('ru-RU', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}
                             </Typography>
                         </Box>
-                        {dateMessages.map((message) => (
-                            <Box
-                                key={message.id}
-                                sx={{
-                                    mb: 1,
-                                    display: 'flex',
-                                    justifyContent: message.sender_id === currentUser.id ? 'flex-end' : 'flex-start',
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        maxWidth: '70%',
-                                        bgcolor: message.sender_id === currentUser.id ? 'primary.main' : 'background.paper',
-                                        color: message.sender_id === currentUser.id ? 'white' : 'text.primary',
-                                        borderRadius: 2,
-                                        boxShadow: 1,
-                                        p: 1.5,
-                                    }}
-                                >
-                                    <Typography variant="body1" sx={{ mb: 0.5 }}>
-                                        {message.content}
-                                    </Typography>
-                                    <Typography
-                                        variant="caption"
-                                        sx={{
-                                            display: 'block',
-                                            textAlign: 'right',
-                                            opacity: 0.8
-                                        }}
-                                    >
-                                        {formatTime(message.created_at)}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        ))}
                     </Box>
                 ))}
                 <div ref={messagesEndRef} />
             </Box>
 
+            {/* Форма отправки */}
             <Box
                 component="form"
                 onSubmit={handleSend}
                 sx={{
                     p: 2,
-                    bgcolor: 'background.paper',
+                    bgcolor: 'white',
                     borderTop: 1,
-                    borderColor: 'divider',
+                    borderColor: 'divider'
                 }}
             >
-                <Stack direction="row" spacing={1}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        placeholder="Введите сообщение..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        multiline
-                        maxRows={4}
-                        sx={{
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                bgcolor: 'grey.50'
-                            }
-                        }}
-                    />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <IconButton>
+                        <Paperclip />
+                    </IconButton>
+                    <Box sx={{
+                        flex: 1,
+                        position: 'relative'
+                    }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            placeholder="Введите сообщение..."
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '24px',
+                                    bgcolor: 'grey.50',
+                                    pr: 5
+                                }
+                            }}
+                        />
+                        <IconButton
+                            onClick={handleEmojiButtonClick}
+                            sx={{
+                                position: 'absolute',
+                                right: 8,
+                                top: '50%',
+                                transform: 'translateY(-50%)'
+                            }}
+                        >
+                            <Smile />
+                        </IconButton>
+                        <Popover
+                            open={Boolean(anchorEl)}
+                            anchorEl={anchorEl}
+                            onClose={() => setAnchorEl(null)}
+                            anchorOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}
+                            transformOrigin={{
+                                vertical: 'bottom',
+                                horizontal: 'right',
+                            }}
+                        >
+                            <EmojiPicker
+                                onEmojiClick={handleEmojiClick}
+                                width={320}
+                                height={400}
+                            />
+                        </Popover>
+                    </Box>
                     <IconButton
-                        color="primary"
                         type="submit"
                         disabled={!newMessage.trim()}
                         sx={{
                             bgcolor: newMessage.trim() ? 'primary.main' : 'grey.200',
                             color: newMessage.trim() ? 'white' : 'grey.400',
                             '&:hover': {
-                                bgcolor: newMessage.trim() ? 'primary.dark' : 'grey.300',
+                                bgcolor: newMessage.trim() ? 'primary.dark' : 'grey.300'
                             }
                         }}
                     >
-                        <SendIcon />
+                        <Send />
                     </IconButton>
-                </Stack>
+                </Box>
             </Box>
-        </Paper>
+        </Box>
     );
 };
-
 // Компонент списка чатов
 export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat }) => {
     const formatPrice = (price) => {
+        if (!price || price === undefined) return 'Цена не указана';
+
         return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
             currency: 'RUB',
             maximumFractionDigits: 0
-        }).format(price);
+        }).format(price || 0);
     };
 
     return (
@@ -6842,7 +6871,7 @@ export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat })
                                         color="primary"
                                         sx={{ fontWeight: 'medium' }}
                                     >
-                                        {formatPrice(chat.listing?.price)}
+                                        {chat.listing && formatPrice(chat.listing.price)}
                                     </Typography>
                                 </Box>
                                 {chat.unread_count > 0 && (
@@ -6906,8 +6935,9 @@ export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat })
 export const ChatHeader = ({ chat, onBack, onArchive }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
     const formatPrice = (price) => {
+        if (!price || price === undefined) return 'Цена не указана';
+
         return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
             currency: 'RUB',
@@ -6973,7 +7003,7 @@ export const ChatHeader = ({ chat, onBack, onArchive }) => {
                                 color="primary.main"
                                 sx={{ fontWeight: 500 }}
                             >
-                                {formatPrice(chat.listing?.price)}
+                                {chat.listing && formatPrice(chat.listing.price)}
                             </Typography>
                             <Box
                                 component="span"
@@ -10361,23 +10391,23 @@ const ChatPage = () => {
                         onSelectChat={handleSelectChat}
                         onArchiveChat={handleArchiveChat}
                     />
-                    {!loading && chats.length === 0 && (
-                        <EmptyState text="У вас пока нет сообщений" />
-                    )}
                 </Grid>
-
+    
                 {/* Окно чата */}
                 <Grid item xs={12} md={8} sx={{ height: '100%' }}>
                     {selectedChat ? (
                         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <ChatHeader chat={selectedChat} />
+                            <ChatHeader 
+                                chat={selectedChat}
+                                onBack={() => setSelectedChat(null)}
+                                onArchive={handleArchiveChat}
+                            />
                             <Box sx={{ flex: 1, overflow: 'hidden' }}>
                                 <ChatWindow
                                     messages={messages}
                                     onSendMessage={handleSendMessage}
                                     currentUser={user}
                                 />
-                                <div ref={messageEndRef} />
                             </Box>
                         </Box>
                     ) : (
@@ -10385,21 +10415,6 @@ const ChatPage = () => {
                     )}
                 </Grid>
             </Grid>
-
-            {error && (
-                <Alert
-                    severity="error"
-                    sx={{
-                        position: 'fixed',
-                        bottom: 16,
-                        right: 16,
-                        maxWidth: 'calc(100% - 32px)'
-                    }}
-                    onClose={() => setError(null)}
-                >
-                    {error}
-                </Alert>
-            )}
         </Container>
     );
 };
@@ -12746,6 +12761,7 @@ PORT=3000
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.7",
     "date-fns": "^4.1.0",
+    "emoji-picker-react": "^4.12.0",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

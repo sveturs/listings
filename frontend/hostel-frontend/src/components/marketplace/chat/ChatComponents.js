@@ -29,6 +29,50 @@ import {
 } from '@mui/icons-material';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+
+// Новый компонент для отображения сообщений с эмодзи
+const MessageContent = ({ content }) => {
+    const isOnlyEmoji = (text) => {
+        const emojiRegex = /^[\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Component}]+$/u;
+        return emojiRegex.test(text.trim());
+    };
+
+    const parseMessage = (text) => {
+        const emojiRegex = /([\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Component}]+)/u;
+        return text.split(emojiRegex).filter(Boolean);
+    };
+
+    const onlyEmoji = isOnlyEmoji(content);
+    const parts = parseMessage(content);
+
+    return (
+        <Typography
+            variant="body2"
+            component="div"
+            sx={{
+                '& .emoji': {
+                    fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", sans-serif',
+                    fontSize: onlyEmoji ? '4rem' : '1.5rem',
+                    lineHeight: 1,
+                    verticalAlign: 'middle'
+                }
+            }}
+        >
+            {parts.map((part, index) => {
+                const isEmoji = /[\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Component}]+/u.test(part);
+                return (
+                    <span
+                        key={index}
+                        className={isEmoji ? 'emoji' : undefined}
+                    >
+                        {part}
+                    </span>
+                );
+            })}
+        </Typography>
+    );
+};
+
 export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, onBack }) => {
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
@@ -62,22 +106,18 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
             setNewMessage('');
         }
     };
-    const handleEmojiClick = (emojiObject) => {
-        setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
-        setAnchorEl(null); // закрываем picker после выбора
+
+    const handleEmojiClick = (emojiData) => {
+        setNewMessage((prevMessage) => prevMessage + emojiData.emoji);
+        setAnchorEl(null);
     };
+
     const handleEmojiButtonClick = (event) => {
         setAnchorEl(anchorEl ? null : event.currentTarget);
     };
+
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                bgcolor: 'grey.50'
-            }}
-        >
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'grey.50' }}>
             {/* Шапка чата */}
             <Box sx={{
                 display: 'flex',
@@ -88,10 +128,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                 borderBottom: 1,
                 borderColor: 'divider'
             }}>
-                <IconButton
-                    onClick={onBack}
-                    sx={{ mr: 1 }}
-                >
+                <IconButton onClick={onBack} sx={{ mr: 1 }}>
                     <ChevronLeft />
                 </IconButton>
                 <Box sx={{ flex: 1 }}>
@@ -163,9 +200,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                                 boxShadow: 1
                             })
                         }}>
-                            <Typography variant="body2">
-                                {message.content}
-                            </Typography>
+                            <MessageContent content={message.content} />
                             <Typography
                                 variant="caption"
                                 sx={{
@@ -242,17 +277,17 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                                 vertical: 'bottom',
                                 horizontal: 'right',
                             }}
-                            sx={{
-                                '& .EmojiPickerReact': {
-                                    '--epr-bg-color': 'white',
-                                    '--epr-category-label-bg-color': 'white',
-                                }
-                            }}
                         >
                             <EmojiPicker
                                 onEmojiClick={handleEmojiClick}
                                 width={320}
                                 height={400}
+                                searchDisabled={true}
+                                skinTonesDisabled={true}
+                                style={{
+                                    '--epr-bg-color': 'white',
+                                    '--epr-category-label-bg-color': 'white'
+                                }}
                             />
                         </Popover>
                     </Box>
@@ -275,6 +310,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
     );
 };
 
+ 
 // Компонент списка чатов
 export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat }) => {
     const formatPrice = (price) => {
