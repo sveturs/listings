@@ -49,10 +49,15 @@ const MessageContent = ({ content }) => {
             component="div"
             sx={{
                 '& .emoji': {
-                    fontFamily: '-apple-system-emoji, "Apple Color Emoji", "Segoe UI Emoji", sans-serif',
+                    // Используем стили для Apple эмодзи
+                    fontFamily: 'Apple Color Emoji',  // Основной шрифт для Apple эмодзи
                     fontSize: onlyEmoji ? '4rem' : '1.5rem',
                     lineHeight: 1,
-                    verticalAlign: 'middle'
+                    verticalAlign: 'middle',
+                    fontStyle: 'normal', // Важно для корректного отображения
+                    WebkitFontSmoothing: 'antialiased', // Улучшает отображение на webkit браузерах
+                    textRendering: 'optimizeLegibility', // Улучшает четкость отображения
+                    fontFamily: 'Apple Color Emoji, -apple-system-emoji, "Segoe UI Emoji", "Noto Color Emoji", sans-serif',
                 }
             }}
         >
@@ -282,7 +287,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                                 height={400}
                                 searchDisabled={true}
                                 skinTonesDisabled={true}
-                                emojiStyle="apple"
+                                emojiStyle="native"
                                 style={{
                                     '--epr-bg-color': 'white',
                                     '--epr-category-label-bg-color': 'white'
@@ -309,7 +314,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
     );
 };
 
-  
+
 // Компонент списка чатов
 export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat }) => {
     const formatPrice = (price) => {
@@ -548,7 +553,11 @@ export const ChatHeader = ({ chat, onBack, onArchive }) => {
                         <Button
                             variant="outlined"
                             size="small"
-                            onClick={() => window.open(`/marketplace/listings/${chat.listing?.id}`, '_blank')}
+                            onClick={() => {
+                                if (chat.listing_id) {
+                                    window.open(`/marketplace/listings/${chat.listing_id}`, '_blank');
+                                }
+                            }}
                             sx={{
                                 minWidth: 'auto',
                                 px: 2,

@@ -33,6 +33,7 @@ type MarketplaceChat struct {
 	// Дополнительные поля для отображения
 	Buyer       *User               `json:"buyer,omitempty"`
 	Seller      *User               `json:"seller,omitempty"`
+	OtherUser    *User               `json:"other_user,omitempty"` 
 	Listing     *MarketplaceListing `json:"listing,omitempty"`
 	LastMessage *MarketplaceMessage `json:"last_message,omitempty"`
 	UnreadCount int                 `json:"unread_count"`

@@ -38,7 +38,7 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
 }
 
 func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error) {
-	rows, err := s.pool.Query(ctx, `
+    rows, err := s.pool.Query(ctx, `
     WITH unread_counts AS (
         SELECT 
             c.id as chat_id,
@@ -51,38 +51,61 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
     SELECT 
         c.id, c.listing_id, c.buyer_id, c.seller_id,
         c.last_message_at, c.created_at, c.updated_at, c.is_archived,
-        l.title, l.price, -- Добавляем price в SELECT
-        COALESCE(uc.unread_count, 0) as unread_count
+        l.title, l.price,
+        COALESCE(uc.unread_count, 0) as unread_count,
+        -- Добавляем информацию о пользователе
+        CASE 
+            WHEN c.buyer_id = $1 THEN seller.name
+            ELSE buyer.name
+        END as other_user_name,
+        CASE 
+            WHEN c.buyer_id = $1 THEN seller.picture_url
+            ELSE buyer.picture_url
+        END as other_user_picture
     FROM marketplace_chats c
     JOIN marketplace_listings l ON c.listing_id = l.id
     LEFT JOIN unread_counts uc ON c.id = uc.chat_id
+    LEFT JOIN users buyer ON c.buyer_id = buyer.id
+    LEFT JOIN users seller ON c.seller_id = seller.id
     WHERE c.buyer_id = $1 OR c.seller_id = $1
     ORDER BY c.last_message_at DESC
-`, userID)
-	if err != nil {
-		return nil, fmt.Errorf("error querying chats: %w", err)
-	}
-	defer rows.Close()
+    `, userID)
+    if err != nil {
+        return nil, fmt.Errorf("error querying chats: %w", err)
+    }
+    defer rows.Close()
 
-	var chats []models.MarketplaceChat
-	for rows.Next() {
-		var chat models.MarketplaceChat
-		chat.Listing = &models.MarketplaceListing{}
+    var chats []models.MarketplaceChat
+    for rows.Next() {
+        var (
+            chat models.MarketplaceChat
+            otherUserName string
+            otherUserPicture string
+        )
+        chat.Listing = &models.MarketplaceListing{}
 
         err := rows.Scan(
             &chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
             &chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
             &chat.Listing.Title, &chat.Listing.Price,
             &chat.UnreadCount,
+            &otherUserName,
+            &otherUserPicture,
         )
-		if err != nil {
-			return nil, fmt.Errorf("error scanning chat: %w", err)
-		}
+        if err != nil {
+            return nil, fmt.Errorf("error scanning chat: %w", err)
+        }
 
-		chats = append(chats, chat)
-	}
+        // Создаем структуру other_user
+        chat.OtherUser = &models.User{
+            Name: otherUserName,
+            PictureURL: otherUserPicture,
+        }
 
-	return chats, nil
+        chats = append(chats, chat)
+    }
+
+    return chats, nil
 }
 
 func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
