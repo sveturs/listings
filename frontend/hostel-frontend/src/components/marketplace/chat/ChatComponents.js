@@ -1,5 +1,4 @@
 // frontend/hostel-frontend/src/components/marketplace/chat/ChatComponents.js
-// frontend/hostel-frontend/src/components/marketplace/chat/ChatComponents.js
 
 import React, { useState, useRef, useEffect } from 'react';
 import EmojiPicker from 'emoji-picker-react';
@@ -49,8 +48,8 @@ const MessageContent = ({ content }) => {
             component="div"
             sx={{
                 '& .emoji': {
-                    // Используем стили для Apple эмодзи
-                    fontFamily: 'Apple Color Emoji',  // Основной шрифт для Apple эмодзи
+                    // Используем стили для  эмодзи
+                    fontFamily: 'Apple Color Emoji',  // Основной шрифт для  эмодзи
                     fontSize: onlyEmoji ? '4rem' : '1.5rem',
                     lineHeight: 1,
                     verticalAlign: 'middle',
@@ -121,48 +120,6 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'grey.50' }}>
-            {/* Шапка чата */}
-            <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                px: 2,
-                py: 1.5,
-                bgcolor: 'white',
-                borderBottom: 1,
-                borderColor: 'divider'
-            }}>
-                <IconButton onClick={onBack} sx={{ mr: 1 }}>
-                    <ChevronLeft />
-                </IconButton>
-                <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar
-                            variant="rounded"
-                            src={chat?.listing?.images?.[0]?.file_path}
-                            sx={{
-                                width: 40,
-                                height: 40,
-                                mr: 1.5,
-                                bgcolor: 'primary.light'
-                            }}
-                        />
-                        <Box>
-                            <Typography variant="subtitle1">
-                                {chat?.listing?.title || 'Чат с продавцом'}
-                            </Typography>
-                            {isTyping && (
-                                <Typography variant="caption" color="success.main">
-                                    печатает...
-                                </Typography>
-                            )}
-                        </Box>
-                    </Box>
-                </Box>
-                <IconButton>
-                    <Phone />
-                </IconButton>
-            </Box>
-
             {/* Область сообщений */}
             <Box sx={{
                 flex: 1,
