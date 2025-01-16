@@ -11,19 +11,15 @@ import (
     //"log"
     //"strconv"
 
-    carStorage "backend/internal/proj/car/storage/postgres"
     marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
     reviewStorage "backend/internal/proj/reviews/storage/postgres"
-    accommodationStorage "backend/internal/proj/accommodation/storage/postgres"
     userStorage             "backend/internal/proj/users/storage/postgres"
 )
 
 type Database struct {
     pool *pgxpool.Pool
-    carDB *carStorage.Storage
     marketplaceDB *marketplaceStorage.Storage
     reviewDB *reviewStorage.Storage
-    accommodationDB *accommodationStorage.Storage
     usersDB *userStorage.Storage 
     
 }
@@ -36,10 +32,8 @@ func NewDatabase(dbURL string) (*Database, error) {
 
     return &Database{
         pool:          pool,
-        carDB:         carStorage.NewStorage(pool),
         marketplaceDB: marketplaceStorage.NewStorage(pool),
         reviewDB:      reviewStorage.NewStorage(pool),
-        accommodationDB: accommodationStorage.NewStorage(pool),
         usersDB:        userStorage.NewStorage(pool),
     }, nil
 }
@@ -85,43 +79,6 @@ func (db *Database) QueryRow(ctx context.Context, sql string, args ...interface{
     return db.pool.QueryRow(ctx, sql, args...)
 }
 
-// Car methods
-func (db *Database) AddCar(ctx context.Context, car *models.Car) (int, error) {
-    return db.carDB.AddCar(ctx, car)
-}
-
-func (db *Database) GetAvailableCars(ctx context.Context, filters map[string]string) ([]models.Car, error) {
-    return db.carDB.GetAvailableCars(ctx, filters)
-}
-
-func (db *Database) GetCarWithFeatures(ctx context.Context, carID int) (*models.Car, error) {
-    return db.carDB.GetCarWithFeatures(ctx, carID)
-}
-
-func (db *Database) GetCarFeatures(ctx context.Context) ([]models.CarFeature, error) {
-    return db.carDB.GetCarFeatures(ctx)
-}
-
-func (db *Database) GetCarCategories(ctx context.Context) ([]models.CarCategory, error) {
-    return db.carDB.GetCarCategories(ctx)
-}
-
-func (db *Database) CreateCarBooking(ctx context.Context, booking *models.CarBooking) error {
-    return db.carDB.CreateCarBooking(ctx, booking)
-}
-
-// Car image methods
-func (db *Database) AddCarImage(ctx context.Context, image *models.CarImage) (int, error) {
-    return db.carDB.AddCarImage(ctx, image)
-}
-
-func (db *Database) GetCarImages(ctx context.Context, carID string) ([]models.CarImage, error) {
-    return db.carDB.GetCarImages(ctx, carID)
-}
-
-func (db *Database) DeleteCarImage(ctx context.Context, imageID string) (string, error) {
-    return db.carDB.DeleteCarImage(ctx, imageID)
-}
 // Marketplace methods
 func (db *Database) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
     return db.marketplaceDB.CreateListing(ctx, listing)
@@ -218,82 +175,6 @@ func (db *Database) GetUserReviewVote(ctx context.Context, userId int, reviewId 
 func (db *Database) GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error) {
     return db.reviewDB.GetEntityRating(ctx, entityType, entityId)
 }
-// Методы для работы с images
-func (db *Database) AddBedImage(ctx context.Context, image *models.RoomImage) (int, error) {
-    return db.accommodationDB.AddBedImage(ctx, image)
-}
-
-func (db *Database) GetBedImages(ctx context.Context, bedID string) ([]models.RoomImage, error) {
-    return db.accommodationDB.GetBedImages(ctx, bedID)
-}
-
-func (db *Database) AddRoomImage(ctx context.Context, image *models.RoomImage) (int, error) {
-    return db.accommodationDB.AddRoomImage(ctx, image)
-}
-
-func (db *Database) GetRoomImages(ctx context.Context, roomID string) ([]models.RoomImage, error) {
-    return db.accommodationDB.GetRoomImages(ctx, roomID)
-}
-
-func (db *Database) DeleteRoomImage(ctx context.Context, imageID string) (string, error) {
-    return db.accommodationDB.DeleteRoomImage(ctx, imageID)
-}
-
-// Методы для работы с rooms
-func (db *Database) AddRoom(ctx context.Context, room *models.Room) (int, error) {
-    return db.accommodationDB.AddRoom(ctx, room)
-}
-
-func (db *Database) GetRooms(ctx context.Context, filters map[string]string, sortBy string, sortDirection string, limit int, offset int) ([]models.Room, int64, error) {
-    return db.accommodationDB.GetRooms(ctx, filters, sortBy, sortDirection, limit, offset)
-}
-
-func (db *Database) GetRoomByID(ctx context.Context, id int) (*models.Room, error) {
-    return db.accommodationDB.GetRoomByID(ctx, id)
-}
-
-// Методы для работы с beds
-func (db *Database) AddBed(ctx context.Context, roomID int, bedNumber string, pricePerNight float64, hasOutlet bool, hasLight bool, hasShelf bool, bedType string) (int, error) {
-    return db.accommodationDB.AddBed(ctx, roomID, bedNumber, pricePerNight, hasOutlet, hasLight, hasShelf, bedType)
-}
-
-func (db *Database) GetBedByID(ctx context.Context, id int) (*models.Bed, error) {
-    return db.accommodationDB.GetBedByID(ctx, id)
-}
-
-func (db *Database) GetBedsByRoomID(ctx context.Context, roomID int) ([]models.Bed, error) {
-    return db.accommodationDB.GetBedsByRoomID(ctx, roomID)
-}
-
-func (db *Database) GetAvailableBeds(ctx context.Context, roomID string, startDate string, endDate string) ([]models.Bed, error) {
-    return db.accommodationDB.GetAvailableBeds(ctx, roomID, startDate, endDate)
-}
-
-func (db *Database) UpdateBedAvailability(ctx context.Context, bedID int, isAvailable bool) error {
-    return db.accommodationDB.UpdateBedAvailability(ctx, bedID, isAvailable)
-}
-
-func (db *Database) UpdateBedPrice(ctx context.Context, bedID int, price float64) error {
-    return db.accommodationDB.UpdateBedPrice(ctx, bedID, price)
-}
-
-func (db *Database) UpdateBedAttributes(ctx context.Context, bedID int, bedReq *models.BedRequest) error {
-    return db.accommodationDB.UpdateBedAttributes(ctx, bedID, bedReq)
-}
-
-// Методы для работы с bookings
-func (db *Database) CreateBooking(ctx context.Context, booking *models.BookingRequest) error {
-    return db.accommodationDB.CreateBooking(ctx, booking)
-}
-
-func (db *Database) GetAllBookings(ctx context.Context) ([]models.Booking, error) {
-    return db.accommodationDB.GetAllBookings(ctx)
-}
-
-func (db *Database) DeleteBooking(ctx context.Context, bookingID string, bookingType string) error {
-    return db.accommodationDB.DeleteBooking(ctx, bookingID, bookingType)
-}
-
 
 // User methods
 func (db *Database) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {

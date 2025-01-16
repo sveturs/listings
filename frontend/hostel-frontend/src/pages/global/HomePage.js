@@ -1,10 +1,10 @@
 import React from "react";
 import { Container } from "@mui/material";
-import RoomList from "../../components/accommodation/RoomList";
+import ListingCard from "../../components/marketplace/ListingCard";
 
 const HomePage = () => (
   <Container sx={{ marginTop: 4 }}>
-    <RoomList />
+    <ListingCard />
   </Container>
 );
 

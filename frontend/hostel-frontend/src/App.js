@@ -4,13 +4,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/global/Layout";
 import HomePage from "./pages/global/HomePage";
-import AddRoomPage from "./pages/accommodation/AddRoomPage";
 import AddUserPage from "./pages/user/AddUserPage";
-import BookingsListPage from "./pages/accommodation/BookingsListPage";
 import AdminPanelPage from "./pages/global/AdminPanelPage";
 import PrivacyPolicy from "./pages/accommodation/PrivacyPolicy";
-import CarListPage from "./pages/car/CarListPage";
-import AddCarPage from "./pages/car/AddCarPage";
 import MarketplacePage from "./pages/marketplace/MarketplacePage";
 import CreateListingPage from "./pages/marketplace/CreateListingPage";
 import ListingDetailsPage from './pages/marketplace/ListingDetailsPage';
@@ -32,14 +28,10 @@ function App() {
         <AuthProvider>
           <Layout>
             <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/bookings" element={<BookingsListPage />} />
-              <Route path="/add-room" element={<AddRoomPage />} />
+            <Route path="/" element={<MarketplacePage />} />
               <Route path="/add-user" element={<AddUserPage />} />
               <Route path="/admin" element={<AdminPanelPage />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/cars" element={<CarListPage />} />
-              <Route path="/add-car" element={<AddCarPage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/marketplace/create" element={<CreateListingPage />} />
               <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />

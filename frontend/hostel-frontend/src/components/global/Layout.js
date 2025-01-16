@@ -22,7 +22,7 @@ import {
 import {
   HomeWork,
   DirectionsCar,
-  AttachMoney,
+  Store,
   Key,
   Logout,
   ListAlt,
@@ -64,9 +64,8 @@ const Layout = ({ children }) => {
   };
 
   const menuItems = [
-    { path: "/", label: "Hostel", icon: <HomeWork fontSize="medium" /> },
-    { path: "/cars", label: "Auto", icon: <DirectionsCar fontSize="medium" /> },
-    { path: "/marketplace", label: "Market", icon: <AttachMoney fontSize="medium" /> },
+    { path: "/", label: "SveTu", icon: <Store size={24} /> },
+
   ];
 
   return (

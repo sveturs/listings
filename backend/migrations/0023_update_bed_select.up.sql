@@ -1,5 +1,0 @@
-ALTER TABLE beds ADD COLUMN has_outlet BOOLEAN NOT NULL DEFAULT true;
-ALTER TABLE beds ADD COLUMN has_light BOOLEAN NOT NULL DEFAULT true;
-ALTER TABLE beds ADD COLUMN has_shelf BOOLEAN NOT NULL DEFAULT true;
-ALTER TABLE beds ADD COLUMN bed_type VARCHAR(20) NOT NULL DEFAULT 'single' 
-  CHECK (bed_type IN ('top', 'bottom', 'single'));

@@ -4,16 +4,12 @@ import (
     "backend/internal/config"
     "backend/internal/storage"
     userService "backend/internal/proj/users/service"
-    accommodationService "backend/internal/proj/accommodation/service"
-    carService "backend/internal/proj/car/service"
     marketplaceService "backend/internal/proj/marketplace/service"
     reviewService "backend/internal/proj/reviews/service"
 )
 
 type Service struct {
     users         *userService.Service
-    accommodation *accommodationService.Service
-    car          *carService.Service
     marketplace  *marketplaceService.Service
     review       *reviewService.Service
     chat         *marketplaceService.Service
@@ -23,8 +19,6 @@ type Service struct {
 func NewService(storage storage.Storage, cfg *config.Config) *Service {
     return &Service{
         users:         userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
-        accommodation: accommodationService.NewService(storage),
-        car:          carService.NewService(storage),
         marketplace:  marketplaceService.NewService(storage),
         review:       reviewService.NewService(storage),
         chat:         marketplaceService.NewService(storage),
@@ -41,18 +35,6 @@ func (s *Service) User() userService.UserServiceInterface {
     return s.users.User
 }
 
-func (s *Service) Car() carService.CarServiceInterface {
-    return s.car.Car
-}
-
-func (s *Service) Room() accommodationService.RoomServiceInterface {
-    return s.accommodation.Room
-}
-
-func (s *Service) Booking() accommodationService.BookingServiceInterface {
-    return s.accommodation.Booking
-}
-
 func (s *Service) Config() *config.Config {
     return s.config
 }
@@ -67,8 +49,4 @@ func (s *Service) Review() reviewService.ReviewServiceInterface {
 
 func (s *Service) Chat() marketplaceService.ChatServiceInterface {
     return s.chat.Chat
-}
-
-func (s *Service) Bed() accommodationService.BedServiceInterface {
-    return s.accommodation.Bed
 }
