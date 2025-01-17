@@ -52,7 +52,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
 
     const handlePhotoAdd = (event) => {
         const files = Array.from(event.target.files);
-        
+
         const validFiles = files.filter(file => {
             const isValidType = file.type.startsWith('image/');
             const isValidSize = file.size <= 15 * 1024 * 1024; // 15MB
@@ -191,8 +191,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
 const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, onReport }) => {
     const [showGallery, setShowGallery] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-     const [showReplyForm, setShowReplyForm] = useState(false);
- 
+    const [showReplyForm, setShowReplyForm] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [menuAnchor, setMenuAnchor] = useState(null);
 
@@ -202,6 +201,21 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
         onReply(review.id, replyText);
         setReplyText('');
         setShowReplyForm(false);
+    };
+
+    const handleVote = (voteType) => {
+        // Проверяем авторизацию
+        if (!currentUserId) {
+            // Если пользователь не авторизован, ничего не делаем
+            return;
+        }
+
+        // Если текущий голос такой же, снимаем его
+        if (review.current_user_vote === voteType) {
+            return;
+        }
+
+        onVote(review.id, voteType);
     };
 
     return (
@@ -324,9 +338,10 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                     <Stack direction="row" spacing={2}>
                         <Button
                             size="small"
-                            onClick={() => onVote(review.id, 'helpful')}
+                            onClick={() => handleVote('helpful')}
                             startIcon={<ThumbsUp />}
                             variant={review.current_user_vote === 'helpful' ? 'contained' : 'outlined'}
+                            disabled={!currentUserId} // Добавляем disabled если пользователь не авторизован
                         >
                             {isMobile ? (
                                 `(${review.votes_count?.helpful || 0})`
@@ -336,9 +351,10 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                         </Button>
                         <Button
                             size="small"
-                            onClick={() => onVote(review.id, 'not_helpful')}
+                            onClick={() => handleVote('not_helpful')}
                             startIcon={<ThumbsDown />}
                             variant={review.current_user_vote === 'not_helpful' ? 'contained' : 'outlined'}
+                            disabled={!currentUserId} // Добавляем disabled если пользователь не авторизован
                         >
                             {isMobile ? (
                                 `(${review.votes_count?.not_helpful || 0})`
@@ -346,7 +362,6 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                 `Не полезно (${review.votes_count?.not_helpful || 0})`
                             )}
                         </Button>
-
                         {isMobile ? (
                             <>
                                 <IconButton onClick={() => setShowReplyForm(!showReplyForm)}>

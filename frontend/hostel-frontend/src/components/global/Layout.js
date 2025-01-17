@@ -1,6 +1,7 @@
 //frontend/hostel-frontend/src/components/Layout.js
 import React, { useState } from "react";
 import { ShoppingBag} from '@mui/icons-material';
+import { Storefront} from '@mui/icons-material';
 import MessageIcon from '@mui/icons-material/Message';
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -22,7 +23,6 @@ import {
 import {
   HomeWork,
   DirectionsCar,
-  Store,
   Key,
   Logout,
   ListAlt,
@@ -63,11 +63,15 @@ const Layout = ({ children }) => {
     setIsProfileOpen(false);
   };
 
+
+
   const menuItems = [
-    { path: "/", label: "SveTu", icon: <Store size={24} /> },
-
+    {
+      path: "/",
+      label: "Sve Tu",
+      icon: <Storefront fontSize="large" color="primary" />,
+    },
   ];
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
@@ -100,36 +104,35 @@ const Layout = ({ children }) => {
             >
               {menuItems.map((item) => (
                 <Box
-                  key={item.path}
-                  component={Link}
-                  to={item.path}
+                key={item.path}
+                component={Link}
+                to={item.path}
+                sx={{
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5, // Расстояние между логотипом и текстом
+                  color: currentPath === item.path ? "primary.main" : "text.secondary",
+                  fontWeight: currentPath === item.path ? 600 : 400,
+                  fontSize: "1rem",
+                  transition: "color 0.3s ease, transform 0.3s ease",
+                  "&:hover": {
+                    color: "primary.main",
+                    transform: "scale(1.05)",
+                  },
+                }}
+              >
+                {item.icon}
+                <Typography
+                  variant="h6"
                   sx={{
-                    textDecoration: "none",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 0.3,
-                    color: currentPath === item.path ? "primary.main" : "text.secondary",
-                    fontWeight: currentPath === item.path ? 600 : 400,
-                    fontSize: "0.9rem",
-                    transition: "color 0.3s ease, transform 0.3s ease",
-                    "&:hover": {
-                      color: "primary.main",
-                      transform: "scale(1.05)",
-                    },
+                    fontSize: isMobile ? "0.85rem" : "1.1rem",
+                    fontWeight: "bold",
                   }}
                 >
-                  {item.icon}
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: isMobile ? "0.75rem" : "0.85rem",
-                      textAlign: "center",
-                    }}
-                  >
-                    {item.label}
-                  </Typography>
-                </Box>
+                  {item.label}
+                </Typography>
+              </Box>
               ))}
             </Box>
 

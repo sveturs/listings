@@ -4,6 +4,7 @@ import { Box, Button, Dialog, DialogTitle, DialogContent, Alert, Snackbar } from
 import { PencilLine } from 'lucide-react';
 import { ReviewForm, ReviewCard, RatingStats } from './ReviewComponents';
 import axios from '../../api/axios';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ReviewsSection = ({
     entityType,
@@ -19,6 +20,7 @@ const ReviewsSection = ({
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const { user } = useAuth();
 
     // Загрузка отзывов и статистики
     const fetchData = async () => {
@@ -33,8 +35,17 @@ const ReviewsSection = ({
                 }),
                 axios.get(`/api/v1/entity/${entityType}/${entityId}/stats`)
             ]);
-
-            setReviews(reviewsResponse.data.data.data || []);
+    
+            // Преобразуем данные
+            const reviews = (reviewsResponse.data.data.data || []).map(review => ({
+                ...review,
+                votes_count: {
+                    helpful: review.helpful_votes || 0,
+                    not_helpful: review.not_helpful_votes || 0
+                }
+            }));
+    
+            setReviews(reviews);
             setStats(statsResponse.data.data);
         } catch (err) {
             setError('Не удалось загрузить отзывы');
@@ -43,7 +54,6 @@ const ReviewsSection = ({
             setLoading(false);
         }
     };
-
     useEffect(() => {
         fetchData();
     }, [entityType, entityId]);
@@ -97,40 +107,54 @@ const ReviewsSection = ({
 
     const handleVote = async (reviewId, voteType) => {
         const oldReviews = [...reviews];
-
-        setReviews((prevReviews) =>
-            prevReviews.map((review) =>
-                review.id === reviewId
-                    ? {
-                        ...review,
-                        votes_count: {
-                            ...review.votes_count,
-                            [voteType]: (review.votes_count?.[voteType] || 0) + 1,
-                        },
-                        current_user_vote: voteType,
-                    }
-                    : review
-            )
-        );
-
+    
         try {
+            // Оптимистично обновляем UI
+            setReviews(prevReviews =>
+                prevReviews.map(review => {
+                    if (review.id === reviewId) {
+                        const votes_count = { ...review.votes_count };
+                        
+                        // Если был предыдущий голос, убираем его
+                        if (review.current_user_vote) {
+                            votes_count[review.current_user_vote]--;
+                        }
+                        
+                        // Добавляем новый голос
+                        votes_count[voteType] = (votes_count[voteType] || 0) + 1;
+    
+                        return {
+                            ...review,
+                            votes_count,
+                            current_user_vote: voteType
+                        };
+                    }
+                    return review;
+                })
+            );
+    
+            // Отправляем запрос на сервер
             await axios.post(`/api/v1/reviews/${reviewId}/vote`, {
-                vote_type: voteType,
+                vote_type: voteType
             });
-
-            setTimeout(() => {
-                fetchData();
-            }, 1000);
+    
+            // Обновляем данные с сервера
+            const response = await axios.get(`/api/v1/reviews/${reviewId}`);
+            setReviews(prevReviews =>
+                prevReviews.map(review =>
+                    review.id === reviewId ? response.data.data : review
+                )
+            );
         } catch (err) {
+            // В случае ошибки возвращаем предыдущее состояние
             setReviews(oldReviews);
             setSnackbar({
                 open: true,
                 message: 'Ошибка при голосовании',
-                severity: 'error',
+                severity: 'error'
             });
         }
     };
-
     const handleReply = async (reviewId, response) => {
         try {
             await axios.post(`/api/v1/reviews/${reviewId}/response`, { response });
@@ -203,6 +227,7 @@ const ReviewsSection = ({
                 <ReviewCard
                     key={review.id}
                     review={review}
+                    currentUserId={user?.id} // Добавляем передачу ID пользователя
                     onVote={handleVote}
                     onReply={handleReply}
                     onEdit={(review) => {

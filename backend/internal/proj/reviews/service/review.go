@@ -19,8 +19,6 @@ func NewReviewService(storage storage.Storage) *ReviewService {
     }
 }
 
-// internal/services/review.go
-
 func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *models.CreateReviewRequest) (*models.Review, error) {
     review := &models.Review{
         UserID:     userId,
