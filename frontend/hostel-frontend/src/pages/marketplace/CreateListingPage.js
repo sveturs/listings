@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/pages/marketplace/CreateListingPage.js
 import React, { useState, useEffect } from "react";
 import {
     Container,
@@ -22,8 +23,10 @@ import LocationPicker from '../../components/global/LocationPicker';
 import MiniMap from '../../components/maps/MiniMap';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import axios from "../../api/axios";
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const CreateListing = () => {
+    const { language } = useLanguage();
     const [listing, setListing] = useState({
         title: "",
         description: "",
@@ -105,7 +108,8 @@ const CreateListing = () => {
         try {
             const listingData = {
                 ...listing,
-                price: parseFloat(listing.price)
+                price: parseFloat(listing.price),
+                original_language: language
             };
 
             const response = await axios.post("/api/v1/marketplace/listings", listingData);

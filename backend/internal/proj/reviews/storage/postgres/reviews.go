@@ -3,9 +3,10 @@ package postgres
 
 import (
     "backend/internal/domain/models"
+        "github.com/jackc/pgx/v5"
     "context"
     "fmt"
-    "log"
+//    "log"
     "database/sql"
 )
 
@@ -170,6 +171,14 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
     review := &models.Review{
         User: &models.User{},
     }
+    
+    // Используем NullString для всех полей, которые могут быть NULL
+    var (
+        comment, pros, cons sql.NullString
+        photos []string
+        userName, userEmail, userPictureURL sql.NullString
+        currentUserVote sql.NullString
+    )
 
     err := s.pool.QueryRow(ctx, `
         WITH votes_summary AS (
@@ -183,7 +192,7 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
             r.id, r.user_id, r.entity_type, r.entity_id, r.rating,
             r.comment, r.pros, r.cons, r.photos, r.likes_count,
             r.is_verified_purchase, r.status, r.created_at, r.updated_at,
-            u.name as user_name, u.email as user_email, u.picture_url as user_picture,
+            u.name, u.email, u.picture_url,
             vs.helpful_count, vs.not_helpful_count,
             (
                 SELECT vote_type 
@@ -196,18 +205,46 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
         WHERE r.id = $1
     `, id, userID).Scan(
         &review.ID, &review.UserID, &review.EntityType, &review.EntityID, &review.Rating,
-        &review.Comment, &review.Pros, &review.Cons, &review.Photos, &review.LikesCount,
+        &comment, &pros, &cons, &photos, &review.LikesCount,
         &review.IsVerifiedPurchase, &review.Status, &review.CreatedAt, &review.UpdatedAt,
-        &review.User.Name, &review.User.Email, &review.User.PictureURL,
+        &userName, &userEmail, &userPictureURL,
         &review.HelpfulVotes, &review.NotHelpfulVotes,
-        &review.CurrentUserVote,
+        &currentUserVote,
     )
 
     if err != nil {
         return nil, fmt.Errorf("error getting review: %w", err)
     }
 
-    // Инициализируем VotesCount сразу из базы данных
+    // Присваиваем значения из NullString только если они валидны
+    if comment.Valid {
+        review.Comment = comment.String
+    }
+    if pros.Valid {
+        review.Pros = pros.String
+    }
+    if cons.Valid {
+        review.Cons = cons.String
+    }
+    review.Photos = photos
+
+    // Заполняем информацию о пользователе
+    if userName.Valid {
+        review.User.Name = userName.String
+    }
+    if userEmail.Valid {
+        review.User.Email = userEmail.String
+    }
+    if userPictureURL.Valid {
+        review.User.PictureURL = userPictureURL.String
+    }
+
+    // Устанавливаем current_user_vote только если значение не NULL
+    if currentUserVote.Valid {
+        review.CurrentUserVote = currentUserVote.String
+    }
+
+    // Инициализируем VotesCount
     review.VotesCount = struct {
         Helpful    int `json:"helpful"`
         NotHelpful int `json:"not_helpful"`
@@ -215,6 +252,7 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
         Helpful:    review.HelpfulVotes,
         NotHelpful: review.NotHelpfulVotes,
     }
+
 
     // Загружаем ответы на отзыв
     rows, err := s.pool.Query(ctx, `

@@ -1,4 +1,4 @@
-//frontend/hostel-frontend/src/components/Layout.js
+// frontend/hostel-frontend/src/components/global/Layout.js
 import React, { useState } from "react";
 import { ShoppingBag} from '@mui/icons-material';
 import { Storefront} from '@mui/icons-material';
@@ -29,18 +29,18 @@ import {
   AddHome,
   AccountCircle,
 } from "@mui/icons-material";
+import { Bookmark } from '@mui/icons-material';
 import { useAuth } from "../../contexts/AuthContext";
 import UserProfile from "../user/UserProfile";
-import { Bookmark } from '@mui/icons-material';
+
+// Добавляем импорт компонента переключателя языка
+import LanguageSwitcher from '../shared/LanguageSwitcher';
 
 const Layout = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const location = useLocation();
-
-  // Определение текущей страницы
   const currentPath = location.pathname;
-
   const { user, login, logout } = useAuth();
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -63,8 +63,6 @@ const Layout = ({ children }) => {
     setIsProfileOpen(false);
   };
 
-
-
   const menuItems = [
     {
       path: "/",
@@ -72,6 +70,7 @@ const Layout = ({ children }) => {
       icon: <Storefront fontSize="large" color="primary" />,
     },
   ];
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
@@ -104,40 +103,41 @@ const Layout = ({ children }) => {
             >
               {menuItems.map((item) => (
                 <Box
-                key={item.path}
-                component={Link}
-                to={item.path}
-                sx={{
-                  textDecoration: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.5, // Расстояние между логотипом и текстом
-                  color: currentPath === item.path ? "primary.main" : "text.secondary",
-                  fontWeight: currentPath === item.path ? 600 : 400,
-                  fontSize: "1rem",
-                  transition: "color 0.3s ease, transform 0.3s ease",
-                  "&:hover": {
-                    color: "primary.main",
-                    transform: "scale(1.05)",
-                  },
-                }}
-              >
-                {item.icon}
-                <Typography
-                  variant="h6"
+                  key={item.path}
+                  component={Link}
+                  to={item.path}
                   sx={{
-                    fontSize: isMobile ? "0.85rem" : "1.1rem",
-                    fontWeight: "bold",
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    color: currentPath === item.path ? "primary.main" : "text.secondary",
+                    fontWeight: currentPath === item.path ? 600 : 400,
+                    fontSize: "1rem",
+                    transition: "color 0.3s ease, transform 0.3s ease",
+                    "&:hover": {
+                      color: "primary.main",
+                      transform: "scale(1.05)",
+                    },
                   }}
                 >
-                  {item.label}
-                </Typography>
-              </Box>
+                  {item.icon}
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontSize: isMobile ? "0.85rem" : "1.1rem",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {item.label}
+                  </Typography>
+                </Box>
               ))}
             </Box>
 
-            {/* Правый блок (авторизация) */}
+            {/* Правый блок (авторизация + переключатель языка) */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <LanguageSwitcher />
               {!user ? (
                 <Tooltip title="Войти">
                   <IconButton onClick={() => {

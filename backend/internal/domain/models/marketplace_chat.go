@@ -18,6 +18,10 @@ type MarketplaceMessage struct {
     Sender   *User             `json:"sender,omitempty"`
     Receiver *User             `json:"receiver,omitempty"`
     Listing  *MarketplaceListing `json:"listing,omitempty"`
+	    // Добавляем поля для мультиязычности
+		OriginalLanguage string                            `json:"original_language"`
+		Translations    map[string]map[string]string      `json:"translations,omitempty"`
+		
 }
 
 type MarketplaceChat struct {

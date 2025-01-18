@@ -21,6 +21,9 @@ type Review struct {
     UpdatedAt         time.Time `json:"updated_at"`
 	HelpfulVotes      int       `json:"helpful_votes"`       
 	NotHelpfulVotes   int       `json:"not_helpful_votes"`   
+    // поля для мультиязычности
+    OriginalLanguage string                            `json:"original_language"`
+    Translations    map[string]map[string]string      `json:"translations,omitempty"`
     
     // Дополнительные поля для отображения
     User              *User     `json:"user,omitempty"`
