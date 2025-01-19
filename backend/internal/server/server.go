@@ -85,6 +85,9 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/categories", s.marketplace.Marketplace.GetCategories)
 	marketplace.Get("/category-tree", s.marketplace.Marketplace.GetCategoryTree)
 
+marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Детали товара
+
+
 	// Публичные маршруты для отзывов
 	review := s.app.Group("/api/v1/reviews")
 	review.Get("/", s.review.Review.GetReviews)       // Получение списка отзывов

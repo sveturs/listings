@@ -43,6 +43,10 @@ type MarketplaceListing struct {
     OriginalLanguage string         `json:"original_language,omitempty"`
     RawTranslations  interface{}    `json:"-"`                               // Для хранения "сырых" данных
     Translations     TranslationMap `json:"translations,omitempty"` 
+    CategoryPathNames []string `json:"category_path_names,omitempty"`
+    CategoryPathIds   []int    `json:"category_path_ids,omitempty"`
+    CategoryPathSlugs []string `json:"category_path_slugs,omitempty"`
+    CategoryPath []string `json:"category_path,omitempty"`
 }
 
 type MarketplaceCategory struct {

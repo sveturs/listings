@@ -242,8 +242,9 @@ const MobileFilters = ({ open, onClose, filters, onFilterChange, categories }) =
                 px: 2,
                 py: 2
             }}>
+                //Категории мобильной версии
                 <Typography variant="subtitle2" gutterBottom>
-                    Категории
+                    Категории 
                 </Typography>
                 <Stack spacing={1} sx={{ mb: 3 }}>
                     {categories.map(category => (

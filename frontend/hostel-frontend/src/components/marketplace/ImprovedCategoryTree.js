@@ -145,9 +145,10 @@ const CompactCategoryTree = ({ categories, selectedId, onSelectCategory }) => {
           key={category.id}
           category={category}
           selectedId={selectedId}
+          defaultCollapseIcon={<ExpandMore />}
           onSelect={onSelectCategory}
         />
-      ))}
+      ))}11
     </List>
   );
 };

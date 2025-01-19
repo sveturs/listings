@@ -8,6 +8,8 @@ import MiniMap from '../../components/maps/MiniMap';
 
 //import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 import { GoogleMap, Marker } from '@react-google-maps/api';
+import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
+
 
 import {
     Container,
@@ -54,6 +56,8 @@ const ListingDetailsPage = () => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [reviewsCount, setReviewsCount] = useState(0);
     const { user, login } = useAuth();
+    const [categoryPath, setCategoryPath] = useState([]);
+
 
     useEffect(() => {
         const fetchListing = async () => {
@@ -61,7 +65,20 @@ const ListingDetailsPage = () => {
                 setLoading(true);
                 const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
                 setListing(response.data.data);
-                setIsFavorite(response.data.data.is_favorite || false);
+    
+                // Добавим отладочный вывод
+                console.log('Listing data:', response.data.data);
+    
+                // Исправляем создание пути категорий
+                if (response.data.data.category_path) {
+                    const path = response.data.data.category_path.map((name, index) => ({
+                        id: response.data.data.category_path_ids[index],
+                        name: name,
+                        slug: response.data.data.category_path_slugs[index]
+                    }));
+                    setCategoryPath(path);
+                    console.log('Category path:', path); // Отладочный вывод
+                }
             } catch (err) {
                 console.error('Error fetching listing:', err);
                 setError('Не удалось загрузить объявление');
@@ -69,10 +86,10 @@ const ListingDetailsPage = () => {
                 setLoading(false);
             }
         };
-
+    
         fetchListing();
     }, [id]);
-    const scrollToReviews = () => {
+        const scrollToReviews = () => {
         const reviewsSection = document.getElementById('reviews-section');
         if (reviewsSection) {
             reviewsSection.scrollIntoView({
@@ -81,6 +98,15 @@ const ListingDetailsPage = () => {
             });
         }
     };
+
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB',
+            maximumFractionDigits: 0
+        }).format(price);
+    };
+
     const handleFavoriteClick = async () => {
         if (!user) {
             const returnUrl = window.location.pathname;
@@ -103,7 +129,6 @@ const ListingDetailsPage = () => {
             }
             // Получаем реальные данные с сервера
             const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
-            console.log('Обновленные данные объявления:', response.data.data);
             setListing(response.data.data);
         } catch (err) {
             // В случае ошибки возвращаем предыдущее состояние
@@ -115,19 +140,12 @@ const ListingDetailsPage = () => {
             alert('Произошла ошибка при обновлении избранного');
         }
     };
-
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('ru-RU', {
-            style: 'currency',
-            currency: 'RUB',
-            maximumFractionDigits: 0
-        }).format(price);
-    };
-
     if (loading) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
+                <Breadcrumbs paths={categoryPath} />
                 <Grid container spacing={4}>
+
                     <Grid item xs={12} md={8}>
                         <Skeleton variant="rectangular" height={400} />
                     </Grid>
@@ -142,6 +160,8 @@ const ListingDetailsPage = () => {
     if (error) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
+                <Breadcrumbs paths={categoryPath} />
+
                 <Typography color="error">{error}</Typography>
             </Container>
         );
@@ -151,6 +171,7 @@ const ListingDetailsPage = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Breadcrumbs paths={categoryPath} />
             <Grid container spacing={4}>
                 {/* Галерея изображений */}
                 <Grid item xs={12} md={8}>

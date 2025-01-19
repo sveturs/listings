@@ -679,109 +679,151 @@ func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.Marketpl
 }
 
 func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-	userID, _ := ctx.Value("user_id").(int)
+    userID, _ := ctx.Value("user_id").(int)
 
-	// Используем COALESCE для NULL значений
-	query := `
+    query := `
+    WITH RECURSIVE category_path AS (
         SELECT 
-            l.id, 
-            l.user_id, 
-            l.category_id, 
-            l.title, 
-            l.description,
-            l.price, 
-            l.condition, 
-            l.status, 
-            l.location, 
-            l.latitude,
-            l.longitude, 
-            l.address_city, 
-            l.address_country, 
-            l.views_count,
-            l.created_at, 
-            l.updated_at,
-            l.show_on_map,
-            u.name, 
-            u.email, 
-            COALESCE(u.picture_url, ''),
-            c.name as category_name, 
-            c.slug as category_slug,
-            EXISTS (
-                SELECT 1 
-                FROM marketplace_favorites mf 
-                WHERE mf.listing_id = l.id 
-                AND mf.user_id = $2
-            ) as is_favorite
-        FROM marketplace_listings l
-        LEFT JOIN users u ON l.user_id = u.id
-        LEFT JOIN marketplace_categories c ON l.category_id = c.id
-        WHERE l.id = $1`
+            c.id, 
+            c.name, 
+            c.parent_id, 
+            c.slug,
+            ARRAY[c.name::varchar] as path_names,
+            ARRAY[c.id] as path_ids,
+            ARRAY[c.slug::varchar] as path_slugs
+        FROM marketplace_categories c
+        WHERE c.id = (SELECT category_id FROM marketplace_listings WHERE id = $1)
+        
+        UNION ALL
+        
+        SELECT 
+            c.id, 
+            c.name, 
+            c.parent_id, 
+            c.slug,
+            array_append(cp.path_names, c.name::varchar),
+            array_append(cp.path_ids, c.id),
+            array_append(cp.path_slugs, c.slug::varchar)
+        FROM marketplace_categories c
+        JOIN category_path cp ON c.parent_id = cp.id
+    )
+    SELECT 
+        l.id, 
+        l.user_id, 
+        l.category_id, 
+        l.title, 
+        l.description,
+        l.price, 
+        l.condition, 
+        l.status, 
+        l.location, 
+        l.latitude,
+        l.longitude, 
+        l.address_city, 
+        l.address_country, 
+        l.views_count,
+        l.created_at, 
+        l.updated_at,
+        l.show_on_map,
+        u.name, 
+        u.email, 
+        COALESCE(u.picture_url, ''),
+        c.name as category_name, 
+        c.slug as category_slug,
+        cp.path_names,
+        cp.path_ids,
+        cp.path_slugs,
+        EXISTS (
+            SELECT 1 
+            FROM marketplace_favorites mf 
+            WHERE mf.listing_id = l.id 
+            AND mf.user_id = $2
+        ) as is_favorite
+    FROM marketplace_listings l
+    LEFT JOIN users u ON l.user_id = u.id
+    LEFT JOIN marketplace_categories c ON l.category_id = c.id
+    LEFT JOIN category_path cp ON cp.id = l.category_id
+    WHERE l.id = $1`
+    
+    listing := &models.MarketplaceListing{
+        User:      &models.User{},
+        Category:  &models.MarketplaceCategory{},
+        ShowOnMap: true,
+    }
 
-	listing := &models.MarketplaceListing{
-		User:      &models.User{},
-		Category:  &models.MarketplaceCategory{},
-		ShowOnMap: true,
-	}
+    var (
+        userPictureURL string
+        categoryPath   []string
+        categoryPathIds []int
+        categoryPathSlugs []string
+    )
 
-	var userPictureURL string
-	err := s.pool.QueryRow(ctx, query, id, userID).Scan(
-		&listing.ID,
-		&listing.UserID,
-		&listing.CategoryID,
-		&listing.Title,
-		&listing.Description,
-		&listing.Price,
-		&listing.Condition,
-		&listing.Status,
-		&listing.Location,
-		&listing.Latitude,
-		&listing.Longitude,
-		&listing.City,
-		&listing.Country,
-		&listing.ViewsCount,
-		&listing.CreatedAt,
-		&listing.UpdatedAt,
-		&listing.ShowOnMap,
-		&listing.User.Name,
-		&listing.User.Email,
-		&userPictureURL,
-		&listing.Category.Name,
-		&listing.Category.Slug,
-		&listing.IsFavorite,
-	)
+    err := s.pool.QueryRow(ctx, query, id, userID).Scan(
+        &listing.ID,
+        &listing.UserID,
+        &listing.CategoryID,
+        &listing.Title,
+        &listing.Description,
+        &listing.Price,
+        &listing.Condition,
+        &listing.Status,
+        &listing.Location,
+        &listing.Latitude,
+        &listing.Longitude,
+        &listing.City,
+        &listing.Country,
+        &listing.ViewsCount,
+        &listing.CreatedAt,
+        &listing.UpdatedAt,
+        &listing.ShowOnMap,
+        &listing.User.Name,
+        &listing.User.Email,
+        &userPictureURL,
+        &listing.Category.Name,
+        &listing.Category.Slug,
+        &categoryPath,
+        &categoryPathIds,
+        &categoryPathSlugs,
+        &listing.IsFavorite,
+    )
 
-	if err != nil {
-		return nil, fmt.Errorf("error fetching listing: %w", err)
-	}
+    if err != nil {
+        return nil, fmt.Errorf("error fetching listing: %w", err)
+    }
 
-	// Присваиваем picture_url после сканирования
-	listing.User.PictureURL = userPictureURL
+    // Присваиваем URL изображения после сканирования
+    listing.User.PictureURL = userPictureURL
+    
+    // Добавляем пути категорий в структуру листинга
+    listing.CategoryPath = categoryPath
+    listing.CategoryPathIds = categoryPathIds
+    listing.CategoryPathSlugs = categoryPathSlugs
 
-	// Копируем ID пользователя
-	listing.User.ID = listing.UserID
+    // Копируем ID пользователя
+    listing.User.ID = listing.UserID
 
-	// Увеличиваем счетчик просмотров в отдельной горутине
-	go func() {
-		timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_, err = s.pool.Exec(timeoutCtx, `
+    // Увеличиваем счетчик просмотров
+    go func() {
+        timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+        _, err = s.pool.Exec(timeoutCtx, `
             UPDATE marketplace_listings 
             SET views_count = views_count + 1 
             WHERE id = $1
         `, id)
-		if err != nil {
-			log.Printf("Error updating views count: %v", err)
-		}
-	}()
+        if err != nil {
+            log.Printf("Error updating views count: %v", err)
+        }
+    }()
 
-	// Получаем изображения
-	images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", id))
-	if err != nil {
-		log.Printf("Error getting images for listing %d: %v", id, err)
-		listing.Images = []models.MarketplaceImage{} // Пустой массив вместо nil
-	} else {
-		listing.Images = images
-	}
+    // Получаем изображения
+    images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", id))
+    if err != nil {
+        log.Printf("Error getting images for listing %d: %v", id, err)
+        listing.Images = []models.MarketplaceImage{} // Пустой массив вместо nil
+    } else {
+        listing.Images = images
+    }
 
-	return listing, nil
+    return listing, nil
 }
