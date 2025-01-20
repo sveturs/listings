@@ -590,7 +590,7 @@ func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 }
 
 func (s *Storage) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	result, err := s.pool.Exec(ctx, `
+    result, err := s.pool.Exec(ctx, `
         UPDATE marketplace_listings
         SET 
             title = $1,
@@ -603,35 +603,41 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
             longitude = $8,
             address_city = $9,
             address_country = $10,
+            show_on_map = $11,
+            category_id = $12,
+            original_language = $13,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $11 AND user_id = $12
+        WHERE id = $14 AND user_id = $15
     `,
-		listing.Title,
-		listing.Description,
-		listing.Price,
-		listing.Condition,
-		listing.Status,
-		listing.Location,
-		listing.Latitude,
-		listing.Longitude,
-		listing.City,
-		listing.Country,
-		listing.ShowOnMap,
-		listing.ID,
-		listing.UserID,
-	)
+        listing.Title,
+        listing.Description,
+        listing.Price,
+        listing.Condition,
+        listing.Status,
+        listing.Location,
+        listing.Latitude,
+        listing.Longitude,
+        listing.City,
+        listing.Country,
+        listing.ShowOnMap,
+        listing.CategoryID,
+        listing.OriginalLanguage,
+        listing.ID,
+        listing.UserID,
+    )
 
-	if err != nil {
-		return err
-	}
+    if err != nil {
+        return fmt.Errorf("error updating listing: %w", err)
+    }
 
-	rowsAffected := result.RowsAffected()
-	if rowsAffected == 0 {
-		return fmt.Errorf("listing not found or you don't have permission to update it")
-	}
+    rowsAffected := result.RowsAffected()
+    if rowsAffected == 0 {
+        return fmt.Errorf("listing not found or you don't have permission to update it")
+    }
 
-	return nil
+    return nil
 }
+
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
 	rows, err := s.pool.Query(ctx, `
         SELECT 

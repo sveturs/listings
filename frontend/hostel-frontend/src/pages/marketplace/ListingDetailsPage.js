@@ -5,6 +5,9 @@ import { useParams } from 'react-router-dom';
 import ReviewsSection from '../../components/reviews/ReviewsSection';
 import { useAuth } from '../../contexts/AuthContext';
 import MiniMap from '../../components/maps/MiniMap';
+import { PencilLine } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 
 //import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 import { GoogleMap, Marker } from '@react-google-maps/api';
@@ -43,6 +46,8 @@ import {
 } from 'lucide-react';
 import axios from '../../api/axios';
 const ListingDetailsPage = () => {
+    const navigate = useNavigate();
+
     const [isFavorite, setIsFavorite] = useState(false);
     const [isMapExpanded, setIsMapExpanded] = useState(false);
     const { id } = useParams();
@@ -65,10 +70,10 @@ const ListingDetailsPage = () => {
                 setLoading(true);
                 const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
                 setListing(response.data.data);
-    
+
                 // Добавим отладочный вывод
                 console.log('Listing data:', response.data.data);
-    
+
                 // Используем category_path вместо category_path_names
                 if (response.data.data.category_path) {
                     const path = response.data.data.category_path.map((name, index) => ({
@@ -76,7 +81,7 @@ const ListingDetailsPage = () => {
                         name: name,
                         slug: response.data.data.category_path_slugs[index]
                     })).reverse(); // Разворачиваем массив, чтобы получить правильный порядок
-    
+
                     console.log('Setting category path:', path);
                     setCategoryPath(path);
                 }
@@ -87,10 +92,10 @@ const ListingDetailsPage = () => {
                 setLoading(false);
             }
         };
-    
+
         fetchListing();
     }, [id]);
-        const scrollToReviews = () => {
+    const scrollToReviews = () => {
         const reviewsSection = document.getElementById('reviews-section');
         if (reviewsSection) {
             reviewsSection.scrollIntoView({
@@ -373,14 +378,28 @@ const ListingDetailsPage = () => {
                                         fullWidth
                                         startIcon={!isMobile && <Share2 />}
                                         onClick={() => {
-                                            // Здесь можно добавить логику для шаринга
+                                            // Здесь логика для шаринга
                                         }}
                                     >
                                         {isMobile ? <Share2 size={20} /> : 'Поделиться'}
                                     </Button>
                                 </Stack>
+
+                                {/* Добавить здесь кнопку редактирования */}
+                                {user?.id === listing.user_id && (
+                                    <Button
+                                        variant="outlined"
+                                        fullWidth
+                                        startIcon={!isMobile && <PencilLine />}
+                                        onClick={() => navigate(`/marketplace/listings/${id}/edit`)}
+                                        sx={{ mt: 2 }} // Добавляем отступ сверху
+                                    >
+                                        {isMobile ? <PencilLine size={20} /> : 'Редактировать'}
+                                    </Button>
+                                )}
                             </CardContent>
                         </Card>
+
                         {listing.latitude && listing.longitude ? (
                             listing.show_on_map ? (
                                 <>

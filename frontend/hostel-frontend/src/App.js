@@ -16,6 +16,8 @@ import FavoriteListingsPage from './pages/marketplace/FavoriteListingsPage';
 import { MapProvider } from './components/maps/MapProvider';
 import ChatPage from "./pages/marketplace/ChatPage";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import EditListingPage from './pages/marketplace/EditListingPage';
+
 
 function App() {
   return (
@@ -41,6 +43,8 @@ function App() {
                 <Route path="/marketplace/chat" element={<ChatPage />} />
                 <Route path="/my-listings" element={<MyListingsPage />} />
                 <Route path="/favorites" element={<FavoriteListingsPage />} />
+                <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
+
               </Routes>
             </Layout>
           </AuthProvider>
