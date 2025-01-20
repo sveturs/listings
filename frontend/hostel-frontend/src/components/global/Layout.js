@@ -89,8 +89,8 @@ const Layout = ({ children }) => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              minHeight: "56px",
-              px: 2,
+              minHeight: "56px",// Это минимальная высота шапки
+              px: 2,// Отступы по бокам
             }}
           >
             {/* Левый блок (меню) */}
@@ -241,7 +241,7 @@ const Layout = ({ children }) => {
       </Modal>
 
       {/* Основной контент */}
-      <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Container maxWidth="lg" sx={{ py: 0 }}>
         {children}
       </Container>
     </Box>

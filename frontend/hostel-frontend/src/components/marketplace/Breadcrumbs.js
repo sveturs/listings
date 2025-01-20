@@ -28,7 +28,7 @@ const Breadcrumbs = ({ paths }) => {
     return (
         <Box sx={{ 
             mb: 2,
-            py: 1,
+            py: 0,
             overflowX: 'auto',
             whiteSpace: 'nowrap',
             '&::-webkit-scrollbar': {

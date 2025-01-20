@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import { Plus, Filter, X } from 'lucide-react';
 import ListingCard from '../../components/marketplace/ListingCard';
+import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import {
     MobileFilters,
     MobileHeader,
@@ -41,6 +42,7 @@ const MarketplacePage = () => {
     const [error, setError] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
+    const [categoryPath, setCategoryPath] = useState([]);
     const [filters, setFilters] = useState({
         query: '',
         category_id: searchParams.get('category_id') || '', 
@@ -116,7 +118,27 @@ const MarketplacePage = () => {
     
         fetchInitialData();
     }, [searchParams]); // Добавляем зависимость от searchParams
-    
+    const findCategoryPath = (categoryId, categoriesTree) => {
+        const path = [];
+        
+        const findPath = (id, categories) => {
+            for (const category of categories) {
+                if (String(category.id) === String(id)) {
+                    path.unshift({ id: category.id, name: category.name, slug: category.slug });
+                    return true;
+                }
+                
+                if (category.children && findPath(id, category.children)) {
+                    path.unshift({ id: category.id, name: category.name, slug: category.slug });
+                    return true;
+                }
+            }
+            return false;
+        };
+        
+        findPath(categoryId, categoriesTree);
+        return path;
+    };
     // Заменяем второй эффект
     useEffect(() => {
         // Проверяем путь и делаем редирект если нужно
@@ -144,8 +166,15 @@ const MarketplacePage = () => {
             });
         }
     }, [searchParams]);
+    useEffect(() => {
+        if (filters.category_id && categories.length > 0) {
+            const path = findCategoryPath(filters.category_id, categories);
+            setCategoryPath(path);
+        } else {
+            setCategoryPath([]);
+        }
+    }, [filters.category_id, categories]);
 
-    
     const handleFilterChange = useCallback((newFilters) => {
         setFilters(prev => {
             const updated = { ...prev, ...newFilters };
@@ -250,7 +279,29 @@ const MarketplacePage = () => {
                     onOpenFilters={() => setIsFilterOpen(true)}
                     filtersCount={getActiveFiltersCount()}
                 />
-
+    
+                {/* Breadcrumbs и кнопка в одной строке */}
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        px: 2,
+                        py: 1,
+                        bgcolor: 'grey.100'
+                    }}
+                >
+                    {categoryPath.length > 0 && <Breadcrumbs paths={categoryPath} />}
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => navigate('/marketplace/create')}
+                        startIcon={<Plus size={20} />}
+                    >
+                        Создать
+                    </Button>
+                </Box>
+    
                 <Box sx={{ flex: 1, p: 1, bgcolor: 'grey.50' }}>
                     {filters.category_id && (
                         <Box sx={{ px: 1, mb: 1 }}>
@@ -263,7 +314,7 @@ const MarketplacePage = () => {
                     )}
                     {renderContent()}
                 </Box>
-
+    
                 <MobileFilters
                     open={isFilterOpen}
                     onClose={() => setIsFilterOpen(false)}
@@ -271,34 +322,27 @@ const MarketplacePage = () => {
                     onFilterChange={handleFilterChange}
                     categories={categories}
                 />
-
-                <Box
-                    component={Paper}
-                    elevation={3}
-                    sx={{
-                        position: 'sticky',
-                        bottom: 0,
-                        p: 2,
-                        borderRadius: 0
-                    }}
-                >
-                    <Button
-                        variant="contained"
-                        fullWidth
-                        onClick={() => navigate('/marketplace/create')}
-                        startIcon={<Plus size={20} />}
-                    >
-                        Разместить объявление
-                    </Button>
-                </Box>
             </Box>
         );
     }
-
+    
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {/* кнопка + Создать объявление*/}
+            {/* Breadcrumbs и кнопка в одной строке */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 4
+                }}
+            >
+                {categoryPath.length > 0 ? (
+                    <Breadcrumbs paths={categoryPath} />
+                ) : (
+                    // Пустое место, если хлебных крошек нет
+                    <Box sx={{ flex: 1 }} />
+                )}
                 <Button
                     variant="contained"
                     onClick={() => navigate('/marketplace/create')}
@@ -307,7 +351,7 @@ const MarketplacePage = () => {
                     Создать объявление
                 </Button>
             </Box>
-
+    
             <Grid container spacing={3}>
                 <Grid item xs={12} md={3}>
                     <CompactMarketplaceFilters
@@ -324,6 +368,9 @@ const MarketplacePage = () => {
             </Grid>
         </Container>
     );
+    
+    
+    
 };
 
 export default MarketplacePage;
