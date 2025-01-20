@@ -1,198 +1,219 @@
-//frontend/hostel-frontend/src/components/marketplace/mobile/MobileComponents.js
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
-    Box,
-    Drawer,
-    AppBar,
-    Toolbar,
-    IconButton,
-    Typography,
-    Badge,
-    InputBase,
-    Button,
-    Chip,
-    Stack,
-    Divider,
-    alpha,
-    Paper
+    Box, Button, IconButton, Typography, InputBase, Toolbar,
+    Paper, Grid, Drawer, Stack
 } from '@mui/material';
-import {
-    Search,
-    Sliders, 
-    ArrowLeft,
-    X,
-    Check,
-} from 'lucide-react';
+import { Search as SearchIcon, Filter, X, Check, ArrowLeft, ChevronRight, Plus } from 'lucide-react';
+import { debounce } from 'lodash';
 
-// Компактная карточка для мобильной версии
-const MobileListingCard = ({ listing }) => {
+// Компонент MobileHeader
+export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValue }) => {
+    const [localSearchValue, setLocalSearchValue] = useState(searchValue || '');
+    const debouncedSearch = useCallback(
+        debounce((value) => onSearch(value), 500),
+        [onSearch]
+    );
+
     return (
-        <Box
-            component={Paper}
-            variant="outlined"
-            sx={{
+        <Box sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            position: 'sticky',
+            top: 0,
+            zIndex: 1100,
+            bgcolor: 'background.paper'
+        }}>
+            <Toolbar sx={{ 
+                minHeight: '56px !important', 
+                px: 2,
                 display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                overflow: 'hidden',
-                borderRadius: 1,
-            }}
-        >
-            {/* Изображение */}
+                justifyContent: 'space-between'
+            }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+                        Sve Tu
+                    </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <IconButton
+                        onClick={onOpenFilters}
+                        sx={{
+                            position: 'relative',
+                            bgcolor: filtersCount > 0 ? 'action.selected' : 'transparent'
+                        }}
+                    >
+                        <Filter size={20} />
+                        {filtersCount > 0 && (
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: 4,
+                                    right: 4,
+                                    width: 16,
+                                    height: 16,
+                                    borderRadius: '50%',
+                                    bgcolor: 'primary.main',
+                                    color: 'primary.contrastText',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.75rem'
+                                }}
+                            >
+                                {filtersCount}
+                            </Box>
+                        )}
+                    </IconButton>
+                </Box>
+            </Toolbar>
+
+            <Box sx={{ px: 2, pb: 2 }}>
+                <Paper
+                    elevation={0}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        px: 2,
+                        py: 1,
+                        bgcolor: 'grey.100',
+                        borderRadius: 2
+                    }}
+                >
+                    <InputBase
+                        fullWidth
+                        placeholder="Поиск объявлений..."
+                        value={localSearchValue}
+                        onChange={(e) => {
+                            setLocalSearchValue(e.target.value);
+                            debouncedSearch(e.target.value);
+                        }}
+                        startAdornment={
+                            <SearchIcon style={{ color: 'text.secondary', marginRight: 8 }} size={20} />
+                        }
+                        endAdornment={
+                            localSearchValue && (
+                                <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                        setLocalSearchValue('');
+                                        onSearch('');
+                                    }}
+                                >
+                                    <X size={16} />
+                                </IconButton>
+                            )
+                        }
+                        sx={{
+                            '& input': {
+                                p: '6px 0',
+                                fontSize: '0.875rem'
+                            }
+                        }}
+                    />
+                </Paper>
+            </Box>
+        </Box>
+    );
+};
+
+// Компонент MobileListingCard
+export const MobileListingCard = ({ listing }) => {
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB',
+            maximumFractionDigits: 0
+        }).format(price || 0);
+    };
+
+    return (
+        <Box sx={{ p: 1 }}>
             <Box
                 sx={{
                     position: 'relative',
                     paddingTop: '100%',
+                    borderRadius: 1,
                     overflow: 'hidden',
-                    backgroundColor: 'grey.100'
+                    bgcolor: 'grey.100'
                 }}
             >
-                <img
-                    src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images?.[0]?.file_path}`}
-                    alt={listing.title}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                    }}
-                />
-                {listing.images?.length > 1 && (
-                    <Chip
-                        label={`+${listing.images.length - 1}`}
-                        size="small"
-                        sx={{
+                {listing.images && listing.images[0] && (
+                    <img
+                        src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}`}
+                        alt={listing.title}
+                        style={{
                             position: 'absolute',
-                            bottom: 8,
-                            right: 8,
-                            bgcolor: 'rgba(0,0,0,0.6)',
-                            color: 'white',
-                            height: 20,
-                            '& .MuiChip-label': { px: 1 }
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
                         }}
                     />
                 )}
             </Box>
-
-            {/* Контент */}
-            <Box sx={{ p: 1, flexGrow: 1 }}>
+            <Box sx={{ mt: 1 }}>
                 <Typography
-                    variant="h6"
+                    variant="subtitle2"
                     sx={{
                         fontSize: '0.875rem',
                         fontWeight: 500,
-                        mb: 0.5,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical'
+                        whiteSpace: 'nowrap'
                     }}
                 >
                     {listing.title}
                 </Typography>
-
                 <Typography
                     variant="subtitle1"
                     sx={{
                         fontSize: '1rem',
                         fontWeight: 600,
-                        color: 'primary.main'
+                        color: 'primary.main',
+                        mt: 0.5
                     }}
                 >
-                    {new Intl.NumberFormat('ru-RU', {
-                        style: 'currency',
-                        currency: 'RUB',
-                        maximumFractionDigits: 0
-                    }).format(listing.price)}
-                </Typography>
-
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{
-                        display: 'block',
-                        mt: 0.5,
-                        fontSize: '0.75rem'
-                    }}
-                >
-                    {listing.location}
+                    {formatPrice(listing.price)}
                 </Typography>
             </Box>
         </Box>
     );
 };
 
-// Мобильная шапка с поиском
-const MobileHeader = ({ onOpenFilters, filtersCount }) => (
-    <AppBar 
-        position="sticky" 
-        color="inherit" 
-        elevation={0}
-        sx={{ 
-            borderBottom: 1,
-            borderColor: 'divider'
-        }}
-    >
-        <Toolbar sx={{ gap: 1, minHeight: 56 }}>
-            <Box
-                sx={{
-                    flex: 1,
-                    display: 'flex',
-                    bgcolor: (theme) => alpha(theme.palette.common.black, 0.05),
-                    borderRadius: 1,
-                    px: 1,
-                }}
-            >
-                <InputBase
-                    placeholder="Поиск объявлений"
-                    startAdornment={<Search size={18} style={{ marginRight: 8 }} />}
-                    sx={{ flex: 1, fontSize: '0.875rem' }}
-                />
-            </Box>
-            <IconButton 
-    onClick={onOpenFilters}
-    sx={{ position: 'relative' }}
->
-    <Sliders size={20} />
-    {filtersCount > 0 && (
-        <Box
-            sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                width: 8,
-                height: 8,
-                bgcolor: 'primary.main',
-                borderRadius: '50%'
-            }}
-        />
-    )}
-</IconButton>
-        </Toolbar>
-    </AppBar>
-);
 
-// Мобильные фильтры
-const MobileFilters = ({ open, onClose, filters, onFilterChange, categories }) => {
+export const MobileFilters = ({ open, onClose, filters, onFilterChange, categories }) => {
     const [tempFilters, setTempFilters] = useState(filters);
-    
+    const [currentParentId, setCurrentParentId] = useState(null);
+    const [navigationHistory, setNavigationHistory] = useState([]);
+
+    useEffect(() => {
+        setTempFilters(filters);
+    }, [filters, open]);
+
     const handleApply = () => {
         onFilterChange(tempFilters);
         onClose();
     };
 
-    const handleReset = () => {
-        setTempFilters({
-            query: '',
-            category_id: '',
-            min_price: '',
-            max_price: '',
-            condition: '',
-            sort_by: 'date_desc'
-        });
+    // Получаем текущие категории для отображения
+    const getCurrentCategories = () => {
+        // На первом уровне показываем все категории
+        if (currentParentId === null) {
+            return categories || [];
+        }
+        // На данный момент нет подкатегорий
+        return [];
+    };
+
+    // Функция для перехода по категориям
+    const handleCategoryClick = (category) => {
+        // Сразу выбираем категорию, так как нет подкатегорий
+        setTempFilters(prev => ({
+            ...prev,
+            category_id: category.id
+        }));
     };
 
     return (
@@ -204,176 +225,53 @@ const MobileFilters = ({ open, onClose, filters, onFilterChange, categories }) =
                 sx: { width: '100%', maxWidth: 400 }
             }}
         >
-            {/* Шапка */}
-            <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                px: 2,
-                py: 1,
-                borderBottom: 1,
-                borderColor: 'divider'
-            }}>
-                <IconButton onClick={onClose} edge="start">
-                    <ArrowLeft />
-                </IconButton>
-                <Typography 
-                    variant="subtitle1"
-                    sx={{ 
-                        flex: 1,
-                        ml: 2,
-                        fontWeight: 500
-                    }}
-                >
-                    Фильтры
-                </Typography>
-                <Button 
-                    variant="text" 
-                    onClick={handleReset}
-                    size="small"
-                >
-                    Сбросить
-                </Button>
-            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                {/* Шапка */}
+                <Box sx={{ 
+                    p: 2,
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    display: 'flex',
+                    alignItems: 'center'
+                }}>
+                    <Typography variant="h6">
+                        Категории
+                    </Typography>
+                </Box>
 
-            {/* Контент */}
-            <Box sx={{ 
-                flex: 1,
-                overflowY: 'auto',
-                px: 2,
-                py: 2
-            }}>
-                //Категории мобильной версии
-                <Typography variant="subtitle2" gutterBottom>
-                    Категории 
-                </Typography>
-                <Stack spacing={1} sx={{ mb: 3 }}>
-                    {categories.map(category => (
-                        <Button
-                            key={category.id}
-                            variant={tempFilters.category_id === category.id ? "contained" : "outlined"}
-                            size="small"
-                            onClick={() => setTempFilters(prev => ({
-                                ...prev,
-                                category_id: category.id
-                            }))}
-                            sx={{ 
-                                justifyContent: 'flex-start',
-                                px: 1.5,
-                                py: 0.75
-                            }}
-                        >
-                            {category.name}
-                        </Button>
-                    ))}
-                </Stack>
+                {/* Список категорий */}
+                <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+                    <Stack spacing={1}>
+                        {getCurrentCategories().map((category) => (
+                            <Button
+                                key={category.id}
+                                variant={tempFilters.category_id === category.id ? "contained" : "outlined"}
+                                onClick={() => handleCategoryClick(category)}
+                                sx={{ 
+                                    justifyContent: 'flex-start',
+                                    textTransform: 'none',
+                                    position: 'relative',
+                                    py: 1.5
+                                }}
+                            >
+                                {category.name}
+                            </Button>
+                        ))}
+                    </Stack>
+                </Box>
 
-                <Typography variant="subtitle2" gutterBottom>
-                    Цена
-                </Typography>
-                <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
-                    <InputBase
-                        placeholder="От"
-                        type="number"
-                        value={tempFilters.min_price}
-                        onChange={(e) => setTempFilters(prev => ({
-                            ...prev,
-                            min_price: e.target.value
-                        }))}
-                        sx={{
-                            flex: 1,
-                            border: 1,
-                            borderColor: 'divider',
-                            borderRadius: 1,
-                            px: 1,
-                            py: 0.5
-                        }}
-                    />
-                    <InputBase
-                        placeholder="До"
-                        type="number"
-                        value={tempFilters.max_price}
-                        onChange={(e) => setTempFilters(prev => ({
-                            ...prev,
-                            max_price: e.target.value
-                        }))}
-                        sx={{
-                            flex: 1,
-                            border: 1,
-                            borderColor: 'divider',
-                            borderRadius: 1,
-                            px: 1,
-                            py: 0.5
-                        }}
-                    />
-                </Stack>
-
-                <Typography variant="subtitle2" gutterBottom>
-                    Состояние
-                </Typography>
-                <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
-                    {['new', 'used'].map((condition) => (
-                        <Button
-                            key={condition}
-                            variant={tempFilters.condition === condition ? "contained" : "outlined"}
-                            size="small"
-                            onClick={() => setTempFilters(prev => ({
-                                ...prev,
-                                condition: condition
-                            }))}
-                            sx={{ flex: 1 }}
-                        >
-                            {condition === 'new' ? 'Новое' : 'Б/у'}
-                        </Button>
-                    ))}
-                </Stack>
-
-                <Typography variant="subtitle2" gutterBottom>
-                    Сортировка
-                </Typography>
-                <Stack spacing={1}>
-                    {[
-                        { value: 'date_desc', label: 'Сначала новые' },
-                        { value: 'price_asc', label: 'Сначала дешевле' },
-                        { value: 'price_desc', label: 'Сначала дороже' }
-                    ].map((option) => (
-                        <Button
-                            key={option.value}
-                            variant={tempFilters.sort_by === option.value ? "contained" : "outlined"}
-                            size="small"
-                            onClick={() => setTempFilters(prev => ({
-                                ...prev,
-                                sort_by: option.value
-                            }))}
-                            sx={{ 
-                                justifyContent: 'flex-start',
-                                px: 1.5,
-                                py: 0.75
-                            }}
-                        >
-                            {option.label}
-                        </Button>
-                    ))}
-                </Stack>
-            </Box>
-
-            {/* Футер */}
-            <Box sx={{ 
-                p: 2, 
-                borderTop: 1,
-                borderColor: 'divider'
-            }}>
-                <Button
-                    variant="contained"
-                    fullWidth
-                    size="large"
-                    onClick={handleApply}
-                    startIcon={<Check />}
-                >
-                    Применить
-                </Button>
+                {/* Кнопка применения фильтров */}
+                <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={handleApply}
+                        startIcon={<Check />}
+                    >
+                        Применить фильтры
+                    </Button>
+                </Box>
             </Box>
         </Drawer>
     );
 };
-
-export { MobileListingCard, MobileHeader, MobileFilters };
