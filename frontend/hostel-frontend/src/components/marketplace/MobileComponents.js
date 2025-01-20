@@ -185,7 +185,7 @@ export const MobileListingCard = ({ listing }) => {
 
 export const MobileFilters = ({ open, onClose, filters, onFilterChange, categories }) => {
     const [tempFilters, setTempFilters] = useState(filters);
-    const [currentParentId, setCurrentParentId] = useState(null);
+    const [currentCategory, setCurrentCategory] = useState(null);
     const [navigationHistory, setNavigationHistory] = useState([]);
 
     useEffect(() => {
@@ -199,21 +199,33 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
 
     // Получаем текущие категории для отображения
     const getCurrentCategories = () => {
-        // На первом уровне показываем все категории
-        if (currentParentId === null) {
+        if (!currentCategory) {
             return categories || [];
         }
-        // На данный момент нет подкатегорий
-        return [];
+        return currentCategory.children || [];
     };
 
-    // Функция для перехода по категориям
     const handleCategoryClick = (category) => {
-        // Сразу выбираем категорию, так как нет подкатегорий
-        setTempFilters(prev => ({
-            ...prev,
-            category_id: category.id
-        }));
+        const hasChildren = category.children && category.children.length > 0;
+        
+        if (hasChildren) {
+            setNavigationHistory(prev => [...prev, currentCategory]);
+            setCurrentCategory(category);
+        } else {
+            setTempFilters(prev => ({
+                ...prev,
+                category_id: category.id
+            }));
+        }
+    };
+
+    const handleBack = () => {
+        if (navigationHistory.length > 0) {
+            const newHistory = [...navigationHistory];
+            const lastCategory = newHistory.pop();
+            setNavigationHistory(newHistory);
+            setCurrentCategory(lastCategory);
+        }
     };
 
     return (
@@ -226,47 +238,110 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
             }}
         >
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                {/* Шапка */}
+                {/* Шапка с навигацией */}
                 <Box sx={{ 
                     p: 2,
-                    borderBottom: 1,
+                    borderBottom: '1px solid',
                     borderColor: 'divider',
                     display: 'flex',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    gap: 1
                 }}>
-                    <Typography variant="h6">
-                        Категории
+                    {navigationHistory.length > 0 && (
+                        <IconButton 
+                            onClick={handleBack}
+                            sx={{ 
+                                color: 'text.secondary',
+                                '&:hover': { color: 'primary.main' }
+                            }}
+                        >
+                            <ArrowLeft size={20} />
+                        </IconButton>
+                    )}
+                    <Typography 
+                        variant="subtitle1" 
+                        sx={{ 
+                            fontWeight: 600,
+                            color: 'text.primary'
+                        }}
+                    >
+                        {currentCategory ? currentCategory.name : 'Категории'}
                     </Typography>
                 </Box>
 
                 {/* Список категорий */}
-                <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-                    <Stack spacing={1}>
-                        {getCurrentCategories().map((category) => (
-                            <Button
+                <Box sx={{ flex: 1, overflow: 'auto' }}>
+                    {getCurrentCategories().map((category) => {
+                        const hasChildren = category.children && category.children.length > 0;
+                        const isSelected = tempFilters.category_id === category.id;
+                        
+                        return (
+                            <Box
                                 key={category.id}
-                                variant={tempFilters.category_id === category.id ? "contained" : "outlined"}
-                                onClick={() => handleCategoryClick(category)}
-                                sx={{ 
-                                    justifyContent: 'flex-start',
-                                    textTransform: 'none',
-                                    position: 'relative',
-                                    py: 1.5
+                                sx={{
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                    '&:last-child': {
+                                        borderBottom: 'none'
+                                    }
                                 }}
                             >
-                                {category.name}
-                            </Button>
-                        ))}
-                    </Stack>
+                                <Button
+                                    onClick={() => handleCategoryClick(category)}
+                                    sx={{ 
+                                        width: '100%',
+                                        justifyContent: 'flex-start',
+                                        textTransform: 'none',
+                                        py: 2,
+                                        px: 2,
+                                        color: isSelected ? 'primary.main' : 'text.primary',
+                                        backgroundColor: isSelected ? 'action.selected' : 'transparent',
+                                        borderRadius: 0,
+                                        '&:hover': {
+                                            backgroundColor: isSelected ? 'action.selected' : 'action.hover'
+                                        }
+                                    }}
+                                >
+                                    <Typography 
+                                        sx={{ 
+                                            flex: 1,
+                                            textAlign: 'left',
+                                            fontWeight: isSelected ? 500 : 400
+                                        }}
+                                    >
+                                        {category.name}
+                                    </Typography>
+                                    {hasChildren && (
+                                        <ChevronRight 
+                                            size={20} 
+                                            style={{ 
+                                                opacity: 0.5,
+                                                marginLeft: 8
+                                            }}
+                                        />
+                                    )}
+                                </Button>
+                            </Box>
+                        );
+                    })}
                 </Box>
 
                 {/* Кнопка применения фильтров */}
-                <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+                <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                     <Button
                         variant="contained"
                         fullWidth
                         onClick={handleApply}
-                        startIcon={<Check />}
+                        startIcon={<Check size={20} />}
+                        sx={{ 
+                            py: 1.5,
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            boxShadow: 'none',
+                            '&:hover': {
+                                boxShadow: 'none'
+                            }
+                        }}
                     >
                         Применить фильтры
                     </Button>
