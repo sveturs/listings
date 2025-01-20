@@ -34,14 +34,14 @@ const MarketplacePage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
 
-    const [listings, setListings] = useState([]); 
+    const [listings, setListings] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filters, setFilters] = useState({
         query: '',
-        category_id: '',
+        category_id: '', 
         min_price: '',
         max_price: '',
         city: '',
@@ -49,72 +49,82 @@ const MarketplacePage = () => {
         condition: '',
         sort_by: 'date_desc'
     });
+    
 
 
-    const handleFilterChange = useCallback((newFilters) => {
-        setFilters(prev => ({
-            ...prev,
-            ...newFilters
-        }));
-    }, []);
 
-    const fetchListings = useCallback(async (currentFilters) => {
+
+    const fetchListings = useCallback(async (currentFilters = {}) => {
         try {
             setLoading(true);
             setError(null);
-
-            const params = Object.entries(currentFilters).reduce((acc, [key, value]) => {
-                if (value !== '' && value !== null && value !== undefined) {
-                    acc[key] = value;
+    
+            // Формируем параметры запроса только из непустых значений
+            const params = {};
+            Object.entries(currentFilters).forEach(([key, value]) => {
+                if (value !== '') {
+                    params[key] = value;
                 }
-                return acc;
-            }, {});
-
-            const response = await axios.get('/api/v1/marketplace/listings', { params });
-            const listingsData = response.data?.data?.data || [];
-            setListings(listingsData);
-        } catch (error) {
-            console.error('Error fetching listings:', error);
+            });
+    
+            const response = await axios.get('/api/v1/marketplace/listings', { 
+                params
+            });
+    
+            if (response.data?.data?.data) {
+                setListings(response.data.data.data);
+            } else {
+                setListings([]);
+            }
+            
+        } catch (err) {
+            console.error('Error fetching listings:', err);
             setError('Не удалось загрузить объявления');
         } finally {
             setLoading(false);
         }
     }, []);
+    
 
     // Эффект для загрузки категорий
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchInitialData = async () => {
             try {
-                setLoading(true);
-                // Параллельная загрузка категорий и листингов
-                const [categoriesResponse, listingsResponse] = await Promise.all([
-                    axios.get('/api/v1/marketplace/category-tree'),
-                    axios.get('/api/v1/marketplace/listings', {
-                        params: Object.entries(filters).reduce((acc, [key, value]) => {
-                            if (value !== '' && value !== null && value !== undefined) {
-                                acc[key] = value;
-                            }
-                            return acc;
-                        }, {})
-                    })
-                ]);
-
+                // Загружаем категории
+                const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
                 if (categoriesResponse.data?.data) {
                     setCategories(categoriesResponse.data.data);
                 }
-                setListings(listingsResponse.data?.data?.data || []);
-                setError(null);
+                
+                // Загружаем все объявления без фильтров
+                await fetchListings({
+                    sort_by: 'date_desc'
+                });
+                
             } catch (err) {
-                console.error('Error fetching data:', err);
+                console.error('Error fetching initial data:', err);
                 setError('Произошла ошибка при загрузке данных');
-            } finally {
-                setLoading(false);
             }
         };
 
-        fetchData();
-    }, [filters]); // Убираем лишний useEffect и объединяем загрузку данных
-
+        fetchInitialData();
+    }, []);
+    const handleFilterChange = useCallback((newFilters) => {
+        setFilters(prev => {
+            const updated = { ...prev, ...newFilters };
+            // Отправляем только непустые значения
+            const cleanFilters = {};
+            Object.entries(updated).forEach(([key, value]) => {
+                if (value !== '') {
+                    cleanFilters[key] = value;
+                }
+            });
+            fetchListings(cleanFilters);
+            return updated;
+        });
+    }, [fetchListings]);
+    
+    
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
             if (key !== 'sort_by' && value !== '') {
@@ -135,8 +145,8 @@ const MarketplacePage = () => {
 
         if (error) {
             return (
-                <Alert 
-                    severity="error" 
+                <Alert
+                    severity="error"
                     sx={{ m: 2 }}
                     action={
                         <IconButton size="small" onClick={() => setError(null)}>
@@ -232,9 +242,7 @@ const MarketplacePage = () => {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h4">
-                    Объявления
-                </Typography>
+                {/* кнопка + Создать объявление*/}
                 <Button
                     variant="contained"
                     onClick={() => navigate('/marketplace/create')}

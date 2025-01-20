@@ -147,12 +147,16 @@ func (s *Storage) processTranslations(rawTranslations interface{}) models.Transl
     return translations
 }
 func (s *Storage) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-	
+    userID, _ := ctx.Value("user_id").(int)
+
     baseQuery := `
     WITH RECURSIVE category_tree AS (
         SELECT id, parent_id, name
         FROM marketplace_categories
-        WHERE id = COALESCE($1::int, id)
+        WHERE id = CASE 
+            WHEN $1 = '' OR $1 IS NULL THEN id
+            ELSE CAST($1 AS INT)
+        END
         
         UNION ALL
         
@@ -160,142 +164,167 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         FROM marketplace_categories c
         INNER JOIN category_tree ct ON c.parent_id = ct.id
     ),
-translations_agg AS (
-    SELECT 
-        entity_id,
-        (
-            SELECT jsonb_object_agg(
-                t2.language || '_' || t2.field_name,
-                t2.translated_text
-            )
-            FROM (
-                SELECT language, field_name, translated_text
-                FROM translations t2 
-                WHERE t2.entity_type = 'listing' 
-                AND t2.entity_id = t1.entity_id
-            ) t2
-        ) as translations
-    FROM translations t1
-    WHERE entity_type = 'listing'
-    GROUP BY entity_id
-)
+    translations_agg AS (
         SELECT 
-    l.id,
-    l.user_id,
-    l.category_id,
-    l.title,
-    l.description,
-    l.price,
-    l.condition,
-    l.status,
-    l.location,
-    l.latitude,
-    l.longitude,
-l.address_city as city,
-l.address_country as country,
-    l.views_count,
-    l.created_at,
-    l.updated_at,
-    l.show_on_map,
-    l.original_language,
-    u.name as user_name, 
-    u.email as user_email,
-    u.picture_url as user_picture_url,
-    c.name as category_name, 
-    c.slug as category_slug,
-    COALESCE(t.translations, '{}'::jsonb) as translations,
-        COALESCE(
-            (SELECT json_agg(
-                json_build_object(
-                    'id', mi.id,
-                    'listing_id', mi.listing_id,
-                    'file_path', mi.file_path,
-                    'file_name', mi.file_name,
-                    'file_size', mi.file_size,
-                    'content_type', mi.content_type,
-                    'is_main', mi.is_main,
-                    'created_at', to_char(mi.created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+            entity_id,
+            (
+                SELECT jsonb_object_agg(
+                    t2.language || '_' || t2.field_name,
+                    t2.translated_text
                 )
-            ) FROM marketplace_images mi 
-            WHERE mi.listing_id = l.id),
-            '[]'::json
-        ) as images,
+                FROM (
+                    SELECT language, field_name, translated_text
+                    FROM translations t2 
+                    WHERE t2.entity_type = 'listing' 
+                    AND t2.entity_id = t1.entity_id
+                ) t2
+            ) as translations
+        FROM translations t1
+        WHERE entity_type = 'listing'
+        GROUP BY entity_id
+    )
+    SELECT 
+        l.id,
+        l.user_id,
+        l.category_id,
+        l.title,
+        l.description,
+        l.price,
+        l.condition,
+        l.status,
+        l.location,
+        l.latitude,
+        l.longitude,
+        l.address_city as city,
+        l.address_country as country,
+        l.views_count,
+        l.created_at,
+        l.updated_at,
+        l.show_on_map,
+        l.original_language,
+        u.name as user_name, 
+        u.email as user_email,
+        u.picture_url as user_picture_url,
+        c.name as category_name, 
+        c.slug as category_slug,
+        COALESCE(t.translations, '{}'::jsonb) as translations,
         EXISTS (
             SELECT 1 
             FROM marketplace_favorites mf 
             WHERE mf.listing_id = l.id 
-            AND mf.user_id = COALESCE($2::int, -1)
+            AND mf.user_id = CAST($2 AS INT)
         ) as is_favorite,
         COUNT(*) OVER() as total_count
     FROM marketplace_listings l
     JOIN users u ON l.user_id = u.id
     JOIN marketplace_categories c ON l.category_id = c.id
     LEFT JOIN translations_agg t ON t.entity_id = l.id
-    WHERE 1=1
-`
-	var conditions []string
-	var args []interface{}
-	argCount := 2 // Начинаем с 2 для category_id и user_id
+    WHERE 1=1`
 
-	// Получаем user_id из контекста
-	userID, _ := ctx.Value("user_id").(int)
-	args = append(args, nil, userID) // nil для category_id и userID
+    var conditions []string
+    var args []interface{}
+    argCount := 2
 
-	if v, ok := filters["category_id"]; ok && v != "" {
-		argCount++
-		conditions = append(conditions, fmt.Sprintf("AND l.category_id = $%d", argCount))
-		args = append(args, v)
-	}
+    // Получаем category_id и user_id
+    categoryID := ""
+    if v, ok := filters["category_id"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf(`
+            AND (l.category_id = CAST($%d AS INT)
+                OR l.category_id IN (
+                    SELECT c.id FROM marketplace_categories c 
+                    WHERE c.parent_id = CAST($%d AS INT)
+                ))`, argCount, argCount))
+        args = append(args, v)
+    }
+    
+    args = append(args, categoryID, userID) // Добавляем начальные параметры
 
-	// Добавляем условия фильтрации
-	if len(conditions) > 0 {
-		baseQuery += " " + strings.Join(conditions, " ")
-	}
+    // Обработка фильтров
+    if v, ok := filters["query"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf("AND (LOWER(l.title) LIKE LOWER($%d) OR LOWER(l.description) LIKE LOWER($%d))", 
+            argCount, argCount))
+        args = append(args, "%"+v+"%")
+    }
 
-	// Сортировка
-	switch filters["sort_by"] {
-	case "price_asc":
-		baseQuery += " ORDER BY l.price ASC"
-	case "price_desc":
-		baseQuery += " ORDER BY l.price DESC"
-	default:
-		baseQuery += " ORDER BY l.created_at DESC"
-	}
+    if v, ok := filters["category_id"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf(`
+            AND (l.category_id = $%d 
+                OR l.category_id IN (
+                    SELECT c.id FROM marketplace_categories c 
+                    WHERE c.parent_id = $%d
+                ))`, argCount, argCount))
+        args = append(args, v)
+    }
 
-	// Пагинация
-	baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount+1, argCount+2)
-	args = append(args, limit, offset)
+    if v, ok := filters["min_price"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
+        args = append(args, v)
+    }
 
-	rows, err := s.pool.Query(ctx, baseQuery, args...)
-	if err != nil {
-		return nil, 0, fmt.Errorf("error querying listings: %w", err)
-	}
-	defer rows.Close()
+    if v, ok := filters["max_price"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf("AND l.price <= $%d", argCount))
+        args = append(args, v)
+    }
 
-	var listings []models.MarketplaceListing
-	var totalCount int64
-    log.Printf("Final SQL Query: %s", baseQuery)
-    log.Printf("Args count: %d, Args: %v", len(args), args)
+    if v, ok := filters["condition"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf("AND l.condition = $%d", argCount))
+        args = append(args, v)
+    }
+
+    // Добавляем условия фильтрации
+    if len(conditions) > 0 {
+        baseQuery += " " + strings.Join(conditions, " ")
+    }
+
+    // Сортировка
+    switch filters["sort_by"] {
+    case "price_asc":
+        baseQuery += " ORDER BY l.price ASC"
+    case "price_desc":
+        baseQuery += " ORDER BY l.price DESC"
+    default:
+        baseQuery += " ORDER BY l.created_at DESC"
+    }
+
+    // Пагинация
+    baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount+1, argCount+2)
+    args = append(args, limit, offset)
+
+    // Выполнение запроса
+    rows, err := s.pool.Query(ctx, baseQuery, args...)
+    if err != nil {
+        return nil, 0, fmt.Errorf("error querying listings: %w", err)
+    }
+    defer rows.Close()
+
+    var listings []models.MarketplaceListing
+    var totalCount int64
+    
     for rows.Next() {
         var listing models.MarketplaceListing
-        var imagesJSON, translationsJSON []byte
+        var translationsJSON []byte
         
-        // Временные переменные для NULL значений
+        listing.User = &models.User{}
+        listing.Category = &models.MarketplaceCategory{}
+
         var (
-            tempEmail     sql.NullString
+            tempEmail       sql.NullString
             tempPictureURL sql.NullString
-            tempLocation sql.NullString
-            tempLatitude sql.NullFloat64
-            tempLongitude sql.NullFloat64
-            tempCity     sql.NullString
-            tempCountry  sql.NullString
+            tempLocation   sql.NullString
+            tempLatitude   sql.NullFloat64
+            tempLongitude  sql.NullFloat64
+            tempCity      sql.NullString
+            tempCountry   sql.NullString
             tempCategoryName sql.NullString
             tempCategorySlug sql.NullString
         )
-    
-        listing.User = &models.User{}
-        listing.Category = &models.MarketplaceCategory{}
-    
+
         err := rows.Scan(
             &listing.ID,
             &listing.UserID,
@@ -321,16 +350,24 @@ l.address_country as country,
             &tempCategoryName,
             &tempCategorySlug,
             &translationsJSON,
-            &imagesJSON,
             &listing.IsFavorite,
             &totalCount,
         )
-    
+
         if err != nil {
             return nil, 0, fmt.Errorf("error scanning listing: %w", err)
         }
-    
-        // Присваиваем значения из временных переменных
+
+        // Получаем изображения
+        images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
+        if err != nil {
+            log.Printf("Error getting images for listing %d: %v", listing.ID, err)
+            listing.Images = []models.MarketplaceImage{} 
+        } else {
+            listing.Images = images
+        }
+
+        // Обработка NULL значений
         if tempLocation.Valid {
             listing.Location = tempLocation.String
         }
@@ -358,29 +395,17 @@ l.address_country as country,
         if tempCategorySlug.Valid {
             listing.Category.Slug = tempCategorySlug.String
         }
-    
-        // Обработка JSON данных
+        
+        // Обработка переводов
         if err := json.Unmarshal(translationsJSON, &listing.RawTranslations); err != nil {
             listing.RawTranslations = make(map[string]interface{})
         }
-    
+        
         if listing.RawTranslations != nil {
             listing.Translations = s.processTranslations(listing.RawTranslations)
         }
-    
-        if err := json.Unmarshal(imagesJSON, &listing.Images); err != nil {
-            listing.Images = []models.MarketplaceImage{}
-        }
-    
+
         listings = append(listings, listing)
-    }
-    
-    
-    for i := range listings {
-        // Обрабатываем переводы
-        if listings[i].RawTranslations != nil {
-            listings[i].Translations = s.processTranslations(listings[i].RawTranslations)
-        }
     }
 
     return listings, totalCount, nil

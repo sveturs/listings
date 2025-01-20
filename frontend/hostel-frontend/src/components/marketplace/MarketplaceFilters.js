@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
 import React from 'react';
 import {
     Paper,
@@ -10,36 +11,27 @@ import {
     Typography,
     Divider,
     Slider,
+    Stack,
 } from '@mui/material';
 import { Search, X } from 'lucide-react';
 import CompactCategoryTree from './CategoryTree';
+import CategoryFilters from './CategoryFilters';
 
 const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, selectedCategoryId }) => {
+    const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+
     return (
-        <Paper 
-            variant="elevation" 
-            elevation={3}
-            sx={{ 
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: 2,
-                overflow: 'hidden',
-            }}
-        >
+        <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Поиск */}
-            <Box sx={{ 
-                p: 2, 
-                backgroundColor: 'background.default', 
-                boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
-                zIndex: 1
-            }}>
+            <Box sx={{ p: 2, backgroundColor: 'background.default', boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)', zIndex: 1 }}>
                 <TextField
                     fullWidth
                     size="small"
                     placeholder="🔍 Поиск"
                     value={filters.query || ''}
                     onChange={(e) => onFilterChange({ query: e.target.value })}
+                 
+
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
@@ -58,18 +50,44 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                             </InputAdornment>
                         )
                     }}
-                    sx={{ 
-                        '& .MuiInputBase-root': {
-                            height: 40,
-                            borderRadius: 2,
-                            backgroundColor: 'white',
-                            transition: 'all 0.3s ease',
-                        },
-                        '& .MuiInputBase-root:focus-within': {
-                            boxShadow: '0 0 4px rgba(0, 123, 255, 0.5)',
-                        }
-                    }}
+
+
                 />
+            </Box>
+
+            {/* Основные фильтры */}
+            <Box sx={{ p: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>Фильтры</Typography>
+                <Stack spacing={2}>
+                    <Box>
+                        <Typography gutterBottom>Цена</Typography>
+                        <Stack direction="row" spacing={1}>
+                            <TextField
+                                size="small"
+                                type="number"
+                                placeholder="От"
+                                value={filters.min_price || ''}
+                                onChange={(e) => onFilterChange({ min_price: e.target.value })}
+                            />
+                            <TextField
+                                size="small"
+                                type="number"
+                                placeholder="До"
+                                value={filters.max_price || ''}
+                                onChange={(e) => onFilterChange({ max_price: e.target.value })}
+                            />
+                        </Stack>
+                    </Box>
+
+                    {/* Специфичные фильтры категории */}
+                    {selectedCategory && (
+                        <CategoryFilters
+                            category={selectedCategory}
+                            filters={filters}
+                            onFilterChange={onFilterChange}
+                        />
+                    )}
+                </Stack>
             </Box>
 
             {/* Категории */}
@@ -78,18 +96,9 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                 overflow: 'auto',
                 p: 2,
                 backgroundColor: 'background.paper',
-                '&::-webkit-scrollbar': {
-                    width: 8,
-                },
-                '&::-webkit-scrollbar-thumb': {
-                    bgcolor: 'rgba(0, 0, 0, 0.2)',
-                    borderRadius: 4,
-                },
-                '&:hover': {
-                    backgroundColor: 'background.default',
-                }
+                borderTop: 1,
+                borderColor: 'divider'
             }}>
-                {/*категории полной версии */}
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                     Категории
                 </Typography>
@@ -98,58 +107,6 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                     selectedId={selectedCategoryId}
                     onSelectCategory={(id) => onFilterChange({ category_id: id })}
                 />
-            </Box>
-
-            {/* Фильтры */}
-            <Box sx={{ 
-                p: 2, 
-                backgroundColor: 'background.default', 
-                borderTop: '1px solid', 
-                borderColor: 'divider',
-            }}>
-                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                    Цена
-                </Typography>
-                <Slider
-                    value={[filters.min_price || 0, filters.max_price || 100000]}
-                    onChange={(e, newValue) => onFilterChange({ min_price: newValue[0], max_price: newValue[1] })}
-                    valueLabelDisplay="auto"
-                    min={0}
-                    max={100000}
-                    sx={{ 
-                        mt: 1,
-                        '& .MuiSlider-thumb': {
-                            backgroundColor: 'primary.main',
-                            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
-                        },
-                    }}
-                />
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                    Сортировка
-                </Typography>
-                <Select
-                    fullWidth
-                    size="small"
-                    value={filters.sort_by || 'date_desc'}
-                    onChange={(e) => onFilterChange({ sort_by: e.target.value })}
-                    sx={{ 
-                        '& .MuiSelect-select': {
-                            py: 1,
-                            fontSize: '1rem',
-                            backgroundColor: 'white',
-                            borderRadius: 2,
-                        },
-                        '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                        }
-                    }}
-                >
-                    <MenuItem value="date_desc">Сначала новые</MenuItem>
-                    <MenuItem value="price_asc">Сначала дешевле</MenuItem>
-                    <MenuItem value="price_desc">Сначала дороже</MenuItem>
-                    <MenuItem value="views">По популярности</MenuItem>
-                </Select>
             </Box>
         </Paper>
     );

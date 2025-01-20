@@ -18,15 +18,26 @@ const CategoryTreeItem = ({
   onSelect,
   level = 0 
 }) => {
-  const [isOpen, setIsOpen] = useState(level === 0);
+  // Меняем начальное состояние на false
+  const [isOpen, setIsOpen] = useState(false);
   const theme = useTheme();
 
+  // Добавляем функцию для подсчета всех объявлений в категории и подкатегориях
   const getTotalListings = (cat) => {
     let total = cat.listing_count || 0;
     if (cat.children) {
       total += cat.children.reduce((sum, child) => sum + getTotalListings(child), 0);
     }
     return total;
+  };
+
+  const handleClick = () => {
+    if (hasChildren) {
+      setIsOpen(!isOpen);
+      onSelect(category.id); // Выбираем категорию при клике
+    } else {
+      onSelect(category.id);
+    }
   };
 
   const totalListings = getTotalListings(category);
