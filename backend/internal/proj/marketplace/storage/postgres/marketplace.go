@@ -148,7 +148,9 @@ func (s *Storage) processTranslations(rawTranslations interface{}) models.Transl
 }
 func (s *Storage) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
     userID, _ := ctx.Value("user_id").(int)
-
+    if userID == 0 {
+        userID = -1
+    }
     baseQuery := `
     WITH RECURSIVE category_tree AS (
         SELECT id, parent_id, name
@@ -208,25 +210,25 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         c.name as category_name, 
         c.slug as category_slug,
         COALESCE(t.translations, '{}'::jsonb) as translations,
-        EXISTS (
-            SELECT 1 
-            FROM marketplace_favorites mf 
-            WHERE mf.listing_id = l.id 
-            AND mf.user_id = CAST($2 AS INT)
-        ) as is_favorite,
-        COUNT(*) OVER() as total_count
-    FROM marketplace_listings l
-    JOIN users u ON l.user_id = u.id
-    JOIN marketplace_categories c ON l.category_id = c.id
-    LEFT JOIN translations_agg t ON t.entity_id = l.id
-    WHERE 1=1`
-
-    var conditions []string
-    var args []interface{}
-    argCount := 2
+    EXISTS (
+        SELECT 1 
+        FROM marketplace_favorites mf 
+        WHERE mf.listing_id = l.id 
+        AND mf.user_id = $2
+    ) as is_favorite,
+    COUNT(*) OVER() as total_count
+FROM marketplace_listings l
+JOIN users u ON l.user_id = u.id
+JOIN marketplace_categories c ON l.category_id = c.id
+LEFT JOIN translations_agg t ON t.entity_id = l.id
+WHERE 1=1`
+ 
 
     // Получаем category_id и user_id
     categoryID := ""
+    argCount := 2
+    args := []interface{}{categoryID, userID} 
+    var conditions []string
     if v, ok := filters["category_id"]; ok && v != "" {
         argCount++
         conditions = append(conditions, fmt.Sprintf(`
@@ -237,8 +239,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
                 ))`, argCount, argCount))
         args = append(args, v)
     }
-    
-    args = append(args, categoryID, userID) // Добавляем начальные параметры
+ 
 
     // Обработка фильтров
     if v, ok := filters["query"]; ok && v != "" {
