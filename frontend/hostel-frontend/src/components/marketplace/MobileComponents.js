@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    Box, Button, IconButton, Typography, InputBase, Toolbar,
+    Box, Button, IconButton, Typography, InputBase, Toolbar, TextField, Select, MenuItem,
     Paper, Grid, Drawer, Stack
 } from '@mui/material';
 import { Search as SearchIcon, Filter, X, Check, ArrowLeft, ChevronRight, Plus } from 'lucide-react';
@@ -228,6 +228,17 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
         }
     };
 
+    const handleClearFilters = () => {
+        setTempFilters({
+            query: "",
+            category_id: "",
+            min_price: "",
+            max_price: "",
+            condition: "",
+            sort_by: "date_desc"
+        });
+    };
+
     return (
         <Drawer
             anchor="right"
@@ -261,72 +272,155 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                     <Typography 
                         variant="subtitle1" 
                         sx={{ 
+                            flex: 1,
                             fontWeight: 600,
                             color: 'text.primary'
                         }}
                     >
-                        {currentCategory ? currentCategory.name : 'Категории'}
+                        {currentCategory ? currentCategory.name : 'Фильтры'}
                     </Typography>
+                    <Button
+                        variant="text"
+                        size="small"
+                        onClick={handleClearFilters}
+                        sx={{ color: 'text.secondary' }}
+                    >
+                        Сбросить
+                    </Button>
                 </Box>
 
-                {/* Список категорий */}
+                {/* Основное содержимое с фильтрами */}
                 <Box sx={{ flex: 1, overflow: 'auto' }}>
-                    {getCurrentCategories().map((category) => {
-                        const hasChildren = category.children && category.children.length > 0;
-                        const isSelected = tempFilters.category_id === category.id;
-                        
-                        return (
-                            <Box
-                                key={category.id}
-                                sx={{
-                                    borderBottom: '1px solid',
-                                    borderColor: 'divider',
-                                    '&:last-child': {
-                                        borderBottom: 'none'
-                                    }
-                                }}
-                            >
-                                <Button
-                                    onClick={() => handleCategoryClick(category)}
-                                    sx={{ 
-                                        width: '100%',
-                                        justifyContent: 'flex-start',
-                                        textTransform: 'none',
-                                        py: 2,
-                                        px: 2,
-                                        color: isSelected ? 'primary.main' : 'text.primary',
-                                        backgroundColor: isSelected ? 'action.selected' : 'transparent',
-                                        borderRadius: 0,
-                                        '&:hover': {
-                                            backgroundColor: isSelected ? 'action.selected' : 'action.hover'
+                    {/* Фильтр цены */}
+                    <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                            Цена
+                        </Typography>
+                        <Stack direction="row" spacing={1}>
+                            <TextField
+                                fullWidth
+                                size="small"
+                                placeholder="От"
+                                type="number"
+                                value={tempFilters.min_price || ''}
+                                onChange={(e) => setTempFilters(prev => ({
+                                    ...prev,
+                                    min_price: e.target.value
+                                }))}
+                            />
+                            <TextField
+                                fullWidth
+                                size="small"
+                                placeholder="До"
+                                type="number"
+                                value={tempFilters.max_price || ''}
+                                onChange={(e) => setTempFilters(prev => ({
+                                    ...prev,
+                                    max_price: e.target.value
+                                }))}
+                            />
+                        </Stack>
+                    </Box>
+
+                    {/* Фильтр состояния */}
+                    <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                            Состояние
+                        </Typography>
+                        <Select
+                            fullWidth
+                            size="small"
+                            value={tempFilters.condition || ''}
+                            onChange={(e) => setTempFilters(prev => ({
+                                ...prev,
+                                condition: e.target.value
+                            }))}
+                        >
+                            <MenuItem value="">Любое</MenuItem>
+                            <MenuItem value="new">Новое</MenuItem>
+                            <MenuItem value="used">Б/у</MenuItem>
+                        </Select>
+                    </Box>
+
+                    {/* Сортировка */}
+                    <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                            Сортировка
+                        </Typography>
+                        <Select
+                            fullWidth
+                            size="small"
+                            value={tempFilters.sort_by || 'date_desc'}
+                            onChange={(e) => setTempFilters(prev => ({
+                                ...prev,
+                                sort_by: e.target.value
+                            }))}
+                        >
+                            <MenuItem value="date_desc">Сначала новые</MenuItem>
+                            <MenuItem value="price_asc">Сначала дешевле</MenuItem>
+                            <MenuItem value="price_desc">Сначала дороже</MenuItem>
+                        </Select>
+                    </Box>
+
+                    {/* Категории */}
+                    <Box sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
+                        {getCurrentCategories().map((category) => {
+                            const hasChildren = category.children && category.children.length > 0;
+                            const isSelected = tempFilters.category_id === category.id;
+                            
+                            return (
+                                <Box
+                                    key={category.id}
+                                    sx={{
+                                        borderBottom: '1px solid',
+                                        borderColor: 'divider',
+                                        '&:last-child': {
+                                            borderBottom: 'none'
                                         }
                                     }}
                                 >
-                                    <Typography 
+                                    <Button
+                                        onClick={() => handleCategoryClick(category)}
                                         sx={{ 
-                                            flex: 1,
-                                            textAlign: 'left',
-                                            fontWeight: isSelected ? 500 : 400
+                                            width: '100%',
+                                            justifyContent: 'flex-start',
+                                            textTransform: 'none',
+                                            py: 2,
+                                            px: 2,
+                                            color: isSelected ? 'primary.main' : 'text.primary',
+                                            backgroundColor: isSelected ? 'action.selected' : 'transparent',
+                                            borderRadius: 0,
+                                            '&:hover': {
+                                                backgroundColor: isSelected ? 'action.selected' : 'action.hover'
+                                            }
                                         }}
                                     >
-                                        {category.name}
-                                    </Typography>
-                                    {hasChildren && (
-                                        <ChevronRight 
-                                            size={20} 
-                                            style={{ 
-                                                opacity: 0.5,
-                                                marginLeft: 8
+                                        <Typography 
+                                            sx={{ 
+                                                flex: 1,
+                                                textAlign: 'left',
+                                                fontWeight: isSelected ? 500 : 400
                                             }}
-                                        />
-                                    )}
-                                </Button>
-                            </Box>
-                        );
-                    })}
+                                        >
+                                            {category.name}
+                                        </Typography>
+                                        {hasChildren && (
+                                            <ChevronRight 
+                                                size={20} 
+                                                style={{ 
+                                                    opacity: 0.5,
+                                                    marginLeft: 8
+                                                }}
+                                            />
+                                        )}
+                                    </Button>
+                                </Box>
+                            );
+                        })}
+                    </Box>
                 </Box>
 
-                {/* Кнопка применения фильтров */}
+                {/* Кнопки действий */}
                 <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                     <Button
                         variant="contained"
@@ -337,16 +431,13 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                             py: 1.5,
                             textTransform: 'none',
                             fontWeight: 500,
-                            boxShadow: 'none',
-                            '&:hover': {
-                                boxShadow: 'none'
-                            }
                         }}
                     >
-                        Применить фильтры
+                        Показать результаты
                     </Button>
                 </Box>
             </Box>
         </Drawer>
     );
+
 };
