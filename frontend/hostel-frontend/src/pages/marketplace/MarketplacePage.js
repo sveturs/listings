@@ -28,6 +28,7 @@ import {
 import CompactMarketplaceFilters from '../../components/marketplace/MarketplaceFilters';
 import axios from '../../api/axios';
 import { debounce } from 'lodash';
+import { useSearchParams } from 'react-router-dom';
 
 const MarketplacePage = () => {
     const theme = useTheme();
@@ -39,9 +40,10 @@ const MarketplacePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
     const [filters, setFilters] = useState({
         query: '',
-        category_id: '', 
+        category_id: searchParams.get('category_id') || '', 
         min_price: '',
         max_price: '',
         city: '',
@@ -95,24 +97,79 @@ const MarketplacePage = () => {
                 if (categoriesResponse.data?.data) {
                     setCategories(categoriesResponse.data.data);
                 }
+    
+                // Получаем начальный categoryId из URL
+                const categoryId = searchParams.get('category_id');
                 
-                // Загружаем все объявления без фильтров
+                // Загружаем листинги с учётом начальных фильтров
                 await fetchListings({
+                    ...filters,
+                    category_id: categoryId || '',
                     sort_by: 'date_desc'
                 });
-                
+                    
             } catch (err) {
                 console.error('Error fetching initial data:', err);
                 setError('Произошла ошибка при загрузке данных');
             }
         };
-
+    
         fetchInitialData();
-    }, []);
+    }, [searchParams]); // Добавляем зависимость от searchParams
+    
+    // Заменяем второй эффект
+    useEffect(() => {
+        // Проверяем путь и делаем редирект если нужно
+        if (!window.location.pathname.includes('/marketplace')) {
+            navigate({
+                pathname: '/marketplace',
+                search: window.location.search
+            }, { replace: true }); // Используем replace чтобы не создавать новую запись в истории
+        }
+    }, []); // Срабатывает только при монтировании
+    
+    // Третий эффект оставляем как есть
+    useEffect(() => {
+        const categoryId = searchParams.get('category_id');
+        
+        if (categoryId !== filters.category_id) {
+            setFilters(prev => ({
+                ...prev,
+                category_id: categoryId || ''
+            }));
+            
+            fetchListings({
+                ...filters,
+                category_id: categoryId || ''
+            });
+        }
+    }, [searchParams]);
+
+    
     const handleFilterChange = useCallback((newFilters) => {
         setFilters(prev => {
             const updated = { ...prev, ...newFilters };
-            // Отправляем только непустые значения
+            
+            // Обновляем URL при изменении категории
+            if (newFilters.category_id !== undefined) {
+                const nextParams = new URLSearchParams(searchParams);
+                if (newFilters.category_id) {
+                    nextParams.set('category_id', newFilters.category_id);
+                    // Убедимся, что мы находимся на правильном пути
+                    if (!window.location.pathname.includes('/marketplace')) {
+                        navigate({
+                            pathname: '/marketplace',
+                            search: nextParams.toString()
+                        });
+                    } else {
+                        setSearchParams(nextParams);
+                    }
+                } else {
+                    nextParams.delete('category_id');
+                    setSearchParams(nextParams);
+                }
+            }
+    
             const cleanFilters = {};
             Object.entries(updated).forEach(([key, value]) => {
                 if (value !== '') {
@@ -122,9 +179,8 @@ const MarketplacePage = () => {
             fetchListings(cleanFilters);
             return updated;
         });
-    }, [fetchListings]);
-    
-    
+    }, [searchParams, setSearchParams, navigate]);
+
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
             if (key !== 'sort_by' && value !== '') {

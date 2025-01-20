@@ -1,6 +1,5 @@
-// src/components/marketplace/Breadcrumbs.js
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
     Breadcrumbs as MuiBreadcrumbs, 
     Typography, 
@@ -11,16 +10,25 @@ import {
 import { ChevronRight } from 'lucide-react';
 
 const Breadcrumbs = ({ paths }) => {
-
     const theme = useTheme();
+    const navigate = useNavigate();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+    console.log('Breadcrumbs received paths:', paths);
 
-    if (!paths || paths.length === 0) return null;
+    if (!paths || paths.length === 0) {
+        return null;
+    }
+
+    const handleCategoryClick = (categoryId, event) => {
+        event.preventDefault();
+        navigate(`/marketplace?category_id=${categoryId}`);
+    };
 
     return (
         <Box sx={{ 
             mb: 2,
+            py: 1,
             overflowX: 'auto',
             whiteSpace: 'nowrap',
             '&::-webkit-scrollbar': {
@@ -34,42 +42,60 @@ const Breadcrumbs = ({ paths }) => {
                 sx={{
                     '& .MuiBreadcrumbs-ol': {
                         flexWrap: 'nowrap'
+                    },
+                    '& .MuiBreadcrumbs-li': {
+                        display: 'flex',
+                        alignItems: 'center'
                     }
                 }}
             >
                 <Link 
                     to="/marketplace"
                     style={{ 
-                        color: 'inherit', 
+                        color: theme.palette.text.secondary,
                         textDecoration: 'none',
-                        '&:hover': {
-                            textDecoration: 'underline'
-                        }
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        transition: 'all 0.2s'
                     }}
                 >
                     Главная
                 </Link>
+
                 {paths.map((path, index) => {
                     const isLast = index === paths.length - 1;
-                    const to = `/marketplace?category=${path.id}`;
                     
-                    return isLast ? (
-                        <Typography 
-                            key={path.id} 
-                            color="text.primary"
-                            sx={{ fontSize: '0.875rem' }}
-                        >
-                            {path.name}
-                        </Typography>
-                    ) : (
+                    if (isLast) {
+                        return (
+                            <Typography 
+                                key={path.id} 
+                                color="text.primary"
+                                sx={{ 
+                                    fontSize: '0.875rem',
+                                    padding: '4px 8px',
+                                    fontWeight: 500
+                                }}
+                            >
+                                {path.name}
+                            </Typography>
+                        );
+                    }
+
+                    return (
                         <Link
                             key={path.id}
-                            to={to}
+                            to={`/marketplace?category_id=${path.id}`}
+                            onClick={(e) => handleCategoryClick(path.id, e)}
                             style={{ 
-                                color: 'inherit',
+                                color: theme.palette.text.secondary,
                                 textDecoration: 'none',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '0.875rem',
+                                transition: 'all 0.2s',
                                 '&:hover': {
-                                    textDecoration: 'underline'
+                                    backgroundColor: theme.palette.action.hover,
+                                    color: theme.palette.primary.main
                                 }
                             }}
                         >

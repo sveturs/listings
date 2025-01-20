@@ -69,15 +69,16 @@ const ListingDetailsPage = () => {
                 // Добавим отладочный вывод
                 console.log('Listing data:', response.data.data);
     
-                // Исправляем создание пути категорий
+                // Используем category_path вместо category_path_names
                 if (response.data.data.category_path) {
                     const path = response.data.data.category_path.map((name, index) => ({
                         id: response.data.data.category_path_ids[index],
                         name: name,
                         slug: response.data.data.category_path_slugs[index]
-                    }));
+                    })).reverse(); // Разворачиваем массив, чтобы получить правильный порядок
+    
+                    console.log('Setting category path:', path);
                     setCategoryPath(path);
-                    console.log('Category path:', path); // Отладочный вывод
                 }
             } catch (err) {
                 console.error('Error fetching listing:', err);
