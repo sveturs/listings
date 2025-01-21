@@ -234,3 +234,17 @@ func (db *Database) GetChat(ctx context.Context, chatID int, userID int) (*model
 func (db *Database) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
     return db.marketplaceDB.MarkMessagesAsRead(ctx, messageIDs, userID)
 }
+func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int, error) {
+    var count int
+    err := db.pool.QueryRow(ctx, `
+        SELECT COUNT(*) 
+        FROM marketplace_messages 
+        WHERE receiver_id = $1 AND is_read = false
+    `, userID).Scan(&count)
+    
+    if err != nil {
+        return 0, err
+    }
+    
+    return count, nil
+}

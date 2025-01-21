@@ -16,7 +16,8 @@ type ChatServiceInterface interface {
     GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error)
     GetChat(ctx context.Context, chatID, userID int) (*models.MarketplaceChat, error)
     ArchiveChat(ctx context.Context, chatID, userID int) error
-    
+    GetUnreadMessagesCount(ctx context.Context, userID int) (int, error)
+
     // WebSocket
     BroadcastMessage(msg *models.MarketplaceMessage)
     SubscribeToMessages(userID int) chan *models.MarketplaceMessage

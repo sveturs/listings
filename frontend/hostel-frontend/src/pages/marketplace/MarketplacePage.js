@@ -295,35 +295,7 @@ const MarketplacePage = () => {
                     borderBottom: 1,
                     borderColor: 'divider'
                 }}>
-                    <Box sx={{ 
-                        px: 2, 
-                        py: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        overflowX: 'auto',
-                        WebkitOverflowScrolling: 'touch'
-                    }}>
-                        <Box sx={{ flex: 1, mr: 2 }}>
-                            {categoryPath.length > 0 ? (
-                                <Breadcrumbs paths={categoryPath} />
-                            ) : (
-                                <Typography variant="body2" color="text.secondary">
-                                    Все категории
-                                </Typography>
-                            )}
-                        </Box>
-                        <Box sx={{ flexShrink: 0 }}>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => navigate('/marketplace/create')}
-                                startIcon={<Plus size={16} />}
-                            >
-                                Создать
-                            </Button>
-                        </Box>
-                    </Box>
+
      
                     {/* Активные фильтры */}
                     {Object.entries(filters).some(([key, value]) => value && key !== 'sort_by') && (

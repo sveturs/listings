@@ -388,21 +388,7 @@ const CreateListing = () => {
                 </Paper>
             </Box>
 
-            {/* Модальное окно с картой */}
-            {showExpandedMap && (
-                <Modal
-                    open={showExpandedMap}
-                    onClose={() => setShowExpandedMap(false)}
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        p: 1
-                    }}
-                >
-                    {/* ... оставляем существующий код модального окна ... */}
-                </Modal>
-            )}
+ 
         </Container>
     );
 

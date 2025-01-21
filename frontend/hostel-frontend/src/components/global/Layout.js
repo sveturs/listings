@@ -1,9 +1,15 @@
 // frontend/hostel-frontend/src/components/global/Layout.js
-import React, { useState } from "react";
-import { ShoppingBag} from '@mui/icons-material';
-import { Storefront} from '@mui/icons-material';
+import React, { useState, useEffect } from "react";
+import { ShoppingBag } from '@mui/icons-material';
+import { Storefront } from '@mui/icons-material';
 import MessageIcon from '@mui/icons-material/Message';
+import NewMessageIndicator from './NewMessageIndicator';
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from '../../contexts/AuthContext';
+import axios from '../../api/axios';
+import ChatService from '../marketplace/chat/ChatService';
+import { Bookmark } from '@mui/icons-material';
+import UserProfile from "../user/UserProfile";
 import {
   AppBar,
   Toolbar,
@@ -29,9 +35,7 @@ import {
   AddHome,
   AccountCircle,
 } from "@mui/icons-material";
-import { Bookmark } from '@mui/icons-material';
-import { useAuth } from "../../contexts/AuthContext";
-import UserProfile from "../user/UserProfile";
+
 
 // Добавляем импорт компонента переключателя языка
 import LanguageSwitcher from '../shared/LanguageSwitcher';
@@ -42,17 +46,13 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const currentPath = location.pathname;
   const { user, login, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [chatService, setChatService] = useState(null);
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const handleOpenMenu = (e) => {
-    setAnchorEl(e.currentTarget);
-  };
 
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-  };
 
   const handleOpenProfile = () => {
     setIsProfileOpen(true);
@@ -70,6 +70,62 @@ const Layout = ({ children }) => {
       icon: <Storefront fontSize="large" color="primary" />,
     },
   ];
+  useEffect(() => {
+    let chatService;
+
+    if (user?.id) {
+      chatService = new ChatService(user.id);
+
+      const messageHandler = (message) => {
+        if (message.receiver_id === user.id && !message.is_read) {
+          setUnreadCount(prev => prev + 1);
+        }
+      };
+
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await axios.get('/api/v1/marketplace/chat/unread-count');
+          setUnreadCount(response.data.data.count);
+        } catch (error) {
+          console.error('Error fetching unread count:', error);
+        }
+      };
+
+      chatService.connect();
+      chatService.onMessage(messageHandler);
+      fetchUnreadCount();
+
+      return () => {
+        if (chatService) {
+          chatService.disconnect();
+        }
+      };
+    }
+  }, [user?.id]);
+
+  const handleOpenMenu = (e) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const renderMessagesMenuItem = () => (
+    <MenuItem
+      component={Link}
+      to="/marketplace/chat"
+      onClick={() => {
+        handleCloseMenu();
+        setUnreadCount(0);
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <NewMessageIndicator unreadCount={unreadCount} />
+        <Typography>Мои сообщения</Typography>
+      </Box>
+    </MenuItem>
+  );
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -150,6 +206,16 @@ const Layout = ({ children }) => {
                 </Tooltip>
               ) : (
                 <>
+                  {/* Добавляем индикатор сообщений */}
+                  {unreadCount > 0 && (
+                    <IconButton
+                      component={Link}
+                      to="/marketplace/chat"
+                      onClick={() => setUnreadCount(0)}
+                    >
+                      <NewMessageIndicator unreadCount={unreadCount} />
+                    </IconButton>
+                  )}
                   <Tooltip title="Мой профиль">
                     <IconButton onClick={handleOpenMenu}>
                       <Avatar
@@ -181,17 +247,15 @@ const Layout = ({ children }) => {
                       </Typography>
                     </MenuItem>
                     <Divider />
-                    
-                    <MenuItem component={Link} to="/marketplace/chat">
-                      <MessageIcon fontSize="small" sx={{ mr: 1 }} />
-                      Мои сообщения
-                    </MenuItem>
-                    
-                    <MenuItem component={Link} to="/bookings">
-                      <ListAlt fontSize="small" sx={{ mr: 1 }} />
-                      Мои бронирования
-                    </MenuItem>
-                    <MenuItem component={Link} to="/my-listings">
+
+                    {renderMessagesMenuItem()}  {/* Заменяем старый MenuItem на этот */}
+
+
+                    <MenuItem
+                      component={Link}
+                      to="/my-listings"
+                      onClick={handleCloseMenu}
+                    >
                       <ShoppingBag fontSize="small" sx={{ mr: 1 }} />
                       Мои объявления
                     </MenuItem>
@@ -199,14 +263,8 @@ const Layout = ({ children }) => {
                       <Bookmark fontSize="small" sx={{ mr: 1 }} />
                       Избранное
                     </MenuItem>
-                    <MenuItem component={Link} to="/add-room">
-                      <AddHome fontSize="small" sx={{ mr: 1 }} />
-                      Добавить жильё
-                    </MenuItem>
-                    <MenuItem component={Link} to="/add-car">
-                      <DirectionsCar fontSize="small" sx={{ mr: 1 }} />
-                      Добавить автомобиль
-                    </MenuItem>
+
+
                     <Divider />
                     <MenuItem onClick={logout}>
                       <Logout fontSize="small" sx={{ mr: 1 }} />

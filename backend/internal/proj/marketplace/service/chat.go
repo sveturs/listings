@@ -61,6 +61,11 @@ func (s *ChatService) GetChats(ctx context.Context, userID int) ([]models.Market
     return s.storage.GetChats(ctx, userID)
 }
 
+func (s *ChatService) GetUnreadMessagesCount(ctx context.Context, userID int) (int, error) {
+    // Используем storage для получения количества непрочитанных сообщений
+    return s.storage.GetUnreadMessagesCount(ctx, userID)
+}
+
 func (s *ChatService) GetChat(ctx context.Context, chatID, userID int) (*models.MarketplaceChat, error) {
     return s.storage.GetChat(ctx, chatID, userID)
 }

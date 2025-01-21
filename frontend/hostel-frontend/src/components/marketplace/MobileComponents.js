@@ -28,13 +28,9 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
                 minHeight: '56px !important', 
                 px: 2,
                 display: 'flex',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                gap: 2
             }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-                        Sve Tu
-                    </Typography>
-                </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                     <IconButton
                         onClick={onOpenFilters}
@@ -66,6 +62,21 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
                         )}
                     </IconButton>
                 </Box>
+
+                <Button
+                    component={Link}
+                    to="/marketplace/create"
+                    variant="contained"
+                    size="small"
+                    startIcon={<Plus size={16} />}
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        height: 32
+                    }}
+                >
+                    Создать
+                </Button>
             </Toolbar>
 
             <Box sx={{ px: 2, pb: 2 }}>
@@ -116,7 +127,6 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
         </Box>
     );
 };
-
 // Компонент MobileListingCard
 export const MobileListingCard = ({ listing }) => {
     const formatPrice = (price) => {

@@ -53,7 +53,18 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
     return utils.SuccessResponse(c, messages)
 }
 
-// backend/internal/proj/marketplace/handler/chat.go
+func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
+    userID := c.Locals("user_id").(int)
+    
+    count, err := h.services.Chat().GetUnreadMessagesCount(c.Context(), userID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting unread count")
+    }
+    
+    return utils.SuccessResponse(c, fiber.Map{
+        "count": count,
+    })
+}
 
 func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)

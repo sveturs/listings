@@ -139,12 +139,16 @@ marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Де
 	marketplaceProtected.Delete("/listings/:id/favorite", s.marketplace.Marketplace.RemoveFromFavorites)
 	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
 	// Чат для маркетплейса
+	
 	chat := api.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)
 	chat.Get("/:listing_id/messages", s.marketplace.Chat.GetMessages)
+ 
 	chat.Post("/messages", s.marketplace.Chat.SendMessage)
 	chat.Put("/messages/read", s.marketplace.Chat.MarkAsRead)
 	chat.Post("/:chat_id/archive", s.marketplace.Chat.ArchiveChat) 
+	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
+
 
 	// WebSocket эндпоинт
 	s.app.Use("/ws/chat", s.middleware.AuthRequired) // Защищаем WebSocket

@@ -60,6 +60,7 @@ type Storage interface {
 	GetChat(ctx context.Context, chatID int, userID int) (*models.MarketplaceChat, error)
 	MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error
 	ArchiveChat(ctx context.Context, chatID int, userID int) error
+    GetUnreadMessagesCount(ctx context.Context, userID int) (int, error)
 
 	// Database connection
 	Close()
