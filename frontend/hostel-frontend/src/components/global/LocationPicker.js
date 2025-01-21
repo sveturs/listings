@@ -169,9 +169,9 @@ const LocationPicker = ({ onLocationSelect }) => {
     };
 
     return (
-        <Paper sx={{ p: 2 }}>
+        <Paper sx={{ p: 0.5 }}>
             <Typography variant="h6" gutterBottom>
-                Выберите местоположение объекта
+                местоположение:
             </Typography>
             <Box sx={{ mb: 2 }}>
                 <TextField

@@ -186,58 +186,58 @@ const CreateListing = () => {
     };
 
     return (
-<Container 
-    maxWidth="md" 
-    disableGutters={isMobile}
-    sx={{ 
-        mx: isMobile ? 0 : 'auto',  // Убираем автоматические отступы на мобильном
-        width: isMobile ? '100%' : 'auto'  // Принудительно растягиваем на всю ширину
-    }}
->
-    <Box sx={{ 
-        mt: isMobile ? 0 : 4, 
-        mb: isMobile ? 0 : 4,
-        px: 0,
-        width: '100%'
-    }}>
+        <Container
+            maxWidth="md"
+            disableGutters={isMobile}
+            sx={{
+                mx: isMobile ? 0 : 'auto',  // Убираем автоматические отступы на мобильном
+                width: isMobile ? '100%' : 'auto'  // Принудительно растягиваем на всю ширину
+            }}
+        >
+            <Box sx={{
+                mt: isMobile ? 0 : 4,
+                mb: isMobile ? 0 : 4,
+                px: 0,
+                width: '100%'
+            }}>
 
-    
+
                 {error && (
                     <Alert severity="error" sx={{ mb: 2 }}>
                         {error}
                     </Alert>
                 )}
-    
+
                 {success && (
                     <Alert severity="success" sx={{ mb: 2 }}>
                         Объявление успешно создано!
                     </Alert>
                 )}
-    
-    <Paper sx={{ 
-    p: isMobile ? '8px 0' : 3,  // Оставляем только вертикальный отступ 8px
-    boxShadow: isMobile ? 'none' : 1,
-    bgcolor: isMobile ? 'transparent' : 'background.paper',
-    width: '100%'
-}}>
+
+                <Paper sx={{
+                    p: isMobile ? '8px 0' : 3,  // Оставляем только вертикальный отступ 8px
+                    boxShadow: isMobile ? 'none' : 1,
+                    bgcolor: isMobile ? 'transparent' : 'background.paper',
+                    width: '100%'
+                }}>
                     <form onSubmit={handleSubmit}>
                         <Grid container spacing={isMobile ? 2 : 3}>
                             {/* Базовая информация */}
                             <Grid item xs={12}>
-                            <FormControl fullWidth required size={isMobile ? "small" : "medium"}>
-                                <InputLabel>Категория</InputLabel>
-                                <Select
-                                    value={listing.category_id}
-                                    onChange={(e) => setListing({ ...listing, category_id: e.target.value })}
-                                >
-                                    {categories.map((category) => (
-                                        <MenuItem key={category.id} value={category.id}>
-                                            {category.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
+                                <FormControl fullWidth required size={isMobile ? "small" : "medium"}>
+                                    <InputLabel>Категория</InputLabel>
+                                    <Select
+                                        value={listing.category_id}
+                                        onChange={(e) => setListing({ ...listing, category_id: e.target.value })}
+                                    >
+                                        {categories.map((category) => (
+                                            <MenuItem key={category.id} value={category.id}>
+                                                {category.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
                             <Grid item xs={12}>
                                 <TextField
                                     label="Наименование товара"
@@ -248,7 +248,65 @@ const CreateListing = () => {
                                     size={isMobile ? "small" : "medium"}
                                 />
                             </Grid>
-    
+                            {/* Фотографии */}
+                            <Grid item xs={12} sx={{ mb: 0.1 }} >
+                                <ImageUploader
+                                    onImagesSelected={(processedImages) => {
+                                        setImages(processedImages.map(img => img.file));
+                                        setPreviewUrls(processedImages.map(img => img.preview));
+                                    }}
+                                />
+
+                                <Box sx={{
+                                    mt: 0.1,
+                                    display: 'grid',
+                                    gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '80px' : '100px'}, 1fr))`,
+                                    gap: 1
+                                }}>
+                                    {previewUrls.map((url, index) => (
+                                        <Box
+                                            key={index}
+                                            sx={{
+                                                position: 'relative',
+                                                paddingTop: '100%'
+                                            }}
+                                        >
+                                            <img
+                                                src={url}
+                                                alt={`Preview ${index}`}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '4px'
+                                                }}
+                                            />
+                                            <IconButton
+                                                size="small"
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: 4,
+                                                    right: 4,
+                                                    backgroundColor: 'rgba(255,255,255,0.8)',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(255,255,255,0.9)'
+                                                    }
+                                                }}
+                                                onClick={() => {
+                                                    setImages(prev => prev.filter((_, i) => i !== index));
+                                                    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+                                                    URL.revokeObjectURL(url);
+                                                }}
+                                            >
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            </Grid>
                             <Grid item xs={12}>
                                 <TextField
                                     label="Описание"
@@ -262,157 +320,99 @@ const CreateListing = () => {
                                 />
                             </Grid>
 
-                        <Grid item xs={6}>
-                            <TextField
-                                label="Цена"
-                                type="number"
-                                fullWidth
-                                required
-                                value={listing.price}
-                                onChange={(e) => setListing({ ...listing, price: e.target.value })}
-                                size={isMobile ? "small" : "medium"}
-                            />
-                        </Grid>
-
-                        <Grid item xs={6}>
-                            <FormControl fullWidth required size={isMobile ? "small" : "medium"}>
-                                <InputLabel>Состояние</InputLabel>
-                                <Select
-                                    value={listing.condition}
-                                    onChange={(e) => setListing({ ...listing, condition: e.target.value })}
-                                >
-                                    <MenuItem value="new">Новое</MenuItem>
-                                    <MenuItem value="used">Б/у</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-
-
-                        {/* Местоположение */}
-                        <Grid item xs={12}>
-                            <Box sx={{ mb: 1 }}>
-                                <LocationPicker onLocationSelect={handleLocationSelect} />
-                            </Box>
-
-                            {listing.latitude && listing.longitude && (
-                                <MiniMap
-                                    latitude={listing.latitude}
-                                    longitude={listing.longitude}
-                                    address={listing.location}
-                                    onExpand={() => setShowExpandedMap(true)}
+                            <Grid item xs={6}>
+                                <TextField
+                                    label="Цена"
+                                    type="number"
+                                    fullWidth
+                                    required
+                                    value={listing.price}
+                                    onChange={(e) => setListing({ ...listing, price: e.target.value })}
+                                    size={isMobile ? "small" : "medium"}
                                 />
-                            )}
+                            </Grid>
 
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={listing.show_on_map}
-                                        onChange={(e) => setListing(prev => ({
-                                            ...prev,
-                                            show_on_map: e.target.checked
-                                        }))}
-                                    />
-                                }
-                                label="Показывать местоположение на карте"
-                                sx={{ mt: 1 }}
-                            />
-                        </Grid>
-
-                        {/* Фотографии */}
-                        <Grid item xs={12}>
-                            <ImageUploader
-                                onImagesSelected={(processedImages) => {
-                                    setImages(processedImages.map(img => img.file));
-                                    setPreviewUrls(processedImages.map(img => img.preview));
-                                }}
-                            />
-
-                            <Box sx={{ 
-                                mt: 2, 
-                                display: 'grid',
-                                gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '80px' : '100px'}, 1fr))`,
-                                gap: 1
-                            }}>
-                                {previewUrls.map((url, index) => (
-                                    <Box
-                                        key={index}
-                                        sx={{ 
-                                            position: 'relative',
-                                            paddingTop: '100%'
-                                        }}
+                            <Grid item xs={6}>
+                                <FormControl fullWidth required size={isMobile ? "small" : "medium"}>
+                                    <InputLabel>Состояние</InputLabel>
+                                    <Select
+                                        value={listing.condition}
+                                        onChange={(e) => setListing({ ...listing, condition: e.target.value })}
                                     >
-                                        <img
-                                            src={url}
-                                            alt={`Preview ${index}`}
-                                            style={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                width: '100%',
-                                                height: '100%',
-                                                objectFit: 'cover',
-                                                borderRadius: '4px'
-                                            }}
+                                        <MenuItem value="new">Новое</MenuItem>
+                                        <MenuItem value="used">Б/у</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+
+
+
+                            {/* Местоположение */}
+                            <Grid item xs={12}>
+                                <Box sx={{ mb: 1 }}>
+                                    <LocationPicker onLocationSelect={handleLocationSelect} />
+                                </Box>
+
+                                {listing.latitude && listing.longitude && (
+                                    <MiniMap
+                                        latitude={listing.latitude}
+                                        longitude={listing.longitude}
+                                        address={listing.location}
+                                        onExpand={() => setShowExpandedMap(true)}
+                                    />
+                                )}
+
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={listing.show_on_map}
+                                            onChange={(e) => setListing(prev => ({
+                                                ...prev,
+                                                show_on_map: e.target.checked
+                                            }))}
                                         />
-                                        <IconButton
-                                            size="small"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 4,
-                                                right: 4,
-                                                backgroundColor: 'rgba(255,255,255,0.8)',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(255,255,255,0.9)'
-                                                }
-                                            }}
-                                            onClick={() => {
-                                                setImages(prev => prev.filter((_, i) => i !== index));
-                                                setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-                                                URL.revokeObjectURL(url);
-                                            }}
-                                        >
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    </Box>
-                                ))}
-                            </Box>
-                        </Grid>
+                                    }
+                                    label="Показывать местоположение на карте"
+                                    sx={{ mt: 1 }}
+                                />
+                            </Grid>
 
-                        <Grid item xs={12}>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                                fullWidth
-                                size={isMobile ? "large" : "large"}
-                                disabled={!listing.title || !listing.description || !listing.category_id || listing.price <= 0}
-                            >
-                                Создать объявление
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </form>
-            </Paper>
-        </Box>
 
-        {/* Модальное окно с картой */}
-        {showExpandedMap && (
-            <Modal
-                open={showExpandedMap}
-                onClose={() => setShowExpandedMap(false)}
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    p: 1
-                }}
-            >
-                {/* ... оставляем существующий код модального окна ... */}
-            </Modal>
-        )}
-    </Container>
-);
+
+                            <Grid item xs={12}>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    color="primary"
+                                    fullWidth
+                                    size={isMobile ? "large" : "large"}
+                                    disabled={!listing.title || !listing.description || !listing.category_id || listing.price <= 0}
+                                >
+                                    Создать объявление
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </form>
+                </Paper>
+            </Box>
+
+            {/* Модальное окно с картой */}
+            {showExpandedMap && (
+                <Modal
+                    open={showExpandedMap}
+                    onClose={() => setShowExpandedMap(false)}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        p: 1
+                    }}
+                >
+                    {/* ... оставляем существующий код модального окна ... */}
+                </Modal>
+            )}
+        </Container>
+    );
 
 };
 
