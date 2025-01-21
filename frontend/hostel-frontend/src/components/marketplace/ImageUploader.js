@@ -1,24 +1,37 @@
 import React, { useState } from 'react';
 import imageCompression from 'browser-image-compression';
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import { Box, Button, IconButton, Typography, CircularProgress } from '@mui/material';
 import { CloudUpload as CloudUploadIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { addWatermark } from '../../utils/imageUtils';
 
 const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
+    const [progress, setProgress] = useState(0);
 
-    const compressImage = async (file) => {
-        const options = {
+    const processImage = async (file) => {
+        // Сначала сжимаем изображение
+        const compressionOptions = {
             maxSizeMB: maxSizeMB,
             maxWidthOrHeight: 1920,
             useWebWorker: true,
-            fileType: file.type,
+            fileType: 'image/jpeg',
+            onProgress: (p) => setProgress(Math.round(p * 100))
         };
 
         try {
-            return await imageCompression(file, options);
+            const compressedFile = await imageCompression(file, compressionOptions);
+            
+            // Добавляем водяной знак
+            const watermarkedBlob = await addWatermark(compressedFile);
+            
+            // Создаем новый File объект с водяным знаком
+            return new File([watermarkedBlob], file.name, {
+                type: 'image/jpeg',
+                lastModified: new Date().getTime()
+            });
         } catch (error) {
-            console.error('Error compressing image:', error);
+            console.error('Error processing image:', error);
             throw error;
         }
     };
@@ -27,6 +40,7 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
         const files = Array.from(event.target.files || []);
         setError('');
         setUploading(true);
+        setProgress(0);
 
         try {
             if (files.length > maxImages) {
@@ -47,43 +61,49 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
                 return;
             }
 
-            const compressPromises = validFiles.map(async (file) => {
-                const compressedFile = await compressImage(file);
+            const processPromises = validFiles.map(async (file) => {
+                const processedFile = await processImage(file);
                 return {
-                    file: compressedFile,
-                    preview: URL.createObjectURL(compressedFile)
+                    file: processedFile,
+                    preview: URL.createObjectURL(processedFile)
                 };
             });
 
-            const compressedImages = await Promise.all(compressPromises);
-            onImagesSelected(compressedImages);
+            const processedImages = await Promise.all(processPromises);
+            onImagesSelected(processedImages);
 
         } catch (error) {
             console.error('Error processing images:', error);
             setError('Ошибка при обработке изображений');
         } finally {
             setUploading(false);
-            event.target.value = ''; // Сброс input для возможности повторной загрузки
+            setProgress(0);
+            event.target.value = '';
         }
     };
 
     return (
         <Box>
-            <Button
-                variant="contained"
-                component="label"
-                startIcon={<CloudUploadIcon />}
-                disabled={uploading}
-            >
-                {uploading ? 'Обработка...' : 'Загрузить фото'}
-                <input
-                    type="file"
-                    hidden
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageChange}
-                />
-            </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Button
+                    variant="contained"
+                    component="label"
+                    startIcon={uploading ? <CircularProgress size={20} /> : <CloudUploadIcon />}
+                    disabled={uploading}
+                >
+                    {uploading ? `Обработка (${progress}%)` : 'Загрузить фото'}
+                    <input
+                        type="file"
+                        hidden
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageChange}
+                    />
+                </Button>
+                {uploading && <Typography variant="body2" color="text.secondary">
+                    Добавляем водяной знак...
+                </Typography>}
+            </Box>
             {error && (
                 <Typography color="error" variant="body2" sx={{ mt: 1 }}>
                     {error}

@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/components/maps/MapProvider.js
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { LoadScript } from '@react-google-maps/api';
 

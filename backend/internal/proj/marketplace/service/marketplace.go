@@ -60,10 +60,27 @@ func (s *MarketplaceService) DeleteListing(ctx context.Context, id int, userID i
 }
 
 func (s *MarketplaceService) ProcessImage(file *multipart.FileHeader) (string, error) {
+    // Получаем расширение файла
     ext := filepath.Ext(file.Filename)
+    if ext == "" {
+        // Если расширение отсутствует, определяем его по MIME-типу
+        switch file.Header.Get("Content-Type") {
+        case "image/jpeg", "image/jpg":
+            ext = ".jpg"
+        case "image/png":
+            ext = ".png"
+        case "image/gif":
+            ext = ".gif"
+        case "image/webp":
+            ext = ".webp"
+        default:
+            ext = ".jpg" // По умолчанию используем .jpg
+        }
+    }
+
+    // Генерируем уникальное имя файла с расширением
     fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
 
-    // Используем переменную в возвращаемом значении
     return fileName, nil
 }
 
