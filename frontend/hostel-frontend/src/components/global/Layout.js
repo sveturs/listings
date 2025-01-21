@@ -72,36 +72,43 @@ const Layout = ({ children }) => {
   ];
   useEffect(() => {
     let chatService;
-
+    let unsubscribe;
+    
     if (user?.id) {
-      chatService = new ChatService(user.id);
+        chatService = new ChatService(user.id);
 
-      const messageHandler = (message) => {
-        if (message.receiver_id === user.id && !message.is_read) {
-          setUnreadCount(prev => prev + 1);
-        }
-      };
+        const messageHandler = (message) => {
+            if (message.receiver_id === user.id && !message.is_read) {
+                setUnreadCount(prev => prev + 1);
+                // Воспроизводим звук уведомления
+                const audio = new Audio('/notification.mp3');
+                audio.play().catch(e => console.log('Notification sound error:', e));
+            }
+        };
 
-      const fetchUnreadCount = async () => {
-        try {
-          const response = await axios.get('/api/v1/marketplace/chat/unread-count');
-          setUnreadCount(response.data.data.count);
-        } catch (error) {
-          console.error('Error fetching unread count:', error);
-        }
-      };
+        const fetchUnreadCount = async () => {
+            try {
+                const response = await axios.get('/api/v1/marketplace/chat/unread-count');
+                setUnreadCount(response.data.data.count);
+            } catch (error) {
+                console.error('Error fetching unread count:', error);
+            }
+        };
 
-      chatService.connect();
-      chatService.onMessage(messageHandler);
-      fetchUnreadCount();
-
-      return () => {
-        if (chatService) {
-          chatService.disconnect();
-        }
-      };
+        chatService.connect();
+        unsubscribe = chatService.onMessage(messageHandler);
+        fetchUnreadCount();
     }
-  }, [user?.id]);
+
+    return () => {
+        if (unsubscribe) {
+            unsubscribe();
+        }
+        if (chatService) {
+            chatService.disconnect();
+        }
+    };
+}, [user?.id]);
 
   const handleOpenMenu = (e) => {
     setAnchorEl(e.currentTarget);
