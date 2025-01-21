@@ -1,3 +1,4 @@
+// backend/internal/proj/global/service/interface.go
 package service
 
 import (

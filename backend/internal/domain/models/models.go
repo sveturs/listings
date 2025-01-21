@@ -2,10 +2,8 @@
 package models
 
 import (
-//    "encoding/json"
-    "time"
-//    "strings"
-)
+     "time"
+ )
 
 type User struct {
     ID         int       `json:"id"`

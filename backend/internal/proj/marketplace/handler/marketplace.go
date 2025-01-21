@@ -102,7 +102,9 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 	if len(files) == 0 {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Нет файлов для загрузки")
 	}
-
+    for _, file := range files {
+        log.Printf("Received file: name=%s, size=%d, type=%s", file.Filename, file.Size, file.Header.Get("Content-Type"))
+    }
 	if len(files) > 10 {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Максимум 10 фотографий")
 	}

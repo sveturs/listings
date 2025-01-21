@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/contexts/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from '../api/axios';
 
