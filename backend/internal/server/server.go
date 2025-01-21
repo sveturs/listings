@@ -43,9 +43,10 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	middleware := middleware.NewMiddleware(cfg, services)
 
-	// Инициализация Fiber
+	// Инициализация Fiber и размер файлов для загрузки #images #upload
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
+		BodyLimit:    20 * 1024 * 1024, // 20MB
 	})
 
 	// Применение middleware
