@@ -25,13 +25,15 @@ import { GoogleMap, Marker } from '@react-google-maps/api';
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import ImageUploader from '../../components/marketplace/ImageUploader';
+
 
 const EditListingPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
     const { language } = useLanguage();
-    
+
     const [listing, setListing] = useState({
         title: "",
         description: "",
@@ -64,7 +66,7 @@ const EditListingPage = () => {
                 ]);
 
                 const listingData = listingResponse.data.data;
-                
+
                 // Проверяем, является ли текущий пользователь владельцем
                 if (listingData.user_id !== user?.id) {
                     navigate('/marketplace');
@@ -87,7 +89,7 @@ const EditListingPage = () => {
 
                 // Загружаем существующие изображения
                 if (listingData.images) {
-                    setPreviewUrls(listingData.images.map(img => 
+                    setPreviewUrls(listingData.images.map(img =>
                         `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
                     ));
                 }
@@ -281,7 +283,7 @@ const EditListingPage = () => {
                                 <Typography variant="h6" gutterBottom>
                                     Местоположение
                                 </Typography>
-                                <LocationPicker 
+                                <LocationPicker
                                     onLocationSelect={handleLocationSelect}
                                     initialLocation={{
                                         latitude: listing.latitude,
@@ -289,7 +291,7 @@ const EditListingPage = () => {
                                         formatted_address: listing.location
                                     }}
                                 />
-                                
+
                                 {listing.latitude && listing.longitude && (
                                     <Box sx={{ mt: 2 }}>
                                         <MiniMap
@@ -300,7 +302,7 @@ const EditListingPage = () => {
                                         />
                                     </Box>
                                 )}
-                                
+
                                 <FormControlLabel
                                     control={
                                         <Switch
@@ -320,20 +322,14 @@ const EditListingPage = () => {
                                 <Typography variant="h6" gutterBottom>
                                     Фотографии
                                 </Typography>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    startIcon={<CloudUploadIcon />}
-                                >
-                                    Добавить фото
-                                    <input
-                                        type="file"
-                                        hidden
-                                        multiple
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                    />
-                                </Button>
+                                <ImageUploader
+                                    onImagesSelected={(processedImages) => {
+                                        setImages(processedImages.map(img => img.file));
+                                        setPreviewUrls(processedImages.map(img => img.preview));
+                                    }}
+                                    maxImages={10}
+                                    maxSizeMB={1}
+                                />
 
                                 <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                                     {previewUrls.map((url, index) => (
@@ -362,6 +358,7 @@ const EditListingPage = () => {
                                                 onClick={() => {
                                                     setImages(prev => prev.filter((_, i) => i !== index));
                                                     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+                                                    URL.revokeObjectURL(url); // Освобождаем память
                                                 }}
                                             >
                                                 <DeleteIcon />

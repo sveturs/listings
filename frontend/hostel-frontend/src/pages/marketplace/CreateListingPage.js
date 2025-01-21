@@ -24,6 +24,8 @@ import MiniMap from '../../components/maps/MiniMap';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import axios from "../../api/axios";
 import { useLanguage } from '../../contexts/LanguageContext';
+import ImageUploader from '../../components/marketplace/ImageUploader';
+
 
 const CreateListing = () => {
     const { language } = useLanguage();
@@ -64,15 +66,15 @@ const CreateListing = () => {
         console.log('handleImageChange triggered');
         const files = Array.from(e.target.files || []);
         console.log('Selected files:', files);
-        
+
         if (files.length === 0) {
             console.log('No files selected');
             return;
         }
-    
+
         const validFiles = files.filter(file => {
             console.log('Checking file:', file.name, 'type:', file.type, 'size:', file.size);
-            
+
             if (!file.type.startsWith('image/')) {
                 console.log('Invalid file type:', file.type);
                 setError("Можно загружать только изображения");
@@ -85,11 +87,11 @@ const CreateListing = () => {
             }
             return true;
         });
-    
+
         console.log('Valid files:', validFiles);
-    
+
         if (validFiles.length === 0) return;
-    
+
         validFiles.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -101,7 +103,7 @@ const CreateListing = () => {
             };
             reader.readAsDataURL(file);
         });
-    
+
         setImages(prev => [...prev, ...validFiles]);
     };
 
@@ -121,7 +123,7 @@ const CreateListing = () => {
         console.log('Form submission started');
         setError("");
         setSuccess(false);
-    
+
         try {
             // Создаем объект с данными листинга
             const listingData = {
@@ -129,12 +131,12 @@ const CreateListing = () => {
                 price: parseFloat(listing.price),
                 original_language: language
             };
-            
+
             console.log('Submitting form data:', listingData);
             const response = await axios.post("/api/v1/marketplace/listings", listingData);
             const listingId = response.data.data.id;
             console.log('Listing created:', listingId);
-    
+
             if (images.length > 0) {
                 console.log('Preparing to upload images:', images.length);
                 const formData = new FormData();
@@ -145,7 +147,7 @@ const CreateListing = () => {
                         formData.append('main_image_index', '0');
                     }
                 });
-    
+
                 console.log('Uploading images...');
                 await axios.post(`/api/v1/marketplace/listings/${listingId}/images`, formData, {
                     headers: {
@@ -154,9 +156,9 @@ const CreateListing = () => {
                 });
                 console.log('Images uploaded successfully');
             }
-    
+
             setSuccess(true);
-    
+
             setListing({
                 title: "",
                 description: "",
@@ -202,7 +204,7 @@ const CreateListing = () => {
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
                                 <TextField
-                                    label="Заголовок"
+                                    label="Наименование товара"
                                     fullWidth
                                     required
                                     value={listing.title}
@@ -267,7 +269,7 @@ const CreateListing = () => {
                                     Местоположение
                                 </Typography>
                                 <LocationPicker onLocationSelect={handleLocationSelect} />
-                                
+
                                 {listing.latitude && listing.longitude && (
                                     <Box sx={{ mt: 2 }}>
                                         <MiniMap
@@ -327,7 +329,7 @@ const CreateListing = () => {
                                         </Paper>
                                     </Modal>
                                 )}
-                                
+
                                 <FormControlLabel
                                     control={
                                         <Switch
@@ -347,20 +349,14 @@ const CreateListing = () => {
                                 <Typography variant="h6" gutterBottom>
                                     Фотографии
                                 </Typography>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    startIcon={<CloudUploadIcon />}
-                                >
-                                    Загрузить фото
-                                    <input
-                                        type="file"
-                                        hidden
-                                        multiple
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                    />
-                                </Button>
+                                <ImageUploader
+                                    onImagesSelected={(processedImages) => {
+                                        setImages(processedImages.map(img => img.file));
+                                        setPreviewUrls(processedImages.map(img => img.preview));
+                                    }}
+                                    maxImages={10}
+                                    maxSizeMB={1}
+                                />
 
                                 <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                                     {previewUrls.map((url, index) => (
@@ -389,6 +385,7 @@ const CreateListing = () => {
                                                 onClick={() => {
                                                     setImages(prev => prev.filter((_, i) => i !== index));
                                                     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+                                                    URL.revokeObjectURL(url); // Освобождаем память
                                                 }}
                                             >
                                                 <DeleteIcon />
