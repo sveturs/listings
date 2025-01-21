@@ -61,32 +61,48 @@ const CreateListing = () => {
     }, []);
 
     const handleImageChange = (e) => {
+        console.log('handleImageChange triggered');
         const files = Array.from(e.target.files || []);
-        if (files.length === 0) return;
-
+        console.log('Selected files:', files);
+        
+        if (files.length === 0) {
+            console.log('No files selected');
+            return;
+        }
+    
         const validFiles = files.filter(file => {
+            console.log('Checking file:', file.name, 'type:', file.type, 'size:', file.size);
+            
             if (!file.type.startsWith('image/')) {
+                console.log('Invalid file type:', file.type);
                 setError("Можно загружать только изображения");
                 return false;
             }
             if (file.size > 15 * 1024 * 1024) {
-                setError("Размер файла не должен превышать 5MB");
+                console.log('File too large:', file.size);
+                setError("Размер файла не должен превышать 15MB");
                 return false;
             }
             return true;
         });
-
+    
+        console.log('Valid files:', validFiles);
+    
         if (validFiles.length === 0) return;
-
-        setImages(prev => [...prev, ...validFiles]);
-
+    
         validFiles.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
+                console.log('File read successfully:', file.name);
                 setPreviewUrls(prev => [...prev, reader.result]);
+            };
+            reader.onerror = (error) => {
+                console.error('Error reading file:', error);
             };
             reader.readAsDataURL(file);
         });
+    
+        setImages(prev => [...prev, ...validFiles]);
     };
 
     const handleLocationSelect = (location) => {
@@ -102,36 +118,45 @@ const CreateListing = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('Form submission started');
         setError("");
         setSuccess(false);
-
+    
         try {
+            // Создаем объект с данными листинга
             const listingData = {
                 ...listing,
                 price: parseFloat(listing.price),
                 original_language: language
             };
-
+            
+            console.log('Submitting form data:', listingData);
             const response = await axios.post("/api/v1/marketplace/listings", listingData);
             const listingId = response.data.data.id;
-
+            console.log('Listing created:', listingId);
+    
             if (images.length > 0) {
+                console.log('Preparing to upload images:', images.length);
                 const formData = new FormData();
                 images.forEach((image, index) => {
+                    console.log('Adding image to formData:', image.name);
                     formData.append('images', image);
                     if (index === 0) {
                         formData.append('main_image_index', '0');
                     }
                 });
-
+    
+                console.log('Uploading images...');
                 await axios.post(`/api/v1/marketplace/listings/${listingId}/images`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
+                console.log('Images uploaded successfully');
             }
-
+    
             setSuccess(true);
+    
             setListing({
                 title: "",
                 description: "",
@@ -148,7 +173,7 @@ const CreateListing = () => {
             setPreviewUrls([]);
 
         } catch (error) {
-            console.error('Ошибка при создании объявления:', error);
+            console.error('Error details:', error);
             setError(error.response?.data?.error || "Ошибка при создании объявления");
         }
     };
