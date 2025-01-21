@@ -353,14 +353,6 @@ const CreateListing = () => {
                                     <LocationPicker onLocationSelect={handleLocationSelect} />
                                 </Box>
 
-                                {listing.latitude && listing.longitude && (
-                                    <MiniMap
-                                        latitude={listing.latitude}
-                                        longitude={listing.longitude}
-                                        address={listing.location}
-                                        onExpand={() => setShowExpandedMap(true)}
-                                    />
-                                )}
 
                                 <FormControlLabel
                                     control={

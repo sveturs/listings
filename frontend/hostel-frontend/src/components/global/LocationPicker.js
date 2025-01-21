@@ -7,24 +7,28 @@ import {
     Typography,
     InputAdornment,
     IconButton,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
 import { Search as SearchIcon, MyLocation as MyLocationIcon } from '@mui/icons-material';
 
 const LocationPicker = ({ onLocationSelect }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    
     const [map, setMap] = useState(null);
     const [marker, setMarker] = useState(null);
     const [address, setAddress] = useState('');
     const [searchBox, setSearchBox] = useState(null);
-
+    const [center, setCenter] = useState({
+        lat: 45.2671,
+        lng: 19.8335
+    });
     const mapContainerStyle = {
         width: '100%',
         height: '400px'
     };
 
-    const defaultCenter = {
-        lat: 45.2671, // Нови-Сад
-        lng: 19.8335
-    };
 
     const mapOptions = {
         scrollwheel: true,
@@ -79,19 +83,21 @@ const LocationPicker = ({ onLocationSelect }) => {
                 const place = places[0];
                 if (!place.geometry) return;
 
-                map.setCenter(place.geometry.location);
-                map.setZoom(17);
-
-                setMarker({
+                const newCenter = {
                     lat: place.geometry.location.lat(),
                     lng: place.geometry.location.lng()
-                });
+                };
 
+                setCenter(newCenter);
+                map.setCenter(newCenter);
+                map.setZoom(17);
+
+                setMarker(newCenter);
                 setAddress(place.formatted_address);
 
                 handleLocationSelect({
-                    latitude: place.geometry.location.lat(),
-                    longitude: place.geometry.location.lng(),
+                    latitude: newCenter.lat,
+                    longitude: newCenter.lng,
                     formatted_address: place.formatted_address,
                     address_components: place.address_components
                 });
@@ -130,26 +136,30 @@ const LocationPicker = ({ onLocationSelect }) => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
+                    const newCenter = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
 
+                    setCenter(newCenter);
+                    setMarker(newCenter);
+                    
                     if (map) {
-                        map.setCenter({ lat, lng });
+                        map.setCenter(newCenter);
                         map.setZoom(17);
-                        setMarker({ lat, lng });
                     }
 
                     if (window.google) {
                         const geocoder = new window.google.maps.Geocoder();
                         geocoder.geocode(
-                            { location: { lat, lng } },
+                            { location: newCenter },
                             (results, status) => {
                                 if (status === 'OK' && results[0]) {
                                     const place = results[0];
                                     setAddress(place.formatted_address);
                                     handleLocationSelect({
-                                        latitude: lat,
-                                        longitude: lng,
+                                        latitude: newCenter.lat,
+                                        longitude: newCenter.lng,
                                         formatted_address: place.formatted_address,
                                         address_components: place.address_components
                                     });
@@ -169,21 +179,22 @@ const LocationPicker = ({ onLocationSelect }) => {
     };
 
     return (
-        <Paper sx={{ p: 0.5 }}>
-            <Typography variant="h6" gutterBottom>
-                местоположение:
+        <Paper sx={{ p: isMobile ? 0 : 2, bgcolor: isMobile ? 'transparent' : 'background.paper', elevation: isMobile ? 0 : 1 }}>
+            <Typography variant={isMobile ? "subtitle1" : "h6"} gutterBottom>
+                Местоположение объекта
             </Typography>
-            <Box sx={{ mb: 2 }}>
+            <Box sx={{ mb: isMobile ? 1 : 2 }}>
                 <TextField
                     id="location-search"
                     fullWidth
                     placeholder="Поиск по адресу..."
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
+                    size={isMobile ? "small" : "medium"}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon />
+                                <SearchIcon fontSize={isMobile ? "small" : "medium"} />
                             </InputAdornment>
                         ),
                         endAdornment: (
@@ -191,8 +202,9 @@ const LocationPicker = ({ onLocationSelect }) => {
                                 <IconButton
                                     onClick={handleCurrentLocation}
                                     title="Мое местоположение"
+                                    size={isMobile ? "small" : "medium"}
                                 >
-                                    <MyLocationIcon />
+                                    <MyLocationIcon fontSize={isMobile ? "small" : "medium"} />
                                 </IconButton>
                             </InputAdornment>
                         )
@@ -201,7 +213,7 @@ const LocationPicker = ({ onLocationSelect }) => {
             </Box>
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
-                center={defaultCenter}
+                center={center}  // Используем центр из state вместо defaultCenter
                 zoom={13}
                 onLoad={onMapLoad}
                 onClick={handleMapClick}
@@ -215,7 +227,7 @@ const LocationPicker = ({ onLocationSelect }) => {
                     />
                 )}
             </GoogleMap>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            <Typography variant={isMobile ? "caption" : "body2"} color="text.secondary" sx={{ mt: 1 }}>
                 Кликните по карте или введите адрес для выбора местоположения
             </Typography>
         </Paper>
