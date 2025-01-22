@@ -6,8 +6,8 @@ CREATE TABLE users (
 );
 
 -- Создаем демо-пользователя с ID=1
-INSERT INTO users (id, name, email) VALUES 
-(1, 'Demo User', 'test@example.com');
+INSERT INTO users (id, name, email, created_at) VALUES 
+(1, 'Demo User', 'test@example.com', CURRENT_TIMESTAMP);
 
 -- Настраиваем sequence чтобы следующий ID был 2
 SELECT setval('users_id_seq', 1, true);

@@ -47,16 +47,18 @@ CREATE TABLE marketplace_favorites (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, listing_id)
 );
+-- Главные категории
 INSERT INTO marketplace_categories (name, slug, icon) VALUES 
 ('Транспорт', 'transport', 'car'),
 ('Недвижимость', 'real-estate', 'home'),
 ('Электроника', 'electronics', 'smartphone'),
 ('Одежда и обувь', 'clothing-and-shoes', 'tshirt'),
 ('Дом и сад', 'home-and-garden', 'couch'),
+('Сельское хозяйство', 'agriculture', 'tractor'),
 ('Работа', 'jobs', 'briefcase'),
 ('Личные вещи', 'personal-items', 'watch'),
 ('Хобби и отдых', 'hobby-and-leisure', 'camera'),
-('Животные', 'pets', 'paw'),
+('Домашние животные', 'pets', 'paw'),
 ('Услуги', 'services', 'toolbox'),
 ('Бизнес и промышленность', 'business-and-industry', 'building');
 
@@ -68,13 +70,26 @@ INSERT INTO marketplace_categories (name, slug, parent_id, icon)
 SELECT 'Мотоциклы', 'motorcycles', id, 'motorcycle' FROM marketplace_categories WHERE slug = 'transport';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Велосипеды', 'bicycles', id, 'bicycle' FROM marketplace_categories WHERE slug = 'transport';
+SELECT 'Электротранспорт', 'electric-vehicles', id, 'car-battery' FROM marketplace_categories WHERE slug = 'transport';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Грузовые автомобили', 'trucks', id, 'truck' FROM marketplace_categories WHERE slug = 'transport';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
 SELECT 'Запчасти и аксессуары', 'parts-and-accessories', id, 'wrench' FROM marketplace_categories WHERE slug = 'transport';
 
+-- Подкатегории для "Электротранспорт"
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Водный транспорт', 'water-transport', id, 'ship' FROM marketplace_categories WHERE slug = 'transport';
+SELECT 'Электромобили', 'electric-cars', id, 'car-electric' FROM marketplace_categories WHERE slug = 'electric-vehicles';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Электросамокаты', 'electric-scooters', id, 'scooter' FROM marketplace_categories WHERE slug = 'electric-vehicles';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Электровелосипеды', 'electric-bikes', id, 'bicycle-electric' FROM marketplace_categories WHERE slug = 'electric-vehicles';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Аксессуары для электротранспорта', 'electric-vehicle-accessories', id, 'plug' FROM marketplace_categories WHERE slug = 'electric-vehicles';
 
 -- Подкатегории для "Недвижимость"
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
@@ -84,10 +99,7 @@ INSERT INTO marketplace_categories (name, slug, parent_id, icon)
 SELECT 'Продажа', 'sale', id, 'apartment' FROM marketplace_categories WHERE slug = 'real-estate';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Коммерческая недвижимость', 'commercial', id, 'office-building' FROM marketplace_categories WHERE slug = 'real-estate';
-
-INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Земельные участки', 'land', id, 'tree' FROM marketplace_categories WHERE slug = 'real-estate';
+SELECT 'Гаражи и парковки', 'garages-and-parking', id, 'parking' FROM marketplace_categories WHERE slug = 'real-estate';
 
 -- Подкатегории для "Электроника"
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
@@ -97,37 +109,110 @@ INSERT INTO marketplace_categories (name, slug, parent_id, icon)
 SELECT 'Компьютеры и ноутбуки', 'computers', id, 'laptop' FROM marketplace_categories WHERE slug = 'electronics';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'ТВ и видео', 'tv-and-video', id, 'tv' FROM marketplace_categories WHERE slug = 'electronics';
+SELECT 'Умные устройства', 'smart-devices', id, 'plug' FROM marketplace_categories WHERE slug = 'electronics';
+
+-- Подкатегории для "Умные устройства"
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Умные часы', 'smart-watches', id, 'watch' FROM marketplace_categories WHERE slug = 'smart-devices';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Игровые консоли', 'gaming-consoles', id, 'gamepad' FROM marketplace_categories WHERE slug = 'electronics';
+SELECT 'Умные колонки', 'smart-speakers', id, 'speaker' FROM marketplace_categories WHERE slug = 'smart-devices';
+
+-- Подкатегории для "Животные"
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Собаки', 'dogs', id, 'dog' FROM marketplace_categories WHERE slug = 'pets';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Аудио и наушники', 'audio', id, 'headphones' FROM marketplace_categories WHERE slug = 'electronics';
-
--- Подкатегории для "Одежда и обувь"
-INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Мужская', 'mens-clothing', id, 'male' FROM marketplace_categories WHERE slug = 'clothing-and-shoes';
+SELECT 'Кошки', 'cats', id, 'cat' FROM marketplace_categories WHERE slug = 'pets';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Женская', 'womens-clothing', id, 'female' FROM marketplace_categories WHERE slug = 'clothing-and-shoes';
+SELECT 'Птицы', 'birds', id, 'dove' FROM marketplace_categories WHERE slug = 'pets';
+
+-- Подкатегории для "Собаки"
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Щенки', 'puppies', id, 'dog' FROM marketplace_categories WHERE slug = 'dogs';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Детская', 'kids-clothing', id, 'child' FROM marketplace_categories WHERE slug = 'clothing-and-shoes';
+SELECT 'Аксессуары для собак', 'dog-accessories', id, 'bone' FROM marketplace_categories WHERE slug = 'dogs';
 
--- Подкатегории для "Дом и сад"
+-- Подкатегории для "Кошки"
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Мебель', 'furniture', id, 'chair' FROM marketplace_categories WHERE slug = 'home-and-garden';
+SELECT 'Аксессуары для кошек', 'cat-accessories', id, 'paw' FROM marketplace_categories WHERE slug = 'cats';
+
+
+
+
+-- Подкатегории для "Сельское хозяйство"
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Сельхозтехника', 'agricultural-machinery', id, 'tractor' FROM marketplace_categories WHERE slug = 'agriculture';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Освещение', 'lighting', id, 'lightbulb' FROM marketplace_categories WHERE slug = 'home-and-garden';
+SELECT 'Сельхозживотные', 'farm-animals', id, 'cow' FROM marketplace_categories WHERE slug = 'agriculture';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Инструменты и ремонт', 'tools-and-repair', id, 'hammer' FROM marketplace_categories WHERE slug = 'home-and-garden';
+SELECT 'Продукты сельского хозяйства', 'agricultural-products', id, 'apple-alt' FROM marketplace_categories WHERE slug = 'agriculture';
+
+-- Подкатегории для "Сельхозтехника"
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Тракторы', 'tractors', id, 'tractor' FROM marketplace_categories WHERE slug = 'agricultural-machinery';
 
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
-SELECT 'Декор', 'decor', id, 'picture' FROM marketplace_categories WHERE slug = 'home-and-garden';
--- Добавляем тестовые объявления
+SELECT 'Комбайны', 'harvesters', id, 'seedling' FROM marketplace_categories WHERE slug = 'agricultural-machinery';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Плуги и бороны', 'plows-and-harrows', id, 'tools' FROM marketplace_categories WHERE slug = 'agricultural-machinery';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Посевная техника', 'seeding-equipment', id, 'corn' FROM marketplace_categories WHERE slug = 'agricultural-machinery';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Оборудование для орошения', 'irrigation-equipment', id, 'water' FROM marketplace_categories WHERE slug = 'agricultural-machinery';
+
+-- Подкатегории для "Сельхозживотные"
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Коровы', 'cows', id, 'cow' FROM marketplace_categories WHERE slug = 'farm-animals';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Свиньи', 'pigs', id, 'pig' FROM marketplace_categories WHERE slug = 'farm-animals';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Козы и овцы', 'goats-and-sheep', id, 'sheep' FROM marketplace_categories WHERE slug = 'farm-animals';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Птицы', 'poultry', id, 'egg' FROM marketplace_categories WHERE slug = 'farm-animals';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Корма для животных', 'animal-feed', id, 'hay' FROM marketplace_categories WHERE slug = 'farm-animals';
+
+-- Подкатегории для "Продукты сельского хозяйства"
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Овощи', 'vegetables', id, 'carrot' FROM marketplace_categories WHERE slug = 'agricultural-products';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Фрукты', 'fruits', id, 'apple-alt' FROM marketplace_categories WHERE slug = 'agricultural-products';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Зерновые культуры', 'grains', id, 'wheat' FROM marketplace_categories WHERE slug = 'agricultural-products';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Молочная продукция', 'dairy-products', id, 'cheese' FROM marketplace_categories WHERE slug = 'agricultural-products';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Мясо и мясные продукты', 'meat-products', id, 'drumstick-bite' FROM marketplace_categories WHERE slug = 'agricultural-products';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Мёд и продукты пчеловодства', 'honey-and-beekeeping', id, 'honey' FROM marketplace_categories WHERE slug = 'agricultural-products';
+
+-- Подкатегории для "Птицы" в сельхозживотных
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Куры', 'chickens', id, 'chicken' FROM marketplace_categories WHERE slug = 'poultry';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Индейки', 'turkeys', id, 'turkey' FROM marketplace_categories WHERE slug = 'poultry';
+
+INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
+SELECT 'Утки и гуси', 'ducks-and-geese', id, 'duck' FROM marketplace_categories WHERE slug = 'poultry';
+
 -- Добавляем тестовые объявления
 INSERT INTO marketplace_listings 
 (user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country) 
@@ -213,58 +298,4 @@ VALUES
 (7, 'treadmill_1.jpg', 'treadmill_1.jpg', 1024, 'image/jpeg', true),
 (7, 'treadmill_2.jpg', 'treadmill_2.jpg', 1024, 'image/jpeg', false);
 
-
--- Добавляем несколько записей в избранное
-INSERT INTO marketplace_favorites (user_id, listing_id)
-VALUES
-(1, 2),
-(1, 3);
-
--- После уже существующих INSERT для категорий добавим:
-
--- Добавляем тестовые объявления
-INSERT INTO marketplace_listings 
-(user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country) 
-VALUES
--- Смартфон
-(1, 
-(SELECT id FROM marketplace_categories WHERE slug = 'phones'), 
-'iPhone 14 Pro', 
-'Продаю iPhone 14 Pro 256GB. Цвет - космический черный. На гарантии еще 9 месяцев. Полный комплект.',
-95000, 
-'used', 
-'active', 
-'Novi Sad, Serbia', 
-45.2671, 
-19.8335, 
-'Novi Sad', 
-'Serbia'),
-
--- Ноутбук
-(1, 
-(SELECT id FROM marketplace_categories WHERE slug = 'laptops'),
-'MacBook Pro 16" M2',
-'Новый MacBook Pro 16" с чипом M2 Pro. 32GB RAM, 1TB SSD. Максимальная комплектация.',
-250000,
-'new',
-'active',
-'Novi Sad, Serbia',
-45.2551,
-19.8452,
-'Novi Sad',
-'Serbia'),
-
--- Квартира
-(1,
-(SELECT id FROM marketplace_categories WHERE slug = 'apartments'),
-'3-х комнатная квартира в центре',
-'Просторная квартира с отличным ремонтом. 85м². Подземный паркинг. 2 санузла. Вид на реку.',
-12500000,
-'new',
-'active',
-'Novi Sad, Serbia',
-45.2541,
-19.8401,
-'Novi Sad',
-'Serbia');
 
