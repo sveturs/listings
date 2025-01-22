@@ -27,6 +27,7 @@ import { GoogleMap, Marker } from '@react-google-maps/api';
 import axios from "../../api/axios";
 import { useLanguage } from '../../contexts/LanguageContext';
 import ImageUploader from '../../components/marketplace/ImageUploader';
+import CategorySelect from '../../components/marketplace/CategorySelect';
 
 
 
@@ -224,18 +225,14 @@ const CreateListing = () => {
                         <Grid container spacing={isMobile ? 2 : 3}>
                             {/* Базовая информация */}
                             <Grid item xs={12}>
-                                <FormControl fullWidth required size={isMobile ? "small" : "medium"}>
-                                    <InputLabel>Категория</InputLabel>
-                                    <Select
+                                <FormControl fullWidth required error={!listing.category_id}>
+                                    <InputLabel shrink>Категория</InputLabel>
+                                    <CategorySelect
+                                        categories={categories}
                                         value={listing.category_id}
-                                        onChange={(e) => setListing({ ...listing, category_id: e.target.value })}
-                                    >
-                                        {categories.map((category) => (
-                                            <MenuItem key={category.id} value={category.id}>
-                                                {category.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
+                                        onChange={(value) => setListing({ ...listing, category_id: value })}
+                                        error={!listing.category_id}
+                                    />
                                 </FormControl>
                             </Grid>
                             <Grid item xs={12}>
@@ -388,7 +385,7 @@ const CreateListing = () => {
                 </Paper>
             </Box>
 
- 
+
         </Container>
     );
 
