@@ -10,6 +10,8 @@ import axios from '../../api/axios';
 import ChatService from '../marketplace/chat/ChatService';
 import { Bookmark } from '@mui/icons-material';
 import UserProfile from "../user/UserProfile";
+import { useChat } from '../../contexts/ChatContext'; // Добавляем импорт
+
 import {
   AppBar,
   Toolbar,
@@ -51,6 +53,7 @@ const Layout = ({ children }) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { getChatService } = useChat();
 
 
 
@@ -71,44 +74,40 @@ const Layout = ({ children }) => {
     },
   ];
   useEffect(() => {
-    let chatService;
     let unsubscribe;
-    
+
     if (user?.id) {
-        chatService = new ChatService(user.id);
+      const chatService = getChatService(user.id);
 
-        const messageHandler = (message) => {
-            if (message.receiver_id === user.id && !message.is_read) {
-                setUnreadCount(prev => prev + 1);
-                // Воспроизводим звук уведомления
-                const audio = new Audio('/notification.mp3');
-                audio.play().catch(e => console.log('Notification sound error:', e));
-            }
-        };
+      const messageHandler = (message) => {
+        if (message.receiver_id === user.id && !message.is_read) {
+          setUnreadCount(prev => prev + 1);
+          // Воспроизводим звук уведомления
+          const audio = new Audio('/notification.mp3');
+          audio.play().catch(e => console.log('Notification sound error:', e));
+        }
+      };
 
-        const fetchUnreadCount = async () => {
-            try {
-                const response = await axios.get('/api/v1/marketplace/chat/unread-count');
-                setUnreadCount(response.data.data.count);
-            } catch (error) {
-                console.error('Error fetching unread count:', error);
-            }
-        };
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await axios.get('/api/v1/marketplace/chat/unread-count');
+          setUnreadCount(response.data.data.count);
+        } catch (error) {
+          console.error('Error fetching unread count:', error);
+        }
+      };
 
-        chatService.connect();
-        unsubscribe = chatService.onMessage(messageHandler);
-        fetchUnreadCount();
+      chatService.connect();
+      unsubscribe = chatService.onMessage(messageHandler);
+      fetchUnreadCount();
     }
 
     return () => {
-        if (unsubscribe) {
-            unsubscribe();
-        }
-        if (chatService) {
-            chatService.disconnect();
-        }
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
-}, [user?.id]);
+  }, [user?.id, getChatService]);
 
   const handleOpenMenu = (e) => {
     setAnchorEl(e.currentTarget);

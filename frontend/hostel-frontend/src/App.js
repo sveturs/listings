@@ -17,6 +17,7 @@ import { MapProvider } from './components/maps/MapProvider';
 import ChatPage from "./pages/marketplace/ChatPage";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import EditListingPage from './pages/marketplace/EditListingPage';
+import { ChatProvider } from './contexts/ChatContext';
 
 
 function App() {
@@ -30,23 +31,25 @@ function App() {
       <MapProvider>
         <LanguageProvider>
           <AuthProvider>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<MarketplacePage />} />
-                <Route path="/add-user" element={<AddUserPage />} />
-                <Route path="/admin" element={<AdminPanelPage />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/marketplace" element={<MarketplacePage />} />
-                <Route path="/marketplace/create" element={<CreateListingPage />} />
-                <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
-                <Route path="/profile" element={<UserProfile />} />
-                <Route path="/marketplace/chat" element={<ChatPage />} />
-                <Route path="/my-listings" element={<MyListingsPage />} />
-                <Route path="/favorites" element={<FavoriteListingsPage />} />
-                <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
+            <ChatProvider>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<MarketplacePage />} />
+                  <Route path="/add-user" element={<AddUserPage />} />
+                  <Route path="/admin" element={<AdminPanelPage />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/marketplace" element={<MarketplacePage />} />
+                  <Route path="/marketplace/create" element={<CreateListingPage />} />
+                  <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
+                  <Route path="/profile" element={<UserProfile />} />
+                  <Route path="/marketplace/chat" element={<ChatPage />} />
+                  <Route path="/my-listings" element={<MyListingsPage />} />
+                  <Route path="/favorites" element={<FavoriteListingsPage />} />
+                  <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
 
-              </Routes>
-            </Layout>
+                </Routes>
+              </Layout>
+            </ChatProvider>
           </AuthProvider>
         </LanguageProvider>
       </MapProvider>

@@ -22,7 +22,7 @@ import {
 import ChatService from '../../components/marketplace/chat/ChatService';
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
-
+import { useChat } from '../../contexts/ChatContext';
 const ChatPage = () => {
     const { listingId } = useParams();
     const navigate = useNavigate();
@@ -38,23 +38,14 @@ const ChatPage = () => {
 
     const chatServiceRef = useRef(null);
     const messageEndRef = useRef(null);
+    const { getChatService } = useChat(); 
 
     // Инициализация чат-сервиса
     useEffect(() => {
-        if (!user?.id) {
-            setError('Необходима авторизация');
-            setLoading(false);
-            return;
+        if (user?.id) {
+            chatServiceRef.current = getChatService(user.id);
         }
-
-        chatServiceRef.current = new ChatService(user.id);
-
-        return () => {
-            if (chatServiceRef.current) {
-                chatServiceRef.current.disconnect();
-            }
-        };
-    }, [user?.id]);
+    }, [user?.id, getChatService]);
 
     // Загрузка списка чатов
     const fetchChats = useCallback(async () => {
@@ -105,8 +96,12 @@ const ChatPage = () => {
         setMessages([]);
     
         try {
-            // Загружаем сообщения сразу после установки чата
-            const loadedMessages = await chatServiceRef.current?.getMessageHistory(chat.id, chat.listing_id);
+            const chatService = chatServiceRef.current;
+            if (!chatService) {
+                throw new Error('ChatService не инициализирован');
+            }
+
+            const loadedMessages = await chatService.getMessageHistory(chat.id, chat.listing_id);
             if (Array.isArray(loadedMessages) && loadedMessages.length > 0) {
                 setMessages(loadedMessages);
             }
@@ -117,24 +112,19 @@ const ChatPage = () => {
             setLoading(false);
         }
     }, []);
-
     // Инициализация WebSocket и загрузка данных
     useEffect(() => {
-        if (chatServiceRef.current) {
-            chatServiceRef.current.connect();
-
-            const unsubscribe = chatServiceRef.current.onMessage((message) => {
+        const chatService = chatServiceRef.current;
+        if (chatService && selectedChat) {
+            const unsubscribe = chatService.onMessage((message) => {
                 console.log('Получено новое сообщение:', message);
 
-                // Проверяем, относится ли сообщение к текущему чату
                 if (selectedChat && message.chat_id === selectedChat.id) {
                     setMessages(prev => {
-                        // Проверяем наличие дубликата
                         if (prev.some(m => m.id === message.id)) {
                             return prev;
                         }
 
-                        // Добавляем новое сообщение и сортируем
                         const updatedMessages = [...prev, {
                             ...message,
                             sender: message.sender || {},
