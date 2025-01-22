@@ -27,10 +27,12 @@ const ListingCard = ({ listing, isMobile }) => {
 
     const formatDate = (dateString) => {
         if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('ru-RU', {
-            day: 'numeric',
+        
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU', {
+            year: 'numeric',
             month: 'long',
-            year: 'numeric'
+            day: 'numeric'
         });
     };
 

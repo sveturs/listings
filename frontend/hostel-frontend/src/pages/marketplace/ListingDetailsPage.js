@@ -115,7 +115,7 @@ const ListingDetailsPage = () => {
         if (!window.confirm('Вы действительно хотите удалить объявление?')) {
             return;
         }
-        
+
         try {
             await axios.delete(`/api/v1/marketplace/listings/${id}`);
             navigate('/marketplace');
@@ -513,7 +513,13 @@ const ListingDetailsPage = () => {
                                             {listing.user?.name}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                            На сайте с {new Date(listing.user?.created_at).toLocaleDateString()}
+                                            На сайте с {listing.user?.created_at ?
+                                                new Intl.DateTimeFormat('ru-RU', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                }).format(new Date(listing.user?.created_at))
+                                                : 'неизвестной даты'}
                                         </Typography>
                                     </Box>
                                 </Stack>
