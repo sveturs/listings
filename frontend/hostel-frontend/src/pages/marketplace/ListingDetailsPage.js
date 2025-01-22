@@ -5,11 +5,10 @@ import { useParams } from 'react-router-dom';
 import ReviewsSection from '../../components/reviews/ReviewsSection';
 import { useAuth } from '../../contexts/AuthContext';
 import MiniMap from '../../components/maps/MiniMap';
-import { PencilLine } from 'lucide-react';
+import { PencilLine, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 
-//import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 
@@ -112,7 +111,18 @@ const ListingDetailsPage = () => {
             maximumFractionDigits: 0
         }).format(price);
     };
-
+    const handleDelete = async () => {
+        if (!window.confirm('Вы действительно хотите удалить объявление?')) {
+            return;
+        }
+        
+        try {
+            await axios.delete(`/api/v1/marketplace/listings/${id}`);
+            navigate('/marketplace');
+        } catch (error) {
+            setError('Ошибка при удалении объявления');
+        }
+    };
     const handleFavoriteClick = async () => {
         if (!user) {
             const returnUrl = window.location.pathname;
@@ -385,17 +395,27 @@ const ListingDetailsPage = () => {
                                     </Button>
                                 </Stack>
 
-                                {/* Добавить здесь кнопку редактирования */}
+                                {/* кнопки удаления и  редактирования */}
                                 {user?.id === listing.user_id && (
-                                    <Button
-                                        variant="outlined"
-                                        fullWidth
-                                        startIcon={!isMobile && <PencilLine />}
-                                        onClick={() => navigate(`/marketplace/listings/${id}/edit`)}
-                                        sx={{ mt: 2 }} // Добавляем отступ сверху
-                                    >
-                                        {isMobile ? <PencilLine size={20} /> : 'Редактировать'}
-                                    </Button>
+                                    <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                                        <Button
+                                            variant="outlined"
+                                            fullWidth
+                                            startIcon={!isMobile && <PencilLine />}
+                                            onClick={() => navigate(`/marketplace/listings/${id}/edit`)}
+                                        >
+                                            {isMobile ? <PencilLine size={20} /> : 'Редактировать'}
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            fullWidth
+                                            startIcon={!isMobile && <Trash2 />}
+                                            onClick={handleDelete}
+                                        >
+                                            {isMobile ? <Trash2 size={20} /> : 'Удалить'}
+                                        </Button>
+                                    </Stack>
                                 )}
                             </CardContent>
                         </Card>

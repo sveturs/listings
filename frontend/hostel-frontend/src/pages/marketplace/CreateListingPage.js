@@ -16,10 +16,11 @@ import {
     Select,
     MenuItem,
     Paper,
+
     useTheme,
-    useMediaQuery,
-    Modal
+    useMediaQuery
 } from "@mui/material";
+import { useNavigate } from 'react-router-dom';
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import LocationPicker from '../../components/global/LocationPicker';
 import MiniMap from '../../components/maps/MiniMap';
@@ -28,7 +29,7 @@ import axios from "../../api/axios";
 import { useLanguage } from '../../contexts/LanguageContext';
 import ImageUploader from '../../components/marketplace/ImageUploader';
 import CategorySelect from '../../components/marketplace/CategorySelect';
-
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 
 
@@ -56,6 +57,7 @@ const CreateListing = () => {
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const navigate = useNavigate();
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -141,6 +143,7 @@ const CreateListing = () => {
             console.log('Submitting form data:', listingData);
             const response = await axios.post("/api/v1/marketplace/listings", listingData);
             const listingId = response.data.data.id;
+            
             console.log('Listing created:', listingId);
 
             if (images.length > 0) {
@@ -180,8 +183,13 @@ const CreateListing = () => {
             setImages([]);
             setPreviewUrls([]);
 
+            setSuccess(true);
+            // Добавляем редирект на страницу созданного объявления
+            setTimeout(() => {
+                navigate(`/marketplace/listings/${listingId}`);
+            }, 1500);
+    
         } catch (error) {
-            console.error('Error details:', error);
             setError(error.response?.data?.error || "Ошибка при создании объявления");
         }
     };
