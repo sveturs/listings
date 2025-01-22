@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import MiniMap from '../../components/maps/MiniMap';
 import { PencilLine, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
+import ShareButton from '../../components/marketplace/ShareButton';
 
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
@@ -383,16 +383,11 @@ const ListingDetailsPage = () => {
                                             />
                                         ) : listing?.is_favorite ? 'В избранном' : 'В избранное'}
                                     </Button>
-                                    <Button
-                                        variant="outlined"
-                                        fullWidth
-                                        startIcon={!isMobile && <Share2 />}
-                                        onClick={() => {
-                                            // Здесь логика для шаринга
-                                        }}
-                                    >
-                                        {isMobile ? <Share2 size={20} /> : 'Поделиться'}
-                                    </Button>
+                                    <ShareButton
+                                        url={window.location.href}
+                                        title={listing.title}
+                                        isMobile={isMobile}
+                                    />
                                 </Stack>
 
                                 {/* кнопки удаления и  редактирования */}
