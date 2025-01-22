@@ -234,7 +234,7 @@ const CreateListing = () => {
                             {/* Базовая информация */}
                             <Grid item xs={12}>
                                 <FormControl fullWidth required error={!listing.category_id}>
-                                    <InputLabel shrink>Категория</InputLabel>
+                                    <InputLabel shrink></InputLabel>
                                     <CategorySelect
                                         categories={categories}
                                         value={listing.category_id}
