@@ -86,6 +86,7 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
         <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Button
+                    id="loadPhotoButton"
                     variant="contained"
                     component="label"
                     startIcon={uploading ? <CircularProgress size={20} /> : <CloudUploadIcon />}

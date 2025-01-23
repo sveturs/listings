@@ -153,6 +153,7 @@ const ListingCard = ({ listing, isMobile }) => {
                         </Box>
 
                         <Button
+                            id="detailsButton"
                             variant="contained"
                             fullWidth
                             sx={{ mt: 2 }}
