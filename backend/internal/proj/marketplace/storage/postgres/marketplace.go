@@ -759,6 +759,7 @@ SELECT
     u.email,
 	u.created_at as user_created_at, 
     COALESCE(u.picture_url, ''),
+	u.phone,
     c.name as category_name, 
     c.slug as category_slug,
     fp.path_names as category_path_names,
@@ -784,6 +785,7 @@ WHERE l.id = $1;`
 
 	var (
 		userPictureURL    string
+		userPhone        sql.NullString
 		categoryPath      []string
 		categoryPathIds   []int
 		categoryPathSlugs []string
@@ -811,6 +813,7 @@ WHERE l.id = $1;`
 		&listing.User.Email,
 		&listing.User.CreatedAt,
 		&userPictureURL,
+		&userPhone,
 		&listing.Category.Name,
 		&listing.Category.Slug,
 		&categoryPath,
@@ -818,7 +821,9 @@ WHERE l.id = $1;`
 		&categoryPathSlugs,
 		&listing.IsFavorite,
 	)
-
+	if userPhone.Valid {
+		listing.User.Phone = &userPhone.String
+	}
 	if err != nil {
 		return nil, fmt.Errorf("error fetching listing: %w", err)
 	}

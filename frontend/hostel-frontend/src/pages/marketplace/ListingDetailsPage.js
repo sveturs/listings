@@ -378,9 +378,17 @@ const ListingDetailsPage = () => {
                                         startIcon={!isMobile && <Phone />}
                                         href={listing.user?.phone ? `tel:${listing.user.phone}` : undefined}
                                         disabled={!listing.user?.phone}
-                                        onClick={() => {
+                                        onClick={(e) => {
                                             if (!listing.user?.phone) {
+                                                e.preventDefault();
                                                 alert('У продавца не указан номер телефона');
+                                            }
+                                        }}
+                                        sx={{
+                                            opacity: listing.user?.phone ? 1 : 0.7,
+                                            '&.Mui-disabled': {
+                                                bgcolor: 'action.disabledBackground',
+                                                color: 'action.disabled'
                                             }
                                         }}
                                     >
