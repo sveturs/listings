@@ -72,15 +72,25 @@ const ListingDetailsPage = () => {
                     axios.get('/api/v1/marketplace/favorites')
                 ]);
     
-                const isFavorite = favoritesResponse.data.data.some(
+                const isFavorite = favoritesResponse.data?.data?.some?.(
                     item => item.id === Number(id)
-                );
+                ) || false;
     
                 setListing({
                     ...listingResponse.data.data,
                     is_favorite: isFavorite
                 });
+    
+                if (listingResponse.data.data.category_path) {
+                    const path = listingResponse.data.data.category_path.map((name, index) => ({
+                        id: listingResponse.data.data.category_path_ids[index],
+                        name: name,
+                        slug: listingResponse.data.data.category_path_slugs[index]
+                    })).reverse();
+                    setCategoryPath(path);
+                }
             } catch (err) {
+                console.error('Error fetching listing:', err);
                 setError('Не удалось загрузить объявление');
             } finally {
                 setLoading(false);
@@ -89,7 +99,7 @@ const ListingDetailsPage = () => {
     
         fetchListing();
     }, [id]);
-    const scrollToReviews = () => {
+        const scrollToReviews = () => {
         const reviewsSection = document.getElementById('reviews-section');
         if (reviewsSection) {
             reviewsSection.scrollIntoView({
@@ -126,34 +136,40 @@ const ListingDetailsPage = () => {
             return;
         }
     
-        const initialFavoriteStatus = listing.is_favorite;
-    
         try {
+            // Оптимистичное обновление UI
             setListing(prev => ({
                 ...prev,
-                is_favorite: !initialFavoriteStatus
+                is_favorite: !prev.is_favorite
             }));
     
-            if (initialFavoriteStatus) {
+            if (listing?.is_favorite) {
                 await axios.delete(`/api/v1/marketplace/listings/${id}/favorite`);
             } else {
                 await axios.post(`/api/v1/marketplace/listings/${id}/favorite`);
             }
     
-            const favoritesResponse = await axios.get('/api/v1/marketplace/favorites');
-            const isFavorite = favoritesResponse.data.data.some(item => item.id === Number(id));
+            // Получаем актуальные данные
+            const [listingResponse, favoritesResponse] = await Promise.all([
+                axios.get(`/api/v1/marketplace/listings/${id}`),
+                axios.get('/api/v1/marketplace/favorites')
+            ]);
     
-            setListing(prev => ({
-                ...prev,
+            const isFavorite = favoritesResponse.data?.data?.some?.(
+                item => item.id === Number(id)
+            ) || false;
+    
+            setListing({
+                ...listingResponse.data.data,
                 is_favorite: isFavorite
-            }));
-    
+            });
         } catch (err) {
+            // Возвращаем предыдущее состояние при ошибке
             setListing(prev => ({
                 ...prev,
-                is_favorite: initialFavoriteStatus
+                is_favorite: !prev.is_favorite
             }));
-            console.error('Ошибка:', err);
+            console.error('Ошибка при обновлении избранного:', err);
         }
     };
     if (loading) {

@@ -24,7 +24,7 @@ const ItemDetails = () => {
     const fetchItemDetails = async () => {
       try {
         const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
-        setItem(response.data);
+setListing(response.data.data);
       } catch (err) {
         setError('Не удалось загрузить данные товара.');
       } finally {
