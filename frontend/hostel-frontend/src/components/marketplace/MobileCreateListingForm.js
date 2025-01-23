@@ -161,6 +161,7 @@ const MobileCreateListingForm = ({
                 </Box>
 
                 <Button
+                    id="createAnnouncementButton" // Добавлено id
                     type="submit"
                     variant="contained"
                     color="primary"

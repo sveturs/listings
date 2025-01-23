@@ -79,6 +79,7 @@ const MyListingsPage = () => {
                     Мои объявления
                 </Typography>
                 <Button
+                    id="createAnnouncementButton" // Добавлено id
                     component={Link}
                     to="/marketplace/create"
                     variant="contained"

@@ -378,6 +378,7 @@ const CreateListing = () => {
 
                             <Grid item xs={12}>
                                 <Button
+                                    id="createAnnouncementButton" // Добавлено id
                                     type="submit"
                                     variant="contained"
                                     color="primary"

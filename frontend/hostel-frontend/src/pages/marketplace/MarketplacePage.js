@@ -351,6 +351,7 @@ const MarketplacePage = () => {
                     <Box sx={{ flex: 1 }} />
                 )}
                 <Button
+                    id="createAnnouncementButton" // Добавлено id
                     variant="contained"
                     onClick={() => navigate('/marketplace/create')}
                     startIcon={<Plus />}
