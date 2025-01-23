@@ -71,16 +71,16 @@ const ListingDetailsPage = () => {
                     axios.get(`/api/v1/marketplace/listings/${id}`),
                     axios.get('/api/v1/marketplace/favorites')
                 ]);
-    
+
                 const isFavorite = favoritesResponse.data?.data?.some?.(
                     item => item.id === Number(id)
                 ) || false;
-    
+
                 setListing({
                     ...listingResponse.data.data,
                     is_favorite: isFavorite
                 });
-    
+
                 if (listingResponse.data.data.category_path) {
                     const path = listingResponse.data.data.category_path.map((name, index) => ({
                         id: listingResponse.data.data.category_path_ids[index],
@@ -96,10 +96,10 @@ const ListingDetailsPage = () => {
                 setLoading(false);
             }
         };
-    
+
         fetchListing();
     }, [id]);
-        const scrollToReviews = () => {
+    const scrollToReviews = () => {
         const reviewsSection = document.getElementById('reviews-section');
         if (reviewsSection) {
             reviewsSection.scrollIntoView({
@@ -135,30 +135,30 @@ const ListingDetailsPage = () => {
             login(`?returnTo=${encodedReturnUrl}`);
             return;
         }
-    
+
         try {
             // Оптимистичное обновление UI
             setListing(prev => ({
                 ...prev,
                 is_favorite: !prev.is_favorite
             }));
-    
+
             if (listing?.is_favorite) {
                 await axios.delete(`/api/v1/marketplace/listings/${id}/favorite`);
             } else {
                 await axios.post(`/api/v1/marketplace/listings/${id}/favorite`);
             }
-    
+
             // Получаем актуальные данные
             const [listingResponse, favoritesResponse] = await Promise.all([
                 axios.get(`/api/v1/marketplace/listings/${id}`),
                 axios.get('/api/v1/marketplace/favorites')
             ]);
-    
+
             const isFavorite = favoritesResponse.data?.data?.some?.(
                 item => item.id === Number(id)
             ) || false;
-    
+
             setListing({
                 ...listingResponse.data.data,
                 is_favorite: isFavorite
@@ -376,8 +376,12 @@ const ListingDetailsPage = () => {
                                         variant="contained"
                                         fullWidth
                                         startIcon={!isMobile && <Phone />}
+                                        href={listing.user?.phone ? `tel:${listing.user.phone}` : undefined}
+                                        disabled={!listing.user?.phone}
                                         onClick={() => {
-                                            // Логика для звонка
+                                            if (!listing.user?.phone) {
+                                                alert('У продавца не указан номер телефона');
+                                            }
                                         }}
                                     >
                                         {isMobile ? <Phone size={20} /> : 'Позвонить'}
