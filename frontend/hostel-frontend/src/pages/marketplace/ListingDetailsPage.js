@@ -11,7 +11,7 @@ import ShareButton from '../../components/marketplace/ShareButton';
 
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
-
+import ProtectedPhoneNumber from '../../components/marketplace/ProtectedPhoneNumber';
 
 import {
     Container,
@@ -61,7 +61,7 @@ const ListingDetailsPage = () => {
     const [reviewsCount, setReviewsCount] = useState(0);
     const { user, login } = useAuth();
     const [categoryPath, setCategoryPath] = useState([]);
-
+    const [showPhoneNumber, setShowPhoneNumber] = useState(false);
 
     useEffect(() => {
         const fetchListing = async () => {
@@ -372,28 +372,33 @@ const ListingDetailsPage = () => {
                                 </Typography>
 
                                 <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
-                                    <Button
-                                        variant="contained"
-                                        fullWidth
-                                        startIcon={!isMobile && <Phone />}
-                                        href={listing.user?.phone ? `tel:${listing.user.phone}` : undefined}
-                                        disabled={!listing.user?.phone}
-                                        onClick={(e) => {
-                                            if (!listing.user?.phone) {
-                                                e.preventDefault();
-                                                alert('У продавца не указан номер телефона');
-                                            }
-                                        }}
-                                        sx={{
-                                            opacity: listing.user?.phone ? 1 : 0.7,
-                                            '&.Mui-disabled': {
-                                                bgcolor: 'action.disabledBackground',
-                                                color: 'action.disabled'
-                                            }
-                                        }}
-                                    >
-                                        {isMobile ? <Phone size={20} /> : 'Позвонить'}
-                                    </Button>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                        <Button
+                                            variant="contained"
+                                            fullWidth
+                                            startIcon={!isMobile && <Phone />}
+                                            href={listing.user?.phone ? `tel:${listing.user.phone}` : undefined}
+                                            disabled={!listing.user?.phone}
+                                            onClick={(e) => {
+                                                if (!listing.user?.phone) {
+                                                    e.preventDefault();
+                                                    alert('У продавца не указан номер телефона');
+                                                } else {
+                                                    setShowPhoneNumber(prev => !prev);
+                                                }
+                                            }}
+                                            sx={{
+                                                opacity: listing.user?.phone ? 1 : 0.7,
+                                                '&.Mui-disabled': {
+                                                    bgcolor: 'action.disabledBackground',
+                                                    color: 'action.disabled'
+                                                }
+                                            }}
+                                        >
+                                            {isMobile ? <Phone size={20} /> : 'Позвонить'}
+                                        </Button>
+                                        <ProtectedPhoneNumber phone={listing.user?.phone} visible={showPhoneNumber} />
+                                    </Box>
                                     <ChatButton listing={listing} isMobile={isMobile} />
                                 </Stack>
 
