@@ -67,31 +67,26 @@ const ListingDetailsPage = () => {
         const fetchListing = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
-                setListing(response.data.data);
-
-                // Добавим отладочный вывод
-                console.log('Listing data:', response.data.data);
-
-                // Используем category_path вместо category_path_names
-                if (response.data.data.category_path) {
-                    const path = response.data.data.category_path.map((name, index) => ({
-                        id: response.data.data.category_path_ids[index],
-                        name: name,
-                        slug: response.data.data.category_path_slugs[index]
-                    })).reverse(); // Разворачиваем массив, чтобы получить правильный порядок
-
-                    console.log('Setting category path:', path);
-                    setCategoryPath(path);
-                }
+                const [listingResponse, favoritesResponse] = await Promise.all([
+                    axios.get(`/api/v1/marketplace/listings/${id}`),
+                    axios.get('/api/v1/marketplace/favorites')
+                ]);
+    
+                const isFavorite = favoritesResponse.data.data.some(
+                    item => item.id === Number(id)
+                );
+    
+                setListing({
+                    ...listingResponse.data.data,
+                    is_favorite: isFavorite
+                });
             } catch (err) {
-                console.error('Error fetching listing:', err);
                 setError('Не удалось загрузить объявление');
             } finally {
                 setLoading(false);
             }
         };
-
+    
         fetchListing();
     }, [id]);
     const scrollToReviews = () => {
@@ -130,30 +125,35 @@ const ListingDetailsPage = () => {
             login(`?returnTo=${encodedReturnUrl}`);
             return;
         }
-
+    
+        const initialFavoriteStatus = listing.is_favorite;
+    
         try {
-            // Оптимистично обновляем UI
             setListing(prev => ({
                 ...prev,
-                is_favorite: !prev.is_favorite
+                is_favorite: !initialFavoriteStatus
             }));
-
-            if (listing.is_favorite) {
+    
+            if (initialFavoriteStatus) {
                 await axios.delete(`/api/v1/marketplace/listings/${id}/favorite`);
             } else {
                 await axios.post(`/api/v1/marketplace/listings/${id}/favorite`);
             }
-            // Получаем реальные данные с сервера
-            const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
-            setListing(response.data.data);
-        } catch (err) {
-            // В случае ошибки возвращаем предыдущее состояние
+    
+            const favoritesResponse = await axios.get('/api/v1/marketplace/favorites');
+            const isFavorite = favoritesResponse.data.data.some(item => item.id === Number(id));
+    
             setListing(prev => ({
                 ...prev,
-                is_favorite: !prev.is_favorite
+                is_favorite: isFavorite
             }));
-            console.error('Ошибка при обновлении избранного:', err);
-            alert('Произошла ошибка при обновлении избранного');
+    
+        } catch (err) {
+            setListing(prev => ({
+                ...prev,
+                is_favorite: initialFavoriteStatus
+            }));
+            console.error('Ошибка:', err);
         }
     };
     if (loading) {
