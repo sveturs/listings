@@ -254,7 +254,7 @@ const Layout = ({ children }) => {
                     </MenuItem>
                     <Divider />
 
-                    {renderMessagesMenuItem()}  {/* Заменяем старый MenuItem на этот */}
+                    {renderMessagesMenuItem()}
 
 
                     <MenuItem

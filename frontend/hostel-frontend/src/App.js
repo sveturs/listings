@@ -18,7 +18,7 @@ import ChatPage from "./pages/marketplace/ChatPage";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import EditListingPage from './pages/marketplace/EditListingPage';
 import { ChatProvider } from './contexts/ChatContext';
-
+import PrivateRoute from "./components/global/PrivateRoute";
 
 function App() {
   return (
@@ -39,7 +39,17 @@ function App() {
                   <Route path="/admin" element={<AdminPanelPage />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/marketplace" element={<MarketplacePage />} />
-                  <Route path="/marketplace/create" element={<CreateListingPage />} />
+                 {/*  <Route path="/marketplace/create" element={<CreateListingPage />} />*/}
+
+                  <Route
+                    path="/marketplace/create"
+                    element={
+                      <PrivateRoute>
+                        <CreateListingPage />
+                      </PrivateRoute>
+                    }
+                  />
+
                   <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
                   <Route path="/profile" element={<UserProfile />} />
                   <Route path="/marketplace/chat" element={<ChatPage />} />
