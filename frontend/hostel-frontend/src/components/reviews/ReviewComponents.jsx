@@ -16,7 +16,10 @@ import {
     IconButton,
     Chip,
     Menu,
-    MenuItem
+    MenuItem,
+    Collapse,
+    Badge,
+    Paper
 } from '@mui/material';
 import {
     ThumbsUp,
@@ -28,7 +31,9 @@ import {
     Edit,
     Trash2,
     CheckCircle2,
-    PencilLine
+    PencilLine,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
 
 // Компонент формы создания/редактирования отзыва
@@ -39,7 +44,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
         pros: initialData?.pros || '',
         cons: initialData?.cons || ''
     });
-
+    const [showResponses, setShowResponses] = useState(false);
     const [photoFiles, setPhotoFiles] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
 
@@ -194,7 +199,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
     const [showReplyForm, setShowReplyForm] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [menuAnchor, setMenuAnchor] = useState(null);
-
+    const [showResponses, setShowResponses] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     const handleReplySubmit = () => {
@@ -341,56 +346,97 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                             onClick={() => handleVote('helpful')}
                             startIcon={<ThumbsUp />}
                             variant={review.current_user_vote === 'helpful' ? 'contained' : 'outlined'}
-                            disabled={!currentUserId} // Добавляем disabled если пользователь не авторизован
+                            disabled={!currentUserId}
                         >
-                            {isMobile ? (
-                                `(${review.votes_count?.helpful || 0})`
-                            ) : (
-                                `Полезно (${review.votes_count?.helpful || 0})`
-                            )}
+                            {isMobile ? `(${review.votes_count?.helpful || 0})` : 
+                                      `Полезно (${review.votes_count?.helpful || 0})`}
                         </Button>
                         <Button
                             size="small"
                             onClick={() => handleVote('not_helpful')}
                             startIcon={<ThumbsDown />}
                             variant={review.current_user_vote === 'not_helpful' ? 'contained' : 'outlined'}
-                            disabled={!currentUserId} // Добавляем disabled если пользователь не авторизован
+                            disabled={!currentUserId}
                         >
-                            {isMobile ? (
-                                `(${review.votes_count?.not_helpful || 0})`
-                            ) : (
-                                `Не полезно (${review.votes_count?.not_helpful || 0})`
-                            )}
+                            {isMobile ? `(${review.votes_count?.not_helpful || 0})` :
+                                      `Не полезно (${review.votes_count?.not_helpful || 0})`}
                         </Button>
+
+                        {/* НОВОЕ: Кнопка ответов */}
+                        {review.responses && review.responses.length > 0 && (
+                            isMobile ? (
+                                <IconButton onClick={() => setShowResponses(!showResponses)}>
+                                    <Badge badgeContent={review.responses.length} color="primary">
+                                        <MessageSquare size={20} />
+                                    </Badge>
+                                </IconButton>
+                            ) : (
+                                <Button
+                                    size="small"
+                                    startIcon={showResponses ? <ChevronUp /> : <ChevronDown />}
+                                    onClick={() => setShowResponses(!showResponses)}
+                                >
+                                    {`Ответы (${review.responses.length})`}
+                                </Button>
+                            )
+                        )}
+
+                        {/* Кнопка "Ответить" */}
                         {isMobile ? (
-                            <>
-                                <IconButton onClick={() => setShowReplyForm(!showReplyForm)}>
-                                    <MessageSquare size={20} />
-                                </IconButton>
-                                <IconButton onClick={() => onReport(review.id)}>
-                                    <Flag size={20} />
-                                </IconButton>
-                            </>
+                            <IconButton onClick={() => setShowReplyForm(!showReplyForm)}>
+                                <MessageSquare size={20} />
+                            </IconButton>
                         ) : (
-                            <>
-                                <Button
-                                    size="small"
-                                    startIcon={<MessageSquare />}
-                                    onClick={() => setShowReplyForm(!showReplyForm)}
-                                >
-                                    Ответить
-                                </Button>
-                                <Button
-                                    size="small"
-                                    startIcon={<Flag />}
-                                    onClick={() => onReport(review.id)}
-                                >
-                                    Пожаловаться
-                                </Button>
-                            </>
+                            <Button
+                                size="small"
+                                startIcon={<MessageSquare />}
+                                onClick={() => setShowReplyForm(!showReplyForm)}
+                            >
+                                Ответить
+                            </Button>
+                        )}
+
+                        {isMobile ? (
+                            <IconButton onClick={() => onReport(review.id)}>
+                                <Flag size={20} />
+                            </IconButton>
+                        ) : (
+                            <Button
+                                size="small"
+                                startIcon={<Flag />}
+                                onClick={() => onReport(review.id)}
+                            >
+                                Пожаловаться
+                            </Button>
                         )}
                     </Stack>
 
+                    {/* НОВОЕ: Блок с ответами */}
+                    <Collapse in={showResponses}>
+                        {review.responses && review.responses.map((response, index) => (
+                            <Box key={index} sx={{ mt: 2, pl: isMobile ? 2 : 4 }}>
+                                <Paper sx={{ p: isMobile ? 1.5 : 2, bgcolor: 'grey.50' }}>
+                                    <Stack direction="row" spacing={isMobile ? 1 : 2} alignItems="center">
+                                        <Avatar 
+                                            src={response.user?.picture_url} 
+                                            sx={{ width: isMobile ? 20 : 24, height: isMobile ? 20 : 24 }} 
+                                        />
+                                        <Typography variant={isMobile ? "body2" : "subtitle2"}>
+                                            {response.user?.name}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {new Date(response.created_at).toLocaleDateString()}
+                                        </Typography>
+                                    </Stack>
+                                    <Typography variant={isMobile ? "body2" : "body1"} sx={{ mt: 1 }}>
+                                        {response.response}
+                                    </Typography>
+                                </Paper>
+                            </Box>
+                        ))}
+                    </Collapse>
+
+                    {/* Форма ответа */}
                     {showReplyForm && (
                         <Box>
                             <TextField
@@ -422,36 +468,11 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                             </Stack>
                         </Box>
                     )}
-
-                    {review.responses && review.responses.length > 0 && (
-                        <Box sx={{ pl: 4 }}>
-                            {review.responses.map((response, index) => (
-                                <Box key={index} sx={{ mt: 2 }}>
-                                    <Stack direction="row" spacing={2} alignItems="center">
-                                        <Avatar
-                                            src={response.user?.picture_url}
-                                            sx={{ width: 24, height: 24 }}
-                                        />
-                                        <Typography variant="subtitle2">
-                                            {response.user?.name}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {new Date(response.created_at).toLocaleDateString()}
-                                        </Typography>
-                                    </Stack>
-                                    <Typography sx={{ mt: 1 }}>
-                                        {response.response}
-                                    </Typography>
-                                </Box>
-                            ))}
-                        </Box>
-                    )}
                 </Stack>
             </CardContent>
         </Card>
     );
 };
-
 
 
 // Компонент статистики рейтингов

@@ -158,7 +158,17 @@ const ReviewsSection = ({
     const handleReply = async (reviewId, response) => {
         try {
             await axios.post(`/api/v1/reviews/${reviewId}/response`, { response });
-            fetchData();
+            
+            // Получаем обновленные данные отзыва
+            const updatedReviewResponse = await axios.get(`/api/v1/reviews/${reviewId}`);
+            
+            // Обновляем состояние, заменяя старый отзыв на новый с ответом
+            setReviews(prevReviews => 
+                prevReviews.map(review => 
+                    review.id === reviewId ? updatedReviewResponse.data.data : review
+                )
+            );
+    
             setSnackbar({
                 open: true,
                 message: 'Ответ успешно добавлен',
