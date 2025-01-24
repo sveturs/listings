@@ -70,6 +70,7 @@ const ChatButton = ({ listing, isMobile }) => {
     return (
         <>
             <Button
+                id="chatButton"
                 variant="outlined"
                 fullWidth
                 startIcon={!isMobile && <MessageCircle />}

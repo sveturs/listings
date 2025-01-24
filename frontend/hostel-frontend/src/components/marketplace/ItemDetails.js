@@ -80,6 +80,7 @@ setListing(response.data.data);
             <Divider sx={{ my: 2 }} />
             <Box display="flex" gap={2}>
               <Button
+                id="buyButton"
                 variant="contained"
                 startIcon={<ShoppingCart />}
                 size="large"
@@ -87,6 +88,7 @@ setListing(response.data.data);
                 Купить
               </Button>
               <Button
+                id="bookmarkButton"
                 variant="outlined"
                 startIcon={<Favorite />}
                 size="large"
@@ -94,6 +96,7 @@ setListing(response.data.data);
                 В избранное
               </Button>
               <Button
+                id="shareButton"
                 variant="outlined"
                 startIcon={<Share />}
                 size="large"

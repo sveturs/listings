@@ -375,6 +375,7 @@ const ListingDetailsPage = () => {
                                 <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
     <Box sx={{ position: 'relative', flex: 1 }}>
         <Button
+            id="callButton"
             variant="contained"
             fullWidth
             startIcon={!isMobile && <Phone />}

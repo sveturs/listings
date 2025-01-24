@@ -224,6 +224,7 @@ const ReviewsSection = ({
 
             {canReview && (
                 <Button
+                    id="reviewButton"
                     variant="contained"
                     onClick={() => setShowReviewForm(true)}
                     startIcon={<PencilLine />}

@@ -50,6 +50,7 @@ const ShareButton = ({ url, title, isMobile }) => {
     return (
         <>
             <Button
+                id="shareButton2"
                 variant="outlined"
                 fullWidth
                 startIcon={!isMobile && <Share2 />}
