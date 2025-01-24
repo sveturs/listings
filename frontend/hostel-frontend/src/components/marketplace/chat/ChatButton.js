@@ -105,13 +105,15 @@ const ChatButton = ({ listing, isMobile }) => {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button 
+                    <Button
+                        id="cancelMessageButton"
                         onClick={() => setOpen(false)}
                         disabled={loading}
                     >
                         Отмена
                     </Button>
                     <Button
+                        id="sendMessageButton"
                         variant="contained"
                         onClick={handleSend}
                         disabled={!message.trim() || loading}
