@@ -11,8 +11,7 @@ import ShareButton from '../../components/marketplace/ShareButton';
 
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
-import ProtectedPhoneNumber from '../../components/marketplace/ProtectedPhoneNumber';
-import PhonePopup from '../../components/marketplace/PhonePopup';
+import CallButton from '../../components/marketplace/CallButton';
 
 import {
     Container,
@@ -45,6 +44,8 @@ import {
     ChevronRight
 } from 'lucide-react';
 import axios from '../../api/axios';
+
+
 const ListingDetailsPage = () => {
     const navigate = useNavigate();
 
@@ -372,36 +373,14 @@ const ListingDetailsPage = () => {
                                     {formatPrice(listing.price)}
                                 </Typography>
 
-                                <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
-    <Box sx={{ position: 'relative', flex: 1 }}>
-        <Button
-            id="callButton"
-            variant="contained"
-            fullWidth
-            startIcon={!isMobile && <Phone />}
-            disabled={!listing.user?.phone}
-            onClick={() => {
-                if (!listing.user?.phone) {
-                    alert('У продавца не указан номер телефона');
-                    return;
-                }
-                if (showPhoneNumber) {
-                    window.location.href = `tel:${listing.user.phone}`;
-                } else {
-                    setShowPhoneNumber(true);
-                }
-            }}
-        >
-            {isMobile ? <Phone size={20} /> : 'Позвонить'}
-        </Button>
-        <PhonePopup 
-            phone={listing.user?.phone}
-            visible={showPhoneNumber}
-            onClose={() => setShowPhoneNumber(false)}
-        />
-    </Box>
-    <ChatButton listing={listing} isMobile={isMobile} />
-</Stack>
+                                <Stack direction="row" spacing={1}>
+                                <Box sx={{ flex: 1 }}>
+                                    <CallButton phone={listing.user?.phone} isMobile={isMobile} />
+                                    </Box>
+                                    <Box sx={{ flex: 1 }}>
+                                        <ChatButton listing={listing} isMobile={isMobile} />
+                                        </Box>
+                                        </Stack>
 
                                 <Stack direction="row" spacing={1}>
                                     <Button
