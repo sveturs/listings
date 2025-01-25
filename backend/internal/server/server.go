@@ -169,8 +169,7 @@ marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Де
 	notifications.Get("/settings", s.notifications.Notification.GetSettings) 
 	notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
 	notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
-	notifications.Post("/telegram/webhook", s.notifications.Notification.HandleTelegramWebhook)
-	
+ 	
 	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
 	notifications.Post("/push/subscribe", s.notifications.Notification.SubscribePush)
 	notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)

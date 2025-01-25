@@ -26,13 +26,12 @@ type NotificationHandler struct {
 }
 
 func NewNotificationHandler(service service.NotificationServiceInterface) *NotificationHandler {
-    var bot *tgbotapi.BotAPI
-    var err error
-    
-    if token := os.Getenv("TELEGRAM_BOT_TOKEN"); token != "" {
-        bot, err = tgbotapi.NewBotAPI(token)
-        if err != nil {
-            log.Printf("Error initializing Telegram bot: %v", err)
+    bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+    if err != nil {
+        log.Printf("Error initializing Telegram bot: %v", err)
+        // Возвращаем handler даже без бота
+        return &NotificationHandler{
+            notificationService: service,
         }
     }
 
@@ -41,13 +40,9 @@ func NewNotificationHandler(service service.NotificationServiceInterface) *Notif
         bot:                bot,
     }
 
-    // Настраиваем вебхук только если бот успешно создан
-    if bot != nil {
-        handler.ConnectTelegramWebhook()
-    }
-
     return handler
 }
+
  func (h *NotificationHandler) SubscribePush(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     
@@ -97,6 +92,10 @@ func (h *NotificationHandler) ConnectTelegramWebhook() {
 }
 // In NotificationHandler
 func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
+    if h.bot == nil {
+        return c.SendStatus(fiber.StatusServiceUnavailable)
+    }
+
     var update tgbotapi.Update
     if err := c.BodyParser(&update); err != nil {
         return err
