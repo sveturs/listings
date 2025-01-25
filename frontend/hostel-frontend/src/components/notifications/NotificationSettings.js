@@ -86,104 +86,104 @@ const NotificationSettings = () => {
             console.error('Error enabling push notifications:', err);
         }
     };
-};
 
-const handleSettingChange = async (type, channel, value) => {
-    try {
-        await updateSettings(type, channel, value);
-        showSnackbar('Настройки успешно обновлены');
-    } catch (error) {
-        showSnackbar('Ошибка при обновлении настроек', 'error');
-    }
-};
 
-return (
-    <Box>
-        <Typography variant="h6" gutterBottom>
-            Настройки уведомлений
-        </Typography>
+    const handleSettingChange = async (type, channel, value) => {
+        try {
+            await updateSettings(type, channel, value);
+            showSnackbar('Настройки успешно обновлены');
+        } catch (error) {
+            showSnackbar('Ошибка при обновлении настроек', 'error');
+        }
+    };
 
-        <Paper sx={{ p: 3, mb: 3 }}>
-            <Stack spacing={3}>
-                <Box>
-                    <Typography variant="subtitle1" gutterBottom>
-                        Каналы уведомлений
-                    </Typography>
-                    <Stack direction="row" spacing={2}>
-                        <Button
-                            variant={telegramConnected ? "outlined" : "contained"}
-                            onClick={connectTelegram}
-                            startIcon={<MessageCircle />}
-                        >
-                            {telegramConnected ? 'Telegram подключен' : 'Подключить Telegram'}
-                        </Button>
+    return (
+        <Box>
+            <Typography variant="h6" gutterBottom>
+                Настройки уведомлений
+            </Typography>
 
-                        <Button
-                            variant="contained"
-                            onClick={handlePushSubscription}
-                            startIcon={<BellRing />}
-                        >
-                            Включить Push-уведомления
-                        </Button>
-                    </Stack>
-                </Box>
+            <Paper sx={{ p: 3, mb: 3 }}>
+                <Stack spacing={3}>
+                    <Box>
+                        <Typography variant="subtitle1" gutterBottom>
+                            Каналы уведомлений
+                        </Typography>
+                        <Stack direction="row" spacing={2}>
+                            <Button
+                                variant={telegramConnected ? "outlined" : "contained"}
+                                onClick={connectTelegram}
+                                startIcon={<MessageCircle />}
+                            >
+                                {telegramConnected ? 'Telegram подключен' : 'Подключить Telegram'}
+                            </Button>
 
-                <Divider />
+                            <Button
+                                variant="contained"
+                                onClick={handlePushSubscription}
+                                startIcon={<BellRing />}
+                            >
+                                Включить Push-уведомления
+                            </Button>
+                        </Stack>
+                    </Box>
 
-                <Stack spacing={2}>
-                    {Object.entries(NOTIFICATION_TYPES).map(([type, { label, icon: Icon, description }]) => (
-                        <Box key={type}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                <Icon size={20} />
-                                <Typography variant="subtitle2">{label}</Typography>
+                    <Divider />
+
+                    <Stack spacing={2}>
+                        {Object.entries(NOTIFICATION_TYPES).map(([type, { label, icon: Icon, description }]) => (
+                            <Box key={type}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                    <Icon size={20} />
+                                    <Typography variant="subtitle2">{label}</Typography>
+                                </Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    {description}
+                                </Typography>
+                                <Stack direction="row" spacing={2}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settings[type]?.telegram || false}
+                                                onChange={(e) => handleSettingChange(type, 'telegram', e.target.checked)}
+                                                disabled={!telegramConnected}
+                                                color="primary"
+                                            />
+                                        }
+                                        label="Telegram"
+                                    />
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settings[type]?.push || false}
+                                                onChange={(e) => handleSettingChange(type, 'push', e.target.checked)}
+                                                color="primary"
+                                            />
+                                        }
+                                        label="Push"
+                                    />
+                                </Stack>
                             </Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                {description}
-                            </Typography>
-                            <Stack direction="row" spacing={2}>
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            checked={settings[type]?.telegram || false}
-                                            onChange={(e) => handleSettingChange(type, 'telegram', e.target.checked)}
-                                            disabled={!telegramConnected}
-                                            color="primary"
-                                        />
-                                    }
-                                    label="Telegram"
-                                />
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            checked={settings[type]?.push || false}
-                                            onChange={(e) => handleSettingChange(type, 'push', e.target.checked)}
-                                            color="primary"
-                                        />
-                                    }
-                                    label="Push"
-                                />
-                            </Stack>
-                        </Box>
-                    ))}
+                        ))}
+                    </Stack>
                 </Stack>
-            </Stack>
-        </Paper>
+            </Paper>
 
-        <Snackbar
-            open={snackbar.open}
-            autoHideDuration={6000}
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-            <Alert
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
-                severity={snackbar.severity}
-                sx={{ width: '100%' }}
             >
-                {snackbar.message}
-            </Alert>
-        </Snackbar>
-    </Box>
-);
+                <Alert
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+        </Box>
+    );
 };
 
 export default NotificationSettings;
