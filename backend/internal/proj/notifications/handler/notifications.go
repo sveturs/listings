@@ -90,29 +90,30 @@ func (h *NotificationHandler) ConnectTelegramWebhook() {
 // In NotificationHandler
 func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
     if h.bot == nil {
+        log.Printf("Bot not initialized")
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Bot not initialized")
     }
 
     var update tgbotapi.Update
     if err := c.BodyParser(&update); err != nil {
+        log.Printf("Error parsing update: %v", err)
         return err
     }
 
     if update.Message != nil && update.Message.IsCommand() {
+        log.Printf("Received command: %s with args: %s", 
+            update.Message.Command(), 
+            update.Message.CommandArguments())
+            
         if update.Message.Command() == "start" {
             token := update.Message.CommandArguments()
-            // Изменено с validateToken на validateUserToken
             userID, err := h.validateUserToken(token)
-            if err == nil && userID > 0 {
-                // Сохраняем связь userID и chatID
-                err = h.notificationService.ConnectTelegram(c.Context(), userID, 
-                    fmt.Sprintf("%d", update.Message.Chat.ID),
-                    update.Message.From.UserName)
-                if err != nil {
-                    msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка подключения. Попробуйте позже.")
-                    h.bot.Send(msg)
-                    return err
-                }
+            if err != nil {
+                log.Printf("Invalid token: %v", err)
+                msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Недействительный токен")
+                h.bot.Send(msg)
+                return nil
+            }
                 msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Бот успешно подключен!")
                 h.bot.Send(msg)
             }
