@@ -26,20 +26,15 @@ type NotificationHandler struct {
 }
 
 func NewNotificationHandler(service service.NotificationServiceInterface) *NotificationHandler {
-    bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
-    if err != nil {
-        log.Printf("Error initializing Telegram bot: %v", err)
-        // Возвращаем handler даже без бота
-        return &NotificationHandler{
-            notificationService: service,
-        }
-    }
-
     handler := &NotificationHandler{
         notificationService: service,
-        bot:                bot,
     }
-
+    
+    bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+    if err == nil {
+        handler.bot = bot
+    }
+    
     return handler
 }
 
@@ -97,40 +92,24 @@ func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
         return err
     }
 
-    if update.Message == nil || !update.Message.IsCommand() || update.Message.Command() != "start" {
-        return c.SendStatus(fiber.StatusOK)
+    if update.Message != nil && update.Message.IsCommand() {
+        if update.Message.Command() == "start" {
+            token := update.Message.CommandArguments()
+            userID := validateToken(token) // Проверка токена
+            if userID > 0 {
+                // Сохраняем связь userID и chatID
+                h.notificationService.ConnectTelegram(c.Context(), userID, 
+                    fmt.Sprintf("%d", update.Message.Chat.ID),
+                    update.Message.From.UserName)
+            }
+        }
     }
-
-    args := update.Message.CommandArguments()
-    if len(args) == 0 {
-        msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, используйте ссылку из приложения")
-        h.bot.Send(msg)
-        return c.SendStatus(fiber.StatusOK) 
-    }
-
-    userID, err := h.validateUserToken(args)
-    if err != nil {
-        msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Недействительный токен. Попробуйте снова через приложение.")
-        h.bot.Send(msg)
-        return c.SendStatus(fiber.StatusOK)
-    }
-
-    err = h.notificationService.ConnectTelegram(c.Context(), userID, fmt.Sprintf("%d", update.Message.Chat.ID), update.Message.From.UserName)
-    if err != nil {
-        return err
-    }
-
-    msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Бот успешно подключен!")
-    h.bot.Send(msg)
-    return c.SendStatus(fiber.StatusOK)
+    return nil
 }
 
 func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
-    token, err := h.generateUserToken(userID)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to generate token")
-    }
+    token := generateToken(userID) // Генерация уникального токена
     return utils.SuccessResponse(c, fiber.Map{"token": token})
 }
 
