@@ -1,3 +1,4 @@
+//frontend/hostel-frontend/src/components/notifications/NotificationSettings.js
 import React, { useState } from 'react';
 import {
     Box,
@@ -63,7 +64,8 @@ const NotificationSettings = () => {
         updateSettings,
         connectTelegram
     } = useNotifications();
-
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
     const showSnackbar = (message, severity = 'success') => {
@@ -86,7 +88,21 @@ const NotificationSettings = () => {
             console.error('Error enabling push notifications:', err);
         }
     };
-
+    const handleTelegramConnect = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await connectTelegram();
+            if (response?.botLink) {
+                window.open(response.botLink, '_blank');
+            }
+        } catch (err) {
+            setError('Ошибка подключения к Telegram');
+            console.error('Telegram connection error:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSettingChange = async (type, channel, value) => {
         try {
@@ -112,10 +128,13 @@ const NotificationSettings = () => {
                         <Stack direction="row" spacing={2}>
                             <Button
                                 variant={telegramConnected ? "outlined" : "contained"}
-                                onClick={connectTelegram}
+                                onClick={handleTelegramConnect}
                                 startIcon={<MessageCircle />}
+                                disabled={loading}
                             >
-                                {telegramConnected ? 'Telegram подключен' : 'Подключить Telegram'}
+                                {loading ? 'Подключение...' :
+                                    telegramConnected ? 'Telegram подключен' :
+                                        'Подключить Telegram'}
                             </Button>
 
                             <Button
