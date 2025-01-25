@@ -82,6 +82,7 @@ func (s *Server) setupRoutes() {
 	s.app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hostel Booking System API")
 	})
+	s.app.Post("/api/v1/notifications/telegram/webhook", s.notifications.Notification.HandleTelegramWebhook)
 
 	// Static files
 	s.app.Static("/uploads", "./uploads")
@@ -169,6 +170,7 @@ marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Де
 	notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
 	notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
 	notifications.Post("/telegram/webhook", s.notifications.Notification.HandleTelegramWebhook)
+	
 	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
 	notifications.Post("/push/subscribe", s.notifications.Notification.SubscribePush)
 	notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
