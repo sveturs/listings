@@ -61,9 +61,9 @@ export const useNotifications = () => {
         try {
             const response = await axios.post('/api/v1/notifications/telegram/token');
             if (response.data.token) {
-                const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`;
+                const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`; 
                 window.open(botLink, '_blank');
-                startStatusCheck();
+                startStatusCheck(); // Начинаем проверять статус подключения
             }
         } catch (err) {
             console.error('Error:', err);
