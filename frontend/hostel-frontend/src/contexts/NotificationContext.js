@@ -78,22 +78,29 @@ export const NotificationProvider = ({ children }) => {
     };
 
     const connectTelegram = async () => {
-        const response = await axios.post('/api/v1/notifications/telegram/token');
-        const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`;
-        window.open(botLink, '_blank');
+        try {
+            const response = await axios.post('/api/v1/notifications/telegram/token');
+            if (response.data.token) {
+                const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`;
+                window.open(botLink, '_blank');
+                startStatusCheck();
+            }
+        } catch (err) {
+            console.error('Error:', err);
+        }
     };
-};
 
-return (
-    <NotificationContext.Provider value={{
-        settings,
-        telegramConnected,
-        updateSettings,
-        connectTelegram
-    }}>
-        {children}
-    </NotificationContext.Provider>
-);
+
+    return (
+        <NotificationContext.Provider value={{
+            settings,
+            telegramConnected,
+            updateSettings,
+            connectTelegram
+        }}>
+            {children}
+        </NotificationContext.Provider>
+    );
 };
 
 export const useNotifications = () => {

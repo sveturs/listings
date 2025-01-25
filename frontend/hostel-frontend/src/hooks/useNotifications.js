@@ -56,20 +56,8 @@ export const useNotifications = () => {
             return false;
         }
     };
+    const { connectTelegram } = useContext(NotificationContext);
 
-    const connectTelegram = async () => {
-        try {
-            const response = await axios.post('/api/v1/notifications/telegram/token');
-            if (!response.data.token) {
-                throw new Error('Токен не получен');
-            }
-            const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`;
-            window.open(botLink, '_blank');
-            startStatusCheck();
-        } catch (err) {
-            showNotification(err.response?.data?.error || 'Ошибка подключения Telegram', 'error');
-        }
-    };
     const checkTelegramStatus = () => {
         if (!statusCheckInterval) {
             const interval = setInterval(async () => {
