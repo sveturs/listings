@@ -26,15 +26,28 @@ type NotificationHandler struct {
 }
 
 func NewNotificationHandler(service service.NotificationServiceInterface) *NotificationHandler {
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
-	if err != nil {
-		log.Printf("Error initializing Telegram bot: %v", err)
-	}
-	return &NotificationHandler{
-		notificationService: service,
-		bot:                bot,
-	}
- }
+    var bot *tgbotapi.BotAPI
+    var err error
+    
+    if token := os.Getenv("TELEGRAM_BOT_TOKEN"); token != "" {
+        bot, err = tgbotapi.NewBotAPI(token)
+        if err != nil {
+            log.Printf("Error initializing Telegram bot: %v", err)
+        }
+    }
+
+    handler := &NotificationHandler{
+        notificationService: service,
+        bot:                bot,
+    }
+
+    // Настраиваем вебхук только если бот успешно создан
+    if bot != nil {
+        handler.ConnectTelegramWebhook()
+    }
+
+    return handler
+}
  func (h *NotificationHandler) SubscribePush(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     
@@ -68,6 +81,9 @@ func (h *NotificationHandler) GetNotifications(c *fiber.Ctx) error {
 	})
 }
 func (h *NotificationHandler) ConnectTelegramWebhook() {
+	if h.bot == nil {
+        return
+    }
     baseURL := "https://landhub.rs/api/v1/notifications/telegram/webhook"
     webhook, err := tgbotapi.NewWebhookWithCert(baseURL, nil)
     if err != nil {
