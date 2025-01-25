@@ -84,7 +84,13 @@ func (s *Server) setupRoutes() {
 
 	// Static files
 	s.app.Static("/uploads", "./uploads")
+	s.app.Static("/public", "./public")
+	s.app.Get("/service-worker.js", func(c *fiber.Ctx) error {
+		c.Set("Content-Type", "application/javascript")
+		return c.SendFile("./public/service-worker.js")
+	})
 	os.MkdirAll("./uploads", os.ModePerm)
+	os.MkdirAll("./public", os.ModePerm)
 
 	// Публичные маршруты маркетплейса
 	marketplace := s.app.Group("/api/v1/marketplace")
@@ -167,6 +173,9 @@ marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Де
 	// WebSocket эндпоинт
 	s.app.Use("/ws/chat", s.middleware.AuthRequired) // Защищаем WebSocket
 	s.app.Get("/ws/chat", websocket.New(s.marketplace.Chat.HandleWebSocket))
+
+
+
 }
 func (s *Server) Start() error {
 	return s.app.Listen(fmt.Sprintf(":%s", s.cfg.Port))
