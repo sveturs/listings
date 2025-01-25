@@ -114,14 +114,12 @@ func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
                 h.bot.Send(msg)
                 return nil
             }
-                msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Бот успешно подключен!")
-                h.bot.Send(msg)
-            }
+            msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Бот успешно подключен!")
+            h.bot.Send(msg)
         }
     }
     return nil
 }
-
 func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     // Изменено с generateToken на generateUserToken
