@@ -7,6 +7,7 @@ import (
     reviewService "backend/internal/proj/reviews/service"
     chatService "backend/internal/proj/marketplace/service"
     "backend/internal/config"
+    notificationService "backend/internal/proj/notifications/service"
 )
 
 type ServicesInterface interface {
@@ -16,4 +17,5 @@ type ServicesInterface interface {
     Marketplace() marketplaceService.MarketplaceServiceInterface
     Review() reviewService.ReviewServiceInterface
     Chat() chatService.ChatServiceInterface
+    Notification() notificationService.NotificationServiceInterface
 }

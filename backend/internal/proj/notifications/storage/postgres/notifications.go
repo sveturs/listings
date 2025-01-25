@@ -1,0 +1,215 @@
+package postgres
+
+import (
+    "context"
+//    "encoding/json"
+    "fmt"
+    "backend/internal/domain/models"
+    "github.com/jackc/pgx/v5/pgxpool"
+)
+
+type Storage struct {
+    pool *pgxpool.Pool
+}
+
+func NewNotificationStorage(pool *pgxpool.Pool) *Storage {
+    return &Storage{pool: pool}
+}
+
+func (s *Storage) GetNotificationSettings(ctx context.Context, userID int) ([]models.NotificationSettings, error) {
+    rows, err := s.pool.Query(ctx, `
+        SELECT user_id, notification_type, telegram_enabled, push_enabled, created_at, updated_at
+        FROM notification_settings
+        WHERE user_id = $1
+    `, userID)
+    if err != nil {
+        return nil, fmt.Errorf("error querying notification settings: %w", err)
+    }
+    defer rows.Close()
+
+    var settings []models.NotificationSettings
+    for rows.Next() {
+        var setting models.NotificationSettings
+        err := rows.Scan(
+            &setting.UserID,
+            &setting.NotificationType,
+            &setting.TelegramEnabled,
+            &setting.PushEnabled,
+            &setting.CreatedAt,
+            &setting.UpdatedAt,
+        )
+        if err != nil {
+            return nil, fmt.Errorf("error scanning notification setting: %w", err)
+        }
+        settings = append(settings, setting)
+    }
+    return settings, nil
+}
+
+func (s *Storage) UpdateNotificationSettings(ctx context.Context, settings *models.NotificationSettings) error {
+    _, err := s.pool.Exec(ctx, `
+        INSERT INTO notification_settings (
+            user_id, notification_type, telegram_enabled, push_enabled
+        ) VALUES ($1, $2, $3, $4)
+        ON CONFLICT (user_id, notification_type) 
+        DO UPDATE SET
+            telegram_enabled = $3,
+            push_enabled = $4,
+            updated_at = CURRENT_TIMESTAMP
+    `, settings.UserID, settings.NotificationType, settings.TelegramEnabled, settings.PushEnabled)
+    return err
+}
+
+func (s *Storage) SaveTelegramConnection(ctx context.Context, userID int, chatID string, username string) error {
+    _, err := s.pool.Exec(ctx, `
+        INSERT INTO user_telegram_connections (user_id, telegram_chat_id, telegram_username)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id) 
+        DO UPDATE SET
+            telegram_chat_id = $2,
+            telegram_username = $3,
+            connected_at = CURRENT_TIMESTAMP
+    `, userID, chatID, username)
+    return err
+}
+
+func (s *Storage) GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error) {
+    connection := &models.TelegramConnection{}
+    err := s.pool.QueryRow(ctx, `
+        SELECT user_id, telegram_chat_id, telegram_username, connected_at
+        FROM user_telegram_connections
+        WHERE user_id = $1
+    `, userID).Scan(
+        &connection.UserID,
+        &connection.TelegramChatID,
+        &connection.TelegramUsername,
+        &connection.ConnectedAt,
+    )
+    if err != nil {
+        return nil, err
+    }
+    return connection, nil
+}
+
+func (s *Storage) DeleteTelegramConnection(ctx context.Context, userID int) error {
+    _, err := s.pool.Exec(ctx, `
+        DELETE FROM user_telegram_connections
+        WHERE user_id = $1
+    `, userID)
+    return err
+}
+
+func (s *Storage) SavePushSubscription(ctx context.Context, sub *models.PushSubscription) error {
+    _, err := s.pool.Exec(ctx, `
+        INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (user_id, endpoint) DO NOTHING
+    `, sub.UserID, sub.Endpoint, sub.P256dh, sub.Auth)
+    return err
+}
+
+func (s *Storage) GetPushSubscriptions(ctx context.Context, userID int) ([]models.PushSubscription, error) {
+    rows, err := s.pool.Query(ctx, `
+        SELECT user_id, endpoint, p256dh, auth
+        FROM push_subscriptions
+        WHERE user_id = $1
+    `, userID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var subs []models.PushSubscription
+    for rows.Next() {
+        var sub models.PushSubscription
+        err := rows.Scan(&sub.UserID, &sub.Endpoint, &sub.P256dh, &sub.Auth)
+        if err != nil {
+            return nil, err
+        }
+        subs = append(subs, sub)
+    }
+    return subs, nil
+}
+
+func (s *Storage) DeletePushSubscription(ctx context.Context, userID int, endpoint string) error {
+    _, err := s.pool.Exec(ctx, `
+        DELETE FROM push_subscriptions
+        WHERE user_id = $1 AND endpoint = $2
+    `, userID, endpoint)
+    return err
+}
+
+func (s *Storage) CreateNotification(ctx context.Context, notification *models.Notification) error {
+    _, err := s.pool.Exec(ctx, `
+        INSERT INTO notifications (
+            user_id, type, title, message, data, is_read, delivered_to
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `,
+        notification.UserID,
+        notification.Type,
+        notification.Title,
+        notification.Message,
+        notification.Data,
+        notification.IsRead,
+        notification.DeliveredTo,
+    )
+    return err
+}
+
+func (s *Storage) GetUserNotifications(ctx context.Context, userID int, limit, offset int) ([]models.Notification, error) {
+    rows, err := s.pool.Query(ctx, `
+        SELECT id, user_id, type, title, message, data, is_read, delivered_to, created_at
+        FROM notifications
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3
+    `, userID, limit, offset)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var notifications []models.Notification
+    for rows.Next() {
+        var n models.Notification
+        err := rows.Scan(
+            &n.ID,
+            &n.UserID,
+            &n.Type,
+            &n.Title,
+            &n.Message,
+            &n.Data,
+            &n.IsRead,
+            &n.DeliveredTo,
+            &n.CreatedAt,
+        )
+        if err != nil {
+            return nil, err
+        }
+        notifications = append(notifications, n)
+    }
+    return notifications, nil
+}
+
+func (s *Storage) MarkNotificationAsRead(ctx context.Context, userID int, notificationID int) error {
+    result, err := s.pool.Exec(ctx, `
+        UPDATE notifications
+        SET is_read = true
+        WHERE id = $1 AND user_id = $2
+    `, notificationID, userID)
+    if err != nil {
+        return err
+    }
+    if result.RowsAffected() == 0 {
+        return fmt.Errorf("notification not found or access denied")
+    }
+    return nil
+}
+
+func (s *Storage) DeleteNotification(ctx context.Context, userID int, notificationID int) error {
+    _, err := s.pool.Exec(ctx, `
+        DELETE FROM notifications
+        WHERE id = $1 AND user_id = $2
+    `, notificationID, userID)
+    return err
+}

@@ -10,7 +10,7 @@ import (
     "fmt"
     //"log"
     //"strconv"
-
+notificationStorage "backend/internal/proj/notifications/storage/postgres"
     marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
     reviewStorage "backend/internal/proj/reviews/storage/postgres"
     userStorage             "backend/internal/proj/users/storage/postgres"
@@ -21,6 +21,7 @@ type Database struct {
     marketplaceDB *marketplaceStorage.Storage
     reviewDB *reviewStorage.Storage
     usersDB *userStorage.Storage 
+    notificationsDB *notificationStorage.Storage
     
 }
 
@@ -35,6 +36,7 @@ func NewDatabase(dbURL string) (*Database, error) {
         marketplaceDB: marketplaceStorage.NewStorage(pool),
         reviewDB:      reviewStorage.NewStorage(pool),
         usersDB:        userStorage.NewStorage(pool),
+        notificationsDB: notificationStorage.NewNotificationStorage(pool),
     }, nil
 }
 
@@ -247,4 +249,51 @@ func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int
     }
     
     return count, nil
+}
+func (db *Database) CreateNotification(ctx context.Context, n *models.Notification) error {
+    return db.notificationsDB.CreateNotification(ctx, n)
+}
+
+func (db *Database) GetNotificationSettings(ctx context.Context, userID int) ([]models.NotificationSettings, error) {
+    return db.notificationsDB.GetNotificationSettings(ctx, userID)
+}
+
+func (db *Database) UpdateNotificationSettings(ctx context.Context, s *models.NotificationSettings) error {
+    return db.notificationsDB.UpdateNotificationSettings(ctx, s)
+}
+
+func (db *Database) SaveTelegramConnection(ctx context.Context, userID int, chatID string, username string) error {
+    return db.notificationsDB.SaveTelegramConnection(ctx, userID, chatID, username)
+}
+
+func (db *Database) GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error) {
+    return db.notificationsDB.GetTelegramConnection(ctx, userID)
+}
+
+func (db *Database) DeleteTelegramConnection(ctx context.Context, userID int) error {
+    return db.notificationsDB.DeleteTelegramConnection(ctx, userID)
+}
+
+func (db *Database) SavePushSubscription(ctx context.Context, sub *models.PushSubscription) error {
+    return db.notificationsDB.SavePushSubscription(ctx, sub)
+}
+
+func (db *Database) GetPushSubscriptions(ctx context.Context, userID int) ([]models.PushSubscription, error) {
+    return db.notificationsDB.GetPushSubscriptions(ctx, userID)
+}
+
+func (db *Database) DeletePushSubscription(ctx context.Context, userID int, endpoint string) error {
+    return db.notificationsDB.DeletePushSubscription(ctx, userID, endpoint)
+}
+
+func (db *Database) GetUserNotifications(ctx context.Context, userID int, limit, offset int) ([]models.Notification, error) {
+    return db.notificationsDB.GetUserNotifications(ctx, userID, limit, offset)
+}
+
+func (db *Database) MarkNotificationAsRead(ctx context.Context, userID int, notificationID int) error {
+    return db.notificationsDB.MarkNotificationAsRead(ctx, userID, notificationID)
+}
+
+func (db *Database) DeleteNotification(ctx context.Context, userID int, notificationID int) error {
+    return db.notificationsDB.DeleteNotification(ctx, userID, notificationID)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 
 	globalService "backend/internal/proj/global/service"
+    notificationHandler "backend/internal/proj/notifications/handler"
 
 	"backend/internal/config"
 	"backend/internal/middleware"
@@ -28,6 +29,8 @@ type Server struct {
 	middleware    *middleware.Middleware
 	review        *reviewHandler.Handler
 	marketplace   *marketplaceHandler.Handler
+	notifications *notificationHandler.Handler
+
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -40,6 +43,8 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	usersHandler := userHandler.NewHandler(services)
 	reviewHandler := reviewHandler.NewHandler(services)
 	marketplaceHandler := marketplaceHandler.NewHandler(services)
+    notificationsHandler := notificationHandler.NewHandler(services)
+	
 
 	middleware := middleware.NewMiddleware(cfg, services)
 
@@ -61,6 +66,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		middleware:    middleware,
 		review:        reviewHandler,
 		marketplace:   marketplaceHandler,
+		notifications: notificationsHandler,
 	}
 
 	// Настройка маршрутов
@@ -149,6 +155,14 @@ marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Де
 	chat.Post("/:chat_id/archive", s.marketplace.Chat.ArchiveChat) 
 	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
 
+
+	notifications := api.Group("/notifications")
+	notifications.Get("/", s.notifications.Notification.GetNotifications)
+	notifications.Get("/settings", s.notifications.Notification.GetSettings) 
+	notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
+	notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
+	notifications.Post("/telegram/connect", s.notifications.Notification.ConnectTelegram)
+	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
 
 	// WebSocket эндпоинт
 	s.app.Use("/ws/chat", s.middleware.AuthRequired) // Защищаем WebSocket

@@ -1,16 +1,20 @@
-// frontend/hostel-frontend/src/components/global/Layout.js
 import React, { useState, useEffect } from "react";
 import { ShoppingBag } from '@mui/icons-material';
 import { Storefront } from '@mui/icons-material';
 import MessageIcon from '@mui/icons-material/Message';
 import NewMessageIndicator from './NewMessageIndicator';
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from '../../contexts/AuthContext';
 import axios from '../../api/axios';
 import ChatService from '../marketplace/chat/ChatService';
 import { Bookmark } from '@mui/icons-material';
 import UserProfile from "../user/UserProfile";
-import { useChat } from '../../contexts/ChatContext'; // Добавляем импорт
+import { useChat } from '../../contexts/ChatContext';
+import LanguageSwitcher from '../shared/LanguageSwitcher';
+import NotificationBadge from '../notifications/NotificationBadge';
+import NotificationDrawer from '../notifications/NotificationDrawer';
+ import { Settings } from '@mui/icons-material';
+
 
 import {
   AppBar,
@@ -36,26 +40,24 @@ import {
   ListAlt,
   AddHome,
   AccountCircle,
+  Chat,
 } from "@mui/icons-material";
-
-
-// Добавляем импорт компонента переключателя языка
-import LanguageSwitcher from '../shared/LanguageSwitcher';
+//import LanguageSwitcher from '../shared/LanguageSwitcher';
+//import { Storefront, Plus } from 'lucide-react';
 
 const Layout = ({ children }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const location = useLocation();
   const currentPath = location.pathname;
   const { user, login, logout } = useAuth();
+  const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [chatService, setChatService] = useState(null);
-
+  const { getChatService } = useChat();
   const [anchorEl, setAnchorEl] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { getChatService } = useChat();
-
-
 
   const handleOpenProfile = () => {
     setIsProfileOpen(true);
@@ -71,7 +73,7 @@ const Layout = ({ children }) => {
       path: "/",
       label: "Sve Tu",
       icon: <Storefront fontSize="large" color="primary" />,
-    },
+    }
   ];
   useEffect(() => {
     let unsubscribe;
@@ -128,6 +130,7 @@ const Layout = ({ children }) => {
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <NewMessageIndicator unreadCount={unreadCount} />
+        <Chat size={20} />
         <Typography>Мои сообщения</Typography>
       </Box>
     </MenuItem>
@@ -151,11 +154,10 @@ const Layout = ({ children }) => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              minHeight: "56px",// Это минимальная высота шапки
-              px: 2,// Отступы по бокам
+              minHeight: "56px",
+              px: 2,
             }}
           >
-            {/* Левый блок (меню) */}
             <Box
               sx={{
                 display: "flex",
@@ -197,7 +199,6 @@ const Layout = ({ children }) => {
               ))}
             </Box>
 
-            {/* Правый блок (авторизация + переключатель языка) */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <LanguageSwitcher />
               {!user ? (
@@ -222,6 +223,7 @@ const Layout = ({ children }) => {
                       <NewMessageIndicator unreadCount={unreadCount} />
                     </IconButton>
                   )}
+
                   <Tooltip title="Мой профиль">
                     <IconButton onClick={handleOpenMenu}>
                       <Avatar
@@ -231,6 +233,7 @@ const Layout = ({ children }) => {
                       />
                     </IconButton>
                   </Tooltip>
+
                   <Menu
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
@@ -255,8 +258,10 @@ const Layout = ({ children }) => {
                     <Divider />
 
                     {renderMessagesMenuItem()}
-
-
+                    <MenuItem onClick={() => navigate('/notifications/settings')}>
+                      <Settings sx={{ mr: 1 }} />
+                      Уведомления
+                    </MenuItem>
                     <MenuItem
                       component={Link}
                       to="/my-listings"
@@ -269,7 +274,6 @@ const Layout = ({ children }) => {
                       <Bookmark fontSize="small" sx={{ mr: 1 }} />
                       Избранное
                     </MenuItem>
-
 
                     <Divider />
                     <MenuItem onClick={logout}>
@@ -284,8 +288,10 @@ const Layout = ({ children }) => {
         </Container>
       </AppBar>
 
-      {/* Модальное окно для редактирования профиля */}
-      <Modal open={isProfileOpen} onClose={handleCloseProfile}>
+      <Modal
+        open={isProfileOpen}
+        onClose={handleCloseProfile}
+      >
         <Box
           sx={{
             position: "absolute",
@@ -304,10 +310,14 @@ const Layout = ({ children }) => {
         </Box>
       </Modal>
 
-      {/* Основной контент */}
       <Container maxWidth="lg" sx={{ py: 0 }}>
         {children}
       </Container>
+
+      <NotificationDrawer
+        open={notificationDrawerOpen}
+        onClose={() => setNotificationDrawerOpen(false)}
+      />
     </Box>
   );
 };

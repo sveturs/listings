@@ -7,6 +7,7 @@ import (
     userService "backend/internal/proj/users/service"
     marketplaceService "backend/internal/proj/marketplace/service"
     reviewService "backend/internal/proj/reviews/service"
+    notificationService "backend/internal/proj/notifications/service"
 )
 
 type Service struct {
@@ -15,6 +16,7 @@ type Service struct {
     review       *reviewService.Service
     chat         *marketplaceService.Service
     config       *config.Config
+    notification    *notificationService.Service
 }
 
 func NewService(storage storage.Storage, cfg *config.Config) *Service {
@@ -24,6 +26,7 @@ func NewService(storage storage.Storage, cfg *config.Config) *Service {
         review:       reviewService.NewService(storage),
         chat:         marketplaceService.NewService(storage),
         config:       cfg,
+        notification: notificationService.NewService(storage),
     }
 }
 
@@ -31,7 +34,9 @@ func NewService(storage storage.Storage, cfg *config.Config) *Service {
 func (s *Service) Auth() userService.AuthServiceInterface {
     return s.users.Auth
 }
-
+func (s *Service) Notification() notificationService.NotificationServiceInterface {
+    return s.notification.Notification
+}
 func (s *Service) User() userService.UserServiceInterface {
     return s.users.User
 }
