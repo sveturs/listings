@@ -114,6 +114,19 @@ func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
                 h.bot.Send(msg)
                 return nil
             }
+            
+            err = h.notificationService.ConnectTelegram(
+                c.Context(),
+                userID,
+                fmt.Sprintf("%d", update.Message.Chat.ID),
+                update.Message.From.UserName,
+            )
+            if err != nil {
+                log.Printf("Error connecting telegram: %v", err) 
+                msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка подключения")
+                h.bot.Send(msg)
+                return err
+            }
             msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Бот успешно подключен!")
             h.bot.Send(msg)
         }
