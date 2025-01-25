@@ -62,8 +62,9 @@ export const useNotifications = () => {
             const response = await axios.post('/api/v1/notifications/telegram/token');
             console.log('Full response data:', JSON.stringify(response.data));
                 
-            if (response.data?.data?.token) {
-                const botLink = `https://t.me/SveTu_bot?start=${response.data.data.token}`;
+            const token = response.data?.data?.data?.token;
+            if (token) {
+                const botLink = `https://t.me/SveTu_bot?start=${token}`;
                 console.log('Opening bot link:', botLink);
                 window.open(botLink, '_blank');
                 startStatusCheck();
