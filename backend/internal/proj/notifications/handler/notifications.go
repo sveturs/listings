@@ -89,32 +89,29 @@ func (h *NotificationHandler) ConnectTelegramWebhook() {
 
 // In NotificationHandler
 func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
-    if h.bot == nil {
-        log.Printf("Bot not initialized")
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Bot not initialized")
-    }
-
     var update tgbotapi.Update
     if err := c.BodyParser(&update); err != nil {
         log.Printf("Error parsing update: %v", err)
         return err
     }
 
-    if update.Message != nil && update.Message.IsCommand() {
-        log.Printf("Received command: %s with args: %s", 
-            update.Message.Command(), 
-            update.Message.CommandArguments())
-            
-        if update.Message.Command() == "start" {
-            token := update.Message.CommandArguments()
-            userID, err := h.validateUserToken(token)
+    if update.Message != nil {
+        if update.Message.IsCommand() && update.Message.Command() == "start" {
+            args := update.Message.CommandArguments()
+            if args == "" {
+                msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Для подключения уведомлений перейдите по ссылке на сайте")
+                h.bot.Send(msg)
+                return nil
+            }
+
+            userID, err := h.validateUserToken(args)
             if err != nil {
                 log.Printf("Invalid token: %v", err)
                 msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Недействительный токен")
                 h.bot.Send(msg)
                 return nil
             }
-            
+
             err = h.notificationService.ConnectTelegram(
                 c.Context(),
                 userID,
@@ -122,12 +119,12 @@ func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
                 update.Message.From.UserName,
             )
             if err != nil {
-                log.Printf("Error connecting telegram: %v", err) 
                 msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка подключения")
                 h.bot.Send(msg)
                 return err
             }
-            msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Бот успешно подключен!")
+            
+            msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Уведомления успешно подключены!")
             h.bot.Send(msg)
         }
     }
