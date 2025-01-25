@@ -135,13 +135,19 @@ func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
 }
 func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
-    // Изменено с generateToken на generateUserToken
     token, err := h.generateUserToken(userID)
     if err != nil {
+        log.Printf("Error generating token: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to generate token")
     }
-    return utils.SuccessResponse(c, fiber.Map{"token": token})
+    
+    log.Printf("Generated telegram token for user %d: %s", userID, token)
+    
+    return utils.SuccessResponse(c, fiber.Map{
+        "token": token,  // Убедитесь, что токен передается именно в этом поле
+    })
 }
+
 // Генерация токена для привязки Telegram
 func (h *NotificationHandler) generateUserToken(userID int) (string, error) {
     data := fmt.Sprintf("%d:%d", userID, time.Now().Unix())
@@ -154,27 +160,28 @@ func (h *NotificationHandler) generateUserToken(userID int) (string, error) {
 // Проверка токена
 func (h *NotificationHandler) validateUserToken(token string) (int, error) {
     parts := strings.Split(token, ".")
-    if len(parts) != 2 {
-        return 0, errors.New("invalid token format")
+    if len(parts) != 3 {
+        return 0, fmt.Errorf("invalid token format: expected 3 parts")
     }
 
     userID, err := strconv.Atoi(parts[0])
     if err != nil {
-        return 0, err
+        return 0, fmt.Errorf("invalid user ID in token")
     }
 
-    // Проверяем подпись токена
-    data := fmt.Sprintf("%d:%d", userID, time.Now().Unix())
-    hash := hmac.New(sha256.New, []byte(os.Getenv("TELEGRAM_BOT_SECRET")))
-    hash.Write([]byte(data))
-    expectedToken := base64.URLEncoding.EncodeToString(hash.Sum(nil))
+    timestamp, err := strconv.ParseInt(parts[1], 10, 64)
+    if err != nil {
+        return 0, fmt.Errorf("invalid timestamp in token")
+    }
 
-    if parts[1] != expectedToken {
-        return 0, errors.New("invalid token signature")
+    // Проверяем срок действия токена (например, 5 минут)
+    if time.Now().Unix()-timestamp > 300 {
+        return 0, fmt.Errorf("token expired")
     }
 
     return userID, nil
 }
+
 // GetSettings handler
 func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)

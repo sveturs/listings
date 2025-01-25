@@ -80,13 +80,19 @@ export const NotificationProvider = ({ children }) => {
     const connectTelegram = async () => {
         try {
             const response = await axios.post('/api/v1/notifications/telegram/token');
-            if (response.data.token) {
-                const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`; 
+            console.log('Telegram API response:', response);
+                
+            if (response.data?.data?.token) {  // Проверяем наличие token в data.data
+                const botLink = `https://t.me/SveTu_bot?start=${response.data.data.token}`;
                 window.open(botLink, '_blank');
-                startStatusCheck(); // Начинаем проверять статус подключения
+                startStatusCheck();
+            } else {
+                console.error('Invalid response format:', response.data);
+                throw new Error('Token not received');
             }
         } catch (err) {
-            console.error('Error:', err);
+            console.error('Error in connectTelegram:', err);
+            throw err;
         }
     };
 
