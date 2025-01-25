@@ -1,6 +1,8 @@
-// /data/proj/hostel-booking-system/frontend/hostel-frontend/src/hooks/useNotifications.js
+// frontend/hostel-frontend/src/hooks/useNotifications.js
 import { useState, useEffect } from 'react';
 import axios from '../api/axios';
+import { useState, useEffect, useContext } from 'react';
+import { NotificationContext } from '../contexts/NotificationContext';
 
 export const useNotifications = () => {
     const [notifications, setNotifications] = useState([]);
@@ -56,7 +58,18 @@ export const useNotifications = () => {
             return false;
         }
     };
-    const { connectTelegram } = useContext(NotificationContext);
+    const connectTelegram = async () => {
+        try {
+            const response = await axios.post('/api/v1/notifications/telegram/token');
+            if (response.data.token) {
+                const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`;
+                window.open(botLink, '_blank');
+                startStatusCheck();
+            }
+        } catch (err) {
+            console.error('Error:', err);
+        }
+    };
 
     const checkTelegramStatus = () => {
         if (!statusCheckInterval) {
