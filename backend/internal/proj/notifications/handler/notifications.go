@@ -15,7 +15,7 @@ import (
 //	"errors"
 	"strconv"
 	"strings"
-	
+
    "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/gofiber/fiber/v2"
 )
@@ -162,8 +162,8 @@ func (h *NotificationHandler) generateUserToken(userID int) (string, error) {
 // Проверка токена
 func (h *NotificationHandler) validateUserToken(token string) (int, error) {
     parts := strings.Split(token, ".")
-    if len(parts) != 3 {
-        return 0, fmt.Errorf("invalid token format: expected 3 parts")
+    if len(parts) != 2 { // Изменено с 3 на 2
+        return 0, fmt.Errorf("invalid token format: expected 2 parts")
     }
 
     userID, err := strconv.Atoi(parts[0])
@@ -171,14 +171,14 @@ func (h *NotificationHandler) validateUserToken(token string) (int, error) {
         return 0, fmt.Errorf("invalid user ID in token")
     }
 
-    timestamp, err := strconv.ParseInt(parts[1], 10, 64)
+    // Проверяем подпись токена
+    expectedToken, err := h.generateUserToken(userID)
     if err != nil {
-        return 0, fmt.Errorf("invalid timestamp in token")
+        return 0, err
     }
 
-    // Проверяем срок действия токена (например, 5 минут)
-    if time.Now().Unix()-timestamp > 300 {
-        return 0, fmt.Errorf("token expired")
+    if token != expectedToken {
+        return 0, fmt.Errorf("invalid token signature")
     }
 
     return userID, nil
