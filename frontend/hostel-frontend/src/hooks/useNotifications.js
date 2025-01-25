@@ -60,21 +60,27 @@ export const useNotifications = () => {
     const connectTelegram = async () => {
         try {
             const response = await axios.post('/api/v1/notifications/telegram/token');
+            console.log('Telegram token response:', response.data);
+            
             if (response.data.token) {
-                const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`; 
-                window.open(botLink, '_blank');
-                startStatusCheck(); // Начинаем проверять статус подключения
+                const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`;
+                startStatusCheck();
+                return { botLink }; // Возвращаем объект с botLink
             }
+            throw new Error('Token not received');
         } catch (err) {
-            console.error('Error:', err);
+            console.error('Error in connectTelegram:', err);
+            throw err;
         }
     };
 
     const checkTelegramStatus = () => {
         if (!statusCheckInterval) {
+            console.log('Starting telegram status check');
             const interval = setInterval(async () => {
                 try {
                     const response = await axios.get('/api/v1/notifications/telegram');
+                    console.log('Telegram status response:', response.data);
                     if (response.data.connected) {
                         clearInterval(interval);
                         setStatusCheckInterval(null);
@@ -82,10 +88,10 @@ export const useNotifications = () => {
                         showNotification('Telegram успешно подключен');
                     }
                 } catch (err) {
-                    console.error('Ошибка проверки статуса:', err);
+                    console.error('Telegram status check error:', err);
                 }
             }, 3000);
-
+    
             setStatusCheckInterval(interval);
             
             setTimeout(() => {
