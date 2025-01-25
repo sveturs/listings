@@ -68,6 +68,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		marketplace:   marketplaceHandler,
 		notifications: notificationsHandler,
 	}
+    notificationsHandler.Notification.ConnectTelegramWebhook()
 
 	// Настройка маршрутов
 	server.setupRoutes()
