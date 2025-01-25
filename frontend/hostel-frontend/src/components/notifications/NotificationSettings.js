@@ -70,22 +70,23 @@ const NotificationSettings = () => {
    };
 
    const handlePushSubscription = async () => {
-       try {
-           const permission = await Notification.requestPermission();
-           if (permission === 'granted') {
-               const registration = await navigator.serviceWorker.register('/service-worker.js');
-               const subscription = await registration.pushManager.subscribe({
-                   userVisibleOnly: true,
-                   applicationServerKey: process.env.REACT_APP_VAPID_PUBLIC_KEY
-               });
-               await axios.post('/api/v1/notifications/push/subscribe', subscription);
-               showSnackbar('Push-уведомления включены');
-           }
-       } catch (err) {
-           console.error('Error enabling push notifications:', err);
-           showSnackbar('Ошибка при включении push-уведомлений', 'error');
-       }
-   };
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const registration = await navigator.serviceWorker.register('/service-worker.js');
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: process.env.REACT_APP_VAPID_PUBLIC_KEY
+            });
+            
+            await axios.post('/api/v1/notifications/push/subscribe', subscription);
+            showSnackbar('Push-уведомления включены');
+        }
+    } catch (err) {
+        console.error('Error enabling push notifications:', err);
+        showSnackbar('Ошибка при включении push-уведомлений', 'error');
+    }
+};
 
    const handleSettingChange = async (type, channel, value) => {
        try {
