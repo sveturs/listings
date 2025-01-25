@@ -15,7 +15,7 @@ import (
 //	"errors"
 	"strconv"
 	"strings"
-
+	
    "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/gofiber/fiber/v2"
 )
@@ -143,9 +143,11 @@ func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
     
     log.Printf("Generated telegram token for user %d: %s", userID, token)
     
-    return utils.SuccessResponse(c, fiber.Map{
-        "token": token,  // Убедитесь, что токен передается именно в этом поле
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"data": fiber.Map{
+			"token": token,
+		},
+	})
 }
 
 // Генерация токена для привязки Telegram

@@ -60,16 +60,14 @@ export const useNotifications = () => {
     const connectTelegram = async () => {
         try {
             const response = await axios.post('/api/v1/notifications/telegram/token');
-            console.log('Telegram API response:', response);
+            console.log('Full response data:', JSON.stringify(response.data));
                 
-            // Проверяем response.data.token напрямую
-            if (response.data?.token) {
-                const botLink = `https://t.me/SveTu_bot?start=${response.data.token}`;
+            if (response.data?.data?.token) {
+                const botLink = `https://t.me/SveTu_bot?start=${response.data.data.token}`;
                 console.log('Opening bot link:', botLink);
                 window.open(botLink, '_blank');
                 startStatusCheck();
             } else {
-                console.error('Token not found in response:', response.data);
                 throw new Error('Token not received');
             }
         } catch (err) {
