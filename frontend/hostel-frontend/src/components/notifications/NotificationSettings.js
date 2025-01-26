@@ -1,4 +1,3 @@
-//frontend/hostel-frontend/src/components/notifications/NotificationSettings.js
 import React, { useState } from 'react';
 import {
     Box,
@@ -10,7 +9,8 @@ import {
     Button,
     Alert,
     Snackbar,
-    Divider
+    Divider,
+    Grid
 } from '@mui/material';
 import {
     MessageCircle,
@@ -77,7 +77,7 @@ const NotificationSettings = () => {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
                 const registration = await navigator.serviceWorker.register('/service-worker.js');
-                const convertedKey = urlBase64ToUint8Array(process.env.REACT_APP_VAPID_PUBLIC_KEY); // Добавить функцию конвертации
+                const convertedKey = urlBase64ToUint8Array(process.env.REACT_APP_VAPID_PUBLIC_KEY);
                 const subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: convertedKey
@@ -88,6 +88,7 @@ const NotificationSettings = () => {
             console.error('Error enabling push notifications:', err);
         }
     };
+
     const handleTelegramConnect = async () => {
         try {
             setLoading(true);
@@ -125,39 +126,47 @@ const NotificationSettings = () => {
                         <Typography variant="subtitle1" gutterBottom>
                             Каналы уведомлений
                         </Typography>
-                        <Stack direction="row" spacing={2}>
-                            <Button
-                                variant={telegramConnected ? "outlined" : "contained"}
-                                onClick={handleTelegramConnect}
-                                startIcon={<MessageCircle />}
-                                disabled={loading}
-                            >
-                                {loading ? 'Подключение...' :
-                                    telegramConnected ? 'Telegram подключен' :
-                                        'Подключить Telegram'}
-                            </Button>
-
-                            <Button
-                                variant="contained"
-                                onClick={handlePushSubscription}
-                                startIcon={<BellRing />}
-                            >
-                                Включить Push-уведомления
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                onClick={async () => {
-                                    try {
-                                        await axios.post('/api/v1/notifications/test');
-                                        showSnackbar('Тестовое уведомление отправлено');
-                                    } catch (err) {
-                                        showSnackbar('Ошибка отправки уведомления', 'error');
-                                    }
-                                }}
-                            >
-                                Отправить тестовое уведомление
-                            </Button>
-                        </Stack>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Button
+                                    variant={telegramConnected ? "outlined" : "contained"}
+                                    onClick={handleTelegramConnect}
+                                    startIcon={<MessageCircle />}
+                                    disabled={loading}
+                                    fullWidth
+                                >
+                                    {loading ? 'Подключение...' :
+                                        telegramConnected ? 'Telegram подключен' :
+                                            'Подключить Telegram'}
+                                </Button>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Button
+                                    variant="contained"
+                                    onClick={handlePushSubscription}
+                                    startIcon={<BellRing />}
+                                    fullWidth
+                                >
+                                    Включить Push-уведомления
+                                </Button>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Button
+                                    variant="outlined"
+                                    onClick={async () => {
+                                        try {
+                                            await axios.post('/api/v1/notifications/test');
+                                            showSnackbar('Тестовое уведомление отправлено');
+                                        } catch (err) {
+                                            showSnackbar('Ошибка отправки уведомления', 'error');
+                                        }
+                                    }}
+                                    fullWidth
+                                >
+                                    Отправить тестовое уведомление
+                                </Button>
+                            </Grid>
+                        </Grid>
                     </Box>
 
                     <Divider />
@@ -171,9 +180,8 @@ const NotificationSettings = () => {
                                 </Box>
                                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                                     {description}
-
                                 </Typography>
-                                <Stack direction="row" spacing={2}>
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                                     <FormControlLabel
                                         control={
                                             <Switch
