@@ -95,41 +95,55 @@ func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
         return err
     }
 
+    log.Printf("Received update: %+v", update)
+
     if update.Message != nil {
-        if update.Message.IsCommand() && update.Message.Command() == "start" {
+        if update.Message.IsCommand() {
+            command := update.Message.Command()
             args := update.Message.CommandArguments()
-            if args == "" {
-                msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Для подключения уведомлений перейдите по ссылке на сайте")
-                h.bot.Send(msg)
-                return nil
-            }
-
-            userID, err := h.validateUserToken(args)
-            if err != nil {
-                log.Printf("Invalid token: %v", err)
-                msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Недействительный токен")
-                h.bot.Send(msg)
-                return nil
-            }
-
-            err = h.notificationService.ConnectTelegram(
-                c.Context(),
-                userID,
-                fmt.Sprintf("%d", update.Message.Chat.ID),
-                update.Message.From.UserName,
-            )
-            if err != nil {
-                msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка подключения")
-                h.bot.Send(msg)
-                return err
-            }
+            log.Printf("Command %s with args: '%s'", command, args)
             
-            msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Уведомления успешно подключены!")
-            h.bot.Send(msg)
+            if command == "start" {
+                return h.handleStartCommand(c, update.Message, args)
+            }
         }
     }
     return nil
 }
+func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi.Message, token string) error {
+    if token == "" {
+        msg := tgbotapi.NewMessage(message.Chat.ID, "Для подключения перейдите по ссылке с сайта")
+        h.bot.Send(msg)
+        return nil
+    }
+
+    log.Printf("Processing start command with token: %s", token)
+    userID, err := h.validateUserToken(token)
+    if err != nil {
+        log.Printf("Token validation error: %v", err)
+        msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("Ошибка валидации токена: %v", err))
+        h.bot.Send(msg)
+        return nil
+    }
+
+    err = h.notificationService.ConnectTelegram(
+        c.Context(),
+        userID,
+        fmt.Sprintf("%d", message.Chat.ID),
+        message.From.UserName,
+    )
+    if err != nil {
+        log.Printf("Error connecting telegram: %v", err)
+        msg := tgbotapi.NewMessage(message.Chat.ID, "Ошибка подключения")
+        h.bot.Send(msg)
+        return err
+    }
+
+    msg := tgbotapi.NewMessage(message.Chat.ID, "Уведомления успешно подключены!")
+    h.bot.Send(msg)
+    return nil
+}
+
 func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     token, err := h.generateUserToken(userID)
