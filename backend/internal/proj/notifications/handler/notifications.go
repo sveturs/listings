@@ -139,9 +139,21 @@ func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi
         return err
     }
 
-    msg := tgbotapi.NewMessage(message.Chat.ID, "Уведомления успешно подключены!")
+
+	settings := &models.NotificationSettings{
+        UserID: userID,
+        NotificationType: "new_message",
+        TelegramEnabled: true,
+    }
+    if err := h.notificationService.UpdateNotificationSettings(c.Context(), settings); err != nil {
+        log.Printf("Error setting default notifications: %v", err)
+    }
+
+    msg := tgbotapi.NewMessage(message.Chat.ID, "Уведомления успешно подключены! Настройте типы уведомлений в настройках на сайте.")
     h.bot.Send(msg)
     return nil
+
+
 }
 
 func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
@@ -214,23 +226,20 @@ func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
 
 // UpdateSettings обновляет настройки уведомлений
 func (h *NotificationHandler) UpdateSettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+    userID := c.Locals("user_id").(int)
+    var settings models.NotificationSettings
+    if err := c.BodyParser(&settings); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid data format")
+    }
 
-	var settings models.NotificationSettings
-	if err := c.BodyParser(&settings); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
-	}
+    settings.UserID = userID
+    err := h.notificationService.UpdateNotificationSettings(c.Context(), &settings)
+    if err != nil {
+        log.Printf("Error updating settings: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update settings")
+    }
 
-	settings.UserID = userID
-
-	err := h.notificationService.UpdateNotificationSettings(c.Context(), &settings)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при обновлении настроек")
-	}
-
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Настройки успешно обновлены",
-	})
+    return utils.SuccessResponse(c, fiber.Map{"message": "Settings updated"})
 }
 
 // GetTelegramStatus проверяет статус подключения Telegram
