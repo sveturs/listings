@@ -144,6 +144,19 @@ const NotificationSettings = () => {
                             >
                                 Включить Push-уведомления
                             </Button>
+                            <Button
+                                variant="outlined"
+                                onClick={async () => {
+                                    try {
+                                        await axios.post('/api/v1/notifications/test');
+                                        showSnackbar('Тестовое уведомление отправлено');
+                                    } catch (err) {
+                                        showSnackbar('Ошибка отправки уведомления', 'error');
+                                    }
+                                }}
+                            >
+                                Отправить тестовое уведомление
+                            </Button>
                         </Stack>
                     </Box>
 
@@ -158,6 +171,7 @@ const NotificationSettings = () => {
                                 </Box>
                                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                                     {description}
+
                                 </Typography>
                                 <Stack direction="row" spacing={2}>
                                     <FormControlLabel

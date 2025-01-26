@@ -173,6 +173,8 @@ marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Де
 	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
 	notifications.Post("/push/subscribe", s.notifications.Notification.SubscribePush)
 	notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
+	notifications.Post("/test", s.notifications.Notification.SendTestNotification)
+
 
 
 
