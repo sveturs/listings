@@ -1,5 +1,5 @@
 // src/components/notifications/settings/NotificationSettings.js
-import { Box, Typography, Switch, FormControl, FormControlLabel } from '@mui/material';
+/*import { Box, Typography, Switch, FormControl, FormControlLabel } from '@mui/material';
 import { useNotifications } from '../../../hooks/useNotifications';
 
 export default function NotificationSettings() {
@@ -40,4 +40,4 @@ export default function NotificationSettings() {
       ))}
     </Box>
   );
-}
+} */

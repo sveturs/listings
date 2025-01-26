@@ -34,11 +34,13 @@ export const useNotifications = () => {
     const fetchSettings = async () => {
         try {
             const response = await axios.get('/api/v1/notifications/settings');
+            console.log('Received settings:', response.data);
             setSettings(response.data.data || {});
         } catch (err) {
             console.error('Error fetching settings:', err);
         }
     };
+    
 
 
     const updateSettings = async (type, channel, value) => {

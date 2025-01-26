@@ -163,7 +163,7 @@ const NotificationSettings = () => {
                                     <FormControlLabel
                                         control={
                                             <Switch
-                                                checked={settings[type]?.telegram || false}
+                                                checked={settings[type]?.telegram_enabled || false}
                                                 onChange={(e) => handleSettingChange(type, 'telegram', e.target.checked)}
                                                 disabled={!telegramConnected}
                                                 color="primary"
