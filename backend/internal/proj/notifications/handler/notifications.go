@@ -236,19 +236,39 @@ func (h *NotificationHandler) UpdateSettings(c *fiber.Ctx) error {
 
 // GetTelegramStatus проверяет статус подключения Telegram
 func (h *NotificationHandler) GetTelegramStatus(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+    userID := c.Locals("user_id").(int)
+    connection, err := h.notificationService.GetTelegramConnection(c.Context(), userID)
+    log.Printf("Checking Telegram status for user %d: connection=%v, err=%v", userID, connection, err)
+    
+    if err != nil {
+        return utils.SuccessResponse(c, fiber.Map{
+            "connected": false,
+        })
+    }
 
-	connection, err := h.notificationService.GetTelegramConnection(c.Context(), userID)
-	if err != nil {
-		return utils.SuccessResponse(c, fiber.Map{
-			"connected": false,
-		})
-	}
+    return utils.SuccessResponse(c, fiber.Map{
+        "connected": true,
+        "username": connection.TelegramUsername,
+    })
+}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"connected": true,
-		"username":  connection.TelegramUsername,
-	})
+func (h *NotificationHandler) SendTestNotification(c *fiber.Ctx) error {
+    userID := c.Locals("user_id").(int)
+    
+    connection, err := h.notificationService.GetTelegramConnection(c.Context(), userID)
+    if err != nil {
+        log.Printf("Error getting telegram connection: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Telegram not connected")
+    }
+
+    msg := tgbotapi.NewMessage(connection.TelegramChatID, "Тестовое уведомление")
+    _, err = h.bot.Send(msg)
+    if err != nil {
+        log.Printf("Error sending test notification: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error sending notification")
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{"message": "Test notification sent"})
 }
 
 // ConnectTelegram связывает аккаунт Telegram
