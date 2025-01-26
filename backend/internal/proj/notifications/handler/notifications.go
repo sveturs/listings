@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 	"fmt"
-	"time"
+//	"time"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -163,24 +163,20 @@ func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
 
 // Генерация токена для привязки Telegram
 func (h *NotificationHandler) generateUserToken(userID int) (string, error) {
-    timestamp := time.Now().Unix()
-    data := fmt.Sprintf("%d_%d", userID, timestamp)
-    
+    data := fmt.Sprintf("%d", userID)
     secret := []byte(os.Getenv("TELEGRAM_BOT_TOKEN"))
     hash := hmac.New(sha256.New, secret)
     hash.Write([]byte(data))
     signature := base64.URLEncoding.EncodeToString(hash.Sum(nil))
-    
-    // Формат: {userID}_{timestamp}_{signature}
-    return fmt.Sprintf("%d_%d_%s", userID, timestamp, signature), nil
+    return fmt.Sprintf("%d_%s", userID, signature), nil
 }
+
 
 
 // Проверка токена
 func (h *NotificationHandler) validateUserToken(token string) (int, error) {
     parts := strings.Split(token, "_")
-    if len(parts) != 3 {
-        log.Printf("Invalid token format (parts=%d): %s", len(parts), token)
+    if len(parts) != 2 {
         return 0, fmt.Errorf("invalid token format")
     }
 
@@ -189,29 +185,18 @@ func (h *NotificationHandler) validateUserToken(token string) (int, error) {
         return 0, fmt.Errorf("invalid user ID")
     }
 
-    timestamp, err := strconv.ParseInt(parts[1], 10, 64)
+    expectedToken, err := h.generateUserToken(userID)
     if err != nil {
-        return 0, fmt.Errorf("invalid timestamp")
+        return 0, err
     }
 
-    // Проверяем не истек ли токен (5 минут)
-    if time.Now().Unix()-timestamp > 300 {
-        return 0, fmt.Errorf("token expired")
-    }
-
-    // Проверяем подпись
-    data := fmt.Sprintf("%d:%d", userID, timestamp)
-    secret := []byte(os.Getenv("TELEGRAM_BOT_TOKEN"))
-    hash := hmac.New(sha256.New, secret)
-    hash.Write([]byte(data))
-    expectedSignature := base64.URLEncoding.EncodeToString(hash.Sum(nil))
-    
-    if parts[2] != expectedSignature {
+    if token != expectedToken {
         return 0, fmt.Errorf("invalid signature")
     }
 
     return userID, nil
 }
+
 
 // GetSettings handler
 func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
