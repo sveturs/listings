@@ -4,15 +4,28 @@ import (
     "context"
     "backend/internal/domain/models"
     "backend/internal/storage"
+	"strconv"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"log"
+	"os"
+
+
 )
 
 type NotificationService struct {
     storage storage.Storage
+	bot     *tgbotapi.BotAPI
 }
 
 func NewNotificationService(storage storage.Storage) NotificationServiceInterface {
+    bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+    if err != nil {
+        log.Printf("Error initializing telegram bot: %v", err)
+    }
+    
     return &NotificationService{
         storage: storage,
+        bot:     bot,
     }
 }
 
@@ -81,4 +94,35 @@ func (s *NotificationService) SendListingUpdateNotification(ctx context.Context,
         Message: "Статус объявления изменен на: " + updateType,
     }
     return s.storage.CreateNotification(ctx, notification)
+}
+func (s *NotificationService) SendNotification(ctx context.Context, userID int, notificationType string, message string) error {
+    // Проверяем настройки пользователя
+    settings, err := s.storage.GetNotificationSettings(ctx, userID)
+    if err != nil {
+        return err
+    }
+
+    // Находим нужный тип уведомления
+    var setting *models.NotificationSettings
+    for _, s := range settings {
+        if s.NotificationType == notificationType {
+            setting = &s
+            break
+        }
+    }
+
+    if setting == nil || !setting.TelegramEnabled {
+        return nil
+    }
+
+    // Получаем Telegram подключение
+    conn, err := s.storage.GetTelegramConnection(ctx, userID)
+    if err != nil {
+        return err
+    }
+
+    chatID, _ := strconv.ParseInt(conn.TelegramChatID, 10, 64)
+    msg := tgbotapi.NewMessage(chatID, message)
+    _, err = s.bot.Send(msg) // используем s.bot вместо bot
+    return err
 }

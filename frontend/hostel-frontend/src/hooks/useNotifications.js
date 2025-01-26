@@ -53,17 +53,22 @@ export const useNotifications = () => {
 
     const updateSettings = async (type, channel, value) => {
         try {
-            await axios.put('/api/v1/notifications/settings', {
+            const response = await axios.put('/api/v1/notifications/settings', {
                 notification_type: type,
                 [channel + '_enabled']: value
             });
-            setSettings(prev => ({
-                ...prev,
-                [type]: { ...prev[type], [channel]: value }
-            }));
-            return true;
+            
+            if (response.data.success) {
+                setSettings(prev => ({
+                    ...prev,
+                    [type]: { ...prev[type], [channel]: value }
+                }));
+                return true;
+            }
+            throw new Error(response.data.error);
         } catch (err) {
-            console.error('Error updating settings:', err);
+            console.error('Error:', err);
+            showNotification('Ошибка при обновлении настроек', 'error');
             return false;
         }
     };

@@ -4,15 +4,18 @@ package service
 import (
     "backend/internal/storage"
 )
+import (
+    "backend/internal/proj/notifications/service"
+)
 
 type Service struct {
     Marketplace MarketplaceServiceInterface
     Chat       ChatServiceInterface
 }
 
-func NewService(storage storage.Storage) *Service {
+func NewService(storage storage.Storage, notifService service.NotificationServiceInterface) *Service {
     return &Service{
         Marketplace: NewMarketplaceService(storage),
-        Chat:       NewChatService(storage),
+        Chat:       NewChatService(storage, notifService),
     }
 }

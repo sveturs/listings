@@ -20,13 +20,15 @@ type Service struct {
 }
 
 func NewService(storage storage.Storage, cfg *config.Config) *Service {
+    notificationSvc := notificationService.NewService(storage)
+    
     return &Service{
-        users:         userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
-        marketplace:  marketplaceService.NewService(storage),
-        review:       reviewService.NewService(storage),
-        chat:         marketplaceService.NewService(storage),
-        config:       cfg,
-        notification: notificationService.NewService(storage),
+        users:        userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
+        marketplace: marketplaceService.NewService(storage, notificationSvc.Notification),
+        review:      reviewService.NewService(storage),
+        chat:        marketplaceService.NewService(storage, notificationSvc.Notification),
+        config:      cfg,
+        notification: notificationSvc,
     }
 }
 
