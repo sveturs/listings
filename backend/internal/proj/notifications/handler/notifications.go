@@ -21,8 +21,8 @@ import (
 )
 
 type NotificationHandler struct {
-	notificationService service.NotificationServiceInterface
-	bot                *tgbotapi.BotAPI
+    notificationService service.NotificationServiceInterface
+    bot                *tgbotapi.BotAPI
 }
 
 func NewNotificationHandler(service service.NotificationServiceInterface) *NotificationHandler {
@@ -126,14 +126,44 @@ func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi
         return err
     }
 
-    // Установим базовые настройки уведомлений
+    // Установка базовых настроек уведомлений 
     settings := []models.NotificationSettings{
-        {UserID: userID, NotificationType: "new_message", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "new_review", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "review_vote", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "review_response", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "listing_status", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "favorite_price", TelegramEnabled: true},
+        {
+            UserID: userID, 
+            NotificationType: "new_message", 
+            TelegramEnabled: true,
+            PushEnabled: false,
+        },
+        {
+            UserID: userID,
+            NotificationType: "new_review",
+            TelegramEnabled: true,
+            PushEnabled: false,
+        },
+        {
+            UserID: userID,
+            NotificationType: "review_vote",
+            TelegramEnabled: true,
+            PushEnabled: false,
+        },
+        {
+            UserID: userID,
+            NotificationType: "review_response",
+            TelegramEnabled: true,
+            PushEnabled: false,
+        },
+        {
+            UserID: userID,
+            NotificationType: "listing_status",
+            TelegramEnabled: true,
+            PushEnabled: false,
+        },
+        {
+            UserID: userID,
+            NotificationType: "favorite_price",
+            TelegramEnabled: true,
+            PushEnabled: false,
+        },
     }
 
     for _, setting := range settings {
@@ -143,8 +173,8 @@ func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi
     }
 
     msg := tgbotapi.NewMessage(message.Chat.ID, "Уведомления успешно подключены!")
-    h.bot.Send(msg)
-    return nil
+    _, err = h.bot.Send(msg)
+    return err
 }
 
 
@@ -204,16 +234,32 @@ func (h *NotificationHandler) validateUserToken(token string) (int, error) {
 
 // GetSettings handler
 func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+    userID := c.Locals("user_id").(int)
+    
+    // Создаем базовые настройки, если их нет
+    baseSettings := []models.NotificationSettings{
+        {UserID: userID, NotificationType: "new_message", TelegramEnabled: true, PushEnabled: false},
+        {UserID: userID, NotificationType: "new_review", TelegramEnabled: true, PushEnabled: false},
+        {UserID: userID, NotificationType: "review_vote", TelegramEnabled: true, PushEnabled: false},
+        {UserID: userID, NotificationType: "review_response", TelegramEnabled: true, PushEnabled: false},
+        {UserID: userID, NotificationType: "listing_status", TelegramEnabled: true, PushEnabled: false},
+        {UserID: userID, NotificationType: "favorite_price", TelegramEnabled: true, PushEnabled: false},
+    }
 
-	settings, err := h.notificationService.GetNotificationSettings(c.Context(), userID)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении настроек")
-	}
+    settings, err := h.notificationService.GetNotificationSettings(c.Context(), userID)
+    if err != nil || len(settings) == 0 {
+        // Если настроек нет, создаем базовые
+        for _, setting := range baseSettings {
+            if err := h.notificationService.UpdateNotificationSettings(c.Context(), &setting); err != nil {
+                log.Printf("Error creating base settings: %v", err)
+            }
+        }
+        settings = baseSettings
+    }
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": settings, // Добавлено data
-	})
+    return utils.SuccessResponse(c, fiber.Map{
+        "data": settings,
+    })
 }
 
 // UpdateSettings обновляет настройки уведомлений

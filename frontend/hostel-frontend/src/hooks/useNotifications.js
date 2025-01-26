@@ -34,16 +34,14 @@ export const useNotifications = () => {
     const fetchSettings = async () => {
         try {
             const response = await axios.get('/api/v1/notifications/settings');
-            console.log('Received settings:', response.data);
-            // Создаем объект в нужном формате
-            const formattedSettings = response.data.data.data.reduce((acc, setting) => {
+            const settings = response.data.data.reduce((acc, setting) => {
                 acc[setting.notification_type] = {
                     telegram_enabled: setting.telegram_enabled,
                     push_enabled: setting.push_enabled
                 };
                 return acc;
             }, {});
-            setSettings(formattedSettings);
+            setSettings(settings);
         } catch (err) {
             console.error('Error fetching settings:', err);
         }
