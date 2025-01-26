@@ -261,7 +261,13 @@ func (h *NotificationHandler) SendTestNotification(c *fiber.Ctx) error {
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Telegram not connected")
     }
 
-    msg := tgbotapi.NewMessage(connection.TelegramChatID, "Тестовое уведомление")
+    chatID, err := strconv.ParseInt(connection.TelegramChatID, 10, 64)
+    if err != nil {
+        log.Printf("Error parsing chat ID: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Invalid chat ID")
+    }
+
+    msg := tgbotapi.NewMessage(chatID, "Тестовое уведомление")
     _, err = h.bot.Send(msg)
     if err != nil {
         log.Printf("Error sending test notification: %v", err)
