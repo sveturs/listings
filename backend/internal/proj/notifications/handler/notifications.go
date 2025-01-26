@@ -163,33 +163,52 @@ func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
 
 // Генерация токена для привязки Telegram
 func (h *NotificationHandler) generateUserToken(userID int) (string, error) {
-    data := fmt.Sprintf("%d:%d", userID, time.Now().Unix())
-    hash := hmac.New(sha256.New, []byte(os.Getenv("TELEGRAM_BOT_SECRET")))
+    // Получаем текущее время
+    timestamp := time.Now().Unix()
+    data := fmt.Sprintf("%d:%d", userID, timestamp)
+    
+    secret := []byte(os.Getenv("TELEGRAM_BOT_TOKEN"))
+    hash := hmac.New(sha256.New, secret)
     hash.Write([]byte(data))
-    token := base64.URLEncoding.EncodeToString(hash.Sum(nil))
-    return fmt.Sprintf("%d.%s", userID, token), nil
+    signature := base64.URLEncoding.EncodeToString(hash.Sum(nil))
+    
+    // Токен формата: {userID}.{timestamp}.{signature}
+    token := fmt.Sprintf("%d.%d.%s", userID, timestamp, signature)
+    return token, nil
 }
 
 // Проверка токена
 func (h *NotificationHandler) validateUserToken(token string) (int, error) {
     parts := strings.Split(token, ".")
-    if len(parts) != 2 { // Изменено с 3 на 2
-        return 0, fmt.Errorf("invalid token format: expected 2 parts")
+    if len(parts) != 3 {
+        log.Printf("Invalid token format (parts=%d): %s", len(parts), token)
+        return 0, fmt.Errorf("invalid token format")
     }
 
     userID, err := strconv.Atoi(parts[0])
     if err != nil {
-        return 0, fmt.Errorf("invalid user ID in token")
+        return 0, fmt.Errorf("invalid user ID")
     }
 
-    // Проверяем подпись токена
-    expectedToken, err := h.generateUserToken(userID)
+    timestamp, err := strconv.ParseInt(parts[1], 10, 64)
     if err != nil {
-        return 0, err
+        return 0, fmt.Errorf("invalid timestamp")
     }
 
-    if token != expectedToken {
-        return 0, fmt.Errorf("invalid token signature")
+    // Проверяем не истек ли токен (5 минут)
+    if time.Now().Unix()-timestamp > 300 {
+        return 0, fmt.Errorf("token expired")
+    }
+
+    // Проверяем подпись
+    data := fmt.Sprintf("%d:%d", userID, timestamp)
+    secret := []byte(os.Getenv("TELEGRAM_BOT_TOKEN"))
+    hash := hmac.New(sha256.New, secret)
+    hash.Write([]byte(data))
+    expectedSignature := base64.URLEncoding.EncodeToString(hash.Sum(nil))
+    
+    if parts[2] != expectedSignature {
+        return 0, fmt.Errorf("invalid signature")
     }
 
     return userID, nil
