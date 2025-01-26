@@ -163,23 +163,22 @@ func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
 
 // Генерация токена для привязки Telegram
 func (h *NotificationHandler) generateUserToken(userID int) (string, error) {
-    // Получаем текущее время
     timestamp := time.Now().Unix()
-    data := fmt.Sprintf("%d:%d", userID, timestamp)
+    data := fmt.Sprintf("%d_%d", userID, timestamp)
     
     secret := []byte(os.Getenv("TELEGRAM_BOT_TOKEN"))
     hash := hmac.New(sha256.New, secret)
     hash.Write([]byte(data))
     signature := base64.URLEncoding.EncodeToString(hash.Sum(nil))
     
-    // Токен формата: {userID}.{timestamp}.{signature}
-    token := fmt.Sprintf("%d.%d.%s", userID, timestamp, signature)
-    return token, nil
+    // Формат: {userID}_{timestamp}_{signature}
+    return fmt.Sprintf("%d_%d_%s", userID, timestamp, signature), nil
 }
+
 
 // Проверка токена
 func (h *NotificationHandler) validateUserToken(token string) (int, error) {
-    parts := strings.Split(token, ".")
+    parts := strings.Split(token, "_")
     if len(parts) != 3 {
         log.Printf("Invalid token format (parts=%d): %s", len(parts), token)
         return 0, fmt.Errorf("invalid token format")
