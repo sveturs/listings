@@ -48,14 +48,15 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 	// Отправляем сообщение через WebSocket
 	s.BroadcastMessage(msg)
 
-	if msg.ReceiverID != msg.SenderID {
-		s.notificationService.SendNotification(
-			ctx,
-			msg.ReceiverID,
-			models.NotificationTypeNewMessage,
-			fmt.Sprintf("Новое сообщение от %s", msg.Sender.Name),
-		)
-	}
+    if msg.ReceiverID != msg.SenderID {
+        notificationText := fmt.Sprintf("Новое сообщение от %s\n\n%s", msg.Sender.Name, msg.Content)
+        s.notificationService.SendNotification(
+            ctx,
+            msg.ReceiverID,
+            models.NotificationTypeNewMessage,
+            notificationText,
+        )
+    }
 
 	return nil
 }
