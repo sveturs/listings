@@ -138,7 +138,7 @@ func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to generate token")
     }
     
-    log.Printf("Generated telegram token for user %d: %s", userID, token)
+     log.Printf("Generated telegram token for user %d: %s", userID, token)
     
 	return utils.SuccessResponse(c, fiber.Map{
 		"data": fiber.Map{
