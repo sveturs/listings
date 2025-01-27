@@ -13,7 +13,7 @@ import { useChat } from '../../contexts/ChatContext';
 import LanguageSwitcher from '../shared/LanguageSwitcher';
 import NotificationBadge from '../notifications/NotificationBadge';
 import NotificationDrawer from '../notifications/NotificationDrawer';
- import { Settings } from '@mui/icons-material';
+import { Settings } from '@mui/icons-material';
 
 
 import {
@@ -258,7 +258,12 @@ const Layout = ({ children }) => {
                     <Divider />
 
                     {renderMessagesMenuItem()}
-                    <MenuItem onClick={() => navigate('/notifications/settings')}>
+                    <MenuItem
+                      onClick={() => {
+                        handleCloseMenu(); // Закрыть меню при клике на "Уведомления"
+                        navigate('/notifications/settings'); // Переход на страницу уведомлений
+                      }}
+                    >
                       <Settings sx={{ mr: 1 }} />
                       Уведомления
                     </MenuItem>

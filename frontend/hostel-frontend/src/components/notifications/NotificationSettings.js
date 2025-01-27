@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/components/notifications/NotificationSettings.js
 import React, { useState } from 'react';
 import {
     Box,
@@ -28,32 +29,38 @@ const NOTIFICATION_TYPES = {
     new_message: {
         label: 'Новые сообщения',
         icon: MessageCircle,
-        description: 'Уведомления о новых сообщениях в чате'
+        description: 'Уведомления о новых сообщениях в чате',
+        implemented: true
     },
     new_review: {
         label: 'Новые отзывы',
         icon: FileText,
-        description: 'Уведомления о новых отзывах на ваши объявления'
+        description: 'Уведомления о новых отзывах на ваши объявления',
+        implemented: false
     },
     review_vote: {
         label: 'Оценка отзыва',
         icon: Star,
-        description: 'Уведомления об оценках ваших отзывов'
+        description: 'Уведомления об оценках ваших отзывов',
+        implemented: false
     },
     review_response: {
         label: 'Ответы на отзывы',
         icon: MessageCircle,
-        description: 'Уведомления об ответах на ваши отзывы'
+        description: 'Уведомления об ответах на ваши отзывы',
+        implemented: false
     },
     listing_status: {
         label: 'Статус объявлений',
         icon: RefreshCw,
-        description: 'Уведомления об изменениях статуса ваших объявлений'
+        description: 'Уведомления об изменениях статуса ваших объявлений',
+        implemented: false
     },
     favorite_price: {
         label: 'Цены в избранном',
         icon: Tag,
-        description: 'Уведомления об изменении цен в избранных объявлениях'
+        description: 'Уведомления об изменении цен в избранных объявлениях',
+        implemented: false
     }
 };
 
@@ -106,6 +113,12 @@ const NotificationSettings = () => {
     };
 
     const handleSettingChange = async (type, channel, value) => {
+        // Проверяем, реализован ли данный тип уведомлений
+        if (!NOTIFICATION_TYPES[type]?.implemented) {
+            showSnackbar('Этот тип уведомлений пока недоступен', 'warning');
+            return;
+        }
+    
         try {
             await updateSettings(type, channel, value);
             showSnackbar('Настройки успешно обновлены');
@@ -172,11 +185,26 @@ const NotificationSettings = () => {
                     <Divider />
 
                     <Stack spacing={2}>
-                        {Object.entries(NOTIFICATION_TYPES).map(([type, { label, icon: Icon, description }]) => (
+                        {Object.entries(NOTIFICATION_TYPES).map(([type, { label, icon: Icon, description, implemented }]) => (
                             <Box key={type}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                     <Icon size={20} />
                                     <Typography variant="subtitle2">{label}</Typography>
+                                    {!implemented && (
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                ml: 1,
+                                                color: 'text.secondary',
+                                                bgcolor: 'action.hover',
+                                                px: 1,
+                                                py: 0.5,
+                                                borderRadius: 1
+                                            }}
+                                        >
+                                            В разработке
+                                        </Typography>
+                                    )}
                                 </Box>
                                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                                     {description}
@@ -187,7 +215,7 @@ const NotificationSettings = () => {
                                             <Switch
                                                 checked={settings[type]?.telegram_enabled || false}
                                                 onChange={(e) => handleSettingChange(type, 'telegram', e.target.checked)}
-                                                disabled={!telegramConnected}
+                                                disabled={!telegramConnected || !implemented}
                                                 color="primary"
                                             />
                                         }
@@ -198,12 +226,22 @@ const NotificationSettings = () => {
                                             <Switch
                                                 checked={settings[type]?.push || false}
                                                 onChange={(e) => handleSettingChange(type, 'push', e.target.checked)}
+                                                disabled={!implemented}
                                                 color="primary"
                                             />
                                         }
                                         label="Push"
                                     />
                                 </Stack>
+                                {!implemented && (
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{ display: 'block', mt: 1 }}
+                                    >
+                                        Этот тип уведомлений пока недоступен
+                                    </Typography>
+                                )}
                             </Box>
                         ))}
                     </Stack>
