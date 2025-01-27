@@ -34,16 +34,27 @@ export const useNotifications = () => {
     const fetchSettings = async () => {
         try {
             const response = await axios.get('/api/v1/notifications/settings');
-            const settings = response.data.data.reduce((acc, setting) => {
+            if (!response.data.data) {
+                setSettings({}); // Если данных нет, устанавливаем пустой объект
+                return;
+            }
+    
+            // Проверяем, является ли response.data.data массивом
+            const settingsData = Array.isArray(response.data.data) ? response.data.data : [];
+            
+            // Преобразуем массив настроек в объект
+            const formattedSettings = settingsData.reduce((acc, setting) => {
                 acc[setting.notification_type] = {
                     telegram_enabled: setting.telegram_enabled,
                     push_enabled: setting.push_enabled
                 };
                 return acc;
             }, {});
-            setSettings(settings);
+    
+            setSettings(formattedSettings);
         } catch (err) {
             console.error('Error fetching settings:', err);
+            setSettings({}); // В случае ошибки устанавливаем пустой объект
         }
     };
     
@@ -59,14 +70,16 @@ export const useNotifications = () => {
             if (response.data.success) {
                 setSettings(prev => ({
                     ...prev,
-                    [type]: { ...prev[type], [channel]: value }
+                    [type]: { 
+                        ...prev[type],
+                        [`${channel}_enabled`]: value // Важно использовать правильное имя поля
+                    }
                 }));
                 return true;
             }
             throw new Error(response.data.error);
         } catch (err) {
             console.error('Error:', err);
-            showNotification('Ошибка при обновлении настроек', 'error');
             return false;
         }
     };
