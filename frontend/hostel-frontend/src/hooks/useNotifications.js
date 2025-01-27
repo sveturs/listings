@@ -33,28 +33,25 @@ export const useNotifications = () => {
     };
     const fetchSettings = async () => {
         try {
+            console.log('Fetching settings...');
             const response = await axios.get('/api/v1/notifications/settings');
-            if (!response.data.data) {
-                setSettings({}); // Если данных нет, устанавливаем пустой объект
-                return;
-            }
-    
-            // Проверяем, является ли response.data.data массивом
-            const settingsData = Array.isArray(response.data.data) ? response.data.data : [];
+            console.log('Settings response:', response.data);
             
-            // Преобразуем массив настроек в объект
-            const formattedSettings = settingsData.reduce((acc, setting) => {
-                acc[setting.notification_type] = {
-                    telegram_enabled: setting.telegram_enabled,
-                    push_enabled: setting.push_enabled
-                };
-                return acc;
-            }, {});
-    
-            setSettings(formattedSettings);
+            if (response.data?.data) {
+                const settingsData = Array.isArray(response.data.data) ? response.data.data : [];
+                const formattedSettings = settingsData.reduce((acc, setting) => {
+                    acc[setting.notification_type] = {
+                        telegram_enabled: setting.telegram_enabled,
+                        push_enabled: setting.push_enabled
+                    };
+                    return acc;
+                }, {});
+                console.log('Formatted settings:', formattedSettings);
+                setSettings(formattedSettings);
+            }
         } catch (err) {
             console.error('Error fetching settings:', err);
-            setSettings({}); // В случае ошибки устанавливаем пустой объект
+            setSettings({});
         }
     };
     
@@ -111,10 +108,11 @@ export const useNotifications = () => {
                 try {
                     const response = await axios.get('/api/v1/notifications/telegram');
                     console.log('Telegram status response:', response.data);
-                    if (response.data.connected) {
+                    if (response.data?.data?.connected) {
                         clearInterval(interval);
                         setStatusCheckInterval(null);
                         setTelegramConnected(true);
+                        await fetchSettings();
                         showNotification('Telegram успешно подключен');
                     }
                 } catch (err) {
