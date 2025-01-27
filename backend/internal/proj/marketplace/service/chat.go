@@ -49,14 +49,21 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 	s.BroadcastMessage(msg)
 
     if msg.ReceiverID != msg.SenderID {
-        notificationText := fmt.Sprintf("Новое сообщение от %s\n\n%s", msg.Sender.Name, msg.Content)
-        s.notificationService.SendNotification(
-            ctx,
-            msg.ReceiverID,
-            models.NotificationTypeNewMessage,
-            notificationText,
-        )
-    }
+		notificationText := fmt.Sprintf(
+			"Новое сообщение от %s\nТовар: %s\n\n%s",
+			msg.Sender.Name,
+			listing.Title,
+			msg.Content,
+		)
+		
+		s.notificationService.SendNotification(
+			ctx,
+			msg.ReceiverID,
+			models.NotificationTypeNewMessage,
+			notificationText,
+			listing.ID,
+		)
+	}
 
 	return nil
 }

@@ -301,22 +301,15 @@ func (h *NotificationHandler) GetTelegramStatus(c *fiber.Ctx) error {
 func (h *NotificationHandler) SendTestNotification(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     
-    connection, err := h.notificationService.GetTelegramConnection(c.Context(), userID)
+    // Тестовое уведомление не привязано к объявлению, поэтому передаем 0
+    err := h.notificationService.SendNotification(
+        c.Context(),
+        userID,
+        "test",
+        "Тестовое уведомление",
+        0,
+    )
     if err != nil {
-        log.Printf("Error getting telegram connection: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Telegram not connected")
-    }
-
-    chatID, err := strconv.ParseInt(connection.TelegramChatID, 10, 64)
-    if err != nil {
-        log.Printf("Error parsing chat ID: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Invalid chat ID")
-    }
-
-    msg := tgbotapi.NewMessage(chatID, "Тестовое уведомление")
-    _, err = h.bot.Send(msg)
-    if err != nil {
-        log.Printf("Error sending test notification: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error sending notification")
     }
 

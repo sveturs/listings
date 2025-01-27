@@ -28,6 +28,7 @@ type Notification struct {
     Type        string          `json:"type"`
     Title       string          `json:"title"`
     Message     string          `json:"message"`
+    ListingID   int            `json:"listing_id,omitempty"` 
     Data        json.RawMessage `json:"data,omitempty"`
     IsRead      bool            `json:"is_read"`
     DeliveredTo json.RawMessage `json:"delivered_to"`

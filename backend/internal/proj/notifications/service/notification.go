@@ -8,6 +8,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"os"
+    "fmt"
+
 
 
 )
@@ -95,7 +97,8 @@ func (s *NotificationService) SendListingUpdateNotification(ctx context.Context,
     }
     return s.storage.CreateNotification(ctx, notification)
 }
-func (s *NotificationService) SendNotification(ctx context.Context, userID int, notificationType string, message string) error {
+// Изменяем сигнатуру метода, добавляя listingID
+func (s *NotificationService) SendNotification(ctx context.Context, userID int, notificationType string, message string, listingID int) error {
     // Проверяем настройки пользователя
     settings, err := s.storage.GetNotificationSettings(ctx, userID)
     if err != nil {
@@ -111,6 +114,7 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int, 
         }
     }
 
+    // Если уведомления выключены, не отправляем
     if setting == nil || !setting.TelegramEnabled {
         return nil
     }
@@ -121,8 +125,13 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int, 
         return err
     }
 
+    // Формируем сообщение с полной ссылкой
+    messageWithLink := fmt.Sprintf("%s\n\nПерейти к объявлению: https://landhub.rs/marketplace/listings/%d", 
+        message, 
+        listingID)
+
     chatID, _ := strconv.ParseInt(conn.TelegramChatID, 10, 64)
-    msg := tgbotapi.NewMessage(chatID, message)
-    _, err = s.bot.Send(msg) // используем s.bot вместо bot
+    msg := tgbotapi.NewMessage(chatID, messageWithLink)
+    _, err = s.bot.Send(msg)
     return err
 }

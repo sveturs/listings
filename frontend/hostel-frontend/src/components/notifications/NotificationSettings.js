@@ -118,7 +118,7 @@ const NotificationSettings = () => {
             showSnackbar('Этот тип уведомлений пока недоступен', 'warning');
             return;
         }
-    
+
         try {
             const success = await updateSettings(type, channel, value);
             if (success) {
@@ -221,20 +221,9 @@ const NotificationSettings = () => {
                                                 onChange={(e) => handleSettingChange(type, 'telegram', e.target.checked)}
                                                 disabled={!telegramConnected || !implemented}
                                                 color="primary"
-                                                sx={{
-                                                    '& .MuiSwitch-switchBase.Mui-disabled': {
-                                                        color: !implemented ? 'action.disabled' : 'primary.main',
-                                                        '& + .MuiSwitch-track': {
-                                                            opacity: !implemented ? 0.12 : 0.5
-                                                        }
-                                                    }
-                                                }}
                                             />
                                         }
                                         label="Telegram"
-                                        sx={{
-                                            opacity: !implemented ? 0.6 : 1
-                                        }}
                                     />
                                     <FormControlLabel
                                         control={

@@ -16,5 +16,5 @@ type NotificationServiceInterface interface {
     CreateNotification(ctx context.Context, notification *models.Notification) error
     GetUserNotifications(ctx context.Context, userID int, limit, offset int) ([]models.Notification, error)
     MarkNotificationAsRead(ctx context.Context, userID int, notificationID int) error
-    SendNotification(ctx context.Context, userID int, notificationType string, message string) error
+    SendNotification(ctx context.Context, userID int, notificationType string, message string, listingID int) error
 }

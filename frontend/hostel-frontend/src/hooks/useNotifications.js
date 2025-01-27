@@ -64,22 +64,23 @@ export const useNotifications = () => {
         try {
             const response = await axios.put('/api/v1/notifications/settings', {
                 notification_type: type,
-                [channel + '_enabled']: value
+                [`${channel}_enabled`]: value
             });
             
             if (response.data.success) {
+                // Правильно обновляем состояние
                 setSettings(prev => ({
                     ...prev,
-                    [type]: { 
+                    [type]: {
                         ...prev[type],
-                        [`${channel}_enabled`]: value // Важно использовать правильное имя поля
+                        [`${channel}_enabled`]: value
                     }
                 }));
                 return true;
             }
-            throw new Error(response.data.error);
+            return false;
         } catch (err) {
-            console.error('Error:', err);
+            console.error('Error updating settings:', err);
             return false;
         }
     };
