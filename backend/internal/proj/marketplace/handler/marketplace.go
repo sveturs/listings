@@ -4,13 +4,16 @@ package handler
 import (
 	"backend/internal/domain/models"
      globalService "backend/internal/proj/global/service"
-
+    "math"
 	"backend/pkg/utils"
 	"log"
+	"fmt"
+
 	"strconv"
     "context"
     "backend/internal/proj/marketplace/service"
 	"github.com/gofiber/fiber/v2"
+		
 )
 
 type MarketplaceHandler struct {
@@ -228,9 +231,6 @@ func (h *MarketplaceHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 	})
 }
 
-// GetListing - получение объявления по ID
-// backend/internal/handlers/marketplace.go
-
 func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
     // Получаем user_id из контекста, если пользователь авторизован
     var userID int
@@ -270,28 +270,67 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 
 // UpdateListing - обновление объявления
 func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
-	listingID, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-	}
+    // Получаем старую версию объявления
+    id, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+    }
 
-	var listing models.MarketplaceListing
-	if err := c.BodyParser(&listing); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
-	}
+    oldListing, err := h.marketplaceService.GetListingByID(c.Context(), id)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+    }
 
-	listing.ID = listingID
-	listing.UserID = userID
+    var listing models.MarketplaceListing
+    if err := c.BodyParser(&listing); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+    }
 
-	err = h.marketplaceService.UpdateListing(c.Context(), &listing)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
-	}
+    listing.ID = id
+    listing.UserID = c.Locals("user_id").(int)
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Listing updated successfully",
-	})
+    // Обновляем объявление
+    err = h.marketplaceService.UpdateListing(c.Context(), &listing)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
+    }
+
+    // Проверяем изменение цены
+    if oldListing.Price != listing.Price {
+        favoritedUsers, err := h.marketplaceService.GetFavoritedUsers(c.Context(), listing.ID)
+        if err != nil {
+            log.Printf("Error getting favorited users: %v", err)
+        } else {
+            priceChange := listing.Price - oldListing.Price
+            changeText := "увеличилась"
+            if priceChange < 0 {
+                changeText = "уменьшилась"
+            }
+
+            for _, userID := range favoritedUsers {
+                notificationText := fmt.Sprintf(
+                    "Изменение цены в избранном\nОбъявление: %s\nЦена %s на %.2f руб.\nНовая цена: %.2f руб.",
+                    listing.Title,
+                    changeText,
+                    math.Abs(float64(priceChange)),
+                    listing.Price,
+                )
+                if err := h.services.Notification().SendNotification(
+                    c.Context(),
+                    userID,
+                    models.NotificationTypeFavoritePrice,
+                    notificationText,
+                    listing.ID,
+                ); err != nil {
+                    log.Printf("Error sending notification to user %d: %v", userID, err)
+                }
+            }
+        }
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Listing updated successfully",
+    })
 }
 
 // DeleteListing - удаление объявления

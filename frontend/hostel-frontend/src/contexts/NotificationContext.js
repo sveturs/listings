@@ -109,7 +109,14 @@ export const NotificationProvider = ({ children }) => {
         </NotificationContext.Provider>
     );
 };
-
+export const NOTIFICATION_TYPES = {
+    NEW_MESSAGE: 'new_message',
+    NEW_REVIEW: 'new_review',
+    REVIEW_VOTE: 'review_vote',
+    REVIEW_RESPONSE: 'review_response',
+    LISTING_STATUS: 'listing_status',
+    FAVORITE_PRICE: 'favorite_price'
+};
 export const useNotifications = () => {
     const context = useContext(NotificationContext);
     if (!context) {

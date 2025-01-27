@@ -16,7 +16,8 @@ type Storage interface {
 	GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error)
 	UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error
 	UpdateLastSeen(ctx context.Context, id int) error
-
+    GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error)
+	
 	
 	// Reviews
 	CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)

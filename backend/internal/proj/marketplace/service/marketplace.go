@@ -34,7 +34,9 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 func (s *MarketplaceService) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
     return s.storage.GetListings(ctx, filters, limit, offset)
 }
-
+func (s *MarketplaceService) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
+    return s.storage.GetFavoritedUsers(ctx, listingID)
+}
 func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
     return s.storage.GetListingByID(ctx, id)
 }

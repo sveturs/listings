@@ -575,6 +575,29 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 
 	return listings, nil
 }
+func (s *Storage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
+    query := `
+        SELECT user_id 
+        FROM marketplace_favorites 
+        WHERE listing_id = $1
+    `
+    rows, err := s.pool.Query(ctx, query, listingID)
+    if err != nil {
+        return nil, fmt.Errorf("error querying favorited users: %w", err)
+    }
+    defer rows.Close()
+
+    var userIDs []int
+    for rows.Next() {
+        var userID int
+        if err := rows.Scan(&userID); err != nil {
+            return nil, fmt.Errorf("error scanning user ID: %w", err)
+        }
+        userIDs = append(userIDs, userID)
+    }
+
+    return userIDs, nil
+}
 func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 	result, err := s.pool.Exec(ctx, `
         DELETE FROM marketplace_listings

@@ -43,11 +43,3 @@ type TelegramConnection struct {
 }
 
 // Константы типов уведомлений
-const (
-    NotificationTypeNewMessage      = "new_message"
-    NotificationTypeNewReview      = "new_review"
-    NotificationTypeReviewVote     = "review_vote"
-    NotificationTypeReviewResponse = "review_response"
-    NotificationTypeListingStatus  = "listing_status"
-    NotificationTypeFavoritePrice  = "favorite_price"
-)

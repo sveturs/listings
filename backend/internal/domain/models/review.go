@@ -58,10 +58,10 @@ type CreateReviewRequest struct {
     EntityID    int      `json:"entity_id" validate:"required"`
     Rating      int      `json:"rating" validate:"required,min=1,max=5"`
     Comment     string   `json:"comment"`
-    Pros        string   `json:"pros"`
-    Cons        string   `json:"cons"`
+    Pros        string   `json:"pros,omitempty"`
+    Cons        string   `json:"cons,omitempty"`
     Photos      []string `json:"photos"`
-}
+ }
 
 // Фильтры для получения отзывов
 type ReviewsFilter struct {

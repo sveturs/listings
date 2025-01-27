@@ -12,6 +12,8 @@ import (
 	"time"
     "backend/internal/proj/reviews/service"
     globalService "backend/internal/proj/global/service"
+ 
+
 
 
 	"github.com/gofiber/fiber/v2"
@@ -32,25 +34,45 @@ func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
 // internal/handlers/reviews.go
 
 func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
-	userId := c.Locals("user_id").(int)
-	var request models.CreateReviewRequest
+    userID := c.Locals("user_id").(int)
+    
+    var request models.CreateReviewRequest // Изменяем тип
+    if err := c.BodyParser(&request); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input")
+    }
 
-	if err := c.BodyParser(&request); err != nil {
-		log.Printf("Error parsing request body: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
-	}
+    // Получаем информацию об объявлении
+    listing, err := h.services.Marketplace().GetListingByID(c.Context(), request.EntityID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+    }
 
-	log.Printf("Creating review: %+v", request)
-	review, err := h.reviewService.CreateReview(c.Context(), userId, &request)
-	if err != nil {
-		log.Printf("Error creating review: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating review")
-	}
+    createdReview, err := h.reviewService.CreateReview(c.Context(), userID, &request)
+    if err != nil {
+        log.Printf("Error creating review: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating review")
+    }
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Review created successfully",
-		"id":      review.ID,
-	})
+    if listing.UserID != userID {
+        notificationText := fmt.Sprintf(
+            "Новый отзыв от %s\nОбъявление: %s\nРейтинг: %d/5\n\n%s",
+            createdReview.User.Name,
+            listing.Title,
+            createdReview.Rating,
+            createdReview.Comment,
+        )
+        if err := h.services.Notification().SendNotification(
+            c.Context(),
+            listing.UserID,
+            models.NotificationTypeNewReview,
+            notificationText,
+            listing.ID, // последний аргумент - listingID
+        ); err != nil {
+            log.Printf("Error sending notification: %v", err)
+        }
+    }
+
+    return utils.SuccessResponse(c, createdReview)
 }
 
 func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
@@ -84,55 +106,108 @@ func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
 }
 
 func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
-	userId := c.Locals("user_id").(int)
-	reviewId, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid review ID")
-	}
+    userID := c.Locals("user_id").(int)
+    reviewID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid review ID")
+    }
 
-	var request struct {
-		VoteType string `json:"vote_type"`
-	}
+    var request struct {
+        VoteType string `json:"vote_type"`
+    }
 
-	if err := c.BodyParser(&request); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
-	}
+    if err := c.BodyParser(&request); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+    }
 
-	err = h.services.Review().VoteForReview(c.Context(), userId, reviewId, request.VoteType)
-	if err != nil {
-		log.Printf("Error voting for review: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error voting for review")
-	}
+    // Получаем информацию об отзыве
+    review, err := h.services.Review().GetReviewByID(c.Context(), reviewID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusNotFound, "Review not found")
+    }
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Vote recorded successfully",
-	})
+    // Получаем информацию об объявлении
+    listing, err := h.services.Marketplace().GetListingByID(c.Context(), review.EntityID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+    }
+
+    err = h.services.Review().VoteForReview(c.Context(), userID, reviewID, request.VoteType)
+    if err != nil {
+        log.Printf("Error voting for review: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error voting for review")
+    }
+
+    notificationText := fmt.Sprintf(
+        "Ваш отзыв оценили как %s\nОбъявление: %s",
+        request.VoteType,
+        listing.Title,
+    )
+    if err := h.services.Notification().SendNotification(
+        c.Context(),
+        review.UserID,
+        models.NotificationTypeReviewVote,
+        notificationText,
+        listing.ID,
+    ); err != nil {
+        log.Printf("Error sending notification: %v", err)
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Vote recorded successfully",
+    })
 }
-
 func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
-	userId := c.Locals("user_id").(int)
-	reviewId, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid review ID")
-	}
+    userID := c.Locals("user_id").(int)
+    reviewID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid review ID")
+    }
 
-	var request struct {
-		Response string `json:"response"`
-	}
+    var request struct {
+        Response string `json:"response"`
+    }
 
-	if err := c.BodyParser(&request); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
-	}
+    if err := c.BodyParser(&request); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+    }
 
-	err = h.services.Review().AddResponse(c.Context(), userId, reviewId, request.Response)
-	if err != nil {
-		log.Printf("Error adding response: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error adding response")
-	}
+    // Получаем информацию об отзыве
+    review, err := h.services.Review().GetReviewByID(c.Context(), reviewID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusNotFound, "Review not found")
+    }
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Response added successfully",
-	})
+    // Получаем информацию об объявлении
+    listing, err := h.services.Marketplace().GetListingByID(c.Context(), review.EntityID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+    }
+
+    err = h.services.Review().AddResponse(c.Context(), userID, reviewID, request.Response)
+    if err != nil {
+        log.Printf("Error adding response: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error adding response")
+    }
+
+    notificationText := fmt.Sprintf(
+        "Получен ответ на ваш отзыв\nОбъявление: %s\n\n%s",
+        listing.Title,
+        request.Response,
+    )
+    if err := h.services.Notification().SendNotification(
+        c.Context(),
+        review.UserID,
+        models.NotificationTypeReviewResponse,
+        notificationText,
+        listing.ID,
+    ); err != nil {
+        log.Printf("Error sending notification: %v", err)
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Response added successfully",
+    })
 }
 
 // internal/handlers/reviews.go

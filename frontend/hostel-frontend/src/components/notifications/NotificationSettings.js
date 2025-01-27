@@ -36,31 +36,31 @@ const NOTIFICATION_TYPES = {
         label: 'Новые отзывы',
         icon: FileText,
         description: 'Уведомления о новых отзывах на ваши объявления',
-        implemented: false
+        implemented: true
     },
     review_vote: {
         label: 'Оценка отзыва',
         icon: Star,
         description: 'Уведомления об оценках ваших отзывов',
-        implemented: false
+        implemented: true
     },
     review_response: {
         label: 'Ответы на отзывы',
         icon: MessageCircle,
         description: 'Уведомления об ответах на ваши отзывы',
-        implemented: false
+        implemented: true
     },
     listing_status: {
         label: 'Статус объявлений',
         icon: RefreshCw,
         description: 'Уведомления об изменениях статуса ваших объявлений',
-        implemented: false
+        implemented: true
     },
     favorite_price: {
         label: 'Цены в избранном',
         icon: Tag,
         description: 'Уведомления об изменении цен в избранных объявлениях',
-        implemented: false
+        implemented: true
     }
 };
 

@@ -4,6 +4,14 @@ package models
 import (
      "time"
  )
+ const (
+    NotificationTypeNewMessage     = "new_message"
+    NotificationTypeNewReview     = "new_review"
+    NotificationTypeReviewVote    = "review_vote"
+    NotificationTypeReviewResponse = "review_response"
+    NotificationTypeListingStatus = "listing_status"
+    NotificationTypeFavoritePrice = "favorite_price"
+)
 
 type User struct {
     ID         int       `json:"id"`

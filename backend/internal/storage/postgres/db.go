@@ -47,7 +47,29 @@ func (db *Database) Close() {
         db.pool.Close()
     }
 }
+func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
+    query := `
+        SELECT user_id 
+        FROM marketplace_favorites 
+        WHERE listing_id = $1
+    `
+    rows, err := db.pool.Query(ctx, query, listingID)
+    if err != nil {
+        return nil, fmt.Errorf("error querying favorited users: %w", err)
+    }
+    defer rows.Close()
 
+    var userIDs []int
+    for rows.Next() {
+        var userID int
+        if err := rows.Scan(&userID); err != nil {
+            return nil, fmt.Errorf("error scanning user ID: %w", err)
+        }
+        userIDs = append(userIDs, userID)
+    }
+
+    return userIDs, nil
+}
 func (db *Database) Ping(ctx context.Context) error {
     return db.pool.Ping(ctx)
 }
