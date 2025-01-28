@@ -93,7 +93,15 @@ export const useNotifications = () => {
     
             const botLink = `https://t.me/SveTu_bot?start=${token}`;
             console.log('Opening bot link:', botLink);
-            window.open(botLink, '_blank');
+            
+            // Создаем и добавляем скрытый элемент <a> для совместимости со всеми браузерами
+            const link = document.createElement('a');
+            link.href = botLink;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             
             // Добавляем задержку перед началом проверки статуса
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -103,7 +111,6 @@ export const useNotifications = () => {
             throw err;
         }
     };
-
     const checkTelegramStatus = () => {
         if (!statusCheckInterval) {
             console.log('Starting telegram status check');
