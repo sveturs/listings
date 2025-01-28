@@ -12,6 +12,7 @@ import (
 
 
 
+
 )
 
 type NotificationService struct {
@@ -40,6 +41,16 @@ func (s *NotificationService) UpdateNotificationSettings(ctx context.Context, se
 }
 
 func (s *NotificationService) ConnectTelegram(ctx context.Context, userID int, chatID string, username string) error {
+    if chatID == "" {
+        return fmt.Errorf("empty chat ID")
+    }
+    
+    // Проверяем существование пользователя перед сохранением
+    _, err := s.storage.GetUserByID(ctx, userID)
+    if err != nil {
+        return fmt.Errorf("user not found: %w", err)
+    }
+
     return s.storage.SaveTelegramConnection(ctx, userID, chatID, username)
 }
 

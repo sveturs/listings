@@ -9,13 +9,14 @@ import (
 	"github.com/gofiber/websocket/v2"
 
 	globalService "backend/internal/proj/global/service"
-    notificationHandler "backend/internal/proj/notifications/handler"
+	notificationHandler "backend/internal/proj/notifications/handler"
 
 	"backend/internal/config"
 	"backend/internal/middleware"
 	"backend/internal/storage/postgres"
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -30,7 +31,6 @@ type Server struct {
 	review        *reviewHandler.Handler
 	marketplace   *marketplaceHandler.Handler
 	notifications *notificationHandler.Handler
-
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -43,8 +43,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	usersHandler := userHandler.NewHandler(services)
 	reviewHandler := reviewHandler.NewHandler(services)
 	marketplaceHandler := marketplaceHandler.NewHandler(services)
-    notificationsHandler := notificationHandler.NewHandler(services)
-	
+	notificationsHandler := notificationHandler.NewHandler(services)
 
 	middleware := middleware.NewMiddleware(cfg, services)
 
@@ -68,7 +67,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		marketplace:   marketplaceHandler,
 		notifications: notificationsHandler,
 	}
-    notificationsHandler.Notification.ConnectTelegramWebhook()
+	notificationsHandler.Notification.ConnectTelegramWebhook()
 
 	// Настройка маршрутов
 	server.setupRoutes()
@@ -82,8 +81,10 @@ func (s *Server) setupRoutes() {
 	s.app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hostel Booking System API")
 	})
-	s.app.Post("/api/v1/notifications/telegram/webhook", s.notifications.Notification.HandleTelegramWebhook)
-
+	s.app.Post("/api/v1/notifications/telegram/webhook", func(c *fiber.Ctx) error {
+		log.Printf("Received webhook request: %s", string(c.Body()))
+		return s.notifications.Notification.HandleTelegramWebhook(c)
+	})
 	// Static files
 	s.app.Static("/uploads", "./uploads")
 	s.app.Static("/public", "./public")
@@ -100,8 +101,7 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/categories", s.marketplace.Marketplace.GetCategories)
 	marketplace.Get("/category-tree", s.marketplace.Marketplace.GetCategoryTree)
 
-marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Детали товара
-
+	marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing) // Детали товара
 
 	// Публичные маршруты для отзывов
 	review := s.app.Group("/api/v1/reviews")
@@ -133,7 +133,6 @@ marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Де
 	entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating) // Получение рейтинга сущности
 	entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)   // Получение статистики по отзывам сущности
 
-
 	// Protected user routes
 	users := s.app.Group("/api/v1/users")
 	users.Post("/register", s.users.User.Register)    // Исправлено
@@ -153,36 +152,30 @@ marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)   // Де
 	marketplaceProtected.Delete("/listings/:id/favorite", s.marketplace.Marketplace.RemoveFromFavorites)
 	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
 	// Чат для маркетплейса
-	
+
 	chat := api.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)
 	chat.Get("/:listing_id/messages", s.marketplace.Chat.GetMessages)
- 
+
 	chat.Post("/messages", s.marketplace.Chat.SendMessage)
 	chat.Put("/messages/read", s.marketplace.Chat.MarkAsRead)
-	chat.Post("/:chat_id/archive", s.marketplace.Chat.ArchiveChat) 
+	chat.Post("/:chat_id/archive", s.marketplace.Chat.ArchiveChat)
 	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
-
 
 	notifications := api.Group("/notifications")
 	notifications.Get("/", s.notifications.Notification.GetNotifications)
-	notifications.Get("/settings", s.notifications.Notification.GetSettings) 
+	notifications.Get("/settings", s.notifications.Notification.GetSettings)
 	notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
 	notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
- 	
+
 	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
 	notifications.Post("/push/subscribe", s.notifications.Notification.SubscribePush)
 	notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
 	notifications.Post("/test", s.notifications.Notification.SendTestNotification)
 
-
-
-
 	// WebSocket эндпоинт
 	s.app.Use("/ws/chat", s.middleware.AuthRequired) // Защищаем WebSocket
 	s.app.Get("/ws/chat", websocket.New(s.marketplace.Chat.HandleWebSocket))
-
-
 
 }
 func (s *Server) Start() error {

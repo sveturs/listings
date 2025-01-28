@@ -61,7 +61,7 @@ func (s *Storage) UpdateNotificationSettings(ctx context.Context, settings *mode
 }
 
 func (s *Storage) SaveTelegramConnection(ctx context.Context, userID int, chatID string, username string) error {
-    _, err := s.pool.Exec(ctx, `
+    result, err := s.pool.Exec(ctx, `
         INSERT INTO user_telegram_connections (user_id, telegram_chat_id, telegram_username)
         VALUES ($1, $2, $3)
         ON CONFLICT (user_id) 
@@ -69,8 +69,19 @@ func (s *Storage) SaveTelegramConnection(ctx context.Context, userID int, chatID
             telegram_chat_id = $2,
             telegram_username = $3,
             connected_at = CURRENT_TIMESTAMP
+        RETURNING user_id
     `, userID, chatID, username)
-    return err
+    
+    if err != nil {
+        return fmt.Errorf("error saving telegram connection: %w", err)
+    }
+
+    rowsAffected := result.RowsAffected()
+    if rowsAffected == 0 {
+        return fmt.Errorf("no rows affected when saving telegram connection")
+    }
+
+    return nil
 }
 
 func (s *Storage) GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error) {

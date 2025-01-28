@@ -15,8 +15,9 @@ import (
 //	"errors"
 	"strconv"
 	"strings"
+    tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
-   "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+   
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -71,21 +72,35 @@ func (h *NotificationHandler) GetNotifications(c *fiber.Ctx) error {
 	})
 }
 func (h *NotificationHandler) ConnectTelegramWebhook() {
-	if h.bot == nil {
+    if h.bot == nil {
         return
     }
+    
     baseURL := "https://landhub.rs/api/v1/notifications/telegram/webhook"
-    webhook, err := tgbotapi.NewWebhookWithCert(baseURL, nil)
+    
+    // Создаем конфигурацию вебхука
+    webhookConfig := tgbotapi.NewWebhook(baseURL)
+    
+    // Устанавливаем вебхук
+    _, err := h.bot.SetWebhook(webhookConfig)
     if err != nil {
-        log.Printf("Error creating webhook: %v", err)
+        log.Printf("Error setting webhook: %v", err)
         return
     }
-
-    if _, err := h.bot.Request(webhook); err != nil {
-        log.Printf("Error setting webhook: %v", err)
+    
+    // Опционально: проверяем информацию о вебхуке
+    info, err := h.bot.GetWebhookInfo()
+    if err != nil {
+        log.Printf("Error getting webhook info: %v", err)
+        return
     }
+    
+    if info.LastErrorDate != 0 {
+        log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
+    }
+    
+    log.Printf("Successfully set webhook for Telegram bot")
 }
-
 
 // In NotificationHandler
 func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
@@ -110,9 +125,21 @@ func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
     }
     return nil
 }
-func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi.Message, token string) error {
-    userID, err := h.validateUserToken(token)
+func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi.Message, args string) error {
+    // Добавляем логирование для отладки
+    log.Printf("Handling start command with args: %s", args)
+    
+    if args == "" {
+        msg := tgbotapi.NewMessage(message.Chat.ID, "Пожалуйста, используйте ссылку для подключения из приложения")
+        _, err := h.bot.Send(msg)
+        return err
+    }
+
+    userID, err := h.validateUserToken(args)
     if err != nil {
+        log.Printf("Token validation error: %v", err)
+        msg := tgbotapi.NewMessage(message.Chat.ID, "Ошибка валидации токена. Пожалуйста, попробуйте снова.")
+        _, err := h.bot.Send(msg)
         return err
     }
 

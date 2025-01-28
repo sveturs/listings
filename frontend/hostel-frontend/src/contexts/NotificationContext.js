@@ -82,15 +82,18 @@ export const NotificationProvider = ({ children }) => {
             const response = await axios.post('/api/v1/notifications/telegram/token');
             console.log('Full response data:', JSON.stringify(response.data));
                 
-            const token = response.data?.data?.data?.token;
-            if (token) {
-                const botLink = `https://t.me/SveTu_bot?start=${token}`;
-                console.log('Opening bot link:', botLink);
-                window.open(botLink, '_blank');
-                startStatusCheck();
-            } else {
+            const token = response.data?.data?.token;
+            if (!token) {
                 throw new Error('Token not received');
             }
+    
+            const botLink = `https://t.me/SveTu_bot?start=${token}`;
+            console.log('Opening bot link:', botLink);
+            window.open(botLink, '_blank');
+            
+            // Добавляем задержку перед началом проверки статуса
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            startStatusCheck();
         } catch (err) {
             console.error('Error in connectTelegram:', err);
             throw err;
