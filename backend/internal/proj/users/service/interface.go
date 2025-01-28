@@ -5,14 +5,15 @@ import (
     "context"
     "backend/internal/domain/models"
     "backend/internal/types"
+    
 )
 
 type AuthServiceInterface interface {
     GetGoogleAuthURL() string
     HandleGoogleCallback(ctx context.Context, code string) (*types.SessionData, error)
     SaveSession(token string, data *types.SessionData)
-    GetSession(token string) (*types.SessionData, bool)
-    DeleteSession(token string)
+     DeleteSession(token string)
+    GetSession(ctx context.Context, token string) (*types.SessionData, error)  // должен принимать ctx и token
 }
 
 type UserServiceInterface interface {

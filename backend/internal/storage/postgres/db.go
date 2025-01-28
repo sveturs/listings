@@ -7,9 +7,9 @@ import (
     "github.com/jackc/pgx/v5"
     "backend/internal/storage"
     "backend/internal/domain/models" 
+    "backend/internal/types"
     "fmt"
-    //"log"
-    //"strconv"
+    
 notificationStorage "backend/internal/proj/notifications/storage/postgres"
     marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
     reviewStorage "backend/internal/proj/reviews/storage/postgres"
@@ -47,6 +47,31 @@ func (db *Database) Close() {
         db.pool.Close()
     }
 }
+
+func (db *Database) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
+    var session types.SessionData
+    err := db.pool.QueryRow(ctx, `
+        SELECT user_id, name, email, google_id, picture_url, provider
+        FROM sessions s
+        JOIN users u ON s.user_id = u.id
+        WHERE token = $1 AND expires_at > NOW()
+    `, token).Scan(
+        &session.UserID,
+        &session.Name,
+        &session.Email,
+        &session.GoogleID,
+        &session.PictureURL,
+        &session.Provider,
+    )
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            return nil, nil
+        }
+        return nil, err
+    }
+    return &session, nil
+}
+
 func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
     query := `
         SELECT user_id 

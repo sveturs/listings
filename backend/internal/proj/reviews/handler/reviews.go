@@ -25,50 +25,81 @@ type ReviewHandler struct {
 }
 
 func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
-	return &ReviewHandler{
-		services:      services,
-		reviewService: services.Review(),
-	}
+    if services == nil {
+        log.Fatal("services cannot be nil")
+    }
+    if services.Review() == nil {
+        log.Fatal("review service cannot be nil")
+    }
+
+    return &ReviewHandler{
+        services:      services,
+        reviewService: services.Review(),
+    }
 }
 
 // internal/handlers/reviews.go
 
 func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
+    log.Printf("Starting CreateReview handler")
     userID := c.Locals("user_id").(int)
-    
-    var request models.CreateReviewRequest // Изменяем тип
+
+    var request models.CreateReviewRequest
     if err := c.BodyParser(&request); err != nil {
+        log.Printf("Failed to parse request: %v", err)
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input")
+    }
+
+    log.Printf("Parsed request: %+v", request)
+
+    // Проверяем входные данные
+    if request.EntityID == 0 || request.Rating == 0 {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Required fields missing")
     }
 
     // Получаем информацию об объявлении
     listing, err := h.services.Marketplace().GetListingByID(c.Context(), request.EntityID)
     if err != nil {
+        log.Printf("Failed to get listing %d: %v", request.EntityID, err)
         return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
     }
 
-    createdReview, err := h.reviewService.CreateReview(c.Context(), userID, &request)
+    log.Printf("Got listing: %+v", listing)
+
+    // Создаем отзыв через сервис
+    createdReview, err := h.services.Review().CreateReview(c.Context(), userID, &request)
     if err != nil {
-        log.Printf("Error creating review: %v", err)
+        log.Printf("Failed to create review: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating review")
     }
 
+    // Проверяем созданный отзыв
+    if createdReview == nil {
+        log.Printf("Created review is nil")
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating review")
+    }
+
+    log.Printf("Review created: %+v", createdReview)
+
+    // Отправляем уведомление только если отзыв написан не владельцем объявления
     if listing.UserID != userID {
         notificationText := fmt.Sprintf(
-            "Новый отзыв от %s\nОбъявление: %s\nРейтинг: %d/5\n\n%s",
-            createdReview.User.Name,
+            "Новый отзыв\nРейтинг: %d/5\nОбъявление: %s\n\n%s",
+            request.Rating,
             listing.Title,
-            createdReview.Rating,
-            createdReview.Comment,
+            request.Comment,
         )
+
+        // Отправляем уведомление
         if err := h.services.Notification().SendNotification(
             c.Context(),
             listing.UserID,
             models.NotificationTypeNewReview,
             notificationText,
-            listing.ID, // последний аргумент - listingID
+            listing.ID,
         ); err != nil {
             log.Printf("Error sending notification: %v", err)
+            // Не возвращаем ошибку, так как отзыв уже создан
         }
     }
 

@@ -8,21 +8,26 @@ import (
 )
 
 func (m *Middleware) AuthRequired(c *fiber.Ctx) error {
+    log.Printf("Starting AuthRequired middleware")
     sessionToken := c.Cookies("session_token")
     if sessionToken == "" {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Authentication required")
+        log.Printf("No session token found")
+        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Unauthorized")
     }
 
-    sessionData, ok := m.services.Auth().GetSession(sessionToken)
-    if !ok {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Invalid or expired session")
+    log.Printf("Found session token: %s", sessionToken)
+    session, err := m.services.Auth().GetSession(c.Context(), sessionToken)
+    if err != nil {
+        log.Printf("Error getting session: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Unauthorized")
     }
 
-    log.Printf("AuthRequired: setting userID=%d for session token %s", sessionData.UserID, sessionToken)
+    if session == nil || session.UserID == 0 {
+        log.Printf("Invalid session: %+v", session)
+        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Unauthorized")
+    }
 
-    // Устанавливаем user_id в контекст
-    c.Locals("user_id", sessionData.UserID)
-    c.Locals("user", sessionData)
-
+    log.Printf("Setting userID=%d for session token %s", session.UserID, sessionToken)
+    c.Locals("user_id", session.UserID)
     return c.Next()
 }

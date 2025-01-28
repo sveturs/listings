@@ -10,6 +10,7 @@ import (
     "golang.org/x/oauth2/google"
     oauth2v2 "google.golang.org/api/oauth2/v2"
     "sync"
+
 )
 
 type AuthService struct {
@@ -91,13 +92,13 @@ func (s *AuthService) SaveSession(token string, data *types.SessionData) {
     s.sessions.Store(token, data)
 }
 
-func (s *AuthService) GetSession(token string) (*types.SessionData, bool) {
+func (s *AuthService) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
     if value, ok := s.sessions.Load(token); ok {
         if sessionData, ok := value.(*types.SessionData); ok {
-            return sessionData, true
+            return sessionData, nil  
         }
     }
-    return nil, false
+    return nil, nil  
 }
 
 func (s *AuthService) DeleteSession(token string) {

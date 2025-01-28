@@ -4,6 +4,7 @@ package storage
 import (
 	"backend/internal/domain/models"
 	"context"
+	"backend/internal/types"
 )
 
 type Storage interface {
@@ -17,7 +18,7 @@ type Storage interface {
 	UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error
 	UpdateLastSeen(ctx context.Context, id int) error
     GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error)
-	
+	GetSession(ctx context.Context, token string) (*types.SessionData, error)
 	
 	// Reviews
 	CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)

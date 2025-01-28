@@ -87,30 +87,38 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 }
 
 func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
-	sessionToken := c.Cookies("session_token")
-	if sessionToken == "" {
-		return c.JSON(fiber.Map{
-			"authenticated": false,
-		})
-	}
+    sessionToken := c.Cookies("session_token")
+    if sessionToken == "" {
+        return c.JSON(fiber.Map{
+            "authenticated": false,
+        })
+    }
 
-	sessionData, ok := h.services.Auth().GetSession(sessionToken)
-	if !ok {
-		return c.JSON(fiber.Map{
-			"authenticated": false,
-		})
-	}
+    // Исправляем вызов метода GetSession, добавляя контекст
+    sessionData, err := h.services.Auth().GetSession(c.Context(), sessionToken)
+    if err != nil {
+        return c.JSON(fiber.Map{
+            "authenticated": false,
+        })
+    }
 
-	return c.JSON(fiber.Map{
-		"authenticated": true,
-		"user": fiber.Map{
-			"id":          sessionData.UserID, // Добавляем ID пользователя
-			"name":        sessionData.Name,
-			"email":       sessionData.Email,
-			"provider":    sessionData.Provider,
-			"picture_url": sessionData.PictureURL, // Добавляем URL изображения
-		},
-	})
+    // Проверяем на nil вместо проверки ошибки
+    if sessionData == nil {
+        return c.JSON(fiber.Map{
+            "authenticated": false,
+        })
+    }
+
+    return c.JSON(fiber.Map{
+        "authenticated": true,
+        "user": fiber.Map{
+            "id":          sessionData.UserID,
+            "name":        sessionData.Name,
+            "email":       sessionData.Email,
+            "provider":    sessionData.Provider,
+            "picture_url": sessionData.PictureURL,
+        },
+    })
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {

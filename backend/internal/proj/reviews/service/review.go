@@ -7,13 +7,17 @@ import (
     "backend/internal/domain/models"
     "backend/internal/storage"
 	"fmt"
+    "log"
 )
 
 type ReviewService struct {
     storage storage.Storage
 }
 
-func NewReviewService(storage storage.Storage) *ReviewService {
+func NewReviewService(storage storage.Storage) ReviewServiceInterface { //  ReviewService -> ReviewServiceInterface
+    if storage == nil {
+        log.Fatal("storage cannot be nil")
+    }
     return &ReviewService{
         storage: storage,
     }
