@@ -36,18 +36,14 @@ export const useNotifications = () => {
             console.log('Fetching settings...');
             const response = await axios.get('/api/v1/notifications/settings');
             console.log('Raw settings response:', response.data);
-
-            if (response.data?.data) {
-                // Убеждаемся, что response.data.data является массивом
-                let settingsData = response.data.data;
-                if (!Array.isArray(settingsData)) {
-                    console.warn('Settings data is not an array:', settingsData);
-                    settingsData = [];
-                }
-
-                // Создаем форматированные настройки
+    
+            // Правильный путь к массиву настроек
+            const settingsArray = response.data?.data?.data;
+            
+            if (Array.isArray(settingsArray)) {
                 const formattedSettings = {};
-                settingsData.forEach(setting => {
+                
+                settingsArray.forEach(setting => {
                     if (setting && setting.notification_type) {
                         formattedSettings[setting.notification_type] = {
                             telegram_enabled: Boolean(setting.telegram_enabled),
@@ -55,21 +51,25 @@ export const useNotifications = () => {
                         };
                     }
                 });
-
+    
                 console.log('Formatted settings:', formattedSettings);
                 setSettings(formattedSettings);
+            } else {
+                console.warn('Settings data is not an array:', response.data);
+                setSettings({});
             }
-
+    
             // Отдельно проверяем статус подключения Telegram
             const telegramStatus = await axios.get('/api/v1/notifications/telegram');
             console.log('Telegram status raw:', telegramStatus.data);
-
+            
+            // Проверяем правильный путь к статусу подключения
             if (telegramStatus.data?.data?.connected === true) {
                 setTelegramConnected(true);
             } else {
                 setTelegramConnected(false);
             }
-
+    
         } catch (err) {
             console.error('Error fetching settings:', err);
             setSettings({});
