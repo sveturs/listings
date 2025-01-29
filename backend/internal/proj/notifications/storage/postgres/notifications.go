@@ -19,7 +19,7 @@ func NewNotificationStorage(pool *pgxpool.Pool) *Storage {
 
 func (s *Storage) GetNotificationSettings(ctx context.Context, userID int) ([]models.NotificationSettings, error) {
     rows, err := s.pool.Query(ctx, `
-        SELECT user_id, notification_type, telegram_enabled, push_enabled, created_at, updated_at
+        SELECT user_id, notification_type, telegram_enabled, created_at, updated_at
         FROM notification_settings
         WHERE user_id = $1
     `, userID)
@@ -35,7 +35,6 @@ func (s *Storage) GetNotificationSettings(ctx context.Context, userID int) ([]mo
             &setting.UserID,
             &setting.NotificationType,
             &setting.TelegramEnabled,
-            &setting.PushEnabled,
             &setting.CreatedAt,
             &setting.UpdatedAt,
         )
@@ -50,14 +49,13 @@ func (s *Storage) GetNotificationSettings(ctx context.Context, userID int) ([]mo
 func (s *Storage) UpdateNotificationSettings(ctx context.Context, settings *models.NotificationSettings) error {
     _, err := s.pool.Exec(ctx, `
         INSERT INTO notification_settings (
-            user_id, notification_type, telegram_enabled, push_enabled
+            user_id, notification_type, telegram_enabled
         ) VALUES ($1, $2, $3, $4)
         ON CONFLICT (user_id, notification_type) 
         DO UPDATE SET
             telegram_enabled = $3,
-            push_enabled = $4,
             updated_at = CURRENT_TIMESTAMP
-    `, settings.UserID, settings.NotificationType, settings.TelegramEnabled, settings.PushEnabled)
+    `, settings.UserID, settings.NotificationType, settings.TelegramEnabled)
     return err
 }
 
@@ -111,45 +109,7 @@ func (s *Storage) DeleteTelegramConnection(ctx context.Context, userID int) erro
     return err
 }
 
-func (s *Storage) SavePushSubscription(ctx context.Context, sub *models.PushSubscription) error {
-    _, err := s.pool.Exec(ctx, `
-        INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (user_id, endpoint) DO NOTHING
-    `, sub.UserID, sub.Endpoint, sub.P256dh, sub.Auth)
-    return err
-}
 
-func (s *Storage) GetPushSubscriptions(ctx context.Context, userID int) ([]models.PushSubscription, error) {
-    rows, err := s.pool.Query(ctx, `
-        SELECT user_id, endpoint, p256dh, auth
-        FROM push_subscriptions
-        WHERE user_id = $1
-    `, userID)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
-
-    var subs []models.PushSubscription
-    for rows.Next() {
-        var sub models.PushSubscription
-        err := rows.Scan(&sub.UserID, &sub.Endpoint, &sub.P256dh, &sub.Auth)
-        if err != nil {
-            return nil, err
-        }
-        subs = append(subs, sub)
-    }
-    return subs, nil
-}
-
-func (s *Storage) DeletePushSubscription(ctx context.Context, userID int, endpoint string) error {
-    _, err := s.pool.Exec(ctx, `
-        DELETE FROM push_subscriptions
-        WHERE user_id = $1 AND endpoint = $2
-    `, userID, endpoint)
-    return err
-}
 
 func (s *Storage) CreateNotification(ctx context.Context, notification *models.Notification) error {
     _, err := s.pool.Exec(ctx, `

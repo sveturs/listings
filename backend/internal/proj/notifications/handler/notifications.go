@@ -39,23 +39,7 @@ func NewNotificationHandler(service service.NotificationServiceInterface) *Notif
     return handler
 }
 
- func (h *NotificationHandler) SubscribePush(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(int)
-    
-    var subscription models.PushSubscription
-    if err := c.BodyParser(&subscription); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid subscription data")
-    }
-    
-    err := h.notificationService.SavePushSubscription(c.Context(), userID, &subscription)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to save subscription")
-    }
-    
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Successfully subscribed to push notifications",
-    })
-}
+
 // GetNotifications handler
 func (h *NotificationHandler) GetNotifications(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -159,38 +143,32 @@ func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi
             UserID: userID, 
             NotificationType: "new_message", 
             TelegramEnabled: true,
-            PushEnabled: false,
-        },
+         },
         {
             UserID: userID,
             NotificationType: "new_review",
             TelegramEnabled: true,
-            PushEnabled: false,
-        },
+         },
         {
             UserID: userID,
             NotificationType: "review_vote",
             TelegramEnabled: true,
-            PushEnabled: false,
-        },
+         },
         {
             UserID: userID,
             NotificationType: "review_response",
             TelegramEnabled: true,
-            PushEnabled: false,
-        },
+         },
         {
             UserID: userID,
             NotificationType: "listing_status",
             TelegramEnabled: true,
-            PushEnabled: false,
-        },
+         },
         {
             UserID: userID,
             NotificationType: "favorite_price",
             TelegramEnabled: true,
-            PushEnabled: false,
-        },
+         },
     }
 
     for _, setting := range settings {
@@ -265,12 +243,12 @@ func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
     
     // Создаем базовые настройки, если их нет
     baseSettings := []models.NotificationSettings{
-        {UserID: userID, NotificationType: "new_message", TelegramEnabled: true, PushEnabled: false},
-        {UserID: userID, NotificationType: "new_review", TelegramEnabled: true, PushEnabled: false},
-        {UserID: userID, NotificationType: "review_vote", TelegramEnabled: true, PushEnabled: false},
-        {UserID: userID, NotificationType: "review_response", TelegramEnabled: true, PushEnabled: false},
-        {UserID: userID, NotificationType: "listing_status", TelegramEnabled: true, PushEnabled: false},
-        {UserID: userID, NotificationType: "favorite_price", TelegramEnabled: true, PushEnabled: false},
+        {UserID: userID, NotificationType: "new_message", TelegramEnabled: true},
+        {UserID: userID, NotificationType: "new_review", TelegramEnabled: true},
+        {UserID: userID, NotificationType: "review_vote", TelegramEnabled: true},
+        {UserID: userID, NotificationType: "review_response", TelegramEnabled: true},
+        {UserID: userID, NotificationType: "listing_status", TelegramEnabled: true},
+        {UserID: userID, NotificationType: "favorite_price", TelegramEnabled: true},
     }
 
     settings, err := h.notificationService.GetNotificationSettings(c.Context(), userID)

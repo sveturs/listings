@@ -16,11 +16,6 @@ type NotificationRepository interface {
     GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error)
     DeleteTelegramConnection(ctx context.Context, userID int) error
     
-    // Методы для Push-уведомлений
-    SavePushSubscription(ctx context.Context, sub *models.PushSubscription) error
-    GetPushSubscriptions(ctx context.Context, userID int) ([]models.PushSubscription, error)
-    DeletePushSubscription(ctx context.Context, userID int, endpoint string) error
-    
     // Методы для уведомлений
     CreateNotification(ctx context.Context, notification *models.Notification) error
     GetUserNotifications(ctx context.Context, userID int, limit, offset int) ([]models.Notification, error)

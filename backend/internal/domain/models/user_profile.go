@@ -13,8 +13,7 @@ type UserProfile struct {
     Phone            *string          `json:"phone,omitempty"`
     Bio             *string          `json:"bio,omitempty"`
     NotificationEmail bool            `json:"notification_email"`
-    NotificationPush bool            `json:"notification_push"`
-    Timezone        string           `json:"timezone"`
+     Timezone        string           `json:"timezone"`
     LastSeen        *time.Time       `json:"last_seen,omitempty"`
     AccountStatus   string           `json:"account_status"`
     Settings        json.RawMessage  `json:"settings,omitempty"`
@@ -25,8 +24,7 @@ type UserProfileUpdate struct {
     Phone            *string          `json:"phone,omitempty"`
     Bio             *string          `json:"bio,omitempty"`
     NotificationEmail *bool           `json:"notification_email,omitempty"`
-    NotificationPush *bool           `json:"notification_push,omitempty"`
-    Timezone        *string          `json:"timezone,omitempty"`
+     Timezone        *string          `json:"timezone,omitempty"`
     Settings        json.RawMessage  `json:"settings,omitempty"`
 }
 

@@ -3,7 +3,6 @@ CREATE TABLE notification_settings (
     user_id INT NOT NULL REFERENCES users(id),
     notification_type VARCHAR(50) NOT NULL, -- new_message, new_review, review_vote, review_response, listing_status, favorite_price
     telegram_enabled BOOLEAN DEFAULT false,
-    push_enabled BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, notification_type)
@@ -17,16 +16,7 @@ CREATE TABLE user_telegram_connections (
     connected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Таблица для хранения PUSH-подписок
-CREATE TABLE push_subscriptions (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id),
-    endpoint TEXT NOT NULL,
-    p256dh TEXT NOT NULL,
-    auth TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, endpoint)
-);
+
 
 -- Таблица для истории уведомлений
 CREATE TABLE notifications (
@@ -37,7 +27,7 @@ CREATE TABLE notifications (
     message TEXT NOT NULL,
     data JSONB,
     is_read BOOLEAN DEFAULT false,
-    delivered_to JSONB, -- {telegram: true, push: false}
+    delivered_to JSONB, -- {telegram: true}
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

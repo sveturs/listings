@@ -169,7 +169,6 @@ func (s *Server) setupRoutes() {
 	notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
 
 	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
-	notifications.Post("/push/subscribe", s.notifications.Notification.SubscribePush)
  	notifications.Post("/telegram/token", func(c *fiber.Ctx) error {
         // Добавляем логирование для отладки
         log.Printf("Handling telegram token request for user: %v", c.Locals("user_id"))

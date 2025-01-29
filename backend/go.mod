@@ -3,8 +3,7 @@ module backend
 go 1.21
 
 require (
-	github.com/SherClockHolmes/webpush-go v1.4.0
-	github.com/gofiber/fiber/v2 v2.52.5
+ 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/gofiber/websocket/v2 v2.2.1
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/joho/godotenv v1.5.1

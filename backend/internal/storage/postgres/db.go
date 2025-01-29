@@ -321,18 +321,6 @@ func (db *Database) DeleteTelegramConnection(ctx context.Context, userID int) er
     return db.notificationsDB.DeleteTelegramConnection(ctx, userID)
 }
 
-func (db *Database) SavePushSubscription(ctx context.Context, sub *models.PushSubscription) error {
-    return db.notificationsDB.SavePushSubscription(ctx, sub)
-}
-
-func (db *Database) GetPushSubscriptions(ctx context.Context, userID int) ([]models.PushSubscription, error) {
-    return db.notificationsDB.GetPushSubscriptions(ctx, userID)
-}
-
-func (db *Database) DeletePushSubscription(ctx context.Context, userID int, endpoint string) error {
-    return db.notificationsDB.DeletePushSubscription(ctx, userID, endpoint)
-}
-
 func (db *Database) GetUserNotifications(ctx context.Context, userID int, limit, offset int) ([]models.Notification, error) {
     return db.notificationsDB.GetUserNotifications(ctx, userID, limit, offset)
 }

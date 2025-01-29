@@ -40,9 +40,6 @@ type Storage interface {
     SaveTelegramConnection(ctx context.Context, userID int, chatID string, username string) error
     GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error)
     DeleteTelegramConnection(ctx context.Context, userID int) error
-    SavePushSubscription(ctx context.Context, sub *models.PushSubscription) error
-    GetPushSubscriptions(ctx context.Context, userID int) ([]models.PushSubscription, error)
-    DeletePushSubscription(ctx context.Context, userID int, endpoint string) error
     CreateNotification(ctx context.Context, notification *models.Notification) error
     GetUserNotifications(ctx context.Context, userID int, limit, offset int) ([]models.Notification, error)
     MarkNotificationAsRead(ctx context.Context, userID int, notificationID int) error

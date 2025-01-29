@@ -12,7 +12,6 @@ type NotificationServiceInterface interface {
     ConnectTelegram(ctx context.Context, userID int, chatID string, username string) error
     GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error)
     DisconnectTelegram(ctx context.Context, userID int) error
-    SavePushSubscription(ctx context.Context, userID int, subscription *models.PushSubscription) error
     CreateNotification(ctx context.Context, notification *models.Notification) error
     GetUserNotifications(ctx context.Context, userID int, limit, offset int) ([]models.Notification, error)
     MarkNotificationAsRead(ctx context.Context, userID int, notificationID int) error

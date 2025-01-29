@@ -13,14 +13,14 @@ func (s *Storage) GetUserProfile(ctx context.Context, userID int) (*models.UserP
     err := s.pool.QueryRow(ctx, `
         SELECT 
             id, name, email, google_id, picture_url, created_at,
-            phone, bio, notification_email, notification_push,
+            phone, bio, notification_email, 
             timezone, last_seen, account_status, settings
         FROM users 
         WHERE id = $1
     `, userID).Scan(
         &profile.ID, &profile.Name, &profile.Email, &profile.GoogleID, &profile.PictureURL,
         &profile.CreatedAt, &profile.Phone, &profile.Bio, &profile.NotificationEmail,
-        &profile.NotificationPush, &profile.Timezone, &profile.LastSeen,
+        &profile.Timezone, &profile.LastSeen,
         &profile.AccountStatus, &profile.Settings,
     )
     if err != nil {
@@ -47,11 +47,6 @@ func (s *Storage) UpdateUserProfile(ctx context.Context, userID int, update *mod
     if update.NotificationEmail != nil {
         setFields = append(setFields, fmt.Sprintf("notification_email = $%d", paramCount))
         params = append(params, update.NotificationEmail)
-        paramCount++
-    }
-    if update.NotificationPush != nil {
-        setFields = append(setFields, fmt.Sprintf("notification_push = $%d", paramCount))
-        params = append(params, update.NotificationPush)
         paramCount++
     }
     if update.Timezone != nil {

@@ -62,11 +62,6 @@ func (s *NotificationService) DisconnectTelegram(ctx context.Context, userID int
     return s.storage.DeleteTelegramConnection(ctx, userID)
 }
 
-func (s *NotificationService) SavePushSubscription(ctx context.Context, userID int, subscription *models.PushSubscription) error {
-    subscription.UserID = userID
-    return s.storage.SavePushSubscription(ctx, subscription)
-}
-
 func (s *NotificationService) CreateNotification(ctx context.Context, notification *models.Notification) error {
     return s.storage.CreateNotification(ctx, notification)
 }

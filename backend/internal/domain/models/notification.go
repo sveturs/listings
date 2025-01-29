@@ -10,17 +10,10 @@ type NotificationSettings struct {
     UserID            int       `json:"user_id"`
     NotificationType  string    `json:"notification_type"`
     TelegramEnabled   bool      `json:"telegram_enabled"`
-    PushEnabled       bool      `json:"push_enabled"`
     CreatedAt         time.Time `json:"created_at"`
     UpdatedAt         time.Time `json:"updated_at"`
 }
 
-type PushSubscription struct {
-    UserID   int    `json:"user_id"`
-    Endpoint string `json:"endpoint"`
-    P256dh   string `json:"p256dh"`
-    Auth     string `json:"auth"`
-}
 
 type Notification struct {
     ID          int             `json:"id"`

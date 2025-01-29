@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import axios from '../../api/axios';
-import { urlBase64ToUint8Array } from '../../utils/webPush';
 
 const NOTIFICATION_TYPES = {
     new_message: {
@@ -86,22 +85,7 @@ const NotificationSettings = () => {
         setSnackbar({ open: true, message, severity });
     };
 
-    const handlePushSubscription = async () => {
-        try {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                const registration = await navigator.serviceWorker.register('/service-worker.js');
-                const convertedKey = urlBase64ToUint8Array(process.env.REACT_APP_VAPID_PUBLIC_KEY);
-                const subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: convertedKey
-                });
-                await axios.post('/api/v1/notifications/push/subscribe', subscription);
-            }
-        } catch (err) {
-            console.error('Error enabling push notifications:', err);
-        }
-    };
+
 
     const handleTelegramConnect = async () => {
         try {
@@ -170,17 +154,7 @@ const NotificationSettings = () => {
                                             'Подключить Telegram'}
                                 </Button>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <Button
-                                    variant="contained"
-                                    onClick={handlePushSubscription}
-                                    startIcon={<BellRing />}
-                                    fullWidth
-                                >
-                                    Включить Push-уведомления
-                                </Button>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
+                             <Grid item xs={12} sm={6} md={4}>
                                 <Button
                                     variant="outlined"
                                     onClick={async () => {
@@ -239,17 +213,7 @@ const NotificationSettings = () => {
                                         label="Telegram"
                                     />
 
-                                    <FormControlLabel
-                                        control={
-                                            <Switch
-                                                checked={Boolean(settings[type]?.push_enabled)}
-                                                onChange={(e) => handleSettingChange(type, 'push', e.target.checked)}
-                                                disabled={!implemented}
-                                                color="primary"
-                                            />
-                                        }
-                                        label="Push"
-                                    />
+ 
                                 </Stack>
                                 {!implemented && (
                                     <Typography

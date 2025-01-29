@@ -3,7 +3,6 @@ ALTER TABLE users
     ADD COLUMN phone VARCHAR(20),
     ADD COLUMN bio TEXT,
     ADD COLUMN notification_email BOOLEAN DEFAULT true,
-    ADD COLUMN notification_push BOOLEAN DEFAULT true,
     ADD COLUMN timezone VARCHAR(50) DEFAULT 'UTC',
     ADD COLUMN last_seen TIMESTAMP,
     ADD COLUMN account_status VARCHAR(20) DEFAULT 'active' 
