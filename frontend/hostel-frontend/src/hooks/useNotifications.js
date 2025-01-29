@@ -2,7 +2,7 @@
 import axios from '../api/axios';
 import { useState, useEffect, useContext } from 'react';
 import { NotificationContext } from '../contexts/NotificationContext';
-  
+
 export const useNotifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [settings, setSettings] = useState({});
@@ -35,18 +35,19 @@ export const useNotifications = () => {
         try {
             console.log('Fetching settings...');
             const response = await axios.get('/api/v1/notifications/settings');
-            console.log('Settings response:', response.data);
-            
+            console.log('Raw settings response:', response.data);
+
             if (response.data?.data) {
-                // Проверяем, является ли data массивом
-                const settingsData = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
-                
-                // Создаем объект настроек
+                // Убеждаемся, что response.data.data является массивом
+                let settingsData = response.data.data;
+                if (!Array.isArray(settingsData)) {
+                    console.warn('Settings data is not an array:', settingsData);
+                    settingsData = [];
+                }
+
+                // Создаем форматированные настройки
                 const formattedSettings = {};
-                
-                // Обрабатываем каждую настройку
                 settingsData.forEach(setting => {
-                    // Проверяем наличие всех необходимых полей
                     if (setting && setting.notification_type) {
                         formattedSettings[setting.notification_type] = {
                             telegram_enabled: Boolean(setting.telegram_enabled),
@@ -54,31 +55,47 @@ export const useNotifications = () => {
                         };
                     }
                 });
-                
+
                 console.log('Formatted settings:', formattedSettings);
                 setSettings(formattedSettings);
-                
-                // Проверяем статус Telegram
-                const hasTelegramEnabled = Object.values(formattedSettings).some(
-                    setting => setting.telegram_enabled
-                );
-                
-                if (hasTelegramEnabled) {
-                    try {
-                        const telegramResponse = await axios.get('/api/v1/notifications/telegram');
-                        setTelegramConnected(Boolean(telegramResponse.data?.data?.connected));
-                    } catch (telegramErr) {
-                        console.error('Error checking Telegram status:', telegramErr);
-                    }
-                }
             }
+
+            // Отдельно проверяем статус подключения Telegram
+            const telegramStatus = await axios.get('/api/v1/notifications/telegram');
+            console.log('Telegram status raw:', telegramStatus.data);
+
+            if (telegramStatus.data?.data?.connected === true) {
+                setTelegramConnected(true);
+            } else {
+                setTelegramConnected(false);
+            }
+
         } catch (err) {
             console.error('Error fetching settings:', err);
             setSettings({});
         }
     };
-    
 
+    // Добавляем эффект для проверки статуса при монтировании компонента
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const response = await axios.get('/api/v1/notifications/telegram');
+                console.log('Initial Telegram status check:', response.data);
+                setTelegramConnected(response.data?.data?.connected === true);
+
+                // Если подключено - загружаем настройки
+                if (response.data?.data?.connected) {
+                    await fetchSettings();
+                }
+            } catch (err) {
+                console.error('Error checking initial Telegram status:', err);
+                setTelegramConnected(false);
+            }
+        };
+
+        checkStatus();
+    }, []); // Пустой массив зависимостей для выполнения только при монтировании
 
     const updateSettings = async (type, channel, value) => {
         try {
@@ -86,7 +103,7 @@ export const useNotifications = () => {
                 notification_type: type,
                 [`${channel}_enabled`]: value
             });
-            
+
             if (response.data.success) {
                 // Правильно обновляем состояние
                 setSettings(prev => ({
@@ -108,20 +125,20 @@ export const useNotifications = () => {
         try {
             const response = await axios.post('/api/v1/notifications/telegram/token');
             console.log('Raw response:', response); // добавим для отладки
-            
+
             // Исправляем извлечение токена из ответа
             const token = response.data?.data?.token || // старый вариант
-                         response.data?.token; // новый вариант
-                         
+                response.data?.token; // новый вариант
+
             if (!token) {
                 console.error('Token structure:', response.data); // добавим для отладки
                 throw new Error('Token not received');
             }
-    
+
             const botLink = `https://t.me/SveTu_bot?start=${token}`;
             console.log('Opening bot link:', botLink);
             window.open(botLink, '_blank');
-            
+
             startStatusCheck();
             return response.data;
         } catch (err) {
@@ -129,7 +146,7 @@ export const useNotifications = () => {
             throw err;
         }
     };
-        const checkTelegramStatus = () => {
+    const checkTelegramStatus = () => {
         if (!statusCheckInterval) {
             console.log('Starting telegram status check');
             const interval = setInterval(async () => {
@@ -147,9 +164,9 @@ export const useNotifications = () => {
                     console.error('Telegram status check error:', err);
                 }
             }, 3000);
-    
+
             setStatusCheckInterval(interval);
-            
+
             setTimeout(() => {
                 clearInterval(interval);
                 setStatusCheckInterval(null);
@@ -172,7 +189,7 @@ export const useNotifications = () => {
                 console.error('Error checking initial Telegram status:', err);
             }
         };
-        
+
         init();
         fetchSettings();
     }, []);

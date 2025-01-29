@@ -1,3 +1,4 @@
+// backend/internal/proj/notifications/storage/postgres/notifications.go
 package postgres
 
 import (
