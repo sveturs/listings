@@ -100,17 +100,17 @@ const NotificationSettings = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             // Добавляем больше логирования
             console.log('Initiating Telegram connection...');
-            
+
             const response = await connectTelegram();
             console.log('Connect Telegram response:', response);
-            
+
         } catch (err) {
             console.error('Telegram connection error:', err);
             setError(err.message || 'Ошибка подключения к Telegram');
-            
+
             // Показываем пользователю более информативное сообщение
             showSnackbar('Не удалось подключить Telegram. Пожалуйста, попробуйте позже.', 'error');
         } finally {
@@ -223,7 +223,7 @@ const NotificationSettings = () => {
                                     <FormControlLabel
                                         control={
                                             <Switch
-                                                checked={settings[type]?.telegram_enabled || false}
+                                                checked={!!settings[type]?.telegram_enabled}
                                                 onChange={(e) => handleSettingChange(type, 'telegram', e.target.checked)}
                                                 disabled={!telegramConnected || !implemented}
                                                 color="primary"
@@ -234,7 +234,7 @@ const NotificationSettings = () => {
                                     <FormControlLabel
                                         control={
                                             <Switch
-                                                checked={settings[type]?.push || false}
+                                                checked={!!settings[type]?.push_enabled}  // Добавляем !!
                                                 onChange={(e) => handleSettingChange(type, 'push', e.target.checked)}
                                                 disabled={!implemented}
                                                 color="primary"

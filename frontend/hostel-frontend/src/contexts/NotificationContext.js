@@ -9,6 +9,38 @@ export const NotificationProvider = ({ children }) => {
     const [settings, setSettings] = useState({});
     const [telegramConnected, setTelegramConnected] = useState(false);
     const { user } = useAuth();
+
+    useEffect(() => {
+        if (user) {
+            const checkStatus = async () => {
+                try {
+                    const response = await axios.get('/api/v1/notifications/telegram');
+                    setTelegramConnected(response.data?.data?.connected || false);
+                    
+                    // Также обновляем настройки
+                    const settingsResponse = await axios.get('/api/v1/notifications/settings');
+                    if (settingsResponse.data?.data) {
+                        const settingsData = settingsResponse.data.data;
+                        const formattedSettings = settingsData.reduce((acc, setting) => {
+                            acc[setting.notification_type] = {
+                                telegram_enabled: setting.telegram_enabled,
+                                push_enabled: setting.push_enabled
+                            };
+                            return acc;
+                        }, {});
+                        setSettings(formattedSettings);
+                    }
+                } catch (err) {
+                    console.error('Error checking telegram status:', err);
+                }
+            };
+            checkStatus();
+        } else {
+            setTelegramConnected(false);
+            setSettings({});
+        }
+    }, [user]);
+
     const [statusCheckInterval, setStatusCheckInterval] = useState(null);
 
     const startStatusCheck = () => {

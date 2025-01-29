@@ -2,7 +2,7 @@
 import axios from '../api/axios';
 import { useState, useEffect, useContext } from 'react';
 import { NotificationContext } from '../contexts/NotificationContext';
-
+  
 export const useNotifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [settings, setSettings] = useState({});
@@ -33,25 +33,30 @@ export const useNotifications = () => {
     };
     const fetchSettings = async () => {
         try {
-            console.log('Fetching settings...');
             const response = await axios.get('/api/v1/notifications/settings');
-            console.log('Settings response:', response.data);
             
             if (response.data?.data) {
                 const settingsData = Array.isArray(response.data.data) ? response.data.data : [];
-                const formattedSettings = settingsData.reduce((acc, setting) => {
-                    acc[setting.notification_type] = {
-                        telegram_enabled: setting.telegram_enabled,
-                        push_enabled: setting.push_enabled
+                const formattedSettings = {};
+                
+                settingsData.forEach(setting => {
+                    formattedSettings[setting.notification_type] = {
+                        telegram_enabled: !!setting.telegram_enabled,  // Явное приведение к boolean
+                        push_enabled: !!setting.push_enabled
                     };
-                    return acc;
-                }, {});
-                console.log('Formatted settings:', formattedSettings);
+                });
+                
                 setSettings(formattedSettings);
+                
+                // Проверяем статус Telegram при загрузке настроек
+                const telegramEnabled = settingsData.some(setting => setting.telegram_enabled);
+                if (telegramEnabled) {
+                    const telegramStatus = await axios.get('/api/v1/notifications/telegram');
+                    setTelegramConnected(!!telegramStatus.data?.data?.connected);
+                }
             }
         } catch (err) {
             console.error('Error fetching settings:', err);
-            setSettings({});
         }
     };
     
