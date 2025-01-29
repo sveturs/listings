@@ -1,5 +1,5 @@
 // frontend/hostel-frontend/src/components/notifications/NotificationSettings.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -69,11 +69,18 @@ const NotificationSettings = () => {
         settings,
         telegramConnected,
         updateSettings,
-        connectTelegram
+        connectTelegram,
+        fetchSettings
     } = useNotifications();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+    useEffect(() => {
+        if (telegramConnected) {
+            fetchSettings();
+        }
+    }, [telegramConnected, fetchSettings]);
 
     const showSnackbar = (message, severity = 'success') => {
         setSnackbar({ open: true, message, severity });
@@ -223,7 +230,7 @@ const NotificationSettings = () => {
                                     <FormControlLabel
                                         control={
                                             <Switch
-                                                checked={!!settings[type]?.telegram_enabled}
+                                                checked={Boolean(settings[type]?.telegram_enabled)}
                                                 onChange={(e) => handleSettingChange(type, 'telegram', e.target.checked)}
                                                 disabled={!telegramConnected || !implemented}
                                                 color="primary"
@@ -231,10 +238,11 @@ const NotificationSettings = () => {
                                         }
                                         label="Telegram"
                                     />
+
                                     <FormControlLabel
                                         control={
                                             <Switch
-                                                checked={!!settings[type]?.push_enabled}  // Добавляем !!
+                                                checked={Boolean(settings[type]?.push_enabled)}
                                                 onChange={(e) => handleSettingChange(type, 'push', e.target.checked)}
                                                 disabled={!implemented}
                                                 color="primary"

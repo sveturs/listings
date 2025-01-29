@@ -33,30 +33,48 @@ export const useNotifications = () => {
     };
     const fetchSettings = async () => {
         try {
+            console.log('Fetching settings...');
             const response = await axios.get('/api/v1/notifications/settings');
+            console.log('Settings response:', response.data);
             
             if (response.data?.data) {
-                const settingsData = Array.isArray(response.data.data) ? response.data.data : [];
+                // Проверяем, является ли data массивом
+                const settingsData = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
+                
+                // Создаем объект настроек
                 const formattedSettings = {};
                 
+                // Обрабатываем каждую настройку
                 settingsData.forEach(setting => {
-                    formattedSettings[setting.notification_type] = {
-                        telegram_enabled: !!setting.telegram_enabled,  // Явное приведение к boolean
-                        push_enabled: !!setting.push_enabled
-                    };
+                    // Проверяем наличие всех необходимых полей
+                    if (setting && setting.notification_type) {
+                        formattedSettings[setting.notification_type] = {
+                            telegram_enabled: Boolean(setting.telegram_enabled),
+                            push_enabled: Boolean(setting.push_enabled)
+                        };
+                    }
                 });
                 
+                console.log('Formatted settings:', formattedSettings);
                 setSettings(formattedSettings);
                 
-                // Проверяем статус Telegram при загрузке настроек
-                const telegramEnabled = settingsData.some(setting => setting.telegram_enabled);
-                if (telegramEnabled) {
-                    const telegramStatus = await axios.get('/api/v1/notifications/telegram');
-                    setTelegramConnected(!!telegramStatus.data?.data?.connected);
+                // Проверяем статус Telegram
+                const hasTelegramEnabled = Object.values(formattedSettings).some(
+                    setting => setting.telegram_enabled
+                );
+                
+                if (hasTelegramEnabled) {
+                    try {
+                        const telegramResponse = await axios.get('/api/v1/notifications/telegram');
+                        setTelegramConnected(Boolean(telegramResponse.data?.data?.connected));
+                    } catch (telegramErr) {
+                        console.error('Error checking Telegram status:', telegramErr);
+                    }
                 }
             }
         } catch (err) {
             console.error('Error fetching settings:', err);
+            setSettings({});
         }
     };
     
@@ -167,7 +185,8 @@ export const useNotifications = () => {
         severity,
         showNotification,
 
-        connectTelegram
+        connectTelegram,
+        fetchSettings
 
     };
 };
