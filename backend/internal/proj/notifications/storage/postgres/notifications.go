@@ -50,7 +50,7 @@ func (s *Storage) UpdateNotificationSettings(ctx context.Context, settings *mode
     _, err := s.pool.Exec(ctx, `
         INSERT INTO notification_settings (
             user_id, notification_type, telegram_enabled
-        ) VALUES ($1, $2, $3, $4)
+        ) VALUES ($1, $2, $3)
         ON CONFLICT (user_id, notification_type) 
         DO UPDATE SET
             telegram_enabled = $3,

@@ -243,12 +243,36 @@ func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
     
     // Создаем базовые настройки, если их нет
     baseSettings := []models.NotificationSettings{
-        {UserID: userID, NotificationType: "new_message", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "new_review", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "review_vote", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "review_response", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "listing_status", TelegramEnabled: true},
-        {UserID: userID, NotificationType: "favorite_price", TelegramEnabled: true},
+        {
+            UserID: userID, 
+            NotificationType: "new_message", 
+            TelegramEnabled: true,
+        },
+        {
+            UserID: userID,
+            NotificationType: "new_review",
+            TelegramEnabled: true,
+        },
+        {
+            UserID: userID,
+            NotificationType: "review_vote",
+            TelegramEnabled: true,
+        },
+        {
+            UserID: userID,
+            NotificationType: "review_response",
+            TelegramEnabled: true,
+        },
+        {
+            UserID: userID,
+            NotificationType: "listing_status",
+            TelegramEnabled: true,
+        },
+        {
+            UserID: userID,
+            NotificationType: "favorite_price",
+            TelegramEnabled: true,
+        },
     }
 
     settings, err := h.notificationService.GetNotificationSettings(c.Context(), userID)
