@@ -23,10 +23,10 @@ func ErrorResponse(c *fiber.Ctx, status int, message string) error {
 }
 
 func SuccessResponse(c *fiber.Ctx, data interface{}) error {
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data":    data,
-	})
+    return c.JSON(fiber.Map{
+        "success": true,
+        "data":    data,
+    })
 }
 func StringToInt(str string, defaultValue int) int {
     if str == "" {

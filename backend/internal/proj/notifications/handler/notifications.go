@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 	"fmt"
-//	"time"
+	"time"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -213,13 +213,13 @@ func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to generate token")
     }
     
-     log.Printf("Generated telegram token for user %d: %s", userID, token)
+    log.Printf("Generated telegram token for user %d: %s", userID, token)
     
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": fiber.Map{
-			"token": token,
-		},
-	})
+    // Изменяем структуру ответа для соответствия ожиданиям фронтенда
+    return utils.SuccessResponse(c, fiber.Map{
+        "token": token, // упрощаем структуру
+        "generated_at": time.Now(),
+    })
 }
 
 // Генерация токена для привязки Telegram

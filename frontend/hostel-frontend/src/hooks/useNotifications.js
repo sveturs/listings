@@ -84,34 +84,29 @@ export const useNotifications = () => {
     const connectTelegram = async () => {
         try {
             const response = await axios.post('/api/v1/notifications/telegram/token');
-            console.log('Full response data:', JSON.stringify(response.data));
-                
-            const token = response.data?.data?.token;
+            console.log('Raw response:', response); // добавим для отладки
+            
+            // Исправляем извлечение токена из ответа
+            const token = response.data?.data?.token || // старый вариант
+                         response.data?.token; // новый вариант
+                         
             if (!token) {
+                console.error('Token structure:', response.data); // добавим для отладки
                 throw new Error('Token not received');
             }
     
             const botLink = `https://t.me/SveTu_bot?start=${token}`;
             console.log('Opening bot link:', botLink);
+            window.open(botLink, '_blank');
             
-            // Создаем и добавляем скрытый элемент <a> для совместимости со всеми браузерами
-            const link = document.createElement('a');
-            link.href = botLink;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Добавляем задержку перед началом проверки статуса
-            await new Promise(resolve => setTimeout(resolve, 1000));
             startStatusCheck();
+            return response.data;
         } catch (err) {
-            console.error('Error in connectTelegram:', err);
+            console.error('Full error details:', err.response || err); // улучшаем логирование
             throw err;
         }
     };
-    const checkTelegramStatus = () => {
+        const checkTelegramStatus = () => {
         if (!statusCheckInterval) {
             console.log('Starting telegram status check');
             const interval = setInterval(async () => {

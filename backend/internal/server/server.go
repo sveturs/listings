@@ -170,7 +170,13 @@ func (s *Server) setupRoutes() {
 
 	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
 	notifications.Post("/push/subscribe", s.notifications.Notification.SubscribePush)
-	notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
+ 	notifications.Post("/telegram/token", func(c *fiber.Ctx) error {
+        // Добавляем логирование для отладки
+        log.Printf("Handling telegram token request for user: %v", c.Locals("user_id"))
+        response := s.notifications.Notification.GetTelegramToken(c)
+        log.Printf("Token generation response: %v", response)
+        return response
+    })
 	notifications.Post("/test", s.notifications.Notification.SendTestNotification)
 
 	// WebSocket эндпоинт

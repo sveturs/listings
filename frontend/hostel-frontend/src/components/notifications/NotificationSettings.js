@@ -100,13 +100,19 @@ const NotificationSettings = () => {
         try {
             setLoading(true);
             setError(null);
+            
+            // Добавляем больше логирования
+            console.log('Initiating Telegram connection...');
+            
             const response = await connectTelegram();
-            if (response?.botLink) {
-                window.open(response.botLink, '_blank');
-            }
+            console.log('Connect Telegram response:', response);
+            
         } catch (err) {
-            setError('Ошибка подключения к Telegram');
             console.error('Telegram connection error:', err);
+            setError(err.message || 'Ошибка подключения к Telegram');
+            
+            // Показываем пользователю более информативное сообщение
+            showSnackbar('Не удалось подключить Telegram. Пожалуйста, попробуйте позже.', 'error');
         } finally {
             setLoading(false);
         }
