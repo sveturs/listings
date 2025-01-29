@@ -76,26 +76,30 @@ export const useNotifications = () => {
         }
     };
 
-    // Добавляем эффект для проверки статуса при монтировании компонента
     useEffect(() => {
+        let intervalId;
+        
         const checkStatus = async () => {
             try {
-                const response = await axios.get('/api/v1/notifications/telegram');
-                console.log('Initial Telegram status check:', response.data);
-                setTelegramConnected(response.data?.data?.connected === true);
-
-                // Если подключено - загружаем настройки
-                if (response.data?.data?.connected) {
-                    await fetchSettings();
+                const telegramStatus = await axios.get('/api/v1/notifications/telegram');
+                if (telegramStatus.data?.data?.connected) {
+                    setTelegramConnected(true);
+                    // Если подключено - очищаем интервал
+                    clearInterval(intervalId);
                 }
             } catch (err) {
-                console.error('Error checking initial Telegram status:', err);
-                setTelegramConnected(false);
+                console.error('Error checking telegram status:', err);
             }
         };
-
-        checkStatus();
-    }, []); // Пустой массив зависимостей для выполнения только при монтировании
+    
+        // Проверяем статус каждые 5 секунд вместо каждой секунды
+        intervalId = setInterval(checkStatus, 5000);
+    
+        // Очищаем интервал при размонтировании
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, []);
 
     const updateSettings = async (type, channel, value) => {
         try {

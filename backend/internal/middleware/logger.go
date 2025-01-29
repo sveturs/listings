@@ -7,39 +7,22 @@ import (
 )
 
 func (m *Middleware) Logger() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		start := time.Now()
-		
-		// Продолжаем обработку запроса
-		err := c.Next()
-		
-		// Логируем информацию о запросе
-		msg := "%s - %s %s - %d - %v"
-		if err != nil {
-			msg = "%s - %s %s - %d - %v - Error: %v"
-		}
-
-		duration := time.Since(start)
-		
-		if err != nil {
-			log.Printf(msg,
-				c.IP(),
-				c.Method(),
-				c.Path(),
-				c.Response().StatusCode(),
-				duration,
-				err,
-			)
-		} else {
-			log.Printf(msg,
-				c.IP(),
-				c.Method(),
-				c.Path(),
-				c.Response().StatusCode(),
-				duration,
-			)
-		}
-
-		return err
-	}
+    return func(c *fiber.Ctx) error {
+        start := time.Now()
+        err := c.Next()
+        
+        // Логируем только ошибки
+        if err != nil || c.Response().StatusCode() >= 400 {
+            log.Printf("ERROR: %s - %s %s - %d - %v - Error: %v",
+                c.IP(),
+                c.Method(),
+                c.Path(),
+                c.Response().StatusCode(),
+                time.Since(start),
+                err,
+            )
+        }
+        
+        return err
+    }
 }
