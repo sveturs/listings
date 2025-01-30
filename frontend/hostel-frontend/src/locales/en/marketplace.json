@@ -8,6 +8,28 @@
     }
   },
   "listings": {
+    "edit": {
+      "title": "Edit Listing",
+      "saveChanges": "Save Changes",
+      "location": {
+        "title": "Location",
+        "showOnMap": "Show location on map"
+      },
+      "photos": {
+        "title": "Photos",
+        "preview": "Preview {{index}}"
+      },
+      "loading": "Loading...",
+      "success": "Listing updated successfully!",
+      "errors": {
+        "loadFailed": "Error loading data",
+        "updateFailed": "Error updating listing",
+        "imageUpload": {
+          "invalidType": "Only images can be uploaded",
+          "tooLarge": "File size should not exceed 15MB"
+        }
+      }
+    },
     "create": {
       "title": "Create Listing",
       "category": "Category",

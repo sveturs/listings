@@ -1,5 +1,14 @@
+// frontend/hostel-frontend/src/pages/marketplace/EditListingPage.js
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import LocationPicker from '../../components/global/LocationPicker';
+import MiniMap from '../../components/maps/MiniMap';
+import ImageUploader from '../../components/marketplace/ImageUploader';
+import { GoogleMap, Marker } from '@react-google-maps/api';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import {
     Container,
     TextField,
@@ -18,17 +27,10 @@ import {
     Modal,
     IconButton
 } from '@mui/material';
-import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
-import LocationPicker from '../../components/global/LocationPicker';
-import MiniMap from '../../components/maps/MiniMap';
-import { GoogleMap, Marker } from '@react-google-maps/api';
 import axios from '../../api/axios';
-import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../contexts/LanguageContext';
-import ImageUploader from '../../components/marketplace/ImageUploader';
-
 
 const EditListingPage = () => {
+    const { t } = useTranslation('marketplace', 'common');
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -56,7 +58,6 @@ const EditListingPage = () => {
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // Загрузка данных объявления и категорий
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -67,7 +68,6 @@ const EditListingPage = () => {
 
                 const listingData = listingResponse.data.data;
 
-                // Проверяем, является ли текущий пользователь владельцем
                 if (listingData.user_id !== user?.id) {
                     navigate('/marketplace');
                     return;
@@ -87,7 +87,6 @@ const EditListingPage = () => {
                     longitude: listingData.longitude
                 });
 
-                // Загружаем существующие изображения
                 if (listingData.images) {
                     setPreviewUrls(listingData.images.map(img =>
                         `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
@@ -97,7 +96,7 @@ const EditListingPage = () => {
                 setCategories(categoriesResponse.data.data || []);
                 setLoading(false);
             } catch (err) {
-                setError("Ошибка при загрузке данных");
+                setError(t('listings.edit.errors.loadFailed'));
                 setLoading(false);
             }
         };
@@ -105,7 +104,7 @@ const EditListingPage = () => {
         if (user?.id) {
             fetchData();
         }
-    }, [id, user, navigate]);
+    }, [id, user, navigate, t]);
 
     const handleLocationSelect = (location) => {
         setListing(prev => ({
@@ -118,49 +117,18 @@ const EditListingPage = () => {
         }));
     };
 
-    const handleImageChange = (e) => {
-        const files = Array.from(e.target.files || []);
-        if (files.length === 0) return;
-
-        const validFiles = files.filter(file => {
-            if (!file.type.startsWith('image/')) {
-                setError("Можно загружать только изображения");
-                return false;
-            }
-            if (file.size > 15 * 1024 * 1024) {
-                setError("Размер файла не должен превышать 15MB");
-                return false;
-            }
-            return true;
-        });
-
-        if (validFiles.length === 0) return;
-
-        setImages(prev => [...prev, ...validFiles]);
-
-        validFiles.forEach(file => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewUrls(prev => [...prev, reader.result]);
-            };
-            reader.readAsDataURL(file);
-        });
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
         setSuccess(false);
 
         try {
-            // Обновляем основные данные объявления
             await axios.put(`/api/v1/marketplace/listings/${id}`, {
                 ...listing,
                 price: parseFloat(listing.price),
                 original_language: language
             });
 
-            // Если есть новые изображения, загружаем их
             if (images.length > 0) {
                 const formData = new FormData();
                 images.forEach(image => {
@@ -180,8 +148,7 @@ const EditListingPage = () => {
             }, 1500);
 
         } catch (error) {
-            console.error('Ошибка при обновлении объявления:', error);
-            setError(error.response?.data?.error || "Ошибка при обновлении объявления");
+            setError(t('listings.edit.errors.updateFailed'));
         }
     };
 
@@ -189,7 +156,7 @@ const EditListingPage = () => {
         return (
             <Container maxWidth="md">
                 <Box sx={{ mt: 4, textAlign: 'center' }}>
-                    <Typography>Загрузка...</Typography>
+                    <Typography>{t('listings.edit.loading')}</Typography>
                 </Box>
             </Container>
         );
@@ -199,7 +166,7 @@ const EditListingPage = () => {
         <Container maxWidth="md">
             <Box sx={{ mt: 4, mb: 4 }}>
                 <Typography variant="h4" gutterBottom>
-                    Редактирование объявления
+                    {t('listings.edit.title')}
                 </Typography>
 
                 {error && (
@@ -210,7 +177,7 @@ const EditListingPage = () => {
 
                 {success && (
                     <Alert severity="success" sx={{ mb: 2 }}>
-                        Объявление успешно обновлено!
+                        {t('listings.edit.success')}
                     </Alert>
                 )}
 
@@ -219,7 +186,7 @@ const EditListingPage = () => {
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
                                 <TextField
-                                    label="Заголовок"
+                                    label={t('listings.create.name')}
                                     fullWidth
                                     required
                                     value={listing.title}
@@ -229,7 +196,7 @@ const EditListingPage = () => {
 
                             <Grid item xs={12}>
                                 <TextField
-                                    label="Описание"
+                                    label={t('listings.create.description')}
                                     fullWidth
                                     required
                                     multiline
@@ -241,7 +208,7 @@ const EditListingPage = () => {
 
                             <Grid item xs={12} sm={6}>
                                 <TextField
-                                    label="Цена"
+                                    label={t('listings.create.price')}
                                     type="number"
                                     fullWidth
                                     required
@@ -252,7 +219,7 @@ const EditListingPage = () => {
 
                             <Grid item xs={12} sm={6}>
                                 <FormControl fullWidth required>
-                                    <InputLabel>Категория</InputLabel>
+                                    <InputLabel>{t('listings.create.category')}</InputLabel>
                                     <Select
                                         value={listing.category_id}
                                         onChange={(e) => setListing({ ...listing, category_id: e.target.value })}
@@ -268,20 +235,20 @@ const EditListingPage = () => {
 
                             <Grid item xs={12} sm={6}>
                                 <FormControl fullWidth required>
-                                    <InputLabel>Состояние</InputLabel>
+                                    <InputLabel>{t('listings.create.condition.label')}</InputLabel>
                                     <Select
                                         value={listing.condition}
                                         onChange={(e) => setListing({ ...listing, condition: e.target.value })}
                                     >
-                                        <MenuItem value="new">Новое</MenuItem>
-                                        <MenuItem value="used">Б/у</MenuItem>
+                                        <MenuItem value="new">{t('listings.create.condition.new')}</MenuItem>
+                                        <MenuItem value="used">{t('listings.create.condition.used')}</MenuItem>
                                     </Select>
                                 </FormControl>
                             </Grid>
 
                             <Grid item xs={12}>
                                 <Typography variant="h6" gutterBottom>
-                                    Местоположение
+                                    {t('listings.edit.location.title')}
                                 </Typography>
                                 <LocationPicker
                                     onLocationSelect={handleLocationSelect}
@@ -313,14 +280,14 @@ const EditListingPage = () => {
                                             }))}
                                         />
                                     }
-                                    label="Показывать местоположение на карте"
+                                    label={t('listings.edit.location.showOnMap')}
                                     sx={{ mt: 1 }}
                                 />
                             </Grid>
 
                             <Grid item xs={12}>
                                 <Typography variant="h6" gutterBottom>
-                                    Фотографии
+                                    {t('listings.edit.photos.title')}
                                 </Typography>
                                 <ImageUploader
                                     onImagesSelected={(processedImages) => {
@@ -339,7 +306,7 @@ const EditListingPage = () => {
                                         >
                                             <img
                                                 src={url}
-                                                alt={`Preview ${index}`}
+                                                alt={t('listings.edit.photos.preview', { index: index + 1 })}
                                                 style={{
                                                     width: '100%',
                                                     height: '100%',
@@ -358,7 +325,7 @@ const EditListingPage = () => {
                                                 onClick={() => {
                                                     setImages(prev => prev.filter((_, i) => i !== index));
                                                     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-                                                    URL.revokeObjectURL(url); // Освобождаем память
+                                                    URL.revokeObjectURL(url);
                                                 }}
                                             >
                                                 <DeleteIcon />
@@ -378,7 +345,7 @@ const EditListingPage = () => {
                                         size="large"
                                         disabled={!listing.title || !listing.description || !listing.category_id || listing.price <= 0}
                                     >
-                                        Сохранить изменения
+                                        {t('listings.edit.saveChanges')}
                                     </Button>
                                     <Button
                                         variant="outlined"
@@ -386,7 +353,7 @@ const EditListingPage = () => {
                                         size="large"
                                         onClick={() => navigate(`/marketplace/listings/${id}`)}
                                     >
-                                        Отмена
+                                      {t('buttons.cancel', { ns: 'common' })}
                                     </Button>
                                 </Box>
                             </Grid>
