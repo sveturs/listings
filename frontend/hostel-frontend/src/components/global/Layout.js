@@ -5,6 +5,7 @@ import MessageIcon from '@mui/icons-material/Message';
 import NewMessageIndicator from './NewMessageIndicator';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
 import ChatService from '../marketplace/chat/ChatService';
 import { Bookmark } from '@mui/icons-material';
@@ -14,7 +15,6 @@ import LanguageSwitcher from '../shared/LanguageSwitcher';
 import NotificationBadge from '../notifications/NotificationBadge';
 import NotificationDrawer from '../notifications/NotificationDrawer';
 import { Settings } from '@mui/icons-material';
-
 
 import {
   AppBar,
@@ -42,10 +42,9 @@ import {
   AccountCircle,
   Chat,
 } from "@mui/icons-material";
-//import LanguageSwitcher from '../shared/LanguageSwitcher';
-//import { Storefront, Plus } from 'lucide-react';
 
 const Layout = ({ children }) => {
+  const { t, i18n } = useTranslation('common');
   const theme = useTheme();
   const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -76,6 +75,11 @@ const Layout = ({ children }) => {
     }
   ];
   useEffect(() => {
+    console.log('Current language:', i18n.language);
+    console.log('Available languages:', i18n.languages);
+    console.log('Translations loaded:', i18n.store.data);
+  }, [i18n.language]);
+  useEffect(() => {
     let unsubscribe;
 
     if (user?.id) {
@@ -84,7 +88,6 @@ const Layout = ({ children }) => {
       const messageHandler = (message) => {
         if (message.receiver_id === user.id && !message.is_read) {
           setUnreadCount(prev => prev + 1);
-          // Воспроизводим звук уведомления
           const audio = new Audio('/notification.mp3');
           audio.play().catch(e => console.log('Notification sound error:', e));
         }
@@ -131,7 +134,7 @@ const Layout = ({ children }) => {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <NewMessageIndicator unreadCount={unreadCount} />
         <Chat size={20} />
-        <Typography>Мои сообщения</Typography>
+        <Typography>{t('navigation.messages')}</Typography>
       </Box>
     </MenuItem>
   );
@@ -202,7 +205,7 @@ const Layout = ({ children }) => {
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <LanguageSwitcher />
               {!user ? (
-                <Tooltip title="Войти">
+                <Tooltip title={t('auth.signIn')}>
                   <IconButton onClick={() => {
                     const returnUrl = window.location.pathname + window.location.search;
                     const encodedReturnUrl = encodeURIComponent(returnUrl);
@@ -213,7 +216,6 @@ const Layout = ({ children }) => {
                 </Tooltip>
               ) : (
                 <>
-                  {/* Добавляем индикатор сообщений */}
                   {unreadCount > 0 && (
                     <IconButton
                       component={Link}
@@ -224,7 +226,7 @@ const Layout = ({ children }) => {
                     </IconButton>
                   )}
 
-                  <Tooltip title="Мой профиль">
+                  <Tooltip title={t('auth.profile')}>
                     <IconButton onClick={handleOpenMenu}>
                       <Avatar
                         src={user.pictureUrl}
@@ -260,12 +262,12 @@ const Layout = ({ children }) => {
                     {renderMessagesMenuItem()}
                     <MenuItem
                       onClick={() => {
-                        handleCloseMenu(); // Закрыть меню при клике на "Уведомления"
-                        navigate('/notifications/settings'); // Переход на страницу уведомлений
+                        handleCloseMenu();
+                        navigate('/notifications/settings');
                       }}
                     >
                       <Settings sx={{ mr: 1 }} />
-                      Уведомления
+                      {t('navigation.notifications')}
                     </MenuItem>
                     <MenuItem
                       component={Link}
@@ -273,17 +275,17 @@ const Layout = ({ children }) => {
                       onClick={handleCloseMenu}
                     >
                       <ShoppingBag fontSize="small" sx={{ mr: 1 }} />
-                      Мои объявления
+                      {t('navigation.myListings')}
                     </MenuItem>
                     <MenuItem component={Link} to="/favorites">
                       <Bookmark fontSize="small" sx={{ mr: 1 }} />
-                      Избранное
+                      {t('navigation.favorites')}
                     </MenuItem>
 
                     <Divider />
                     <MenuItem onClick={logout}>
                       <Logout fontSize="small" sx={{ mr: 1 }} />
-                      Выйти
+                      {t('auth.signOut')}
                     </MenuItem>
                   </Menu>
                 </>

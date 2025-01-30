@@ -1,0 +1,57 @@
+{
+    "buttons": {
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "close": "Close",
+      "back": "Back",
+      "search": "Search",
+      "share": "Share",
+      "favorite": "Add to Favorites",
+      "unfavorite": "Remove from Favorites"
+    },
+    "navigation": {
+      "home": "Home",
+      "marketplace": "Marketplace",
+      "myListings": "My Listings",
+      "favorites": "Favorites",
+      "messages": "Messages",
+      "profile": "Profile",
+      "notifications": "Notifications",
+      "settings": "Settings"
+    },
+    "auth": {
+      "signIn": "Sign In",
+      "signOut": "Sign Out",
+      "profile": "Profile",
+      "needAuth": "Authentication Required",
+      "pleaseLogin": "Please sign in to continue"
+    },
+    "common": {
+      "loading": "Loading...",
+      "error": "Error",
+      "success": "Success",
+      "notFound": "Not Found",
+      "price": "Price",
+      "condition": "Condition",
+      "category": "Category",
+      "location": "Location",
+      "description": "Description",
+      "photos": "Photos",
+      "new": "New",
+      "used": "Used"
+    },
+    "time": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "ago": "ago",
+      "minute": "minute",
+      "minutes": "minutes",
+      "hour": "hour",
+      "hours": "hours",
+      "day": "day",
+      "days": "days"
+    }
+  }

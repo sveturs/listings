@@ -1,20 +1,16 @@
 FROM node:18
 
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Сначала копируем package.json и package-lock.json
 COPY package*.json ./
 
-# Устанавливаем зависимости
-RUN npm install --legacy-peer-deps
-
-# Устанавливаем react-scripts локально в проекте
-RUN npm install react-scripts@5.0.1 --save
-
-# Копируем остальные файлы проекта
+# Clear npm cache and install dependencies with specific versions
+RUN npm cache clean --force && \
+    npm install --legacy-peer-deps && \
+    npm install react-scripts@5.0.1 --save --legacy-peer-deps && \
+    npm install ajv@6.12.6 ajv-keywords@3.5.2 --legacy-peer-deps
+COPY src/locales ./public/locales
 COPY . .
-
 # Указываем порт
 EXPOSE 3001
 

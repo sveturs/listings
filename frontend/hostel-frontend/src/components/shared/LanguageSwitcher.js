@@ -1,5 +1,5 @@
-// frontend/hostel-frontend/src/components/shared/LanguageSwitcher.js
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Select,
     MenuItem,
@@ -7,16 +7,28 @@ import {
     Box,
     Typography
 } from '@mui/material';
-import { useLanguage } from '../../contexts/LanguageContext';
+
+const LANGUAGES = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+    { code: 'sr', name: 'Српски', flag: '🇷🇸' }
+];
 
 const LanguageSwitcher = () => {
-    const { language, setLanguage, supportedLanguages } = useLanguage();
+    const { i18n } = useTranslation();
+
+    const handleLanguageChange = (event) => {
+        const newLang = event.target.value;
+        i18n.changeLanguage(newLang);
+        localStorage.setItem('preferredLanguage', newLang);
+        document.documentElement.lang = newLang;
+    };
 
     return (
         <FormControl size="small">
             <Select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
+                value={i18n.language}
+                onChange={handleLanguageChange}
                 sx={{
                     minWidth: 120,
                     '& .MuiSelect-select': {
@@ -26,7 +38,7 @@ const LanguageSwitcher = () => {
                     }
                 }}
             >
-                {supportedLanguages.map((lang) => (
+                {LANGUAGES.map((lang) => (
                     <MenuItem key={lang.code} value={lang.code}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Typography variant="body2" component="span">

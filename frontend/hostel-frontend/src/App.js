@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { AuthProvider } from "./contexts/AuthContext";
@@ -21,6 +21,10 @@ import { ChatProvider } from './contexts/ChatContext';
 import PrivateRoute from "./components/global/PrivateRoute";
 import { NotificationProvider } from './contexts/NotificationContext';
 import NotificationSettings from './components/notifications/NotificationSettings';
+import i18n from './i18n/config';
+ import './i18n/config';
+import { CircularProgress, Box } from '@mui/material';
+
 
 function App() {
   return (
@@ -32,47 +36,47 @@ function App() {
     >
       <MapProvider>
         <LanguageProvider>
+             <AuthProvider>
+              <ChatProvider>
+                <NotificationProvider>
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<MarketplacePage />} />
+                      <Route path="/add-user" element={<AddUserPage />} />
+                      <Route path="/admin" element={<AdminPanelPage />} />
+                      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                      <Route path="/marketplace" element={<MarketplacePage />} />
+                      {/*  <Route path="/marketplace/create" element={<CreateListingPage />} />*/}
 
-          <AuthProvider>
-            <ChatProvider>
-              <NotificationProvider>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<MarketplacePage />} />
-                    <Route path="/add-user" element={<AddUserPage />} />
-                    <Route path="/admin" element={<AdminPanelPage />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/marketplace" element={<MarketplacePage />} />
-                    {/*  <Route path="/marketplace/create" element={<CreateListingPage />} />*/}
+                      <Route
+                        path="/marketplace/create"
+                        element={
+                          <PrivateRoute>
+                            <CreateListingPage />
+                          </PrivateRoute>
+                        }
+                      />
+                      <Route
+                        path="/notifications/settings"
+                        element={
+                          <PrivateRoute>
+                            <NotificationSettings />
+                          </PrivateRoute>
+                        }
+                      />
+                      <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
+                      <Route path="/profile" element={<UserProfile />} />
+                      <Route path="/marketplace/chat" element={<ChatPage />} />
+                      <Route path="/my-listings" element={<MyListingsPage />} />
+                      <Route path="/favorites" element={<FavoriteListingsPage />} />
+                      <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
 
-                    <Route
-                      path="/marketplace/create"
-                      element={
-                        <PrivateRoute>
-                          <CreateListingPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/notifications/settings"
-                      element={
-                        <PrivateRoute>
-                          <NotificationSettings />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
-                    <Route path="/profile" element={<UserProfile />} />
-                    <Route path="/marketplace/chat" element={<ChatPage />} />
-                    <Route path="/my-listings" element={<MyListingsPage />} />
-                    <Route path="/favorites" element={<FavoriteListingsPage />} />
-                    <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
-
-                  </Routes>
-                </Layout>
-              </NotificationProvider>
-            </ChatProvider>
-          </AuthProvider>
+                    </Routes>
+                  </Layout>
+                </NotificationProvider>
+              </ChatProvider>
+            </AuthProvider>
+ 
         </LanguageProvider>
       </MapProvider>
     </BrowserRouter >

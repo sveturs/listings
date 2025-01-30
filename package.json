@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
-    "@googlemaps/markerclusterer": "^2.5.3"
+    "@googlemaps/markerclusterer": "^2.5.3",
+    "react-scripts": "^5.0.1"
   }
 }
