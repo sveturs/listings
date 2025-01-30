@@ -1,4 +1,6 @@
 //frontend/hostel-frontend/src/pages/marketplace/MarketplacePage.js
+import { useTranslation } from 'react-i18next';
+
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +65,7 @@ const MobileListingGrid = ({ listings }) => (
 );
 
 const MarketplacePage = () => {
+    const { t } = useTranslation('marketplace');
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
@@ -356,7 +359,9 @@ const MarketplacePage = () => {
                     onClick={() => navigate('/marketplace/create')}
                     startIcon={<Plus />}
                 >
-                    Создать объявление
+                {t('listings.create.title')}
+
+
                 </Button>
             </Box>
      

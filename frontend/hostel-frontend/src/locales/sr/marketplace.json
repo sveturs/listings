@@ -1,0 +1,161 @@
+{
+  "listings": {
+    "create": {
+      "title": "Направи оглас",
+      "category": "Категорија",
+      "name": "Назив производа",
+      "description": "Опис",
+      "price": "Цена",
+      "condition": {
+        "label": "Стање",
+        "new": "Ново",
+        "used": "Коришћено"
+      },
+      "location": {
+        "label": "Локација",
+        "showOnMap": "Прикажи локацију на мапи",
+        "searchPlaceholder": "Претрага по адреси...",
+        "currentLocation": "Моја локација",
+        "mapInstructions": "Кликните на мапу или унесите адресу"
+      },
+      "photos": {
+        "upload": "Отпремите фотографије",
+        "processing": "Обрада ({{progress}}%)",
+        "addWatermark": "Додајемо водени жиг...",
+        "maxCount": "Максималан број фотографија: {{count}}",
+        "onlyImages": "Могу се отпремити само слике",
+        "processingError": "Грешка при обради слика"
+      },
+      "submit": "Направи оглас",
+      "success": "Оглас је успешно креиран!",
+      "error": "Грешка при креирању огласа"
+    },
+    "details": {
+      "title": {
+        "noImages": "Нема слика",
+        "photoCount": "{{count}} фотографија"
+      },
+      "image": {
+        "prev": "Претходна слика",
+        "next": "Следећа слика",
+        "preview": "Преглед слике {{number}}"
+      },
+      "info": {
+        "reviews": {
+          "count": "{{count}} рецензија",
+          "countOne": "1 рецензија",
+          "countMany": "{{count}} рецензија",
+          "goTo": "Иди на рецензије"
+        },
+        "date": {
+          "created": "Креирано"
+        }
+      },
+      "price": "Цена",
+      "condition": "Стање",
+      "location": "Локација",
+      "description": "Опис",
+      "seller": {
+        "title": "Продавац",
+        "memberSince": "Члан од {{date}}",
+        "unknownDate": "непознатог датума"
+      },
+      "contact": {
+        "call": "Позови",
+        "message": "Порука",
+        "share": "Подели",
+        "errors": {
+          "noPhone": "Број телефона продавца није доступан"
+        }
+      },
+      "actions": {
+        "edit": "Уреди",
+        "delete": "Обриши",
+        "deleteConfirm": "Да ли сте сигурни да желите да обришете овај оглас?"
+      },
+      "favorite": {
+        "add": "Додај у омиљено",
+        "remove": "У омиљеном"
+      },
+      "location": {
+        "show": "Прикажи на мапи",
+        "title": "Локација",
+        "expand": "Прошири мапу",
+        "collapse": "Скупи мапу"
+      },
+      "errors": {
+        "loadFailed": "Грешка при учитавању огласа",
+        "deleteFailed": "Грешка при брисању огласа",
+        "updateFailed": "Грешка при ажурирању огласа"
+      }
+    },
+    "filters": {
+      "title": "Филтери",
+      "price": {
+        "label": "Цена",
+        "min": "Од",
+        "max": "До"
+      },
+      "sort": {
+        "label": "Сортирање",
+        "newest": "Најновије прво",
+        "cheapest": "Цена: од најниже",
+        "expensive": "Цена: од највише"
+      },
+      "apply": "Прикажи резултате",
+      "reset": "Ресетуј",
+      "noResults": "Нема резултата за вашу претрагу"
+    }
+  },
+  "reviews": {
+    "title": "Рецензије",
+    "write": "Напиши рецензију",
+    "edit": "Уреди рецензију",
+    "rating": "Укупна оцена",
+    "comment": "Коментар",
+    "pros": "Предности",
+    "cons": "Мане",
+    "photos": "Фотографије",
+    "helpful": "Корисно",
+    "notHelpful": "Није корисно",
+    "reply": "Одговори",
+    "report": "Пријави",
+    "verifiedPurchase": "Проверена куповина",
+    "responses": "Одговори",
+    "submit": "Пошаљи",
+    "cancel": "Откажи"
+  },
+  "chat": {
+    "newMessage": "Нова порука",
+    "reply": "Одговори",
+    "typing": "куца...",
+    "placeholder": "Унесите поруку...",
+    "send": "Пошаљи",
+    "empty": "Изаберите разговор за почетак",
+    "noMessages": "Још увек немате порука",
+    "archive": "Архивирај",
+    "sending": "Sending...",
+    "errors": {
+      "sendFailed": "Failed to send message. Please try again later."
+    }
+  },
+  "notifications": {
+    "title": "Подешавања обавештења",
+    "channels": "Канали обавештења",
+    "telegram": {
+      "connect": "Повежи Telegram",
+      "connected": "Telegram повезан",
+      "connecting": "Повезивање..."
+    },
+    "types": {
+      "newMessage": "Нове поруке",
+      "newReview": "Нове рецензије",
+      "reviewVote": "Гласови за рецензије",
+      "reviewResponse": "Одговори на рецензије",
+      "listingStatus": "Статус огласа",
+      "favoritePrice": "Промене цена омиљених"
+    },
+    "test": "Пошаљи тест обавештење",
+    "inDevelopment": "У развоју"
+  }
+}

@@ -1,6 +1,6 @@
-// frontend/hostel-frontend/src/components/marketplace/chat/ChatButton.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
     Button,
@@ -17,6 +17,7 @@ import axios from '../../../api/axios';
 const ChatButton = ({ listing, isMobile }) => {
     const navigate = useNavigate();
     const { user, login } = useAuth();
+    const { t } = useTranslation('marketplace');
     const [open, setOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -60,7 +61,7 @@ const ChatButton = ({ listing, isMobile }) => {
             console.error('Error sending message:', error);
             setError(
                 error.response?.data?.message || 
-                'Не удалось отправить сообщение. Пожалуйста, попробуйте позже.'
+                t('chat.errors.sendFailed')
             );
         } finally {
             setLoading(false);
@@ -76,7 +77,7 @@ const ChatButton = ({ listing, isMobile }) => {
                 startIcon={!isMobile && <MessageCircle />}
                 onClick={handleClick}
             >
-                {isMobile ? <MessageCircle size={20} /> : 'Написать'}
+                {isMobile ? <MessageCircle size={20} /> : t('listings.details.contact.message')}
             </Button>
 
             <Dialog 
@@ -85,7 +86,7 @@ const ChatButton = ({ listing, isMobile }) => {
                 maxWidth="sm" 
                 fullWidth
             >
-                <DialogTitle>Написать продавцу</DialogTitle>
+                <DialogTitle>{t('chat.newMessage')}</DialogTitle>
                 <DialogContent>
                     {error && (
                         <Alert severity="error" sx={{ mb: 2 }}>
@@ -97,7 +98,7 @@ const ChatButton = ({ listing, isMobile }) => {
                         fullWidth
                         multiline
                         rows={4}
-                        placeholder="Введите сообщение..."
+                        placeholder={t('chat.placeholder')}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         sx={{ mt: 2 }}
@@ -110,7 +111,7 @@ const ChatButton = ({ listing, isMobile }) => {
                         onClick={() => setOpen(false)}
                         disabled={loading}
                     >
-                        Отмена
+                        {t('reviews.cancel')}
                     </Button>
                     <Button
                         id="sendMessageButton"
@@ -118,7 +119,7 @@ const ChatButton = ({ listing, isMobile }) => {
                         onClick={handleSend}
                         disabled={!message.trim() || loading}
                     >
-                        {loading ? 'Отправка...' : 'Отправить'}
+                        {loading ? t('chat.sending') : t('chat.send')}
                     </Button>
                 </DialogActions>
             </Dialog>

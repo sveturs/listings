@@ -1,0 +1,161 @@
+{
+  "listings": {
+    "create": {
+      "title": "Create Listing",
+      "category": "Category",
+      "name": "Item Name",
+      "description": "Description",
+      "price": "Price",
+      "condition": {
+        "label": "Condition",
+        "new": "New",
+        "used": "Used"
+      },
+      "location": {
+        "label": "Location",
+        "showOnMap": "Show location on map",
+        "searchPlaceholder": "Search by address...",
+        "currentLocation": "My location",
+        "mapInstructions": "Click on the map or enter address"
+      },
+      "photos": {
+        "upload": "Upload photos",
+        "processing": "Processing ({{progress}}%)",
+        "addWatermark": "Adding watermark...",
+        "maxCount": "Maximum number of photos: {{count}}",
+        "onlyImages": "Only images can be uploaded",
+        "processingError": "Error processing images"
+      },
+      "submit": "Create Listing",
+      "success": "Listing created successfully!",
+      "error": "Error creating listing"
+    },
+    "details": {
+      "title": {
+        "noImages": "No images",
+        "photoCount": "{{count}} photos"
+      },
+      "image": {
+        "prev": "Previous image",
+        "next": "Next image",
+        "preview": "Preview image {{number}}"
+      },
+      "info": {
+        "reviews": {
+          "count": "{{count}} reviews",
+          "countOne": "1 review",
+          "countMany": "{{count}} reviews",
+          "goTo": "Go to reviews"
+        },
+        "date": {
+          "created": "Created"
+        }
+      },
+      "price": "Price",
+      "condition": "Condition",
+      "location": "Location",
+      "description": "Description",
+      "seller": {
+        "title": "Seller",
+        "memberSince": "Member since {{date}}",
+        "unknownDate": "unknown date"
+      },
+      "contact": {
+        "call": "Call",
+        "message": "Message",
+        "share": "Share",
+        "errors": {
+          "noPhone": "Seller's phone number is not available"
+        }
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleteConfirm": "Are you sure you want to delete this listing?"
+      },
+      "favorite": {
+        "add": "Add to favorites",
+        "remove": "In favorites"
+      },
+      "location": {
+        "show": "Show on map",
+        "title": "Location",
+        "expand": "Expand map",
+        "collapse": "Collapse map"
+      },
+      "errors": {
+        "loadFailed": "Failed to load listing",
+        "deleteFailed": "Error deleting listing",
+        "updateFailed": "Error updating listing"
+      }
+    },
+    "filters": {
+      "title": "Filters",
+      "price": {
+        "label": "Price",
+        "min": "From",
+        "max": "To"
+      },
+      "sort": {
+        "label": "Sort",
+        "newest": "Newest first",
+        "cheapest": "Price: Low to High",
+        "expensive": "Price: High to Low"
+      },
+      "apply": "Show Results",
+      "reset": "Reset",
+      "noResults": "No results found for your search"
+    }
+  },
+  "reviews": {
+    "title": "Reviews",
+    "write": "Write a Review",
+    "edit": "Edit Review",
+    "rating": "Overall Rating",
+    "comment": "Comment",
+    "pros": "Pros",
+    "cons": "Cons",
+    "photos": "Photos",
+    "helpful": "Helpful",
+    "notHelpful": "Not Helpful",
+    "reply": "Reply",
+    "report": "Report",
+    "verifiedPurchase": "Verified Purchase",
+    "responses": "Responses",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  },
+  "chat": {
+    "newMessage": "New Message",
+    "reply": "Reply",
+    "typing": "typing...",
+    "sending": "Sending...",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "empty": "Select a chat to start messaging",
+    "noMessages": "You don't have any messages yet",
+    "archive": "Archive",
+    "errors": {
+      "sendFailed": "Failed to send message. Please try again later."
+    }
+  },
+  "notifications": {
+    "title": "Notification Settings",
+    "channels": "Notification Channels",
+    "telegram": {
+      "connect": "Connect Telegram",
+      "connected": "Telegram Connected",
+      "connecting": "Connecting..."
+    },
+    "types": {
+      "newMessage": "New Messages",
+      "newReview": "New Reviews",
+      "reviewVote": "Review Votes",
+      "reviewResponse": "Review Responses",
+      "listingStatus": "Listing Status",
+      "favoritePrice": "Favorite Price Changes"
+    },
+    "test": "Send Test Notification",
+    "inDevelopment": "In Development"
+  }
+}

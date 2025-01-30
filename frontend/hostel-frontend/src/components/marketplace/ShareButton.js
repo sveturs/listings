@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import {
     Button,
     Menu,
@@ -14,7 +16,7 @@ import { Telegram, Facebook as FacebookIcon } from '@mui/icons-material';
 const ShareButton = ({ url, title, isMobile }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [showCopyAlert, setShowCopyAlert] = useState(false);
-    
+    const { t } = useTranslation('marketplace'); 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
     };
@@ -56,7 +58,7 @@ const ShareButton = ({ url, title, isMobile }) => {
                 startIcon={!isMobile && <Share2 />}
                 onClick={handleClick}
             >
-                {isMobile ? <Share2 size={20} /> : 'Поделиться'}
+                {isMobile ? <Share2 size={20} /> : t('listings.details.contact.share')}
             </Button>
             
             <Menu

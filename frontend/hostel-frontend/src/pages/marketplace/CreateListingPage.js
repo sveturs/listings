@@ -1,5 +1,6 @@
 // frontend/hostel-frontend/src/pages/marketplace/CreateListingPage.js
 import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import {
     Container,
     TextField,
@@ -16,7 +17,6 @@ import {
     Select,
     MenuItem,
     Paper,
-
     useTheme,
     useMediaQuery
 } from "@mui/material";
@@ -31,10 +31,13 @@ import ImageUploader from '../../components/marketplace/ImageUploader';
 import CategorySelect from '../../components/marketplace/CategorySelect';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
-
-
 const CreateListing = () => {
+    const theme = useTheme();
+    const { t } = useTranslation('marketplace');
     const { language } = useLanguage();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const navigate = useNavigate();
+
     const [listing, setListing] = useState({
         title: "",
         description: "",
@@ -55,55 +58,40 @@ const CreateListing = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [showExpandedMap, setShowExpandedMap] = useState(false);
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const response = await axios.get("/api/v1/marketplace/categories");
                 setCategories(response.data.data || []);
             } catch (err) {
-                setError("Ошибка при загрузке категорий");
+                setError(t('listings.create.error'));
             }
         };
         fetchCategories();
-    }, []);
+    }, [t]);
 
     const handleImageChange = (e) => {
-        console.log('handleImageChange triggered');
         const files = Array.from(e.target.files || []);
-        console.log('Selected files:', files);
-
-        if (files.length === 0) {
-            console.log('No files selected');
-            return;
-        }
+        if (files.length === 0) return;
 
         const validFiles = files.filter(file => {
-            console.log('Checking file:', file.name, 'type:', file.type, 'size:', file.size);
-
             if (!file.type.startsWith('image/')) {
-                console.log('Invalid file type:', file.type);
-                setError("Можно загружать только изображения");
+                setError(t('listings.create.photos.onlyImages'));
                 return false;
             }
             if (file.size > 15 * 1024 * 1024) {
-                console.log('File too large:', file.size);
-                setError("Размер файла не должен превышать 15MB");
+                setError(t('listings.create.photos.maxSize', { size: '15MB' }));
                 return false;
             }
             return true;
         });
-
-        console.log('Valid files:', validFiles);
 
         if (validFiles.length === 0) return;
 
         validFiles.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
-                console.log('File read successfully:', file.name);
                 setPreviewUrls(prev => [...prev, reader.result]);
             };
             reader.onerror = (error) => {
@@ -128,46 +116,36 @@ const CreateListing = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form submission started');
         setError("");
         setSuccess(false);
 
         try {
-            // Создаем объект с данными листинга
             const listingData = {
                 ...listing,
                 price: parseFloat(listing.price),
                 original_language: language
             };
 
-            console.log('Submitting form data:', listingData);
             const response = await axios.post("/api/v1/marketplace/listings", listingData);
             const listingId = response.data.data.id;
-            
-            console.log('Listing created:', listingId);
 
             if (images.length > 0) {
-                console.log('Preparing to upload images:', images.length);
                 const formData = new FormData();
                 images.forEach((image, index) => {
-                    console.log('Adding image to formData:', image.name);
                     formData.append('images', image);
                     if (index === 0) {
                         formData.append('main_image_index', '0');
                     }
                 });
 
-                console.log('Uploading images...');
                 await axios.post(`/api/v1/marketplace/listings/${listingId}/images`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                console.log('Images uploaded successfully');
             }
 
             setSuccess(true);
-
             setListing({
                 title: "",
                 description: "",
@@ -183,14 +161,12 @@ const CreateListing = () => {
             setImages([]);
             setPreviewUrls([]);
 
-            setSuccess(true);
-            // Добавляем редирект на страницу созданного объявления
             setTimeout(() => {
                 navigate(`/marketplace/listings/${listingId}`);
             }, 1500);
-    
+
         } catch (error) {
-            setError(error.response?.data?.error || "Ошибка при создании объявления");
+            setError(error.response?.data?.error || t('listings.create.error'));
         }
     };
 
@@ -199,8 +175,8 @@ const CreateListing = () => {
             maxWidth="md"
             disableGutters={isMobile}
             sx={{
-                mx: isMobile ? 0 : 'auto',  // Убираем автоматические отступы на мобильном
-                width: isMobile ? '100%' : 'auto'  // Принудительно растягиваем на всю ширину
+                mx: isMobile ? 0 : 'auto',
+                width: isMobile ? '100%' : 'auto'
             }}
         >
             <Box sx={{
@@ -209,8 +185,6 @@ const CreateListing = () => {
                 px: 0,
                 width: '100%'
             }}>
-
-
                 {error && (
                     <Alert severity="error" sx={{ mb: 2 }}>
                         {error}
@@ -219,22 +193,21 @@ const CreateListing = () => {
 
                 {success && (
                     <Alert severity="success" sx={{ mb: 2 }}>
-                        Объявление успешно создано!
+                        {t('listings.create.success')}
                     </Alert>
                 )}
 
                 <Paper sx={{
-                    p: isMobile ? '8px 0' : 3,  // Оставляем только вертикальный отступ 8px
+                    p: isMobile ? '8px 0' : 3,
                     boxShadow: isMobile ? 'none' : 1,
                     bgcolor: isMobile ? 'transparent' : 'background.paper',
                     width: '100%'
                 }}>
                     <form onSubmit={handleSubmit}>
                         <Grid container spacing={isMobile ? 2 : 3}>
-                            {/* Базовая информация */}
                             <Grid item xs={12}>
                                 <FormControl fullWidth required error={!listing.category_id}>
-                                    <InputLabel shrink></InputLabel>
+                                    <InputLabel shrink>{t('listings.create.category')}</InputLabel>
                                     <CategorySelect
                                         categories={categories}
                                         value={listing.category_id}
@@ -243,9 +216,10 @@ const CreateListing = () => {
                                     />
                                 </FormControl>
                             </Grid>
+
                             <Grid item xs={12}>
                                 <TextField
-                                    label="Наименование товара"
+                                    label={t('listings.create.name')}
                                     fullWidth
                                     required
                                     value={listing.title}
@@ -253,13 +227,15 @@ const CreateListing = () => {
                                     size={isMobile ? "small" : "medium"}
                                 />
                             </Grid>
-                            {/* Фотографии */}
-                            <Grid item xs={12} sx={{ mb: 0.1 }} >
+
+                            <Grid item xs={12} sx={{ mb: 0.1 }}>
                                 <ImageUploader
                                     onImagesSelected={(processedImages) => {
                                         setImages(processedImages.map(img => img.file));
                                         setPreviewUrls(processedImages.map(img => img.preview));
                                     }}
+                                    maxImages={10}
+                                    maxSizeMB={15}
                                 />
 
                                 <Box sx={{
@@ -278,7 +254,7 @@ const CreateListing = () => {
                                         >
                                             <img
                                                 src={url}
-                                                alt={`Preview ${index}`}
+                                                alt={`${t('listings.create.photos.preview')} ${index + 1}`}
                                                 style={{
                                                     position: 'absolute',
                                                     top: 0,
@@ -312,9 +288,10 @@ const CreateListing = () => {
                                     ))}
                                 </Box>
                             </Grid>
+
                             <Grid item xs={12}>
                                 <TextField
-                                    label="Описание"
+                                    label={t('listings.create.description')}
                                     fullWidth
                                     required
                                     multiline
@@ -327,7 +304,7 @@ const CreateListing = () => {
 
                             <Grid item xs={6}>
                                 <TextField
-                                    label="Цена"
+                                    label={t('listings.create.price')}
                                     type="number"
                                     fullWidth
                                     required
@@ -339,25 +316,21 @@ const CreateListing = () => {
 
                             <Grid item xs={6}>
                                 <FormControl fullWidth required size={isMobile ? "small" : "medium"}>
-                                    <InputLabel>Состояние</InputLabel>
+                                    <InputLabel>{t('listings.create.condition.label')}</InputLabel>
                                     <Select
                                         value={listing.condition}
                                         onChange={(e) => setListing({ ...listing, condition: e.target.value })}
                                     >
-                                        <MenuItem value="new">Новое</MenuItem>
-                                        <MenuItem value="used">Б/у</MenuItem>
+                                        <MenuItem value="new">{t('listings.create.condition.new')}</MenuItem>
+                                        <MenuItem value="used">{t('listings.create.condition.used')}</MenuItem>
                                     </Select>
                                 </FormControl>
                             </Grid>
 
-
-
-                            {/* Местоположение */}
                             <Grid item xs={12}>
                                 <Box sx={{ mb: 1 }}>
                                     <LocationPicker onLocationSelect={handleLocationSelect} />
                                 </Box>
-
 
                                 <FormControlLabel
                                     control={
@@ -369,16 +342,14 @@ const CreateListing = () => {
                                             }))}
                                         />
                                     }
-                                    label="Показывать местоположение на карте"
+                                    label={t('listings.create.location.showOnMap')}
                                     sx={{ mt: 1 }}
                                 />
                             </Grid>
 
-
-
                             <Grid item xs={12}>
                                 <Button
-                                    id="createAnnouncementButton" // Добавлено id
+                                    id="createAnnouncementButton"
                                     type="submit"
                                     variant="contained"
                                     color="primary"
@@ -386,18 +357,15 @@ const CreateListing = () => {
                                     size={isMobile ? "large" : "large"}
                                     disabled={!listing.title || !listing.description || !listing.category_id || listing.price <= 0}
                                 >
-                                    Создать объявление
+                                    {t('listings.create.submit')}
                                 </Button>
                             </Grid>
                         </Grid>
                     </form>
                 </Paper>
             </Box>
-
-
         </Container>
     );
-
 };
 
 export default CreateListing;

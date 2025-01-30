@@ -1,70 +1,51 @@
-//frontend/hostel-frontend/src/pages/ListingDetailsPage.js
-import ChatButton from '../../components/marketplace/chat/ChatButton';
+// frontend/hostel-frontend/src/pages/marketplace/ListingDetailsPage.js
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import ReviewsSection from '../../components/reviews/ReviewsSection';
 import { useAuth } from '../../contexts/AuthContext';
 import MiniMap from '../../components/maps/MiniMap';
 import { PencilLine, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ShareButton from '../../components/marketplace/ShareButton';
-
+import ChatButton from '../../components/marketplace/chat/ChatButton';
+import ReviewsSection from '../../components/reviews/ReviewsSection';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import CallButton from '../../components/marketplace/CallButton';
-
-import {
-    Container,
-    Modal,
-    Paper,
-    Grid,
-    Box,
-    Typography,
-    Button,
-    Card,
-    CardContent,
-    Skeleton,
-    Stack,
-    Avatar,
-    IconButton,
-    useTheme,
-    useMediaQuery,
-    ImageList,
-    ImageListItem
-} from '@mui/material';
 import {
     MapPin,
     Calendar,
     Heart,
-    Share2,
-    Phone,
-    MessageCircle,
     ChevronLeft,
-    Maximize2,
-    ChevronRight
+    ChevronRight,
+    Maximize2
 } from 'lucide-react';
 import axios from '../../api/axios';
-
+import {
+    Container, Modal, Paper, Grid, Box, Typography,
+    Button, Card, CardContent, Skeleton, Stack,
+    Avatar, IconButton, useTheme, useMediaQuery,
+    ImageList, ImageListItem
+} from '@mui/material';
 
 const ListingDetailsPage = () => {
-    const navigate = useNavigate();
-
-    const [isFavorite, setIsFavorite] = useState(false);
-    const [isMapExpanded, setIsMapExpanded] = useState(false);
+    const { t } = useTranslation('marketplace');
     const { id } = useParams();
     const theme = useTheme();
+    const navigate = useNavigate();
+    const { user, login } = useAuth();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const reviewsRef = useRef(null);
 
+    // State
     const [listing, setListing] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [reviewsCount, setReviewsCount] = useState(0);
-    const { user, login } = useAuth();
     const [categoryPath, setCategoryPath] = useState([]);
-    const [showPhoneNumber, setShowPhoneNumber] = useState(false);
-    const [showPhone, setShowPhone] = useState(false);
+    const [isMapExpanded, setIsMapExpanded] = useState(false);
+
     useEffect(() => {
         const fetchListing = async () => {
             try {
@@ -93,14 +74,15 @@ const ListingDetailsPage = () => {
                 }
             } catch (err) {
                 console.error('Error fetching listing:', err);
-                setError('Не удалось загрузить объявление');
+                setError(t('listings.details.errors.loadFailed'));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchListing();
-    }, [id]);
+    }, [id, t]);
+
     const scrollToReviews = () => {
         const reviewsSection = document.getElementById('reviews-section');
         if (reviewsSection) {
@@ -118,8 +100,9 @@ const ListingDetailsPage = () => {
             maximumFractionDigits: 0
         }).format(price);
     };
+
     const handleDelete = async () => {
-        if (!window.confirm('Вы действительно хотите удалить объявление?')) {
+        if (!window.confirm(t('listings.details.actions.deleteConfirm'))) {
             return;
         }
 
@@ -127,9 +110,10 @@ const ListingDetailsPage = () => {
             await axios.delete(`/api/v1/marketplace/listings/${id}`);
             navigate('/marketplace');
         } catch (error) {
-            setError('Ошибка при удалении объявления');
+            setError(t('listings.details.errors.deleteFailed'));
         }
     };
+
     const handleFavoriteClick = async () => {
         if (!user) {
             const returnUrl = window.location.pathname;
@@ -139,7 +123,6 @@ const ListingDetailsPage = () => {
         }
 
         try {
-            // Оптимистичное обновление UI
             setListing(prev => ({
                 ...prev,
                 is_favorite: !prev.is_favorite
@@ -151,7 +134,6 @@ const ListingDetailsPage = () => {
                 await axios.post(`/api/v1/marketplace/listings/${id}/favorite`);
             }
 
-            // Получаем актуальные данные
             const [listingResponse, favoritesResponse] = await Promise.all([
                 axios.get(`/api/v1/marketplace/listings/${id}`),
                 axios.get('/api/v1/marketplace/favorites')
@@ -166,20 +148,19 @@ const ListingDetailsPage = () => {
                 is_favorite: isFavorite
             });
         } catch (err) {
-            // Возвращаем предыдущее состояние при ошибке
             setListing(prev => ({
                 ...prev,
                 is_favorite: !prev.is_favorite
             }));
-            console.error('Ошибка при обновлении избранного:', err);
+            setError(t('listings.details.errors.updateFailed'));
         }
     };
+
     if (loading) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
                 <Breadcrumbs paths={categoryPath} />
                 <Grid container spacing={4}>
-
                     <Grid item xs={12} md={8}>
                         <Skeleton variant="rectangular" height={400} />
                     </Grid>
@@ -195,7 +176,6 @@ const ListingDetailsPage = () => {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
                 <Breadcrumbs paths={categoryPath} />
-
                 <Typography color="error">{error}</Typography>
             </Container>
         );
@@ -207,7 +187,7 @@ const ListingDetailsPage = () => {
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Breadcrumbs paths={categoryPath} />
             <Grid container spacing={4}>
-                {/* Галерея изображений */}
+                {/* Images Gallery */}
                 <Grid item xs={12} md={8}>
                     <Box sx={{ position: 'relative' }}>
                         {listing.images && listing.images.length > 0 ? (
@@ -226,6 +206,7 @@ const ListingDetailsPage = () => {
                                 {listing.images.length > 1 && (
                                     <>
                                         <IconButton
+                                            aria-label={t('listings.details.image.prev')}
                                             sx={{
                                                 position: 'absolute',
                                                 left: 8,
@@ -241,6 +222,7 @@ const ListingDetailsPage = () => {
                                             <ChevronLeft />
                                         </IconButton>
                                         <IconButton
+                                            aria-label={t('listings.details.image.next')}
                                             sx={{
                                                 position: 'absolute',
                                                 right: 8,
@@ -271,12 +253,13 @@ const ListingDetailsPage = () => {
                                 }}
                             >
                                 <Typography color="text.secondary">
-                                    Нет изображений
+                                    {t('listings.details.title.noImages')}
                                 </Typography>
                             </Box>
                         )}
                     </Box>
 
+                    {/* Thumbnails */}
                     {listing.images && listing.images.length > 1 && (
                         <ImageList
                             sx={{ mt: 2, maxHeight: 100 }}
@@ -296,7 +279,7 @@ const ListingDetailsPage = () => {
                                 >
                                     <img
                                         src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${image.file_path}`}
-                                        alt={`${listing.title} ${index + 1}`}
+                                        alt={t('listings.details.image.preview', { number: index + 1 })}
                                         style={{
                                             height: '100%',
                                             objectFit: 'cover'
@@ -307,7 +290,7 @@ const ListingDetailsPage = () => {
                         </ImageList>
                     )}
 
-                    {/* Описание объявления */}
+                    {/* Listing Description */}
                     <Box sx={{ mt: 4 }}>
                         <Typography variant="h4" gutterBottom>
                             {listing.title}
@@ -338,19 +321,18 @@ const ListingDetailsPage = () => {
                                     padding: 0,
                                     display: 'flex',
                                     alignItems: 'center',
-                                    '&:hover': {
-                                        color: 'primary.dark'
-                                    }
+                                    '&:hover': { color: 'primary.dark' }
                                 }}
                             >
-                                {reviewsCount} отзывов
+                                {t('listings.details.info.reviews.count', { count: reviewsCount })}
                             </Box>
                         </Stack>
+
                         <Typography variant="body1" sx={{ mb: 4 }}>
                             {listing.description}
                         </Typography>
 
-                        {/* Отзывы */}
+                        {/* Reviews section */}
                         <Box id="reviews-section" ref={reviewsRef} sx={{ mt: 4 }}>
                             <ReviewsSection
                                 entityType="listing"
@@ -363,10 +345,10 @@ const ListingDetailsPage = () => {
                     </Box>
                 </Grid>
 
-                {/* Правая панель */}
+                {/* Right panel */}
                 <Grid item xs={12} md={4}>
                     <Box sx={{ position: 'sticky', top: 24 }}>
-                        {/* Карточка с ценой и контактами */}
+                        {/* Price and contact card */}
                         <Card elevation={2}>
                             <CardContent>
                                 <Typography variant="h4" gutterBottom>
@@ -374,13 +356,13 @@ const ListingDetailsPage = () => {
                                 </Typography>
 
                                 <Stack direction="row" spacing={1}>
-                                <Box sx={{ flex: 1 }}>
-                                    <CallButton phone={listing.user?.phone} isMobile={isMobile} />
+                                    <Box sx={{ flex: 1 }}>
+                                        <CallButton phone={listing.user?.phone} isMobile={isMobile} />
                                     </Box>
                                     <Box sx={{ flex: 1 }}>
                                         <ChatButton listing={listing} isMobile={isMobile} />
-                                        </Box>
-                                        </Stack>
+                                    </Box>
+                                </Stack>
 
                                 <Stack direction="row" spacing={1}>
                                     <Button
@@ -394,7 +376,7 @@ const ListingDetailsPage = () => {
                                                 size={20}
                                                 fill={listing?.is_favorite ? 'currentColor' : 'none'}
                                             />
-                                        ) : listing?.is_favorite ? 'В избранном' : 'В избранное'}
+                                        ) : t(`listings.details.favorite.${listing?.is_favorite ? 'remove' : 'add'}`)}
                                     </Button>
                                     <ShareButton
                                         url={window.location.href}
@@ -403,7 +385,7 @@ const ListingDetailsPage = () => {
                                     />
                                 </Stack>
 
-                                {/* кнопки удаления и  редактирования */}
+                                {/* Edit and delete buttons */}
                                 {user?.id === listing.user_id && (
                                     <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
                                         <Button
@@ -412,7 +394,7 @@ const ListingDetailsPage = () => {
                                             startIcon={!isMobile && <PencilLine />}
                                             onClick={() => navigate(`/marketplace/listings/${id}/edit`)}
                                         >
-                                            {isMobile ? <PencilLine size={20} /> : 'Редактировать'}
+                                            {isMobile ? <PencilLine size={20} /> : t('listings.details.actions.edit')}
                                         </Button>
                                         <Button
                                             variant="outlined"
@@ -421,13 +403,14 @@ const ListingDetailsPage = () => {
                                             startIcon={!isMobile && <Trash2 />}
                                             onClick={handleDelete}
                                         >
-                                            {isMobile ? <Trash2 size={20} /> : 'Удалить'}
+                                            {isMobile ? <Trash2 size={20} /> : t('listings.details.actions.delete')}
                                         </Button>
                                     </Stack>
                                 )}
                             </CardContent>
                         </Card>
 
+                        {/* Map card */}
                         {listing.latitude && listing.longitude ? (
                             listing.show_on_map ? (
                                 <>
@@ -504,11 +487,12 @@ const ListingDetailsPage = () => {
                                 </Card>
                             )
                         ) : null}
-                        {/* Карточка продавца */}
+
+                        {/* Seller card */}
                         <Card elevation={2} sx={{ mt: 2 }}>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>
-                                    Продавец
+                                    {t('listings.details.seller.title')}
                                 </Typography>
                                 <Stack direction="row" spacing={2} alignItems="center">
                                     <Avatar
@@ -521,13 +505,15 @@ const ListingDetailsPage = () => {
                                             {listing.user?.name}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                            На сайте с {listing.user?.created_at ?
-                                                new Intl.DateTimeFormat('ru-RU', {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                }).format(new Date(listing.user?.created_at))
-                                                : 'неизвестной даты'}
+                                            {t('listings.details.seller.memberSince', {
+                                                date: listing.user?.created_at
+                                                    ? new Intl.DateTimeFormat('ru-RU', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    }).format(new Date(listing.user?.created_at))
+                                                    : t('listings.details.seller.unknownDate')
+                                            })}
                                         </Typography>
                                     </Box>
                                 </Stack>

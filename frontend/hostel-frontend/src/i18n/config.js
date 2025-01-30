@@ -3,19 +3,27 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import Backend from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
+
+// Импортируем все файлы переводов
 import commonRu from '../locales/ru/common.json';
 import commonEn from '../locales/en/common.json';
 import commonSr from '../locales/sr/common.json';
+import marketplaceRu from '../locales/ru/marketplace.json';
+import marketplaceEn from '../locales/en/marketplace.json';
+import marketplaceSr from '../locales/sr/marketplace.json';
 
 const resources = {
   ru: {
-    common: commonRu
+    common: commonRu,
+    marketplace: marketplaceRu
   },
   en: {
-    common: commonEn
+    common: commonEn,
+    marketplace: marketplaceEn
   },
   sr: {
-    common: commonSr
+    common: commonSr,
+    marketplace: marketplaceSr
   }
 };
 
@@ -24,13 +32,13 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    debug: process.env.NODE_ENV === 'development',
-    fallbackLng: 'en',
+    resources,
+    fallbackLng: 'sr',
     supportedLngs: ['en', 'ru', 'sr'],
     
-    ns: ['common', 'forms', 'navigation', 'marketplace', 'errors'],
+    ns: ['common', 'marketplace'],
     defaultNS: 'common',
-    
+    lng: 'sr', 
     interpolation: {
       escapeValue: false,
     },

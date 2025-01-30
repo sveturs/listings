@@ -1,16 +1,18 @@
+// frontend/hostel-frontend/src/components/marketplace/ImageUploader.js
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import imageCompression from 'browser-image-compression';
 import { Box, Button, IconButton, Typography, CircularProgress } from '@mui/material';
 import { CloudUpload as CloudUploadIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { addWatermark } from '../../utils/imageUtils';
 
 const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
+    const { t } = useTranslation('marketplace');
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
     const [progress, setProgress] = useState(0);
 
     const processImage = async (file) => {
-        // Сначала сжимаем изображение
         const compressionOptions = {
             maxSizeMB: maxSizeMB,
             maxWidthOrHeight: 1920,
@@ -21,11 +23,8 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
 
         try {
             const compressedFile = await imageCompression(file, compressionOptions);
-            
-            // Добавляем водяной знак
             const watermarkedBlob = await addWatermark(compressedFile);
             
-            // Создаем новый File объект с водяным знаком
             return new File([watermarkedBlob], file.name, {
                 type: 'image/jpeg',
                 lastModified: new Date().getTime()
@@ -44,13 +43,13 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
 
         try {
             if (files.length > maxImages) {
-                setError(`Максимальное количество фотографий: ${maxImages}`);
+                setError(t('listings.create.photos.maxCount', { count: maxImages }));
                 return;
             }
 
             const validFiles = files.filter(file => {
                 if (!file.type.startsWith('image/')) {
-                    setError('Можно загружать только изображения');
+                    setError(t('listings.create.photos.onlyImages'));
                     return false;
                 }
                 return true;
@@ -74,7 +73,7 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
 
         } catch (error) {
             console.error('Error processing images:', error);
-            setError('Ошибка при обработке изображений');
+            setError(t('listings.create.photos.processingError'));
         } finally {
             setUploading(false);
             setProgress(0);
@@ -92,7 +91,10 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
                     startIcon={uploading ? <CircularProgress size={20} /> : <CloudUploadIcon />}
                     disabled={uploading}
                 >
-                    {uploading ? `Обработка (${progress}%)` : 'Загрузить фото'}
+                    {uploading 
+                        ? t('listings.create.photos.processing', { progress })
+                        : t('listings.create.photos.upload')
+                    }
                     <input
                         type="file"
                         hidden
@@ -101,9 +103,11 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
                         onChange={handleImageChange}
                     />
                 </Button>
-                {uploading && <Typography variant="body2" color="text.secondary">
-                    Добавляем водяной знак...
-                </Typography>}
+                {uploading && (
+                    <Typography variant="body2" color="text.secondary">
+                        {t('listings.create.photos.addWatermark')}
+                    </Typography>
+                )}
             </Box>
             {error && (
                 <Typography color="error" variant="body2" sx={{ mt: 1 }}>
