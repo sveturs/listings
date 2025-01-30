@@ -52,6 +52,7 @@
         }
       },
       "price": "Цена",
+      "moreDetails": "Детаљније",
       "condition": "Стање",
       "location": "Локација",
       "description": "Опис",

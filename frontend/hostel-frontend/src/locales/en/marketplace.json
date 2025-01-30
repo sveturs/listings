@@ -52,6 +52,7 @@
         }
       },
       "price": "Price",
+      "moreDetails": "More details",
       "condition": "Condition",
       "location": "Location",
       "description": "Description",

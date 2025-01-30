@@ -1,5 +1,6 @@
 {
     "listings": {
+        
       "create": {
         "title": "Создать объявление",
         "category": "Категория",
@@ -52,6 +53,7 @@
           }
         },
         "price": "Цена",
+        "moreDetails": "Подробнее",
         "condition": "Состояние",
         "location": "Местоположение",
         "description": "Описание",

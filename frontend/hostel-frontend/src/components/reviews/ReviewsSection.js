@@ -1,5 +1,7 @@
 // frontend/hostel-frontend/src/components/reviews/ReviewsSection.js
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import { Box, Button, Dialog, DialogTitle, DialogContent, Alert, Snackbar } from '@mui/material';
 import { PencilLine } from 'lucide-react';
 import { ReviewForm, ReviewCard, RatingStats } from './ReviewComponents';
@@ -13,6 +15,8 @@ const ReviewsSection = ({
     canReview = true,
     onReviewsCountChange
 }) => {
+    const { t } = useTranslation('marketplace'); 
+
     const [reviews, setReviews] = useState([]);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -21,6 +25,7 @@ const ReviewsSection = ({
     const [editingReview, setEditingReview] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const { user } = useAuth();
+    
 
     // Загрузка отзывов и статистики
     const fetchData = async () => {
@@ -230,7 +235,7 @@ const ReviewsSection = ({
                     startIcon={<PencilLine />}
                     sx={{ mb: 3 }}
                 >
-                    Написать отзыв
+                    {t('reviews.write')}
                 </Button>
             )}
 

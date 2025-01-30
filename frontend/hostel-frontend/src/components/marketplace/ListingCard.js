@@ -1,5 +1,7 @@
 // src/components/marketplace/ListingCard.js
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+
 import {
     Card,
     CardContent,
@@ -17,6 +19,7 @@ import { MapPin as LocationIcon, Clock as AccessTime, Camera } from 'lucide-reac
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
 const ListingCard = ({ listing, isMobile }) => {
+     
     const formatPrice = (price) => {
         return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
@@ -24,11 +27,10 @@ const ListingCard = ({ listing, isMobile }) => {
             maximumFractionDigits: 0
         }).format(price || 0);
     };
-
+    const { t } = useTranslation('marketplace'); 
     const formatDate = (dateString) => {
         if (!dateString) return '';
-        
-        const date = new Date(dateString);
+         const date = new Date(dateString);
         return date.toLocaleDateString('ru-RU', {
             year: 'numeric',
             month: 'long',
@@ -158,7 +160,8 @@ const ListingCard = ({ listing, isMobile }) => {
                             fullWidth
                             sx={{ mt: 2 }}
                         >
-                            Подробнее
+                            {t('listings.details.moreDetails')}
+                            
                         </Button>
                     </>
                 )}
