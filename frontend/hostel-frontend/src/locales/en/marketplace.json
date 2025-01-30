@@ -188,7 +188,13 @@
       "reviewVote": "Review Votes",
       "reviewResponse": "Review Responses",
       "listingStatus": "Listing Status",
-      "favoritePrice": "Favorite Price Changes"
+      "favoritePrice": "Favorite Price Changes",
+      "newMessageDescription": "Notifications about new messages in chat",
+      "newReviewDescription": "Notifications about new reviews on your listings",
+      "reviewVoteDescription": "Notifications about ratings of your reviews",
+      "reviewResponseDescription": "Notifications about responses to your reviews",
+      "listingStatusDescription": "Notifications about changes in the status of your listings",
+      "favoritePriceDescription": "Notifications about price changes in favorite listings"
     },
     "test": "Send Test Notification",
     "inDevelopment": "In Development"

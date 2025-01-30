@@ -1,5 +1,6 @@
 // frontend/hostel-frontend/src/components/notifications/NotificationSettings.js
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     Typography,
@@ -24,46 +25,50 @@ import {
 import { useNotifications } from '../../hooks/useNotifications';
 import axios from '../../api/axios';
 
-const NOTIFICATION_TYPES = {
-    new_message: {
-        label: 'Новые сообщения',
-        icon: MessageCircle,
-        description: 'Уведомления о новых сообщениях в чате',
-        implemented: true
-    },
-    new_review: {
-        label: 'Новые отзывы',
-        icon: FileText,
-        description: 'Уведомления о новых отзывах на ваши объявления',
-        implemented: true
-    },
-    review_vote: {
-        label: 'Оценка отзыва',
-        icon: Star,
-        description: 'Уведомления об оценках ваших отзывов',
-        implemented: true
-    },
-    review_response: {
-        label: 'Ответы на отзывы',
-        icon: MessageCircle,
-        description: 'Уведомления об ответах на ваши отзывы',
-        implemented: true
-    },
-    listing_status: {
-        label: 'Статус объявлений',
-        icon: RefreshCw,
-        description: 'Уведомления об изменениях статуса ваших объявлений',
-        implemented: true
-    },
-    favorite_price: {
-        label: 'Цены в избранном',
-        icon: Tag,
-        description: 'Уведомления об изменении цен в избранных объявлениях',
-        implemented: true
-    }
-};
+
 
 const NotificationSettings = () => {
+    const { t } = useTranslation('marketplace');
+    const NOTIFICATION_TYPES = {
+        new_message: {
+            label: t('notifications.types.newMessage'),
+            icon: MessageCircle,
+            description: t('notifications.types.newMessageDescription'),
+            implemented: true
+        },
+        new_review: {
+            label: t('notifications.types.newReview'),
+            icon: FileText,
+            description: t('notifications.types.newReviewDescription'),
+            implemented: true
+        },
+        review_vote: {
+            label: t('notifications.types.reviewVote'),
+            icon: Star,
+            description: t('notifications.types.reviewVoteDescription'),
+            implemented: true
+        },
+        review_response: {
+            label: t('notifications.types.reviewResponse'),
+            icon: MessageCircle,
+            description: t('notifications.types.reviewResponseDescription'),
+            implemented: true
+        },
+        listing_status: {
+            label: t('notifications.types.listingStatus'),
+            icon: RefreshCw,
+            description: t('notifications.types.listingStatusDescription'),
+            implemented: true
+        },
+        favorite_price: {
+            label: t('notifications.types.favoritePrice'),
+            icon: Tag,
+            description: t('notifications.types.favoritePriceDescription'),
+            implemented: true
+        }
+    };
+
+
     const {
         settings,
         telegramConnected,
@@ -131,15 +136,12 @@ const NotificationSettings = () => {
     return (
         <Box>
             <Typography variant="h6" gutterBottom>
-                Настройки уведомлений
+                {t('notifications.title')}
             </Typography>
 
             <Paper sx={{ p: 3, mb: 3 }}>
                 <Stack spacing={3}>
                     <Box>
-                        <Typography variant="subtitle1" gutterBottom>
-                            Каналы уведомлений
-                        </Typography>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Button
@@ -149,25 +151,25 @@ const NotificationSettings = () => {
                                     disabled={loading}
                                     fullWidth
                                 >
-                                    {loading ? 'Подключение...' :
-                                        telegramConnected ? 'Telegram подключен' :
-                                            'Подключить Telegram'}
+                                    {loading ? t('notifications.telegram.connecting') :
+                                        telegramConnected ? t('notifications.telegram.connected') :
+                                            t('notifications.telegram.connect')}
                                 </Button>
                             </Grid>
-                             <Grid item xs={12} sm={6} md={4}>
+                            <Grid item xs={12} sm={6} md={4}>
                                 <Button
                                     variant="outlined"
                                     onClick={async () => {
                                         try {
                                             await axios.post('/api/v1/notifications/test');
-                                            showSnackbar('Тестовое уведомление отправлено');
+                                            showSnackbar(t('chat.sending'));
                                         } catch (err) {
-                                            showSnackbar('Ошибка отправки уведомления', 'error');
+                                            showSnackbar('error', 'error');
                                         }
                                     }}
                                     fullWidth
                                 >
-                                    Отправить тестовое уведомление
+                                    {t('notifications.test')}
                                 </Button>
                             </Grid>
                         </Grid>
@@ -213,7 +215,7 @@ const NotificationSettings = () => {
                                         label="Telegram"
                                     />
 
- 
+
                                 </Stack>
                                 {!implemented && (
                                     <Typography

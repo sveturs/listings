@@ -188,7 +188,13 @@
       "reviewVote": "Гласови за рецензије",
       "reviewResponse": "Одговори на рецензије",
       "listingStatus": "Статус огласа",
-      "favoritePrice": "Промене цена омиљених"
+      "favoritePrice": "Промене цена омиљених",
+      "newMessageDescription": "Обавештења о новим порукама у ћаскању",
+      "newReviewDescription": "Обавештења о новим рецензијама на ваше огласе",
+      "reviewVoteDescription": "Обавештења о оценама ваших рецензија",
+      "reviewResponseDescription": "Обавештења о одговорима на ваше рецензије",
+      "listingStatusDescription": "Обавештења о променама статуса ваших огласа",
+      "favoritePriceDescription": "Обавештења о промени цена у омиљеним огласима"
     },
     "test": "Пошаљи тест обавештење",
     "inDevelopment": "У развоју"

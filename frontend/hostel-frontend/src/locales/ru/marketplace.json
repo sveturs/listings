@@ -1,4 +1,5 @@
 {
+
     "favorites": {
       "title": "Избранные объявления",
       "empty": "У вас пока нет избранных объявлений",
@@ -188,7 +189,15 @@
         "reviewVote": "Оценка отзыва",
         "reviewResponse": "Ответы на отзывы",
         "listingStatus": "Статус объявлений",
-        "favoritePrice": "Цены в избранном"
+        "favoritePrice": "Цены в избранном",
+        "notificationschatmessage": "Уведомления о сообщениях в чате",
+        "newMessageDescription": "Уведомления о новых сообщениях в чате",
+        "newReviewDescription": "Уведомления о новых отзывах на ваши объявления",
+        "reviewVoteDescription": "Уведомления об оценках ваших отзывов",
+        "reviewResponseDescription": "Уведомления об ответах на ваши отзывы",
+        "listingStatusDescription": "Уведомления об изменениях статуса ваших объявлений",
+        "favoritePriceDescription": "Уведомления об изменении цен в избранных объявлениях"
+   
       },
       "test": "Отправить тестовое уведомление",
       "inDevelopment": "В разработке"

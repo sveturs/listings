@@ -16,7 +16,7 @@ import {
 import { Search, X } from 'lucide-react';
 import CompactCategoryTree from './CategoryTree';
 import CategoryFilters from './CategoryFilters';
-
+ 
 const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, selectedCategoryId }) => {
     const selectedCategory = categories.find(c => c.id === selectedCategoryId);
 
@@ -100,7 +100,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                 borderColor: 'divider'
             }}>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    Категории
+                    Категории1
                 </Typography>
                 <CompactCategoryTree
                     categories={categories}
