@@ -206,55 +206,87 @@ SELECT 'Ћурке', 'turkeys', id, 'turkey' FROM marketplace_categories WHERE s
 INSERT INTO marketplace_categories (name, slug, parent_id, icon) 
 SELECT 'Патке и гуске', 'ducks-and-geese', id, 'duck' FROM marketplace_categories WHERE slug = 'poultry';
 
--- Тестовые объявления
+-- Добавляем тестовые объявления
 INSERT INTO marketplace_listings 
-(user_id, category_id, title, description, price, condition, status, location) 
+(user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country) 
 VALUES
 -- Транспорт: Автомобили
 (1, (SELECT id FROM marketplace_categories WHERE slug = 'cars'), 
 'Toyota Corolla 2018', 
 'Продајем Toyota Corolla 2018 годиште, 80.000 км, одлично стање.', 
 1150000, 'used', 'active', 
-'Нови Сад, Србија'),
+'Нови Сад, Србија', 45.2671, 19.8335, 'Нови Сад', 'Србија'),
 
 -- Электроника: Смартфоны
 (1, (SELECT id FROM marketplace_categories WHERE slug = 'smartphones'), 
 'Samsung Galaxy S21 Ultra', 
 'Samsung Galaxy S21 Ultra 5G, 12GB RAM, 256GB. Под гаранцијом, као нов.', 
 90000, 'used', 'active', 
-'Нови Сад, Србија'),
+'Нови Сад, Србија', 45.2551, 19.8452, 'Нови Сад', 'Србија'),
 
 -- Электроника: Компьютеры
 (1, (SELECT id FROM marketplace_categories WHERE slug = 'computers'), 
 'Гејмерски рачунар Ryzen 5', 
 'Конфигурација: Ryzen 5 5600X, RTX 3060, 16GB RAM, 1TB SSD. Идеално за игрице.', 
 200000, 'used', 'active', 
-'Нови Сад, Србија'),
+'Нови Сад, Србија', 45.2541, 19.8401, 'Нови Сад', 'Србија'),
 
 -- Одежда и обувь
 (1, (SELECT id FROM marketplace_categories WHERE slug = 'clothing-and-shoes'), 
 'Кожна јакна', 
 'Мушка кожна јакна, величина L, одлично стање.', 
 10000, 'used', 'active', 
-'Нови Сад, Србија'),
+'Нови Сад, Србија', 45.2460, 19.8235, 'Нови Сад', 'Србија'),
 
 -- Дом и сад
 (1, (SELECT id FROM marketplace_categories WHERE slug = 'home-and-garden'), 
 'Кауч на развлачење', 
 'Удобан кауч на развлачење, претвара се у кревет. У добром стању.', 
 25000, 'used', 'active', 
-'Нови Сад, Србија'),
+'Нови Сад, Србија', 45.2701, 19.8500, 'Нови Сад', 'Србија'),
 
 -- Животные
 (1, (SELECT id FROM marketplace_categories WHERE slug = 'pets'), 
 'Штене бигла', 
 'Продајем штенце бигла. Старост 2 месеца, вакцинисани и здрави.', 
 20000, 'new', 'active', 
-'Нови Сад, Србија'),
+'Нови Сад, Србија', 45.2600, 19.8400, 'Нови Сад', 'Србија'),
 
 -- Хобби и отдых
 (1, (SELECT id FROM marketplace_categories WHERE slug = 'hobby-and-leisure'), 
 'Трака за трчање', 
 'Електрична трака за трчање, склопива, са дисплејом за брзину и раздаљину.', 
 45000, 'used', 'active', 
-'Нови Сад, Србија');
+'Нови Сад, Србија', 45.2450, 19.8350, 'Нови Сад', 'Србија');
+
+-- Добавляем изображения для объявлений
+INSERT INTO marketplace_images 
+(listing_id, file_path, file_name, file_size, content_type, is_main)
+VALUES
+-- Изображения для Toyota Corolla
+(1, 'toyota_1.jpg', 'toyota_1.jpg', 1024, 'image/jpeg', true),
+(1, 'toyota_2.jpg', 'toyota_2.jpg', 1024, 'image/jpeg', false),
+
+-- Изображения для Samsung Galaxy S21 Ultra
+(2, 'galaxy_s21_1.jpg', 'galaxy_s21_1.jpg', 1024, 'image/jpeg', true),
+(2, 'galaxy_s21_2.jpg', 'galaxy_s21_2.jpg', 1024, 'image/jpeg', false),
+
+-- Изображения для Геймерского ПК
+(3, 'gaming_pc_1.jpg', 'gaming_pc_1.jpg', 1024, 'image/jpeg', true),
+(3, 'gaming_pc_2.jpg', 'gaming_pc_2.jpg', 1024, 'image/jpeg', false),
+
+-- Изображения для кожаной куртки
+(4, 'leather_jacket_1.jpg', 'leather_jacket_1.jpg', 1024, 'image/jpeg', true),
+(4, 'leather_jacket_2.jpg', 'leather_jacket_2.jpg', 1024, 'image/jpeg', false),
+
+-- Изображения для дивана
+(5, 'sofa_1.jpg', 'sofa_1.jpg', 1024, 'image/jpeg', true),
+(5, 'sofa_2.jpg', 'sofa_2.jpg', 1024, 'image/jpeg', false),
+
+-- Изображения для щенка бигля
+(6, 'beagle_puppy_1.jpg', 'beagle_puppy_1.jpg', 1024, 'image/jpeg', true),
+(6, 'beagle_puppy_2.jpg', 'beagle_puppy_2.jpg', 1024, 'image/jpeg', false),
+
+-- Изображения для беговой дорожки
+(7, 'treadmill_1.jpg', 'treadmill_1.jpg', 1024, 'image/jpeg', true),
+(7, 'treadmill_2.jpg', 'treadmill_2.jpg', 1024, 'image/jpeg', false);
