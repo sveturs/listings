@@ -51,7 +51,13 @@ docker network prune -f || true
 # Собираем фронтенд
 echo "Building frontend..."
 cd frontend/hostel-frontend
-NODE_ENV=production docker run -v $(pwd):/app -w /app node:18 sh -c "npm install && npm run build"
+# Изменить эту строку в deploy.sh
+NODE_ENV=production docker run -v $(pwd):/app -w /app node:18 sh -c "\
+    npm cache clean --force && \
+    npm install --legacy-peer-deps && \
+    npm install react-scripts@5.0.1 --save --legacy-peer-deps && \
+    npm install ajv@6.12.6 ajv-keywords@3.5.2 schema-utils@3.1.1 --legacy-peer-deps && \
+    npm run build"
 cd ../..
 
 # Запускаем только базу данных
