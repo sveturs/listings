@@ -1,0 +1,57 @@
+{
+    "buttons": {
+      "create": "Направи",
+      "edit": "Уреди",
+      "delete": "Обриши",
+      "save": "Сачувај",
+      "cancel": "Откажи",
+      "close": "Затвори",
+      "back": "Назад",
+      "search": "Претрага",
+      "share": "Подели",
+      "favorite": "Додај у омиљено",
+      "unfavorite": "Уклони из омиљеног"
+    },
+    "navigation": {
+      "home": "Почетна",
+      "marketplace": "Пијаца",
+      "myListings": "Моји огласи",
+      "favorites": "Омиљено",
+      "messages": "Поруке",
+      "profile": "Профил",
+      "notifications": "Обавештења",
+      "settings": "Подешавања"
+    },
+    "auth": {
+      "signIn": "Пријави се",
+      "signOut": "Одјави се",
+      "profile": "Профил",
+      "needAuth": "Потребна је аутентификација",
+      "pleaseLogin": "Молимо вас да се пријавите"
+    },
+    "common": {
+      "loading": "Учитавање...",
+      "error": "Грешка",
+      "success": "Успешно",
+      "notFound": "Није пронађено",
+      "price": "Цена",
+      "condition": "Стање",
+      "category": "Категорија",
+      "location": "Локација",
+      "description": "Опис",
+      "photos": "Фотографије",
+      "new": "Ново",
+      "used": "Коришћено"
+    },
+    "time": {
+      "today": "Данас",
+      "yesterday": "Јуче",
+      "ago": "пре",
+      "minute": "минут",
+      "minutes": "минута",
+      "hour": "сат",
+      "hours": "сати",
+      "day": "дан",
+      "days": "дана"
+    }
+  }
