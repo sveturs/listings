@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
 import {
     Container,
     Typography,
@@ -17,6 +19,7 @@ const FavoriteListingsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { user } = useAuth();
+    const { t } = useTranslation('marketplace');
 
     useEffect(() => {
         const fetchFavorites = async () => {
@@ -26,7 +29,7 @@ const FavoriteListingsPage = () => {
                 setListings(response.data.data);
             } catch (err) {
                 console.error('Error fetching favorites:', err);
-                setError('Не удалось загрузить избранные объявления');
+                setError(t('favorites.errors.loadFailed'));
                 setListings([]); // Устанавливаем пустой массив в случае ошибки
             } finally {
                 setLoading(false);
@@ -53,7 +56,7 @@ const FavoriteListingsPage = () => {
         return (
             <Container sx={{ py: 4 }}>
                 <Alert severity="info">
-                    Для просмотра избранных объявлений необходимо авторизоваться
+                {t('favorites.authRequired')}
                 </Alert>
             </Container>
         );
@@ -62,7 +65,7 @@ const FavoriteListingsPage = () => {
     return (
         <Container sx={{ py: 4 }}>
             <Typography variant="h4" gutterBottom>
-                Избранные объявления
+            {t('favorites.title')}
             </Typography>
 
             {error && (
@@ -73,7 +76,7 @@ const FavoriteListingsPage = () => {
 
             {listings && listings.length === 0 ? (
                 <Alert severity="info">
-                    У вас пока нет избранных объявлений
+                    {t('favorites.empty')}
                 </Alert>
             ) : (
                 <Grid container spacing={3}>

@@ -1,4 +1,12 @@
 {
+  "favorites": {
+    "title": "Favorite Listings",
+    "empty": "You don't have any favorite listings yet",
+    "authRequired": "Please sign in to view your favorite listings",
+    "errors": {
+      "loadFailed": "Failed to load favorite listings"
+    }
+  },
   "listings": {
     "create": {
       "title": "Create Listing",
