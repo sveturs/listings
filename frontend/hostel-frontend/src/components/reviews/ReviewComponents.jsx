@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { useMediaQuery } from '@mui/material';
 import GalleryViewer from '../shared/GalleryViewer';
+import { useTranslation } from 'react-i18next';
+
 import {
     Box,
     Typography,
@@ -38,6 +40,8 @@ import {
 
 // Компонент формы создания/редактирования отзыва
 const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entityId }) => {
+    const { t } = useTranslation('marketplace');
+
     const [formData, setFormData] = useState({
         rating: initialData?.rating || 0,
         comment: initialData?.comment || '',
@@ -65,7 +69,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
         });
 
         if (validFiles.length + photoFiles.length > 10) {
-            alert('Можно загрузить максимум 10 фотографий');
+            alert(t('reviews.uploadupto10'));
             return;
         }
 
@@ -110,7 +114,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
         <Box component="form" onSubmit={handleSubmit} sx={{ p: 2 }}>
             <Stack spacing={3}>
                 <Box>
-                    <Typography gutterBottom>Общая оценка</Typography>
+                    <Typography gutterBottom>{t('reviews.rating')}</Typography>
                     <Rating
                         value={formData.rating}
                         onChange={(_, newValue) => {
@@ -121,7 +125,8 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                 </Box>
 
                 <TextField
-                    label="Комментарий"
+                    label={t('reviews.comment')}
+
                     multiline
                     rows={4}
                     value={formData.comment}
@@ -130,7 +135,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                 />
 
                 <TextField
-                    label="Достоинства"
+                    label={t('reviews.pros')}
                     multiline
                     rows={2}
                     value={formData.pros}
@@ -139,7 +144,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                 />
 
                 <TextField
-                    label="Недостатки"
+                    label={t('reviews.cons')}
                     multiline
                     rows={2}
                     value={formData.cons}
@@ -177,14 +182,14 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
 
                 <Stack direction="row" spacing={2} justifyContent="flex-end">
                     <Button onClick={onCancel}>
-                        Отмена
+                        {t('reviews.cancel')}
                     </Button>
                     <Button
                         type="submit"
                         variant="contained"
                         disabled={!formData.rating || !formData.comment}
                     >
-                        {initialData ? 'Сохранить' : 'Опубликовать'}
+                        {initialData ? t('reviews.save') : t('reviews.submit')}
                     </Button>
                 </Stack>
             </Stack>
@@ -201,6 +206,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [showResponses, setShowResponses] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+    const { t } = useTranslation('marketplace');
 
     const handleReplySubmit = () => {
         onReply(review.id, replyText);
@@ -250,7 +256,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                 ) : (
                                     <Chip
                                         icon={<CheckCircle2 size={16} />}
-                                        label="Проверенная покупка"
+                                        label={t('reviews.verifiedPurchase')}
                                         size="small"
                                         color="success"
                                     />
@@ -273,14 +279,14 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                         setMenuAnchor(null);
                                     }}>
                                         <Edit size={16} style={{ marginRight: 8 }} />
-                                        Редактировать
+                                        {t('reviews.edit')}
                                     </MenuItem>
                                     <MenuItem onClick={() => {
                                         onDelete(review.id);
                                         setMenuAnchor(null);
                                     }}>
                                         <Trash2 size={16} style={{ marginRight: 8 }} />
-                                        Удалить
+                                        {t('reviews.delete')}
                                     </MenuItem>
                                 </Menu>
                             </>
@@ -296,7 +302,8 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                     {review.pros && (
                         <Box>
                             <Typography color="success.main" variant="subtitle2">
-                                Достоинства:
+                            {t('reviews.pros')}
+                                
                             </Typography>
                             <Typography>{review.pros}</Typography>
                         </Box>
@@ -305,7 +312,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                     {review.cons && (
                         <Box>
                             <Typography color="error.main" variant="subtitle2">
-                                Недостатки:
+                            {t('reviews.cons')} 
                             </Typography>
                             <Typography>{review.cons}</Typography>
                         </Box>
@@ -348,8 +355,8 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                             variant={review.current_user_vote === 'helpful' ? 'contained' : 'outlined'}
                             disabled={!currentUserId}
                         >
-                            {isMobile ? `(${review.votes_count?.helpful || 0})` : 
-                                      `Полезно (${review.votes_count?.helpful || 0})`}
+                            {isMobile ? `(${review.votes_count?.helpful || 0})` :
+                                `${t('reviews.helpful')} (${review.votes_count?.helpful || 0})`}
                         </Button>
                         <Button
                             size="small"
@@ -359,7 +366,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                             disabled={!currentUserId}
                         >
                             {isMobile ? `(${review.votes_count?.not_helpful || 0})` :
-                                      `Не полезно (${review.votes_count?.not_helpful || 0})`}
+                                `${t('reviews.notHelpful')} (${review.votes_count?.not_helpful || 0})`}
                         </Button>
 
                         {/* НОВОЕ: Кнопка ответов */}
@@ -376,7 +383,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                     startIcon={showResponses ? <ChevronUp /> : <ChevronDown />}
                                     onClick={() => setShowResponses(!showResponses)}
                                 >
-                                    {`Ответы (${review.responses.length})`}
+                                    {`${t('reviews.responses')} (${review.responses.length})`}
                                 </Button>
                             )
                         )}
@@ -392,7 +399,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                 startIcon={<MessageSquare />}
                                 onClick={() => setShowReplyForm(!showReplyForm)}
                             >
-                                Ответить
+                                {t('reviews.reply')}
                             </Button>
                         )}
 
@@ -406,7 +413,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                 startIcon={<Flag />}
                                 onClick={() => onReport(review.id)}
                             >
-                                Пожаловаться
+                                {t('reviews.report')}
                             </Button>
                         )}
                     </Stack>
@@ -417,9 +424,9 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                             <Box key={index} sx={{ mt: 2, pl: isMobile ? 2 : 4 }}>
                                 <Paper sx={{ p: isMobile ? 1.5 : 2, bgcolor: 'grey.50' }}>
                                     <Stack direction="row" spacing={isMobile ? 1 : 2} alignItems="center">
-                                        <Avatar 
-                                            src={response.user?.picture_url} 
-                                            sx={{ width: isMobile ? 20 : 24, height: isMobile ? 20 : 24 }} 
+                                        <Avatar
+                                            src={response.user?.picture_url}
+                                            sx={{ width: isMobile ? 20 : 24, height: isMobile ? 20 : 24 }}
                                         />
                                         <Typography variant={isMobile ? "body2" : "subtitle2"}>
                                             {response.user?.name}
@@ -443,7 +450,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                 fullWidth
                                 multiline
                                 rows={3}
-                                placeholder="Напишите ответ..."
+                                placeholder={t('reviews.writeResponse')}
                                 value={replyText}
                                 onChange={(e) => setReplyText(e.target.value)}
                             />
@@ -454,7 +461,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                     onClick={handleReplySubmit}
                                     disabled={!replyText.trim()}
                                 >
-                                    Ответить
+                                    {t('reviews.reply')}
                                 </Button>
                                 <Button
                                     size="small"
@@ -463,7 +470,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                         setReplyText('');
                                     }}
                                 >
-                                    Отмена
+                                    {t('reviews.cancel')} 
                                 </Button>
                             </Stack>
                         </Box>
@@ -477,6 +484,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
 
 // Компонент статистики рейтингов
 const RatingStats = ({ stats }) => {
+    const { t } = useTranslation('marketplace');
     return (
         <Stack direction="row" spacing={4} alignItems="center" sx={{ mb: 4 }}>
             <Box textAlign="center">
@@ -489,7 +497,7 @@ const RatingStats = ({ stats }) => {
                     precision={0.1}
                 />
                 <Typography color="text.secondary">
-                    {stats.total_reviews || 0} отзывов
+                    {t('listings.details.info.reviews.count', { count: stats.total_reviews || 0 })}
                 </Typography>
             </Box>
 
