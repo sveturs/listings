@@ -38,6 +38,7 @@
       "price": "Price",
       "condition": {
         "label": "Condition",
+        "any": "Any",
         "new": "New",
         "used": "Used"
       },

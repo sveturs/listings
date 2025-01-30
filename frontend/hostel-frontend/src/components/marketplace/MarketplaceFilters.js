@@ -1,5 +1,7 @@
 // frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+
 import {
     Paper,
     Box,
@@ -18,6 +20,7 @@ import CompactCategoryTree from './CategoryTree';
 import CategoryFilters from './CategoryFilters';
  
 const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, selectedCategoryId }) => {
+    const { t } = useTranslation('marketplace', 'common');
     const selectedCategory = categories.find(c => c.id === selectedCategoryId);
 
     return (
@@ -27,7 +30,8 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                 <TextField
                     fullWidth
                     size="small"
-                    placeholder="🔍 Поиск"
+                    placeholder= {t('buttons.search', { ns: 'common' })}
+                    
                     value={filters.query || ''}
                     onChange={(e) => onFilterChange({ query: e.target.value })}
                  
@@ -57,22 +61,22 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
 
             {/* Основные фильтры */}
             <Box sx={{ p: 2 }}>
-                <Typography variant="subtitle1" gutterBottom>Фильтры</Typography>
+                <Typography variant="subtitle1" gutterBottom>{t('listings.filters.title')}</Typography>
                 <Stack spacing={2}>
                     <Box>
-                        <Typography gutterBottom>Цена</Typography>
+                        <Typography gutterBottom>{t('listings.filters.price.label')}</Typography>
                         <Stack direction="row" spacing={1}>
                             <TextField
                                 size="small"
                                 type="number"
-                                placeholder="От"
+                                placeholder={t('listings.filters.price.min')}
                                 value={filters.min_price || ''}
                                 onChange={(e) => onFilterChange({ min_price: e.target.value })}
                             />
                             <TextField
                                 size="small"
                                 type="number"
-                                placeholder="До"
+                                placeholder={t('listings.filters.price.max')}
                                 value={filters.max_price || ''}
                                 onChange={(e) => onFilterChange({ max_price: e.target.value })}
                             />

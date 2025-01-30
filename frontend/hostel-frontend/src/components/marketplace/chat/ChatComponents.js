@@ -277,9 +277,9 @@ export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat })
     const formatPrice = (price) => {
         if (!price || price === undefined) return 'Цена не указана';
 
-        return new Intl.NumberFormat('ru-RU', {
+        return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
-            currency: 'RUB',
+            currency: 'RSD',
             maximumFractionDigits: 0
         }).format(price || 0);
     };
@@ -394,9 +394,9 @@ export const ChatHeader = ({ chat, onBack, onArchive }) => {
     const formatPrice = (price) => {
         if (!price || price === undefined) return 'Цена не указана';
 
-        return new Intl.NumberFormat('ru-RU', {
+        return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
-            currency: 'RUB',
+            currency: 'RSD',
             maximumFractionDigits: 0
         }).format(price || 0);
     };

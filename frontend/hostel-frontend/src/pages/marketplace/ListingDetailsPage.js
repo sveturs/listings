@@ -94,9 +94,9 @@ const ListingDetailsPage = () => {
     };
 
     const formatPrice = (price) => {
-        return new Intl.NumberFormat('ru-RU', {
+        return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
-            currency: 'RUB',
+            currency: 'RSD',
             maximumFractionDigits: 0
         }).format(price);
     };

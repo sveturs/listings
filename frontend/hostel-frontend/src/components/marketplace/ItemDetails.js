@@ -72,7 +72,7 @@ setListing(response.data.data);
               {item.title}
             </Typography>
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              {item.price} ₽
+              {item.price} RSD
             </Typography>
             <Typography variant="body1" sx={{ my: 2 }}>
               {item.description}

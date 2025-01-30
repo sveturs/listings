@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
     Breadcrumbs as MuiBreadcrumbs, 
@@ -10,6 +11,8 @@ import {
 import { ChevronRight } from 'lucide-react';
 
 const Breadcrumbs = ({ paths }) => {
+        const { t } = useTranslation('common');
+    
     const theme = useTheme();
     const navigate = useNavigate();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -59,7 +62,7 @@ const Breadcrumbs = ({ paths }) => {
                         transition: 'all 0.2s'
                     }}
                 >
-                    Главная
+                   {t('navigation.home')}
                 </Link>
 
                 {paths.map((path, index) => {

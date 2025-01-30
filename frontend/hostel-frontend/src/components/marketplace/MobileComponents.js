@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import { Link } from 'react-router-dom';
 import {
     Box, Button, IconButton, Typography, InputBase, Toolbar, TextField, Select, MenuItem,
@@ -6,9 +8,11 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon, Filter, X, Check, ArrowLeft, ChevronRight, Plus } from 'lucide-react';
 import { debounce } from 'lodash';
-
+ 
 // Компонент MobileHeader
 export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValue }) => {
+        const { t } = useTranslation('marketplace', 'common');
+    
     const [localSearchValue, setLocalSearchValue] = useState(searchValue || '');
     const debouncedSearch = useCallback(
         debounce((value) => onSearch(value), 500),
@@ -75,7 +79,7 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
                         height: 32
                     }}
                 >
-                    Создать
+                   {t('buttons.create', { ns: 'common' })}
                 </Button>
             </Toolbar>
 
@@ -93,7 +97,7 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
                 >
                     <InputBase
                         fullWidth
-                        placeholder="Поиск объявлений..."
+                        placeholder={t('buttons.search', { ns: 'common' })}
                         value={localSearchValue}
                         onChange={(e) => {
                             setLocalSearchValue(e.target.value);
@@ -130,9 +134,9 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
 // Компонент MobileListingCard
 export const MobileListingCard = ({ listing }) => {
     const formatPrice = (price) => {
-        return new Intl.NumberFormat('ru-RU', {
+        return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
-            currency: 'RUB',
+            currency: 'RSD',
             maximumFractionDigits: 0
         }).format(price || 0);
     };
@@ -194,6 +198,8 @@ export const MobileListingCard = ({ listing }) => {
 
 
 export const MobileFilters = ({ open, onClose, filters, onFilterChange, categories }) => {
+    const { t } = useTranslation('marketplace');
+
     const [tempFilters, setTempFilters] = useState(filters);
     const [currentCategory, setCurrentCategory] = useState(null);
     const [navigationHistory, setNavigationHistory] = useState([]);
@@ -287,7 +293,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                             color: 'text.primary'
                         }}
                     >
-                        {currentCategory ? currentCategory.name : 'Фильтры'}
+                        {currentCategory ? currentCategory.name : t('listings.filters.title')}
                     </Typography>
                     <Button
                         variant="text"
@@ -295,7 +301,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                         onClick={handleClearFilters}
                         sx={{ color: 'text.secondary' }}
                     >
-                        Сбросить
+                        {t('listings.filters.reset')}
                     </Button>
                 </Box>
 
@@ -304,13 +310,13 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                     {/* Фильтр цены */}
                     <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle2" gutterBottom>
-                            Цена
+                        {t('listings.filters.price.label')}
                         </Typography>
                         <Stack direction="row" spacing={1}>
                             <TextField
                                 fullWidth
                                 size="small"
-                                placeholder="От"
+                                placeholder={t('listings.filters.price.min')}
                                 type="number"
                                 value={tempFilters.min_price || ''}
                                 onChange={(e) => setTempFilters(prev => ({
@@ -321,7 +327,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                             <TextField
                                 fullWidth
                                 size="small"
-                                placeholder="До"
+                                placeholder={t('listings.filters.price.max')}
                                 type="number"
                                 value={tempFilters.max_price || ''}
                                 onChange={(e) => setTempFilters(prev => ({
@@ -335,7 +341,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                     {/* Фильтр состояния */}
                     <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle2" gutterBottom>
-                            Состояние
+                        {t('listings.details.condition')}
                         </Typography>
                         <Select
                             fullWidth
@@ -346,16 +352,16 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                                 condition: e.target.value
                             }))}
                         >
-                            <MenuItem value="">Любое</MenuItem>
-                            <MenuItem value="new">Новое</MenuItem>
-                            <MenuItem value="used">Б/у</MenuItem>
+                            <MenuItem value="">{t('listings.create.condition.any')}</MenuItem>
+                            <MenuItem value="new">{t('listings.create.condition.new')}</MenuItem>
+                            <MenuItem value="used">{t('listings.create.condition.used')}</MenuItem>
                         </Select>
                     </Box>
 
                     {/* Сортировка */}
                     <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle2" gutterBottom>
-                            Сортировка
+                            {t('listings.filters.sort.label')}
                         </Typography>
                         <Select
                             fullWidth
@@ -366,9 +372,9 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                                 sort_by: e.target.value
                             }))}
                         >
-                            <MenuItem value="date_desc">Сначала новые</MenuItem>
-                            <MenuItem value="price_asc">Сначала дешевле</MenuItem>
-                            <MenuItem value="price_desc">Сначала дороже</MenuItem>
+                            <MenuItem value="date_desc">{t('listings.filters.sort.newest')}</MenuItem>
+                            <MenuItem value="price_asc">{t('listings.filters.sort.cheapest')}</MenuItem>
+                            <MenuItem value="price_desc">{t('listings.filters.sort.expensive')}</MenuItem>
                         </Select>
                     </Box>
 
@@ -443,7 +449,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                             fontWeight: 500,
                         }}
                     >
-                        Показать результаты
+                     {t('listings.filters.apply')}
                     </Button>
                 </Box>
             </Box>
