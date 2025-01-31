@@ -104,7 +104,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                 borderColor: 'divider'
             }}>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    Категории1
+                {t('listings.create.сategories')}
                 </Typography>
                 <CompactCategoryTree
                     categories={categories}

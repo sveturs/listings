@@ -8,14 +8,40 @@
     }
   },
   "listings": {
+    "myListings": "Моји огласи",
+    "Youdonthave": "Још увек немате огласа. Направите свој први оглас одмах!",
+    "edit": {
+      "title": "Уређивање огласа",
+      "saveChanges": "Сачувај промене",
+      "location": {
+        "title": "Локација",
+        "showOnMap": "Прикажи локацију на мапи"
+      },
+      "photos": {
+        "title": "Фотографије",
+        "preview": "Преглед {{index}}"
+      },
+      "loading": "Учитавање...",
+      "success": "Оглас је успешно ажуриран!",
+      "errors": {
+        "loadFailed": "Грешка при учитавању података",
+        "updateFailed": "Грешка при ажурирању огласа",
+        "imageUpload": {
+          "invalidType": "Могу се отпремити само слике",
+          "tooLarge": "Величина датотеке не сме прећи 15MB"
+        }
+      }
+    },
     "create": {
       "title": "Направи оглас",
       "category": "Категорија",
+      "сategories": "Категорије",
       "name": "Назив производа",
       "description": "Опис",
       "price": "Цена",
       "condition": {
         "label": "Стање",
+        "any": "Било које",
         "new": "Ново",
         "used": "Коришћено"
       },
@@ -145,6 +171,7 @@
     "placeholder": "Унесите поруку...",
     "send": "Пошаљи",
     "empty": "Изаберите разговор за почетак",
+    "openlisting": "Отвори оглас",
     "noMessages": "Још увек немате порука",
     "archive": "Архивирај",
     "sending": "Sending...",
@@ -166,7 +193,13 @@
       "reviewVote": "Гласови за рецензије",
       "reviewResponse": "Одговори на рецензије",
       "listingStatus": "Статус огласа",
-      "favoritePrice": "Промене цена омиљених"
+      "favoritePrice": "Промене цена омиљених",
+      "newMessageDescription": "Обавештења о новим порукама у ћаскању",
+      "newReviewDescription": "Обавештења о новим рецензијама на ваше огласе",
+      "reviewVoteDescription": "Обавештења о оценама ваших рецензија",
+      "reviewResponseDescription": "Обавештења о одговорима на ваше рецензије",
+      "listingStatusDescription": "Обавештења о променама статуса ваших огласа",
+      "favoritePriceDescription": "Обавештења о промени цена у омиљеним огласима"
     },
     "test": "Пошаљи тест обавештење",
     "inDevelopment": "У развоју"

@@ -8,6 +8,8 @@
     }
   },
   "listings": {
+    "myListings": "My Listings",
+    "Youdonthave": "You don't have any listings yet. Create your first listing right now!",
     "edit": {
       "title": "Edit Listing",
       "saveChanges": "Save Changes",
@@ -33,6 +35,7 @@
     "create": {
       "title": "Create Listing",
       "category": "Category",
+      "сategories": "Categories",
       "name": "Item Name",
       "description": "Description",
       "price": "Price",
@@ -169,6 +172,7 @@
     "placeholder": "Type a message...",
     "send": "Send",
     "empty": "Select a chat to start messaging",
+    "openlisting": "Open listing",
     "noMessages": "You don't have any messages yet",
     "archive": "Archive",
     "errors": {

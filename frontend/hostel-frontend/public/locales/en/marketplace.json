@@ -8,14 +8,40 @@
     }
   },
   "listings": {
+    "myListings": "My Listings",
+    "Youdonthave": "You don't have any listings yet. Create your first listing right now!",
+    "edit": {
+      "title": "Edit Listing",
+      "saveChanges": "Save Changes",
+      "location": {
+        "title": "Location",
+        "showOnMap": "Show location on map"
+      },
+      "photos": {
+        "title": "Photos",
+        "preview": "Preview {{index}}"
+      },
+      "loading": "Loading...",
+      "success": "Listing updated successfully!",
+      "errors": {
+        "loadFailed": "Error loading data",
+        "updateFailed": "Error updating listing",
+        "imageUpload": {
+          "invalidType": "Only images can be uploaded",
+          "tooLarge": "File size should not exceed 15MB"
+        }
+      }
+    },
     "create": {
       "title": "Create Listing",
       "category": "Category",
+      "сategories": "Categories",
       "name": "Item Name",
       "description": "Description",
       "price": "Price",
       "condition": {
         "label": "Condition",
+        "any": "Any",
         "new": "New",
         "used": "Used"
       },
@@ -146,6 +172,7 @@
     "placeholder": "Type a message...",
     "send": "Send",
     "empty": "Select a chat to start messaging",
+    "openlisting": "Open listing",
     "noMessages": "You don't have any messages yet",
     "archive": "Archive",
     "errors": {
@@ -166,7 +193,13 @@
       "reviewVote": "Review Votes",
       "reviewResponse": "Review Responses",
       "listingStatus": "Listing Status",
-      "favoritePrice": "Favorite Price Changes"
+      "favoritePrice": "Favorite Price Changes",
+      "newMessageDescription": "Notifications about new messages in chat",
+      "newReviewDescription": "Notifications about new reviews on your listings",
+      "reviewVoteDescription": "Notifications about ratings of your reviews",
+      "reviewResponseDescription": "Notifications about responses to your reviews",
+      "listingStatusDescription": "Notifications about changes in the status of your listings",
+      "favoritePriceDescription": "Notifications about price changes in favorite listings"
     },
     "test": "Send Test Notification",
     "inDevelopment": "In Development"

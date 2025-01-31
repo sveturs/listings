@@ -1,6 +1,7 @@
 // frontend/hostel-frontend/src/components/marketplace/chat/ChatComponents.js
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import EmojiPicker from 'emoji-picker-react';
 import { MessageCircle, Send, Smile, Paperclip, ChevronLeft, Phone } from 'lucide-react';
 import {
@@ -29,6 +30,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 const MessageContent = ({ content }) => {
+                const { t } = useTranslation('marketplace');
+    
     const isOnlyEmoji = (text) => {
         const emojiRegex = /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier})+$/u;
         return emojiRegex.test(text.trim());
@@ -76,6 +79,8 @@ const MessageContent = ({ content }) => {
 };
 
 export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, onBack }) => {
+                const { t } = useTranslation('marketplace');
+    
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
     const [processedMessages, setProcessedMessages] = useState([]);
@@ -203,7 +208,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                         <TextField
                             fullWidth
                             size="small"
-                            placeholder="Введите сообщение..."
+                            placeholder={t('chat.placeholder')} 
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             sx={{
@@ -274,6 +279,8 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
 
 // Компонент списка чатов
 export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat }) => {
+                const { t } = useTranslation('marketplace');
+    
     const formatPrice = (price) => {
         if (!price || price === undefined) return 'Цена не указана';
 
@@ -389,6 +396,8 @@ export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat })
 
 // Компонент заголовка чата
 export const ChatHeader = ({ chat, onBack, onArchive }) => {
+                const { t } = useTranslation('marketplace');
+    
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const formatPrice = (price) => {
@@ -522,7 +531,7 @@ export const ChatHeader = ({ chat, onBack, onArchive }) => {
                                 display: { xs: 'none', sm: 'inline-flex' }
                             }}
                         >
-                            Открыть объявление
+                            {t('chat.openlisting')} 
                         </Button>
                     </Stack>
                 </Stack>
@@ -533,6 +542,7 @@ export const ChatHeader = ({ chat, onBack, onArchive }) => {
 
 // Компонент пустого состояния
 export const EmptyState = ({ text }) => (
+    
     <Box
         sx={{
             height: '100%',

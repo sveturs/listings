@@ -1,5 +1,7 @@
 // frontend/hostel-frontend/src/pages/marketplace/ChatPage.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -24,6 +26,8 @@ import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
 const ChatPage = () => {
+            const { t } = useTranslation('marketplace');
+    
     const { listingId } = useParams();
     const navigate = useNavigate();
     const { user, loading: authLoading, login } = useAuth();
@@ -291,7 +295,7 @@ const ChatPage = () => {
                         onArchiveChat={handleArchiveChat}
                     />
                     {!loading && chats.length === 0 && (
-                        <EmptyState text="У вас пока нет сообщений" />
+                        <EmptyState text={t('chat.noMessages')} />
                     )}
                 </Grid>
 
@@ -310,7 +314,7 @@ const ChatPage = () => {
                             </Box>
                         </Box>
                     ) : (
-                        <EmptyState text="Выберите чат для начала общения" />
+                        <EmptyState text={t('chat.empty')} />
                     )}
                 </Grid>
             </Grid>

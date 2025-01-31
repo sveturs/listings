@@ -1,5 +1,7 @@
 // frontend/hostel-frontend/src/pages/marketplace/MyListingsPage.js
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import {
     Container,
     Typography,
@@ -16,6 +18,8 @@ import ListingCard from '../../components/marketplace/ListingCard';
 import axios from '../../api/axios';
 
 const MyListingsPage = () => {
+        const { t } = useTranslation('marketplace');
+    
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -76,7 +80,7 @@ const MyListingsPage = () => {
         <Container sx={{ py: 4 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
                 <Typography variant="h4" component="h1">
-                    Мои объявления
+                {t('listings.myListings')}
                 </Typography>
                 <Button
                     id="createAnnouncementButton" // Добавлено id
@@ -85,7 +89,10 @@ const MyListingsPage = () => {
                     variant="contained"
                     startIcon={<Plus />}
                 >
-                    Создать объявление
+                    {t('listings.create.title')}
+
+
+
                 </Button>
             </Box>
 
@@ -93,7 +100,7 @@ const MyListingsPage = () => {
                 {listings.length === 0 ? (
                     <Grid item xs={12}>
                         <Alert severity="info">
-                            У вас пока нет объявлений. Создайте свое первое объявление прямо сейчас!
+                        {t('listings.Youdonthave')}
                         </Alert>
                     </Grid>
                 ) : (
