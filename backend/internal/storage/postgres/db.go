@@ -9,6 +9,8 @@ import (
     "backend/internal/domain/models" 
     "backend/internal/types"
     "fmt"
+    marketplaceService "backend/internal/proj/marketplace/service"
+
     
 notificationStorage "backend/internal/proj/notifications/storage/postgres"
     marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
@@ -31,11 +33,17 @@ func NewDatabase(dbURL string) (*Database, error) {
         return nil, fmt.Errorf("error creating connection pool: %w", err)
     }
 
+    // Создаем сервис переводов
+    translationService, err := marketplaceService.NewTranslationService()
+    if err != nil {
+        return nil, fmt.Errorf("error creating translation service: %w", err)
+    }
+
     return &Database{
         pool:          pool,
-        marketplaceDB: marketplaceStorage.NewStorage(pool),
+        marketplaceDB: marketplaceStorage.NewStorage(pool, translationService),
         reviewDB:      reviewStorage.NewStorage(pool),
-        usersDB:        userStorage.NewStorage(pool),
+        usersDB:       userStorage.NewStorage(pool),
         notificationsDB: notificationStorage.NewNotificationStorage(pool),
     }, nil
 }

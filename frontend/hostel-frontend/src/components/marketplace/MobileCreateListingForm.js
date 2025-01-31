@@ -1,4 +1,7 @@
+// /data/proj/hostel-booking-system/frontend/hostel-frontend/src/components/marketplace/MobileCreateListingForm.js
+
 import React from 'react';
+import { useTranslation } from 'react-i18next'; // Добавляем импорт
 import { Box, TextField, Button, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch, Alert } from '@mui/material';
 import LocationPicker from '../global/LocationPicker';
 import MiniMap from '../maps/MiniMap';
@@ -16,6 +19,17 @@ const MobileCreateListingForm = ({
     error,
     success
 }) => {
+    const { t, i18n } = useTranslation('marketplace'); // Добавляем i18n
+
+    const handleSubmitForm = (e) => {
+        e.preventDefault();
+        // Добавляем язык интерфейса как оригинальный язык объявления
+        onSubmit({
+            ...listing,
+            original_language: i18n.language
+        });
+    };
+
     return (
         <Box sx={{ px: 2, pb: 2 }}>
             {error && (
@@ -26,18 +40,20 @@ const MobileCreateListingForm = ({
             
             {success && (
                 <Alert severity="success" sx={{ mb: 2 }}>
-                    Объявление успешно создано!
+                    {t('listings.create.success')}
                 </Alert>
             )}
 
-            <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleSubmitForm} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <TextField
-                    label="Заголовок"
+                    label={t('listings.create.name')}
                     fullWidth
                     required
                     value={listing.title}
                     onChange={(e) => setListing({ ...listing, title: e.target.value })}
                 />
+
+
 
                 <TextField
                     label="Описание"
@@ -160,8 +176,8 @@ const MobileCreateListingForm = ({
                     ))}
                 </Box>
 
-                <Button
-                    id="createAnnouncementButton" // Добавлено id
+                               <Button
+                    id="createAnnouncementButton"
                     type="submit"
                     variant="contained"
                     color="primary"
@@ -169,7 +185,7 @@ const MobileCreateListingForm = ({
                     size="large"
                     disabled={!listing.title || !listing.description || !listing.category_id || listing.price <= 0}
                 >
-                    Создать объявление
+                    {t('listings.create.submit')}
                 </Button>
             </form>
         </Box>

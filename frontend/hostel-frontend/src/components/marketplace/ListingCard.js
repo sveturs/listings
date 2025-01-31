@@ -1,7 +1,6 @@
 // src/components/marketplace/ListingCard.js
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-
 import {
     Card,
     CardContent,
@@ -19,19 +18,31 @@ import { MapPin as LocationIcon, Clock as AccessTime, Camera } from 'lucide-reac
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
 const ListingCard = ({ listing, isMobile }) => {
-     
+    const { t, i18n } = useTranslation('marketplace'); 
+    
+    const getLocalizedText = (field) => {
+        // Если текущий язык совпадает с оригинальным языком листинга
+        if (i18n.language === listing.original_language) {
+            return listing[field];
+        }
+        
+        // Пытаемся получить перевод
+        const translation = listing.translations?.[i18n.language]?.[field];
+        return translation || listing[field]; // Если перевода нет, возвращаем оригинальный текст
+    };
+
     const formatPrice = (price) => {
-        return new Intl.NumberFormat('ru-RU', {
+        return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
             currency: 'RSD',
             maximumFractionDigits: 0
         }).format(price || 0);
     };
-    const { t } = useTranslation('marketplace'); 
+
     const formatDate = (dateString) => {
         if (!dateString) return '';
-         const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU', {
+        const date = new Date(dateString);
+        return date.toLocaleDateString(i18n.language, {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -74,7 +85,7 @@ const ListingCard = ({ listing, isMobile }) => {
                         objectFit: 'cover'
                     }}
                     image={getMainImageUrl()}
-                    alt={listing.title || 'Изображение отсутствует'}
+                    alt={getLocalizedText('title') || 'Изображение отсутствует'}
                 />
                 {listing.images && listing.images.length > 1 && !isMobile && (
                     <Chip
@@ -105,10 +116,9 @@ const ListingCard = ({ listing, isMobile }) => {
                         fontWeight: 'medium'
                     }}
                 >
-                    {listing.title || 'Без названия'}
+                    {getLocalizedText('title') || 'Без названия'}
                 </Typography>
 
-                {/*  рейтинг */}
                 {listing.rating > 0 && (
                     <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 1 }}>
                         <Rating 
@@ -161,7 +171,6 @@ const ListingCard = ({ listing, isMobile }) => {
                             sx={{ mt: 2 }}
                         >
                             {t('listings.details.moreDetails')}
-                            
                         </Button>
                     </>
                 )}

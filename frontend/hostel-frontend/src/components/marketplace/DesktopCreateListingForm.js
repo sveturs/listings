@@ -1,4 +1,7 @@
+// /data/proj/hostel-booking-system/frontend/hostel-frontend/src/components/marketplace/DesktopCreateListingForm.js
+
 import React from 'react';
+import { useTranslation } from 'react-i18next'; // Добавляем импорт
 import {
     TextField,
     Button,
@@ -28,12 +31,23 @@ const DesktopCreateListingForm = ({
     setPreviewUrls,
     onSubmit
 }) => {
+    const { t, i18n } = useTranslation('marketplace'); // Добавляем i18n
+
+    const handleSubmitForm = (e) => {
+        e.preventDefault();
+        // Добавляем язык интерфейса как оригинальный язык объявления
+        onSubmit({
+            ...listing,
+            original_language: i18n.language
+        });
+    };
+
     return (
-        <form onSubmit={onSubmit}>
+        <form onSubmit={handleSubmitForm}>
             <Grid container spacing={3}>
                 <Grid item xs={12}>
                     <FormControl fullWidth required>
-                        <InputLabel>Категория</InputLabel>
+                        <InputLabel>{t('listings.create.category')}</InputLabel>
                         <Select
                             value={listing.category_id}
                             onChange={(e) => setListing({ ...listing, category_id: e.target.value })}
@@ -49,13 +63,14 @@ const DesktopCreateListingForm = ({
 
                 <Grid item xs={12}>
                     <TextField
-                        label="Наименование товара"
+                        label={t('listings.create.name')}
                         fullWidth
                         required
                         value={listing.title}
                         onChange={(e) => setListing({ ...listing, title: e.target.value })}
                     />
                 </Grid>
+
 
                 <Grid item xs={12}>
                     <ImageUploader
@@ -183,7 +198,7 @@ const DesktopCreateListingForm = ({
 
                 <Grid item xs={12}>
                     <Button
-                        id="createAnnouncementButton" // Добавлено id
+                        id="createAnnouncementButton"
                         type="submit"
                         variant="contained"
                         color="primary"
@@ -191,7 +206,7 @@ const DesktopCreateListingForm = ({
                         size="large"
                         disabled={!listing.title || !listing.description || !listing.category_id || listing.price <= 0}
                     >
-                        Создать объявление
+                        {t('listings.create.submit')}
                     </Button>
                 </Grid>
             </Grid>

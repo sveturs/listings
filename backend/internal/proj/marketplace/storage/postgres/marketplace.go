@@ -29,7 +29,40 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		listing.Price, listing.Condition, listing.Status, listing.Location,
 		listing.Latitude, listing.Longitude, listing.City, listing.Country, listing.ShowOnMap,
 	).Scan(&listingID)
-
+	if listing.OriginalLanguage != "" {
+		// Поля, которые нужно перевести
+		fieldsToTranslate := map[string]string{
+			"title": listing.Title,
+			"description": listing.Description,
+		}
+	
+		// Целевые языки для перевода
+		targetLanguages := []string{"en", "ru", "sr"}
+		
+		for _, lang := range targetLanguages {
+			if lang == listing.OriginalLanguage {
+				continue
+			}
+			
+			for fieldName, text := range fieldsToTranslate {
+				translatedText, err := s.translationService.Translate(ctx, text, listing.OriginalLanguage, lang)
+				if err != nil {
+					log.Printf("Error translating %s to %s: %v", fieldName, lang, err)
+					continue
+				}
+				
+				_, err = s.pool.Exec(ctx, `
+					INSERT INTO translations (
+						entity_type, entity_id, language, field_name, translated_text
+					) VALUES ($1, $2, $3, $4, $5)
+				`, "listing", listingID, lang, fieldName, translatedText)
+				
+				if err != nil {
+					log.Printf("Error saving translation: %v", err)
+				}
+			}
+		}
+	}
 	return listingID, err
 }
 func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
@@ -884,6 +917,25 @@ WHERE l.id = $1;`
 	} else {
 		listing.Images = images
 	}
-
+	var translations map[string]map[string]string
+	rows, err := s.pool.Query(ctx, `
+		SELECT language, field_name, translated_text
+		FROM translations
+		WHERE entity_type = 'listing' AND entity_id = $1
+	`, id)
+	if err == nil {
+		translations = make(map[string]map[string]string)
+		for rows.Next() {
+			var lang, field, text string
+			if err := rows.Scan(&lang, &field, &text); err != nil {
+				continue
+			}
+			if translations[lang] == nil {
+				translations[lang] = make(map[string]string)
+			}
+			translations[lang][field] = text
+		}
+		listing.Translations = translations
+	}
 	return listing, nil
 }
