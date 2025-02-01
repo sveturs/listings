@@ -1,6 +1,8 @@
 // frontend/hostel-frontend/src/pages/marketplace/ListingDetailsPage.js
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import MiniMap from '../../components/maps/MiniMap';
@@ -29,14 +31,15 @@ import {
 } from '@mui/material';
 
 const ListingDetailsPage = () => {
-    const { t } = useTranslation('marketplace');
+    const { t, i18n } = useTranslation('marketplace');
+    const { language } = useLanguage();
+    const currentLanguage = useRef(language);
     const { id } = useParams();
     const theme = useTheme();
     const navigate = useNavigate();
     const { user, login } = useAuth();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const reviewsRef = useRef(null);
-
     // State
     const [listing, setListing] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -46,42 +49,64 @@ const ListingDetailsPage = () => {
     const [categoryPath, setCategoryPath] = useState([]);
     const [isMapExpanded, setIsMapExpanded] = useState(false);
 
-    useEffect(() => {
-        const fetchListing = async () => {
-            try {
-                setLoading(true);
-                const [listingResponse, favoritesResponse] = await Promise.all([
-                    axios.get(`/api/v1/marketplace/listings/${id}`),
-                    axios.get('/api/v1/marketplace/favorites')
-                ]);
+    const getTranslatedText = (field) => {
+        if (!listing || !field) return '';
 
-                const isFavorite = favoritesResponse.data?.data?.some?.(
-                    item => item.id === Number(id)
-                ) || false;
+        if (i18n.language === listing.original_language) {
+            return listing[field];
+        }
 
-                setListing({
-                    ...listingResponse.data.data,
-                    is_favorite: isFavorite
-                });
+        const translation = listing.translations?.[i18n.language]?.[field];
+        return translation || listing[field];
+    };
 
-                if (listingResponse.data.data.category_path) {
-                    const path = listingResponse.data.data.category_path.map((name, index) => ({
-                        id: listingResponse.data.data.category_path_ids[index],
-                        name: name,
-                        slug: listingResponse.data.data.category_path_slugs[index]
-                    })).reverse();
-                    setCategoryPath(path);
-                }
-            } catch (err) {
-                console.error('Error fetching listing:', err);
-                setError(t('listings.details.errors.loadFailed'));
-            } finally {
-                setLoading(false);
+    // В начале fetchListing:
+    const fetchListing = useCallback(async () => {
+        console.log('Starting fetchListing...');
+        try {
+            setLoading(true);
+            const [listingResponse, favoritesResponse] = await Promise.all([
+                axios.get(`/api/v1/marketplace/listings/${id}`),
+                axios.get('/api/v1/marketplace/favorites')
+            ]);
+    
+            console.log('Full listing response:', listingResponse.data.data);
+            const listingData = listingResponse.data.data;
+            
+            // Добавляем проверку структуры данных
+            if (!listingData.images) {
+                console.warn('No images array in listing data. Adding empty array.');
+                listingData.images = [];
             }
-        };
-
-        fetchListing();
+    
+            setListing({
+                ...listingData,
+                is_favorite: favoritesResponse.data?.data?.some?.(
+                    item => item.id === Number(id)
+                ) || false,
+                images: listingData.images || [] // Гарантируем, что images всегда будет массивом
+            });
+        } catch (err) {
+            console.error('Error fetching listing:', err);
+            setError(t('listings.details.errors.loadFailed'));
+        } finally {
+            setLoading(false);
+        }
     }, [id, t]);
+
+    useEffect(() => {
+        fetchListing();
+    }, [fetchListing]);
+
+    useEffect(() => {
+        if (listing && listing.images) {
+            console.log('Images data:', {
+                images: listing.images,
+                firstImagePath: listing.images[0]?.file_path,
+                backendUrl: process.env.REACT_APP_BACKEND_URL
+            });
+        }
+    }, [listing]);
 
     const scrollToReviews = () => {
         const reviewsSection = document.getElementById('reviews-section');
@@ -123,30 +148,20 @@ const ListingDetailsPage = () => {
         }
 
         try {
+            const newFavoriteState = !listing.is_favorite;
             setListing(prev => ({
                 ...prev,
-                is_favorite: !prev.is_favorite
+                is_favorite: newFavoriteState
             }));
 
-            if (listing?.is_favorite) {
+            if (listing.is_favorite) {
                 await axios.delete(`/api/v1/marketplace/listings/${id}/favorite`);
             } else {
                 await axios.post(`/api/v1/marketplace/listings/${id}/favorite`);
             }
 
-            const [listingResponse, favoritesResponse] = await Promise.all([
-                axios.get(`/api/v1/marketplace/listings/${id}`),
-                axios.get('/api/v1/marketplace/favorites')
-            ]);
-
-            const isFavorite = favoritesResponse.data?.data?.some?.(
-                item => item.id === Number(id)
-            ) || false;
-
-            setListing({
-                ...listingResponse.data.data,
-                is_favorite: isFavorite
-            });
+            // После изменения статуса избранного, обновляем данные
+            await fetchListing();
         } catch (err) {
             setListing(prev => ({
                 ...prev,
@@ -155,6 +170,8 @@ const ListingDetailsPage = () => {
             setError(t('listings.details.errors.updateFailed'));
         }
     };
+
+
 
     if (loading) {
         return (
@@ -182,6 +199,32 @@ const ListingDetailsPage = () => {
     }
 
     if (!listing) return null;
+    const getImageUrl = (image) => {
+        console.log('Getting image URL for:', image);
+        if (!image) {
+            console.log('No image provided');
+            return '';
+        }
+
+        const baseUrl = process.env.REACT_APP_BACKEND_URL;
+        if (!baseUrl) {
+            console.error('REACT_APP_BACKEND_URL is not defined!');
+            return '';
+        }
+
+        if (typeof image === 'string') {
+            console.log(`Returning URL for string image: ${baseUrl}/uploads/${image}`);
+            return `${baseUrl}/uploads/${image}`;
+        }
+
+        if (image.file_path) {
+            console.log(`Returning URL for image object: ${baseUrl}/uploads/${image.file_path}`);
+            return `${baseUrl}/uploads/${image.file_path}`;
+        }
+
+        console.log('Invalid image format:', image);
+        return '';
+    };
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -190,11 +233,11 @@ const ListingDetailsPage = () => {
                 {/* Images Gallery */}
                 <Grid item xs={12} md={8}>
                     <Box sx={{ position: 'relative' }}>
-                        {listing.images && listing.images.length > 0 ? (
+                    {listing.images && Array.isArray(listing.images) && listing.images.length > 0 ? (
                             <>
                                 <Box
                                     component="img"
-                                    src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[currentImageIndex].file_path}`}
+                                    src={getImageUrl(listing.images[currentImageIndex])}
                                     alt={listing.title}
                                     sx={{
                                         width: '100%',
@@ -293,7 +336,7 @@ const ListingDetailsPage = () => {
                     {/* Listing Description */}
                     <Box sx={{ mt: 4 }}>
                         <Typography variant="h4" gutterBottom>
-                            {listing.title}
+                            {getTranslatedText('title')}
                         </Typography>
 
                         <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
@@ -329,7 +372,7 @@ const ListingDetailsPage = () => {
                         </Stack>
 
                         <Typography variant="body1" sx={{ mb: 4 }}>
-                            {listing.description}
+                            {getTranslatedText('description')}
                         </Typography>
 
                         {/* Reviews section */}

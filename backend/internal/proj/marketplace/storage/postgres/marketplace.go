@@ -11,60 +11,93 @@ import (
 
 	"log"
 	"strings"
-	"time"
+	//"time"
 	// "github.com/jackc/pgx/v5"
 )
 
 func (s *Storage) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
-	var listingID int
-	err := s.pool.QueryRow(ctx, `
+    var listingID int
+    
+    // Логируем входные данные
+    log.Printf("Creating listing: title=%s, description=%s, original_language=%s", 
+        listing.Title, listing.Description, listing.OriginalLanguage)
+
+    // Устанавливаем язык по умолчанию если не указан
+    if listing.OriginalLanguage == "" {
+        listing.OriginalLanguage = "sr"
+        log.Printf("Original language not set, using default: sr")
+    }
+
+    // Вставляем основные данные объявления
+    err := s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
-            address_city, address_country, show_on_map
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            address_city, address_country, show_on_map, original_language
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING id
     `,
-		listing.UserID, listing.CategoryID, listing.Title, listing.Description,
-		listing.Price, listing.Condition, listing.Status, listing.Location,
-		listing.Latitude, listing.Longitude, listing.City, listing.Country, listing.ShowOnMap,
-	).Scan(&listingID)
-	if listing.OriginalLanguage != "" {
-		// Поля, которые нужно перевести
-		fieldsToTranslate := map[string]string{
-			"title": listing.Title,
-			"description": listing.Description,
-		}
-	
-		// Целевые языки для перевода
-		targetLanguages := []string{"en", "ru", "sr"}
-		
-		for _, lang := range targetLanguages {
-			if lang == listing.OriginalLanguage {
-				continue
-			}
-			
-			for fieldName, text := range fieldsToTranslate {
-				translatedText, err := s.translationService.Translate(ctx, text, listing.OriginalLanguage, lang)
-				if err != nil {
-					log.Printf("Error translating %s to %s: %v", fieldName, lang, err)
-					continue
-				}
-				
-				_, err = s.pool.Exec(ctx, `
-					INSERT INTO translations (
-						entity_type, entity_id, language, field_name, translated_text
-					) VALUES ($1, $2, $3, $4, $5)
-				`, "listing", listingID, lang, fieldName, translatedText)
-				
-				if err != nil {
-					log.Printf("Error saving translation: %v", err)
-				}
-			}
-		}
-	}
-	return listingID, err
+        listing.UserID, listing.CategoryID, listing.Title, listing.Description,
+        listing.Price, listing.Condition, listing.Status, listing.Location,
+        listing.Latitude, listing.Longitude, listing.City, listing.Country,
+        listing.ShowOnMap, listing.OriginalLanguage,
+    ).Scan(&listingID)
+
+    if err != nil {
+        log.Printf("Error inserting listing: %v", err)
+        return 0, fmt.Errorf("failed to insert listing: %w", err)
+    }
+
+    log.Printf("Created listing with ID: %d, starting translations", listingID)
+
+    // Создаем переводы
+    targetLanguages := []string{"en", "ru"}
+    fieldsToTranslate := map[string]string{
+        "title":       listing.Title,
+        "description": listing.Description,
+    }
+
+    for _, lang := range targetLanguages {
+        // Пропускаем перевод если это язык оригинала
+        if lang == listing.OriginalLanguage {
+            log.Printf("Skipping translation to %s as it's the original language", lang)
+            continue
+        }
+
+        for field, text := range fieldsToTranslate {
+            log.Printf("Translating %s to %s", field, lang)
+            
+            // Получаем перевод
+            translatedText, err := s.translationService.Translate(ctx, text, listing.OriginalLanguage, lang)
+            if err != nil {
+                log.Printf("Error translating %s to %s: %v", field, lang, err)
+                continue
+            }
+
+            log.Printf("Got translation for %s: %s", field, translatedText)
+
+            // Сохраняем перевод
+            _, err = s.pool.Exec(ctx, `
+                INSERT INTO translations (
+                    entity_type, entity_id, language, field_name, 
+                    translated_text, is_machine_translated, is_verified
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `,
+                "listing", listingID, lang, field,
+                translatedText, true, false,
+            )
+
+            if err != nil {
+                log.Printf("Error saving translation: %v", err)
+            } else {
+                log.Printf("Successfully saved translation")
+            }
+        }
+    }
+
+    return listingID, nil
 }
+
 func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
 	var imageID int
 	err := s.pool.QueryRow(ctx, `
@@ -754,188 +787,75 @@ func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.Marketpl
 	return cat, nil
 }
 func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-	userID, _ := ctx.Value("user_id").(int)
+    listing := &models.MarketplaceListing{
+        User:     &models.User{},
+        Category: &models.MarketplaceCategory{},
+    }
 
-	query := `WITH RECURSIVE category_path AS (
-    -- Базовый случай: начальная категория
-    SELECT 
-        c.id, 
-        c.name, 
-        c.parent_id, 
-        c.slug,
-        ARRAY[c.id]::integer[] as path_ids,
-        ARRAY[c.name]::varchar[] as path_names,
-        ARRAY[c.slug]::varchar[] as path_slugs,
-        1 as level
-    FROM marketplace_categories c
-    WHERE c.id = (SELECT category_id FROM marketplace_listings WHERE id = $1)
+    // Получаем основные данные объявления с original_language
+    err := s.pool.QueryRow(ctx, `
+        SELECT 
+            l.id, l.user_id, l.category_id, l.title, l.description,
+            l.price, l.condition, l.status, l.location, l.latitude,
+            l.longitude, l.address_city, l.address_country, l.views_count,
+            l.created_at, l.updated_at, l.show_on_map, l.original_language,
+            u.name, u.email, u.created_at as user_created_at, 
+            COALESCE(u.picture_url, ''), u.phone,
+            c.name as category_name, c.slug as category_slug
+        FROM marketplace_listings l
+        LEFT JOIN users u ON l.user_id = u.id
+        LEFT JOIN marketplace_categories c ON l.category_id = c.id
+        WHERE l.id = $1
+    `, id).Scan(
+        &listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title,
+        &listing.Description, &listing.Price, &listing.Condition, &listing.Status,
+        &listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
+        &listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
+        &listing.ShowOnMap, &listing.OriginalLanguage,
+        &listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
+        &listing.User.PictureURL, &listing.User.Phone,
+        &listing.Category.Name, &listing.Category.Slug,
+    )
+
+    if err != nil {
+        return nil, fmt.Errorf("error getting listing: %w", err)
+    }
+
+    // Загружаем переводы
+    translations := make(map[string]map[string]string)
+    rows, err := s.pool.Query(ctx, `
+        SELECT language, field_name, translated_text
+        FROM translations
+        WHERE entity_type = 'listing' AND entity_id = $1
+    `, id)
+    if err != nil {
+        return listing, nil
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var lang, field, text string
+        if err := rows.Scan(&lang, &field, &text); err != nil {
+            continue
+        }
+        if translations[lang] == nil {
+            translations[lang] = make(map[string]string)
+        }
+        translations[lang][field] = text
+        log.Printf("Added translation for %s.%s: %s", lang, field, text)
+    }
+    // Получаем изображения
+    images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
+    if err != nil {
+        log.Printf("Error loading images: %v", err) // Добавляем лог
+        return nil, err
+    }
     
-    UNION ALL
-    
-    -- Рекурсивный случай: находим родительскую категорию
-    SELECT 
-        p.id, 
-        p.name, 
-        p.parent_id, 
-        p.slug,
-        path_ids || p.id,
-        path_names || p.name,
-        path_slugs || p.slug,
-        cp.level + 1
-    FROM marketplace_categories p
-    INNER JOIN category_path cp ON p.id = cp.parent_id
-),
-final_path AS (
-    -- Выбираем полный путь
-    SELECT path_ids, path_names, path_slugs
-    FROM category_path 
-    WHERE parent_id IS NULL
-    ORDER BY level DESC
-    LIMIT 1
-)
-SELECT 
-    l.id, 
-    l.user_id, 
-    l.category_id, 
-    l.title, 
-    l.description,
-    l.price, 
-    l.condition, 
-    l.status, 
-    l.location, 
-    l.latitude,
-    l.longitude, 
-    l.address_city, 
-    l.address_country, 
-    l.views_count,
-    l.created_at, 
-    l.updated_at,
-    l.show_on_map,
-    u.name, 
-    u.email,
-	u.created_at as user_created_at, 
-    COALESCE(u.picture_url, ''),
-	u.phone,
-    c.name as category_name, 
-    c.slug as category_slug,
-    fp.path_names as category_path_names,
-    fp.path_ids as category_path_ids,
-    fp.path_slugs as category_path_slugs,
-    EXISTS (
-        SELECT 1 
-        FROM marketplace_favorites mf 
-        WHERE mf.listing_id = l.id 
-        AND mf.user_id = $2
-    ) as is_favorite
-FROM marketplace_listings l
-LEFT JOIN users u ON l.user_id = u.id
-LEFT JOIN marketplace_categories c ON l.category_id = c.id
-LEFT JOIN final_path fp ON true
-WHERE l.id = $1;`
+    // Важно! Присваиваем изображения объявлению
+    listing.Images = images
+    listing.Translations = translations
+    log.Printf("Final translations for listing %d: %+v", id, translations)
+    log.Printf("Original language: %s", listing.OriginalLanguage)
 
-	listing := &models.MarketplaceListing{
-		User:      &models.User{},
-		Category:  &models.MarketplaceCategory{},
-		ShowOnMap: true,
-	}
-
-	var (
-		userPictureURL    string
-		userPhone        sql.NullString
-		categoryPath      []string
-		categoryPathIds   []int
-		categoryPathSlugs []string
-	)
-
-	err := s.pool.QueryRow(ctx, query, id, userID).Scan(
-		&listing.ID,
-		&listing.UserID,
-		&listing.CategoryID,
-		&listing.Title,
-		&listing.Description,
-		&listing.Price,
-		&listing.Condition,
-		&listing.Status,
-		&listing.Location,
-		&listing.Latitude,
-		&listing.Longitude,
-		&listing.City,
-		&listing.Country,
-		&listing.ViewsCount,
-		&listing.CreatedAt,
-		&listing.UpdatedAt,
-		&listing.ShowOnMap,
-		&listing.User.Name,
-		&listing.User.Email,
-		&listing.User.CreatedAt,
-		&userPictureURL,
-		&userPhone,
-		&listing.Category.Name,
-		&listing.Category.Slug,
-		&categoryPath,
-		&categoryPathIds,
-		&categoryPathSlugs,
-		&listing.IsFavorite,
-	)
-	if userPhone.Valid {
-		listing.User.Phone = &userPhone.String
-	}
-	if err != nil {
-		return nil, fmt.Errorf("error fetching listing: %w", err)
-	}
-
-	// Присваиваем URL изображения после сканирования
-	listing.User.PictureURL = userPictureURL
-
-	// Добавляем пути категорий в структуру листинга
-	listing.CategoryPath = categoryPath
-	listing.CategoryPathIds = categoryPathIds
-	listing.CategoryPathSlugs = categoryPathSlugs
-
-	// Копируем ID пользователя
-	listing.User.ID = listing.UserID
-
-	// Увеличиваем счетчик просмотров
-	go func() {
-		timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_, err = s.pool.Exec(timeoutCtx, `
-            UPDATE marketplace_listings 
-            SET views_count = views_count + 1 
-            WHERE id = $1
-        `, id)
-		if err != nil {
-			log.Printf("Error updating views count: %v", err)
-		}
-	}()
-
-	// Получаем изображения
-	images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", id))
-	if err != nil {
-		log.Printf("Error getting images for listing %d: %v", id, err)
-		listing.Images = []models.MarketplaceImage{} // Пустой массив вместо nil
-	} else {
-		listing.Images = images
-	}
-	var translations map[string]map[string]string
-	rows, err := s.pool.Query(ctx, `
-		SELECT language, field_name, translated_text
-		FROM translations
-		WHERE entity_type = 'listing' AND entity_id = $1
-	`, id)
-	if err == nil {
-		translations = make(map[string]map[string]string)
-		for rows.Next() {
-			var lang, field, text string
-			if err := rows.Scan(&lang, &field, &text); err != nil {
-				continue
-			}
-			if translations[lang] == nil {
-				translations[lang] = make(map[string]string)
-			}
-			translations[lang][field] = text
-		}
-		listing.Translations = translations
-	}
-	return listing, nil
+    return listing, nil
 }
