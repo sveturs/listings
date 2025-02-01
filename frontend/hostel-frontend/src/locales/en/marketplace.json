@@ -87,6 +87,7 @@
       },
       "price": "Price",
       "moreDetails": "More details",
+      "ChooseAcategory": "Choose a category...",
       "condition": "Condition",
       "location": "Location",
       "description": "Description",

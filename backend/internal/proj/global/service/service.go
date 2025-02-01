@@ -8,18 +8,26 @@ import (
     marketplaceService "backend/internal/proj/marketplace/service"
     reviewService "backend/internal/proj/reviews/service"
     notificationService "backend/internal/proj/notifications/service"
+    "log"
 )
 
 type Service struct {
     users         *userService.Service
-    marketplace  *marketplaceService.Service
-    review       *reviewService.Service
-    chat         *marketplaceService.Service
-    config       *config.Config
-    notification    *notificationService.Service
+    marketplace   *marketplaceService.Service
+    review        *reviewService.Service
+    chat          *marketplaceService.Service
+    config        *config.Config
+    notification  *notificationService.Service
+    translation   marketplaceService.TranslationServiceInterface
 }
 
 func NewService(storage storage.Storage, cfg *config.Config) *Service {
+    // Create translation service first since other services might need it
+    translationSvc, err := marketplaceService.NewTranslationService(cfg.GoogleTranslateAPIKey)
+    if err != nil {
+        log.Fatalf("Failed to create translation service: %v", err)
+    }
+
     notificationSvc := notificationService.NewService(storage)
     
     return &Service{
@@ -29,18 +37,25 @@ func NewService(storage storage.Storage, cfg *config.Config) *Service {
         chat:        marketplaceService.NewService(storage, notificationSvc.Notification),
         config:      cfg,
         notification: notificationSvc,
+        translation:  translationSvc,
     }
 }
 
-// Реализация методов интерфейса
+// Implement interface methods
 func (s *Service) Auth() userService.AuthServiceInterface {
     return s.users.Auth
 }
+
 func (s *Service) Notification() notificationService.NotificationServiceInterface {
     return s.notification.Notification
 }
+
 func (s *Service) User() userService.UserServiceInterface {
     return s.users.User
+}
+
+func (s *Service) Translation() marketplaceService.TranslationServiceInterface {
+    return s.translation
 }
 
 func (s *Service) Config() *config.Config {

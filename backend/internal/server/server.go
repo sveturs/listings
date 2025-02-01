@@ -5,6 +5,7 @@ import (
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	userHandler "backend/internal/proj/users/handler"
+//	service "backend/internal/proj/marketplace/service"  
 
 	"github.com/gofiber/websocket/v2"
 
@@ -34,47 +35,47 @@ type Server struct {
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
-	db, err := postgres.NewDatabase(cfg.DatabaseURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize database: %w", err)
-	}
+    db, err := postgres.NewDatabase(cfg.DatabaseURL)
+    if err != nil {
+        return nil, fmt.Errorf("failed to initialize database: %w", err)
+    }
 
-	services := globalService.NewService(db, cfg)
-	usersHandler := userHandler.NewHandler(services)
-	reviewHandler := reviewHandler.NewHandler(services)
-	marketplaceHandler := marketplaceHandler.NewHandler(services)
-	notificationsHandler := notificationHandler.NewHandler(services)
+    // Create global services
+    services := globalService.NewService(db, cfg)
 
-	middleware := middleware.NewMiddleware(cfg, services)
+    usersHandler := userHandler.NewHandler(services)
+    reviewHandler := reviewHandler.NewHandler(services)
+    marketplaceHandler := marketplaceHandler.NewHandler(services)
+    notificationsHandler := notificationHandler.NewHandler(services)
 
-	// Инициализация Fiber и размер файлов для загрузки #images #upload
-	app := fiber.New(fiber.Config{
-		ErrorHandler: middleware.ErrorHandler,
-		BodyLimit:    20 * 1024 * 1024, // 20MB
-	})
+    middleware := middleware.NewMiddleware(cfg, services)
 
-	// Применение middleware
-	middleware.Setup(app)
+    // Initialize Fiber with file upload size limit
+    app := fiber.New(fiber.Config{
+        ErrorHandler: middleware.ErrorHandler,
+        BodyLimit:    20 * 1024 * 1024, // 20MB
+    })
 
-	// Инициализация сервера
-	server := &Server{
-		app: app,
-		cfg: cfg,
-		//		handlers:   	handlers,
-		users:         usersHandler,
-		middleware:    middleware,
-		review:        reviewHandler,
-		marketplace:   marketplaceHandler,
-		notifications: notificationsHandler,
-	}
-	notificationsHandler.Notification.ConnectTelegramWebhook()
+    // Apply middleware
+    middleware.Setup(app)
 
-	// Настройка маршрутов
-	server.setupRoutes()
+    // Initialize server
+    server := &Server{
+        app: app,
+        cfg: cfg,
+        users:         usersHandler,
+        middleware:    middleware,
+        review:        reviewHandler,
+        marketplace:   marketplaceHandler,
+        notifications: notificationsHandler,
+    }
+    notificationsHandler.Notification.ConnectTelegramWebhook()
 
-	return server, nil
+    // Setup routes
+    server.setupRoutes()
+
+    return server, nil
 }
-
 // setupRoutes настраивает маршруты сервера
 func (s *Server) setupRoutes() {
 	// Root path

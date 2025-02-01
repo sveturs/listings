@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     Button,
@@ -17,6 +18,8 @@ const CategorySelect = ({ categories, value, onChange, error }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [currentPath, setCurrentPath] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
+        const { t, i18n } = useTranslation('marketplace'); 
+    
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -89,7 +92,7 @@ const CategorySelect = ({ categories, value, onChange, error }) => {
                         </Typography>
                     </Stack>
                 ) : (
-                    'Выберите категорию'
+                   t('listings.details.ChooseAcategory')
                 )}
             </Button>
 

@@ -34,7 +34,7 @@ func NewDatabase(dbURL string) (*Database, error) {
     }
 
     // Создаем сервис переводов
-    translationService, err := marketplaceService.NewTranslationService()
+    translationService, err := marketplaceService.NewTranslationService("AIzaSyBISWAfMMEdWSIKL9WASQIWeKbSQo4Dv48")
     if err != nil {
         return nil, fmt.Errorf("error creating translation service: %w", err)
     }

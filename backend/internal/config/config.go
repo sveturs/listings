@@ -14,6 +14,8 @@ type Config struct {
 	GoogleRedirectURL  string
 	FrontendURL        string
 	Environment        string
+	    GoogleTranslateAPIKey string
+		
 }
 
 func NewConfig() (*Config, error) {
@@ -21,7 +23,10 @@ func NewConfig() (*Config, error) {
 	if port == "" {
 		port = "3000"
 	}
-
+    googleTranslateAPIKey := os.Getenv("GOOGLE_TRANSLATE_API_KEY")
+    if googleTranslateAPIKey == "" {
+        return nil, fmt.Errorf("GOOGLE_TRANSLATE_API_KEY is not set")
+    }
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
 		return nil, fmt.Errorf("DATABASE_URL is not set")
@@ -60,5 +65,6 @@ func NewConfig() (*Config, error) {
 		GoogleRedirectURL:  googleRedirectURL,
 		FrontendURL:        frontendURL,
 		Environment:        environment,
+		GoogleTranslateAPIKey: googleTranslateAPIKey,
 	}, nil
 }
