@@ -8,7 +8,8 @@ import (
     marketplaceService "backend/internal/proj/marketplace/service"
     reviewService "backend/internal/proj/reviews/service"
     notificationService "backend/internal/proj/notifications/service"
-    "log"
+    translationService "backend/internal/proj/marketplace/service"  // правильный импорт
+    //"log"
 )
 
 type Service struct {
@@ -18,16 +19,10 @@ type Service struct {
     chat          *marketplaceService.Service
     config        *config.Config
     notification  *notificationService.Service
-    translation   marketplaceService.TranslationServiceInterface
+     translation   translationService.TranslationServiceInterface
 }
 
-func NewService(storage storage.Storage, cfg *config.Config) *Service {
-    // Create translation service first since other services might need it
-    translationSvc, err := marketplaceService.NewTranslationService(cfg.GoogleTranslateAPIKey)
-    if err != nil {
-        log.Fatalf("Failed to create translation service: %v", err)
-    }
-
+func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
     notificationSvc := notificationService.NewService(storage)
     
     return &Service{
@@ -37,7 +32,7 @@ func NewService(storage storage.Storage, cfg *config.Config) *Service {
         chat:        marketplaceService.NewService(storage, notificationSvc.Notification),
         config:      cfg,
         notification: notificationSvc,
-        translation:  translationSvc,
+        translation:  translationSvc, // используем переданный сервис
     }
 }
 
@@ -54,7 +49,7 @@ func (s *Service) User() userService.UserServiceInterface {
     return s.users.User
 }
 
-func (s *Service) Translation() marketplaceService.TranslationServiceInterface {
+func (s *Service) Translation() translationService.TranslationServiceInterface {
     return s.translation
 }
 

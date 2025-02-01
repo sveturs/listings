@@ -25,6 +25,13 @@ func (s *MarketplaceService) GetUserFavorites(ctx context.Context, userID int) (
 }
 func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
     // Устанавливаем начальные значения
+    if listing.OriginalLanguage == "" {
+        detectedLang, _, err := s.translationService.DetectLanguage(ctx, listing.Title)
+        if err != nil {
+            return 0, fmt.Errorf("failed to detect language: %w", err)
+        }
+        listing.OriginalLanguage = detectedLang
+    }
     listing.Status = "active"
     listing.ViewsCount = 0
     

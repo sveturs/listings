@@ -5,9 +5,8 @@ import (
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	userHandler "backend/internal/proj/users/handler"
-//	service "backend/internal/proj/marketplace/service"  
-
-	"github.com/gofiber/websocket/v2"
+ 	"github.com/gofiber/websocket/v2"
+	 marketplaceService "backend/internal/proj/marketplace/service"  // исправленный импорт
 
 	globalService "backend/internal/proj/global/service"
 	notificationHandler "backend/internal/proj/notifications/handler"
@@ -40,8 +39,15 @@ func NewServer(cfg *config.Config) (*Server, error) {
         return nil, fmt.Errorf("failed to initialize database: %w", err)
     }
 
+    // Создаем сервис переводов с правильным именованием пакета
+    translationService, err := marketplaceService.NewTranslationService(cfg.GoogleTranslateAPIKey)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create translation service: %w", err)
+    }
+
     // Create global services
-    services := globalService.NewService(db, cfg)
+    services := globalService.NewService(db, cfg, translationService)
+
 
     usersHandler := userHandler.NewHandler(services)
     reviewHandler := reviewHandler.NewHandler(services)

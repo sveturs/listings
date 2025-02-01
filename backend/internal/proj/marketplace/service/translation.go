@@ -16,8 +16,10 @@ const GOOGLE_TRANSLATE_API_URL = "https://translation.googleapis.com/language/tr
 type TranslationService struct {
     apiKey string
     cache  *sync.Map
+    supportedLanguages []string
 }
 
+// Структуры для API Google Translate
 type googleTranslateRequest struct {
     Q        string `json:"q"`
     Source   string `json:"source"`
@@ -33,6 +35,20 @@ type googleTranslateResponse struct {
     } `json:"data"`
 }
 
+// Структура для определения языка через Google API
+type languageDetectionRequest struct {
+    Q string `json:"q"`
+}
+
+type languageDetectionResponse struct {
+    Data struct {
+        Detections [][]struct {
+            Language       string  `json:"language"`
+            Confidence    float64 `json:"confidence"`
+        } `json:"detections"`
+    } `json:"data"`
+}
+
 func NewTranslationService(apiKey string) (*TranslationService, error) {
     if apiKey == "" {
         return nil, fmt.Errorf("Google Translate API key is required")
@@ -40,8 +56,85 @@ func NewTranslationService(apiKey string) (*TranslationService, error) {
     return &TranslationService{
         apiKey: apiKey,
         cache:  &sync.Map{},
+        supportedLanguages: []string{"sr", "en", "ru"},
     }, nil
 }
+
+// DetectLanguage определяет язык текста
+func (s *TranslationService) DetectLanguage(ctx context.Context, text string) (string, float64, error) {
+    url := fmt.Sprintf("https://translation.googleapis.com/language/translate/v2/detect?key=%s", s.apiKey)
+    
+    reqBody := languageDetectionRequest{
+        Q: text,
+    }
+    
+    jsonData, err := json.Marshal(reqBody)
+    if err != nil {
+        return "", 0, err
+    }
+
+    req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+    if err != nil {
+        return "", 0, err
+    }
+
+    req.Header.Set("Content-Type", "application/json")
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        return "", 0, err
+    }
+    defer resp.Body.Close()
+
+    var result languageDetectionResponse
+    if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+        return "", 0, err
+    }
+
+    if len(result.Data.Detections) > 0 && len(result.Data.Detections[0]) > 0 {
+        detection := result.Data.Detections[0][0]
+        return detection.Language, detection.Confidence, nil
+    }
+
+    return "", 0, fmt.Errorf("no language detection results")
+}
+
+// TranslateToAllLanguages переводит текст на все поддерживаемые языки
+func (s *TranslationService) TranslateToAllLanguages(ctx context.Context, text string) (map[string]string, error) {
+    // Определяем язык исходного текста
+    sourceLanguage, confidence, err := s.DetectLanguage(ctx, text)
+    if err != nil {
+        return nil, fmt.Errorf("language detection failed: %w", err)
+    }
+
+    log.Printf("Detected language: %s (confidence: %.2f)", sourceLanguage, confidence)
+
+    // Результаты переводов
+    translations := make(map[string]string)
+    
+    // Сохраняем оригинальный текст
+    translations[sourceLanguage] = text
+
+    // Переводим на все остальные поддерживаемые языки
+    for _, targetLang := range s.supportedLanguages {
+        // Пропускаем язык оригинала
+        if targetLang == sourceLanguage {
+            continue
+        }
+
+        translated, err := s.Translate(ctx, text, sourceLanguage, targetLang)
+        if err != nil {
+            log.Printf("Warning: translation to %s failed: %v", targetLang, err)
+            continue
+        }
+
+        translations[targetLang] = translated
+    }
+
+    return translations, nil
+}
+
 
 func (s *TranslationService) Translate(ctx context.Context, text string, sourceLanguage string, targetLanguage string) (string, error) {
     // Check cache first

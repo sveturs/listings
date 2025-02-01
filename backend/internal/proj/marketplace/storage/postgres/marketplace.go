@@ -19,28 +19,21 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
     var listingID int
     
     // Логируем входные данные
-    log.Printf("Creating listing: title=%s, description=%s, original_language=%s", 
-        listing.Title, listing.Description, listing.OriginalLanguage)
-
-    // Устанавливаем язык по умолчанию если не указан
-    if listing.OriginalLanguage == "" {
-        listing.OriginalLanguage = "sr"
-        log.Printf("Original language not set, using default: sr")
-    }
+    log.Printf("Creating listing: title=%s, description=%s", listing.Title, listing.Description)
 
     // Вставляем основные данные объявления
     err := s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
-            address_city, address_country, show_on_map, original_language
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            address_city, address_country, show_on_map
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING id
     `,
         listing.UserID, listing.CategoryID, listing.Title, listing.Description,
         listing.Price, listing.Condition, listing.Status, listing.Location,
         listing.Latitude, listing.Longitude, listing.City, listing.Country,
-        listing.ShowOnMap, listing.OriginalLanguage,
+        listing.ShowOnMap,
     ).Scan(&listingID)
 
     if err != nil {
@@ -50,47 +43,48 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 
     log.Printf("Created listing with ID: %d, starting translations", listingID)
 
-    // Создаем переводы
-    targetLanguages := []string{"en", "ru"}
-    fieldsToTranslate := map[string]string{
-        "title":       listing.Title,
-        "description": listing.Description,
-    }
-
-    for _, lang := range targetLanguages {
-        // Пропускаем перевод если это язык оригинала
-        if lang == listing.OriginalLanguage {
-            log.Printf("Skipping translation to %s as it's the original language", lang)
-            continue
-        }
-
-        for field, text := range fieldsToTranslate {
-            log.Printf("Translating %s to %s", field, lang)
-            
-            // Получаем перевод
-            translatedText, err := s.translationService.Translate(ctx, text, listing.OriginalLanguage, lang)
-            if err != nil {
-                log.Printf("Error translating %s to %s: %v", field, lang, err)
-                continue
-            }
-
-            log.Printf("Got translation for %s: %s", field, translatedText)
-
-            // Сохраняем перевод
-            _, err = s.pool.Exec(ctx, `
+    // Переводим заголовок
+    translations, err := s.translationService.TranslateToAllLanguages(ctx, listing.Title)
+    if err != nil {
+        log.Printf("Title translation failed: %v", err)
+    } else {
+        // Сохраняем все переводы заголовка
+        for lang, translatedText := range translations {
+            err := s.pool.QueryRow(ctx, `
                 INSERT INTO translations (
                     entity_type, entity_id, language, field_name, 
                     translated_text, is_machine_translated, is_verified
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7)
             `,
-                "listing", listingID, lang, field,
-                translatedText, true, false,
-            )
+                "listing", listingID, lang, "title",
+                translatedText, lang != listing.OriginalLanguage, false,
+            ).Scan()
 
             if err != nil {
-                log.Printf("Error saving translation: %v", err)
-            } else {
-                log.Printf("Successfully saved translation")
+                log.Printf("Failed to save title translation to %s: %v", lang, err)
+            }
+        }
+    }
+
+    // Переводим описание
+    translations, err = s.translationService.TranslateToAllLanguages(ctx, listing.Description)
+    if err != nil {
+        log.Printf("Description translation failed: %v", err)
+    } else {
+        // Сохраняем все переводы описания
+        for lang, translatedText := range translations {
+            err := s.pool.QueryRow(ctx, `
+                INSERT INTO translations (
+                    entity_type, entity_id, language, field_name, 
+                    translated_text, is_machine_translated, is_verified
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `,
+                "listing", listingID, lang, "description",
+                translatedText, lang != listing.OriginalLanguage, false,
+            ).Scan()
+
+            if err != nil {
+                log.Printf("Failed to save description translation to %s: %v", lang, err)
             }
         }
     }
