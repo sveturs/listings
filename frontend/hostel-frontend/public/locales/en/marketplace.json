@@ -12,6 +12,7 @@
     "Youdonthave": "You don't have any listings yet. Create your first listing right now!",
     "edit": {
       "title": "Edit Listing",
+      "translationNote": "You are editing a translation. Original is in another language.",
       "saveChanges": "Save Changes",
       "location": {
         "title": "Location",

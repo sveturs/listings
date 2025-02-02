@@ -5,6 +5,8 @@ import (
 	"backend/internal/domain/models"
 	"context"
 	"backend/internal/types"
+	"database/sql"
+	
 )
 
 type Storage interface {
@@ -73,6 +75,8 @@ type Storage interface {
 	MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error
 	ArchiveChat(ctx context.Context, chatID int, userID int) error
     GetUnreadMessagesCount(ctx context.Context, userID int) (int, error)
+
+    Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 
 	// Database connection
 	Close()

@@ -183,12 +183,6 @@ func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
 
 	log.Printf("Found %d listings", len(listings))
 
-	// Добавляем информацию о том, добавлено ли объявление в избранное
-	// userID, ok := c.Locals("user_id").(int)
-	//if ok {
-	// TODO: Добавить проверку избранного для авторизованных пользователей
-	//}
-
 	return utils.SuccessResponse(c, fiber.Map{
 		"data": listings,
 		"meta": fiber.Map{
@@ -332,7 +326,42 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
         "message": "Listing updated successfully",
     })
 }
+func (h *MarketplaceHandler) UpdateTranslations(c *fiber.Ctx) error {
+    listingID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+    }
 
+    var updateData struct {
+        Language     string            `json:"language"`
+        Translations map[string]string `json:"translations"`
+        IsVerified   bool             `json:"is_verified"`
+    }
+
+    if err := c.BodyParser(&updateData); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+    }
+
+    // Обновляем каждый переведенный field
+    for fieldName, translatedText := range updateData.Translations {
+        err := h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
+            EntityType:         "listing",
+            EntityID:          listingID,
+            Language:          updateData.Language,
+            FieldName:         fieldName,
+            TranslatedText:    translatedText,
+            IsVerified:        updateData.IsVerified,
+            IsMachineTranslated: false,
+        })
+        if err != nil {
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating translation")
+        }
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Translations updated successfully",
+    })
+}
 // DeleteListing - удаление объявления
 func (h *MarketplaceHandler) DeleteListing(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)

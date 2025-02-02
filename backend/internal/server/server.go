@@ -6,7 +6,8 @@ import (
 	reviewHandler "backend/internal/proj/reviews/handler"
 	userHandler "backend/internal/proj/users/handler"
  	"github.com/gofiber/websocket/v2"
-	 marketplaceService "backend/internal/proj/marketplace/service"  // исправленный импорт
+	 marketplaceService "backend/internal/proj/marketplace/service"  
+	 
 
 	globalService "backend/internal/proj/global/service"
 	notificationHandler "backend/internal/proj/notifications/handler"
@@ -158,6 +159,8 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Post("/listings/:id/favorite", s.marketplace.Marketplace.AddToFavorites)
 	marketplaceProtected.Delete("/listings/:id/favorite", s.marketplace.Marketplace.RemoveFromFavorites)
 	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
+	marketplaceProtected.Put("/translations/:id", s.marketplace.Marketplace.UpdateTranslations)
+	
 	// Чат для маркетплейса
 
 	chat := api.Group("/marketplace/chat")

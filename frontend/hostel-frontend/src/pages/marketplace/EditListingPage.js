@@ -30,7 +30,8 @@ import {
 import axios from '../../api/axios';
 
 const EditListingPage = () => {
-    const { t } = useTranslation('marketplace', 'common');
+    const { t, i18n } = useTranslation('marketplace', 'common');
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -65,17 +66,27 @@ const EditListingPage = () => {
                     axios.get(`/api/v1/marketplace/listings/${id}`),
                     axios.get("/api/v1/marketplace/categories")
                 ]);
-
+    
                 const listingData = listingResponse.data.data;
-
+    
                 if (listingData.user_id !== user?.id) {
                     navigate('/marketplace');
                     return;
                 }
-
+    
+                // Получаем текст на нужном языке
+                const title = i18n.language === listingData.original_language
+                    ? listingData.title
+                    : listingData.translations?.[i18n.language]?.title || listingData.title;
+    
+                const description = i18n.language === listingData.original_language
+                    ? listingData.description
+                    : listingData.translations?.[i18n.language]?.description || listingData.description;
+    
                 setListing({
-                    title: listingData.title,
-                    description: listingData.description,
+                    ...listingData,
+                    title,
+                    description,
                     price: listingData.price,
                     category_id: listingData.category_id,
                     condition: listingData.condition,
@@ -86,13 +97,13 @@ const EditListingPage = () => {
                     latitude: listingData.latitude,
                     longitude: listingData.longitude
                 });
-
+    
                 if (listingData.images) {
                     setPreviewUrls(listingData.images.map(img =>
                         `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
                     ));
                 }
-
+    
                 setCategories(categoriesResponse.data.data || []);
                 setLoading(false);
             } catch (err) {
@@ -100,11 +111,43 @@ const EditListingPage = () => {
                 setLoading(false);
             }
         };
-
+    
         if (user?.id) {
             fetchData();
         }
-    }, [id, user, navigate, t]);
+    }, [id, user, navigate, t, i18n.language]); // Добавляем i18n.language в зависимости
+    
+    // Добавляем эффект для отслеживания изменения языка
+    useEffect(() => {
+        const updateContent = async () => {
+            try {
+                const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
+                const listingData = response.data.data;
+    
+                // Получаем текст на выбранном языке
+                const title = i18n.language === listingData.original_language
+                    ? listingData.title
+                    : listingData.translations?.[i18n.language]?.title || listingData.title;
+    
+                const description = i18n.language === listingData.original_language
+                    ? listingData.description
+                    : listingData.translations?.[i18n.language]?.description || listingData.description;
+    
+                setListing(prev => ({
+                    ...prev,
+                    title,
+                    description
+                }));
+            } catch (error) {
+                console.error('Error updating content for new language:', error);
+            }
+        };
+    
+        if (currentLanguage !== i18n.language) {
+            updateContent();
+            setCurrentLanguage(i18n.language);
+        }
+    }, [i18n.language, id, currentLanguage]);
 
     const handleLocationSelect = (location) => {
         setListing(prev => ({
@@ -116,29 +159,50 @@ const EditListingPage = () => {
             country: location.address_components?.country || ''
         }));
     };
+    useEffect(() => {
+        if (listing && listing.translations) {
+            const newListing = { ...listing };
+            
+            // Если текущий язык совпадает с оригинальным
+            if (i18n.language === listing.original_language) {
+                newListing.title = listing.title;
+                newListing.description = listing.description;
+            } else {
+                // Берем перевод из translations
+                const translation = listing.translations[i18n.language];
+                if (translation) {
+                    newListing.title = translation.title || listing.title;
+                    newListing.description = translation.description || listing.description;
+                }
+            }
+            
+            setListing(newListing);
+            setCurrentLanguage(i18n.language);
+        }
+    }, [i18n.language]);
 
+    // Модифицируем handleSubmit для сохранения переводов
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
         setSuccess(false);
 
         try {
-            await axios.put(`/api/v1/marketplace/listings/${id}`, {
-                ...listing,
-                price: parseFloat(listing.price),
-                original_language: language
-            });
-
-            if (images.length > 0) {
-                const formData = new FormData();
-                images.forEach(image => {
-                    formData.append('images', image);
+            // Если редактируем оригинальный язык
+            if (i18n.language === listing.original_language) {
+                await axios.put(`/api/v1/marketplace/listings/${id}`, {
+                    ...listing,
+                    price: parseFloat(listing.price)
                 });
-
-                await axios.post(`/api/v1/marketplace/listings/${id}/images`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
+            } else {
+                // Если редактируем перевод
+                await axios.put(`/api/v1/marketplace/translations/${id}`, {
+                    language: i18n.language,
+                    translations: {
+                        title: listing.title,
+                        description: listing.description
+                    },
+                    is_verified: true // Отмечаем как проверенный перевод
                 });
             }
 
@@ -166,9 +230,13 @@ const EditListingPage = () => {
         <Container maxWidth="md">
             <Box sx={{ mt: 4, mb: 4 }}>
                 <Typography variant="h4" gutterBottom>
-                    {t('listings.edit.title')}
+                    {t('listings.edit.title')} ({i18n.language.toUpperCase()})
                 </Typography>
-
+                {i18n.language !== listing?.original_language && (
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                        {t('listings.edit.translationNote')}
+                    </Alert>
+                )}
                 {error && (
                     <Alert severity="error" sx={{ mb: 2 }}>
                         {error}

@@ -102,3 +102,28 @@ func (s *MarketplaceService) AddToFavorites(ctx context.Context, userID int, lis
 func (s *MarketplaceService) RemoveFromFavorites(ctx context.Context, userID int, listingID int) error {
     return s.storage.RemoveFromFavorites(ctx, userID, listingID)
 }
+func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation *models.Translation) error {
+    query := `
+        INSERT INTO translations (
+            entity_type, entity_id, language, field_name,
+            translated_text, is_machine_translated, is_verified
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (entity_type, entity_id, language, field_name)
+        DO UPDATE SET
+            translated_text = EXCLUDED.translated_text,
+            is_machine_translated = EXCLUDED.is_machine_translated,
+            is_verified = EXCLUDED.is_verified,
+            updated_at = CURRENT_TIMESTAMP
+    `
+    
+    _, err := s.storage.Exec(ctx, query,
+        translation.EntityType,
+        translation.EntityID,
+        translation.Language,
+        translation.FieldName,
+        translation.TranslatedText,
+        translation.IsMachineTranslated,
+        translation.IsVerified)
+
+    return err
+}
