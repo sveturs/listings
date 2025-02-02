@@ -21,16 +21,22 @@ const ListingCard = ({ listing, isMobile }) => {
     const { t, i18n } = useTranslation('marketplace'); 
     
     const getLocalizedText = (field) => {
-        // Если текущий язык совпадает с оригинальным языком листинга
+        if (!listing || !field) return '';
+    
+        // Если текущий язык совпадает с языком оригинала
         if (i18n.language === listing.original_language) {
             return listing[field];
         }
         
         // Пытаемся получить перевод
         const translation = listing.translations?.[i18n.language]?.[field];
-        return translation || listing[field]; // Если перевода нет, возвращаем оригинальный текст
+        if (translation) {
+            return translation;
+        }
+    
+        // Если перевод не найден, возвращаем оригинальный текст
+        return listing[field];
     };
-
     const formatPrice = (price) => {
         return new Intl.NumberFormat('sr-RS', {
             style: 'currency',

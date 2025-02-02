@@ -1,6 +1,7 @@
 // frontend/hostel-frontend/src/pages/marketplace/CreateListingPage.js
 import React, { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
+
 import {
     Container,
     TextField,
@@ -32,11 +33,10 @@ import CategorySelect from '../../components/marketplace/CategorySelect';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 const CreateListing = () => {
-
+    const { t, i18n } = useTranslation('marketplace'); 
     const theme = useTheme();
-    const { t } = useTranslation('marketplace');
-    const { language } = useLanguage();
-    
+     const { language } = useLanguage();
+
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const navigate = useNavigate();
 
@@ -51,7 +51,7 @@ const CreateListing = () => {
         country: "",
         show_on_map: true,
         latitude: null,
-        original_language: 'sr', 
+        original_language: 'sr',
         longitude: null
     });
 
@@ -63,19 +63,19 @@ const CreateListing = () => {
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const getTranslatedText = (field) => {
         if (!listing) return '';
-        
+
         // Если текущий язык совпадает с языком оригинала
         if (language === listing.original_language) {
             return listing[field];
         }
-        
+
         // Пытаемся получить перевод
-        if (listing.translations && 
-            listing.translations[language] && 
+        if (listing.translations &&
+            listing.translations[language] &&
             listing.translations[language][field]) {
             return listing.translations[language][field];
         }
-        
+
         // Если перевода нет, возвращаем оригинал
         return listing[field];
     };
@@ -138,17 +138,16 @@ const CreateListing = () => {
         e.preventDefault();
         setError("");
         setSuccess(false);
-    
+
         try {
             const listingData = {
                 ...listing,
                 price: parseFloat(listing.price),
-                original_language: 'sr' // Устанавливаем сербский язык по умолчанию
+                original_language: i18n.language // Устанавливаем текущий язык интерфейса как язык оригинала
             };
-    
             const response = await axios.post("/api/v1/marketplace/listings", listingData);
             const listingId = response.data.data.id;
-    
+
             if (images.length > 0) {
                 const formData = new FormData();
                 images.forEach((image, index) => {
@@ -157,14 +156,14 @@ const CreateListing = () => {
                         formData.append('main_image_index', '0');
                     }
                 });
-    
+
                 await axios.post(`/api/v1/marketplace/listings/${listingId}/images`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
             }
-    
+
             setSuccess(true);
             setListing({
                 title: "",
@@ -182,11 +181,11 @@ const CreateListing = () => {
             });
             setImages([]);
             setPreviewUrls([]);
-    
+
             setTimeout(() => {
                 navigate(`/marketplace/listings/${listingId}`);
             }, 1500);
-    
+
         } catch (error) {
             setError(error.response?.data?.error || t('listings.create.error'));
         }

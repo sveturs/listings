@@ -51,13 +51,20 @@ const ListingDetailsPage = () => {
 
     const getTranslatedText = (field) => {
         if (!listing || !field) return '';
-
+    
+        // Если текущий язык совпадает с языком оригинала
         if (i18n.language === listing.original_language) {
             return listing[field];
         }
-
+        
+        // Пытаемся получить перевод
         const translation = listing.translations?.[i18n.language]?.[field];
-        return translation || listing[field];
+        if (translation) {
+            return translation;
+        }
+    
+        // Если перевод не найден, возвращаем оригинальный текст
+        return listing[field];
     };
 
     // В начале fetchListing:
