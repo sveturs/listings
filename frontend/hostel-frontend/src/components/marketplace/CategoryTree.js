@@ -1,5 +1,6 @@
-//frontend/hostel-frontend/src/components/marketplace/CategoryTree.js
+// frontend/hostel-frontend/src/components/marketplace/CategoryTree.js
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next'; // Добавляем импорт
 import {
   List,
   ListItemButton,
@@ -18,11 +19,10 @@ const CategoryTreeItem = ({
   onSelect,
   level = 0 
 }) => {
-  // Меняем начальное состояние на false
+  const { i18n } = useTranslation(); // Добавляем хук
   const [isOpen, setIsOpen] = useState(false);
   const theme = useTheme();
 
-  // Добавляем функцию для подсчета всех объявлений в категории и подкатегориях
   const getTotalListings = (cat) => {
     let total = cat.listing_count || 0;
     if (cat.children) {
@@ -34,10 +34,17 @@ const CategoryTreeItem = ({
   const handleClick = () => {
     if (hasChildren) {
       setIsOpen(!isOpen);
-      onSelect(category.id); // Выбираем категорию при клике
+      onSelect(category.id);
     } else {
       onSelect(category.id);
     }
+  };
+
+  const getTranslatedName = (category, currentLanguage) => {
+    if (category.translations && category.translations[currentLanguage]) {
+      return category.translations[currentLanguage];
+    }
+    return category.name;
   };
 
   const totalListings = getTotalListings(category);
@@ -84,7 +91,7 @@ const CategoryTreeItem = ({
                   fontWeight: isSelected ? 500 : 400,
                 }}
               >
-                {category.name}
+                {getTranslatedName(category, i18n.language)}
               </Typography>
               {totalListings > 0 && (
                 <Typography
@@ -120,10 +127,12 @@ const CategoryTreeItem = ({
 };
 
 const CompactCategoryTree = ({ categories, selectedId, onSelectCategory }) => {
+  const { t } = useTranslation('marketplace'); // Добавляем хук для перевода
+
   if (!categories?.length) {
     return (
       <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-        Категории не найдены
+        {t('listings.create.ChooseAcategory')}
       </Typography>
     );
   }

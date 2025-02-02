@@ -57,13 +57,15 @@ type MarketplaceListing struct {
 }
 
 type MarketplaceCategory struct {
-    ID        int       `json:"id"`
-    Name      string    `json:"name"`
-    Slug      string    `json:"slug"`
-    ParentID  *int      `json:"parent_id,omitempty"`
-    Icon      string    `json:"icon,omitempty"`
-    CreatedAt time.Time `json:"created_at"`
+    ID           int               `json:"id"`
+    Name         string           `json:"name"`
+    Slug         string           `json:"slug"`
+    ParentID     *int             `json:"parent_id,omitempty"`
+    Icon         string           `json:"icon,omitempty"`
+    CreatedAt    time.Time        `json:"created_at"`
+    Translations map[string]string `json:"translations,omitempty"`
 }
+
 type MarketplaceImage struct {
     ID          int       `json:"id"`
     ListingID   int       `json:"listing_id"`

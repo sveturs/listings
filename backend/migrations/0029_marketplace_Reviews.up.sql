@@ -1,4 +1,4 @@
--- /backend/migrations/0029_create_reviews.up.sql
+-- backend/migrations/0029_marketplace_Reviews.up.sql
 
 -- Таблица для хранения отзывов
 CREATE TABLE reviews (

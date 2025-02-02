@@ -742,37 +742,65 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 }
 
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	rows, err := s.pool.Query(ctx, `
+    query := `
+        WITH category_translations AS (
+            SELECT 
+                t.entity_id,
+                t.language,
+                t.translated_text
+            FROM translations t
+            WHERE t.entity_type = 'category' AND t.field_name = 'name'
+        )
         SELECT 
-            id, name, slug, parent_id, icon, created_at
-        FROM marketplace_categories
+            c.id, c.name, c.slug, c.parent_id, c.icon, c.created_at,
+            COALESCE(
+                jsonb_object_agg(
+                    t.language, 
+                    t.translated_text
+                ) FILTER (WHERE t.language IS NOT NULL),
+                '{}'::jsonb
+            ) as translations
+        FROM marketplace_categories c
+        LEFT JOIN category_translations t ON c.id = t.entity_id
+        GROUP BY c.id, c.name, c.slug, c.parent_id, c.icon, c.created_at
         ORDER BY 
-            CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END,
-            name
-    `)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+            CASE WHEN c.parent_id IS NULL THEN 0 ELSE 1 END,
+            c.name
+    `
 
-	var categories []models.MarketplaceCategory
-	for rows.Next() {
-		var cat models.MarketplaceCategory
-		err := rows.Scan(
-			&cat.ID,
-			&cat.Name,
-			&cat.Slug,
-			&cat.ParentID,
-			&cat.Icon,
-			&cat.CreatedAt,
-		)
-		if err != nil {
-			continue
-		}
-		categories = append(categories, cat)
-	}
+    rows, err := s.pool.Query(ctx, query)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-	return categories, rows.Err()
+    var categories []models.MarketplaceCategory
+    for rows.Next() {
+        var cat models.MarketplaceCategory
+        var translationsJson []byte
+        err := rows.Scan(
+            &cat.ID,
+            &cat.Name,
+            &cat.Slug,
+            &cat.ParentID,
+            &cat.Icon,
+            &cat.CreatedAt,
+            &translationsJson,
+        )
+        if err != nil {
+            continue
+        }
+
+        // Преобразуем JSON в map для переводов
+        translations := make(map[string]string)
+        if err := json.Unmarshal(translationsJson, &translations); err == nil {
+            cat.Translations = translations
+        }
+
+        categories = append(categories, cat)
+    }
+
+    return categories, rows.Err()
 }
 
 func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {

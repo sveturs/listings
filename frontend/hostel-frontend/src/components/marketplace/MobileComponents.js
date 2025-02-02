@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/components/marketplace/MobileComponents.js
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -133,6 +134,17 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
 };
 // Компонент MobileListingCard
 export const MobileListingCard = ({ listing }) => {
+    const { i18n } = useTranslation();
+
+    const getTranslatedText = (field) => {
+        if (!listing) return '';
+
+        if (i18n.language === listing.original_language) {
+            return listing[field];
+        }
+
+        return listing.translations?.[i18n.language]?.[field] || listing[field];
+    };
     const formatPrice = (price) => {
         return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
@@ -178,7 +190,7 @@ export const MobileListingCard = ({ listing }) => {
                         whiteSpace: 'nowrap'
                     }}
                 >
-                    {listing.title}
+                    {getTranslatedText('title')}
                 </Typography>
                 <Typography
                     variant="subtitle1"

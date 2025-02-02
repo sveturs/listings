@@ -1,3 +1,4 @@
+-- backend/migrations/0028_marketplace.up.sql
 -- Категории объявлений
 CREATE TABLE marketplace_categories (
     id SERIAL PRIMARY KEY,
