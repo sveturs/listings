@@ -87,4 +87,5 @@ type CategoryTreeNode struct {
     Path         string             `json:"path"`
     ListingCount int                `json:"listing_count"`
     Children     []CategoryTreeNode `json:"children,omitempty"`
+        Translations map[string]string  `json:"translations,omitempty"`
 }

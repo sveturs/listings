@@ -475,7 +475,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 }
 
 func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
-	query := `
+    query := `
         WITH RECURSIVE category_tree AS (
             -- Корневые категории
             SELECT 
@@ -486,7 +486,7 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
                 c.parent_id,
                 c.created_at,
                 0 as level,
-                c.name::text as path  -- Добавляем явное приведение типа
+                c.name::text as path
             FROM marketplace_categories c
             WHERE parent_id IS NULL
 
@@ -501,38 +501,71 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
                 c.parent_id,
                 c.created_at,
                 ct.level + 1,
-                (ct.path || ' > ' || c.name)::text -- Добавляем явное приведение типа
+                (ct.path || ' > ' || c.name)::text
             FROM marketplace_categories c
             JOIN category_tree ct ON c.parent_id = ct.id
+        ),
+        category_translations AS (
+            SELECT 
+                t.entity_id,
+                jsonb_object_agg(
+                    t.language,
+                    t.translated_text
+                ) as translations
+            FROM translations t
+            WHERE t.entity_type = 'category' AND t.field_name = 'name'
+            GROUP BY t.entity_id
         )
         SELECT 
-            id, name, slug, icon, parent_id, created_at, 
-            level, path,
+            ct.id, ct.name, ct.slug, ct.icon, ct.parent_id, ct.created_at, 
+            ct.level, ct.path,
+            COALESCE(tr.translations, '{}'::jsonb) as translations,
             (SELECT COUNT(*) FROM marketplace_listings WHERE category_id = ct.id) as listing_count
         FROM category_tree ct
-        ORDER BY path;
+        LEFT JOIN category_translations tr ON tr.entity_id = ct.id
+        ORDER BY ct.path;
     `
 
-	rows, err := s.pool.Query(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("error querying category tree: %w", err)
-	}
-	defer rows.Close()
+    rows, err := s.pool.Query(ctx, query)
+    if err != nil {
+        log.Printf("Error querying category tree: %v", err)
+        return nil, err
+    }
+    defer rows.Close()
 
-	var categories []models.CategoryTreeNode
-	for rows.Next() {
-		var cat models.CategoryTreeNode
-		err := rows.Scan(
-			&cat.ID, &cat.Name, &cat.Slug, &cat.Icon, &cat.ParentID,
-			&cat.CreatedAt, &cat.Level, &cat.Path, &cat.ListingCount,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("error scanning category: %w", err)
-		}
-		categories = append(categories, cat)
-	}
+    var categories []models.CategoryTreeNode
+    for rows.Next() {
+        var cat models.CategoryTreeNode
+        var translationsJson []byte
 
-	return categories, rows.Err()
+        err := rows.Scan(
+            &cat.ID,
+            &cat.Name,
+            &cat.Slug,
+            &cat.Icon,
+            &cat.ParentID,
+            &cat.CreatedAt,
+            &cat.Level,
+            &cat.Path,
+            &translationsJson,
+            &cat.ListingCount,
+        )
+
+        if err != nil {
+            log.Printf("Error scanning category: %v", err)
+            return nil, err
+        }
+
+        translations := make(map[string]string)
+        if err := json.Unmarshal(translationsJson, &translations); err == nil {
+            cat.Translations = translations
+            log.Printf("Category %d (%s) translations: %v", cat.ID, cat.Name, translations)
+        }
+
+        categories = append(categories, cat)
+    }
+
+    return categories, rows.Err()
 }
 func (s *Storage) AddToFavorites(ctx context.Context, userID int, listingID int) error {
 	_, err := s.pool.Exec(ctx, `
@@ -742,34 +775,30 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 }
 
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
+    log.Printf("GetCategories: starting to fetch categories")
     query := `
         WITH category_translations AS (
             SELECT 
                 t.entity_id,
-                t.language,
-                t.translated_text
+                jsonb_object_agg(
+                    t.language,  -- Изменено: убираем конкатенацию с field_name
+                    t.translated_text
+                ) as translations
             FROM translations t
-            WHERE t.entity_type = 'category' AND t.field_name = 'name'
+            WHERE t.entity_type = 'category' 
+            AND t.field_name = 'name'
+            GROUP BY t.entity_id
         )
         SELECT 
             c.id, c.name, c.slug, c.parent_id, c.icon, c.created_at,
-            COALESCE(
-                jsonb_object_agg(
-                    t.language, 
-                    t.translated_text
-                ) FILTER (WHERE t.language IS NOT NULL),
-                '{}'::jsonb
-            ) as translations
+            COALESCE(ct.translations, '{}'::jsonb) as translations
         FROM marketplace_categories c
-        LEFT JOIN category_translations t ON c.id = t.entity_id
-        GROUP BY c.id, c.name, c.slug, c.parent_id, c.icon, c.created_at
-        ORDER BY 
-            CASE WHEN c.parent_id IS NULL THEN 0 ELSE 1 END,
-            c.name
+        LEFT JOIN category_translations ct ON c.id = ct.entity_id
     `
 
     rows, err := s.pool.Query(ctx, query)
     if err != nil {
+        log.Printf("Error querying categories: %v", err)
         return nil, err
     }
     defer rows.Close()
@@ -778,6 +807,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
     for rows.Next() {
         var cat models.MarketplaceCategory
         var translationsJson []byte
+
         err := rows.Scan(
             &cat.ID,
             &cat.Name,
@@ -787,19 +817,26 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
             &cat.CreatedAt,
             &translationsJson,
         )
+
         if err != nil {
+            log.Printf("Error scanning category: %v", err)
             continue
         }
 
-        // Преобразуем JSON в map для переводов
+        log.Printf("Raw translations for category %d: %s", cat.ID, string(translationsJson))
+
         translations := make(map[string]string)
-        if err := json.Unmarshal(translationsJson, &translations); err == nil {
+        if err := json.Unmarshal(translationsJson, &translations); err != nil {
+            log.Printf("Error unmarshaling translations for category %d: %v", cat.ID, err)
+        } else {
             cat.Translations = translations
+            log.Printf("Processed translations for category %d: %+v", cat.ID, translations)
         }
 
         categories = append(categories, cat)
     }
 
+    log.Printf("GetCategories: returning %d categories", len(categories))
     return categories, rows.Err()
 }
 

@@ -9,11 +9,11 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon, Filter, X, Check, ArrowLeft, ChevronRight, Plus } from 'lucide-react';
 import { debounce } from 'lodash';
- 
+
 // Компонент MobileHeader
 export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValue }) => {
-        const { t } = useTranslation('marketplace', 'common');
-    
+    const { t } = useTranslation('marketplace', 'common');
+
     const [localSearchValue, setLocalSearchValue] = useState(searchValue || '');
     const debouncedSearch = useCallback(
         debounce((value) => onSearch(value), 500),
@@ -21,16 +21,16 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
     );
 
     return (
-        <Box sx={{ 
-            borderBottom: 1, 
+        <Box sx={{
+            borderBottom: 1,
             borderColor: 'divider',
             position: 'sticky',
             top: 0,
             zIndex: 1100,
             bgcolor: 'background.paper'
         }}>
-            <Toolbar sx={{ 
-                minHeight: '56px !important', 
+            <Toolbar sx={{
+                minHeight: '56px !important',
                 px: 2,
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -80,7 +80,7 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
                         height: 32
                     }}
                 >
-                   {t('buttons.create', { ns: 'common' })}
+                    {t('buttons.create', { ns: 'common' })}
                 </Button>
             </Toolbar>
 
@@ -210,7 +210,14 @@ export const MobileListingCard = ({ listing }) => {
 
 
 export const MobileFilters = ({ open, onClose, filters, onFilterChange, categories }) => {
-    const { t } = useTranslation('marketplace');
+    const { t, i18n } = useTranslation('marketplace'); // Добавляем i18n
+
+    const getTranslatedName = (category) => {
+        if (category.translations && category.translations[i18n.language]) {
+            return category.translations[i18n.language];
+        }
+        return category.name;
+    };
 
     const [tempFilters, setTempFilters] = useState(filters);
     const [currentCategory, setCurrentCategory] = useState(null);
@@ -235,7 +242,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
 
     const handleCategoryClick = (category) => {
         const hasChildren = category.children && category.children.length > 0;
-        
+
         if (hasChildren) {
             setNavigationHistory(prev => [...prev, currentCategory]);
             setCurrentCategory(category);
@@ -278,7 +285,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
         >
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 {/* Шапка с навигацией */}
-                <Box sx={{ 
+                <Box sx={{
                     p: 2,
                     borderBottom: '1px solid',
                     borderColor: 'divider',
@@ -287,9 +294,9 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                     gap: 1
                 }}>
                     {navigationHistory.length > 0 && (
-                        <IconButton 
+                        <IconButton
                             onClick={handleBack}
-                            sx={{ 
+                            sx={{
                                 color: 'text.secondary',
                                 '&:hover': { color: 'primary.main' }
                             }}
@@ -297,15 +304,15 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                             <ArrowLeft size={20} />
                         </IconButton>
                     )}
-                    <Typography 
-                        variant="subtitle1" 
-                        sx={{ 
+                    <Typography
+                        variant="subtitle1"
+                        sx={{
                             flex: 1,
                             fontWeight: 600,
                             color: 'text.primary'
                         }}
                     >
-                        {currentCategory ? currentCategory.name : t('listings.filters.title')}
+                        {currentCategory ? getTranslatedName(currentCategory) : t('listings.filters.title')}
                     </Typography>
                     <Button
                         variant="text"
@@ -322,7 +329,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                     {/* Фильтр цены */}
                     <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle2" gutterBottom>
-                        {t('listings.filters.price.label')}
+                            {t('listings.filters.price.label')}
                         </Typography>
                         <Stack direction="row" spacing={1}>
                             <TextField
@@ -353,7 +360,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                     {/* Фильтр состояния */}
                     <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle2" gutterBottom>
-                        {t('listings.details.condition')}
+                            {t('listings.details.condition')}
                         </Typography>
                         <Select
                             fullWidth
@@ -395,7 +402,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                         {getCurrentCategories().map((category) => {
                             const hasChildren = category.children && category.children.length > 0;
                             const isSelected = tempFilters.category_id === category.id;
-                            
+
                             return (
                                 <Box
                                     key={category.id}
@@ -409,7 +416,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                                 >
                                     <Button
                                         onClick={() => handleCategoryClick(category)}
-                                        sx={{ 
+                                        sx={{
                                             width: '100%',
                                             justifyContent: 'flex-start',
                                             textTransform: 'none',
@@ -423,19 +430,19 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                                             }
                                         }}
                                     >
-                                        <Typography 
-                                            sx={{ 
+                                        <Typography
+                                            sx={{
                                                 flex: 1,
                                                 textAlign: 'left',
                                                 fontWeight: isSelected ? 500 : 400
                                             }}
                                         >
-                                            {category.name}
+                                            {getTranslatedName(category)}
                                         </Typography>
                                         {hasChildren && (
-                                            <ChevronRight 
-                                                size={20} 
-                                                style={{ 
+                                            <ChevronRight
+                                                size={20}
+                                                style={{
                                                     opacity: 0.5,
                                                     marginLeft: 8
                                                 }}
@@ -455,13 +462,13 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                         fullWidth
                         onClick={handleApply}
                         startIcon={<Check size={20} />}
-                        sx={{ 
+                        sx={{
                             py: 1.5,
                             textTransform: 'none',
                             fontWeight: 500,
                         }}
                     >
-                     {t('listings.filters.apply')}
+                        {t('listings.filters.apply')}
                     </Button>
                 </Box>
             </Box>

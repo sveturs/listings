@@ -289,9 +289,9 @@ const MarketplacePage = () => {
                     onSearch={(query) => handleFilterChange({ query })}
                     searchValue={filters.query}
                 />
-     
-                <Box sx={{ 
-                    position: 'sticky', 
+
+                <Box sx={{
+                    position: 'sticky',
                     top: 104,
                     zIndex: 1,
                     bgcolor: 'background.paper',
@@ -299,7 +299,7 @@ const MarketplacePage = () => {
                     borderColor: 'divider'
                 }}>
 
-     
+
                     {/* Активные фильтры */}
                     {Object.entries(filters).some(([key, value]) => value && key !== 'sort_by') && (
                         <Box sx={{ px: 2, py: 1, display: 'flex', gap: 1, overflowX: 'auto' }}>
@@ -322,11 +322,11 @@ const MarketplacePage = () => {
                         </Box>
                     )}
                 </Box>
-     
+
                 <Box sx={{ flex: 1, bgcolor: 'grey.50' }}>
                     {renderContent()}
                 </Box>
-     
+
                 <MobileFilters
                     open={isFilterOpen}
                     onClose={() => setIsFilterOpen(false)}
@@ -336,9 +336,9 @@ const MarketplacePage = () => {
                 />
             </Box>
         );
-     }
-     
-     return (
+    }
+
+    return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box
                 sx={{
@@ -349,7 +349,7 @@ const MarketplacePage = () => {
                 }}
             >
                 {categoryPath.length > 0 ? (
-                    <Breadcrumbs paths={categoryPath} />
+                    <Breadcrumbs paths={categoryPath} categories={categories} />
                 ) : (
                     <Box sx={{ flex: 1 }} />
                 )}
@@ -360,12 +360,12 @@ const MarketplacePage = () => {
                     startIcon={<Plus />}
                 >
 
-                {t('listings.create.title')}
+                    {t('listings.create.title')}
 
 
                 </Button>
             </Box>
-     
+
             <Grid container spacing={3}>
                 <Grid item xs={12} md={3}>
                     <CompactMarketplaceFilters
@@ -381,6 +381,6 @@ const MarketplacePage = () => {
                 </Grid>
             </Grid>
         </Container>
-     );
-    };
-     export default MarketplacePage;
+    );
+};
+export default MarketplacePage;

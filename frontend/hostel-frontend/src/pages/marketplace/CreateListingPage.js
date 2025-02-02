@@ -61,6 +61,7 @@ const CreateListing = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [showExpandedMap, setShowExpandedMap] = useState(false);
+ 
     const getTranslatedText = (field) => {
         if (!listing) return '';
 

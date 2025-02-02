@@ -48,6 +48,7 @@ const ListingDetailsPage = () => {
     const [reviewsCount, setReviewsCount] = useState(0);
     const [categoryPath, setCategoryPath] = useState([]);
     const [isMapExpanded, setIsMapExpanded] = useState(false);
+    const [categories, setCategories] = useState([]); 
 
     const getTranslatedText = (field) => {
         if (!listing || !field) return '';
@@ -100,7 +101,20 @@ const ListingDetailsPage = () => {
             setLoading(false);
         }
     }, [id, t]);
-
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
+                if (categoriesResponse.data?.data) {
+                    setCategories(categoriesResponse.data.data);
+                }
+            } catch (err) {
+                console.error('Error fetching categories:', err);
+            }
+        };
+        
+        fetchCategories();
+    }, []);
     useEffect(() => {
         fetchListing();
     }, [fetchListing]);
@@ -183,7 +197,7 @@ const ListingDetailsPage = () => {
     if (loading) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Breadcrumbs paths={categoryPath} />
+               <Breadcrumbs paths={categoryPath} categories={categories} />
                 <Grid container spacing={4}>
                     <Grid item xs={12} md={8}>
                         <Skeleton variant="rectangular" height={400} />
@@ -199,7 +213,7 @@ const ListingDetailsPage = () => {
     if (error) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Breadcrumbs paths={categoryPath} />
+               <Breadcrumbs paths={categoryPath} categories={categories} />
                 <Typography color="error">{error}</Typography>
             </Container>
         );
@@ -235,7 +249,7 @@ const ListingDetailsPage = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Breadcrumbs paths={categoryPath} />
+            <Breadcrumbs paths={categoryPath} categories={categories} />
             <Grid container spacing={4}>
                 {/* Images Gallery */}
                 <Grid item xs={12} md={8}>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// frontend/hostel-frontend/src/components/marketplace/CategorySelect.js
+ import React, { useState, useEffect } from 'react';  
 import { useTranslation } from 'react-i18next';
 import {
     Box,
@@ -15,11 +16,32 @@ import {
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 const CategorySelect = ({ categories, value, onChange, error }) => {
+    const { t, i18n } = useTranslation('marketplace');
     const [anchorEl, setAnchorEl] = useState(null);
     const [currentPath, setCurrentPath] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
-        const { t, i18n } = useTranslation('marketplace'); 
-    
+
+    useEffect(() => {
+        console.log('Current language:', i18n.language);
+        console.log('Categories with translations:', categories);
+        // Проверим одну категорию для примера
+        if (categories.length > 0) {
+            console.log('First category:', categories[0]);
+            console.log('Translations for first category:', categories[0].translations);
+        }
+    }, [categories, i18n.language]);
+
+    const getTranslatedName = (category) => {
+        // Добавим отладочный вывод
+        console.log('Getting translation for category:', category);
+        console.log('Current language:', i18n.language);
+        console.log('Available translations:', category.translations);
+        
+        if (category.translations && category.translations[i18n.language]) {
+            return category.translations[i18n.language];
+        }
+        return category.name;
+    };
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -40,7 +62,7 @@ const CategorySelect = ({ categories, value, onChange, error }) => {
 
     const handleCategoryClick = (category) => {
         const hasChildren = categories.some(cat => cat.parent_id === category.id);
-        
+
         if (hasChildren) {
             setCurrentPath([...currentPath, category]);
         } else {
@@ -58,12 +80,12 @@ const CategorySelect = ({ categories, value, onChange, error }) => {
     const findCategoryPath = (categoryId) => {
         const path = [];
         let current = categories.find(c => c.id === categoryId);
-        
+
         while (current) {
             path.unshift(current);
             current = categories.find(c => c.id === current.parent_id);
         }
-        
+
         return path;
     };
 
@@ -85,14 +107,14 @@ const CategorySelect = ({ categories, value, onChange, error }) => {
                 {selectedPath.length > 0 ? (
                     <Stack spacing={0.5}>
                         <Typography variant="body1" noWrap>
-                            {selectedPath[selectedPath.length - 1].name}
+                            {getTranslatedName(selectedPath[selectedPath.length - 1])}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" noWrap>
-                            {selectedPath.map(cat => cat.name).join(' > ')}
+                            {selectedPath.map(cat => getTranslatedName(cat)).join(' > ')}
                         </Typography>
                     </Stack>
                 ) : (
-                   t('listings.details.ChooseAcategory')
+                    t('listings.details.ChooseAcategory')
                 )}
             </Button>
 
@@ -109,7 +131,7 @@ const CategorySelect = ({ categories, value, onChange, error }) => {
                     horizontal: 'left',
                 }}
                 PaperProps={{
-                    sx: { 
+                    sx: {
                         width: 320,
                         maxHeight: 400,
                     }
@@ -121,8 +143,8 @@ const CategorySelect = ({ categories, value, onChange, error }) => {
                             <ListItemIcon sx={{ minWidth: 32 }}>
                                 <ChevronLeft size={20} />
                             </ListItemIcon>
-                            <ListItemText 
-                                primary={currentPath[currentPath.length - 1].name}
+                            <ListItemText
+                                primary={getTranslatedName(currentPath[currentPath.length - 1])}
                                 primaryTypographyProps={{
                                     variant: 'subtitle2',
                                     color: 'text.secondary'
@@ -142,8 +164,8 @@ const CategorySelect = ({ categories, value, onChange, error }) => {
                                     onClick={() => handleCategoryClick(category)}
                                     selected={isSelected}
                                 >
-                                    <ListItemText 
-                                        primary={category.name}
+                                    <ListItemText
+                                        primary={getTranslatedName(category)}
                                         primaryTypographyProps={{
                                             variant: 'body2',
                                             color: isSelected ? 'primary.main' : 'text.primary'

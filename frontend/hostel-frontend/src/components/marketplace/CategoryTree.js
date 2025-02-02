@@ -41,11 +41,15 @@ const CategoryTreeItem = ({
   };
 
   const getTranslatedName = (category, currentLanguage) => {
+    console.log('Getting translation for category:', category.id, category.name);
+    console.log('Current language:', currentLanguage);
+    console.log('Translations:', category.translations);
+    
     if (category.translations && category.translations[currentLanguage]) {
-      return category.translations[currentLanguage];
+        return category.translations[currentLanguage];
     }
     return category.name;
-  };
+};
 
   const totalListings = getTotalListings(category);
   const hasChildren = category.children && category.children.length > 0;

@@ -1,13 +1,11 @@
 -- Сначала проверяем существование таблицы
 DO $$ 
 BEGIN
-    -- Проверяем существование таблицы translations
     IF NOT EXISTS (
         SELECT FROM pg_tables 
         WHERE schemaname = 'public' 
         AND tablename = 'translations'
     ) THEN
-        -- Если таблица не существует, создаем её
         CREATE TABLE translations (
             id SERIAL PRIMARY KEY,
             entity_type VARCHAR(50) NOT NULL,
@@ -24,16 +22,14 @@ BEGIN
     END IF;
 END $$;
 
--- Очищаем старые переводы категорий если они есть
+-- Очищаем старые переводы категорий
 DELETE FROM translations WHERE entity_type = 'category';
 
--- Добавляем переводы для основных категорий
-INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified)
+-- Создаем временную таблицу для хранения всех переводов
+CREATE TEMP TABLE category_translations AS
 SELECT 
-    'category',
     id,
-    'en',
-    'name',
+    name,
     CASE 
         WHEN name = 'Превоз' THEN 'Transport'
         WHEN name = 'Некретнине' THEN 'Real Estate'
@@ -47,7 +43,6 @@ SELECT
         WHEN name = 'Кућни љубимци' THEN 'Pets'
         WHEN name = 'Услуге' THEN 'Services'
         WHEN name = 'Бизнис и индустрија' THEN 'Business and Industry'
-        -- Добавляем переводы для всех подкатегорий
         WHEN name = 'Аутомобили' THEN 'Cars'
         WHEN name = 'Мотоцикли' THEN 'Motorcycles'
         WHEN name = 'Електрична возила' THEN 'Electric Vehicles'
@@ -59,20 +54,27 @@ SELECT
         WHEN name = 'Издавање' THEN 'Rent'
         WHEN name = 'Продаја' THEN 'Sale'
         WHEN name = 'Гараже и паркинг' THEN 'Garages and Parking'
-        -- Добавляем остальные подкатегории...
-        ELSE name -- Для остальных оставляем оригинальное имя
-    END,
-    true,
-    true
-FROM marketplace_categories;
-
--- Аналогично добавляем русские переводы
-INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified)
-SELECT 
-    'category',
-    id,
-    'ru',
-    'name',
+        WHEN name = 'Пољопривредне машине' THEN 'Agricultural Machinery'
+        WHEN name = 'Домаће животиње' THEN 'Farm Animals'
+        WHEN name = 'Пољопривредни производи' THEN 'Agricultural Products'
+        WHEN name = 'Трактори' THEN 'Tractors'
+        WHEN name = 'Комбајни' THEN 'Harvesters'
+        WHEN name = 'Плугови и дрљаче' THEN 'Plows and Harrows'
+        WHEN name = 'Сејалице' THEN 'Seeders'
+        WHEN name = 'Опрема за наводњавање' THEN 'Irrigation Equipment'
+        WHEN name = 'Краве' THEN 'Cows'
+        WHEN name = 'Свиње' THEN 'Pigs'
+        WHEN name = 'Козе и овце' THEN 'Goats and Sheep'
+        WHEN name = 'Живина' THEN 'Poultry'
+        WHEN name = 'Сточна храна' THEN 'Animal Feed'
+        WHEN name = 'Поврће' THEN 'Vegetables'
+        WHEN name = 'Воће' THEN 'Fruits'
+        WHEN name = 'Житарице' THEN 'Grains'
+        WHEN name = 'Млечни производи' THEN 'Dairy Products'
+        WHEN name = 'Месо и месни производи' THEN 'Meat Products'
+        WHEN name = 'Мед и пчеларски производи' THEN 'Honey and Beekeeping Products'
+        ELSE name
+    END as en_name,
     CASE 
         WHEN name = 'Превоз' THEN 'Транспорт'
         WHEN name = 'Некретнине' THEN 'Недвижимость'
@@ -86,7 +88,6 @@ SELECT
         WHEN name = 'Кућни љубимци' THEN 'Домашние животные'
         WHEN name = 'Услуге' THEN 'Услуги'
         WHEN name = 'Бизнис и индустрија' THEN 'Бизнес и промышленность'
-        -- Добавляем переводы для всех подкатегорий
         WHEN name = 'Аутомобили' THEN 'Автомобили'
         WHEN name = 'Мотоцикли' THEN 'Мотоциклы'
         WHEN name = 'Електрична возила' THEN 'Электротранспорт'
@@ -98,12 +99,43 @@ SELECT
         WHEN name = 'Издавање' THEN 'Аренда'
         WHEN name = 'Продаја' THEN 'Продажа'
         WHEN name = 'Гараже и паркинг' THEN 'Гаражи и парковки'
-        -- Добавляем остальные подкатегории...
-        ELSE name -- Для остальных оставляем оригинальное имя
-    END,
-    true,
-    true
+        WHEN name = 'Пољопривредне машине' THEN 'Сельскохозяйственная техника'
+        WHEN name = 'Домаће животиње' THEN 'Домашние животные'
+        WHEN name = 'Пољопривредни производи' THEN 'Сельхозпродукция'
+        WHEN name = 'Трактори' THEN 'Тракторы'
+        WHEN name = 'Комбајни' THEN 'Комбайны'
+        WHEN name = 'Плугови и дрљаче' THEN 'Плуги и бороны'
+        WHEN name = 'Сејалице' THEN 'Сеялки'
+        WHEN name = 'Опрема за наводњавање' THEN 'Оборудование для полива'
+        WHEN name = 'Краве' THEN 'Коровы'
+        WHEN name = 'Свиње' THEN 'Свиньи'
+        WHEN name = 'Козе и овце' THEN 'Козы и овцы'
+        WHEN name = 'Живина' THEN 'Птица'
+        WHEN name = 'Сточна храна' THEN 'Корм для животных'
+        WHEN name = 'Поврће' THEN 'Овощи'
+        WHEN name = 'Воће' THEN 'Фрукты'
+        WHEN name = 'Житарице' THEN 'Зерновые'
+        WHEN name = 'Млечни производи' THEN 'Молочные продукты'
+        WHEN name = 'Месо и месни производи' THEN 'Мясо и мясные продукты'
+        WHEN name = 'Мед и пчеларски производи' THEN 'Мёд и продукты пчеловодства'
+        ELSE name
+    END as ru_name
 FROM marketplace_categories;
 
--- Создаем индекс если его еще нет
+-- Добавляем английские переводы
+INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified)
+SELECT 'category', id, 'en', 'name', en_name, true, true
+FROM category_translations
+WHERE en_name != name;
+
+-- Добавляем русские переводы
+INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified)
+SELECT 'category', id, 'ru', 'name', ru_name, true, true
+FROM category_translations
+WHERE ru_name != name;
+
+-- Удаляем временную таблицу
+DROP TABLE category_translations;
+
+-- Создаем индекс для ускорения поиска переводов
 CREATE INDEX IF NOT EXISTS idx_translations_lookup ON translations(entity_type, entity_id, language);
