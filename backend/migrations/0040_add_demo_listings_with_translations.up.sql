@@ -1,3 +1,4 @@
+-- backend/migrations/0040_add_demo_listings_with_translations.up.sql
 -- Сначала очистим существующие демо-данные
 DELETE FROM marketplace_images WHERE listing_id IN (SELECT id FROM marketplace_listings WHERE user_id = 1);
 DELETE FROM translations WHERE entity_type = 'listing' AND entity_id IN (SELECT id FROM marketplace_listings WHERE user_id = 1);

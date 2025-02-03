@@ -1,4 +1,4 @@
--- Сначала проверяем существование таблицы
+-- backend/migrations/0041_add_category_translations.up.sql
 DO $$ 
 BEGIN
     IF NOT EXISTS (
@@ -34,6 +34,9 @@ SELECT
         WHEN name = 'Превоз' THEN 'Transport'
         WHEN name = 'Некретнине' THEN 'Real Estate'
         WHEN name = 'Електроника' THEN 'Electronics'
+        WHEN name = 'Рачунари и лаптопови' THEN 'Computers and Laptops'
+        WHEN name = 'Паметни уређаји' THEN 'Smart devices' 
+        WHEN name = 'Смартфони и опрема' THEN 'Smartphones and Accessories'
         WHEN name = 'Одећа и обућа' THEN 'Clothing and Shoes'
         WHEN name = 'Кућа и башта' THEN 'Home and Garden'
         WHEN name = 'Пољопривреда' THEN 'Agriculture'
@@ -56,6 +59,9 @@ SELECT
         WHEN name = 'Гараже и паркинг' THEN 'Garages and Parking'
         WHEN name = 'Пољопривредне машине' THEN 'Agricultural Machinery'
         WHEN name = 'Домаће животиње' THEN 'Farm Animals'
+        WHEN name = 'Пси' THEN 'Dogs'
+        WHEN name = 'Мачке' THEN 'Cats'
+        WHEN name = 'Птице' THEN 'Birds'
         WHEN name = 'Пољопривредни производи' THEN 'Agricultural Products'
         WHEN name = 'Трактори' THEN 'Tractors'
         WHEN name = 'Комбајни' THEN 'Harvesters'
@@ -79,6 +85,9 @@ SELECT
         WHEN name = 'Превоз' THEN 'Транспорт'
         WHEN name = 'Некретнине' THEN 'Недвижимость'
         WHEN name = 'Електроника' THEN 'Электроника'
+        WHEN name = 'Паметни уређаји' THEN 'Умные устройства' 
+        WHEN name = 'Рачунари и лаптопови' THEN 'Компьютеры и ноутбуки'
+        WHEN name = 'Смартфони и опрема' THEN 'Смартфоны и аксессуары'
         WHEN name = 'Одећа и обућа' THEN 'Одежда и обувь'
         WHEN name = 'Кућа и башта' THEN 'Дом и сад'
         WHEN name = 'Пољопривреда' THEN 'Сельское хозяйство'
@@ -86,6 +95,9 @@ SELECT
         WHEN name = 'Лични предмети' THEN 'Личные вещи'
         WHEN name = 'Хоби и разонода' THEN 'Хобби и развлечения'
         WHEN name = 'Кућни љубимци' THEN 'Домашние животные'
+        WHEN name = 'Пси' THEN 'Собаки'
+        WHEN name = 'Мачке' THEN 'Кошки'
+        WHEN name = 'Птице' THEN 'Птицы'
         WHEN name = 'Услуге' THEN 'Услуги'
         WHEN name = 'Бизнис и индустрија' THEN 'Бизнес и промышленность'
         WHEN name = 'Аутомобили' THEN 'Автомобили'
@@ -133,6 +145,10 @@ INSERT INTO translations (entity_type, entity_id, language, field_name, translat
 SELECT 'category', id, 'ru', 'name', ru_name, true, true
 FROM category_translations
 WHERE ru_name != name;
+-- После добавления английских и русских переводов, добавляем сербские (оригинальные) названия
+INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified)
+SELECT 'category', id, 'sr', 'name', name, false, true
+FROM marketplace_categories;
 
 -- Удаляем временную таблицу
 DROP TABLE category_translations;

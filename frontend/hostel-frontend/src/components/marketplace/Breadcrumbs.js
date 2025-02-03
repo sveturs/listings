@@ -10,22 +10,25 @@ import {
 import { ChevronRight } from 'lucide-react';
 
 const Breadcrumbs = ({ paths, categories }) => {
-    const { t } = useTranslation('common');
-    const { i18n } = useTranslation('marketplace');
+    const { t, i18n } = useTranslation(['common', 'marketplace']);
     const theme = useTheme();
     const navigate = useNavigate();
 
     const getTranslatedName = (pathCategory) => {
-        // Ищем полную информацию о категории из общего списка категорий
-        const fullCategory = categories?.find(c => c.id === pathCategory.id);
+        console.log('Current language:', i18n.language);
+        console.log('All translations:', pathCategory.translations);
+        console.log('Serbian translation:', pathCategory.translations?.sr);
+        console.log('Russian translation:', pathCategory.translations?.ru);
         
-        if (fullCategory?.translations?.[i18n.language]) {
-            return fullCategory.translations[i18n.language];
+        // Сначала пробуем найти перевод для текущего языка
+        if (i18n.language === 'sr' && pathCategory.translations?.sr) {
+            return pathCategory.translations.sr;
         }
-        
-        return pathCategory.name;
+    
+        // Если не нашли, возвращаем в порядке sr -> ru -> en -> name
+        const translations = pathCategory.translations || {};
+        return translations[i18n.language] || translations.sr || translations.ru || translations.en || pathCategory.name;
     };
-
     if (!paths || paths.length === 0) {
         return null;
     }
@@ -69,11 +72,12 @@ const Breadcrumbs = ({ paths, categories }) => {
                         transition: 'all 0.2s'
                     }}
                 >
-                    {t('navigation.home')}
+                    {t('navigation.home', { ns: 'common' })}
                 </Link>
 
                 {paths.map((path, index) => {
                     const isLast = index === paths.length - 1;
+                    const translatedName = getTranslatedName(path);
 
                     if (isLast) {
                         return (
@@ -86,7 +90,7 @@ const Breadcrumbs = ({ paths, categories }) => {
                                     fontWeight: 500
                                 }}
                             >
-                                {getTranslatedName(path)}
+                                {translatedName}
                             </Typography>
                         );
                     }
@@ -102,14 +106,10 @@ const Breadcrumbs = ({ paths, categories }) => {
                                 padding: '4px 8px',
                                 borderRadius: '4px',
                                 fontSize: '0.875rem',
-                                transition: 'all 0.2s',
-                                '&:hover': {
-                                    backgroundColor: theme.palette.action.hover,
-                                    color: theme.palette.primary.main
-                                }
+                                transition: 'all 0.2s'
                             }}
                         >
-                            {getTranslatedName(path)}
+                            {translatedName}
                         </Link>
                     );
                 })}

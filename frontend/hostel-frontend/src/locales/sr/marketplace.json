@@ -96,7 +96,7 @@
         "title": "Продавац",
         "memberSince": "Члан од {{date}}",
         "unknownDate": "непознатог датума"
-      },
+      }, 
       "contact": {
         "call": "Позови",
         "message": "Порука",

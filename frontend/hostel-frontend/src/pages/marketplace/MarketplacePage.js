@@ -158,22 +158,32 @@ const MarketplacePage = () => {
 
     const findCategoryPath = (categoryId, categoriesTree) => {
         const path = [];
-
+    
         const findPath = (id, categories) => {
             for (const category of categories) {
                 if (String(category.id) === String(id)) {
-                    path.unshift({ id: category.id, name: category.name, slug: category.slug });
+                    path.unshift({ 
+                        id: category.id, 
+                        name: category.name, 
+                        slug: category.slug,
+                        translations: category.translations // Добавляем translations
+                    });
                     return true;
                 }
-
+    
                 if (category.children && findPath(id, category.children)) {
-                    path.unshift({ id: category.id, name: category.name, slug: category.slug });
+                    path.unshift({ 
+                        id: category.id, 
+                        name: category.name, 
+                        slug: category.slug,
+                        translations: category.translations // Добавляем translations
+                    });
                     return true;
                 }
             }
             return false;
         };
-
+    
         findPath(categoryId, categoriesTree);
         return path;
     };

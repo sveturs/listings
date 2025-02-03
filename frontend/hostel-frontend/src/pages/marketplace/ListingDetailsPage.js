@@ -1,6 +1,4 @@
-// frontend/hostel-frontend/src/pages/marketplace/ListingDetailsPage.js
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useParams } from 'react-router-dom';
@@ -40,7 +38,8 @@ const ListingDetailsPage = () => {
     const { user, login } = useAuth();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const reviewsRef = useRef(null);
-    // State
+
+    // State declarations
     const [listing, setListing] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -48,51 +47,75 @@ const ListingDetailsPage = () => {
     const [reviewsCount, setReviewsCount] = useState(0);
     const [categoryPath, setCategoryPath] = useState([]);
     const [isMapExpanded, setIsMapExpanded] = useState(false);
-    const [categories, setCategories] = useState([]); 
+    const [categories, setCategories] = useState([]);
+
+    const findCategoryPath = useCallback((categoryId, categoriesTree) => {
+        const path = [];
+
+        const findPath = (id, categories) => {
+            for (const category of categories) {
+                if (String(category.id) === String(id)) {
+                    path.unshift({
+                        id: category.id,
+                        name: category.name,
+                        slug: category.slug,
+                        translations: category.translations
+                    });
+                    return true;
+                }
+
+                if (category.children && findPath(id, category.children)) {
+                    path.unshift({
+                        id: category.id,
+                        name: category.name,
+                        slug: category.slug,
+                        translations: category.translations
+                    });
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        findPath(categoryId, categoriesTree);
+        return path;
+    }, []);
 
     const getTranslatedText = (field) => {
         if (!listing || !field) return '';
-    
-        // Если текущий язык совпадает с языком оригинала
+
         if (i18n.language === listing.original_language) {
             return listing[field];
         }
-        
-        // Пытаемся получить перевод
+
         const translation = listing.translations?.[i18n.language]?.[field];
         if (translation) {
             return translation;
         }
-    
-        // Если перевод не найден, возвращаем оригинальный текст
+
         return listing[field];
     };
 
-    // В начале fetchListing:
     const fetchListing = useCallback(async () => {
-        console.log('Starting fetchListing...');
         try {
             setLoading(true);
             const [listingResponse, favoritesResponse] = await Promise.all([
                 axios.get(`/api/v1/marketplace/listings/${id}`),
                 axios.get('/api/v1/marketplace/favorites')
             ]);
-    
-            console.log('Full listing response:', listingResponse.data.data);
+
             const listingData = listingResponse.data.data;
-            
-            // Добавляем проверку структуры данных
+
             if (!listingData.images) {
-                console.warn('No images array in listing data. Adding empty array.');
                 listingData.images = [];
             }
-    
+
             setListing({
                 ...listingData,
                 is_favorite: favoritesResponse.data?.data?.some?.(
                     item => item.id === Number(id)
                 ) || false,
-                images: listingData.images || [] // Гарантируем, что images всегда будет массивом
+                images: listingData.images || []
             });
         } catch (err) {
             console.error('Error fetching listing:', err);
@@ -101,6 +124,8 @@ const ListingDetailsPage = () => {
             setLoading(false);
         }
     }, [id, t]);
+
+    // All useEffects grouped together
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -112,22 +137,20 @@ const ListingDetailsPage = () => {
                 console.error('Error fetching categories:', err);
             }
         };
-        
+
         fetchCategories();
     }, []);
+
     useEffect(() => {
         fetchListing();
     }, [fetchListing]);
 
     useEffect(() => {
-        if (listing && listing.images) {
-            console.log('Images data:', {
-                images: listing.images,
-                firstImagePath: listing.images[0]?.file_path,
-                backendUrl: process.env.REACT_APP_BACKEND_URL
-            });
+        if (listing?.category_id && categories.length > 0) {
+            const path = findCategoryPath(listing.category_id, categories);
+            setCategoryPath(path);
         }
-    }, [listing]);
+    }, [listing, categories, findCategoryPath]);
 
     const scrollToReviews = () => {
         const reviewsSection = document.getElementById('reviews-section');
@@ -181,7 +204,6 @@ const ListingDetailsPage = () => {
                 await axios.post(`/api/v1/marketplace/listings/${id}/favorite`);
             }
 
-            // После изменения статуса избранного, обновляем данные
             await fetchListing();
         } catch (err) {
             setListing(prev => ({
@@ -192,12 +214,44 @@ const ListingDetailsPage = () => {
         }
     };
 
+    const getImageUrl = (image) => {
+        if (!image) {
+            return '';
+        }
 
+        const baseUrl = process.env.REACT_APP_BACKEND_URL;
+        if (!baseUrl) {
+            console.error('REACT_APP_BACKEND_URL is not defined!');
+            return '';
+        }
 
+        if (typeof image === 'string') {
+            return `${baseUrl}/uploads/${image}`;
+        }
+
+        if (image.file_path) {
+            return `${baseUrl}/uploads/${image.file_path}`;
+        }
+
+        return '';
+    };
+    const formatMemberDate = (dateString) => {
+        if (!dateString) return t('listings.details.seller.unknownDate');
+
+        // Форматируем дату в соответствии с текущим языком
+        const date = new Intl.DateTimeFormat(i18n.language, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }).format(new Date(dateString));
+
+        // Используем переведенный шаблон из JSON с отформатированной датой
+        return t('listings.details.seller.memberSince', { date });
+    };
     if (loading) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
-               <Breadcrumbs paths={categoryPath} categories={categories} />
+                <Breadcrumbs paths={categoryPath} categories={categories} />
                 <Grid container spacing={4}>
                     <Grid item xs={12} md={8}>
                         <Skeleton variant="rectangular" height={400} />
@@ -213,39 +267,13 @@ const ListingDetailsPage = () => {
     if (error) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
-               <Breadcrumbs paths={categoryPath} categories={categories} />
+                <Breadcrumbs paths={categoryPath} categories={categories} />
                 <Typography color="error">{error}</Typography>
             </Container>
         );
     }
 
     if (!listing) return null;
-    const getImageUrl = (image) => {
-        console.log('Getting image URL for:', image);
-        if (!image) {
-            console.log('No image provided');
-            return '';
-        }
-
-        const baseUrl = process.env.REACT_APP_BACKEND_URL;
-        if (!baseUrl) {
-            console.error('REACT_APP_BACKEND_URL is not defined!');
-            return '';
-        }
-
-        if (typeof image === 'string') {
-            console.log(`Returning URL for string image: ${baseUrl}/uploads/${image}`);
-            return `${baseUrl}/uploads/${image}`;
-        }
-
-        if (image.file_path) {
-            console.log(`Returning URL for image object: ${baseUrl}/uploads/${image.file_path}`);
-            return `${baseUrl}/uploads/${image.file_path}`;
-        }
-
-        console.log('Invalid image format:', image);
-        return '';
-    };
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -254,7 +282,7 @@ const ListingDetailsPage = () => {
                 {/* Images Gallery */}
                 <Grid item xs={12} md={8}>
                     <Box sx={{ position: 'relative' }}>
-                    {listing.images && Array.isArray(listing.images) && listing.images.length > 0 ? (
+                        {listing.images && Array.isArray(listing.images) && listing.images.length > 0 ? (
                             <>
                                 <Box
                                     component="img"
@@ -569,15 +597,7 @@ const ListingDetailsPage = () => {
                                             {listing.user?.name}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                            {t('listings.details.seller.memberSince', {
-                                                date: listing.user?.created_at
-                                                    ? new Intl.DateTimeFormat('ru-RU', {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric'
-                                                    }).format(new Date(listing.user?.created_at))
-                                                    : t('listings.details.seller.unknownDate')
-                                            })}
+                                        {formatMemberDate(listing.user?.created_at)}
                                         </Typography>
                                     </Box>
                                 </Stack>

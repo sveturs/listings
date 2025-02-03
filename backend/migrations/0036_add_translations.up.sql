@@ -1,3 +1,4 @@
+-- backend/migrations/0036_add_translations.up.sql
 CREATE TABLE translations (
     id SERIAL PRIMARY KEY,
     entity_type VARCHAR(50) NOT NULL,
