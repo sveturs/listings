@@ -88,8 +88,7 @@ export const useNotifications = () => {
                     clearInterval(intervalId);
                 }
             } catch (err) {
-                console.error('Error checking telegram status:', err);
-            }
+             }
         };
     
         // Проверяем статус каждые 5 секунд вместо каждой секунды
@@ -156,8 +155,7 @@ export const useNotifications = () => {
             const interval = setInterval(async () => {
                 try {
                     const response = await axios.get('/api/v1/notifications/telegram');
-                    console.log('Telegram status response:', response.data);
-                    if (response.data?.data?.connected) {
+                     if (response.data?.data?.connected) {
                         clearInterval(interval);
                         setStatusCheckInterval(null);
                         setTelegramConnected(true);
@@ -165,8 +163,7 @@ export const useNotifications = () => {
                         showNotification('Telegram успешно подключен');
                     }
                 } catch (err) {
-                    console.error('Telegram status check error:', err);
-                }
+                 }
             }, 3000);
 
             setStatusCheckInterval(interval);

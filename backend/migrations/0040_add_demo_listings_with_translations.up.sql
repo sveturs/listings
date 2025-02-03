@@ -17,8 +17,8 @@ VALUES
 
 -- Объявление на английском
 (1, (SELECT id FROM marketplace_categories WHERE slug = 'smartphones'),
-'iPhone 14 Pro Max',
-'Selling iPhone 14 Pro Max, 256GB, Deep Purple. Perfect condition, complete set with original box and accessories. AppleCare+ until 2024.',
+'mobile Samsung Galaxy S21',
+'Selling Samsung Galaxy S21, 256GB, Deep Purple. Perfect condition, complete set with original box and accessories. AppleCare+ until 2024.',
 120000, 'used', 'active',
 'Novi Sad, Serbia', 45.2551, 19.8452, 'Novi Sad', 'Serbia', 'en'),
 
@@ -55,22 +55,22 @@ true, false);
 INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified)
 VALUES
 -- Английский оригинал
-('listing', (SELECT id FROM marketplace_listings WHERE title = 'iPhone 14 Pro Max'), 'en', 'title',
-'iPhone 14 Pro Max', false, true),
-('listing', (SELECT id FROM marketplace_listings WHERE title = 'iPhone 14 Pro Max'), 'en', 'description',
-'Selling iPhone 14 Pro Max, 256GB, Deep Purple. Perfect condition, complete set with original box and accessories. AppleCare+ until 2024.',
+('listing', (SELECT id FROM marketplace_listings WHERE title = 'mobile Samsung Galaxy S21'), 'en', 'title',
+'mobile Samsung Galaxy S21', false, true),
+('listing', (SELECT id FROM marketplace_listings WHERE title = 'mobile Samsung Galaxy S21'), 'en', 'description',
+'Selling Samsung Galaxy S21 Ultra 5G, 12 GB RAM, 256 GB. Guaranteed, like new.',
 false, true),
 -- Сербский перевод
-('listing', (SELECT id FROM marketplace_listings WHERE title = 'iPhone 14 Pro Max'), 'sr', 'title',
-'iPhone 14 Pro Max', true, false),
-('listing', (SELECT id FROM marketplace_listings WHERE title = 'iPhone 14 Pro Max'), 'sr', 'description',
-'Продајем iPhone 14 Pro Max, 256GB, тамно љубичасти. Перфектно стање, комплетан сет са оригиналном кутијом и додацима. AppleCare+ до 2024.',
+('listing', (SELECT id FROM marketplace_listings WHERE title = 'mobile Samsung Galaxy S21'), 'sr', 'title',
+'мобилни телефон Samsung Galaxy S21', true, false),
+('listing', (SELECT id FROM marketplace_listings WHERE title = 'mobile Samsung Galaxy S21'), 'sr', 'description',
+'Samsung Galaxy S21 Ultra 5G, 12GB RAM, 256GB. Под гаранцијом, као нов.',
 true, false),
 -- Русский перевод
-('listing', (SELECT id FROM marketplace_listings WHERE title = 'iPhone 14 Pro Max'), 'ru', 'title',
-'iPhone 14 Pro Max', true, false),
-('listing', (SELECT id FROM marketplace_listings WHERE title = 'iPhone 14 Pro Max'), 'ru', 'description',
-'Продаю iPhone 14 Pro Max, 256GB, темно-фиолетовый. Идеальное состояние, полный комплект с оригинальной коробкой и аксессуарами. AppleCare+ до 2024.',
+('listing', (SELECT id FROM marketplace_listings WHERE title = 'mobile Samsung Galaxy S21'), 'ru', 'title',
+'мобильник Samsung Galaxy S21', true, false),
+('listing', (SELECT id FROM marketplace_listings WHERE title = 'mobile Samsung Galaxy S21'), 'ru', 'description',
+'Продаю Samsung Galaxy S21 Ultra 5G, 12 ГБ ОЗУ, 256 ГБ. На гарантии, как новый.',
 true, false);
 
 -- Добавляем переводы для третьего объявления (русский оригинал)
@@ -106,9 +106,9 @@ VALUES
 'toyota_2.jpg', 'toyota_2.jpg', 1024, 'image/jpeg', false),
 
 -- Изображения для iPhone
-((SELECT id FROM marketplace_listings WHERE title = 'iPhone 14 Pro Max'),
+((SELECT id FROM marketplace_listings WHERE title = 'mobile Samsung Galaxy S21'),
 'galaxy_s21_1.jpg', 'galaxy_s21_1.jpg', 1024, 'image/jpeg', true),
-((SELECT id FROM marketplace_listings WHERE title = 'iPhone 14 Pro Max'),
+((SELECT id FROM marketplace_listings WHERE title = 'mobile Samsung Galaxy S21'),
 'galaxy_s21_2.jpg', 'galaxy_s21_2.jpg', 1024, 'image/jpeg', false),
 
 -- Изображения для игрового ПК

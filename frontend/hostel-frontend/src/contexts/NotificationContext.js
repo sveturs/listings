@@ -31,8 +31,7 @@ export const NotificationProvider = ({ children }) => {
                         setSettings(formattedSettings);
                     }
                 } catch (err) {
-                    console.error('Error checking telegram status:', err);
-                }
+                 }
             };
             checkStatus();
         } else {
