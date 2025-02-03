@@ -166,7 +166,7 @@ const MarketplacePage = () => {
                         id: category.id, 
                         name: category.name, 
                         slug: category.slug,
-                        translations: category.translations // Добавляем translations
+                        translations: category.translations 
                     });
                     return true;
                 }
@@ -176,7 +176,7 @@ const MarketplacePage = () => {
                         id: category.id, 
                         name: category.name, 
                         slug: category.slug,
-                        translations: category.translations // Добавляем translations
+                        translations: category.translations 
                     });
                     return true;
                 }
@@ -267,7 +267,7 @@ const MarketplacePage = () => {
         if (listings.length === 0) {
             return (
                 <Alert severity="info" sx={{ m: 2 }}>
-                    По вашему запросу ничего не найдено
+                    {t('listings.filters.noResults')}
                 </Alert>
             );
         }
@@ -364,7 +364,7 @@ const MarketplacePage = () => {
                     <Box sx={{ flex: 1 }} />
                 )}
                 <Button
-                    id="createAnnouncementButton" // Добавлено id
+                    id="createAnnouncementButton"
                     variant="contained"
                     onClick={() => navigate('/marketplace/create')}
                     startIcon={<Plus />}

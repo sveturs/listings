@@ -313,12 +313,24 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
     argCount := 2
 
     // Добавляем остальные фильтры
-    if v, ok := filters["query"]; ok && v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND (LOWER(l.title) LIKE LOWER($%d) OR LOWER(l.description) LIKE LOWER($%d))", 
-            argCount, argCount))
-        args = append(args, "%"+v+"%")
-    }
+ if v, ok := filters["query"]; ok && v != "" {
+    argCount++
+    conditions = append(conditions, fmt.Sprintf(`
+        AND (
+            LOWER(l.title) LIKE LOWER($%d) 
+            OR LOWER(l.description) LIKE LOWER($%d)
+            OR EXISTS (
+                SELECT 1 
+                FROM translations t 
+                WHERE t.entity_type = 'listing' 
+                AND t.entity_id = l.id 
+                AND t.field_name IN ('title', 'description')
+                AND LOWER(t.translated_text) LIKE LOWER($%d)
+            )
+        )`, 
+        argCount, argCount, argCount))
+    args = append(args, "%"+v+"%")
+}
 
     if v, ok := filters["min_price"]; ok && v != "" {
         argCount++
