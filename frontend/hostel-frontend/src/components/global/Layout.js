@@ -75,9 +75,9 @@ const Layout = ({ children }) => {
     }
   ];
   useEffect(() => {
-    console.log('Current language:', i18n.language);
-    console.log('Available languages:', i18n.languages);
-    console.log('Translations loaded:', i18n.store.data);
+  //  console.log('Current language:', i18n.language);
+  //  console.log('Available languages:', i18n.languages);
+   // console.log('Translations loaded:', i18n.store.data);
   }, [i18n.language]);
   useEffect(() => {
     let unsubscribe;

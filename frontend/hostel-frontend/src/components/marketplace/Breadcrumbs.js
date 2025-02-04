@@ -15,10 +15,10 @@ const Breadcrumbs = ({ paths, categories }) => {
     const navigate = useNavigate();
 
     const getTranslatedName = (pathCategory) => {
-        console.log('Current language:', i18n.language);
-        console.log('All translations:', pathCategory.translations);
-        console.log('Serbian translation:', pathCategory.translations?.sr);
-        console.log('Russian translation:', pathCategory.translations?.ru);
+     //   console.log('Current language:', i18n.language);
+     //   console.log('All translations:', pathCategory.translations);
+      //  console.log('Serbian translation:', pathCategory.translations?.sr);
+      //  console.log('Russian translation:', pathCategory.translations?.ru);
         
         // Сначала пробуем найти перевод для текущего языка
         if (i18n.language === 'sr' && pathCategory.translations?.sr) {

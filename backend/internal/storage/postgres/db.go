@@ -10,7 +10,7 @@ import (
 	"database/sql"
 	"fmt"
     "github.com/jackc/pgx/v5/pgconn" 
-
+	"os"
     
 
 	"github.com/jackc/pgx/v5"
@@ -31,24 +31,24 @@ type Database struct {
 }
 
 func NewDatabase(dbURL string) (*Database, error) {
-	pool, err := pgxpool.New(context.Background(), dbURL)
-	if err != nil {
-		return nil, fmt.Errorf("error creating connection pool: %w", err)
-	}
+    pool, err := pgxpool.New(context.Background(), dbURL)
+    if err != nil {
+        return nil, fmt.Errorf("error creating connection pool: %w", err)
+    }
 
-	// Создаем сервис переводов
-	translationService, err := marketplaceService.NewTranslationService("AIzaSyBISWAfMMEdWSIKL9WASQIWeKbSQo4Dv48")
-	if err != nil {
-		return nil, fmt.Errorf("error creating translation service: %w", err)
-	}
+    // Создаем сервис переводов
+    translationService, err := marketplaceService.NewTranslationService(os.Getenv("GOOGLE_TRANSLATE_API_KEY"))
+    if err != nil {
+        return nil, fmt.Errorf("error creating translation service: %w", err)  
+    }
 
-	return &Database{
-		pool:            pool,
-		marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
-		reviewDB:        reviewStorage.NewStorage(pool),
-		usersDB:         userStorage.NewStorage(pool),
-		notificationsDB: notificationStorage.NewNotificationStorage(pool),
-	}, nil
+    return &Database{
+        pool:            pool,
+        marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
+        reviewDB:        reviewStorage.NewStorage(pool, translationService), // передаем сервис переводов 
+        usersDB:         userStorage.NewStorage(pool),
+        notificationsDB: notificationStorage.NewNotificationStorage(pool),
+    }, nil
 }
 
 var _ storage.Storage = (*Database)(nil)

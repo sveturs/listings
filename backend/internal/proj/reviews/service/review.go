@@ -34,12 +34,13 @@ func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *model
         Cons:       req.Cons,
         Photos:     req.Photos,
         Status:     "published",
+        OriginalLanguage: req.OriginalLanguage, 
     }
     
     // Проверяем, является ли покупка верифицированной
     review.IsVerifiedPurchase = s.checkVerifiedPurchase(ctx, userId, req.EntityType, req.EntityID)
     
-    // Исправляем эту строку, чтобы получить оба возвращаемых значения
+    // Сохраняем отзыв
     createdReview, err := s.storage.CreateReview(ctx, review)
     if err != nil {
         return nil, err
@@ -47,7 +48,6 @@ func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *model
     
     return createdReview, nil
 }
-
 func (s *ReviewService) GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error) {
     return s.storage.GetReviews(ctx, filter)
 }

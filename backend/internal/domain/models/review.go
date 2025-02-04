@@ -23,6 +23,7 @@ type Review struct {
 	NotHelpfulVotes   int       `json:"not_helpful_votes"`   
     // поля для мультиязычности
     OriginalLanguage string                            `json:"original_language"`
+    RawTranslations  interface{}                       `json:"-"`
     Translations    map[string]map[string]string      `json:"translations,omitempty"`
     
     // Дополнительные поля для отображения
@@ -61,6 +62,8 @@ type CreateReviewRequest struct {
     Pros        string   `json:"pros,omitempty"`
     Cons        string   `json:"cons,omitempty"`
     Photos      []string `json:"photos"`
+    OriginalLanguage string   `json:"original_language" validate:"required"`
+
  }
 
 // Фильтры для получения отзывов

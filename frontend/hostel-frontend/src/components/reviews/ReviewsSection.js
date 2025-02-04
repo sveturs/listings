@@ -15,7 +15,7 @@ const ReviewsSection = ({
     canReview = true,
     onReviewsCountChange
 }) => {
-    const { t } = useTranslation('marketplace'); 
+    const { t, i18n } = useTranslation('marketplace'); 
 
     const [reviews, setReviews] = useState([]);
     const [stats, setStats] = useState(null);
@@ -71,7 +71,10 @@ const ReviewsSection = ({
 
     const handleReviewSubmit = async ({ reviewData, photosFormData }) => {
         try {
-            const response = await axios.post('/api/v1/reviews', reviewData);
+            const response = await axios.post('/api/v1/reviews', {
+                ...reviewData,
+                original_language: i18n.language // Добавляем текущий язык
+            });
             const reviewId = response.data.data.id;
 
             if (photosFormData && photosFormData.getAll('photos').length > 0) {

@@ -40,7 +40,7 @@ import {
 
 // Компонент формы создания/редактирования отзыва
 const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entityId }) => {
-    const { t } = useTranslation('marketplace');
+    const { t, i18n } = useTranslation('marketplace');
 
     const [formData, setFormData] = useState({
         rating: initialData?.rating || 0,
@@ -89,16 +89,17 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
+    
         const reviewData = {
             entity_type: entityType,
             entity_id: entityId,
             rating: parseInt(formData.rating),
             comment: formData.comment,
             pros: formData.pros,
-            cons: formData.cons
+            cons: formData.cons,
+            original_language: i18n.language
         };
-
+    
         let photosFormData = null;
         if (photoFiles.length > 0) {
             photosFormData = new FormData();
@@ -106,7 +107,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                 photosFormData.append('photos', file);
             });
         }
-
+    
         onSubmit({ reviewData, photosFormData });
     };
 
@@ -199,6 +200,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
 
 // Компонент отдельного отзыва
 const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, onReport }) => {
+    const { t, i18n } = useTranslation('marketplace');
     const [showGallery, setShowGallery] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [showReplyForm, setShowReplyForm] = useState(false);
@@ -206,8 +208,6 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [showResponses, setShowResponses] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-    const { t } = useTranslation('marketplace');
-
     const handleReplySubmit = () => {
         onReply(review.id, replyText);
         setReplyText('');
@@ -228,6 +228,22 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
 
         onVote(review.id, voteType);
     };
+
+    const getTranslatedContent = (field) => {
+        if (!review || !field) return '';
+    
+        if (i18n.language === review.original_language) {
+            return review[field];
+        }
+    
+        const translation = review.translations?.[i18n.language]?.[field];
+        if (translation) {
+            return translation;
+        }
+    
+        return review[field];
+    };
+
 
     return (
         <Card sx={{ mb: 2 }}>
@@ -296,25 +312,23 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                     <Rating value={review.rating} readOnly />
 
                     {review.comment && (
-                        <Typography>{review.comment}</Typography>
+                        <Typography>{getTranslatedContent('comment')}</Typography>
                     )}
-
                     {review.pros && (
                         <Box>
                             <Typography color="success.main" variant="subtitle2">
-                            {t('reviews.pros')}
-                                
+                                {t('reviews.pros')}
                             </Typography>
-                            <Typography>{review.pros}</Typography>
+                            <Typography>{getTranslatedContent('pros')}</Typography>
                         </Box>
                     )}
 
                     {review.cons && (
                         <Box>
                             <Typography color="error.main" variant="subtitle2">
-                            {t('reviews.cons')} 
+                                {t('reviews.cons')}
                             </Typography>
-                            <Typography>{review.cons}</Typography>
+                            <Typography>{getTranslatedContent('cons')}</Typography>
                         </Box>
                     )}
 
@@ -470,7 +484,7 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
                                         setReplyText('');
                                     }}
                                 >
-                                    {t('reviews.cancel')} 
+                                    {t('reviews.cancel')}
                                 </Button>
                             </Stack>
                         </Box>
