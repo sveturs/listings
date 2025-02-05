@@ -37,7 +37,7 @@ func NewDatabase(dbURL string) (*Database, error) {
     }
 
     // Создаем сервис переводов
-    translationService, err := marketplaceService.NewTranslationService(os.Getenv("GOOGLE_TRANSLATE_API_KEY"))
+    translationService, err := marketplaceService.NewTranslationService(os.Getenv("OPENAI_API_KEY"))
     if err != nil {
         return nil, fmt.Errorf("error creating translation service: %w", err)  
     }

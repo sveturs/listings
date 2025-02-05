@@ -11,6 +11,9 @@ require (
 	github.com/sashabaranov/go-openai v1.36.1
 	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.214.0
+	github.com/sashabaranov/go-openai v1.17.3
+
+
 )
 
 require (

@@ -41,7 +41,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
     }
 
     // Создаем сервис переводов с правильным именованием пакета
-    translationService, err := marketplaceService.NewTranslationService(cfg.GoogleTranslateAPIKey)
+	translationService, err := marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
     if err != nil {
         return nil, fmt.Errorf("failed to create translation service: %w", err)
     }
