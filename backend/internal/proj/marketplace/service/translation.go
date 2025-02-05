@@ -97,7 +97,7 @@ func (s *TranslationService) TranslateToAllLanguages(ctx context.Context, text s
 	translations[sourceLanguage] = text
 
 	// Сначала модерируем исходный текст
-	moderatedText, err := s.moderateText(ctx, text, sourceLanguage)
+	moderatedText, err := s.ModerateText(ctx, text, sourceLanguage)
 	if err != nil {
 		return nil, fmt.Errorf("moderation failed: %w", err)
 	}
@@ -131,7 +131,7 @@ func (s *TranslationService) TranslateEntityFields(ctx context.Context, sourceLa
             continue
         }
         
-        moderatedText, err := s.moderateText(ctx, text, sourceLanguage)
+        moderatedText, err := s.ModerateText(ctx, text, sourceLanguage)
         if err != nil {
             log.Printf("Error moderating field %s: %v", fieldName, err)
             continue
@@ -171,7 +171,7 @@ func (s *TranslationService) Translate(ctx context.Context, text string, sourceL
 	}
 
 	// Сначала модерируем текст
-	moderatedText, err := s.moderateText(ctx, text, sourceLanguage)
+	moderatedText, err := s.ModerateText(ctx, text, sourceLanguage)
 	if err != nil {
 		return "", err
 	}
@@ -187,7 +187,7 @@ func (s *TranslationService) Translate(ctx context.Context, text string, sourceL
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
-					Content: fmt.Sprintf("Translate this text from %s to %s: %s", sourceLanguage, targetLanguage, moderatedText),
+					Content: fmt.Sprintf("I send you messages, phrases for translation – in response, you send me only the translated text and nothing else, no headings or anything extra – just the translated text and that's it! Translate this text from %s to %s: %s", sourceLanguage, targetLanguage, moderatedText),
 				},
 			},
 			Temperature: 0.3,
@@ -203,7 +203,7 @@ func (s *TranslationService) Translate(ctx context.Context, text string, sourceL
 	return translatedText, nil
 }
 
-func (s *TranslationService) moderateText(ctx context.Context, text string, language string) (string, error) {
+func (s *TranslationService) ModerateText(ctx context.Context, text string, language string) (string, error) {
     var prompt string
     switch language {
     case "ru":

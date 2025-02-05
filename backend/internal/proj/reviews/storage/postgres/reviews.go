@@ -8,19 +8,28 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-
+    
 	"github.com/jackc/pgx/v5"
 )
 
 func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*models.Review, error) {
-	tx, err := s.pool.Begin(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to start transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
+    tx, err := s.pool.Begin(ctx)
+    if err != nil {
+        return nil, fmt.Errorf("failed to start transaction: %w", err)
+    }
+    defer tx.Rollback(ctx)
 
-	// Сначала создаем запись отзыва
-	err = tx.QueryRow(ctx, `
+    // Сначала модерируем оригинальный текст
+    moderatedComment := review.Comment
+    if review.Comment != "" {
+        moderatedComment, err = s.translationService.ModerateText(ctx, review.Comment, review.OriginalLanguage)
+        if err != nil {
+            return nil, fmt.Errorf("failed to moderate comment: %w", err)
+        }
+    }
+
+    // Создаем запись отзыва с модерированным текстом
+    err = tx.QueryRow(ctx, `
         INSERT INTO reviews (
             user_id, entity_type, entity_id, rating, comment, 
             pros, cons, photos, is_verified_purchase, status,
@@ -28,73 +37,43 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING id, created_at, updated_at
     `,
-		review.UserID, review.EntityType, review.EntityID, review.Rating,
-		review.Comment, review.Pros, review.Cons, review.Photos,
-		review.IsVerifiedPurchase, review.Status, review.OriginalLanguage,
-	).Scan(&review.ID, &review.CreatedAt, &review.UpdatedAt)
+        review.UserID, review.EntityType, review.EntityID, review.Rating,
+        moderatedComment, review.Pros, review.Cons, review.Photos,
+        review.IsVerifiedPurchase, review.Status, review.OriginalLanguage,
+    ).Scan(&review.ID, &review.CreatedAt, &review.UpdatedAt)
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to insert review: %w", err)
-	}
+    if err != nil {
+        return nil, fmt.Errorf("failed to insert review: %w", err)
+    }
 
-	// Создаем переводы на все языки
-	targetLangs := []string{"en", "ru", "sr"}
-	for _, lang := range targetLangs {
-		isMachine := lang != review.OriginalLanguage
-		isVerified := !isMachine
+    // Сохраняем модерированный текст как оригинальный перевод
+    err = s.saveTranslation(ctx, tx, "review", review.ID, review.OriginalLanguage, "comment", moderatedComment, false, true)
+    if err != nil {
+        return nil, fmt.Errorf("failed to save original translation: %w", err)
+    }
 
-		if review.Comment != "" {
-			var text string
-			if lang == review.OriginalLanguage {
-				text = review.Comment
-			} else {
-				var err error
-				text, err = s.translationService.Translate(ctx, review.Comment, review.OriginalLanguage, lang)
-				if err != nil {
-					return nil, fmt.Errorf("failed to translate comment to %s: %w", lang, err)
-				}
-			}
-			if err := s.saveTranslation(ctx, tx, "review", review.ID, lang, "comment", text, isMachine, isVerified); err != nil {
-				return nil, fmt.Errorf("failed to save comment translation: %w", err)
-			}
-		}
+    // Создаем переводы на другие языки
+    targetLangs := []string{"en", "ru", "sr"}
+    for _, lang := range targetLangs {
+        if lang == review.OriginalLanguage {
+            continue
+        }
 
-		if review.Pros != "" {
-			var text string
-			if lang == review.OriginalLanguage {
-				text = review.Pros
-			} else {
-				var err error
-				text, err = s.translationService.Translate(ctx, review.Pros, review.OriginalLanguage, lang)
-				if err != nil {
-					return nil, fmt.Errorf("failed to translate pros to %s: %w", lang, err)
-				}
-			}
-			if err := s.saveTranslation(ctx, tx, "review", review.ID, lang, "pros", text, isMachine, isVerified); err != nil {
-				return nil, fmt.Errorf("failed to save pros translation: %w", err)
-			}
-		}
+        translatedText, err := s.translationService.Translate(ctx, moderatedComment, review.OriginalLanguage, lang)
+        if err != nil {
+            log.Printf("Failed to translate to %s: %v", lang, err)
+            continue
+        }
 
-		if review.Cons != "" {
-			var text string
-			if lang == review.OriginalLanguage {
-				text = review.Cons
-			} else {
-				var err error
-				text, err = s.translationService.Translate(ctx, review.Cons, review.OriginalLanguage, lang)
-				if err != nil {
-					return nil, fmt.Errorf("failed to translate cons to %s: %w", lang, err)
-				}
-			}
-			if err := s.saveTranslation(ctx, tx, "review", review.ID, lang, "cons", text, isMachine, isVerified); err != nil {
-				return nil, fmt.Errorf("failed to save cons translation: %w", err)
-			}
-		}
-	}
+        if err := s.saveTranslation(ctx, tx, "review", review.ID, lang, "comment", translatedText, true, false); err != nil {
+            log.Printf("Failed to save translation to %s: %v", lang, err)
+            continue
+        }
+    }
 
-	if err = tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
-	}
+    if err = tx.Commit(ctx); err != nil {
+        return nil, fmt.Errorf("failed to commit transaction: %w", err)
+    }
 
 	// Загружаем все переводы в структуру отзыва
 	translations := make(map[string]map[string]string)
