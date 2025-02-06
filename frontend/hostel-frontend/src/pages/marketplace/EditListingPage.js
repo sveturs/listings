@@ -186,31 +186,47 @@ const EditListingPage = () => {
         e.preventDefault();
         setError("");
         setSuccess(false);
-
+    
         try {
-            // Если редактируем оригинальный язык
             if (i18n.language === listing.original_language) {
+                // Сначала обновляем основные данные
                 await axios.put(`/api/v1/marketplace/listings/${id}`, {
                     ...listing,
                     price: parseFloat(listing.price)
                 });
+    
+                // Отправляем новые изображения, если они есть
+                if (images.length > 0) {
+                    const formData = new FormData();
+                    images.forEach((file) => {
+                        formData.append('images', file);
+                    });
+                    
+                    await axios.post(
+                        `/api/v1/marketplace/listings/${id}/images`,
+                        formData,
+                        {
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        }
+                    );
+                }
             } else {
-                // Если редактируем перевод
                 await axios.put(`/api/v1/marketplace/translations/${id}`, {
                     language: i18n.language,
                     translations: {
                         title: listing.title,
                         description: listing.description
                     },
-                    is_verified: true // Отмечаем как проверенный перевод
+                    is_verified: true
                 });
             }
-
+    
             setSuccess(true);
             setTimeout(() => {
                 navigate(`/marketplace/listings/${id}`);
             }, 1500);
-
         } catch (error) {
             setError(t('listings.edit.errors.updateFailed'));
         }
