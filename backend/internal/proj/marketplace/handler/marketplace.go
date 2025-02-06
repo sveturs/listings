@@ -181,7 +181,7 @@ func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listings")
 	}
 
-	log.Printf("Found %d listings", len(listings))
+	//log.Printf("Found %d listings", len(listings))
 
 	return utils.SuccessResponse(c, fiber.Map{
 		"data": listings,
@@ -242,7 +242,7 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
     }
 
-    log.Printf("GetListing: userID=%d, listingID=%d", userID, id)
+    //log.Printf("GetListing: userID=%d, listingID=%d", userID, id)
 
     // Создаем контекст с user_id
     ctx := context.WithValue(c.Context(), "user_id", userID)
@@ -257,7 +257,7 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
     }
 
     // Добавляем логирование для отладки
-    log.Printf("GetListing result: listingID=%d, isFavorite=%v, userID=%d", id, listing.IsFavorite, userID)
+    //log.Printf("GetListing result: listingID=%d, isFavorite=%v, userID=%d", id, listing.IsFavorite, userID)
 
     return utils.SuccessResponse(c, listing)
 }
@@ -392,11 +392,11 @@ func (h *MarketplaceHandler) GetCategories(c *fiber.Ctx) error {
 func (h *MarketplaceHandler) GetFavorites(c *fiber.Ctx) error {
     userID, ok := c.Locals("user_id").(int)
     if !ok {
-        log.Printf("GetFavorites: no user_id in context")
+     //   log.Printf("GetFavorites: no user_id in context")
         return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
     }
 
-    log.Printf("GetFavorites: fetching favorites for userID=%d", userID)
+   // log.Printf("GetFavorites: fetching favorites for userID=%d", userID)
 
     ctx := context.WithValue(c.Context(), "user_id", userID)
 
@@ -406,6 +406,6 @@ func (h *MarketplaceHandler) GetFavorites(c *fiber.Ctx) error {
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении избранных объявлений")
     }
 
-    log.Printf("GetFavorites: found %d favorites for userID=%d", len(favorites), userID)
+  //  log.Printf("GetFavorites: found %d favorites for userID=%d", len(favorites), userID)
     return utils.SuccessResponse(c, favorites)
 }

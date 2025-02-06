@@ -60,7 +60,7 @@ func (h *NotificationHandler) ConnectTelegramWebhook() {
 		return
 	}
 
-	baseURL := "https://SveTu.rs/api/v1/notifications/telegram/webhook"
+	baseURL := "https://svetu.rs/api/v1/notifications/telegram/webhook"
 
 	// Создаем конфигурацию вебхука
 	webhookConfig := tgbotapi.NewWebhook(baseURL)
@@ -68,14 +68,14 @@ func (h *NotificationHandler) ConnectTelegramWebhook() {
 	// Устанавливаем вебхук
 	_, err := h.bot.SetWebhook(webhookConfig)
 	if err != nil {
-		log.Printf("Error setting webhook: %v", err)
+		//log.Printf("Error setting webhook: %v", err)
 		return
 	}
 
 	// Опционально: проверяем информацию о вебхуке
 	info, err := h.bot.GetWebhookInfo()
 	if err != nil {
-		log.Printf("Error getting webhook info: %v", err)
+		//log.Printf("Error getting webhook info: %v", err)
 		return
 	}
 
@@ -83,14 +83,14 @@ func (h *NotificationHandler) ConnectTelegramWebhook() {
 		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
 	}
 
-	log.Printf("Successfully set webhook for Telegram bot")
+	//log.Printf("Successfully set webhook for Telegram bot")
 }
 
 // In NotificationHandler
 func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
 	var update tgbotapi.Update
 	if err := c.BodyParser(&update); err != nil {
-		log.Printf("Error parsing update: %v", err)
+		//log.Printf("Error parsing update: %v", err)
 		return err
 	}
 
@@ -100,7 +100,7 @@ func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
 		if update.Message.IsCommand() {
 			command := update.Message.Command()
 			args := update.Message.CommandArguments()
-			log.Printf("Command %s with args: '%s'", command, args)
+			//log.Printf("Command %s with args: '%s'", command, args)
 
 			if command == "start" {
 				return h.handleStartCommand(c, update.Message, args)
@@ -111,7 +111,7 @@ func (h *NotificationHandler) HandleTelegramWebhook(c *fiber.Ctx) error {
 }
 func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi.Message, args string) error {
 	// Добавляем логирование для отладки
-	log.Printf("Handling start command with args: %s", args)
+	//log.Printf("Handling start command with args: %s", args)
 
 	if args == "" {
 		msg := tgbotapi.NewMessage(message.Chat.ID, "Пожалуйста, используйте ссылку для подключения из приложения")
@@ -121,7 +121,7 @@ func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi
 
 	userID, err := h.validateUserToken(args)
 	if err != nil {
-		log.Printf("Token validation error: %v", err)
+		//log.Printf("Token validation error: %v", err)
 		msg := tgbotapi.NewMessage(message.Chat.ID, "Ошибка валидации токена. Пожалуйста, попробуйте снова.")
 		_, err := h.bot.Send(msg)
 		return err
@@ -173,7 +173,7 @@ func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi
 
 	for _, setting := range settings {
 		if err := h.notificationService.UpdateNotificationSettings(c.Context(), &setting); err != nil {
-			log.Printf("Error setting notification: %v", err)
+			// log.Printf("Error setting notification: %v", err)
 		}
 	}
 
@@ -186,11 +186,11 @@ func (h *NotificationHandler) GetTelegramToken(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 	token, err := h.generateUserToken(userID)
 	if err != nil {
-		log.Printf("Error generating token: %v", err)
+		// log.Printf("Error generating token: %v", err)
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to generate token")
 	}
 
-	log.Printf("Generated telegram token for user %d: %s", userID, token)
+	// log.Printf("Generated telegram token for user %d: %s", userID, token)
 
 	// Изменяем структуру ответа для соответствия ожиданиям фронтенда
 	return utils.SuccessResponse(c, fiber.Map{
@@ -309,7 +309,7 @@ func (h *NotificationHandler) UpdateSettings(c *fiber.Ctx) error {
 func (h *NotificationHandler) GetTelegramStatus(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 	connection, err := h.notificationService.GetTelegramConnection(c.Context(), userID)
-	log.Printf("Checking Telegram status for user %d: connection=%v, err=%v", userID, connection, err)
+	// log.Printf("Checking Telegram status for user %d: connection=%v, err=%v", userID, connection, err)
 
 	if err != nil {
 		return utils.SuccessResponse(c, fiber.Map{

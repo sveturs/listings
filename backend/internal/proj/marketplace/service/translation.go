@@ -204,27 +204,8 @@ func (s *TranslationService) Translate(ctx context.Context, text string, sourceL
 }
 
 func (s *TranslationService) ModerateText(ctx context.Context, text string, language string) (string, error) {
-    var prompt string
-    switch language {
-    case "ru":
-        prompt = fmt.Sprintf(`Проверь текст на русском языке на нецензурную лексику и оскорбления.
-Если найдешь - замени на нейтральные слова схожего смысла.
-Верни ТОЛЬКО сам текст без каких-либо пометок и объяснений.
-Пример: если на входе "охуенная тачка" - верни "отличная машина"
-Текст: "%s"`, text)
-    case "sr":
-        prompt = fmt.Sprintf(`Proveri tekst na srpskom jeziku.
-Ako sadrži psovke ili uvrede - zameni pristojnim rečima istog značenja.
-Vrati SAMO obrađeni tekst, bez dodatnih objašnjenja.
-Tekst: "%s"`, text)
-    case "en":
-        prompt = fmt.Sprintf(`Check the text for profanity and offensive language.
-Replace any inappropriate words with neutral alternatives of similar meaning.
-Return ONLY the processed text without any additional marks or explanations.
-Example: if input is "fucking awesome car" - return "really great car"
-Text: "%s"`, text)
-    default:
-        return "", fmt.Errorf("unsupported language for moderation: %s", language)
+    if text == "" {
+        return "", nil
     }
 
     resp, err := s.client.CreateChatCompletion(
@@ -234,11 +215,11 @@ Text: "%s"`, text)
             Messages: []openai.ChatCompletionMessage{
                 {
                     Role: openai.ChatMessageRoleSystem,
-                    Content: "You are a content moderator. Replace inappropriate language with neutral alternatives. Return ONLY the processed text, without any markers, explanations or additional text. Never add prefixes like 'Moderated text:' or similar.",
+                    Content: "You are a content moderator. Your task is to check the input text and:\n1. If it contains profanity or offensive language - replace those words with neutral alternatives\n2. If the text is clean - return it exactly as is\nNEVER add any comments or explanations about moderation.",
                 },
                 {
                     Role: openai.ChatMessageRoleUser,
-                    Content: prompt,
+                    Content: text,
                 },
             },
             Temperature: 0,
@@ -247,10 +228,6 @@ Text: "%s"`, text)
     if err != nil {
         return "", err
     }
-
-    // Очищаем от всех возможных маркеров и лишних пробелов
-    cleanedText := strings.TrimSpace(resp.Choices[0].Message.Content)
-    cleanedText = strings.Trim(cleanedText, `"'*_[]()`)
     
-    return cleanedText, nil
+    return strings.TrimSpace(resp.Choices[0].Message.Content), nil
 }
