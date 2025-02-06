@@ -16,7 +16,7 @@ upstream api_backend {
 
 server {
     listen 80;
-    server_name landhub.rs www.landhub.rs;
+    server_name SveTu.rs www.SveTu.rs;
     
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -49,16 +49,16 @@ echo "Attempting to get SSL certificate..."
 docker-compose -f docker-compose.prod.yml run --rm certbot certbot certonly \
     --webroot \
     --webroot-path=/var/www/certbot \
-    --email admin@landhub.rs \
+    --email admin@SveTu.rs \
     --agree-tos \
     --no-eff-email \
-    -d landhub.rs \
-    -d www.landhub.rs \
+    -d SveTu.rs \
+    -d www.SveTu.rs \
     --force-renewal \
     --verbose
 
 # Проверяем, были ли созданы сертификаты
-if [ -d "certbot/conf/live/landhub.rs" ]; then
+if [ -d "certbot/conf/live/SveTu.rs" ]; then
     echo "Certificates successfully obtained!"
     
     # Восстанавливаем оригинальный nginx.conf
