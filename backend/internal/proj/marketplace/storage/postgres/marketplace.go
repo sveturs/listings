@@ -18,23 +18,25 @@ import (
 func (s *Storage) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
     var listingID int
     
-    // Определяем язык, если не указан
-    if listing.OriginalLanguage == "" {
-        // Используем весь текст для более точного определения языка
-        fullText := listing.Title + "\n" + listing.Description
-        sourceLanguage, confidence, err := s.translationService.DetectLanguage(ctx, fullText)
-        if err != nil || confidence < 0.8 {
-            // Если не удалось определить язык или уверенность низкая,
-            // используем язык интерфейса пользователя или английский по умолчанию
-            if userLang, ok := ctx.Value("user_language").(string); ok && userLang != "" {
-                listing.OriginalLanguage = userLang
-            } else {
-                listing.OriginalLanguage = "en"
-            }
+    // Всегда определяем язык текста, даже если указан язык интерфейса
+    fullText := listing.Title + "\n" + listing.Description
+    detectedLanguage, confidence, err := s.translationService.DetectLanguage(ctx, fullText)
+    
+    if err != nil || confidence < 0.8 {
+        // Если не удалось определить язык или уверенность низкая
+        if listing.OriginalLanguage != "" {
+            // Используем явно указанный язык
+            detectedLanguage = listing.OriginalLanguage
+        } else if userLang, ok := ctx.Value("user_language").(string); ok && userLang != "" {
+            // Используем язык интерфейса
+            detectedLanguage = userLang
         } else {
-            listing.OriginalLanguage = sourceLanguage
+            detectedLanguage = "en"
         }
     }
+    
+    // Устанавливаем определенный язык
+    listing.OriginalLanguage = detectedLanguage
 
     // Проверяем текст на модерацию перед сохранением
     moderatedTitle, err := s.translationService.ModerateText(ctx, listing.Title, listing.OriginalLanguage)
@@ -69,29 +71,27 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
     }
 
     // Сохраняем оригинальный текст как перевод для исходного языка
-    err = s.pool.QueryRow(ctx, `
+    _, err = s.pool.Exec(ctx, `
         INSERT INTO translations (
             entity_type, entity_id, language, field_name, 
             translated_text, is_machine_translated, is_verified
         ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     `,
         "listing", listingID, listing.OriginalLanguage, "title",
-        listing.Title, false, true,
-    ).Scan()
+        listing.Title, false, true)
 
     if err != nil {
         log.Printf("Error saving original title translation: %v", err)
     }
 
-    err = s.pool.QueryRow(ctx, `
+    _, err = s.pool.Exec(ctx, `
         INSERT INTO translations (
             entity_type, entity_id, language, field_name, 
             translated_text, is_machine_translated, is_verified
         ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     `,
         "listing", listingID, listing.OriginalLanguage, "description",
-        listing.Description, false, true,
-    ).Scan()
+        listing.Description, false, true)
 
     if err != nil {
         log.Printf("Error saving original description translation: %v", err)
@@ -107,15 +107,14 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
         // Переводим заголовок
         translatedTitle, err := s.translationService.Translate(ctx, listing.Title, listing.OriginalLanguage, targetLang)
         if err == nil {
-            err = s.pool.QueryRow(ctx, `
+            _, err = s.pool.Exec(ctx, `
                 INSERT INTO translations (
                     entity_type, entity_id, language, field_name, 
                     translated_text, is_machine_translated, is_verified
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7)
             `,
                 "listing", listingID, targetLang, "title",
-                translatedTitle, true, false,
-            ).Scan()
+                translatedTitle, true, false)
             if err != nil {
                 log.Printf("Error saving %s title translation: %v", targetLang, err)
             }
@@ -124,15 +123,14 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
         // Переводим описание
         translatedDesc, err := s.translationService.Translate(ctx, listing.Description, listing.OriginalLanguage, targetLang)
         if err == nil {
-            err = s.pool.QueryRow(ctx, `
+            _, err = s.pool.Exec(ctx, `
                 INSERT INTO translations (
                     entity_type, entity_id, language, field_name, 
                     translated_text, is_machine_translated, is_verified
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7)
             `,
                 "listing", listingID, targetLang, "description",
-                translatedDesc, true, false,
-            ).Scan()
+                translatedDesc, true, false)
             if err != nil {
                 log.Printf("Error saving %s description translation: %v", targetLang, err)
             }
