@@ -5,6 +5,7 @@ import (
 	"backend/internal/domain/models"
 	"context"
 	"fmt"
+    "database/sql"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -156,56 +157,63 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 	return messages, nil
 }
 
+// In chat.go
 func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
-	if msg == nil {
-		return fmt.Errorf("message cannot be nil")
-	}
+    if msg == nil {
+        return fmt.Errorf("message cannot be nil")
+    }
 
-	// Инициализируем структуры User, если они nil
-	if msg.Sender == nil {
-		msg.Sender = &models.User{}
-	}
-	if msg.Receiver == nil {
-		msg.Receiver = &models.User{}
-	}
+    // Initialize user structs if nil
+    if msg.Sender == nil {
+        msg.Sender = &models.User{}
+    }
+    if msg.Receiver == nil {
+        msg.Receiver = &models.User{}
+    }
 
-	tx, err := s.pool.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
+    tx, err := s.pool.Begin(ctx)
+    if err != nil {
+        return fmt.Errorf("error starting transaction: %w", err)
+    }
+    defer tx.Rollback(ctx)
 
-	// Проверяем тип данных
-	if msg.SenderID == 0 || msg.ReceiverID == 0 || msg.ListingID == 0 {
-		return fmt.Errorf("invalid message data: sender_id=%d, receiver_id=%d, listing_id=%d",
-			msg.SenderID, msg.ReceiverID, msg.ListingID)
-	}
+    // Validate input data
+    if msg.SenderID == 0 || msg.ReceiverID == 0 || msg.ListingID == 0 {
+        return fmt.Errorf("invalid message data: sender_id=%d, receiver_id=%d, listing_id=%d",
+            msg.SenderID, msg.ReceiverID, msg.ListingID)
+    }
 
-	// Получаем ID продавца и проверяем существование объявления
-	var sellerID int
-	err = tx.QueryRow(ctx, `
+    // Get seller ID and check listing existence
+    var sellerID int
+    err = tx.QueryRow(ctx, `
         SELECT user_id 
         FROM marketplace_listings 
         WHERE id = $1
     `, msg.ListingID).Scan(&sellerID)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return fmt.Errorf("listing not found: %d", msg.ListingID)
-		}
-		return fmt.Errorf("error getting listing seller: %w", err)
-	}
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            return fmt.Errorf("listing not found: %d", msg.ListingID)
+        }
+        return fmt.Errorf("error getting listing seller: %w", err)
+    }
 
-	// Определяем кто покупатель, а кто продавец
-	var buyerID int
-	if msg.SenderID == sellerID {
-		buyerID = msg.ReceiverID
-	} else {
-		buyerID = msg.SenderID
-	}
+    // Determine buyer and seller
+    var buyerID int
+    if msg.SenderID == sellerID {
+        buyerID = msg.ReceiverID
+    } else {
+        buyerID = msg.SenderID
+    }
 
-	// Создаем или получаем существующий чат
-	var chatID int
-	err = tx.QueryRow(ctx, `
+    // Add NULL handling for user information
+    type userInfo struct {
+        name       sql.NullString
+        pictureURL sql.NullString
+    }
+    var senderInfo, receiverInfo userInfo
+
+    // Create or get existing chat with proper NULL handling
+    err = tx.QueryRow(ctx, `
         WITH user_info AS (
             SELECT id, name, picture_url 
             FROM users 
@@ -220,56 +228,64 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
             ) VALUES ($3, $4, $5, CURRENT_TIMESTAMP)
             ON CONFLICT (listing_id, buyer_id, seller_id) 
             DO UPDATE SET 
-                last_message_at = CURRENT_TIMESTAMP
+                last_message_at = CURRENT_TIMESTAMP,
+                is_archived = false
             RETURNING id
         )
         SELECT 
             ci.id,
-            (SELECT name FROM user_info WHERE id = $1) as sender_name,
-            (SELECT picture_url FROM user_info WHERE id = $1) as sender_picture,
-            (SELECT name FROM user_info WHERE id = $2) as receiver_name,
-            (SELECT picture_url FROM user_info WHERE id = $2) as receiver_picture
+            (SELECT name FROM user_info WHERE id = $1),
+            (SELECT picture_url FROM user_info WHERE id = $1),
+            (SELECT name FROM user_info WHERE id = $2),
+            (SELECT picture_url FROM user_info WHERE id = $2)
         FROM chat_insert ci
     `,
-		msg.SenderID, msg.ReceiverID,
-		msg.ListingID, buyerID, sellerID,
-	).Scan(
-		&chatID,
-		&msg.Sender.Name,
-		&msg.Sender.PictureURL,
-		&msg.Receiver.Name,
-		&msg.Receiver.PictureURL,
-	)
+        msg.SenderID, msg.ReceiverID,
+        msg.ListingID, buyerID, sellerID,
+    ).Scan(
+        &msg.ChatID,
+        &senderInfo.name,
+        &senderInfo.pictureURL,
+        &receiverInfo.name,
+        &receiverInfo.pictureURL,
+    )
 
-	if err != nil {
-		return fmt.Errorf("error creating/getting chat: %w", err)
-	}
+    if err != nil {
+        return fmt.Errorf("error creating/getting chat: %w", err)
+    }
 
-	// Создаем сообщение
-	err = tx.QueryRow(ctx, `
+    // Set user information with NULL handling
+    msg.Sender.Name = senderInfo.name.String
+    msg.Sender.PictureURL = senderInfo.pictureURL.String
+    msg.Receiver.Name = receiverInfo.name.String
+    msg.Receiver.PictureURL = receiverInfo.pictureURL.String
+
+    // Create message
+    err = tx.QueryRow(ctx, `
         INSERT INTO marketplace_messages (
             chat_id,
             listing_id,
             sender_id,
             receiver_id,
             content,
-            is_read
-        ) VALUES ($1, $2, $3, $4, $5, false)
+            is_read,
+            original_language
+        ) VALUES ($1, $2, $3, $4, $5, false, $6)
         RETURNING id, created_at
     `,
-		chatID,
-		msg.ListingID,
-		msg.SenderID,
-		msg.ReceiverID,
-		msg.Content,
-	).Scan(&msg.ID, &msg.CreatedAt)
+        msg.ChatID,
+        msg.ListingID,
+        msg.SenderID,
+        msg.ReceiverID,
+        msg.Content,
+        msg.OriginalLanguage,
+    ).Scan(&msg.ID, &msg.CreatedAt)
 
-	if err != nil {
-		return fmt.Errorf("error creating message: %w", err)
-	}
+    if err != nil {
+        return fmt.Errorf("error creating message: %w", err)
+    }
 
-	msg.ChatID = chatID
-	return tx.Commit(ctx)
+    return tx.Commit(ctx)
 }
 func (s *Storage) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
 	_, err := s.pool.Exec(ctx, `
