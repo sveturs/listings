@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-    
+        
 	"github.com/jackc/pgx/v5"
 )
 
@@ -103,31 +103,31 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
 }
 
 func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error) {
-	userID, ok := ctx.Value("user_id").(int)
-	if !ok {
-		userID = 0
-	}
+    userID, ok := ctx.Value("user_id").(int)
+    if !ok {
+        userID = 0
+    }
 
-	baseQuery := `
+    baseQuery := `
     WITH vote_counts AS (
-    SELECT 
-        review_id,
-        COUNT(*) FILTER (WHERE vote_type = 'helpful') as helpful_votes,
-        COUNT(*) FILTER (WHERE vote_type = 'not_helpful') as not_helpful_votes
-    FROM review_votes 
-    GROUP BY review_id
-),
-translations_agg AS (
-    SELECT 
-        entity_id,
-        jsonb_object_agg(
-            t.language,
-            jsonb_build_object(t.field_name, t.translated_text)
-        ) as translations
-    FROM translations t
-    WHERE entity_type = 'review'
-    GROUP BY entity_id
-)
+        SELECT 
+            review_id,
+            COUNT(*) FILTER (WHERE vote_type = 'helpful') as helpful_votes,
+            COUNT(*) FILTER (WHERE vote_type = 'not_helpful') as not_helpful_votes
+        FROM review_votes 
+        GROUP BY review_id
+    ),
+    translations_agg AS (
+        SELECT 
+            entity_id,
+            jsonb_object_agg(
+                t.language,
+                jsonb_build_object(t.field_name, t.translated_text)
+            ) as translations
+        FROM translations t
+        WHERE entity_type = 'review'
+        GROUP BY entity_id
+    )
     SELECT 
         r.id, r.user_id, r.entity_type, r.entity_id, r.rating, 
         r.comment, r.pros, r.cons, r.photos, r.likes_count,
@@ -149,112 +149,128 @@ translations_agg AS (
     LEFT JOIN translations_agg ta ON ta.entity_id = r.id
     WHERE 1=1`
 
-	params := []interface{}{userID}
-	paramCount := 2
+    args := []interface{}{userID}
+    paramCount := 2
 
-	// Добавляем условия фильтрации
-	if filter.EntityType != "" {
-		baseQuery += fmt.Sprintf(" AND r.entity_type = $%d", paramCount)
-		params = append(params, filter.EntityType)
-		paramCount++
-	}
+    // Добавляем условия фильтрации
+    if filter.EntityType != "" {
+        baseQuery += fmt.Sprintf(" AND r.entity_type = $%d", paramCount)
+        args = append(args, filter.EntityType)
+        paramCount++
+    }
 
-	if filter.EntityID != 0 {
-		baseQuery += fmt.Sprintf(" AND r.entity_id = $%d", paramCount)
-		params = append(params, filter.EntityID)
-		paramCount++
-	}
+    if filter.EntityID != 0 {
+        baseQuery += fmt.Sprintf(" AND r.entity_id = $%d", paramCount)
+        args = append(args, filter.EntityID)
+        paramCount++
+    }
 
-	if filter.UserID != 0 {
-		baseQuery += fmt.Sprintf(" AND r.user_id = $%d", paramCount)
-		params = append(params, filter.UserID)
-		paramCount++
-	}
+    if filter.UserID != 0 {
+        baseQuery += fmt.Sprintf(" AND r.user_id = $%d", paramCount)
+        args = append(args, filter.UserID)
+        paramCount++
+    }
 
-	if filter.MinRating > 0 {
-		baseQuery += fmt.Sprintf(" AND r.rating >= $%d", paramCount)
-		params = append(params, filter.MinRating)
-		paramCount++
-	}
+    if filter.MinRating > 0 {
+        baseQuery += fmt.Sprintf(" AND r.rating >= $%d", paramCount)
+        args = append(args, filter.MinRating)
+        paramCount++
+    }
 
-	if filter.MaxRating > 0 {
-		baseQuery += fmt.Sprintf(" AND r.rating <= $%d", paramCount)
-		params = append(params, filter.MaxRating)
-		paramCount++
-	}
+    if filter.MaxRating > 0 {
+        baseQuery += fmt.Sprintf(" AND r.rating <= $%d", paramCount)
+        args = append(args, filter.MaxRating)
+        paramCount++
+    }
 
-	if filter.Status != "" {
-		baseQuery += fmt.Sprintf(" AND r.status = $%d", paramCount)
-		params = append(params, filter.Status)
-		paramCount++
-	}
+    if filter.Status != "" {
+        baseQuery += fmt.Sprintf(" AND r.status = $%d", paramCount)
+        args = append(args, filter.Status)
+        paramCount++
+    }
 
-	// Сортировка
-	switch filter.SortBy {
-	case "rating":
-		baseQuery += " ORDER BY r.rating " + filter.SortOrder
-	case "likes":
-		baseQuery += " ORDER BY r.likes_count " + filter.SortOrder
-	default:
-		baseQuery += " ORDER BY r.created_at " + filter.SortOrder
-	}
+    // Сортировка
+    switch filter.SortBy {
+    case "rating":
+        baseQuery += " ORDER BY r.rating " + filter.SortOrder
+    case "likes":
+        baseQuery += " ORDER BY r.likes_count " + filter.SortOrder
+    default:
+        baseQuery += " ORDER BY r.created_at " + filter.SortOrder
+    }
 
-	// Пагинация
-	baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", paramCount, paramCount+1)
-	params = append(params, filter.Limit, (filter.Page-1)*filter.Limit)
+    // Пагинация
+    baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", paramCount, paramCount+1)
+    args = append(args, filter.Limit, (filter.Page-1)*filter.Limit)
 
-	rows, err := s.pool.Query(ctx, baseQuery, params...)
-	if err != nil {
-		return nil, 0, fmt.Errorf("error executing query: %w", err)
-	}
-	defer rows.Close()
+    rows, err := s.pool.Query(ctx, baseQuery, args...)
+    if err != nil {
+        return nil, 0, fmt.Errorf("error executing query: %w", err)
+    }
+    defer rows.Close()
 
-	var reviews []models.Review
-	var totalCount int64
+    var reviews []models.Review
+    var totalCount int64
 
-	for rows.Next() {
-		var r models.Review
-		r.User = &models.User{}
-		var currentUserVote sql.NullString
-		var translationsJSON []byte
+    for rows.Next() {
+        var r models.Review
+        r.User = &models.User{}
+        var currentUserVote *string
+        var translationsJSON []byte
+        var pros, cons *string
+        var userEmail, userPicture *string
 
-		err := rows.Scan(
-			&r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
-			&r.Comment, &r.Pros, &r.Cons, &r.Photos, &r.LikesCount,
-			&r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
-			&r.OriginalLanguage,
-			&r.HelpfulVotes, &r.NotHelpfulVotes,
-			&r.User.Name, &r.User.Email, &r.User.PictureURL,
-			&totalCount,
-			&translationsJSON,
-			&currentUserVote,
-		)
-		if err != nil {
-			return nil, 0, fmt.Errorf("error scanning row: %w", err)
-		}
+        err := rows.Scan(
+            &r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
+            &r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
+            &r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
+            &r.OriginalLanguage,
+            &r.HelpfulVotes, &r.NotHelpfulVotes,
+            &r.User.Name, &userEmail, &userPicture,
+            &totalCount,
+            &translationsJSON,
+            &currentUserVote,
+        )
+        if err != nil {
+            return nil, 0, fmt.Errorf("error scanning row: %w", err)
+        }
 
-		// Парсим переводы из JSON
-		if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
-			log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
-			r.Translations = make(map[string]map[string]string)
-		}
+        // Обрабатываем NULL значения
+        if pros != nil {
+            r.Pros = *pros
+        }
+        if cons != nil {
+            r.Cons = *cons
+        }
+        if userEmail != nil {
+            r.User.Email = *userEmail
+        }
+        if userPicture != nil {
+            r.User.PictureURL = *userPicture
+        }
 
-		r.VotesCount = struct {
-			Helpful    int `json:"helpful"`
-			NotHelpful int `json:"not_helpful"`
-		}{
-			Helpful:    r.HelpfulVotes,
-			NotHelpful: r.NotHelpfulVotes,
-		}
+        // Парсим переводы из JSON
+        if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
+            log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
+            r.Translations = make(map[string]map[string]string)
+        }
 
-		if currentUserVote.Valid {
-			r.CurrentUserVote = currentUserVote.String
-		}
+        r.VotesCount = struct {
+            Helpful    int `json:"helpful"`
+            NotHelpful int `json:"not_helpful"`
+        }{
+            Helpful:    r.HelpfulVotes,
+            NotHelpful: r.NotHelpfulVotes,
+        }
 
-		reviews = append(reviews, r)
-	}
+        if currentUserVote != nil {
+            r.CurrentUserVote = *currentUserVote
+        }
 
-	return reviews, totalCount, nil
+        reviews = append(reviews, r)
+    }
+
+    return reviews, totalCount, rows.Err()
 }
 
 func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, error) {
