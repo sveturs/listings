@@ -10,6 +10,7 @@ class ChatService {
         this.reconnectTimer = null;
         this.isConnecting = false;
         this.isActive = true;
+        this.chatListHandlers = new Set();
     }
 
     connect() {
@@ -148,10 +149,24 @@ class ChatService {
             throw error;
         }
     }
-
+    onChatListUpdate(handler) {
+        this.chatListHandlers.add(handler);
+        return () => this.chatListHandlers.delete(handler);
+    }
+    async updateChatsList() {
+        try {
+            const response = await axios.get('/api/v1/marketplace/chat');
+            const chats = response.data?.data || [];
+            this.chatListHandlers.forEach(handler => handler(chats));
+        } catch (error) {
+            console.error('Error updating chats list:', error);
+        }
+    }
     onMessage(handler) {
         this.messageHandlers.add(handler);
-        return () => this.messageHandlers.delete(handler);
+        return () => {
+            this.messageHandlers.delete(handler);
+        };
     }
 
     async getMessageHistory(chatId, listingId) {
@@ -193,6 +208,10 @@ class ChatService {
         } catch (error) {
             console.error('Ошибка отметки сообщений как прочитанных:', error);
         }
+    }
+    handleNewMessage = async (message) => {
+        this.messageHandlers.forEach(handler => handler(message));
+         await this.updateChatsList();
     }
 }
 

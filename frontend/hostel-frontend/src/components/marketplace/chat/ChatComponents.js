@@ -27,11 +27,27 @@ import {
     Archive as ArchiveIcon,
 } from '@mui/icons-material';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
-
+import { enUS, ru, sr } from 'date-fns/locale';
+const getLocale = (language) => {
+    switch (language) {
+        case 'ru':
+            return ru;
+        case 'sr':
+            return sr;
+        default:
+            return enUS;
+    }
+};
+const formatMessageTime = (date, language) => {
+    return formatDistanceToNow(new Date(date), {
+        addSuffix: true,
+        locale: getLocale(language)
+    });
+};
 const MessageContent = ({ content }) => {
-                const { t } = useTranslation('marketplace');
-    
+    const { t } = useTranslation('marketplace');
+
+
     const isOnlyEmoji = (text) => {
         const emojiRegex = /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier})+$/u;
         return emojiRegex.test(text.trim());
@@ -79,8 +95,8 @@ const MessageContent = ({ content }) => {
 };
 
 export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, onBack }) => {
-                const { t } = useTranslation('marketplace');
-    
+    const { t, i18n } = useTranslation('marketplace');  // Добавляем i18n
+
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
     const [processedMessages, setProcessedMessages] = useState([]);
@@ -175,10 +191,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                                     opacity: 0.7
                                 }}
                             >
-                                {new Date(message.created_at).toLocaleTimeString('ru-RU', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
+                                {formatMessageTime(message.created_at, i18n.language)}
                             </Typography>
                         </Box>
                     </Box>
@@ -208,7 +221,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                         <TextField
                             fullWidth
                             size="small"
-                            placeholder={t('chat.placeholder')} 
+                            placeholder={t('chat.placeholder')}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             sx={{
@@ -279,8 +292,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
 
 // Компонент списка чатов
 export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat }) => {
-                const { t } = useTranslation('marketplace');
-    
+    const { t, i18n } = useTranslation('marketplace');  // Добавляем i18n
     const formatPrice = (price) => {
         if (!price || price === undefined) return 'Цена не указана';
 
@@ -363,10 +375,7 @@ export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat })
                                     {chat.other_user?.name || 'Пользователь'}
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary">
-                                    {formatDistanceToNow(new Date(chat.last_message_at), {
-                                        addSuffix: true,
-                                        locale: ru
-                                    })}
+                                    {formatMessageTime(chat.last_message_at, i18n.language)}
                                 </Typography>
                             </Box>
 
@@ -396,8 +405,8 @@ export const ChatList = ({ chats, selectedChatId, onSelectChat, onArchiveChat })
 
 // Компонент заголовка чата
 export const ChatHeader = ({ chat, onBack, onArchive }) => {
-                const { t } = useTranslation('marketplace');
-    
+    const { t } = useTranslation('marketplace');
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const formatPrice = (price) => {
@@ -531,7 +540,7 @@ export const ChatHeader = ({ chat, onBack, onArchive }) => {
                                 display: { xs: 'none', sm: 'inline-flex' }
                             }}
                         >
-                            {t('chat.openlisting')} 
+                            {t('chat.openlisting')}
                         </Button>
                     </Stack>
                 </Stack>
@@ -542,7 +551,7 @@ export const ChatHeader = ({ chat, onBack, onArchive }) => {
 
 // Компонент пустого состояния
 export const EmptyState = ({ text }) => (
-    
+
     <Box
         sx={{
             height: '100%',

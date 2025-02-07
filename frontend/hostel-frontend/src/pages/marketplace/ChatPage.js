@@ -104,10 +104,29 @@ const ChatPage = () => {
             if (!chatService) {
                 throw new Error('ChatService не инициализирован');
             }
-
+    
             const loadedMessages = await chatService.getMessageHistory(chat.id, chat.listing_id);
             if (Array.isArray(loadedMessages) && loadedMessages.length > 0) {
                 setMessages(loadedMessages);
+    
+                // Отмечаем все непрочитанные сообщения как прочитанные
+                const unreadMessages = loadedMessages.filter(
+                    msg => !msg.is_read && msg.receiver_id === user?.id
+                );
+                if (unreadMessages.length > 0) {
+                    const messageIds = unreadMessages.map(msg => msg.id);
+                    chatService.markMessagesAsRead(messageIds);
+                }
+    
+                // Обновляем счетчик непрочитанных сообщений в списке чатов
+                setChats(prevChats => 
+                    prevChats.map(c => {
+                        if (c.id === chat.id) {
+                            return { ...c, unread_count: 0 };
+                        }
+                        return c;
+                    })
+                );
             }
         } catch (error) {
             console.error('Ошибка при загрузке сообщений:', error);
@@ -115,20 +134,27 @@ const ChatPage = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [user?.id]);
     // Инициализация WebSocket и загрузка данных
     useEffect(() => {
         const chatService = chatServiceRef.current;
-        if (chatService && selectedChat) {
-            const unsubscribe = chatService.onMessage((message) => {
+        if (chatService && user?.id) {
+            // Подписываемся на обновления списка чатов
+            const unsubscribeChatList = chatService.onChatListUpdate((updatedChats) => {
+                setChats(updatedChats);
+            });
+    
+            // Обрабатываем новые сообщения
+            const unsubscribeMessages = chatService.onMessage((message) => {
                 console.log('Получено новое сообщение:', message);
-
+    
+                // Обновляем сообщения в текущем чате
                 if (selectedChat && message.chat_id === selectedChat.id) {
                     setMessages(prev => {
                         if (prev.some(m => m.id === message.id)) {
                             return prev;
                         }
-
+    
                         const updatedMessages = [...prev, {
                             ...message,
                             sender: message.sender || {},
@@ -136,17 +162,45 @@ const ChatPage = () => {
                             is_read: message.is_read || false,
                             created_at: message.created_at || new Date().toISOString()
                         }];
-
+    
                         return updatedMessages.sort((a, b) =>
                             new Date(a.created_at) - new Date(b.created_at)
                         );
                     });
+    
+                    // Отмечаем сообщения как прочитанные
+                    if (!message.is_read && message.receiver_id === user.id) {
+                        chatService.markMessagesAsRead([message.id]);
+                    }
                 }
+    
+                // Обновляем список чатов для отображения новых сообщений
+                setChats(prevChats => {
+                    const updatedChats = prevChats.map(chat => {
+                        if (chat.id === message.chat_id) {
+                            return {
+                                ...chat,
+                                last_message: message,
+                                unread_count: chat.id !== selectedChat?.id && message.receiver_id === user.id
+                                    ? (chat.unread_count || 0) + 1
+                                    : chat.unread_count
+                            };
+                        }
+                        return chat;
+                    });
+                    return updatedChats;
+                });
             });
-
-            return () => unsubscribe();
+    
+            // Инициализируем WebSocket соединение
+            chatService.connect();
+    
+            return () => {
+                unsubscribeChatList();
+                unsubscribeMessages();
+            };
         }
-    }, [selectedChat]);
+    }, [user?.id, selectedChat]);
 
     // Загрузка чатов при монтировании
     useEffect(() => {
