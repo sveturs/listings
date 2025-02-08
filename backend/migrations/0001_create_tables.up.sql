@@ -323,12 +323,14 @@ CREATE TRIGGER update_translations_timestamp
 INSERT INTO users (id, name, email, created_at, google_id, picture_url, phone, bio, notification_email, timezone, last_seen, account_status, settings, updated_at) VALUES
 (1, 'Demo User', 'test@example.com', '2025-02-07 07:13:52.804162', NULL, NULL, NULL, NULL, true, 'UTC', NULL, 'active', '{}', '2025-02-07 07:13:52.887303'),
 (2, 'Dmitry Voroshilov', 'voroshilovdo@gmail.com', '2025-02-07 07:14:48.873609', '102440686443518161778', 'https://lh3.googleusercontent.com/a/ACg8ocI7sRI0jzgpBiZmqITMtqT_BavTMXgiBJcZ5Qy1GlqyvN3BdlI=s96-c', NULL, NULL, true, 'UTC', NULL, 'active', '{}', '2025-02-07 07:14:48.873609'),
-(3, 'Mail Box', 'boxmail386@gmail.com', '2025-02-07 07:48:08.691308', '105865404629114315097', 'https://lh3.googleusercontent.com/a/ACg8ocKlutGBMU-dy0DBOKpu78fL5o3b-PxMVaOwtlyNqEuEXNJRfg=s96-c', NULL, NULL, true, 'UTC', NULL, 'active', '{}', '2025-02-07 07:48:08.691308');
-
+(3, 'Mail Box', 'boxmail386@gmail.com', '2025-02-07 07:48:08.691308', '105865404629114315097', 'https://lh3.googleusercontent.com/a/ACg8ocKlutGBMU-dy0DBOKpu78fL5o3b-PxMVaOwtlyNqEuEXNJRfg=s96-c', NULL, NULL, true, 'UTC', NULL, 'active', '{}', '2025-02-07 07:48:08.691308'),
+(4, 'Azamat Salakhov', 'azamat777salakhov@gmail.com', '2025-02-08 11:50:47.665263', '112906345377302904578', 'https://lh3.googleusercontent.com/a/ACg8ocKQ_MwCSDPuSujNEC7UVdGWfEO6CG0D2RtaxLJ80JJcVrDKfA=s96-c', NULL, NULL, true, 'UTC', NULL, 'active', '{}', '2025-02-08 11:50:47.665263');
 SELECT setval('users_id_seq', 3, true);
 
 INSERT INTO user_telegram_connections (user_id, telegram_chat_id, telegram_username, connected_at) VALUES
-(2, '158107689', 'Dmvool', '2025-02-07 07:34:33.511245');
+(2, '158107689', 'Dmvool', '2025-02-07 07:34:33.511245'),
+(4, '888561089', 'A777A1982', '2025-02-08 11:31:36.516123');
+
 
 INSERT INTO notification_settings (user_id, notification_type, telegram_enabled, created_at, updated_at) VALUES
 (2, 'new_message', true, '2025-02-07 07:14:49.238702', '2025-02-07 07:34:33.513959'),
@@ -337,12 +339,12 @@ INSERT INTO notification_settings (user_id, notification_type, telegram_enabled,
 (2, 'review_response', true, '2025-02-07 07:14:49.241442', '2025-02-07 07:34:33.522901'),
 (2, 'listing_status', true, '2025-02-07 07:14:49.241945', '2025-02-07 07:34:33.523478'),
 (2, 'favorite_price', true, '2025-02-07 07:14:49.243803', '2025-02-07 07:34:33.523998'),
-(3, 'new_message', true, '2025-02-07 07:48:09.274778', '2025-02-07 07:48:09.274778'),
-(3, 'new_review', true, '2025-02-07 07:48:09.27687', '2025-02-07 07:48:09.27687'),
-(3, 'review_vote', true, '2025-02-07 07:48:09.277562', '2025-02-07 07:48:09.277562'),
-(3, 'review_response', true, '2025-02-07 07:48:09.278246', '2025-02-07 07:48:09.278246'),
-(3, 'listing_status', true, '2025-02-07 07:48:09.279014', '2025-02-07 07:48:09.279014'),
-(3, 'favorite_price', true, '2025-02-07 07:48:09.279632', '2025-02-07 07:48:09.279632');
+(4, 'new_message', true, '2025-02-08 11:38:09.274778', '2025-02-07 07:48:09.274778'),
+(4, 'new_review', true, '2025-02-08 11:38:09.27687', '2025-02-07 07:48:09.27687'),
+(4, 'review_vote', true, '2025-02-08 11:38:09.277562', '2025-02-07 07:48:09.277562'),
+(4, 'review_response', true, '2025-02-08 11:38:09.278246', '2025-02-07 07:48:09.278246'),
+(4, 'listing_status', true, '2025-02-08 11:38:09.279014', '2025-02-07 07:48:09.279014'),
+(4, 'favorite_price', true, '2025-02-08 11:38:09.279632', '2025-02-07 07:48:09.279632');
 
 -- Insert marketplace categories
 INSERT INTO marketplace_categories (id, name, slug, parent_id, icon, created_at) VALUES
@@ -409,7 +411,7 @@ SELECT setval('marketplace_categories_id_seq', 56, true);
 INSERT INTO marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, created_at, updated_at, show_on_map, original_language) VALUES
 (8, 2, 13, 'Toyota Corolla 2018', 'Продајем Toyota Corolla 2018 годиште, 80.000 км, одлично стање. Први власник, редовно одржавање, сва документација доступна.', 1150000.00, 'used', 'active', 'Нови Сад, Србија', 45.26710000, 19.83350000, 'Нови Сад', 'Србија', 0, '2025-02-07 07:13:52.973909', '2025-02-07 07:13:52.973909', true, 'sr'),
 (9, 3, 24, 'mobile Samsung Galaxy S21', 'Selling Samsung Galaxy S21, 256GB, Deep Purple. Perfect condition, complete set with original box and accessories. AppleCare+ until 2024.', 120000.00, 'used', 'active', 'Novi Sad, Serbia', 45.25510000, 19.84520000, 'Novi Sad', 'Serbia', 0, '2025-02-07 07:13:52.973909', '2025-02-07 07:13:52.973909', true, 'en'),
-(10, 3, 25, 'Игровой компьютер RTX 4080', 'Продаю мощный игровой ПК: Intel Core i9-13900K, RTX 4080, 64GB RAM, 2TB NVMe SSD. Идеален для любых игр и тяжелых задач.', 350000.00, 'used', 'active', 'Нови-Сад, Сербия', 45.25410000, 19.84010000, 'Нови-Сад', 'Сербия', 0, '2025-02-07 07:13:52.973909', '2025-02-07 07:13:52.973909', true, 'ru'),
+(10, 4, 25, 'Игровой компьютер RTX 4080', 'Продаю мощный игровой ПК: Intel Core i9-13900K, RTX 4080, 64GB RAM, 2TB NVMe SSD. Идеален для любых игр и тяжелых задач.', 350000.00, 'used', 'active', 'Нови-Сад, Сербия', 45.25410000, 19.84010000, 'Нови-Сад', 'Сербия', 0, '2025-02-07 07:13:52.973909', '2025-02-07 07:13:52.973909', true, 'ru'),
 (12, 2, 13, 'автомобиль Toyota Corolla 2018', 'Продаю Toyota Corolla 2018 года, 80.000 км, отличное состояние. Первый владелец, регулярное обслуживание, вся документация в наличии.', 1475000.00, 'used', 'active', 'Косте Мајинског 4, Ветерник, Сербия', 45.24755670, 19.76878366, 'Ветерник', 'Сербия', 0, '2025-02-07 17:33:27.680035', '2025-02-07 17:40:23.957971', true, 'ru');
 
 SELECT setval('marketplace_listings_id_seq', 12, true);
