@@ -164,8 +164,8 @@ func (s *Server) setupRoutes() {
 	// Чат для маркетплейса
 
 	chat := api.Group("/marketplace/chat")
-	chat.Get("/", s.marketplace.Chat.GetChats)
-	chat.Get("/:listing_id/messages", s.marketplace.Chat.GetMessages)
+ 	chat.Get("/", s.marketplace.Chat.GetChats)
+	chat.Get("/messages", s.marketplace.Chat.GetMessages) 
 
 	chat.Post("/messages", s.marketplace.Chat.SendMessage)
 	chat.Put("/messages/read", s.marketplace.Chat.MarkAsRead)

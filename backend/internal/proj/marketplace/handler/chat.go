@@ -11,6 +11,9 @@ import (
     "encoding/json"
     "github.com/gofiber/fiber/v2"
     "github.com/gofiber/websocket/v2"
+    "strconv"
+
+
 )
 
 type ChatHandler struct {
@@ -37,19 +40,45 @@ func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
 
 func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
-    listingID, err := c.ParamsInt("listing_id")
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+    
+    chatID := c.Query("chat_id")
+    if chatID != "" {
+        chatIDInt, err := strconv.Atoi(chatID)
+        if err == nil {
+            c.Context().SetUserValue("chat_id", chatIDInt)
+        }
     }
     
-    page := utils.StringToInt(c.Query("page"), 1)
-    limit := utils.StringToInt(c.Query("limit"), 20)
+    listingID := c.Query("listing_id")
+    if listingID == "" {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Listing ID is required")
+    }
     
-    messages, err := h.services.Chat().GetMessages(c.Context(), listingID, userID, page, limit)
+
+    
+    listingIDInt, err := strconv.Atoi(listingID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID format")
+    }
+
+    // Убедимся, что пагинация не даст отрицательный offset
+    page := utils.StringToInt(c.Query("page"), 1)
+    if page < 1 {
+        page = 1
+    }
+    
+    limit := utils.StringToInt(c.Query("limit"), 20)
+    if limit < 1 {
+        limit = 20
+    }
+    
+    offset := (page - 1) * limit
+
+    messages, err := h.services.Chat().GetMessages(c.Context(), listingIDInt, userID, offset, limit)
     if err != nil {
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching messages")
     }
-    
+
     return utils.SuccessResponse(c, messages)
 }
 
@@ -162,7 +191,12 @@ func (h *ChatHandler) HandleWebSocket(c *websocket.Conn) {
                 
                 msg.SenderID = userID
                 if err := h.services.Chat().SendMessage(ctx, &msg); err != nil {
-                    errMsg := fiber.Map{"error": err.Error()}
+                    log.Printf("Error sending message via WebSocket: %v", err)
+                    errMsg := fiber.Map{
+                        "error": err.Error(),
+                        "chat_id": msg.ChatID,
+                        "listing_id": msg.ListingID,
+                    }
                     if errBytes, err := json.Marshal(errMsg); err == nil {
                         c.WriteMessage(websocket.TextMessage, errBytes)
                     }

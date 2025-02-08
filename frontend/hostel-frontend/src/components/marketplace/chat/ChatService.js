@@ -171,27 +171,22 @@ class ChatService {
 
     async getMessageHistory(chatId, listingId) {
         if (!chatId || !listingId) {
-            console.error('Отсутствует chatId или listingId:', { chatId, listingId });
+            console.error('Missing required params:', { chatId, listingId });
             return [];
         }
     
         try {
-            let attempts = 3;
-            while (attempts > 0) {
-                try {
-                    const response = await axios.get(`/api/v1/marketplace/chat/${listingId}/messages`);
-                    
-                    if (response.data?.data) {
-                        return response.data.data.sort((a, b) =>
-                            new Date(a.created_at) - new Date(b.created_at)
-                        );
-                    }
-                    break;
-                } catch (error) {
-                    attempts--;
-                    if (attempts === 0) throw error;
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+            const response = await axios.get('/api/v1/marketplace/chat/messages', {
+                params: {
+                    chat_id: chatId,
+                    listing_id: listingId
                 }
+            });
+            
+            if (response.data?.data) {
+                return response.data.data.sort((a, b) =>
+                    new Date(a.created_at) - new Date(b.created_at)
+                );
             }
             return [];
         } catch (error) {

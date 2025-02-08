@@ -408,8 +408,8 @@ SELECT setval('marketplace_categories_id_seq', 56, true);
 -- Insert marketplace listings
 INSERT INTO marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, created_at, updated_at, show_on_map, original_language) VALUES
 (8, 2, 13, 'Toyota Corolla 2018', 'Продајем Toyota Corolla 2018 годиште, 80.000 км, одлично стање. Први власник, редовно одржавање, сва документација доступна.', 1150000.00, 'used', 'active', 'Нови Сад, Србија', 45.26710000, 19.83350000, 'Нови Сад', 'Србија', 0, '2025-02-07 07:13:52.973909', '2025-02-07 07:13:52.973909', true, 'sr'),
-(9, 2, 24, 'mobile Samsung Galaxy S21', 'Selling Samsung Galaxy S21, 256GB, Deep Purple. Perfect condition, complete set with original box and accessories. AppleCare+ until 2024.', 120000.00, 'used', 'active', 'Novi Sad, Serbia', 45.25510000, 19.84520000, 'Novi Sad', 'Serbia', 0, '2025-02-07 07:13:52.973909', '2025-02-07 07:13:52.973909', true, 'en'),
-(10, 2, 25, 'Игровой компьютер RTX 4080', 'Продаю мощный игровой ПК: Intel Core i9-13900K, RTX 4080, 64GB RAM, 2TB NVMe SSD. Идеален для любых игр и тяжелых задач.', 350000.00, 'used', 'active', 'Нови-Сад, Сербия', 45.25410000, 19.84010000, 'Нови-Сад', 'Сербия', 0, '2025-02-07 07:13:52.973909', '2025-02-07 07:13:52.973909', true, 'ru'),
+(9, 3, 24, 'mobile Samsung Galaxy S21', 'Selling Samsung Galaxy S21, 256GB, Deep Purple. Perfect condition, complete set with original box and accessories. AppleCare+ until 2024.', 120000.00, 'used', 'active', 'Novi Sad, Serbia', 45.25510000, 19.84520000, 'Novi Sad', 'Serbia', 0, '2025-02-07 07:13:52.973909', '2025-02-07 07:13:52.973909', true, 'en'),
+(10, 3, 25, 'Игровой компьютер RTX 4080', 'Продаю мощный игровой ПК: Intel Core i9-13900K, RTX 4080, 64GB RAM, 2TB NVMe SSD. Идеален для любых игр и тяжелых задач.', 350000.00, 'used', 'active', 'Нови-Сад, Сербия', 45.25410000, 19.84010000, 'Нови-Сад', 'Сербия', 0, '2025-02-07 07:13:52.973909', '2025-02-07 07:13:52.973909', true, 'ru'),
 (12, 2, 13, 'автомобиль Toyota Corolla 2018', 'Продаю Toyota Corolla 2018 года, 80.000 км, отличное состояние. Первый владелец, регулярное обслуживание, вся документация в наличии.', 1475000.00, 'used', 'active', 'Косте Мајинског 4, Ветерник, Сербия', 45.24755670, 19.76878366, 'Ветерник', 'Сербия', 0, '2025-02-07 17:33:27.680035', '2025-02-07 17:40:23.957971', true, 'ru');
 
 SELECT setval('marketplace_listings_id_seq', 12, true);
@@ -422,8 +422,8 @@ INSERT INTO marketplace_images (id, listing_id, file_path, file_name, file_size,
 (18, 9, 'galaxy_s21_2.jpg', 'galaxy_s21_2.jpg', 1024, 'image/jpeg', false, '2025-02-07 07:13:52.973909'),
 (19, 10, 'gaming_pc_1.jpg', 'gaming_pc_1.jpg', 1024, 'image/jpeg', true, '2025-02-07 07:13:52.973909'),
 (20, 10, 'gaming_pc_2.jpg', 'gaming_pc_2.jpg', 1024, 'image/jpeg', false, '2025-02-07 07:13:52.973909'),
-(21, 12, '1738949709574813061.jpg', 'toyota_1.jpg', 454842, 'image/jpeg', true, '2025-02-07 17:35:09.579393'),
-(22, 12, '1738950024386340777.jpg', 'toyota_2.jpg', 398035, 'image/jpeg', true, '2025-02-07 17:40:24.397595');
+(21, 12, 'toyota_1.jpg', 'toyota_1.jpg', 454842, 'image/jpeg', true, '2025-02-07 17:35:09.579393'),
+(22, 12, 'toyota_2.jpg', 'toyota_2.jpg', 398035, 'image/jpeg', true, '2025-02-07 17:40:24.397595');
 
 SELECT setval('marketplace_images_id_seq', 22, true);
 
@@ -479,6 +479,72 @@ INSERT INTO translations (id, entity_type, entity_id, language, field_name, tran
 
 -- Set sequence value for translations
 SELECT setval('translations_id_seq', 185, true);
+
+-- Insert translations for categories (English translations)
+INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified, created_at, updated_at) VALUES
+('category', 1, 'en', 'name', 'Transport', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 2, 'en', 'name', 'Real Estate', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 3, 'en', 'name', 'Electronics', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 4, 'en', 'name', 'Clothing and Shoes', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 5, 'en', 'name', 'Home and Garden', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 6, 'en', 'name', 'Agriculture', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 7, 'en', 'name', 'Jobs', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 8, 'en', 'name', 'Personal Items', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 9, 'en', 'name', 'Hobbies and Leisure', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 10, 'en', 'name', 'Pets', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 11, 'en', 'name', 'Services', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 12, 'en', 'name', 'Business and Industry', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 13, 'en', 'name', 'Cars', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 14, 'en', 'name', 'Motorcycles', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 15, 'en', 'name', 'Electric Vehicles', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682');
+
+-- Insert translations for categories (Russian translations)
+INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified, created_at, updated_at) VALUES
+('category', 1, 'ru', 'name', 'Транспорт', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 2, 'ru', 'name', 'Недвижимость', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 3, 'ru', 'name', 'Электроника', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 4, 'ru', 'name', 'Одежда и обувь', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 5, 'ru', 'name', 'Дом и сад', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 6, 'ru', 'name', 'Сельское хозяйство', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 7, 'ru', 'name', 'Работа', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 8, 'ru', 'name', 'Личные вещи', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 9, 'ru', 'name', 'Хобби и развлечения', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 10, 'ru', 'name', 'Домашние животные', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 11, 'ru', 'name', 'Услуги', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 12, 'ru', 'name', 'Бизнес и промышленность', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 13, 'ru', 'name', 'Автомобили', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 14, 'ru', 'name', 'Мотоциклы', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 15, 'ru', 'name', 'Электротранспорт', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682');
+
+-- Insert translations for subcategories (English and Russian)
+INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified, created_at, updated_at) VALUES
+-- Electric Vehicles subcategories
+('category', 18, 'en', 'name', 'Electric Cars', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 18, 'ru', 'name', 'Электромобили', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 19, 'en', 'name', 'Electric Scooters', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 19, 'ru', 'name', 'Электросамокаты', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 20, 'en', 'name', 'Electric Bikes', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 20, 'ru', 'name', 'Электровелосипеды', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+
+-- Real Estate subcategories
+('category', 21, 'en', 'name', 'Rent', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 21, 'ru', 'name', 'Аренда', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 22, 'en', 'name', 'Sale', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 22, 'ru', 'name', 'Продажа', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 23, 'en', 'name', 'Garages and Parking', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 23, 'ru', 'name', 'Гаражи и парковки', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+
+-- Electronics subcategories
+('category', 24, 'en', 'name', 'Smartphones and Accessories', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 24, 'ru', 'name', 'Смартфоны и аксессуары', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 25, 'en', 'name', 'Computers and Laptops', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 25, 'ru', 'name', 'Компьютеры и ноутбуки', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 26, 'en', 'name', 'Smart Devices', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+('category', 26, 'ru', 'name', 'Умные устройства', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682')
+;
+
+-- Set updated sequence value
+SELECT setval('translations_id_seq', (SELECT MAX(id) FROM translations), true);
 
 -- Set initial schema version
 INSERT INTO schema_migrations (version, dirty) VALUES (41, false);

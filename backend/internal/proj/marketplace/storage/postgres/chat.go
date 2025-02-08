@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
     "database/sql"
+    "strconv"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -110,51 +111,95 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 }
 
 func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
-	messages := []models.MarketplaceMessage{}
+    messages := []models.MarketplaceMessage{}
 
-	rows, err := s.pool.Query(ctx, `
+    if offset < 0 {
+        offset = 0
+    }
+    if limit <= 0 {
+        limit = 20
+    }
+
+    // Получаем chatID из контекста, безопасное приведение типов
+    var chatID int
+    if chatIDValue := ctx.Value("chat_id"); chatIDValue != nil {
+        switch v := chatIDValue.(type) {
+        case int:
+            chatID = v
+        case string:
+            var err error
+            chatID, err = strconv.Atoi(v)
+            if err != nil {
+                chatID = 0
+            }
+        default:
+            chatID = 0
+        }
+    }
+
+    // Сначала проверяем существование листинга
+    var listingExists bool
+    err := s.pool.QueryRow(ctx, `
+        SELECT EXISTS(SELECT 1 FROM marketplace_listings WHERE id = $1)
+    `, listingID).Scan(&listingExists)
+    
+    if err != nil {
+        return nil, fmt.Errorf("error checking listing existence: %w", err)
+    }
+    
+    if !listingExists {
+        return nil, fmt.Errorf("listing not found")
+    }
+
+    rows, err := s.pool.Query(ctx, `
+        WITH chat AS (
+            SELECT c.id 
+            FROM marketplace_chats c 
+            WHERE c.listing_id = $1 
+            AND (c.buyer_id = $2 OR c.seller_id = $2)
+            AND ($3 = 0 OR c.id = $3)
+            LIMIT 1
+        )
         SELECT 
             m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
             m.content, m.is_read, m.created_at,
-            -- Информация об отправителе
             sender.name as sender_name, 
             sender.picture_url as sender_picture,
-            -- Информация о получателе
             receiver.name as receiver_name,
             receiver.picture_url as receiver_picture
         FROM marketplace_messages m
-        JOIN marketplace_chats c ON m.chat_id = c.id
+        JOIN chat c ON m.chat_id = c.id
         JOIN users sender ON m.sender_id = sender.id
         JOIN users receiver ON m.receiver_id = receiver.id
-        WHERE m.listing_id = $1 
-        AND (c.buyer_id = $2 OR c.seller_id = $2)
-        ORDER BY m.created_at DESC
-        LIMIT $3 OFFSET $4
-    `, listingID, userID, limit, offset)
-	if err != nil {
-		return messages, fmt.Errorf("error querying messages: %w", err)
-	}
-	defer rows.Close()
+        WHERE m.chat_id = c.id
+        ORDER BY m.created_at ASC
+        LIMIT $4 OFFSET $5
+    `, listingID, userID, chatID, limit, offset)
 
-	for rows.Next() {
-		var msg models.MarketplaceMessage
-		msg.Sender = &models.User{}
-		msg.Receiver = &models.User{}
+    if err != nil {
+        return messages, fmt.Errorf("error querying messages: %w", err)
+    }
+    defer rows.Close()
 
-		err := rows.Scan(
-			&msg.ID, &msg.ChatID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
-			&msg.Content, &msg.IsRead, &msg.CreatedAt,
-			&msg.Sender.Name, &msg.Sender.PictureURL,
-			&msg.Receiver.Name, &msg.Receiver.PictureURL,
-		)
-		if err != nil {
-			return messages, fmt.Errorf("error scanning message: %w", err)
-		}
+    for rows.Next() {
+        var msg models.MarketplaceMessage
+        msg.Sender = &models.User{}
+        msg.Receiver = &models.User{}
 
-		messages = append(messages, msg)
-	}
+        err := rows.Scan(
+            &msg.ID, &msg.ChatID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
+            &msg.Content, &msg.IsRead, &msg.CreatedAt,
+            &msg.Sender.Name, &msg.Sender.PictureURL,
+            &msg.Receiver.Name, &msg.Receiver.PictureURL,
+        )
+        if err != nil {
+            return messages, fmt.Errorf("error scanning message: %w", err)
+        }
 
-	return messages, nil
+        messages = append(messages, msg)
+    }
+
+    return messages, nil
 }
 
 // In chat.go
