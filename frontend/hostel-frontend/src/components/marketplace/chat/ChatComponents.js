@@ -138,27 +138,23 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
         setAnchorEl(anchorEl ? null : event.currentTarget);
     };
 
-    return (
-        <Box 
-            sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                height: '100%',
-                maxHeight: '100vh',
-                position: 'relative',
-                bgcolor: 'grey.50',
-                overflow: 'hidden' // Предотвращает скролл всего контейнера
-            }}
-        >
-            {/* Область сообщений */}
+        return (
             <Box 
-                sx={{
+                sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    height: '100%',
+                    overflow: 'hidden',
+                    bgcolor: 'grey.50'
+                }}
+            >
+                {/* Область сообщений */}
+                <Box sx={{
                     flex: 1,
                     overflowY: 'auto',
                     overflowX: 'hidden',
                     p: 2,
-                    WebkitOverflowScrolling: 'touch', // Улучшает скролл на iOS
-                    position: 'relative',
+                    WebkitOverflowScrolling: 'touch',
                     '&::-webkit-scrollbar': {
                         width: 8,
                         borderRadius: 4,
@@ -170,10 +166,9 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                         backgroundColor: 'rgba(0,0,0,0.1)',
                         borderRadius: 4
                     }
-                }}
-            >
-                {processedMessages.map((message) => (
-                    <Box
+                }}>
+                    {processedMessages.map((message) => (
+                        <Box
                         key={message.id}
                         sx={{
                             display: 'flex',
@@ -226,8 +221,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    zIndex: 2,
-                    width: '100%'
+                    zIndex: 2
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -244,7 +238,6 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                             placeholder={t('chat.placeholder')}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
-                            onFocus={() => scrollToBottom()}
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '24px',
@@ -277,12 +270,6 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                                 vertical: 'top',
                                 horizontal: 'right',
                             }}
-                            sx={{
-                                '& .MuiPopover-paper': {
-                                    marginTop: 1,
-                                    marginBottom: 1
-                                }
-                            }}
                         >
                             <EmojiPicker
                                 onEmojiClick={handleEmojiClick}
@@ -297,7 +284,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                                 }}
                             />
                         </Popover>
-                    </Box>
+                        </Box>
                     <IconButton
                         type="submit"
                         disabled={!newMessage.trim()}

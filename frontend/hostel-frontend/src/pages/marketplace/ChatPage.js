@@ -304,36 +304,35 @@ const ChatPage = () => {
     // Мобильная версия
     if (isMobile) {
         return (
-            <Box 
-                sx={{ 
-                    height: '100vh',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    zIndex: 1200,
-                    bgcolor: 'background.default'
-                }}
-            >
+            <Box sx={{ 
+                height: `calc(100vh - 56px)`, // 56px верхняя панель + 56px отступ сверху
+                display: 'flex',
+                flexDirection: 'column',
+                bgcolor: 'background.default',
+                position: 'fixed',
+                top: 56,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 1000
+            }}>
                 {selectedChat ? (
                     <Box sx={{ 
                         display: 'flex', 
                         flexDirection: 'column',
                         height: '100%',
-                        overflow: 'hidden' // Предотвращает прокрутку всего контейнера
+                        overflow: 'hidden'
                     }}>
                         <ChatHeader
                             chat={selectedChat}
                             onBack={() => setSelectedChat(null)}
+                            onArchive={handleArchiveChat}
                         />
                         <Box sx={{ 
                             flex: 1,
-                            overflow: 'hidden',
-                            display: 'flex',
-                            flexDirection: 'column'
+                            minHeight: 0,
+                            position: 'relative',
+                            overflow: 'hidden'
                         }}>
                             <ChatWindow
                                 messages={messages}
@@ -344,35 +343,36 @@ const ChatPage = () => {
                     </Box>
                 ) : (
                     <Box sx={{ 
-                        display: 'flex',
-                        flexDirection: 'column',
-                        height: '100%',
-                        overflow: 'hidden'
+                        flex: 1,
+                        overflow: 'auto',
+                        height: '100%'
                     }}>
-                        <Box sx={{ 
-                            flex: 1,
-                            overflow: 'auto'
-                        }}>
-                            <ChatList
-                                chats={chats}
-                                selectedChatId={selectedChat?.id}
-                                onSelectChat={handleSelectChat}
-                                onArchiveChat={handleArchiveChat}
-                            />
-                            {!loading && chats.length === 0 && (
-                                <EmptyState text={t('chat.noMessages')} />
-                            )}
-                        </Box>
+                        <ChatList
+                            chats={chats}
+                            selectedChatId={selectedChat?.id}
+                            onSelectChat={handleSelectChat}
+                            onArchiveChat={handleArchiveChat}
+                        />
+                        {!loading && chats.length === 0 && (
+                            <EmptyState text={t('chat.noMessages')} />
+                        )}
                     </Box>
                 )}
             </Box>
         );
     }
+
     // Десктопная версия
     return (
-        <Container maxWidth="xl" sx={{ py: 4, height: 'calc(100vh - 64px)' }}>
+        <Container 
+            maxWidth="xl" 
+            sx={{ 
+                py: 2,
+                height: 'calc(100vh - 80px)', // 64px верхняя панель + отступы
+                mt: 1
+            }}
+        >
             <Grid container spacing={2} sx={{ height: '100%' }}>
-                {/* Список чатов */}
                 <Grid item xs={12} md={4} sx={{ height: '100%' }}>
                     <ChatList
                         chats={chats}
@@ -385,18 +385,21 @@ const ChatPage = () => {
                     )}
                 </Grid>
 
-                {/* Окно чата */}
                 <Grid item xs={12} md={8} sx={{ height: '100%' }}>
                     {selectedChat ? (
-                        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <ChatHeader chat={selectedChat} />
+                        <Box sx={{ 
+                            height: '100%', 
+                            display: 'flex', 
+                            flexDirection: 'column',
+                            overflow: 'hidden'
+                        }}>
+                            <ChatHeader chat={selectedChat} onArchive={handleArchiveChat} />
                             <Box sx={{ flex: 1, overflow: 'hidden' }}>
                                 <ChatWindow
                                     messages={messages}
                                     onSendMessage={handleSendMessage}
                                     currentUser={user}
                                 />
-                                <div ref={messageEndRef} />
                             </Box>
                         </Box>
                     ) : (
@@ -412,7 +415,8 @@ const ChatPage = () => {
                         position: 'fixed',
                         bottom: 16,
                         right: 16,
-                        maxWidth: 'calc(100% - 32px)'
+                        maxWidth: 'calc(100% - 32px)',
+                        zIndex: 1200
                     }}
                     onClose={() => setError(null)}
                 >

@@ -5,7 +5,9 @@ import {
     MenuItem,
     FormControl,
     Box,
-    Typography
+    Typography,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
 
 const LANGUAGES = [
@@ -16,6 +18,8 @@ const LANGUAGES = [
 
 const LanguageSwitcher = () => {
     const { i18n } = useTranslation();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const handleLanguageChange = (event) => {
         const newLang = event.target.value;
@@ -24,29 +28,54 @@ const LanguageSwitcher = () => {
         document.documentElement.lang = newLang;
     };
 
+    const currentLanguage = LANGUAGES.find(lang => lang.code === i18n.language);
+
     return (
         <FormControl size="small">
             <Select
                 value={i18n.language}
                 onChange={handleLanguageChange}
                 sx={{
-                    minWidth: 120,
+                    minWidth: isMobile ? 'auto' : 120,
                     '& .MuiSelect-select': {
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1
+                        gap: 1,
+                        py: isMobile ? 1 : 1.2,
+                        pl: isMobile ? 1.5 : 2,
+                        pr: isMobile ? 3 : 4
                     }
                 }}
             >
                 {LANGUAGES.map((lang) => (
-                    <MenuItem key={lang.code} value={lang.code}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="body2" component="span">
+                    <MenuItem 
+                        key={lang.code} 
+                        value={lang.code}
+                        sx={{
+                            minWidth: isMobile ? 'auto' : 120,
+                            py: isMobile ? 1 : 1.2,
+                            px: isMobile ? 1.5 : 2,
+                        }}
+                    >
+                        <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 1,
+                            width: '100%',
+                            justifyContent: isMobile ? 'center' : 'flex-start'
+                        }}>
+                            <Typography 
+                                variant="body2" 
+                                component="span"
+                                sx={{ fontSize: isMobile ? '1.2rem' : '1rem' }}
+                            >
                                 {lang.flag}
                             </Typography>
-                            <Typography variant="body2">
-                                {lang.name}
-                            </Typography>
+                            {!isMobile && (
+                                <Typography variant="body2">
+                                    {lang.name}
+                                </Typography>
+                            )}
                         </Box>
                     </MenuItem>
                 ))}
