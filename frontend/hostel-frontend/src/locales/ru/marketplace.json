@@ -166,6 +166,7 @@
     "submit": "Опубликовать",
     "cancel": "Отмена"
   },
+
   "chat": {
     "newMessage": "Новое сообщение",
     "reply": "Ответить",
@@ -184,13 +185,20 @@
     }
   },
   "notifications": {
+    "telegram": {
+      "qrcode": "QR-код",
+      "scanQr": "Отсканируйте QR-код для подключения Telegram",
+      "error": "Ошибка подключения Telegram",
+      "connecting": "Подключение...",
+      "connected": "Telegram подключен",
+      "connect": "Подключить Telegram"
+    },
+    "settingsUpdated": "Настройки успешно обновлены",
+    "updateError": "Ошибка обновления настроек",
+    "testSent": "Тестовое уведомление отправлено",
+    "testError": "Ошибка отправки тестового уведомления",
     "title": "Настройки уведомлений",
     "channels": "Каналы уведомлений",
-    "telegram": {
-      "connect": "Подключить Telegram",
-      "connected": "Telegram подключен",
-      "connecting": "Подключение..."
-    },
     "types": {
       "newMessage": "Новые сообщения",
       "newReview": "Новые отзывы",

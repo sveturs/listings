@@ -1,6 +1,6 @@
-// frontend/hostel-frontend/src/components/notifications/NotificationSettings.js
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { QRCodeSVG } from 'qrcode.react';
 import {
     Box,
     Typography,
@@ -12,7 +12,9 @@ import {
     Alert,
     Snackbar,
     Divider,
-    Grid
+    Grid,
+    Tabs,
+    Tab
 } from '@mui/material';
 import {
     MessageCircle,
@@ -20,15 +22,29 @@ import {
     FileText,
     Star,
     Tag,
-    RefreshCw
+    RefreshCw,
+    QrCode
 } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import axios from '../../api/axios';
 
-
-
 const NotificationSettings = () => {
     const { t } = useTranslation('marketplace');
+    const [activeTab, setActiveTab] = useState(0);
+    const [qrToken, setQrToken] = useState('');
+    
+    const {
+        settings,
+        telegramConnected,
+        updateSettings,
+        connectTelegram,
+        fetchSettings
+    } = useNotifications();
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
     const NOTIFICATION_TYPES = {
         new_message: {
             label: t('notifications.types.newMessage'),
@@ -68,68 +84,61 @@ const NotificationSettings = () => {
         }
     };
 
-
-    const {
-        settings,
-        telegramConnected,
-        updateSettings,
-        connectTelegram,
-        fetchSettings
-    } = useNotifications();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-
     useEffect(() => {
         if (telegramConnected) {
             fetchSettings();
         }
     }, [telegramConnected, fetchSettings]);
+    
+    useEffect(() => {
+        const fetchQrToken = async () => {
+            try {
+                const response = await axios.get('/api/v1/notifications/telegram/token');
+                if (response.data?.data?.token) {
+                    setQrToken(`https://t.me/SveTu_bot?start=${response.data.data.token}`);
+                }
+            } catch (err) {
+                console.error('Error fetching QR token:', err);
+            }
+        };
+    
+        if (!telegramConnected) {
+            fetchQrToken();
+        }
+    }, [telegramConnected]);
 
     const showSnackbar = (message, severity = 'success') => {
         setSnackbar({ open: true, message, severity });
     };
 
-
-
     const handleTelegramConnect = async () => {
         try {
             setLoading(true);
             setError(null);
-
-            // Добавляем больше логирования
-            console.log('Initiating Telegram connection...');
-
-            const response = await connectTelegram();
-            console.log('Connect Telegram response:', response);
-
+            await connectTelegram();
         } catch (err) {
-            console.error('Telegram connection error:', err);
-            setError(err.message || 'Ошибка подключения к Telegram');
-
-            // Показываем пользователю более информативное сообщение
-            showSnackbar('Не удалось подключить Telegram. Пожалуйста, попробуйте позже.', 'error');
+            setError(err.message || t('notifications.telegram.error'));
+            showSnackbar(t('notifications.telegram.error'), 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const handleSettingChange = async (type, channel, value) => {
-        // Проверяем, реализован ли данный тип уведомлений
         if (!NOTIFICATION_TYPES[type]?.implemented) {
-            showSnackbar('Этот тип уведомлений пока недоступен', 'warning');
+            showSnackbar(t('notifications.inDevelopment'), 'warning');
             return;
         }
 
         try {
             const success = await updateSettings(type, channel, value);
             if (success) {
-                showSnackbar('Настройки успешно обновлены');
+                showSnackbar(t('notifications.settingsUpdated'));
             } else {
-                showSnackbar('Ошибка при обновлении настроек', 'error');
+                showSnackbar(t('notifications.updateError'), 'error');
             }
         } catch (error) {
-            showSnackbar('Ошибка при обновлении настроек', 'error');
+            showSnackbar(t('notifications.updateError'), 'error');
         }
     };
 
@@ -142,37 +151,75 @@ const NotificationSettings = () => {
             <Paper sx={{ p: 3, mb: 3 }}>
                 <Stack spacing={3}>
                     <Box>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <Button
-                                    variant={telegramConnected ? "outlined" : "contained"}
-                                    onClick={handleTelegramConnect}
-                                    startIcon={<MessageCircle />}
-                                    disabled={loading}
-                                    fullWidth
-                                >
-                                    {loading ? t('notifications.telegram.connecting') :
-                                        telegramConnected ? t('notifications.telegram.connected') :
-                                            t('notifications.telegram.connect')}
-                                </Button>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <Button
-                                    variant="outlined"
-                                    onClick={async () => {
-                                        try {
-                                            await axios.post('/api/v1/notifications/test');
-                                            showSnackbar(t('chat.sending'));
-                                        } catch (err) {
-                                            showSnackbar('error', 'error');
-                                        }
-                                    }}
-                                    fullWidth
-                                >
-                                    {t('notifications.test')}
-                                </Button>
-                            </Grid>
-                        </Grid>
+                        <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)}>
+                            <Tab label={t('notifications.telegram.connect')} />
+                            <Tab label={t('notifications.telegram.qrcode')} />
+                        </Tabs>
+
+                        <Box sx={{ mt: 2 }}>
+                            {activeTab === 0 ? (
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={6} md={4}>
+                                        <Button
+                                            variant={telegramConnected ? "outlined" : "contained"}
+                                            onClick={handleTelegramConnect}
+                                            startIcon={<MessageCircle />}
+                                            disabled={loading}
+                                            fullWidth
+                                        >
+                                            {loading ? t('notifications.telegram.connecting') :
+                                                telegramConnected ? t('notifications.telegram.connected') :
+                                                    t('notifications.telegram.connect')}
+                                        </Button>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6} md={4}>
+                                        <Button
+                                            variant="outlined"
+                                            onClick={async () => {
+                                                try {
+                                                    await axios.post('/api/v1/notifications/test');
+                                                    showSnackbar(t('notifications.testSent'));
+                                                } catch (err) {
+                                                    showSnackbar(t('notifications.testError'), 'error');
+                                                }
+                                            }}
+                                            fullWidth
+                                        >
+                                            {t('notifications.test')}
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            ) : (
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    flexDirection: 'column', 
+                                    alignItems: 'center',
+                                    gap: 2 
+                                }}>
+                                    <Typography variant="body1" color="text.secondary">
+                                        {t('notifications.telegram.scanQr')}
+                                    </Typography>
+                                    {qrToken && (
+                                        <Box 
+                                            sx={{ 
+                                                p: 3, 
+                                                bgcolor: 'white', 
+                                                borderRadius: 1,
+                                                cursor: 'pointer'
+                                            }}
+                                            onClick={() => window.open(qrToken, '_blank')}
+                                        >
+                                            <QRCodeSVG 
+                                                value={qrToken}
+                                                size={200}
+                                                level="H"
+                                                includeMargin
+                                            />
+                                        </Box>
+                                    )}
+                                </Box>
+                            )}
+                        </Box>
                     </Box>
 
                     <Divider />
@@ -195,7 +242,7 @@ const NotificationSettings = () => {
                                                 borderRadius: 1
                                             }}
                                         >
-                                            В разработке
+                                            {t('notifications.inDevelopment')}
                                         </Typography>
                                     )}
                                 </Box>
@@ -214,18 +261,7 @@ const NotificationSettings = () => {
                                         }
                                         label="Telegram"
                                     />
-
-
                                 </Stack>
-                                {!implemented && (
-                                    <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        sx={{ display: 'block', mt: 1 }}
-                                    >
-                                        Этот тип уведомлений пока недоступен
-                                    </Typography>
-                                )}
                             </Box>
                         ))}
                     </Stack>

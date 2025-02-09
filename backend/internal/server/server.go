@@ -177,6 +177,8 @@ func (s *Server) setupRoutes() {
 	notifications.Get("/settings", s.notifications.Notification.GetSettings)
 	notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
 	notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
+	notifications.Get("/telegram/token", s.notifications.Notification.GetTelegramToken)
+
 
 	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
  	notifications.Post("/telegram/token", func(c *fiber.Ctx) error {

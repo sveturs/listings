@@ -166,6 +166,20 @@
     "submit": "Submit",
     "cancel": "Cancel"
   },
+  "notifications": {
+    "telegram": {
+      "qrcode": "QR Code",
+      "scanQr": "Scan QR code to connect Telegram",
+      "error": "Error connecting Telegram",
+      "connecting": "Connecting...",
+      "connected": "Telegram connected",
+      "connect": "Connect Telegram"
+    },
+    "settingsUpdated": "Settings updated successfully",
+    "updateError": "Error updating settings",
+    "testSent": "Test notification sent",
+    "testError": "Error sending test notification"
+  },
   "chat": {
     "newMessage": "New Message",
     "reply": "Reply",
