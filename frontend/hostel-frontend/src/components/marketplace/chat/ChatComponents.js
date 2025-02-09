@@ -95,8 +95,7 @@ const MessageContent = ({ content }) => {
 };
 
 export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, onBack }) => {
-    const { t, i18n } = useTranslation('marketplace');  // Добавляем i18n
-
+    const { t, i18n } = useTranslation('marketplace');
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
     const [processedMessages, setProcessedMessages] = useState([]);
@@ -140,24 +139,39 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'grey.50' }}>
+        <Box 
+            sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                height: '100%',
+                maxHeight: '100vh',
+                position: 'relative',
+                bgcolor: 'grey.50',
+                overflow: 'hidden' // Предотвращает скролл всего контейнера
+            }}
+        >
             {/* Область сообщений */}
-            <Box sx={{
-                flex: 1,
-                overflowY: 'auto',
-                p: 2,
-                '&::-webkit-scrollbar': {
-                    width: 8,
-                    borderRadius: 4,
-                },
-                '&::-webkit-scrollbar-track': {
-                    backgroundColor: 'transparent'
-                },
-                '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'rgba(0,0,0,0.1)',
-                    borderRadius: 4
-                }
-            }}>
+            <Box 
+                sx={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    p: 2,
+                    WebkitOverflowScrolling: 'touch', // Улучшает скролл на iOS
+                    position: 'relative',
+                    '&::-webkit-scrollbar': {
+                        width: 8,
+                        borderRadius: 4,
+                    },
+                    '&::-webkit-scrollbar-track': {
+                        backgroundColor: 'transparent'
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        backgroundColor: 'rgba(0,0,0,0.1)',
+                        borderRadius: 4
+                    }
+                }}
+            >
                 {processedMessages.map((message) => (
                     <Box
                         key={message.id}
@@ -207,11 +221,17 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                     p: 2,
                     bgcolor: 'white',
                     borderTop: 1,
-                    borderColor: 'divider'
+                    borderColor: 'divider',
+                    position: 'sticky',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 2,
+                    width: '100%'
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <IconButton>
+                    <IconButton type="button">
                         <Paperclip />
                     </IconButton>
                     <Box sx={{
@@ -224,6 +244,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                             placeholder={t('chat.placeholder')}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
+                            onFocus={() => scrollToBottom()}
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '24px',
@@ -233,6 +254,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                             }}
                         />
                         <IconButton
+                            type="button"
                             onClick={handleEmojiButtonClick}
                             sx={{
                                 position: 'absolute',
@@ -248,12 +270,18 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                             anchorEl={anchorEl}
                             onClose={() => setAnchorEl(null)}
                             anchorOrigin={{
-                                vertical: 'top',
+                                vertical: 'bottom',
                                 horizontal: 'right',
                             }}
                             transformOrigin={{
-                                vertical: 'bottom',
+                                vertical: 'top',
                                 horizontal: 'right',
+                            }}
+                            sx={{
+                                '& .MuiPopover-paper': {
+                                    marginTop: 1,
+                                    marginBottom: 1
+                                }
                             }}
                         >
                             <EmojiPicker
@@ -288,6 +316,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
         </Box>
     );
 };
+
 
 
 // Компонент списка чатов

@@ -304,38 +304,70 @@ const ChatPage = () => {
     // Мобильная версия
     if (isMobile) {
         return (
-            <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Box 
+                sx={{ 
+                    height: '100vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 1200,
+                    bgcolor: 'background.default'
+                }}
+            >
                 {selectedChat ? (
-                    <>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        height: '100%',
+                        overflow: 'hidden' // Предотвращает прокрутку всего контейнера
+                    }}>
                         <ChatHeader
                             chat={selectedChat}
                             onBack={() => setSelectedChat(null)}
                         />
-                        <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                        <Box sx={{ 
+                            flex: 1,
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column'
+                        }}>
                             <ChatWindow
                                 messages={messages}
                                 onSendMessage={handleSendMessage}
                                 currentUser={user}
                             />
                         </Box>
-                    </>
+                    </Box>
                 ) : (
-                    <>
-                        <ChatList
-                            chats={chats}
-                            selectedChatId={selectedChat?.id}
-                            onSelectChat={handleSelectChat}
-                            onArchiveChat={handleArchiveChat}
-                        />
-                        {!loading && chats.length === 0 && (
-                            <EmptyState text="У вас пока нет сообщений" />
-                        )}
-                    </>
+                    <Box sx={{ 
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
+                        overflow: 'hidden'
+                    }}>
+                        <Box sx={{ 
+                            flex: 1,
+                            overflow: 'auto'
+                        }}>
+                            <ChatList
+                                chats={chats}
+                                selectedChatId={selectedChat?.id}
+                                onSelectChat={handleSelectChat}
+                                onArchiveChat={handleArchiveChat}
+                            />
+                            {!loading && chats.length === 0 && (
+                                <EmptyState text={t('chat.noMessages')} />
+                            )}
+                        </Box>
+                    </Box>
                 )}
             </Box>
         );
     }
-
     // Десктопная версия
     return (
         <Container maxWidth="xl" sx={{ py: 4, height: 'calc(100vh - 64px)' }}>
