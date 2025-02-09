@@ -305,7 +305,7 @@ const ChatPage = () => {
     if (isMobile) {
         return (
             <Box sx={{ 
-                height: `calc(100vh - 56px)`, // 56px верхняя панель + 56px отступ сверху
+                height: `calc(100vh - 112px)`, // 56px верхняя панель + 56px отступ сверху
                 display: 'flex',
                 flexDirection: 'column',
                 bgcolor: 'background.default',
