@@ -177,6 +177,8 @@
     "openlisting": "Open listing",
     "noMessages": "You don't have any messages yet",
     "archive": "Archive",
+    "call": "call",
+    "copyPhone": "copy phone",
     "errors": {
       "sendFailed": "Failed to send message. Please try again later."
     }

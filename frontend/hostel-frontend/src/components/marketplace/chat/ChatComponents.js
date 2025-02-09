@@ -1,5 +1,4 @@
 // frontend/hostel-frontend/src/components/marketplace/chat/ChatComponents.js
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import EmojiPicker from 'emoji-picker-react';
@@ -20,11 +19,15 @@ import {
     Button,
     useTheme,
     useMediaQuery,
+    Menu,
+    MenuItem,
 } from '@mui/material';
-import { ArrowLeft } from '@mui/icons-material';
 import {
+    ArrowLeft,
     Send as SendIcon,
     Archive as ArchiveIcon,
+    ContentCopy,
+    Phone as PhoneIcon,
 } from '@mui/icons-material';
 import { formatDistanceToNow } from 'date-fns';
 import { enUS, ru, sr } from 'date-fns/locale';
@@ -46,16 +49,105 @@ const formatMessageTime = (date, language) => {
 };
 const MessageContent = ({ content }) => {
     const { t } = useTranslation('marketplace');
-
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedPhone, setSelectedPhone] = useState(null);
 
     const isOnlyEmoji = (text) => {
         const emojiRegex = /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier})+$/u;
         return emojiRegex.test(text.trim());
     };
 
+    const parsePhoneNumbers = (text) => {
+        // Обновленное регулярное выражение для сербских номеров
+        const phoneRegex = /(?:(?:\+381|0)[\s.-]?(?:6[0-9])[\s.-]?[0-9]{3}[\s.-]?[0-9]{3,4})|(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = phoneRegex.exec(text)) !== null) {
+            // Добавляем текст до телефона
+            if (match.index > lastIndex) {
+                parts.push({
+                    type: 'text',
+                    content: text.slice(lastIndex, match.index)
+                });
+            }
+
+            // Нормализуем номер телефона
+            let phoneNumber = match[0].replace(/[-\s()]/g, '');
+
+            // Преобразуем номер в международный формат если начинается с 0
+            if (phoneNumber.startsWith('0')) {
+                phoneNumber = '+381' + phoneNumber.substring(1);
+            }
+
+            // Добавляем телефон
+            parts.push({
+                type: 'phone',
+                content: match[0],
+                phoneNumber: phoneNumber
+            });
+
+            lastIndex = match.index + match[0].length;
+        }
+
+        // Добавляем оставшийся текст после последнего телефона
+        if (lastIndex < text.length) {
+            parts.push({
+                type: 'text',
+                content: text.slice(lastIndex)
+            });
+        }
+
+        return parts.length > 0 ? parts : [{ type: 'text', content: text }];
+    };
+
     const parseMessage = (text) => {
         const emojiRegex = /((?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier})+)/u;
-        return text.split(emojiRegex).filter(Boolean);
+        const parts = [];
+
+        const phoneParts = parsePhoneNumbers(text);
+
+        phoneParts.forEach(part => {
+            if (part.type === 'phone') {
+                parts.push(part);
+            } else {
+                const emojiParts = part.content.split(emojiRegex).filter(Boolean);
+                emojiParts.forEach(textPart => {
+                    const isEmoji = emojiRegex.test(textPart);
+                    parts.push({
+                        type: isEmoji ? 'emoji' : 'text',
+                        content: textPart
+                    });
+                });
+            }
+        });
+
+        return parts;
+    };
+
+    const handlePhoneClick = (event, phone) => {
+        event.preventDefault();
+        setSelectedPhone(phone);
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleCopy = () => {
+        if (selectedPhone) {
+            navigator.clipboard.writeText(selectedPhone.phoneNumber);
+        }
+        handleClose();
+    };
+
+    const handleCall = () => {
+        if (selectedPhone) {
+            window.location.href = `tel:${selectedPhone.phoneNumber}`;
+        }
+        handleClose();
     };
 
     const onlyEmoji = isOnlyEmoji(content);
@@ -67,32 +159,91 @@ const MessageContent = ({ content }) => {
             component="div"
             sx={{
                 '& .emoji': {
-                    // Используем стили для  эмодзи
-                    fontFamily: 'Apple Color Emoji',  // Основной шрифт для  эмодзи
+                    fontFamily: 'Apple Color Emoji, -apple-system-emoji, "Segoe UI Emoji", "Noto Color Emoji", sans-serif',
                     fontSize: onlyEmoji ? '4rem' : '1.5rem',
                     lineHeight: 1,
                     verticalAlign: 'middle',
-                    fontStyle: 'normal', // Важно для корректного отображения
-                    WebkitFontSmoothing: 'antialiased', // Улучшает отображение на webkit браузерах
-                    textRendering: 'optimizeLegibility', // Улучшает четкость отображения
-                    fontFamily: 'Apple Color Emoji, -apple-system-emoji, "Segoe UI Emoji", "Noto Color Emoji", sans-serif',
+                    fontStyle: 'normal',
+                    WebkitFontSmoothing: 'antialiased',
+                    textRendering: 'optimizeLegibility',
+                },
+                '& .phone-container': {
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    bgcolor: 'action.hover',
+                    borderRadius: 1,
+                    px: 0.5,
+                    cursor: 'pointer',
+                    '&:hover': {
+                        bgcolor: 'action.selected'
+                    }
                 }
             }}
         >
             {parts.map((part, index) => {
-                const isEmoji = /(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier})+/u.test(part);
-                return (
-                    <span
-                        key={index}
-                        className={isEmoji ? 'emoji' : undefined}
-                    >
-                        {part}
-                    </span>
-                );
+                switch (part.type) {
+                    case 'emoji':
+                        return (
+                            <span key={index} className="emoji">
+                                {part.content}
+                            </span>
+                        );
+                    case 'phone':
+                        return (
+                            <Box
+                                key={index}
+                                component="span"
+                                className="phone-container"
+                                onClick={(e) => handlePhoneClick(e, part)}
+                            >
+                                {part.content}
+                                <IconButton
+                                    size="small"
+                                    sx={{
+                                        ml: 0.5,
+                                        p: 0.3,
+                                        color: 'success.main',
+                                        '&:hover': {
+                                            bgcolor: 'success.lighter'
+                                        }
+                                    }}
+                                >
+                                    <Phone fontSize="small" />
+                                </IconButton>
+                            </Box>
+                        );
+                    default:
+                        return <span key={index}>{part.content}</span>;
+                }
             })}
+
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                }}
+            >
+                <MenuItem onClick={handleCall}>
+                <PhoneIcon sx={{ mr: 1, color: 'success.main' }} fontSize="small" />
+                    {t('chat.call')}
+                </MenuItem>
+                <MenuItem onClick={handleCopy}>
+                    <ContentCopy sx={{ mr: 1 }} fontSize="small" />
+                    {t('chat.copyPhone')}
+                </MenuItem>
+            </Menu>
         </Typography>
     );
 };
+
 
 export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, onBack }) => {
     const { t, i18n } = useTranslation('marketplace');
@@ -138,37 +289,37 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
         setAnchorEl(anchorEl ? null : event.currentTarget);
     };
 
-        return (
-            <Box 
-                sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    height: '100%',
-                    overflow: 'hidden',
-                    bgcolor: 'grey.50'
-                }}
-            >
-                {/* Область сообщений */}
-                <Box sx={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    overflowX: 'hidden',
-                    p: 2,
-                    WebkitOverflowScrolling: 'touch',
-                    '&::-webkit-scrollbar': {
-                        width: 8,
-                        borderRadius: 4,
-                    },
-                    '&::-webkit-scrollbar-track': {
-                        backgroundColor: 'transparent'
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                        backgroundColor: 'rgba(0,0,0,0.1)',
-                        borderRadius: 4
-                    }
-                }}>
-                    {processedMessages.map((message) => (
-                        <Box
+    return (
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                overflow: 'hidden',
+                bgcolor: 'grey.50'
+            }}
+        >
+            {/* Область сообщений */}
+            <Box sx={{
+                flex: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                p: 2,
+                WebkitOverflowScrolling: 'touch',
+                '&::-webkit-scrollbar': {
+                    width: 8,
+                    borderRadius: 4,
+                },
+                '&::-webkit-scrollbar-track': {
+                    backgroundColor: 'transparent'
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    borderRadius: 4
+                }
+            }}>
+                {processedMessages.map((message) => (
+                    <Box
                         key={message.id}
                         sx={{
                             display: 'flex',
@@ -284,7 +435,7 @@ export const ChatWindow = ({ messages = [], onSendMessage, currentUser, chat, on
                                 }}
                             />
                         </Popover>
-                        </Box>
+                    </Box>
                     <IconButton
                         type="submit"
                         disabled={!newMessage.trim()}
