@@ -96,7 +96,7 @@
         "title": "Продавац",
         "memberSince": "Члан од {{date}}",
         "unknownDate": "непознатог датума"
-      }, 
+      },
       "contact": {
         "call": "Позови",
         "message": "Порука",
@@ -153,7 +153,7 @@
     "pros": "Предности",
     "cons": "Мане",
     "photos": "Фотографије",
-    "uploadupto10" : "Можеш да отпремите до 10 слика",
+    "uploadupto10": "Можеш да отпремите до 10 слика",
     "writeResponse": "Напишите одговор...",
     "save": "Сачувај",
     "delete": "Обриши",
@@ -182,28 +182,32 @@
     }
   },
   "notifications": {
-    "title": "Подешавања обавештења",
-    "channels": "Канали обавештења",
+    "title": "Podešavanja obaveštenja",
+    "channels": "Kanali obaveštenja",
     "telegram": {
-      "connect": "Повежи Telegram",
-      "connected": "Telegram повезан",
-      "connecting": "Повезивање..."
+      "description": "Povežite Telegram za primanje obaveštenja",
+      "scanQr": "Skenirajte QR kod",
+      "or": "ili",
+      "connect": "Povežite Telegram",
+      "connecting": "Povezivanje...",
+      "connected": "Telegram uspešno povezan"
     },
     "types": {
-      "newMessage": "Нове поруке",
-      "newReview": "Нове рецензије",
-      "reviewVote": "Гласови за рецензије",
-      "reviewResponse": "Одговори на рецензије",
-      "listingStatus": "Статус огласа",
-      "favoritePrice": "Промене цена омиљених",
-      "newMessageDescription": "Обавештења о новим порукама у ћаскању",
-      "newReviewDescription": "Обавештења о новим рецензијама на ваше огласе",
-      "reviewVoteDescription": "Обавештења о оценама ваших рецензија",
-      "reviewResponseDescription": "Обавештења о одговорима на ваше рецензије",
-      "listingStatusDescription": "Обавештења о променама статуса ваших огласа",
-      "favoritePriceDescription": "Обавештења о промени цена у омиљеним огласима"
+      "newMessage": "Nove poruke",
+      "newReview": "Nove recenzije",
+      "reviewVote": "Glasovi za recenzije",
+      "reviewResponse": "Odgovori na recenzije",
+      "listingStatus": "Status oglasa",
+      "favoritePrice": "Cene u omiljenim",
+      "notificationschatmessage": "Obaveštenja o porukama u četu",
+      "newMessageDescription": "Obaveštenja o novim porukama u četu",
+      "newReviewDescription": "Obaveštenja o novim recenzijama vaših oglasa",
+      "reviewVoteDescription": "Obaveštenja o glasovima na vašim recenzijama",
+      "reviewResponseDescription": "Obaveštenja o odgovorima na vaše recenzije",
+      "listingStatusDescription": "Obaveštenja o promenama statusa vaših oglasa",
+      "favoritePriceDescription": "Obaveštenja o promenama cena u omiljenim oglasima"
     },
-    "test": "Пошаљи тест обавештење",
-    "inDevelopment": "У развоју"
+    "test": "Pošalji test obaveštenje",
+    "inDevelopment": "U razvoju"
   }
 }

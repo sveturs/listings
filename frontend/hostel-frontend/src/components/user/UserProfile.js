@@ -127,33 +127,7 @@ const UserProfile = ({ onClose }) => {
                                 fullWidth
                             />
 
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={formData.notification_email}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            notification_email: e.target.checked
-                                        })}
-                                        disabled={!isEditing}
-                                    />
-                                }
-                                label="Email уведомления"
-                            />
 
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={formData.notification_push}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            notification_push: e.target.checked
-                                        })}
-                                        disabled={!isEditing}
-                                    />
-                                }
-                                label="Push уведомления"
-                            />
 
                             {isEditing ? (
                                 <Box sx={{ display: 'flex', gap: 1 }}>

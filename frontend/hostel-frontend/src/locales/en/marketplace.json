@@ -153,7 +153,7 @@
     "pros": "Pros",
     "cons": "Cons",
     "photos": "Photos",
-    "uploadupto10" : "You can upload up to 10 photos",
+    "uploadupto10": "You can upload up to 10 photos",
     "writeResponse": "Write a response...",
     "delete": "Delete",
     "save": "Save",
@@ -167,43 +167,15 @@
     "cancel": "Cancel"
   },
   "notifications": {
-    "telegram": {
-      "qrcode": "QR Code",
-      "scanQr": "Scan QR code to connect Telegram",
-      "error": "Error connecting Telegram",
-      "connecting": "Connecting...",
-      "connected": "Telegram connected",
-      "connect": "Connect Telegram"
-    },
-    "settingsUpdated": "Settings updated successfully",
-    "updateError": "Error updating settings",
-    "testSent": "Test notification sent",
-    "testError": "Error sending test notification"
-  },
-  "chat": {
-    "newMessage": "New Message",
-    "reply": "Reply",
-    "typing": "typing...",
-    "sending": "Sending...",
-    "placeholder": "Type a message...",
-    "send": "Send",
-    "empty": "Select a chat to start messaging",
-    "openlisting": "Open listing",
-    "noMessages": "You don't have any messages yet",
-    "archive": "Archive",
-    "call": "call",
-    "copyPhone": "copy phone",
-    "errors": {
-      "sendFailed": "Failed to send message. Please try again later."
-    }
-  },
-  "notifications": {
     "title": "Notification Settings",
     "channels": "Notification Channels",
     "telegram": {
+      "description": "Connect Telegram to receive notifications",
+      "scanQr": "Scan QR Code",
+      "or": "or",
       "connect": "Connect Telegram",
-      "connected": "Telegram Connected",
-      "connecting": "Connecting..."
+      "connecting": "Connecting...",
+      "connected": "Telegram successfully connected"
     },
     "types": {
       "newMessage": "New Messages",
@@ -211,13 +183,14 @@
       "reviewVote": "Review Votes",
       "reviewResponse": "Review Responses",
       "listingStatus": "Listing Status",
-      "favoritePrice": "Favorite Price Changes",
-      "newMessageDescription": "Notifications about new messages in chat",
+      "favoritePrice": "Favorite Prices",
+      "notificationschatmessage": "Chat Message Notifications",
+      "newMessageDescription": "Notifications about new chat messages",
       "newReviewDescription": "Notifications about new reviews on your listings",
-      "reviewVoteDescription": "Notifications about ratings of your reviews",
+      "reviewVoteDescription": "Notifications about votes on your reviews",
       "reviewResponseDescription": "Notifications about responses to your reviews",
-      "listingStatusDescription": "Notifications about changes in the status of your listings",
-      "favoritePriceDescription": "Notifications about price changes in favorite listings"
+      "listingStatusDescription": "Notifications about changes to your listing status",
+      "favoritePriceDescription": "Notifications about price changes in your favorite listings"
     },
     "test": "Send Test Notification",
     "inDevelopment": "In Development"

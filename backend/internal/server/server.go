@@ -188,7 +188,6 @@ func (s *Server) setupRoutes() {
         log.Printf("Token generation response: %v", response)
         return response
     })
-	notifications.Post("/test", s.notifications.Notification.SendTestNotification)
 
 	// WebSocket эндпоинт
 	s.app.Use("/ws/chat", s.middleware.AuthRequired) // Защищаем WebSocket

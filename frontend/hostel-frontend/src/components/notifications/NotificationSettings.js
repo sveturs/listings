@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
+import { Check } from 'lucide-react';
 import {
     Box,
     Typography,
@@ -11,14 +12,11 @@ import {
     Button,
     Alert,
     Snackbar,
-    Divider,
-    Grid,
-    Tabs,
-    Tab
+    Divider
+    
 } from '@mui/material';
 import {
     MessageCircle,
-    BellRing,
     FileText,
     Star,
     Tag,
@@ -30,7 +28,6 @@ import axios from '../../api/axios';
 
 const NotificationSettings = () => {
     const { t } = useTranslation('marketplace');
-    const [activeTab, setActiveTab] = useState(0);
     const [qrToken, setQrToken] = useState('');
     
     const {
@@ -143,88 +140,92 @@ const NotificationSettings = () => {
     };
 
     return (
-        <Box>
-            <Typography variant="h6" gutterBottom>
-                {t('notifications.title')}
-            </Typography>
+<Box>
+    <Typography variant="h6" gutterBottom>
+        {t('notifications.title')}
+    </Typography>
 
-            <Paper sx={{ p: 3, mb: 3 }}>
-                <Stack spacing={3}>
-                    <Box>
-                        <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)}>
-                            <Tab label={t('notifications.telegram.connect')} />
-                            <Tab label={t('notifications.telegram.qrcode')} />
-                        </Tabs>
+    <Paper sx={{ p: 3, mb: 3 }}>
+        <Stack spacing={3}>
+            <Box>
+                {/* Заменяем Tabs на единый блок подключения */}
+                <Box sx={{ 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 3,
+                    mb: 3
+                }}>
+                    {telegramConnected ? (
+                        <Alert 
+                            icon={<Check />}
+                            severity="success"
+                            sx={{ width: '100%' }}
+                        >
+                            {t('notifications.telegram.connected')}
+                        </Alert>
+                    ) : (
+                        <>
+                            <Typography variant="body1" color="text.secondary" align="center">
+                                {t('notifications.telegram.description')}
+                            </Typography>
+                            
+                            <Stack 
+                                direction={{ xs: 'column', sm: 'row' }} 
+                                spacing={2}
+                                alignItems="center"
+                            >
+                                <Button
+                                    variant="contained"
+                                    onClick={() => window.open(qrToken, '_blank')}
+                                    startIcon={<QrCode />}
+                                    disabled={loading || !qrToken}
+                                >
+                                    {t('notifications.telegram.scanQr')}
+                                </Button>
 
-                        <Box sx={{ mt: 2 }}>
-                            {activeTab === 0 ? (
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} sm={6} md={4}>
-                                        <Button
-                                            variant={telegramConnected ? "outlined" : "contained"}
-                                            onClick={handleTelegramConnect}
-                                            startIcon={<MessageCircle />}
-                                            disabled={loading}
-                                            fullWidth
-                                        >
-                                            {loading ? t('notifications.telegram.connecting') :
-                                                telegramConnected ? t('notifications.telegram.connected') :
-                                                    t('notifications.telegram.connect')}
-                                        </Button>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6} md={4}>
-                                        <Button
-                                            variant="outlined"
-                                            onClick={async () => {
-                                                try {
-                                                    await axios.post('/api/v1/notifications/test');
-                                                    showSnackbar(t('notifications.testSent'));
-                                                } catch (err) {
-                                                    showSnackbar(t('notifications.testError'), 'error');
-                                                }
-                                            }}
-                                            fullWidth
-                                        >
-                                            {t('notifications.test')}
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                            ) : (
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    flexDirection: 'column', 
-                                    alignItems: 'center',
-                                    gap: 2 
-                                }}>
-                                    <Typography variant="body1" color="text.secondary">
-                                        {t('notifications.telegram.scanQr')}
-                                    </Typography>
-                                    {qrToken && (
-                                        <Box 
-                                            sx={{ 
-                                                p: 3, 
-                                                bgcolor: 'white', 
-                                                borderRadius: 1,
-                                                cursor: 'pointer'
-                                            }}
-                                            onClick={() => window.open(qrToken, '_blank')}
-                                        >
-                                            <QRCodeSVG 
-                                                value={qrToken}
-                                                size={200}
-                                                level="H"
-                                                includeMargin
-                                            />
-                                        </Box>
-                                    )}
+                                <Typography color="text.secondary">
+                                    {t('notifications.telegram.or')}
+                                </Typography>
+
+                                <Button
+                                    variant="contained"
+                                    onClick={handleTelegramConnect}
+                                    startIcon={<MessageCircle />}
+                                    disabled={loading}
+                                >
+                                    {loading ? t('notifications.telegram.connecting') : 
+                                        t('notifications.telegram.connect')}
+                                </Button>
+                            </Stack>
+
+                            {qrToken && (
+                                <Box 
+                                    sx={{ 
+                                        p: 3, 
+                                        bgcolor: 'background.paper', 
+                                        borderRadius: 1,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => window.open(qrToken, '_blank')}
+                                >
+                                    <QRCodeSVG 
+                                        value={qrToken}
+                                        size={200}
+                                        level="H"
+                                        includeMargin
+                                    />
                                 </Box>
                             )}
-                        </Box>
-                    </Box>
+                        </>
+                    )}
+                </Box>
 
-                    <Divider />
+                <Divider />
 
-                    <Stack spacing={2}>
+                <Stack spacing={2} sx={{ mt: 3 }}>
                         {Object.entries(NOTIFICATION_TYPES).map(([type, { label, icon: Icon, description, implemented }]) => (
                             <Box key={type}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -265,23 +266,11 @@ const NotificationSettings = () => {
                             </Box>
                         ))}
                     </Stack>
-                </Stack>
-            </Paper>
 
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-            >
-                <Alert
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    severity={snackbar.severity}
-                    sx={{ width: '100%' }}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
-        </Box>
+            </Box>
+        </Stack>
+    </Paper>
+</Box>
     );
 };
 

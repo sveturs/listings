@@ -323,24 +323,6 @@ func (h *NotificationHandler) GetTelegramStatus(c *fiber.Ctx) error {
 	})
 }
 
-func (h *NotificationHandler) SendTestNotification(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
-
-	// Тестовое уведомление не привязано к объявлению, поэтому передаем 0
-	err := h.notificationService.SendNotification(
-		c.Context(),
-		userID,
-		"test",
-		"Тестовое уведомление",
-		0,
-	)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error sending notification")
-	}
-
-	return utils.SuccessResponse(c, fiber.Map{"message": "Test notification sent"})
-}
-
 // ConnectTelegram связывает аккаунт Telegram
 func (h *NotificationHandler) ConnectTelegram(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)

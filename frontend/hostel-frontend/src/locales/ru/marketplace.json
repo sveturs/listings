@@ -185,20 +185,16 @@
     }
   },
   "notifications": {
-    "telegram": {
-      "qrcode": "QR-код",
-      "scanQr": "Отсканируйте QR-код для подключения Telegram",
-      "error": "Ошибка подключения Telegram",
-      "connecting": "Подключение...",
-      "connected": "Telegram подключен",
-      "connect": "Подключить Telegram"
-    },
-    "settingsUpdated": "Настройки успешно обновлены",
-    "updateError": "Ошибка обновления настроек",
-    "testSent": "Тестовое уведомление отправлено",
-    "testError": "Ошибка отправки тестового уведомления",
     "title": "Настройки уведомлений",
     "channels": "Каналы уведомлений",
+    "telegram": {
+      "description": "Подключите Telegram для получения уведомлений",
+      "scanQr": "Сканировать QR-код",
+      "or": "или",
+      "connect": "Подключить Telegram",
+      "connecting": "Подключение...",
+      "connected": "Telegram успешно подключен"
+    },
     "types": {
       "newMessage": "Новые сообщения",
       "newReview": "Новые отзывы",
@@ -216,6 +212,5 @@
     },
     "test": "Отправить тестовое уведомление",
     "inDevelopment": "В разработке"
-  }
-  
+  }  
 }
