@@ -210,6 +210,7 @@ const NotificationSettings = () => {
                                         cursor: 'pointer'
                                     }}
                                     onClick={() => window.open(qrToken, '_blank')}
+                                    title={t('notifications.telegram.clickToOpen')}
                                 >
                                     <QRCodeSVG 
                                         value={qrToken}

@@ -189,6 +189,7 @@
     "channels": "Каналы уведомлений",
     "telegram": {
       "description": "Подключите Telegram для получения уведомлений",
+      "clickToOpen": "Нажмите, чтобы открыть в Telegram",
       "scanQr": "Сканировать QR-код",
       "or": "или",
       "connect": "Подключить Telegram",

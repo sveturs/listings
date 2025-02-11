@@ -41,9 +41,9 @@ const CategoryTreeItem = ({
   };
 
   const getTranslatedName = (category, currentLanguage) => {
-    console.log('Getting translation for category:', category.id, category.name);
-    console.log('Current language:', currentLanguage);
-    console.log('TTranslations:', category.translations);
+   // console.log('Getting translation for category:', category.id, category.name);
+   // console.log('Current language:', currentLanguage);
+   // console.log('TTranslations:', category.translations);
     
     if (category.translations && category.translations[currentLanguage]) {
         return category.translations[currentLanguage];

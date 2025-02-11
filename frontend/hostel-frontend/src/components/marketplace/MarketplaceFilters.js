@@ -1,5 +1,5 @@
 // frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
-import React from 'react';
+import React, { useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -17,11 +17,15 @@ import {
 } from '@mui/material';
 import { Search, X } from 'lucide-react';
 import CompactCategoryTree from './CategoryTree';
-import CategoryFilters from './CategoryFilters';
- 
 const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, selectedCategoryId }) => {
     const { t } = useTranslation('marketplace', 'common');
-    const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+
+    const handleFilterChange = useCallback((newFilters) => {
+        onFilterChange({
+            ...filters,
+            ...newFilters
+        });
+    }, [filters, onFilterChange]);
 
     return (
         <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -30,12 +34,9 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                 <TextField
                     fullWidth
                     size="small"
-                    placeholder= {t('buttons.search', { ns: 'common' })}
-                    
+                    placeholder={t('buttons.search', { ns: 'common' })}
                     value={filters.query || ''}
-                    onChange={(e) => onFilterChange({ query: e.target.value })}
-                 
-
+                    onChange={(e) => handleFilterChange({ query: e.target.value })}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
@@ -44,18 +45,16 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                         ),
                         endAdornment: filters.query && (
                             <InputAdornment position="end">
-                                <IconButton 
-                                    edge="end" 
-                                    size="small" 
-                                    onClick={() => onFilterChange({ query: '' })}
+                                <IconButton
+                                    edge="end"
+                                    size="small"
+                                    onClick={() => handleFilterChange({ query: '' })}
                                 >
                                     <X size={14} />
                                 </IconButton>
                             </InputAdornment>
                         )
                     }}
-
-
                 />
             </Box>
 
@@ -71,32 +70,23 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                                 type="number"
                                 placeholder={t('listings.filters.price.min')}
                                 value={filters.min_price || ''}
-                                onChange={(e) => onFilterChange({ min_price: e.target.value })}
+                                onChange={(e) => handleFilterChange({ min_price: e.target.value })}
                             />
                             <TextField
                                 size="small"
                                 type="number"
                                 placeholder={t('listings.filters.price.max')}
                                 value={filters.max_price || ''}
-                                onChange={(e) => onFilterChange({ max_price: e.target.value })}
+                                onChange={(e) => handleFilterChange({ max_price: e.target.value })}
                             />
                         </Stack>
                     </Box>
-
-                    {/* Специфичные фильтры категории */}
-                    {selectedCategory && (
-                        <CategoryFilters
-                            category={selectedCategory}
-                            filters={filters}
-                            onFilterChange={onFilterChange}
-                        />
-                    )}
                 </Stack>
             </Box>
 
             {/* Категории */}
-            <Box sx={{ 
-                flex: 1, 
+            <Box sx={{
+                flex: 1,
                 overflow: 'auto',
                 p: 2,
                 backgroundColor: 'background.paper',
@@ -104,16 +94,16 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                 borderColor: 'divider'
             }}>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                {t('listings.create.сategories')}
+                    {t('listings.create.сategories')}
                 </Typography>
                 <CompactCategoryTree
                     categories={categories}
                     selectedId={selectedCategoryId}
-                    onSelectCategory={(id) => onFilterChange({ category_id: id })}
+                    onSelectCategory={(id) => handleFilterChange({ category_id: id })}
                 />
             </Box>
         </Paper>
     );
 };
 
-export default CompactMarketplaceFilters;
+export default React.memo(CompactMarketplaceFilters);
