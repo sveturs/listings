@@ -9,11 +9,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-    "github.com/jackc/pgx/v5/pgconn" 
 	"os"
-    
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
@@ -31,24 +30,24 @@ type Database struct {
 }
 
 func NewDatabase(dbURL string) (*Database, error) {
-    pool, err := pgxpool.New(context.Background(), dbURL)
-    if err != nil {
-        return nil, fmt.Errorf("error creating connection pool: %w", err)
-    }
+	pool, err := pgxpool.New(context.Background(), dbURL)
+	if err != nil {
+		return nil, fmt.Errorf("error creating connection pool: %w", err)
+	}
 
-    // Создаем сервис переводов
-    translationService, err := marketplaceService.NewTranslationService(os.Getenv("OPENAI_API_KEY"))
-    if err != nil {
-        return nil, fmt.Errorf("error creating translation service: %w", err)  
-    }
+	// Создаем сервис переводов
+	translationService, err := marketplaceService.NewTranslationService(os.Getenv("OPENAI_API_KEY"))
+	if err != nil {
+		return nil, fmt.Errorf("error creating translation service: %w", err)
+	}
 
-    return &Database{
-        pool:            pool,
-        marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
-        reviewDB:        reviewStorage.NewStorage(pool, translationService), // передаем сервис переводов 
-        usersDB:         userStorage.NewStorage(pool),
-        notificationsDB: notificationStorage.NewNotificationStorage(pool),
-    }, nil
+	return &Database{
+		pool:            pool,
+		marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
+		reviewDB:        reviewStorage.NewStorage(pool, translationService),
+		usersDB:         userStorage.NewStorage(pool),
+		notificationsDB: notificationStorage.NewNotificationStorage(pool),
+	}, nil
 }
 
 var _ storage.Storage = (*Database)(nil)
@@ -108,23 +107,26 @@ func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int
 }
 
 type pgxResult struct {
-    ct pgconn.CommandTag
+	ct pgconn.CommandTag
 }
 
+func (db *Database) GetSubcategories(ctx context.Context, parentID *int, limit int, offset int) ([]models.CategoryTreeNode, error) {
+	return db.marketplaceDB.GetSubcategories(ctx, parentID, limit, offset)
+}
 func (r pgxResult) LastInsertId() (int64, error) {
-    return 0, fmt.Errorf("LastInsertId is not supported by PostgreSQL")
+	return 0, fmt.Errorf("LastInsertId is not supported by PostgreSQL")
 }
 
 func (r pgxResult) RowsAffected() (int64, error) {
-    return r.ct.RowsAffected(), nil
+	return r.ct.RowsAffected(), nil
 }
 
 func (db *Database) Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) {
-    ct, err := db.pool.Exec(ctx, sql, args...)
-    if err != nil {
-        return nil, err
-    }
-    return &pgxResult{ct: ct}, nil
+	ct, err := db.pool.Exec(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	return &pgxResult{ct: ct}, nil
 }
 
 func (db *Database) Ping(ctx context.Context) error {

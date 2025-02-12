@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import { QueryClient, QueryClientProvider } from 'react-query';
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/global/Layout";
 import HomePage from "./pages/global/HomePage";
@@ -22,9 +22,20 @@ import PrivateRoute from "./components/global/PrivateRoute";
 import { NotificationProvider } from './contexts/NotificationContext';
 import NotificationSettings from './components/notifications/NotificationSettings';
 import i18n from './i18n/config';
- import './i18n/config';
+import './i18n/config';
 import { CircularProgress, Box } from '@mui/material';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
 
 function App() {
   return (
@@ -34,9 +45,10 @@ function App() {
         v7_relativeSplatPath: true
       }}
     >
-      <MapProvider>
-        <LanguageProvider>
-             <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <MapProvider>
+          <LanguageProvider>
+            <AuthProvider>
               <ChatProvider>
                 <NotificationProvider>
                   <Layout>
@@ -76,9 +88,10 @@ function App() {
                 </NotificationProvider>
               </ChatProvider>
             </AuthProvider>
- 
-        </LanguageProvider>
-      </MapProvider>
+
+          </LanguageProvider>
+        </MapProvider>
+      </QueryClientProvider>
     </BrowserRouter >
   );
 }

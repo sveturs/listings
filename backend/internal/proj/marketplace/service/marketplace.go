@@ -9,6 +9,7 @@ import (
     "path/filepath"
     "fmt"
     "time"
+    "strconv"
 )
 
 type MarketplaceService struct {
@@ -31,7 +32,20 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
     
     return s.storage.CreateListing(ctx, listing)
 }
-
+func (s *MarketplaceService) GetSubcategories(ctx context.Context, parentID string, limit, offset int) ([]models.CategoryTreeNode, error) {
+    var parentIDInt *int
+    
+    if parentID != "" {
+        // Преобразуем строку в int
+        id, err := strconv.Atoi(parentID)
+        if err != nil {
+            return nil, fmt.Errorf("invalid parent_id: %w", err)
+        }
+        parentIDInt = &id
+    }
+    
+    return s.storage.GetSubcategories(ctx, parentIDInt, limit, offset)
+}
 func (s *MarketplaceService) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
     return s.storage.GetListings(ctx, filters, limit, offset)
 }
@@ -47,6 +61,10 @@ func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.
 }
 func (s *MarketplaceService) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
     return s.storage.GetCategoryTree(ctx)
+}
+func (s *MarketplaceService) RefreshCategoryListingCounts(ctx context.Context) error {
+    _, err := s.storage.Exec(ctx, "REFRESH MATERIALIZED VIEW CONCURRENTLY category_listing_counts")
+    return err
 }
 func (s *MarketplaceService) DeleteListing(ctx context.Context, id int, userID int) error {
     // Проверяем, что пользователь является владельцем объявления

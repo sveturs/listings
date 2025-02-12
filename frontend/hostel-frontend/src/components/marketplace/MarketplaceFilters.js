@@ -1,4 +1,4 @@
-// frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
+//frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -6,25 +6,19 @@ import {
     Paper,
     Box,
     TextField,
-    Select,
-    MenuItem,
     InputAdornment,
     IconButton,
     Typography,
-    Divider,
-    Slider,
     Stack,
 } from '@mui/material';
 import { Search, X } from 'lucide-react';
-import CompactCategoryTree from './CategoryTree';
-const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, selectedCategoryId }) => {
+import VirtualizedCategoryTree from './VirtualizedCategoryTree';
+
+const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId }) => {
     const { t } = useTranslation('marketplace', 'common');
 
-    const handleFilterChange = useCallback((newFilters) => {
-        onFilterChange({
-            ...filters,
-            ...newFilters
-        });
+    const handleCategorySelect = useCallback((id) => {
+        onFilterChange({ ...filters, category_id: id });
     }, [filters, onFilterChange]);
 
     return (
@@ -36,7 +30,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                     size="small"
                     placeholder={t('buttons.search', { ns: 'common' })}
                     value={filters.query || ''}
-                    onChange={(e) => handleFilterChange({ query: e.target.value })}
+                    onChange={(e) => onFilterChange({ ...filters, query: e.target.value })}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
@@ -48,7 +42,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                                 <IconButton
                                     edge="end"
                                     size="small"
-                                    onClick={() => handleFilterChange({ query: '' })}
+                                    onClick={() => onFilterChange({ ...filters, query: '' })}
                                 >
                                     <X size={14} />
                                 </IconButton>
@@ -70,14 +64,14 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                                 type="number"
                                 placeholder={t('listings.filters.price.min')}
                                 value={filters.min_price || ''}
-                                onChange={(e) => handleFilterChange({ min_price: e.target.value })}
+                                onChange={(e) => onFilterChange({ ...filters, min_price: e.target.value })}
                             />
                             <TextField
                                 size="small"
                                 type="number"
                                 placeholder={t('listings.filters.price.max')}
                                 value={filters.max_price || ''}
-                                onChange={(e) => handleFilterChange({ max_price: e.target.value })}
+                                onChange={(e) => onFilterChange({ ...filters, max_price: e.target.value })}
                             />
                         </Stack>
                     </Box>
@@ -96,10 +90,9 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, categories, select
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                     {t('listings.create.сategories')}
                 </Typography>
-                <CompactCategoryTree
-                    categories={categories}
+                <VirtualizedCategoryTree
                     selectedId={selectedCategoryId}
-                    onSelectCategory={(id) => handleFilterChange({ category_id: id })}
+                    onSelectCategory={handleCategorySelect}
                 />
             </Box>
         </Paper>

@@ -12,7 +12,6 @@ import {
     Rating,
     Stack
 } from '@mui/material';
-import { Star } from 'lucide-react';
 import { MapPin as LocationIcon, Clock as AccessTime, Camera } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';

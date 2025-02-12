@@ -1,6 +1,6 @@
 // frontend/hostel-frontend/src/hooks/useNotifications.js
 import axios from '../api/axios';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { NotificationContext } from '../contexts/NotificationContext';
 
 export const useNotifications = () => {

@@ -1,4 +1,4 @@
-// backend/internal/storage/postgres/marketplace.go
+// backend/internal/proj/marketplace/storage/postgres/marketplace.go
 package postgres
 
 import (
@@ -9,50 +9,145 @@ import (
 	"fmt"
 	"strconv"
 
+	"backend/internal/proj/marketplace/service"
 	"log"
 	"strings"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 	//"time"
 	// "github.com/jackc/pgx/v5"
 )
 
+type Storage struct {
+	pool               *pgxpool.Pool
+	translationService service.TranslationServiceInterface
+}
+
+func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServiceInterface) *Storage {
+	return &Storage{
+		pool:               pool,
+		translationService: translationService,
+	}
+}
+func (s *Storage) GetSubcategories(ctx context.Context, parentID *int, limit int, offset int) ([]models.CategoryTreeNode, error) {
+	query := `
+        WITH RECURSIVE category_path AS (
+            SELECT 
+                c.id,
+                c.name,
+                c.slug,
+                c.icon,
+                c.parent_id,
+                c.created_at,
+                ARRAY[c.id] as path,
+                1 as level,
+                (SELECT COUNT(*) FROM marketplace_listings ml WHERE ml.category_id = c.id) as listing_count,
+                (SELECT COUNT(*) FROM marketplace_categories sc WHERE sc.parent_id = c.id) as children_count
+            FROM marketplace_categories c
+            WHERE CASE 
+                WHEN $1::int IS NULL THEN c.parent_id IS NULL
+                ELSE c.parent_id = $1
+            END
+        )
+        SELECT 
+            cp.*,
+            COALESCE(
+                jsonb_object_agg(
+                    t.language, 
+                    t.translated_text
+                ) FILTER (WHERE t.language IS NOT NULL),
+                '{}'::jsonb
+            ) as translations
+        FROM category_path cp
+        LEFT JOIN translations t ON 
+            t.entity_type = 'category' 
+            AND t.entity_id = cp.id 
+            AND t.field_name = 'name'
+        GROUP BY 
+            cp.id, cp.name, cp.slug, cp.icon, cp.parent_id, 
+            cp.created_at, cp.path, cp.level, cp.listing_count, 
+            cp.children_count
+        ORDER BY cp.name
+        LIMIT $2 OFFSET $3
+    `
+
+	rows, err := s.pool.Query(ctx, query, parentID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("error querying subcategories: %w", err)
+	}
+	defer rows.Close()
+
+	var categories []models.CategoryTreeNode
+	for rows.Next() {
+		var cat models.CategoryTreeNode
+		var pathArray []int
+		var translationsJson []byte
+
+		err := rows.Scan(
+			&cat.ID,
+			&cat.Name,
+			&cat.Slug,
+			&cat.Icon,
+			&cat.ParentID,
+			&cat.CreatedAt,
+			&pathArray,
+			&cat.Level,
+			&cat.ListingCount,
+			&cat.ChildrenCount,
+			&translationsJson,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning category: %w", err)
+		}
+
+		if err := json.Unmarshal(translationsJson, &cat.Translations); err != nil {
+			cat.Translations = make(map[string]string)
+		}
+
+		categories = append(categories, cat)
+	}
+
+	return categories, nil
+}
+
 func (s *Storage) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
-    var listingID int
-    
-    // Всегда определяем язык текста, даже если указан язык интерфейса
-    fullText := listing.Title + "\n" + listing.Description
-    detectedLanguage, confidence, err := s.translationService.DetectLanguage(ctx, fullText)
-    
-    if err != nil || confidence < 0.8 {
-        // Если не удалось определить язык или уверенность низкая
-        if listing.OriginalLanguage != "" {
-            // Используем явно указанный язык
-            detectedLanguage = listing.OriginalLanguage
-        } else if userLang, ok := ctx.Value("user_language").(string); ok && userLang != "" {
-            // Используем язык интерфейса
-            detectedLanguage = userLang
-        } else {
-            detectedLanguage = "en"
-        }
-    }
-    
-    // Устанавливаем определенный язык
-    listing.OriginalLanguage = detectedLanguage
+	var listingID int
 
-    // Проверяем текст на модерацию перед сохранением
-    moderatedTitle, err := s.translationService.ModerateText(ctx, listing.Title, listing.OriginalLanguage)
-    if err != nil {
-        return 0, fmt.Errorf("failed to moderate title: %w", err)
-    }
-    listing.Title = moderatedTitle
+	// Всегда определяем язык текста, даже если указан язык интерфейса
+	fullText := listing.Title + "\n" + listing.Description
+	detectedLanguage, confidence, err := s.translationService.DetectLanguage(ctx, fullText)
 
-    moderatedDesc, err := s.translationService.ModerateText(ctx, listing.Description, listing.OriginalLanguage)
-    if err != nil {
-        return 0, fmt.Errorf("failed to moderate description: %w", err)
-    }
-    listing.Description = moderatedDesc
+	if err != nil || confidence < 0.8 {
+		// Если не удалось определить язык или уверенность низкая
+		if listing.OriginalLanguage != "" {
+			// Используем явно указанный язык
+			detectedLanguage = listing.OriginalLanguage
+		} else if userLang, ok := ctx.Value("user_language").(string); ok && userLang != "" {
+			// Используем язык интерфейса
+			detectedLanguage = userLang
+		} else {
+			detectedLanguage = "en"
+		}
+	}
 
-    // Вставляем основные данные объявления
-    err = s.pool.QueryRow(ctx, `
+	// Устанавливаем определенный язык
+	listing.OriginalLanguage = detectedLanguage
+
+	// Проверяем текст на модерацию перед сохранением
+	moderatedTitle, err := s.translationService.ModerateText(ctx, listing.Title, listing.OriginalLanguage)
+	if err != nil {
+		return 0, fmt.Errorf("failed to moderate title: %w", err)
+	}
+	listing.Title = moderatedTitle
+
+	moderatedDesc, err := s.translationService.ModerateText(ctx, listing.Description, listing.OriginalLanguage)
+	if err != nil {
+		return 0, fmt.Errorf("failed to moderate description: %w", err)
+	}
+	listing.Description = moderatedDesc
+
+	// Вставляем основные данные объявления
+	err = s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
@@ -60,84 +155,84 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING id
     `,
-        listing.UserID, listing.CategoryID, listing.Title, listing.Description,
-        listing.Price, listing.Condition, listing.Status, listing.Location,
-        listing.Latitude, listing.Longitude, listing.City, listing.Country,
-        listing.ShowOnMap, listing.OriginalLanguage,
-    ).Scan(&listingID)
+		listing.UserID, listing.CategoryID, listing.Title, listing.Description,
+		listing.Price, listing.Condition, listing.Status, listing.Location,
+		listing.Latitude, listing.Longitude, listing.City, listing.Country,
+		listing.ShowOnMap, listing.OriginalLanguage,
+	).Scan(&listingID)
 
-    if err != nil {
-        return 0, fmt.Errorf("failed to insert listing: %w", err)
-    }
+	if err != nil {
+		return 0, fmt.Errorf("failed to insert listing: %w", err)
+	}
 
-    // Сохраняем оригинальный текст как перевод для исходного языка
-    _, err = s.pool.Exec(ctx, `
+	// Сохраняем оригинальный текст как перевод для исходного языка
+	_, err = s.pool.Exec(ctx, `
         INSERT INTO translations (
             entity_type, entity_id, language, field_name, 
             translated_text, is_machine_translated, is_verified
         ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     `,
-        "listing", listingID, listing.OriginalLanguage, "title",
-        listing.Title, false, true)
+		"listing", listingID, listing.OriginalLanguage, "title",
+		listing.Title, false, true)
 
-    if err != nil {
-        log.Printf("Error saving original title translation: %v", err)
-    }
+	if err != nil {
+		log.Printf("Error saving original title translation: %v", err)
+	}
 
-    _, err = s.pool.Exec(ctx, `
+	_, err = s.pool.Exec(ctx, `
         INSERT INTO translations (
             entity_type, entity_id, language, field_name, 
             translated_text, is_machine_translated, is_verified
         ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     `,
-        "listing", listingID, listing.OriginalLanguage, "description",
-        listing.Description, false, true)
+		"listing", listingID, listing.OriginalLanguage, "description",
+		listing.Description, false, true)
 
-    if err != nil {
-        log.Printf("Error saving original description translation: %v", err)
-    }
+	if err != nil {
+		log.Printf("Error saving original description translation: %v", err)
+	}
 
-    // Переводим на другие языки
-    targetLanguages := []string{"en", "ru", "sr"}
-    for _, targetLang := range targetLanguages {
-        if targetLang == listing.OriginalLanguage {
-            continue
-        }
+	// Переводим на другие языки
+	targetLanguages := []string{"en", "ru", "sr"}
+	for _, targetLang := range targetLanguages {
+		if targetLang == listing.OriginalLanguage {
+			continue
+		}
 
-        // Переводим заголовок
-        translatedTitle, err := s.translationService.Translate(ctx, listing.Title, listing.OriginalLanguage, targetLang)
-        if err == nil {
-            _, err = s.pool.Exec(ctx, `
+		// Переводим заголовок
+		translatedTitle, err := s.translationService.Translate(ctx, listing.Title, listing.OriginalLanguage, targetLang)
+		if err == nil {
+			_, err = s.pool.Exec(ctx, `
                 INSERT INTO translations (
                     entity_type, entity_id, language, field_name, 
                     translated_text, is_machine_translated, is_verified
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7)
             `,
-                "listing", listingID, targetLang, "title",
-                translatedTitle, true, false)
-            if err != nil {
-                log.Printf("Error saving %s title translation: %v", targetLang, err)
-            }
-        }
+				"listing", listingID, targetLang, "title",
+				translatedTitle, true, false)
+			if err != nil {
+				log.Printf("Error saving %s title translation: %v", targetLang, err)
+			}
+		}
 
-        // Переводим описание
-        translatedDesc, err := s.translationService.Translate(ctx, listing.Description, listing.OriginalLanguage, targetLang)
-        if err == nil {
-            _, err = s.pool.Exec(ctx, `
+		// Переводим описание
+		translatedDesc, err := s.translationService.Translate(ctx, listing.Description, listing.OriginalLanguage, targetLang)
+		if err == nil {
+			_, err = s.pool.Exec(ctx, `
                 INSERT INTO translations (
                     entity_type, entity_id, language, field_name, 
                     translated_text, is_machine_translated, is_verified
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7)
             `,
-                "listing", listingID, targetLang, "description",
-                translatedDesc, true, false)
-            if err != nil {
-                log.Printf("Error saving %s description translation: %v", targetLang, err)
-            }
-        }
-    }
+				"listing", listingID, targetLang, "description",
+				translatedDesc, true, false)
+			if err != nil {
+				log.Printf("Error saving %s description translation: %v", targetLang, err)
+			}
+		}
+	}
 
-    return listingID, nil
+	return listingID, nil
 }
 
 func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
@@ -255,12 +350,12 @@ func (s *Storage) processTranslations(rawTranslations interface{}) models.Transl
 	return translations
 }
 func (s *Storage) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-    userID, _ := ctx.Value("user_id").(int)
-    if userID == 0 {
-        userID = -1
-    }
+	userID, _ := ctx.Value("user_id").(int)
+	if userID == 0 {
+		userID = -1
+	}
 
-    baseQuery := `WITH RECURSIVE category_tree AS (
+	baseQuery := `WITH RECURSIVE category_tree AS (
         -- Базовый случай: корневые категории или конкретная категория
         SELECT c.id, c.parent_id, c.name
         FROM marketplace_categories c
@@ -336,18 +431,18 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
             ELSE l.category_id IN (SELECT id FROM category_tree)
         END`
 
-    args := []interface{}{
-        filters["category_id"], // $1
-        userID,                // $2
-    }
+	args := []interface{}{
+		filters["category_id"], // $1
+		userID,                 // $2
+	}
 
-    conditions := []string{}
-    argCount := 2
+	conditions := []string{}
+	argCount := 2
 
-    // Добавляем остальные фильтры
- if v, ok := filters["query"]; ok && v != "" {
-    argCount++
-    conditions = append(conditions, fmt.Sprintf(`
+	// Добавляем остальные фильтры
+	if v, ok := filters["query"]; ok && v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf(`
         AND (
             LOWER(l.title) LIKE LOWER($%d) 
             OR LOWER(l.description) LIKE LOWER($%d)
@@ -359,17 +454,16 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
                 AND t.field_name IN ('title', 'description')
                 AND LOWER(t.translated_text) LIKE LOWER($%d)
             )
-        )`, 
-        argCount, argCount, argCount))
-    args = append(args, "%"+v+"%")
-}
+        )`,
+			argCount, argCount, argCount))
+		args = append(args, "%"+v+"%")
+	}
 
-    if v, ok := filters["min_price"]; ok && v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
-        args = append(args, v)
-    }
-
+	if v, ok := filters["min_price"]; ok && v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
+		args = append(args, v)
+	}
 
 	if v, ok := filters["max_price"]; ok && v != "" {
 		argCount++
@@ -384,24 +478,24 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 	}
 
 	// Добавляем условия фильтрации
-    if len(conditions) > 0 {
-        baseQuery += " " + strings.Join(conditions, " ")
-    }
+	if len(conditions) > 0 {
+		baseQuery += " " + strings.Join(conditions, " ")
+	}
 
-    // Сортировка
-    switch filters["sort_by"] {
-    case "price_asc":
-        baseQuery += " ORDER BY l.price ASC"
-    case "price_desc":
-        baseQuery += " ORDER BY l.price DESC"
-    default:
-        baseQuery += " ORDER BY l.created_at DESC"
-    }
+	// Сортировка
+	switch filters["sort_by"] {
+	case "price_asc":
+		baseQuery += " ORDER BY l.price ASC"
+	case "price_desc":
+		baseQuery += " ORDER BY l.price DESC"
+	default:
+		baseQuery += " ORDER BY l.created_at DESC"
+	}
 
-    // Пагинация
-    baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount+1, argCount+2)
-    args = append(args, limit, offset)
-    
+	// Пагинация
+	baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount+1, argCount+2)
+	args = append(args, limit, offset)
+
 	// Выполнение запроса
 	rows, err := s.pool.Query(ctx, baseQuery, args...)
 	if err != nil {
@@ -519,98 +613,123 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 }
 
 func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
+    log.Printf("GetCategoryTree in storage called") // Добавляем лог
+
     query := `
-        WITH RECURSIVE category_tree AS (
-            -- Корневые категории
+        WITH RECURSIVE category_hierarchy AS (
+            -- Базовый запрос: корневые категории
             SELECT 
-                c.id,
-                c.name,
-                c.slug,
-                c.icon,
-                c.parent_id,
-                c.created_at,
+                id, name, slug, icon, parent_id, created_at,
+                ARRAY[id] as path,
                 0 as level,
-                c.name::text as path
-            FROM marketplace_categories c
+                (SELECT COUNT(*) FROM marketplace_listings ml WHERE ml.category_id = id) as listing_count,
+                (SELECT COUNT(*) FROM marketplace_categories mc WHERE mc.parent_id = id) as children_count
+            FROM marketplace_categories 
             WHERE parent_id IS NULL
-
+            
             UNION ALL
-
-            -- Дочерние категории
+            
+            -- Рекурсивная часть: подкатегории
             SELECT 
-                c.id,
-                c.name,
-                c.slug,
-                c.icon,
-                c.parent_id,
-                c.created_at,
-                ct.level + 1,
-                (ct.path || ' > ' || c.name)::text
+                c.id, c.name, c.slug, c.icon, c.parent_id, c.created_at,
+                h.path || c.id,
+                h.level + 1,
+                (SELECT COUNT(*) FROM marketplace_listings ml WHERE ml.category_id = c.id),
+                (SELECT COUNT(*) FROM marketplace_categories mc WHERE mc.parent_id = c.id)
             FROM marketplace_categories c
-            JOIN category_tree ct ON c.parent_id = ct.id
-        ),
-        category_translations AS (
-            SELECT 
-                t.entity_id,
-                jsonb_object_agg(
-                    t.language,
-                    t.translated_text
-                ) as translations
-            FROM translations t
-            WHERE t.entity_type = 'category' AND t.field_name = 'name'
-            GROUP BY t.entity_id
+            INNER JOIN category_hierarchy h ON c.parent_id = h.id
         )
         SELECT 
-            ct.id, ct.name, ct.slug, ct.icon, ct.parent_id, ct.created_at, 
-            ct.level, ct.path,
-            COALESCE(tr.translations, '{}'::jsonb) as translations,
-            (SELECT COUNT(*) FROM marketplace_listings WHERE category_id = ct.id) as listing_count
-        FROM category_tree ct
-        LEFT JOIN category_translations tr ON tr.entity_id = ct.id
-        ORDER BY ct.path;
+            ch.*,
+            COALESCE(jsonb_object_agg(t.language, t.translated_text) 
+                FILTER (WHERE t.language IS NOT NULL), '{}'::jsonb
+            ) as translations
+        FROM category_hierarchy ch
+        LEFT JOIN translations t ON 
+            t.entity_type = 'category' 
+            AND t.entity_id = ch.id 
+            AND t.field_name = 'name'
+        GROUP BY 
+            ch.id, ch.name, ch.slug, ch.icon, ch.parent_id, ch.created_at,
+            ch.path, ch.level, ch.listing_count, ch.children_count
+        ORDER BY 
+            ch.level ASC,     -- Сначала по уровню вложенности
+            ch.name ASC;      -- Затем по имени
     `
 
     rows, err := s.pool.Query(ctx, query)
     if err != nil {
-        log.Printf("Error querying category tree: %v", err)
-        return nil, err
+        log.Printf("Error executing query: %v", err) // Добавляем лог
+
+        return nil, fmt.Errorf("error querying categories: %w", err)
     }
     defer rows.Close()
 
-    var categories []models.CategoryTreeNode
+    // Map для хранения всех категорий
+    nodeMap := make(map[int]*models.CategoryTreeNode)
+    var rootNodes []*models.CategoryTreeNode
+
+    // Первый проход - создаем все узлы
     for rows.Next() {
-        var cat models.CategoryTreeNode
+        var node models.CategoryTreeNode
+        var pathArray []int
         var translationsJson []byte
 
         err := rows.Scan(
-            &cat.ID,
-            &cat.Name,
-            &cat.Slug,
-            &cat.Icon,
-            &cat.ParentID,
-            &cat.CreatedAt,
-            &cat.Level,
-            &cat.Path,
+            &node.ID,
+            &node.Name,
+            &node.Slug,
+            &node.Icon,
+            &node.ParentID,
+            &node.CreatedAt,
+            &pathArray,
+            &node.Level,
+            &node.ListingCount,
+            &node.ChildrenCount,
             &translationsJson,
-            &cat.ListingCount,
         )
-
         if err != nil {
-            log.Printf("Error scanning category: %v", err)
-            return nil, err
+            return nil, fmt.Errorf("error scanning category: %w", err)
         }
 
-        translations := make(map[string]string)
-        if err := json.Unmarshal(translationsJson, &translations); err == nil {
-            cat.Translations = translations
-            //log.Printf("Categoryy %d (%s) translationss: %v", cat.ID, cat.Name, translations)
+        // Обрабатываем переводы
+        if err := json.Unmarshal(translationsJson, &node.Translations); err != nil {
+            node.Translations = make(map[string]string)
         }
 
-        categories = append(categories, cat)
+        // Всегда инициализируем Children как пустой массив
+        node.Children = make([]models.CategoryTreeNode, 0)
+        
+        // Сохраняем указатель на узел
+        nodePtr := &node
+        nodeMap[node.ID] = nodePtr
+
+        // Если это корневой узел
+        if node.ParentID == nil {
+            rootNodes = append(rootNodes, nodePtr)
+        }
     }
 
-    return categories, rows.Err()
+    // Второй проход - строим иерархию
+    for _, node := range nodeMap {
+        if node.ParentID != nil {
+            if parent, exists := nodeMap[*node.ParentID]; exists {
+                parent.Children = append(parent.Children, *node)
+            }
+        }
+    }
+
+    // Преобразуем в слайс результатов
+    result := make([]models.CategoryTreeNode, len(rootNodes))
+    for i, node := range rootNodes {
+        result[i] = *node
+    }
+    log.Printf("Returning %d root categories with tree", len(result)) // Добавляем лог
+
+    return result, nil
 }
+
+
 func (s *Storage) AddToFavorites(ctx context.Context, userID int, listingID int) error {
 	_, err := s.pool.Exec(ctx, `
         INSERT INTO marketplace_favorites (user_id, listing_id)
@@ -695,7 +814,7 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 			&listing.UpdatedAt,
 			&listing.User.Name,
 			&listing.User.Email,
-			&listing.User.CreatedAt, 
+			&listing.User.CreatedAt,
 			&userPictureURL,
 			&listing.Category.Name,
 			&listing.Category.Slug,
@@ -729,27 +848,27 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 	return listings, nil
 }
 func (s *Storage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
-    query := `
+	query := `
         SELECT user_id 
         FROM marketplace_favorites 
         WHERE listing_id = $1
     `
-    rows, err := s.pool.Query(ctx, query, listingID)
-    if err != nil {
-        return nil, fmt.Errorf("error querying favorited users: %w", err)
-    }
-    defer rows.Close()
+	rows, err := s.pool.Query(ctx, query, listingID)
+	if err != nil {
+		return nil, fmt.Errorf("error querying favorited users: %w", err)
+	}
+	defer rows.Close()
 
-    var userIDs []int
-    for rows.Next() {
-        var userID int
-        if err := rows.Scan(&userID); err != nil {
-            return nil, fmt.Errorf("error scanning user ID: %w", err)
-        }
-        userIDs = append(userIDs, userID)
-    }
+	var userIDs []int
+	for rows.Next() {
+		var userID int
+		if err := rows.Scan(&userID); err != nil {
+			return nil, fmt.Errorf("error scanning user ID: %w", err)
+		}
+		userIDs = append(userIDs, userID)
+	}
 
-    return userIDs, nil
+	return userIDs, nil
 }
 func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 	result, err := s.pool.Exec(ctx, `
@@ -770,7 +889,7 @@ func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 }
 
 func (s *Storage) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-    result, err := s.pool.Exec(ctx, `
+	result, err := s.pool.Exec(ctx, `
         UPDATE marketplace_listings
         SET 
             title = $1,
@@ -789,38 +908,38 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $14 AND user_id = $15
     `,
-        listing.Title,
-        listing.Description,
-        listing.Price,
-        listing.Condition,
-        listing.Status,
-        listing.Location,
-        listing.Latitude,
-        listing.Longitude,
-        listing.City,
-        listing.Country,
-        listing.ShowOnMap,
-        listing.CategoryID,
-        listing.OriginalLanguage,
-        listing.ID,
-        listing.UserID,
-    )
+		listing.Title,
+		listing.Description,
+		listing.Price,
+		listing.Condition,
+		listing.Status,
+		listing.Location,
+		listing.Latitude,
+		listing.Longitude,
+		listing.City,
+		listing.Country,
+		listing.ShowOnMap,
+		listing.CategoryID,
+		listing.OriginalLanguage,
+		listing.ID,
+		listing.UserID,
+	)
 
-    if err != nil {
-        return fmt.Errorf("error updating listing: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("error updating listing: %w", err)
+	}
 
-    rowsAffected := result.RowsAffected()
-    if rowsAffected == 0 {
-        return fmt.Errorf("listing not found or you don't have permission to update it")
-    }
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("listing not found or you don't have permission to update it")
+	}
 
-    return nil
+	return nil
 }
 
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-    log.Printf("GetCategories: starting to fetch categories")
-    query := `
+	log.Printf("GetCategories: starting to fetch categories")
+	query := `
         WITH category_translations AS (
             SELECT 
                 t.entity_id,
@@ -840,48 +959,48 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
         LEFT JOIN category_translations ct ON c.id = ct.entity_id
     `
 
-    rows, err := s.pool.Query(ctx, query)
-    if err != nil {
-        log.Printf("Error querying categories: %v", err)
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := s.pool.Query(ctx, query)
+	if err != nil {
+		log.Printf("Error querying categories: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
 
-    var categories []models.MarketplaceCategory
-    for rows.Next() {
-        var cat models.MarketplaceCategory
-        var translationsJson []byte
+	var categories []models.MarketplaceCategory
+	for rows.Next() {
+		var cat models.MarketplaceCategory
+		var translationsJson []byte
 
-        err := rows.Scan(
-            &cat.ID,
-            &cat.Name,
-            &cat.Slug,
-            &cat.ParentID,
-            &cat.Icon,
-            &cat.CreatedAt,
-            &translationsJson,
-        )
+		err := rows.Scan(
+			&cat.ID,
+			&cat.Name,
+			&cat.Slug,
+			&cat.ParentID,
+			&cat.Icon,
+			&cat.CreatedAt,
+			&translationsJson,
+		)
 
-        if err != nil {
-            log.Printf("Error scanning category: %v", err)
-            continue
-        }
+		if err != nil {
+			log.Printf("Error scanning category: %v", err)
+			continue
+		}
 
-    //    log.Printf("Raw translations for category %d: %s", cat.ID, string(translationsJson))
+		//    log.Printf("Raw translations for category %d: %s", cat.ID, string(translationsJson))
 
-        translations := make(map[string]string)
-        if err := json.Unmarshal(translationsJson, &translations); err != nil {
-            log.Printf("Error unmarshaling translations for category %d: %v", cat.ID, err)
-        } else {
-            cat.Translations = translations
-       //     log.Printf("Processed translations for category %d: %+v", cat.ID, translations)
-        }
+		translations := make(map[string]string)
+		if err := json.Unmarshal(translationsJson, &translations); err != nil {
+			log.Printf("Error unmarshaling translations for category %d: %v", cat.ID, err)
+		} else {
+			cat.Translations = translations
+			//     log.Printf("Processed translations for category %d: %+v", cat.ID, translations)
+		}
 
-        categories = append(categories, cat)
-    }
+		categories = append(categories, cat)
+	}
 
-    log.Printf("GetCategories: returning %d categories", len(categories))
-    return categories, rows.Err()
+	log.Printf("GetCategories: returning %d categories", len(categories))
+	return categories, rows.Err()
 }
 
 func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
@@ -906,13 +1025,13 @@ func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.Marketpl
 	return cat, nil
 }
 func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-    listing := &models.MarketplaceListing{
-        User:     &models.User{},
-        Category: &models.MarketplaceCategory{},
-    }
+	listing := &models.MarketplaceListing{
+		User:     &models.User{},
+		Category: &models.MarketplaceCategory{},
+	}
 
-    // Получаем основные данные объявления с original_language
-    err := s.pool.QueryRow(ctx, `
+	// Получаем основные данные объявления с original_language
+	err := s.pool.QueryRow(ctx, `
         SELECT 
             l.id, l.user_id, l.category_id, l.title, l.description,
             l.price, l.condition, l.status, l.location, l.latitude,
@@ -926,55 +1045,55 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
         WHERE l.id = $1
     `, id).Scan(
-        &listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title,
-        &listing.Description, &listing.Price, &listing.Condition, &listing.Status,
-        &listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
-        &listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
-        &listing.ShowOnMap, &listing.OriginalLanguage,
-        &listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
-        &listing.User.PictureURL, &listing.User.Phone,
-        &listing.Category.Name, &listing.Category.Slug,
-    )
+		&listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title,
+		&listing.Description, &listing.Price, &listing.Condition, &listing.Status,
+		&listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
+		&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
+		&listing.ShowOnMap, &listing.OriginalLanguage,
+		&listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
+		&listing.User.PictureURL, &listing.User.Phone,
+		&listing.Category.Name, &listing.Category.Slug,
+	)
 
-    if err != nil {
-        return nil, fmt.Errorf("error getting listing: %w", err)
-    }
+	if err != nil {
+		return nil, fmt.Errorf("error getting listing: %w", err)
+	}
 
-    // Загружаем переводы
-    translations := make(map[string]map[string]string)
-    rows, err := s.pool.Query(ctx, `
+	// Загружаем переводы
+	translations := make(map[string]map[string]string)
+	rows, err := s.pool.Query(ctx, `
         SELECT language, field_name, translated_text
         FROM translations
         WHERE entity_type = 'listing' AND entity_id = $1
     `, id)
-    if err != nil {
-        return listing, nil
-    }
-    defer rows.Close()
+	if err != nil {
+		return listing, nil
+	}
+	defer rows.Close()
 
-    for rows.Next() {
-        var lang, field, text string
-        if err := rows.Scan(&lang, &field, &text); err != nil {
-            continue
-        }
-        if translations[lang] == nil {
-            translations[lang] = make(map[string]string)
-        }
-        translations[lang][field] = text
- //       log.Printf("Added translation for %s.%s: %s", lang, field, text)
-    }
-    // Получаем изображения
-    images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
-    if err != nil {
-        log.Printf("Error loading images: %v", err) // Добавляем лог
-        return nil, err
-    }
-    
-    // Важно! Присваиваем изображения объявлению
-    listing.Images = images
-    listing.Translations = translations
-//    log.Printf("Final translations for listing %d: %+v", id, translations)
-//    log.Printf("Original language: %s", listing.OriginalLanguage)
+	for rows.Next() {
+		var lang, field, text string
+		if err := rows.Scan(&lang, &field, &text); err != nil {
+			continue
+		}
+		if translations[lang] == nil {
+			translations[lang] = make(map[string]string)
+		}
+		translations[lang][field] = text
+		//       log.Printf("Added translation for %s.%s: %s", lang, field, text)
+	}
+	// Получаем изображения
+	images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
+	if err != nil {
+		log.Printf("Error loading images: %v", err) // Добавляем лог
+		return nil, err
+	}
 
-    return listing, nil
+	// Важно! Присваиваем изображения объявлению
+	listing.Images = images
+	listing.Translations = translations
+	//    log.Printf("Final translations for listing %d: %+v", id, translations)
+	//    log.Printf("Original language: %s", listing.OriginalLanguage)
+
+	return listing, nil
 }

@@ -17,9 +17,9 @@ import {
     Calendar,
     Heart,
     ChevronLeft,
-    ChevronRight,
-    Maximize2
-} from 'lucide-react';
+    ChevronRight
+} 
+from 'lucide-react';
 import axios from '../../api/axios';
 import {
     Container, Modal, Paper, Grid, Box, Typography,

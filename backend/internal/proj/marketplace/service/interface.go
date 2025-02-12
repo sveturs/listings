@@ -23,4 +23,6 @@ type MarketplaceServiceInterface interface {
     GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error)
     GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error)
     UpdateTranslation(ctx context.Context, translation *models.Translation) error
+    GetSubcategories(ctx context.Context, parentID string, limit int, offset int) ([]models.CategoryTreeNode, error)
+    RefreshCategoryListingCounts(ctx context.Context) error
 }

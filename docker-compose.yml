@@ -17,6 +17,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    stop_grace_period: 10s
+    stop_signal: SIGINT
+    networks:
+     - hostel_network
 
   backend:
     build:
@@ -33,7 +37,26 @@ services:
       - ./backend/uploads:/app/uploads
     environment:
       - UPLOAD_DIR=/app/uploads
-
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
+    init: true
+    networks:
+      - hostel_network
+  frontend:
+    build:
+      context: ./frontend/hostel-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./frontend/hostel-frontend/.env.local
+    volumes:
+      - ./frontend/hostel-frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - hostel_network
   migrate:
     image: migrate/migrate
     volumes:
@@ -46,6 +69,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
-
+    stop_grace_period: 1s
+    restart: "no"
+    networks:
+      - hostel_network
 volumes:
   postgres_data:
+
+networks:
+  hostel_network:
+    driver: bridge

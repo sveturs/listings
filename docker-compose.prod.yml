@@ -16,6 +16,9 @@ services:
       retries: 5
     networks:
       - hostel_network
+    stop_grace_period: 10s
+    stop_signal: SIGINT
+
   migrate:
     image: migrate/migrate
     volumes:
@@ -28,6 +31,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - hostel_network
+    stop_grace_period: 1s
+    restart: "no"
+
   backend:
     build:
       context: ./backend
@@ -53,6 +61,10 @@ services:
       retries: 3
     networks:
       - hostel_network
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
+    init: true
+
   nginx:
     image: nginx:alpine
     container_name: hostel_nginx
@@ -75,8 +87,12 @@ services:
       retries: 3
     networks:
       - hostel_network
+    stop_grace_period: 5s
+    stop_signal: SIGTERM
+
 volumes:
   postgres_data:
+
 networks:
   hostel_network:
     driver: bridge

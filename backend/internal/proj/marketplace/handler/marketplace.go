@@ -3,22 +3,22 @@ package handler
 
 import (
 	"backend/internal/domain/models"
-     globalService "backend/internal/proj/global/service"
-    "math"
+	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
-	"log"
 	"fmt"
+	"log"
+	"math"
 
+	"backend/internal/proj/marketplace/service"
+	"context"
 	"strconv"
-    "context"
-    "backend/internal/proj/marketplace/service"
+
 	"github.com/gofiber/fiber/v2"
-		
 )
 
 type MarketplaceHandler struct {
-    services            globalService.ServicesInterface
-	marketplaceService  service.MarketplaceServiceInterface
+	services           globalService.ServicesInterface
+	marketplaceService service.MarketplaceServiceInterface
 }
 
 func NewMarketplaceHandler(services globalService.ServicesInterface) *MarketplaceHandler {
@@ -51,43 +51,43 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 	}
 
 	// Создаем объявление
-	listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
-	if err != nil {
-		log.Printf("Failed to create listing: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
-	}
+    listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
+    }
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"id":      listingID,
-		"message": "Объявление успешно создано",
-	})
+    // Обновляем материализованное представление
+    if err := h.marketplaceService.RefreshCategoryListingCounts(c.Context()); err != nil {
+        log.Printf("Error refreshing category counts: %v", err)
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "id":      listingID,
+        "message": "Объявление успешно создано",
+    })
 }
+
 func (h *MarketplaceHandler) GetCategoryTree(c *fiber.Ctx) error {
-	categories, err := h.marketplaceService.GetCategoryTree(c.Context())
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching category tree")
-	}
+    log.Printf("GetCategoryTree called") // Добавляем лог
 
-	// Строим дерево из плоского списка
-	categoryMap := make(map[int]*models.CategoryTreeNode)
-	var rootCategories []*models.CategoryTreeNode
+    categories, err := h.marketplaceService.GetCategoryTree(c.Context())
+    if err != nil {
+        log.Printf("Error getting category tree: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching category tree")
+    }
 
-	for i := range categories {
-		cat := &categories[i]
-		categoryMap[cat.ID] = cat
+    log.Printf("Found %d categories", len(categories)) // Добавляем лог
+    if categories == nil {
+        categories = []models.CategoryTreeNode{} 
+    }
 
-		if cat.ParentID == nil {
-			rootCategories = append(rootCategories, cat)
-		} else {
-			parent := categoryMap[*cat.ParentID]
-			if parent != nil {
-				parent.Children = append(parent.Children, *cat)
-			}
-		}
-	}
-
-	return utils.SuccessResponse(c, rootCategories)
+    log.Printf("Returning categories: %+v", categories) // Добавляем лог
+    return utils.SuccessResponse(c, categories)
 }
+
+
+
+
 func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 	log.Printf("Starting image upload for listing ID: %v", c.Params("id"))
 	listingID, err := c.ParamsInt("id")
@@ -105,9 +105,9 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 	if len(files) == 0 {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Нет файлов для загрузки")
 	}
-    for _, file := range files {
-        log.Printf("Received file: name=%s, size=%d, type=%s", file.Filename, file.Size, file.Header.Get("Content-Type"))
-    }
+	for _, file := range files {
+		log.Printf("Received file: name=%s, size=%d, type=%s", file.Filename, file.Size, file.Header.Get("Content-Type"))
+	}
 	if len(files) > 10 {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Максимум 10 фотографий")
 	}
@@ -224,144 +224,157 @@ func (h *MarketplaceHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 		"message": "Removed from favorites successfully",
 	})
 }
+// Добавить новый метод
+func (h *MarketplaceHandler) GetSubcategories(c *fiber.Ctx) error {
+    parentID := c.Query("parent_id")
+    limit := c.QueryInt("limit", 20)
+    offset := c.QueryInt("offset", 0)
 
+    categories, err := h.marketplaceService.GetSubcategories(c.Context(), parentID, limit, offset)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching subcategories")
+    }
+
+    return utils.SuccessResponse(c, categories)
+}
 func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
-    // Получаем user_id из контекста, если пользователь авторизован
-    var userID int
-    if uid := c.Locals("user_id"); uid != nil {
-        var ok bool
-        userID, ok = uid.(int)
-        if !ok {
-            log.Printf("Invalid user_id type in context: %T", uid)
-            userID = 0
-        }
-    }
+	// Получаем user_id из контекста, если пользователь авторизован
+	var userID int
+	if uid := c.Locals("user_id"); uid != nil {
+		var ok bool
+		userID, ok = uid.(int)
+		if !ok {
+			log.Printf("Invalid user_id type in context: %T", uid)
+			userID = 0
+		}
+	}
 
-    id, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-    }
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+	}
 
-    //log.Printf("GetListing: userID=%d, listingID=%d", userID, id)
+	//log.Printf("GetListing: userID=%d, listingID=%d", userID, id)
 
-    // Создаем контекст с user_id
-    ctx := context.WithValue(c.Context(), "user_id", userID)
+	// Создаем контекст с user_id
+	ctx := context.WithValue(c.Context(), "user_id", userID)
 
-    listing, err := h.marketplaceService.GetListingByID(ctx, id)
-    if err != nil {
-        log.Printf("Error getting listing %d: %v", id, err)
-        if err.Error() == "listing not found" {
-            return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
-        }
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listing")
-    }
+	listing, err := h.marketplaceService.GetListingByID(ctx, id)
+	if err != nil {
+		log.Printf("Error getting listing %d: %v", id, err)
+		if err.Error() == "listing not found" {
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listing")
+	}
 
-    // Добавляем логирование для отладки
-    //log.Printf("GetListing result: listingID=%d, isFavorite=%v, userID=%d", id, listing.IsFavorite, userID)
+	// Добавляем логирование для отладки
+	//log.Printf("GetListing result: listingID=%d, isFavorite=%v, userID=%d", id, listing.IsFavorite, userID)
 
-    return utils.SuccessResponse(c, listing)
+	return utils.SuccessResponse(c, listing)
 }
 
 // UpdateListing - обновление объявления
 func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
-    // Получаем старую версию объявления
-    id, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-    }
+	// Получаем старую версию объявления
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+	}
 
-    oldListing, err := h.marketplaceService.GetListingByID(c.Context(), id)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
-    }
+	oldListing, err := h.marketplaceService.GetListingByID(c.Context(), id)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+	}
 
-    var listing models.MarketplaceListing
-    if err := c.BodyParser(&listing); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
-    }
+	var listing models.MarketplaceListing
+	if err := c.BodyParser(&listing); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+	}
 
-    listing.ID = id
-    listing.UserID = c.Locals("user_id").(int)
+	listing.ID = id
+	listing.UserID = c.Locals("user_id").(int)
 
-    // Обновляем объявление
-    err = h.marketplaceService.UpdateListing(c.Context(), &listing)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
-    }
+	// Обновляем объявление
+	err = h.marketplaceService.UpdateListing(c.Context(), &listing)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
+	}
 
-    // Проверяем изменение цены
-    if oldListing.Price != listing.Price {
-        favoritedUsers, err := h.marketplaceService.GetFavoritedUsers(c.Context(), listing.ID)
-        if err != nil {
-            log.Printf("Error getting favorited users: %v", err)
-        } else {
-            priceChange := listing.Price - oldListing.Price
-            changeText := "увеличилась"
-            if priceChange < 0 {
-                changeText = "уменьшилась"
-            }
+	// Проверяем изменение цены
+	if oldListing.Price != listing.Price {
+		favoritedUsers, err := h.marketplaceService.GetFavoritedUsers(c.Context(), listing.ID)
+		if err != nil {
+			log.Printf("Error getting favorited users: %v", err)
+		} else {
+			priceChange := listing.Price - oldListing.Price
+			changeText := "увеличилась"
+			if priceChange < 0 {
+				changeText = "уменьшилась"
+			}
 
-            for _, userID := range favoritedUsers {
-                notificationText := fmt.Sprintf(
-                    "Изменение цены в избранном\nОбъявление: %s\nЦена %s на %.2f руб.\nНовая цена: %.2f руб.",
-                    listing.Title,
-                    changeText,
-                    math.Abs(float64(priceChange)),
-                    listing.Price,
-                )
-                if err := h.services.Notification().SendNotification(
-                    c.Context(),
-                    userID,
-                    models.NotificationTypeFavoritePrice,
-                    notificationText,
-                    listing.ID,
-                ); err != nil {
-                    log.Printf("Error sending notification to user %d: %v", userID, err)
-                }
-            }
-        }
-    }
+			for _, userID := range favoritedUsers {
+				notificationText := fmt.Sprintf(
+					"Изменение цены в избранном\nОбъявление: %s\nЦена %s на %.2f руб.\nНовая цена: %.2f руб.",
+					listing.Title,
+					changeText,
+					math.Abs(float64(priceChange)),
+					listing.Price,
+				)
+				if err := h.services.Notification().SendNotification(
+					c.Context(),
+					userID,
+					models.NotificationTypeFavoritePrice,
+					notificationText,
+					listing.ID,
+				); err != nil {
+					log.Printf("Error sending notification to user %d: %v", userID, err)
+				}
+			}
+		}
+	}
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Listing updated successfully",
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Listing updated successfully",
+	})
 }
 func (h *MarketplaceHandler) UpdateTranslations(c *fiber.Ctx) error {
-    listingID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-    }
+	listingID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+	}
 
-    var updateData struct {
-        Language     string            `json:"language"`
-        Translations map[string]string `json:"translations"`
-        IsVerified   bool             `json:"is_verified"`
-    }
+	var updateData struct {
+		Language     string            `json:"language"`
+		Translations map[string]string `json:"translations"`
+		IsVerified   bool              `json:"is_verified"`
+	}
 
-    if err := c.BodyParser(&updateData); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
-    }
+	if err := c.BodyParser(&updateData); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+	}
 
-    // Обновляем каждый переведенный field
-    for fieldName, translatedText := range updateData.Translations {
-        err := h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
-            EntityType:         "listing",
-            EntityID:          listingID,
-            Language:          updateData.Language,
-            FieldName:         fieldName,
-            TranslatedText:    translatedText,
-            IsVerified:        updateData.IsVerified,
-            IsMachineTranslated: false,
-        })
-        if err != nil {
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating translation")
-        }
-    }
+	// Обновляем каждый переведенный field
+	for fieldName, translatedText := range updateData.Translations {
+		err := h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
+			EntityType:          "listing",
+			EntityID:            listingID,
+			Language:            updateData.Language,
+			FieldName:           fieldName,
+			TranslatedText:      translatedText,
+			IsVerified:          updateData.IsVerified,
+			IsMachineTranslated: false,
+		})
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating translation")
+		}
+	}
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Translations updated successfully",
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Translations updated successfully",
+	})
 }
+
 // DeleteListing - удаление объявления
 func (h *MarketplaceHandler) DeleteListing(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -390,22 +403,22 @@ func (h *MarketplaceHandler) GetCategories(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, categories)
 }
 func (h *MarketplaceHandler) GetFavorites(c *fiber.Ctx) error {
-    userID, ok := c.Locals("user_id").(int)
-    if !ok {
-     //   log.Printf("GetFavorites: no user_id in context")
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
-    }
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		//   log.Printf("GetFavorites: no user_id in context")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
 
-   // log.Printf("GetFavorites: fetching favorites for userID=%d", userID)
+	// log.Printf("GetFavorites: fetching favorites for userID=%d", userID)
 
-    ctx := context.WithValue(c.Context(), "user_id", userID)
+	ctx := context.WithValue(c.Context(), "user_id", userID)
 
-    favorites, err := h.marketplaceService.GetUserFavorites(ctx, userID)
-    if err != nil {
-        log.Printf("GetFavorites error: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении избранных объявлений")
-    }
+	favorites, err := h.marketplaceService.GetUserFavorites(ctx, userID)
+	if err != nil {
+		log.Printf("GetFavorites error: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении избранных объявлений")
+	}
 
-  //  log.Printf("GetFavorites: found %d favorites for userID=%d", len(favorites), userID)
-    return utils.SuccessResponse(c, favorites)
+	//  log.Printf("GetFavorites: found %d favorites for userID=%d", len(favorites), userID)
+	return utils.SuccessResponse(c, favorites)
 }

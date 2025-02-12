@@ -19,7 +19,7 @@ const LocationPicker = ({ onLocationSelect }) => {
     const [map, setMap] = useState(null);
     const [marker, setMarker] = useState(null);
     const [address, setAddress] = useState('');
-    const [searchBox, setSearchBox] = useState(null);
+    const [setSearchBox] = useState(null);
     const [center, setCenter] = useState({
         lat: 45.2671,
         lng: 19.8335

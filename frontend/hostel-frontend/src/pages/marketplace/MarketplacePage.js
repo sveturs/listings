@@ -8,7 +8,6 @@ import {
     Container,
     Grid,
     Box,
-    Typography,
     CircularProgress,
     Button,
     useTheme,
@@ -17,10 +16,9 @@ import {
     Alert,
     Paper,
     Chip,
-    InputBase,
-    Toolbar,
-} from '@mui/material';
-import { Plus, Search as SearchIcon, Filter, X } from 'lucide-react';
+}
+from '@mui/material';
+import { Plus, Search as SearchIcon, X } from 'lucide-react';
 import ListingCard from '../../components/marketplace/ListingCard';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import {
@@ -30,7 +28,6 @@ import {
 } from '../../components/marketplace/MobileComponents';
 import CompactMarketplaceFilters from '../../components/marketplace/MarketplaceFilters';
 import axios from '../../api/axios';
-import { debounce } from 'lodash';
 import { useSearchParams } from 'react-router-dom';
 
 
