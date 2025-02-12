@@ -613,11 +613,11 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 }
 
 func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
-    log.Printf("GetCategoryTree in storage called") // Добавляем лог
+	log.Printf("GetCategoryTree in storage called") // Добавляем лог
 
-    query := `
+	query := `
         WITH RECURSIVE category_hierarchy AS (
-            -- Базовый запрос: корневые категории
+            -- Базовый случай: корневые категории
             SELECT 
                 id, name, slug, icon, parent_id, created_at,
                 ARRAY[id] as path,
@@ -641,8 +641,12 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
         )
         SELECT 
             ch.*,
-            COALESCE(jsonb_object_agg(t.language, t.translated_text) 
-                FILTER (WHERE t.language IS NOT NULL), '{}'::jsonb
+            COALESCE(
+                jsonb_object_agg(
+                    t.language, 
+                    t.translated_text
+                ) FILTER (WHERE t.language IS NOT NULL),
+                '{}'::jsonb
             ) as translations
         FROM category_hierarchy ch
         LEFT JOIN translations t ON 
@@ -650,85 +654,86 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
             AND t.entity_id = ch.id 
             AND t.field_name = 'name'
         GROUP BY 
-            ch.id, ch.name, ch.slug, ch.icon, ch.parent_id, ch.created_at,
-            ch.path, ch.level, ch.listing_count, ch.children_count
+            ch.id, ch.name, ch.slug, ch.icon, ch.parent_id, 
+            ch.created_at, ch.path, ch.level, ch.listing_count, 
+            ch.children_count
         ORDER BY 
-            ch.level ASC,     -- Сначала по уровню вложенности
-            ch.name ASC;      -- Затем по имени
+    array_to_string(ch.path, '_'),
+    ch.name,
+    ch.id
     `
 
-    rows, err := s.pool.Query(ctx, query)
-    if err != nil {
-        log.Printf("Error executing query: %v", err) // Добавляем лог
+	rows, err := s.pool.Query(ctx, query)
+	if err != nil {
+		log.Printf("Error executing query: %v", err) // Добавляем лог
 
-        return nil, fmt.Errorf("error querying categories: %w", err)
-    }
-    defer rows.Close()
+		return nil, fmt.Errorf("error querying categories: %w", err)
+	}
+	defer rows.Close()
 
-    // Map для хранения всех категорий
-    nodeMap := make(map[int]*models.CategoryTreeNode)
-    var rootNodes []*models.CategoryTreeNode
+	// Map для хранения всех категорий
+	nodeMap := make(map[int]*models.CategoryTreeNode)
+	var rootNodes []*models.CategoryTreeNode
 
-    // Первый проход - создаем все узлы
-    for rows.Next() {
-        var node models.CategoryTreeNode
-        var pathArray []int
-        var translationsJson []byte
+	// Первый проход - создаем все узлы
+	for rows.Next() {
+		var node models.CategoryTreeNode
+		var pathArray []int
+		var translationsJson []byte
 
-        err := rows.Scan(
-            &node.ID,
-            &node.Name,
-            &node.Slug,
-            &node.Icon,
-            &node.ParentID,
-            &node.CreatedAt,
-            &pathArray,
-            &node.Level,
-            &node.ListingCount,
-            &node.ChildrenCount,
-            &translationsJson,
-        )
-        if err != nil {
-            return nil, fmt.Errorf("error scanning category: %w", err)
-        }
+		err := rows.Scan(
+			&node.ID,
+			&node.Name,
+			&node.Slug,
+			&node.Icon,
+			&node.ParentID,
+			&node.CreatedAt,
+			&pathArray,
+			&node.Level,
+			&node.ListingCount,
+			&node.ChildrenCount,
+			&translationsJson,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning category: %w", err)
+		}
 
-        // Обрабатываем переводы
-        if err := json.Unmarshal(translationsJson, &node.Translations); err != nil {
-            node.Translations = make(map[string]string)
-        }
+		// Обрабатываем переводы
+		if err := json.Unmarshal(translationsJson, &node.Translations); err != nil {
+			node.Translations = make(map[string]string)
+		}
 
-        // Всегда инициализируем Children как пустой массив
-        node.Children = make([]models.CategoryTreeNode, 0)
-        
-        // Сохраняем указатель на узел
-        nodePtr := &node
-        nodeMap[node.ID] = nodePtr
+		// Всегда инициализируем Children как пустой массив
+		node.Children = make([]models.CategoryTreeNode, 0)
 
-        // Если это корневой узел
-        if node.ParentID == nil {
-            rootNodes = append(rootNodes, nodePtr)
-        }
-    }
+		// Сохраняем указатель на узел
+		nodePtr := &node
+		nodeMap[node.ID] = nodePtr
 
-    // Второй проход - строим иерархию
-    for _, node := range nodeMap {
-        if node.ParentID != nil {
-            if parent, exists := nodeMap[*node.ParentID]; exists {
-                parent.Children = append(parent.Children, *node)
-            }
-        }
-    }
+		// Если это корневой узел
+		if node.ParentID == nil {
+			rootNodes = append(rootNodes, nodePtr)
+		}
+	}
 
-    // Преобразуем в слайс результатов
-    result := make([]models.CategoryTreeNode, len(rootNodes))
-    for i, node := range rootNodes {
-        result[i] = *node
-    }
-    log.Printf("Returning %d root categories with tree", len(result)) // Добавляем лог
+	// Второй проход - строим иерархию
+	for _, node := range nodeMap {
+		if node.ParentID != nil {
+			if parent, exists := nodeMap[*node.ParentID]; exists {
+				parent.Children = append(parent.Children, *node)
+			}
+		}
+	}
 
-    return result, nil
+	// Преобразуем в слайс результатов
+	result := make([]models.CategoryTreeNode, len(rootNodes))
+	for i, node := range rootNodes {
+		result[i] = *node
+	}
+	log.Printf("Returning %d root categories with tree", len(result)) // Добавляем лог
+
+	return result, nil
 }
-
 
 func (s *Storage) AddToFavorites(ctx context.Context, userID int, listingID int) error {
 	_, err := s.pool.Exec(ctx, `

@@ -21,7 +21,6 @@ const PAGE_SIZE = 20;
 
 
 const CategoryItem = React.memo(({ data, index, style }) => {
-
     const { i18n } = useTranslation();
     const {
         items,
@@ -32,15 +31,25 @@ const CategoryItem = React.memo(({ data, index, style }) => {
     } = data;
 
     const item = items[index];
-    if (!item) return null;
+    // Перемещаем проверку в конец, после всех хуков
+    const renderKey = `${item?.id}-${item ? expandedItems.has(item.id) : false}`;
+    const memoizedItem = useMemo(() => {
+        if (!item) return null;
+        // Оставляем только одну группу логов
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Rendering category:', item);
+            console.log('Children:', item.children);
+        }
+        return item;
+    }, [renderKey, item]);
 
-    const isExpanded = expandedItems.has(item.id);
-    const isSelected = selectedId === item.id;
-    const hasChildren = item.children?.length > 0;
-    const paddingLeft = item.level * 16 + 8;
-    console.log('Rendering category:', item);
-    console.log('Children:', item.children);
+    // Теперь проверяем memoizedItem
+    if (!memoizedItem) return null;
 
+    const isExpanded = expandedItems.has(memoizedItem.id);
+    const isSelected = selectedId === memoizedItem.id;
+    const hasChildren = memoizedItem.children?.length > 0;
+    const paddingLeft = memoizedItem.level * 16 + 8;
 
     // Добавляем функцию получения переведенного имени
     const getTranslatedName = (category) => {
@@ -57,7 +66,7 @@ const CategoryItem = React.memo(({ data, index, style }) => {
                 paddingLeft,
                 backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.04)' : 'transparent'
             }}
-            onClick={() => onSelect(item.id)}
+            onClick={() => onSelect(memoizedItem.id)}
             dense
         >
             <ListItemIcon sx={{ minWidth: 24 }}>
@@ -66,7 +75,7 @@ const CategoryItem = React.memo(({ data, index, style }) => {
                         component="span"
                         onClick={(e) => {
                             e.stopPropagation();
-                            onToggle(item.id);
+                            onToggle(memoizedItem.id);
                         }}
                     >
                         {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
@@ -76,13 +85,13 @@ const CategoryItem = React.memo(({ data, index, style }) => {
             <ListItemText
                 primary={
                     <Typography variant="body2" noWrap>
-                        {getTranslatedName(item)}
+                        {getTranslatedName(memoizedItem)}
                         <Typography
                             component="span"
                             variant="caption"
                             sx={{ ml: 1, color: 'text.secondary' }}
                         >
-                            ({item.listing_count || 0})
+                            ({memoizedItem.listing_count || 0})
                         </Typography>
                     </Typography>
                 }
@@ -95,16 +104,20 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
     const { i18n } = useTranslation();
     const [expandedItems, setExpandedItems] = useState(new Set());
     const [flattenedItems, setFlattenedItems] = useState([]);
-    const treeRef = useRef(null);
+    const [treeData, setTreeData] = useState(null); 
 
     const buildFlattenedList = useCallback((items, level = 0, result = []) => {
         if (!items || !Array.isArray(items)) return result;
         
-        items.forEach(item => {
+        // Сначала сортируем элементы
+        const sortedItems = [...items].sort((a, b) => a.name.localeCompare(b.name));
+        
+        sortedItems.forEach(item => {
             const itemCopy = {
                 ...item,
                 level,
-                children: Array.isArray(item.children) ? [...item.children] : []
+                children: Array.isArray(item.children) ? [...item.children].sort((a, b) => 
+                    a.name.localeCompare(b.name)) : []
             };
             result.push(itemCopy);
             
@@ -134,9 +147,9 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
     // Сохраняем данные в ref при первой загрузке
     useEffect(() => {
         console.log('Query result:', queryResult);
-        if (queryResult?.pages?.[0]?.data && !treeRef.current) {
+        if (queryResult?.pages?.[0]?.data && !treeData) {  // Заменяем проверку treeRef на treeData
             console.log('Setting tree data:', queryResult.pages[0].data);
-            treeRef.current = queryResult.pages[0].data;
+            setTreeData(queryResult.pages[0].data);  // Используем setTreeData вместо присвоения treeRef.current
             const flatList = buildFlattenedList(queryResult.pages[0].data);
             setFlattenedItems(flatList);
         }
@@ -144,11 +157,11 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
 
     // Обновляем при изменении expanded items
     useEffect(() => {
-        if (treeRef.current) {
-            const flatList = buildFlattenedList(treeRef.current);
+        if (treeData) {  // Заменяем проверку treeRef.current на treeData
+            const flatList = buildFlattenedList(treeData);
             setFlattenedItems(flatList);
         }
-    }, [expandedItems, buildFlattenedList]);
+    }, [expandedItems, buildFlattenedList, treeData]);
 
     const handleToggle = useCallback((id) => {
         setExpandedItems(prev => {

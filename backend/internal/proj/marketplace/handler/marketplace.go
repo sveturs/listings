@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"log"
 	"math"
-
+	"time"
 	"backend/internal/proj/marketplace/service"
 	"context"
 	"strconv"
+	"sync"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -66,26 +67,33 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
         "message": "Объявление успешно создано",
     })
 }
+var (
+    categoryTreeCache []models.CategoryTreeNode
+    categoryTreeLastUpdate time.Time
+    categoryTreeMutex sync.RWMutex
+)
 
 func (h *MarketplaceHandler) GetCategoryTree(c *fiber.Ctx) error {
-    log.Printf("GetCategoryTree called") // Добавляем лог
+    categoryTreeMutex.RLock()
+    if time.Since(categoryTreeLastUpdate) < 5*time.Minute && categoryTreeCache != nil {
+        defer categoryTreeMutex.RUnlock()
+        return utils.SuccessResponse(c, categoryTreeCache)
+    }
+    categoryTreeMutex.RUnlock()
+
+    categoryTreeMutex.Lock()
+    defer categoryTreeMutex.Unlock()
 
     categories, err := h.marketplaceService.GetCategoryTree(c.Context())
     if err != nil {
-        log.Printf("Error getting category tree: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching category tree")
     }
 
-    log.Printf("Found %d categories", len(categories)) // Добавляем лог
-    if categories == nil {
-        categories = []models.CategoryTreeNode{} 
-    }
+    categoryTreeCache = categories
+    categoryTreeLastUpdate = time.Now()
 
-    log.Printf("Returning categories: %+v", categories) // Добавляем лог
     return utils.SuccessResponse(c, categories)
 }
-
-
 
 
 func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
