@@ -346,7 +346,7 @@ INSERT INTO notification_settings (user_id, notification_type, telegram_enabled,
 (4, 'review_response', true, '2025-02-08 11:38:09.278246', '2025-02-07 07:48:09.278246'),
 (4, 'listing_status', true, '2025-02-08 11:38:09.279014', '2025-02-07 07:48:09.279014'),
 (4, 'favorite_price', true, '2025-02-08 11:38:09.279632', '2025-02-07 07:48:09.279632');
-
+-- ОБРАЗЕЦ, как нужно сделать из данных второго файла!
 -- Insert marketplace categories
 INSERT INTO marketplace_categories (id, name, slug, parent_id, icon, created_at) VALUES
 (1, 'Превоз', 'transport', NULL, 'car', '2025-02-07 07:13:52.823283'),

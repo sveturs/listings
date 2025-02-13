@@ -82,6 +82,7 @@ func (s *Storage) GetSubcategories(ctx context.Context, parentID *int, limit int
 		var cat models.CategoryTreeNode
 		var pathArray []int
 		var translationsJson []byte
+		var directCount int // Добавляем эту переменную
 
 		err := rows.Scan(
 			&cat.ID,
@@ -92,8 +93,9 @@ func (s *Storage) GetSubcategories(ctx context.Context, parentID *int, limit int
 			&cat.CreatedAt,
 			&pathArray,
 			&cat.Level,
-			&cat.ListingCount,
+			&directCount,
 			&cat.ChildrenCount,
+			&cat.ListingCount,
 			&translationsJson,
 		)
 		if err != nil {
@@ -617,50 +619,71 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
 
 	query := `
         WITH RECURSIVE category_hierarchy AS (
-            -- Базовый случай: корневые категории
-            SELECT 
-                id, name, slug, icon, parent_id, created_at,
-                ARRAY[id] as path,
-                0 as level,
-                (SELECT COUNT(*) FROM marketplace_listings ml WHERE ml.category_id = id) as listing_count,
-                (SELECT COUNT(*) FROM marketplace_categories mc WHERE mc.parent_id = id) as children_count
-            FROM marketplace_categories 
-            WHERE parent_id IS NULL
-            
-            UNION ALL
-            
-            -- Рекурсивная часть: подкатегории
-            SELECT 
-                c.id, c.name, c.slug, c.icon, c.parent_id, c.created_at,
-                h.path || c.id,
-                h.level + 1,
-                (SELECT COUNT(*) FROM marketplace_listings ml WHERE ml.category_id = c.id),
-                (SELECT COUNT(*) FROM marketplace_categories mc WHERE mc.parent_id = c.id)
-            FROM marketplace_categories c
-            INNER JOIN category_hierarchy h ON c.parent_id = h.id
-        )
-        SELECT 
-            ch.*,
-            COALESCE(
-                jsonb_object_agg(
-                    t.language, 
-                    t.translated_text
-                ) FILTER (WHERE t.language IS NOT NULL),
-                '{}'::jsonb
-            ) as translations
-        FROM category_hierarchy ch
-        LEFT JOIN translations t ON 
-            t.entity_type = 'category' 
-            AND t.entity_id = ch.id 
-            AND t.field_name = 'name'
-        GROUP BY 
-            ch.id, ch.name, ch.slug, ch.icon, ch.parent_id, 
-            ch.created_at, ch.path, ch.level, ch.listing_count, 
-            ch.children_count
-        ORDER BY 
-    array_to_string(ch.path, '_'),
-    ch.name,
-    ch.id
+    -- Базовый случай: корневые категории
+    SELECT 
+        id, name, slug, icon, parent_id, created_at,
+        ARRAY[id] as path,
+        0 as level,
+        (
+            SELECT COUNT(*) 
+            FROM marketplace_listings ml 
+            WHERE ml.category_id = marketplace_categories.id 
+            AND ml.status = 'active'
+        ) as direct_count,
+        (SELECT COUNT(*) FROM marketplace_categories mc WHERE mc.parent_id = marketplace_categories.id) as children_count
+    FROM marketplace_categories 
+    WHERE parent_id IS NULL
+    
+    UNION ALL
+    
+    -- Рекурсивная часть: подкатегории
+    SELECT 
+        c.id, c.name, c.slug, c.icon, c.parent_id, c.created_at,
+        h.path || c.id,
+        h.level + 1,
+        (
+            SELECT COUNT(*) 
+            FROM marketplace_listings ml 
+            WHERE ml.category_id = c.id 
+            AND ml.status = 'active'
+        ) as direct_count,
+        (SELECT COUNT(*) FROM marketplace_categories mc WHERE mc.parent_id = c.id) as children_count
+    FROM marketplace_categories c
+    INNER JOIN category_hierarchy h ON c.parent_id = h.id
+),
+category_totals AS (
+    SELECT 
+        h.*,
+        direct_count + COALESCE((
+            SELECT SUM(ch.direct_count)
+            FROM category_hierarchy ch
+            WHERE ch.path[1:array_length(h.path, 1)] = h.path
+            AND ch.id != h.id
+        ), 0) as listing_count
+    FROM category_hierarchy h
+)
+SELECT 
+    ct.*,
+    COALESCE(
+        jsonb_object_agg(
+            t.language, 
+            t.translated_text
+        ) FILTER (WHERE t.language IS NOT NULL),
+        '{}'::jsonb
+    ) as translations
+FROM category_totals ct
+LEFT JOIN translations t ON 
+    t.entity_type = 'category' 
+    AND t.entity_id = ct.id 
+    AND t.field_name = 'name'
+GROUP BY 
+    ct.id, ct.name, ct.slug, ct.icon, ct.parent_id, 
+    ct.created_at, ct.path, ct.level, ct.listing_count, 
+    ct.children_count, ct.direct_count
+ORDER BY 
+    array_to_string(ct.path, '_'),
+    ct.name,
+    ct.id
     `
 
 	rows, err := s.pool.Query(ctx, query)
@@ -675,11 +698,11 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
 	nodeMap := make(map[int]*models.CategoryTreeNode)
 	var rootNodes []*models.CategoryTreeNode
 
-	// Первый проход - создаем все узлы
 	for rows.Next() {
 		var node models.CategoryTreeNode
 		var pathArray []int
 		var translationsJson []byte
+		var directCount int // Добавляем эту переменную
 
 		err := rows.Scan(
 			&node.ID,
@@ -690,8 +713,9 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
 			&node.CreatedAt,
 			&pathArray,
 			&node.Level,
-			&node.ListingCount,
+			&directCount,
 			&node.ChildrenCount,
+			&node.ListingCount,
 			&translationsJson,
 		)
 		if err != nil {

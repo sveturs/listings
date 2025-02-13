@@ -15,11 +15,11 @@ import { Search as SearchIcon, MyLocation as MyLocationIcon } from '@mui/icons-m
 const LocationPicker = ({ onLocationSelect }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    
+
     const [map, setMap] = useState(null);
+    const [searchBox, setSearchBox] = useState(null);
     const [marker, setMarker] = useState(null);
     const [address, setAddress] = useState('');
-    const [setSearchBox] = useState(null);
     const [center, setCenter] = useState({
         lat: 45.2671,
         lng: 19.8335
@@ -29,6 +29,9 @@ const LocationPicker = ({ onLocationSelect }) => {
         height: '400px'
     };
 
+    const onSearchBoxLoad = useCallback((ref) => {
+        setSearchBox(ref);
+    }, []);
 
     const mapOptions = {
         scrollwheel: true,
@@ -143,7 +146,7 @@ const LocationPicker = ({ onLocationSelect }) => {
 
                     setCenter(newCenter);
                     setMarker(newCenter);
-                    
+
                     if (map) {
                         map.setCenter(newCenter);
                         map.setZoom(17);

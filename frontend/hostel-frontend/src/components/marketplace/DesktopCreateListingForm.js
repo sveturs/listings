@@ -21,13 +21,13 @@ import MiniMap from '../maps/MiniMap';
 import ImageUploader from './ImageUploader';
 import HierarchicalSelect from './HierarchicalSelect';
 
-const DesktopCreateListingForm = ({ 
-    listing, 
-    setListing, 
-    categories, 
-    images, 
-    setImages, 
-    previewUrls, 
+const DesktopCreateListingForm = ({
+    listing,
+    setListing,
+    categories,
+    images,
+    setImages,
+    previewUrls,
     setPreviewUrls,
     onSubmit
 }) => {
@@ -48,16 +48,17 @@ const DesktopCreateListingForm = ({
                 <Grid item xs={12}>
                     <FormControl fullWidth required>
                         <InputLabel>{t('listings.create.category')}</InputLabel>
-                        <Select
-                            value={listing.category_id}
-                            onChange={(e) => setListing({ ...listing, category_id: e.target.value })}
-                        >
-                            {categories.map((category) => (
-                                <MenuItem key={category.id} value={category.id}>
-                                    {category.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
+                        <Box sx={{ mt: 2, height: '300px' }}>
+                            <VirtualizedCategoryTree
+                                selectedId={listing.category_id}
+                                onSelectCategory={(id) => {
+                                    setListing(prev => ({
+                                        ...prev,
+                                        category_id: id
+                                    }));
+                                }}
+                            />
+                        </Box>
                     </FormControl>
                 </Grid>
 

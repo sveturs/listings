@@ -1,37 +1,49 @@
 -- Оптимизированное материализованное представление
 CREATE MATERIALIZED VIEW category_listing_counts AS
 WITH RECURSIVE category_tree AS (
-    -- Базовый случай: корневые категории
     SELECT 
         id,
         ARRAY[id] as category_path,
         name,
-        1 as depth
+        1 as depth,
+        (
+            SELECT COUNT(*) 
+            FROM marketplace_listings ml 
+            WHERE ml.category_id = marketplace_categories.id 
+            AND ml.status = 'active'
+        ) as direct_count
     FROM marketplace_categories
     WHERE parent_id IS NULL
     
     UNION ALL
     
-    -- Рекурсивная часть: дочерние категории
     SELECT 
         c.id,
         ct.category_path || c.id,
         c.name,
-        ct.depth + 1
+        ct.depth + 1,
+        (
+            SELECT COUNT(*) 
+            FROM marketplace_listings ml 
+            WHERE ml.category_id = c.id 
+            AND ml.status = 'active'
+        ) as direct_count
     FROM marketplace_categories c
     INNER JOIN category_tree ct ON c.parent_id = ct.id
-    WHERE ct.depth < 10  -- Ограничиваем глубину рекурсии
+    WHERE ct.depth < 10
 )
 SELECT 
     ct.id as category_id,
-    COUNT(DISTINCT l.id) as listing_count,
+    ct.direct_count + COALESCE((
+        SELECT SUM(ch.direct_count)
+        FROM category_tree ch
+        WHERE ch.category_path[1:array_length(ct.category_path, 1)] = ct.category_path
+        AND ch.id != ct.id
+    ), 0) as listing_count,
     MAX(ct.depth) as category_depth
 FROM category_tree ct
-LEFT JOIN marketplace_listings l ON (
-    l.category_id = ct.id 
-    AND l.status = 'active'
-)
-GROUP BY ct.id;
+GROUP BY ct.id, ct.direct_count, ct.category_path;
+
 
 -- Создаем уникальный индекс для возможности CONCURRENT обновления
 CREATE UNIQUE INDEX category_listing_counts_idx ON category_listing_counts(category_id);

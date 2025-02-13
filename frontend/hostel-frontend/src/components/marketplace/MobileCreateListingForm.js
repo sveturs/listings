@@ -7,13 +7,13 @@ import LocationPicker from '../global/LocationPicker';
 import MiniMap from '../maps/MiniMap';
 import ImageUploader from './ImageUploader';
 
-const MobileCreateListingForm = ({ 
-    listing, 
-    setListing, 
-    categories, 
-    images, 
-    setImages, 
-    previewUrls, 
+const MobileCreateListingForm = ({
+    listing,
+    setListing,
+    categories,
+    images,
+    setImages,
+    previewUrls,
     setPreviewUrls,
     onSubmit,
     error,
@@ -37,7 +37,7 @@ const MobileCreateListingForm = ({
                     {error}
                 </Alert>
             )}
-            
+
             {success && (
                 <Alert severity="success" sx={{ mb: 2 }}>
                     {t('listings.create.success')}
@@ -88,17 +88,18 @@ const MobileCreateListingForm = ({
                 </Box>
 
                 <FormControl fullWidth required>
-                    <InputLabel>Категория</InputLabel>
-                    <Select
-                        value={listing.category_id}
-                        onChange={(e) => setListing({ ...listing, category_id: e.target.value })}
-                    >
-                        {categories.map((category) => (
-                            <MenuItem key={category.id} value={category.id}>
-                                {category.name}
-                            </MenuItem>
-                        ))}
-                    </Select>
+                    <InputLabel>{t('listings.create.category')}</InputLabel>
+                    <Box sx={{ mt: 2 }}>
+                        <VirtualizedCategoryTree
+                            selectedId={listing.category_id}
+                            onSelectCategory={(id) => {
+                                setListing(prev => ({
+                                    ...prev,
+                                    category_id: id
+                                }));
+                            }}
+                        />
+                    </Box>
                 </FormControl>
 
                 <Box sx={{ mt: 1 }}>
@@ -144,9 +145,9 @@ const MobileCreateListingForm = ({
                     }}
                 />
 
-                <Box sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', 
+                <Box sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
                     gap: 1,
                     mt: 1
                 }}>
@@ -176,7 +177,7 @@ const MobileCreateListingForm = ({
                     ))}
                 </Box>
 
-                               <Button
+                <Button
                     id="createAnnouncementButton"
                     type="submit"
                     variant="contained"
