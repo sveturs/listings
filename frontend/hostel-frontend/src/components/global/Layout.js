@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { ShoppingBag } from '@mui/icons-material';
 import { Storefront } from '@mui/icons-material';
-import MessageIcon from '@mui/icons-material/Message';
 import NewMessageIndicator from './NewMessageIndicator';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
-import ChatService from '../marketplace/chat/ChatService';
 import { Bookmark } from '@mui/icons-material';
 import UserProfile from "../user/UserProfile";
 import { useChat } from '../../contexts/ChatContext';
 import LanguageSwitcher from '../shared/LanguageSwitcher';
-import NotificationBadge from '../notifications/NotificationBadge';
 import NotificationDrawer from '../notifications/NotificationDrawer';
 import { Settings } from '@mui/icons-material';
 import { AccountBalanceWallet } from '@mui/icons-material';
