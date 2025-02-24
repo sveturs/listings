@@ -25,15 +25,19 @@ fi
 # Save uploaded images
 cp -r backend/uploads /tmp/hostel-backup/ 2>/dev/null || true
 
-# Backup database
-echo "Creating database backup..."
-BACKUP_FILE="/tmp/hostel-backup/db/backup_$(date +%Y%m%d_%H%M%S).sql"
-docker-compose -f docker-compose.prod.yml exec -T db pg_dumpall -U postgres > "$BACKUP_FILE"
-if [ $? -ne 0 ]; then
-    echo "Database backup failed!"
-    exit 1
+# Backup database only if container is running
+echo "Attempting database backup..."
+if docker-compose -f docker-compose.prod.yml ps | grep -q "db.*Up"; then
+  BACKUP_FILE="/tmp/hostel-backup/db/backup_$(date +%Y%m%d_%H%M%S).sql"
+  docker-compose -f docker-compose.prod.yml exec -T db pg_dumpall -U postgres > "$BACKUP_FILE"
+  if [ $? -eq 0 ]; then
+    echo "Database backup created at $BACKUP_FILE"
+  else
+    echo "Database backup failed, but continuing with deployment"
+  fi
+else
+  echo "Database not running, skipping backup"
 fi
-echo "Database backup created at $BACKUP_FILE"
 
 # Clean git state
 git fetch origin
@@ -92,21 +96,25 @@ fi
 echo "Running migrations..."
 docker run --rm --network hostel-booking-system_hostel_network -v $(pwd)/backend/migrations:/migrations migrate/migrate -path=/migrations/ -database="postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable" up
 
-# Restore database data
-echo "Restoring database data..."
-cat "$BACKUP_FILE" | docker-compose -f docker-compose.prod.yml exec -T db psql -U postgres
-if [ $? -ne 0 ]; then
-    echo "Database restore failed!"
-    exit 1
+# Restore database data if there's a backup
+if [ -n "$(ls -t /tmp/hostel-backup/db/*.sql 2>/dev/null | head -1)" ]; then
+  LATEST_BACKUP=$(ls -t /tmp/hostel-backup/db/*.sql | head -1)
+  echo "Restoring database from $LATEST_BACKUP..."
+  cat "$LATEST_BACKUP" | docker-compose -f docker-compose.prod.yml exec -T db psql -U postgres
+  if [ $? -eq 0 ]; then
+    echo "Database restored successfully"
+  else
+    echo "Database restore failed, but continuing deployment"
+  fi
+else
+  echo "No database backup found, skipping restore"
 fi
-echo "Database restored successfully"
 
 # Start remaining services
 echo "Starting services..."
 docker-compose -f docker-compose.prod.yml up --build -d
 
 # Keep last 5 backups and remove older ones
-cd /tmp/hostel-backup/db
-ls -t *.sql | tail -n +6 | xargs rm -f 2>/dev/null || true
+find /tmp/hostel-backup/db -name "*.sql" -type f | sort -r | tail -n +6 | xargs rm -f 2>/dev/null || true
 
 echo "Deployment completed!"
