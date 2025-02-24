@@ -63,12 +63,41 @@ docker network prune -f || true
 # Build frontend
 echo "Building frontend..."
 cd frontend/hostel-frontend
-NODE_ENV=production docker run -v $(pwd):/app -w /app node:18 sh -c "\
-  npm cache clean --force && \
-  npm install --legacy-peer-deps && \
-  npm install react-scripts@5.0.1 --save --legacy-peer-deps && \
-  npm install ajv@6.12.6 ajv-keywords@3.5.2 schema-utils@3.1.1 --legacy-peer-deps && \
-  npm run build"
+
+# Create a custom script for frontend build with additional package installations
+cat > build_frontend.sh << 'EOL'
+#!/bin/sh
+set -e
+echo "Installing dependencies..."
+npm cache clean --force
+npm install --legacy-peer-deps
+
+# Install common packages that might be required
+echo "Installing React Scripts and other dependencies..."
+npm install react-scripts@5.0.1 --save --legacy-peer-deps
+npm install ajv@6.12.6 ajv-keywords@3.5.2 schema-utils@3.1.1 --legacy-peer-deps
+
+# Install packages that are often missing
+echo "Installing additional dependencies that might be needed..."
+npm install react-query@3.39.3 --legacy-peer-deps
+npm install @tanstack/react-query --legacy-peer-deps
+npm install axios --legacy-peer-deps
+npm install react-router-dom --legacy-peer-deps
+npm install date-fns --legacy-peer-deps
+
+echo "Running build..."
+npm run build
+EOL
+
+chmod +x build_frontend.sh
+NODE_ENV=production docker run -v $(pwd):/app -w /app node:18 sh -c "./build_frontend.sh"
+
+# Check if build succeeded
+if [ ! -d "build" ] || [ -z "$(ls -A build)" ]; then
+  echo "Frontend build failed. Check the logs above for errors."
+  exit 1
+fi
+
 cd ../..
 
 # Start database
