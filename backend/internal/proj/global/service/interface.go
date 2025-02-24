@@ -10,6 +10,7 @@ import (
     notificationService "backend/internal/proj/notifications/service"
     translationService "backend/internal/proj/marketplace/service" 
     balanceService "backend/internal/proj/balance/service"
+        paymentService "backend/internal/proj/payments/service"
 )
 
 type ServicesInterface interface {
@@ -22,5 +23,6 @@ type ServicesInterface interface {
     Notification() notificationService.NotificationServiceInterface
     Translation() translationService.TranslationServiceInterface  
     Balance() balanceService.BalanceServiceInterface
+    Payment() paymentService.PaymentServiceInterface 
 
 }

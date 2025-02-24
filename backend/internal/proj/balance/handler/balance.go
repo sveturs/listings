@@ -8,16 +8,19 @@ import (
 	"backend/internal/domain/models" 
     "strconv"
 	"log"
-	"strings"  
+	paymentService "backend/internal/proj/payments/service" 
+	//"strings"  
 )
 
 type BalanceHandler struct {
-    balanceService balance.BalanceServiceInterface // Используем balance вместо service
+    balanceService balance.BalanceServiceInterface
+    paymentService paymentService.PaymentServiceInterface  // Теперь используем импортированный пакет
 }
 
-func NewBalanceHandler(balanceService balance.BalanceServiceInterface) *BalanceHandler { // Используем balance вместо service
+func NewBalanceHandler(balanceService balance.BalanceServiceInterface, paymentService paymentService.PaymentServiceInterface) *BalanceHandler {
     return &BalanceHandler{
         balanceService: balanceService,
+        paymentService: paymentService,
     }
 }
  
@@ -59,22 +62,21 @@ func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
 
     log.Printf("Processing deposit request: amount=%f, method=%s", request.Amount, request.PaymentMethod)
 
-    transaction, err := h.balanceService.CreateDeposit(c.Context(), userID, request.Amount, request.PaymentMethod)
+    // Создаем платежную сессию вместо прямого создания депозита
+    session, err := h.paymentService.CreatePaymentSession(
+        c.Context(), 
+        userID, 
+        request.Amount, 
+        "rsd", 
+        request.PaymentMethod,
+    )
     if err != nil {
-        log.Printf("Error creating deposit: %v", err)
-        
-        switch {
-        case strings.Contains(err.Error(), "below minimum allowed"):
-            return utils.ErrorResponse(c, fiber.StatusBadRequest, err.Error())
-        case strings.Contains(err.Error(), "above maximum allowed"):
-            return utils.ErrorResponse(c, fiber.StatusBadRequest, err.Error())
-        default:
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка обработки депозита")
-        }
+        log.Printf("Error creating payment session: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create payment")
     }
 
-    log.Printf("Successfully created deposit transaction: %+v", transaction)
-    return utils.SuccessResponse(c, transaction)
+    log.Printf("Created payment session: %+v", session)
+    return utils.SuccessResponse(c, session)
 }
 
 

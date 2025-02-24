@@ -64,7 +64,17 @@ docker network prune -f || true
 echo "Собираем фронтенд..."
 cd frontend/hostel-frontend
 
-# Создаем кастомный скрипт для сборки фронтенда с установкой дополнительных пакетов
+# Создаем измененный package.json с дополнительными зависимостями
+echo "Добавляем необходимые зависимости в package.json..."
+if [ -f "package.json" ]; then
+  # Сохраняем оригинальный package.json
+  cp package.json package.json.orig
+  
+  # Добавляем react-query в зависимости
+  sed -i 's/"dependencies": {/"dependencies": {\n    "react-query": "^3.39.3",\n    "react-window": "^1.8.9",/g' package.json
+fi
+
+# Создаем кастомный скрипт для сборки фронтенда
 cat > build_frontend.sh << 'EOL'
 #!/bin/sh
 set -e
@@ -72,32 +82,58 @@ echo "Устанавливаем зависимости..."
 npm cache clean --force
 npm install --legacy-peer-deps
 
+# Проверяем, установился ли react-query
+if ! npm list react-query >/dev/null 2>&1; then
+  echo "Принудительная установка react-query..."
+  npm install react-query@3.39.3 --save --legacy-peer-deps
+fi
+
+# Проверяем, установился ли react-window
+if ! npm list react-window >/dev/null 2>&1; then
+  echo "Принудительная установка react-window..."
+  npm install react-window@1.8.9 --save --legacy-peer-deps
+fi
+
 # Устанавливаем react-scripts
 echo "Устанавливаем React Scripts и другие основные зависимости..."
 npm install react-scripts@5.0.1 --save --legacy-peer-deps
 npm install ajv@6.12.6 ajv-keywords@3.5.2 schema-utils@3.1.1 --legacy-peer-deps
 
-# Устанавливаем пакеты, которых может не хватать
-echo "Устанавливаем дополнительные зависимости, которые могут потребоваться..."
-npm install react-window --legacy-peer-deps
-npm install react-virtualized --legacy-peer-deps
-npm install @tanstack/react-query --legacy-peer-deps
-npm install @tanstack/react-table --legacy-peer-deps
-npm install @mui/x-date-pickers --legacy-peer-deps
-npm install @faker-js/faker --legacy-peer-deps
-npm install framer-motion --legacy-peer-deps
+echo "Пробуем сборку проекта..."
+npm run build || {
+  echo "Сборка не удалась, пробуем установить дополнительные зависимости..."
 
-# Проверяем и устанавливаем пакеты из сообщений об ошибках
-if grep -q "Can't resolve" npm-debug.log 2>/dev/null; then
-  echo "Устанавливаем пакеты из сообщений об ошибках..."
-  for pkg in $(grep -o "'[^']*'" npm-debug.log | grep -v node_modules | sed "s/'//g"); do
-    echo "Установка $pkg..."
-    npm install $pkg --legacy-peer-deps || true
-  done
-fi
-
-echo "Запускаем сборку..."
-npm run build
+  # Анализируем ошибки сборки
+  npm run build 2>&1 | tee build_error.log
+  
+  # Находим все упоминания о недостающих пакетах
+  if grep -q "Can't resolve" build_error.log; then
+    packages=$(grep -o "Can't resolve '[^']*'" build_error.log | sed "s/Can't resolve '//g" | sed "s/'//g")
+    echo "Найдены отсутствующие пакеты: $packages"
+    
+    for pkg in $packages; do
+      echo "Устанавливаем $pkg..."
+      npm install "$pkg" --save --legacy-peer-deps
+    done
+    
+    # Пробуем собрать снова
+    echo "Пробуем собрать проект снова..."
+    npm run build || {
+      echo "Сборка не удалась повторно. Пробуем последний вариант..."
+      
+      # Особые случаи для конкретных пакетов
+      if grep -q "Can't resolve 'react-query'" build_error.log; then
+        echo "Особый случай для react-query..."
+        npm uninstall react-query
+        npm install react-query@3.39.0 --legacy-peer-deps
+        npm install @tanstack/react-query --legacy-peer-deps
+      fi
+      
+      # Последняя попытка
+      npm run build
+    }
+  fi
+}
 EOL
 
 chmod +x build_frontend.sh
@@ -105,40 +141,8 @@ NODE_ENV=production docker run -v $(pwd):/app -w /app node:18 sh -c "./build_fro
 
 # Проверяем, успешно ли прошла сборка
 if [ ! -d "build" ] || [ -z "$(ls -A build)" ]; then
-  echo "Сборка фронтенда не удалась. Проверьте логи выше на наличие ошибок."
-  
-  # Если сборка не удалась, попробуем установить все недостающие пакеты
-  echo "Пытаемся исправить ошибки сборки..."
-  
-  cat > fix_build.sh << 'EOL'
-#!/bin/sh
-set -e
-
-# Сначала сохраним лог с ошибками
-npm run build > build_errors.log 2>&1 || true
-
-# Находим все сообщения об отсутствующих пакетах
-if grep -q "Can't resolve" build_errors.log; then
-  echo "Найдены отсутствующие пакеты, устанавливаем их..."
-  for pkg in $(grep -o "Can't resolve '[^']*'" build_errors.log | sed "s/Can't resolve '//g" | sed "s/'//g"); do
-    echo "Устанавливаем $pkg..."
-    npm install $pkg --legacy-peer-deps || true
-  done
-  
-  # Пробуем собрать снова
-  echo "Пробуем собрать снова..."
-  npm run build
-fi
-EOL
-  
-  chmod +x fix_build.sh
-  NODE_ENV=production docker run -v $(pwd):/app -w /app node:18 sh -c "./fix_build.sh"
-  
-  # Проверяем еще раз
-  if [ ! -d "build" ] || [ -z "$(ls -A build)" ]; then
-    echo "Не удалось исправить ошибки сборки. Деплой прерван."
-    exit 1
-  fi
+  echo "Сборка фронтенда не удалась. Деплой прерван."
+  exit 1
 fi
 
 cd ../..

@@ -12,6 +12,6 @@ type Handler struct {
 
 func NewHandler(services globalService.ServicesInterface) *Handler {
     return &Handler{
-        Balance: NewBalanceHandler(services.Balance()),
+        Balance: NewBalanceHandler(services.Balance(), services.Payment()),
     }
 }

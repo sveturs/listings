@@ -14,6 +14,7 @@ import (
     "backend/internal/middleware"
     "backend/internal/storage/postgres"
     balanceHandler "backend/internal/proj/balance/handler" 
+        paymentService "backend/internal/proj/payments/service"
     "context"
     "fmt"
     "log"
@@ -32,7 +33,7 @@ type Server struct {
     marketplace   *marketplaceHandler.Handler
     notifications *notificationHandler.Handler
     balance       *balanceHandler.Handler
-
+    payments      paymentService.PaymentServiceInterface 
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -73,6 +74,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
         marketplace:   marketplaceHandler,
         notifications: notificationsHandler,
         balance:       balanceHandler,
+        payments:      services.Payment(), 
     }
 
     // Инициализируем webhooks для телеграма
@@ -136,6 +138,19 @@ func (s *Server) setupRoutes() {
     balanceRoutes.Get("/transactions", s.balance.Balance.GetTransactions)
     balanceRoutes.Get("/payment-methods", s.balance.Balance.GetPaymentMethods)
     balanceRoutes.Post("/deposit", s.balance.Balance.CreateDeposit)
+
+    s.app.Post("/webhook/stripe", func(c *fiber.Ctx) error {
+        payload := c.Body()
+        signature := c.Get("Stripe-Signature")
+    
+        err := s.payments.HandleWebhook(c.Context(), payload, signature)
+        if err != nil {
+            log.Printf("Webhook error: %v", err)
+            return c.SendStatus(fiber.StatusBadRequest)
+        }
+    
+        return c.SendStatus(fiber.StatusOK)
+    })
 
     // Public marketplace routes
     marketplace := s.app.Group("/api/v1/marketplace")

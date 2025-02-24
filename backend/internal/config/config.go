@@ -15,9 +15,13 @@ type Config struct {
 	FrontendURL        string
 	Environment        string
 	OpenAIAPIKey       string
+	    StripeAPIKey       string
+    StripeWebhookSecret string
 }
 
 func NewConfig() (*Config, error) {
+	
+	config := &Config{}
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
@@ -55,7 +59,8 @@ func NewConfig() (*Config, error) {
 	if environment == "" {
 		environment = "development"
 	}
-
+    config.StripeAPIKey = os.Getenv("STRIPE_API_KEY")
+    config.StripeWebhookSecret = os.Getenv("STRIPE_WEBHOOK_SECRET")
 	return &Config{
 		Port:               port,
 		DatabaseURL:        dbURL,
@@ -65,5 +70,7 @@ func NewConfig() (*Config, error) {
 		FrontendURL:        frontendURL,
 		Environment:        environment,
 		OpenAIAPIKey:       openAIAPIKey,
+		StripeAPIKey:       config.StripeAPIKey,
+		StripeWebhookSecret: config.StripeWebhookSecret, 
 	}, nil
 }

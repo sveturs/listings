@@ -49,29 +49,30 @@ const DepositDialog = ({ open, onClose, onBalanceUpdate }) => { // Добавл�
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/v1/balance/deposit', {
-        amount: parseFloat(amount),
-        payment_method: paymentMethod
-      });
+        const response = await axios.post('/api/v1/balance/deposit', {
+            amount: parseFloat(amount),
+            payment_method: paymentMethod
+        });
 
-      if (!response.data?.success) {
-        throw new Error(response.data?.message || 'Unknown error');
-      }
+        if (!response.data?.success) {
+            throw new Error(response.data?.message || 'Unknown error');
+        }
 
-      // Обновляем баланс только после успешного депозита
-      const balanceRes = await axios.get('/api/v1/balance');
-      if (balanceRes.data?.data) {
-        onBalanceUpdate?.(balanceRes.data.data.balance); // Используем опциональную цепочку
-      }
-
-      onClose();
+        // Получаем URL для оплаты от Stripe
+        const paymentSession = response.data.data;
+        
+        if (paymentSession.payment_url) {
+            // Перенаправляем на страницу оплаты Stripe
+            window.location.href = paymentSession.payment_url;
+        } else {
+            throw new Error('Payment URL not provided');
+        }
     } catch (err) {
-      console.error('Deposit error:', err);
-      setError(err.response?.data?.message || t('balance.errors.depositFailed'));
-    } finally {
-      setLoading(false);
+        console.error('Deposit error:', err);
+        setError(err.response?.data?.message || t('balance.errors.depositFailed'));
+        setLoading(false);
     }
-  };
+};
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>

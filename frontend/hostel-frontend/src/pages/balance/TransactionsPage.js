@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
 import BalanceWidget from '../../components/balance/BalanceWidget';
 import DepositDialog from '../../components/balance/DepositDialog';
+import { useLocation } from 'react-router-dom';
 
 const TransactionsPage = () => {
   const { t } = useTranslation('common');
@@ -31,6 +32,8 @@ const TransactionsPage = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [depositDialogOpen, setDepositDialogOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const location = useLocation();
   const handleBalanceUpdate = (newBalance) => {
     setBalance(newBalance);
     fetchData(); // Обновляем список транзакций
@@ -79,17 +82,46 @@ const TransactionsPage = () => {
     }).format(amount);
   };
 
-  if (loading) {
+
+  useEffect(() => {
+    // Проверяем параметры URL
+    const params = new URLSearchParams(location.search);
+    if (params.has('success') && params.get('success') === 'true') {
+        setPaymentStatus('success');
+    } else if (params.has('canceled') && params.get('canceled') === 'true') {
+        setPaymentStatus('canceled');
+    }
+
+    // Очищаем параметры URL
+    if (params.has('success') || params.has('canceled')) {
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        
+        // Обновляем данные
+        fetchData();
+    }
+}, [location]);
+if (loading) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
         <CircularProgress />
       </Box>
     );
   }
-
-  return (
-<Container maxWidth="lg" sx={{ py: 4 }}>
-    <Typography variant="h4" gutterBottom>
+return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+        {paymentStatus === 'success' && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+                {t('balance.paymentSuccess')}
+            </Alert>
+        )}
+        
+        {paymentStatus === 'canceled' && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+                {t('balance.paymentCanceled')}
+            </Alert>
+        )}
+            <Typography variant="h4" gutterBottom>
       {t('balance.title')}
     </Typography>
 

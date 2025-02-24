@@ -11,6 +11,7 @@ import (
     notificationService "backend/internal/proj/notifications/service"
     translationService "backend/internal/proj/marketplace/service"
     balance "backend/internal/proj/balance/service"
+        payment "backend/internal/proj/payments/service"
 )
 
 type Service struct {
@@ -22,10 +23,22 @@ type Service struct {
     notification  *notificationService.Service
     translation   translationService.TranslationServiceInterface
     balance       *balance.BalanceService
+    payment       payment.PaymentServiceInterface
+    
 }
+
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
     notificationSvc := notificationService.NewService(storage)
+    balanceSvc := balance.NewBalanceService(storage)
+    
+    // Создаем сервис платежей с передачей сервиса баланса
+    stripeService := payment.NewStripeService(
+        cfg.StripeAPIKey, 
+        cfg.StripeWebhookSecret, 
+        cfg.FrontendURL,
+        balanceSvc,
+    )
 
     return &Service{
         users:        userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
@@ -35,13 +48,18 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
         config:       cfg,
         notification: notificationSvc,
         translation:  translationSvc,
-        balance:      balance.NewBalanceService(storage),
+        balance:      balanceSvc,
+        payment:      stripeService,
     }
+}
+
+func (s *Service) Payment() payment.PaymentServiceInterface {
+    return s.payment
 }
 func (s *Service) Balance() balance.BalanceServiceInterface {
     return s.balance
 }
-
+ 
 // Остальные методы интерфейса ServicesInterface
 func (s *Service) Auth() userService.AuthServiceInterface {
     return s.users.Auth
