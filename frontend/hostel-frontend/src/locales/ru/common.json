@@ -20,7 +20,38 @@
       "messages": "Сообщения",
       "profile": "Профиль",
       "notifications": "Уведомления",
-      "settings": "Настройки"
+      "settings": "Настройки",
+      "balance": "Баланс"
+    },
+    "balance": {
+      "title": "Баланс и транзакции",
+      "available": "Доступный баланс",
+      "deposit": "Пополнить",
+      "confirmDeposit": "Подтвердить пополнение",
+      "processing": "Обработка...",
+      "amount": "Сумма",
+      "paymentMethod": "Способ оплаты",
+      "date": "Дата",
+      "type": "Тип",
+      "description": "Описание",
+      "status": "Статус",
+      "fee": "Комиссия: {{fixed}} RSD + {{percent}}%",
+      "types": {
+        "deposit": "Пополнение",
+        "withdrawal": "Вывод",
+        "payment": "Оплата",
+        "transfer": "Перевод"
+      },
+      "statuses": {
+        "pending": "В обработке",
+        "completed": "Выполнено",
+        "failed": "Ошибка"
+      },
+      "errors": {
+        "loadFailed": "Не удалось загрузить данные баланса",
+        "depositFailed": "Ошибка пополнения баланса",
+        "loadPaymentMethods": "Не удалось загрузить методы оплаты"
+      }
     },
     "auth": {
       "signIn": "Войти",

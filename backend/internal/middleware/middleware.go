@@ -3,7 +3,8 @@ package middleware
 
 import (
 	"backend/internal/config"
-
+"log"
+"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -29,13 +30,15 @@ func (m *Middleware) Setup(app *fiber.App) {
 
 // ErrorHandler обрабатывает все ошибки приложения
 func (m *Middleware) ErrorHandler(c *fiber.Ctx, err error) error {
-	code := fiber.StatusInternalServerError
+    code := fiber.StatusInternalServerError
+    message := "Internal Server Error"
 
-	if e, ok := err.(*fiber.Error); ok {
-		code = e.Code
-	}
+    if e, ok := err.(*fiber.Error); ok {
+        code = e.Code
+        message = e.Message
+    }
 
-	return c.Status(code).JSON(fiber.Map{
-		"error": err.Error(),
-	})
+    log.Printf("Error handling request: %v", err)
+
+    return utils.ErrorResponse(c, code, message)
 }

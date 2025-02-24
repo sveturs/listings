@@ -8,10 +8,8 @@ import (
 	"fmt"
 	"sync"
 
-)
-import (
     "backend/internal/proj/notifications/service"
-//    notificationService "backend/internal/proj/notifications/service"
+
 )
 
 type ChatService struct {

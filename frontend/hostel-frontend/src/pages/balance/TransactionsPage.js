@@ -1,0 +1,163 @@
+// frontend/hostel-frontend/src/pages/balance/TransactionsPage.js
+
+import React, { useState, useEffect } from 'react';
+import {
+  Container,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Chip,
+  Box,
+  Alert,
+  CircularProgress
+} from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import axios from '../../api/axios';
+import BalanceWidget from '../../components/balance/BalanceWidget';
+import DepositDialog from '../../components/balance/DepositDialog';
+
+const TransactionsPage = () => {
+  const { t } = useTranslation('common');
+  const [transactions, setTransactions] = useState([]);
+  const [balance, setBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [depositDialogOpen, setDepositDialogOpen] = useState(false);
+  const handleBalanceUpdate = (newBalance) => {
+    setBalance(newBalance);
+    fetchData(); // Обновляем список транзакций
+};
+
+  const fetchData = async () => {
+    try {
+      const [balanceRes, transactionsRes] = await Promise.all([
+        axios.get('/api/v1/balance'),
+        axios.get('/api/v1/balance/transactions', {
+          params: {
+            limit: rowsPerPage,
+            offset: page * rowsPerPage
+          }
+        })
+      ]);
+  
+      // Проверяем что данные существуют перед установкой
+      if (balanceRes.data?.data) {
+        setBalance(balanceRes.data.data.balance);
+      }
+      
+      // Проверяем что транзакции существуют
+      if (transactionsRes.data?.data) {
+        setTransactions(transactionsRes.data.data);
+      } else {
+        setTransactions([]); // Если данных нет - устанавливаем пустой массив
+      }
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError(t('balance.errors.loadFailed'));
+      setTransactions([]); // При ошибке устанавливаем пустой массив
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchData();
+  }, [page, rowsPerPage]);
+
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat('sr-RS', {
+      style: 'currency',
+      currency: 'RSD',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" p={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+<Container maxWidth="lg" sx={{ py: 4 }}>
+    <Typography variant="h4" gutterBottom>
+      {t('balance.title')}
+    </Typography>
+
+    {error && (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        {error}
+      </Alert>
+    )}
+
+     <BalanceWidget
+      balance={balance}
+      onDeposit={() => setDepositDialogOpen(true)}
+    />
+
+    <Paper sx={{ mt: 4 }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>{t('balance.date')}</TableCell>
+                <TableCell>{t('balance.type')}</TableCell>
+                <TableCell>{t('balance.description')}</TableCell>
+                <TableCell align="right">{t('balance.amount')}</TableCell>
+                <TableCell>{t('balance.status')}</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {transactions.map((transaction) => (
+                <TableRow key={transaction.id}>
+                  <TableCell>
+                    {new Date(transaction.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>{t(`balance.types.${transaction.type}`)}</TableCell>
+                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell align="right">
+                    {formatAmount(transaction.amount)}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={t(`balance.statuses.${transaction.status}`)}
+                      color={transaction.status === 'completed' ? 'success' : 'default'}
+                      size="small"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          component="div"
+          count={-1}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+        />
+      </Paper>
+      <DepositDialog
+        open={depositDialogOpen}
+        onClose={() => setDepositDialogOpen(false)}
+        onBalanceUpdate={handleBalanceUpdate}
+      />
+    </Container>
+  );
+};
+
+export default TransactionsPage;

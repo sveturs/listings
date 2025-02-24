@@ -13,6 +13,7 @@ import (
     "backend/internal/config"
     "backend/internal/middleware"
     "backend/internal/storage/postgres"
+    balanceHandler "backend/internal/proj/balance/handler" 
     "context"
     "fmt"
     "log"
@@ -30,6 +31,8 @@ type Server struct {
     review        *reviewHandler.Handler
     marketplace   *marketplaceHandler.Handler
     notifications *notificationHandler.Handler
+    balance       *balanceHandler.Handler
+
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -49,7 +52,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
     reviewHandler := reviewHandler.NewHandler(services)
     marketplaceHandler := marketplaceHandler.NewHandler(services)
     notificationsHandler := notificationHandler.NewHandler(services)
-    
+    balanceHandler := balanceHandler.NewHandler(services)
     middleware := middleware.NewMiddleware(cfg, services)
 
     app := fiber.New(fiber.Config{
@@ -69,6 +72,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
         review:        reviewHandler,
         marketplace:   marketplaceHandler,
         notifications: notificationsHandler,
+        balance:       balanceHandler,
     }
 
     // Инициализируем webhooks для телеграма
@@ -125,6 +129,13 @@ func (s *Server) setupRoutes() {
         log.Printf("Received webhook request: %s", string(c.Body()))
         return s.notifications.Notification.HandleTelegramWebhook(c)
     })
+
+    // Balance routes
+    balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequired)
+    balanceRoutes.Get("/", s.balance.Balance.GetBalance)                // Добавляем .Balance
+    balanceRoutes.Get("/transactions", s.balance.Balance.GetTransactions)
+    balanceRoutes.Get("/payment-methods", s.balance.Balance.GetPaymentMethods)
+    balanceRoutes.Post("/deposit", s.balance.Balance.CreateDeposit)
 
     // Public marketplace routes
     marketplace := s.app.Group("/api/v1/marketplace")

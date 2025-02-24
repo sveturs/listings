@@ -75,27 +75,50 @@ var (
 
 func (h *MarketplaceHandler) GetCategoryTree(c *fiber.Ctx) error {
     categoryTreeMutex.RLock()
-    if time.Since(categoryTreeLastUpdate) < 5*time.Minute && categoryTreeCache != nil {
-        defer categoryTreeMutex.RUnlock()
-        return utils.SuccessResponse(c, categoryTreeCache)
+    if time.Since(categoryTreeLastUpdate) < 5*time.Minute && categoryTreeCache != nil && len(categoryTreeCache) > 0 {
+        categories := categoryTreeCache
+        categoryTreeMutex.RUnlock()
+        return utils.SuccessResponse(c, categories)
     }
     categoryTreeMutex.RUnlock()
 
     categoryTreeMutex.Lock()
     defer categoryTreeMutex.Unlock()
 
+    // Повторная проверка после получения блокировки
+    if time.Since(categoryTreeLastUpdate) < 5*time.Minute && categoryTreeCache != nil && len(categoryTreeCache) > 0 {
+        return utils.SuccessResponse(c, categoryTreeCache)
+    }
+
     categories, err := h.marketplaceService.GetCategoryTree(c.Context())
     if err != nil {
+        // В случае ошибки очищаем кеш
+        categoryTreeCache = nil
+        categoryTreeLastUpdate = time.Time{}
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching category tree")
     }
 
+    // Проверяем валидность полученных данных
+    if len(categories) == 0 {
+        // Если данные пустые, не кешируем их
+        categoryTreeCache = nil
+        categoryTreeLastUpdate = time.Time{}
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Received empty category tree")
+    }
+
+    // Сохраняем только валидные данные
     categoryTreeCache = categories
     categoryTreeLastUpdate = time.Now()
 
     return utils.SuccessResponse(c, categories)
 }
 
-
+func (h *MarketplaceHandler) InvalidateCategoryCache() {
+    categoryTreeMutex.Lock()
+    defer categoryTreeMutex.Unlock()
+    categoryTreeCache = nil
+    categoryTreeLastUpdate = time.Time{}
+}
 func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 	log.Printf("Starting image upload for listing ID: %v", c.Params("id"))
 	listingID, err := c.ParamsInt("id")

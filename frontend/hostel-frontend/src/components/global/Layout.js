@@ -15,6 +15,7 @@ import LanguageSwitcher from '../shared/LanguageSwitcher';
 import NotificationBadge from '../notifications/NotificationBadge';
 import NotificationDrawer from '../notifications/NotificationDrawer';
 import { Settings } from '@mui/icons-material';
+import { AccountBalanceWallet } from '@mui/icons-material';
 
 import {
   AppBar,
@@ -281,7 +282,10 @@ const Layout = ({ children }) => {
                       <Bookmark fontSize="small" sx={{ mr: 1 }} />
                       {t('navigation.favorites')}
                     </MenuItem>
-
+                    <MenuItem component={Link} to="/balance" onClick={handleCloseMenu}>
+  <AccountBalanceWallet fontSize="small" sx={{ mr: 1 }} />
+  {t('navigation.balance')}
+</MenuItem>
                     <Divider />
                     <MenuItem onClick={logout}>
                       <Logout fontSize="small" sx={{ mr: 1 }} />

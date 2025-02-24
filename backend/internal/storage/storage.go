@@ -67,6 +67,13 @@ type Storage interface {
 	RemoveFromFavorites(ctx context.Context, userID int, listingID int) error
 	GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error)
 
+    // Balance methods
+    GetUserBalance(ctx context.Context, userID int) (*models.UserBalance, error)
+    GetUserTransactions(ctx context.Context, userID int, limit, offset int) ([]models.BalanceTransaction, error)
+    CreateTransaction(ctx context.Context, transaction *models.BalanceTransaction) (int, error)
+    GetActivePaymentMethods(ctx context.Context) ([]models.PaymentMethod, error)
+    UpdateBalance(ctx context.Context, userID int, amount float64) error
+    BeginTx(ctx context.Context, opts *sql.TxOptions) (Transaction, error)
 	// Marketplace Chat methods
 	CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error
 	GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error)
@@ -82,7 +89,13 @@ type Storage interface {
 	Close()
 	Ping(ctx context.Context) error
 }
-
+type Transaction interface {
+    Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+    Query(ctx context.Context, query string, args ...interface{}) (Rows, error)
+    QueryRow(ctx context.Context, query string, args ...interface{}) Row
+    Commit() error
+    Rollback() error
+}
 type Row interface {
 	Scan(dest ...interface{}) error
 }

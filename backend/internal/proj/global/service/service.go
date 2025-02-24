@@ -1,4 +1,5 @@
 // backend/internal/proj/global/service/service.go
+
 package service
 
 import (
@@ -8,8 +9,8 @@ import (
     marketplaceService "backend/internal/proj/marketplace/service"
     reviewService "backend/internal/proj/reviews/service"
     notificationService "backend/internal/proj/notifications/service"
-    translationService "backend/internal/proj/marketplace/service"  // правильный импорт
-    //"log"
+    translationService "backend/internal/proj/marketplace/service"
+    balance "backend/internal/proj/balance/service"
 )
 
 type Service struct {
@@ -19,38 +20,35 @@ type Service struct {
     chat          *marketplaceService.Service
     config        *config.Config
     notification  *notificationService.Service
-     translation   translationService.TranslationServiceInterface
+    translation   translationService.TranslationServiceInterface
+    balance       *balance.BalanceService
 }
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
     notificationSvc := notificationService.NewService(storage)
-    
+
     return &Service{
         users:        userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
-        marketplace: marketplaceService.NewService(storage, notificationSvc.Notification),
-        review:      reviewService.NewService(storage),
-        chat:        marketplaceService.NewService(storage, notificationSvc.Notification),
-        config:      cfg,
+        marketplace:  marketplaceService.NewService(storage, notificationSvc.Notification),
+        review:       reviewService.NewService(storage),
+        chat:         marketplaceService.NewService(storage, notificationSvc.Notification),
+        config:       cfg,
         notification: notificationSvc,
-        translation:  translationSvc, // используем переданный сервис
+        translation:  translationSvc,
+        balance:      balance.NewBalanceService(storage),
     }
 }
+func (s *Service) Balance() balance.BalanceServiceInterface {
+    return s.balance
+}
 
-// Implement interface methods
+// Остальные методы интерфейса ServicesInterface
 func (s *Service) Auth() userService.AuthServiceInterface {
     return s.users.Auth
 }
 
-func (s *Service) Notification() notificationService.NotificationServiceInterface {
-    return s.notification.Notification
-}
-
 func (s *Service) User() userService.UserServiceInterface {
     return s.users.User
-}
-
-func (s *Service) Translation() translationService.TranslationServiceInterface {
-    return s.translation
 }
 
 func (s *Service) Config() *config.Config {
@@ -67,4 +65,12 @@ func (s *Service) Review() reviewService.ReviewServiceInterface {
 
 func (s *Service) Chat() marketplaceService.ChatServiceInterface {
     return s.chat.Chat
+}
+
+func (s *Service) Notification() notificationService.NotificationServiceInterface {
+    return s.notification.Notification
+}
+
+func (s *Service) Translation() translationService.TranslationServiceInterface {
+    return s.translation
 }

@@ -106,6 +106,8 @@ func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int
 	return userIDs, nil
 }
 
+
+
 type pgxResult struct {
 	ct pgconn.CommandTag
 }
@@ -366,4 +368,44 @@ func (db *Database) MarkNotificationAsRead(ctx context.Context, userID int, noti
 
 func (db *Database) DeleteNotification(ctx context.Context, userID int, notificationID int) error {
 	return db.notificationsDB.DeleteNotification(ctx, userID, notificationID)
+}
+type pgxTransaction struct {
+    tx pgx.Tx
+}
+
+func (db *Database) BeginTx(ctx context.Context, opts *sql.TxOptions) (storage.Transaction, error) {
+    tx, err := db.pool.Begin(ctx)
+    if err != nil {
+        return nil, err
+    }
+    return &pgxTransaction{tx: tx}, nil
+}
+
+// Реализация методов интерфейса Transaction
+func (t *pgxTransaction) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+    ct, err := t.tx.Exec(ctx, query, args...)
+    if err != nil {
+        return nil, err
+    }
+    return &pgxResult{ct: ct}, nil
+}
+
+func (t *pgxTransaction) Query(ctx context.Context, query string, args ...interface{}) (storage.Rows, error) {
+    rows, err := t.tx.Query(ctx, query, args...)
+    if err != nil {
+        return nil, err
+    }
+    return &RowsWrapper{rows: rows}, nil
+}
+
+func (t *pgxTransaction) QueryRow(ctx context.Context, query string, args ...interface{}) storage.Row {
+    return t.tx.QueryRow(ctx, query, args...)
+}
+
+func (t *pgxTransaction) Commit() error {
+    return t.tx.Commit(context.Background())
+}
+
+func (t *pgxTransaction) Rollback() error {
+    return t.tx.Rollback(context.Background())
 }
