@@ -1,6 +1,7 @@
 // frontend/hostel-frontend/src/pages/balance/TransactionsPage.js
-
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Container,
   Typography,
@@ -15,16 +16,17 @@ import {
   Chip,
   Box,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Snackbar
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
 import BalanceWidget from '../../components/balance/BalanceWidget';
 import DepositDialog from '../../components/balance/DepositDialog';
-import { useLocation } from 'react-router-dom';
 
 const TransactionsPage = () => {
   const { t } = useTranslation('common');
+  const { checkAuth } = useAuth(); 
   const [transactions, setTransactions] = useState([]);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -34,13 +36,17 @@ const TransactionsPage = () => {
   const [depositDialogOpen, setDepositDialogOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const location = useLocation();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
   const handleBalanceUpdate = (newBalance) => {
     setBalance(newBalance);
     fetchData(); // Обновляем список транзакций
-};
+  };
 
   const fetchData = async () => {
     try {
+      console.log("Fetching balance data...");
       const [balanceRes, transactionsRes] = await Promise.all([
         axios.get('/api/v1/balance'),
         axios.get('/api/v1/balance/transactions', {
@@ -50,7 +56,11 @@ const TransactionsPage = () => {
           }
         })
       ]);
-  
+      
+      // Добавляем отладочный вывод
+      console.log("Balance response:", balanceRes.data);
+      console.log("Transactions response:", transactionsRes.data);
+
       // Проверяем что данные существуют перед установкой
       if (balanceRes.data?.data) {
         setBalance(balanceRes.data.data.balance);
@@ -70,9 +80,35 @@ const TransactionsPage = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchData();
   }, [page, rowsPerPage]);
+
+  useEffect(() => {
+    // Проверяем параметры URL
+    const params = new URLSearchParams(location.search);
+    if (params.has('success') && params.get('success') === 'true') {
+      setPaymentStatus('success');
+      
+      // После успешной оплаты обновляем сессию и затем данные
+      checkAuth().then(() => {
+        fetchData();
+      });
+      
+      // Показываем уведомление
+      setSnackbarMessage(t('balance.paymentSuccess'));
+      setSnackbarOpen(true);
+    } else if (params.has('canceled') && params.get('canceled') === 'true') {
+      setPaymentStatus('canceled');
+    }
+    
+    // Очищаем параметры URL
+    if (params.has('success') || params.has('canceled')) {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, [location, t, checkAuth]);
 
   const formatAmount = (amount) => {
     return new Intl.NumberFormat('sr-RS', {
@@ -82,61 +118,51 @@ const TransactionsPage = () => {
     }).format(amount);
   };
 
-
-  useEffect(() => {
-    // Проверяем параметры URL
-    const params = new URLSearchParams(location.search);
-    if (params.has('success') && params.get('success') === 'true') {
-        setPaymentStatus('success');
-    } else if (params.has('canceled') && params.get('canceled') === 'true') {
-        setPaymentStatus('canceled');
-    }
-
-    // Очищаем параметры URL
-    if (params.has('success') || params.has('canceled')) {
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-        
-        // Обновляем данные
-        fetchData();
-    }
-}, [location]);
-if (loading) {
+  if (loading) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
         <CircularProgress />
       </Box>
     );
   }
-return (
+
+  return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-        {paymentStatus === 'success' && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-                {t('balance.paymentSuccess')}
-            </Alert>
-        )}
-        
-        {paymentStatus === 'canceled' && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-                {t('balance.paymentCanceled')}
-            </Alert>
-        )}
-            <Typography variant="h4" gutterBottom>
-      {t('balance.title')}
-    </Typography>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+      />
 
-    {error && (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        {error}
-      </Alert>
-    )}
+      {paymentStatus === 'success' && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {t('balance.paymentSuccess')}
+        </Alert>
+      )}
+      
+      {paymentStatus === 'canceled' && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          {t('balance.paymentCanceled')}
+        </Alert>
+      )}
 
-     <BalanceWidget
-      balance={balance}
-      onDeposit={() => setDepositDialogOpen(true)}
-    />
+      <Typography variant="h4" gutterBottom>
+        {t('balance.title')}
+      </Typography>
 
-    <Paper sx={{ mt: 4 }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <BalanceWidget
+        balance={balance}
+        onDeposit={() => setDepositDialogOpen(true)}
+      />
+
+      <Paper sx={{ mt: 4 }}>
         <TableContainer>
           <Table>
             <TableHead>

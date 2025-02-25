@@ -13,6 +13,8 @@ import LanguageSwitcher from '../shared/LanguageSwitcher';
 import NotificationDrawer from '../notifications/NotificationDrawer';
 import { Settings } from '@mui/icons-material';
 import { AccountBalanceWallet } from '@mui/icons-material';
+import SveTuLogo from '../icons/SveTuLogo'; 
+
 
 import {
   AppBar,
@@ -69,9 +71,10 @@ const Layout = ({ children }) => {
     {
       path: "/",
       label: "Sve Tu",
-      icon: <Storefront fontSize="large" color="primary" />,
+      icon: <SveTuLogo width={60} height={60} />, 
     }
   ];
+  
   useEffect(() => {
   //  console.log('Current language:', i18n.language);
   //  console.log('Available languages:', i18n.languages);
