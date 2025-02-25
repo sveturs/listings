@@ -30,12 +30,22 @@ export const AuthProvider = ({ children }) => {
   // Обновляем метод проверки авторизации
   const checkAuth = async () => {
     try {
-      // Сначала проверяем локальную сессию
+      // Сначала проверяем URL на наличие токена сессии
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionTokenFromUrl = urlParams.get('session_token');
+      
+      // Если токен найден в URL, сохраняем его и используем
+      if (sessionTokenFromUrl) {
+        localStorage.setItem('user_session_token', sessionTokenFromUrl);
+        // Здесь можно добавить логику для использования этого токена при запросах
+      }
+  
+      // Затем проверяем локальную сессию
       const savedSession = loadSession();
       if (savedSession) {
         setUser(savedSession);
       }
-
+  
       // Затем делаем запрос к серверу для подтверждения
       const response = await axios.get('/auth/session');
       if (response.data.authenticated) {

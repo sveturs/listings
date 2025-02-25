@@ -91,6 +91,13 @@ const TransactionsPage = () => {
     if (params.has('success') && params.get('success') === 'true') {
       setPaymentStatus('success');
       
+      // Проверяем, есть ли токен сессии в URL
+      const sessionToken = params.get('session_token');
+      if (sessionToken) {
+        // Если есть токен сессии в URL, сохраняем его в localStorage
+        localStorage.setItem('user_session', sessionToken);
+      }
+      
       // После успешной оплаты обновляем сессию и затем данные
       checkAuth().then(() => {
         fetchData();
@@ -109,7 +116,7 @@ const TransactionsPage = () => {
       window.history.replaceState({}, document.title, cleanUrl);
     }
   }, [location, t, checkAuth]);
-
+  
   const formatAmount = (amount) => {
     return new Intl.NumberFormat('sr-RS', {
       style: 'currency',
