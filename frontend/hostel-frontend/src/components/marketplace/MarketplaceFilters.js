@@ -91,9 +91,9 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                     {t('listings.create.сategories')}
                 </Typography>
                 <VirtualizedCategoryTree
-                    selectedId={selectedCategoryId}
-                    onSelectCategory={handleCategorySelect}
-                />
+    selectedId={selectedCategoryId}
+    onSelectCategory={handleCategorySelect}
+/>
             </Box>
         </Paper>
     );

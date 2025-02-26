@@ -648,6 +648,7 @@ WITH RECURSIVE category_tree AS (
     FROM marketplace_categories c
     LEFT JOIN category_listing_counts clc ON clc.category_id = c.id
     INNER JOIN category_tree ct ON ct.id = c.parent_id
+    WHERE ct.level < 10
 ),
 categories_with_translations AS (
     SELECT 
@@ -695,7 +696,7 @@ SELECT
                 'listing_count', c2.listing_count,
                 'children_count', c2.children_count,
                 'translations', c2.translations
-            )
+            ) ORDER BY c2.name ASC
         ) FILTER (WHERE c2.id IS NOT NULL),
         '[]'::json
     ) as children
@@ -705,7 +706,7 @@ GROUP BY
     c1.id, c1.name, c1.slug, c1.icon, c1.parent_id, 
     c1.created_at, c1.level, c1.category_path, c1.listing_count,
     c1.children_count, c1.translations
-ORDER BY c1.name;
+ORDER BY c1.name ASC;
 `
 
 	rows, err := s.pool.Query(ctx, query)

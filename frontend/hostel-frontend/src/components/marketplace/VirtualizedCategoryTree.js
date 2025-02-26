@@ -19,41 +19,54 @@ import { ChevronRight, ChevronDown } from 'lucide-react';
 const ITEM_SIZE = 40;
 const PAGE_SIZE = 20;
 const buildTree = (flatList) => {
-    const rootCategories = flatList.filter(item => !item.parent_id);
-    const nonRootCategories = flatList.filter(item => item.parent_id);
-    
-    // Сначала создаём корневые категории
-    const tree = rootCategories.map(item => ({
-        ...item,
-        level: 0,
-        children: []
-    }));
-    
-    // Сортируем корневые категории по имени
-    tree.sort((a, b) => a.name.localeCompare(b.name));
-    
-    // Создаём Map для быстрого доступа к категориям
+    // Создаем Map для быстрого доступа к категориям по ID
     const categoryMap = new Map();
-    tree.forEach(category => categoryMap.set(category.id, category));
     
-    // Добавляем все остальные категории к их родителям
-    nonRootCategories.forEach(item => {
-        const parent = categoryMap.get(item.parent_id);
-        if (parent) {
-            const child = {
-                ...item,
-                level: parent.level + 1,
-                children: []
-            };
-            parent.children.push(child);
-            categoryMap.set(child.id, child);
-            
-            // Сортируем дочерние элементы по имени
-            parent.children.sort((a, b) => a.name.localeCompare(b.name));
+    // Сначала добавляем все категории в Map
+    flatList.forEach(category => {
+        categoryMap.set(category.id, {
+            ...category,
+            level: 0,
+            children: []
+        });
+    });
+    
+    // Корневые категории - те, у которых нет родителя
+    const rootCategories = [];
+    
+    // Строим дерево
+    flatList.forEach(category => {
+        const categoryWithChildren = categoryMap.get(category.id);
+        
+        if (!category.parent_id) {
+            // Корневая категория
+            rootCategories.push(categoryWithChildren);
+        } else {
+            // Дочерняя категория - добавляем к родителю
+            const parent = categoryMap.get(category.parent_id);
+            if (parent) {
+                categoryWithChildren.level = parent.level + 1;
+                parent.children.push(categoryWithChildren);
+            } else {
+                // Если родитель не найден, добавляем как корневую
+                rootCategories.push(categoryWithChildren);
+            }
         }
     });
     
-    return tree;
+    // Сортируем категории по имени
+    const sortCategoriesByName = (categories) => {
+        categories.sort((a, b) => a.name.localeCompare(b.name));
+        categories.forEach(category => {
+            if (category.children.length > 0) {
+                sortCategoriesByName(category.children);
+            }
+        });
+    };
+    
+    sortCategoriesByName(rootCategories);
+    
+    return rootCategories;
 };
 
 const CategoryItem = React.memo(({ data, index, style }) => {
@@ -126,20 +139,20 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
     const buildFlattenedList = useCallback((items, level = 0, result = []) => {
         if (!items || !Array.isArray(items)) return result;
         
-        items.forEach(item => {
+        for (const item of items) {
             // Добавляем элемент с его уровнем
             const itemCopy = {
                 ...item,
                 level: level,
-                hasChildren: item.children?.length > 0
+                hasChildren: Array.isArray(item.children) && item.children.length > 0
             };
             result.push(itemCopy);
             
             // Если элемент развёрнут и имеет дочерние элементы, добавляем их с увеличенным уровнем
-            if (expandedItems.has(item.id) && item.children && item.children.length > 0) {
+            if (expandedItems.has(item.id) && Array.isArray(item.children) && item.children.length > 0) {
                 buildFlattenedList(item.children, level + 1, result);
             }
-        });
+        }
         
         return result;
     }, [expandedItems]);
