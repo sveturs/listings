@@ -1,18 +1,18 @@
 <svg width="32" height="32" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(24,24)">
     <!-- Верхний ряд плиток -->
-    <rect x="0" y="0" width="64" height="64" rx="8" fill="#ffcc00" />
-    <rect x="74" y="0" width="64" height="64" rx="8" fill="#ff6b6b" />
-    <rect x="148" y="0" width="64" height="64" rx="8" fill="#4ecdc4" />
+    <rect x="0" y="0" width="64" height="64" rx="8" fill="#2196F3" /> <!-- Синий -->
+    <rect x="74" y="0" width="64" height="64" rx="8" fill="#4CAF50" /> <!-- Зеленый -->
+    <rect x="148" y="0" width="64" height="64" rx="8" fill="#F44336" /> <!-- Красный -->
     
     <!-- Средний ряд плиток -->
-    <rect x="0" y="74" width="64" height="64" rx="8" fill="#1a535c" />
-    <rect x="74" y="74" width="64" height="64" rx="8" fill="#ffe66d" />
-    <rect x="148" y="74" width="64" height="64" rx="8" fill="#f7fff7" />
+    <rect x="0" y="74" width="64" height="64" rx="8" fill="#FF9800" /> <!-- Оранжевый -->
+    <rect x="74" y="74" width="64" height="64" rx="8" fill="#673AB7" /> <!-- Фиолетовый -->
+    <rect x="148" y="74" width="64" height="64" rx="8" fill="#00BCD4" /> <!-- Голубой -->
     
     <!-- Нижний ряд плиток -->
-    <rect x="0" y="148" width="64" height="64" rx="8" fill="#ff6b6b" />
-    <rect x="74" y="148" width="64" height="64" rx="8" fill="#4ecdc4" />
-    <rect x="148" y="148" width="64" height="64" rx="8" fill="#1a535c" />
+    <rect x="0" y="148" width="64" height="64" rx="8" fill="#FFEB3B" /> <!-- Желтый -->
+    <rect x="74" y="148" width="64" height="64" rx="8" fill="#607D8B" /> <!-- Серо-синий -->
+    <rect x="148" y="148" width="64" height="64" rx="8" fill="#9C27B0" /> <!-- Пурпурный -->
   </g>
 </svg>

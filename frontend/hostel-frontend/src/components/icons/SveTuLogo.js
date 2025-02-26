@@ -18,16 +18,16 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
   // Инициализируем начальные позиции
   useEffect(() => {
     const initialPositions = [
-      { id: 0, x: 0, y: 0, color: "#ffcc00", icon: "🛒", scale: 1 },
-      { id: 1, x: 74, y: 0, color: "#ff6b6b", icon: "🏪", scale: 1 },
-      { id: 2, x: 148, y: 0, color: "#4ecdc4", icon: "🔍", scale: 1 },
-      { id: 3, x: 0, y: 74, color: "#1a535c", icon: "📦", scale: 1 },
-      { id: 4, x: 74, y: 74, color: "#ffe66d", icon: "🏠", scale: 1 },
-      { id: 5, x: 148, y: 74, color: "#f7fff7", icon: "🏷️", scale: 1 },
-      { id: 6, x: 0, y: 148, color: "#ff6b6b", icon: "📱", scale: 1 },
-      { id: 7, x: 74, y: 148, color: "#4ecdc4", icon: "📍", scale: 1 },
-      { id: 8, x: 148, y: 148, color: "#1a535c", icon: "💰", scale: 1 }
-    ];
+        { id: 0, x: 0, y: 0, color: "#2196F3", icon: "🛒", scale: 1 },     // Синий
+        { id: 1, x: 74, y: 0, color: "#4CAF50", icon: "🏪", scale: 1 },    // Зеленый
+        { id: 2, x: 148, y: 0, color: "#F44336", icon: "🔍", scale: 1 },   // Красный
+        { id: 3, x: 0, y: 74, color: "#FF9800", icon: "📦", scale: 1 },    // Оранжевый
+        { id: 4, x: 74, y: 74, color: "#673AB7", icon: "🏠", scale: 1 },   // Фиолетовый
+        { id: 5, x: 148, y: 74, color: "#00BCD4", icon: "🏷️", scale: 1 },  // Голубой
+        { id: 6, x: 0, y: 148, color: "#FFEB3B", icon: "📱", scale: 1 },   // Желтый
+        { id: 7, x: 74, y: 148, color: "#607D8B", icon: "📍", scale: 1 },  // Серо-синий
+        { id: 8, x: 148, y: 148, color: "#9C27B0", icon: "💰", scale: 1 }  // Пурпурный
+      ];
     setPositions(initialPositions);
     setAnimatingPositions(initialPositions);
   }, []);
