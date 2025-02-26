@@ -154,34 +154,45 @@ const MarketplacePage = () => {
     }, []);
 
     const findCategoryPath = (categoryId, categoriesTree) => {
-        const path = [];
-    
-        const findPath = (id, categories) => {
+        if (!categoryId || !categoriesTree || categoriesTree.length === 0) {
+            return [];
+        }
+        
+        // Создаем плоскую карту всех категорий для быстрого поиска
+        const categoryMap = new Map();
+        
+        const flattenCategories = (categories) => {
             for (const category of categories) {
-                if (String(category.id) === String(id)) {
-                    path.unshift({ 
-                        id: category.id, 
-                        name: category.name, 
-                        slug: category.slug,
-                        translations: category.translations 
-                    });
-                    return true;
-                }
-    
-                if (category.children && findPath(id, category.children)) {
-                    path.unshift({ 
-                        id: category.id, 
-                        name: category.name, 
-                        slug: category.slug,
-                        translations: category.translations 
-                    });
-                    return true;
+                categoryMap.set(String(category.id), category);
+                if (category.children && category.children.length > 0) {
+                    flattenCategories(category.children);
                 }
             }
-            return false;
         };
-    
-        findPath(categoryId, categoriesTree);
+        
+        // Заполняем карту всеми категориями
+        flattenCategories(categoriesTree);
+        
+        // Строим путь от выбранной категории до корня
+        const path = [];
+        let currentId = String(categoryId);
+        
+        while (currentId) {
+            const category = categoryMap.get(currentId);
+            if (!category) break;
+            
+            // Добавляем категорию в начало пути
+            path.unshift({
+                id: category.id,
+                name: category.name,
+                slug: category.slug,
+                translations: category.translations
+            });
+            
+            // Переходим к родителю
+            currentId = category.parent_id ? String(category.parent_id) : null;
+        }
+        
         return path;
     };
 

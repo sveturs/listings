@@ -32,7 +32,24 @@ const Breadcrumbs = ({ paths, categories }) => {
     if (!paths || paths.length === 0) {
         return null;
     }
-
+// Добавьте эту функцию в компонент Breadcrumbs, если её нет
+const truncateLongPath = (paths) => {
+    // Если путь слишком длинный, показываем только первые 2 и последнюю категории
+    if (paths.length > 3) {
+        const truncatedPath = [
+            paths[0], // Первая категория
+            { 
+                id: 'truncated', 
+                name: '...', 
+                slug: '', 
+                translations: {} 
+            }, // Отображение многоточия
+            ...paths.slice(paths.length - 1) // Последняя категория
+        ];
+        return truncatedPath;
+    }
+    return paths;
+};
     const handleCategoryClick = (categoryId, event) => {
         event.preventDefault();
         navigate(`/marketplace?category_id=${categoryId}`);
