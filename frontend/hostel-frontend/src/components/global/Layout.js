@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { ShoppingBag } from '@mui/icons-material';
 import { Storefront } from '@mui/icons-material';
 import NewMessageIndicator from './NewMessageIndicator';
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -14,7 +13,7 @@ import NotificationDrawer from '../notifications/NotificationDrawer';
 import { Settings } from '@mui/icons-material';
 import { AccountBalanceWallet } from '@mui/icons-material';
 import SveTuLogo from '../icons/SveTuLogo'; 
-
+import { ShoppingBag, Store } from '@mui/icons-material';
 
 import {
   AppBar,
@@ -278,6 +277,10 @@ const Layout = ({ children }) => {
                       <ShoppingBag fontSize="small" sx={{ mr: 1 }} />
                       {t('navigation.myListings')}
                     </MenuItem>
+                    <MenuItem component={Link} to="/storefronts" onClick={handleCloseMenu}>
+  <Store fontSize="small" sx={{ mr: 1 }} />
+  {t('navigation.storefronts')}
+</MenuItem>
                     <MenuItem component={Link} to="/favorites">
                       <Bookmark fontSize="small" sx={{ mr: 1 }} />
                       {t('navigation.favorites')}

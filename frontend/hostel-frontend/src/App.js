@@ -25,6 +25,8 @@ import i18n from './i18n/config';
 import './i18n/config';
 import { CircularProgress, Box } from '@mui/material';
 import TransactionsPage from './pages/balance/TransactionsPage';
+import StorefrontPage from "./pages/store/StorefrontPage";
+import StorefrontDetailPage from "./pages/store/StorefrontDetailPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,7 +62,22 @@ function App() {
                       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                       <Route path="/marketplace" element={<MarketplacePage />} />
                       {/*  <Route path="/marketplace/create" element={<CreateListingPage />} />*/}
-
+                      <Route
+  path="/storefronts"
+  element={
+    <PrivateRoute>
+      <StorefrontPage />
+    </PrivateRoute>
+  }
+/>
+<Route
+  path="/storefronts/:id"
+  element={
+    <PrivateRoute>
+      <StorefrontDetailPage />
+    </PrivateRoute>
+  }
+/>
                       <Route
                         path="/marketplace/create"
                         element={
