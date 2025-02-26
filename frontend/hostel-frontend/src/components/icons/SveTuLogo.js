@@ -7,66 +7,140 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
   const [positions, setPositions] = useState([]);
   const [animatingPositions, setAnimatingPositions] = useState([]);
   const [targetPositions, setTargetPositions] = useState(null);
+  const [animationProgress, setAnimationProgress] = useState(0);
+  const [animationCompleted, setAnimationCompleted] = useState(true);
+  
   const animationFrameRef = useRef(null);
   const animationStartTimeRef = useRef(null);
   const touchTimeoutRef = useRef(null);
+  const intermediatePositionsRef = useRef(null);
   
   // Инициализируем начальные позиции
   useEffect(() => {
     const initialPositions = [
-      { id: 0, x: 0, y: 0, color: "#ffcc00", icon: "🛒", scale: 1, wobble: 0, originalX: 0, originalY: 0 },
-      { id: 1, x: 74, y: 0, color: "#ff6b6b", icon: "🏪", scale: 1, wobble: 0, originalX: 74, originalY: 0 },
-      { id: 2, x: 148, y: 0, color: "#4ecdc4", icon: "", scale: 1, wobble: 0, originalX: 148, originalY: 0 },
-      { id: 3, x: 0, y: 74, color: "#1a535c", icon: "📦", scale: 1, wobble: 0, originalX: 0, originalY: 74 },
-      { id: 4, x: 74, y: 74, color: "#ffe66d", icon: "", scale: 1, wobble: 0, originalX: 74, originalY: 74 },
-      { id: 5, x: 148, y: 74, color: "#f7fff7", icon: "🏷️", scale: 1, wobble: 0, originalX: 148, originalY: 74 },
-      { id: 6, x: 0, y: 148, color: "#ff6b6b", icon: "", scale: 1, wobble: 0, originalX: 0, originalY: 148 },
-      { id: 7, x: 74, y: 148, color: "#4ecdc4", icon: "📍", scale: 1, wobble: 0, originalX: 74, originalY: 148 },
-      { id: 8, x: 148, y: 148, color: "#1a535c", icon: "💰", scale: 1, wobble: 0, originalX: 148, originalY: 148 }
+      { id: 0, x: 0, y: 0, color: "#ffcc00", icon: "🛒", scale: 1 },
+      { id: 1, x: 74, y: 0, color: "#ff6b6b", icon: "🏪", scale: 1 },
+      { id: 2, x: 148, y: 0, color: "#4ecdc4", icon: "", scale: 1 },
+      { id: 3, x: 0, y: 74, color: "#1a535c", icon: "📦", scale: 1 },
+      { id: 4, x: 74, y: 74, color: "#ffe66d", icon: "", scale: 1 },
+      { id: 5, x: 148, y: 74, color: "#f7fff7", icon: "🏷️", scale: 1 },
+      { id: 6, x: 0, y: 148, color: "#ff6b6b", icon: "", scale: 1 },
+      { id: 7, x: 74, y: 148, color: "#4ecdc4", icon: "📍", scale: 1 },
+      { id: 8, x: 148, y: 148, color: "#1a535c", icon: "💰", scale: 1 }
     ];
     setPositions(initialPositions);
     setAnimatingPositions(initialPositions);
   }, []);
 
-  // Функция для анимации перемещения плиток
-  const animateTiles = (startTime, fromPositions, toPositions, duration = 800) => {
-    const currentTime = performance.now();
-    const elapsedTime = currentTime - startTime;
-    const progress = Math.min(elapsedTime / duration, 1);
+  // Генерирует промежуточные точки для плавной анимации
+  const createIntermediatePositions = (startPos, endPos, numPoints = 5) => {
+    if (!startPos || !endPos) return [];
     
-    // Кубическая функция плавности для естественного движения (ease-in-out)
+    // Создаем список промежуточных точек для выбранной плитки
+    const points = [];
+    
+    // Только для выбранной плитки создаем сложный путь
+    const selectedStartTile = startPos.find(tile => tile.id === randomTile);
+    const selectedEndTile = endPos.find(tile => tile.id === randomTile);
+    
+    if (selectedStartTile && selectedEndTile) {
+      // Средняя точка с большим отклонением для выбранной плитки
+      const midX = (selectedStartTile.x + selectedEndTile.x) / 2;
+      const midY = (selectedStartTile.y + selectedEndTile.y) / 2;
+      
+      // Вычисляем вектор пути
+      const dx = selectedEndTile.x - selectedStartTile.x;
+      const dy = selectedEndTile.y - selectedStartTile.y;
+      
+      // Создаем перпендикулярный вектор для отклонения
+      const perpX = -dy;
+      const perpY = dx;
+      
+      // Нормализуем перпендикулярный вектор
+      const length = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
+      const normalizedPerpX = perpX / length;
+      const normalizedPerpY = perpY / length;
+      
+      // Создаем промежуточные точки с отклонением
+      for (let i = 1; i < numPoints; i++) {
+        const t = i / numPoints;
+        const smoothT = t * t * (3 - 2 * t); // Плавная функция
+        
+        // Базовая позиция на прямой
+        const baseX = selectedStartTile.x + dx * smoothT;
+        const baseY = selectedStartTile.y + dy * smoothT;
+        
+        // Отклонение, максимальное в середине пути
+        const deviationFactor = 50 * Math.sin(t * Math.PI); // Максимальное отклонение в середине
+        
+        // Добавляем к базовой позиции отклонение в перпендикулярном направлении
+        points.push({
+          id: selectedStartTile.id,
+          t: t,
+          x: baseX + normalizedPerpX * deviationFactor,
+          y: baseY + normalizedPerpY * deviationFactor,
+          scale: 1 + (t > 0.6 ? (t - 0.6) / 0.4 * (selectedEndTile.scale - 1) : 0) // Увеличение во второй половине пути
+        });
+      }
+    }
+    
+    return points;
+  };
+
+  // Функция для расчета текущих позиций на основе прогресса анимации
+  const calculateCurrentPositions = (startPos, endPos, progress) => {
+    // Кубическая функция плавности для естественного движения
     const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     const easedProgress = easeInOut(progress);
     
-    // Расчет текущих позиций на основе прогресса анимации
-    const currentPositions = fromPositions.map((startPos, index) => {
-      const targetPos = toPositions[index];
+    // Находим индекс ближайшей промежуточной точки для выбранной плитки
+    const intermediatePos = intermediatePositionsRef.current || [];
+    const closestIndex = intermediatePos.findIndex(pos => pos.t >= progress) - 1;
+    const prevPoint = intermediatePos[Math.max(0, closestIndex)];
+    const nextPoint = intermediatePos[Math.min(intermediatePos.length - 1, closestIndex + 1)];
+    
+    // Расчет позиций для всех плиток
+    return startPos.map((start, idx) => {
+      const end = endPos[idx];
       
-      // Промежуточный scale - плавное увеличение выбранной плитки
-      const currentScale = startPos.id === randomTile 
-        ? startPos.scale + (targetPos.scale - startPos.scale) * easedProgress
-        : startPos.scale;
+      // Для невыбранных плиток используем обычную интерполяцию
+      if (start.id !== randomTile) {
+        return {
+          ...start,
+          x: start.x + (end.x - start.x) * easedProgress,
+          y: start.y + (end.y - start.y) * easedProgress,
+          scale: start.scale
+        };
+      }
+      
+      // Для выбранной плитки используем промежуточные точки, если они есть
+      if (prevPoint && nextPoint && intermediatePos.length > 0) {
+        // Интерполируем между точками пути
+        const pointProgress = prevPoint.t === nextPoint.t ? 0 : (progress - prevPoint.t) / (nextPoint.t - prevPoint.t);
+        const interpolatedX = prevPoint.x + (nextPoint.x - prevPoint.x) * pointProgress;
+        const interpolatedY = prevPoint.y + (nextPoint.y - prevPoint.y) * pointProgress;
         
+        // Функция для плавного масштабирования во второй половине пути
+        const scaleProgress = progress > 0.6 ? (progress - 0.6) / 0.4 : 0;
+        const superSmoothScale = scaleProgress * scaleProgress * (3 - 2 * scaleProgress);
+        const targetScale = 1 + (end.scale - 1) * superSmoothScale;
+        
+        return {
+          ...start,
+          x: interpolatedX,
+          y: interpolatedY,
+          scale: targetScale
+        };
+      }
+      
+      // Fallback на обычную интерполяцию, если нет промежуточных точек
       return {
-        ...startPos,
-        x: startPos.x + (targetPos.x - startPos.x) * easedProgress,
-        y: startPos.y + (targetPos.y - startPos.y) * easedProgress,
-        scale: currentScale
+        ...start,
+        x: start.x + (end.x - start.x) * easedProgress,
+        y: start.y + (end.y - start.y) * easedProgress,
+        scale: progress > 0.6 ? start.scale + (end.scale - start.scale) * ((progress - 0.6) / 0.4) : start.scale
       };
     });
-    
-    setAnimatingPositions(currentPositions);
-    
-    if (progress < 1) {
-      animationFrameRef.current = requestAnimationFrame(() => {
-        animateTiles(startTime, fromPositions, toPositions, duration);
-      });
-    } else {
-      // Анимация завершена, сохраняем конечные позиции
-      setPositions(toPositions);
-      setAnimatingPositions(toPositions);
-      setTargetPositions(null);
-    }
   };
 
   // Очистка анимации при размонтировании компонента
@@ -81,12 +155,50 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
     };
   }, []);
 
-  // Общая функция для анимации, используемая и для hover и для touch
-  const animateShuffle = () => {
+  // Функция для запуска анимации
+  const runAnimation = (startPositions, endPositions, duration = 1500, afterComplete = null) => {
+    // Очистим предыдущую анимацию
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
     
+    // Генерируем промежуточные точки
+    intermediatePositionsRef.current = createIntermediatePositions(startPositions, endPositions);
+    
+    // Сохраняем время начала анимации
+    const startTime = performance.now();
+    setAnimationCompleted(false);
+    
+    const animate = (timestamp) => {
+      const elapsedTime = timestamp - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+      
+      // Вычисляем текущие позиции на основе прогресса
+      const currentPositions = calculateCurrentPositions(startPositions, endPositions, progress);
+      setAnimatingPositions(currentPositions);
+      setAnimationProgress(progress);
+      
+      // Проверяем, завершена ли анимация
+      if (progress < 1) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      } else {
+        // Анимация завершена
+        setPositions(endPositions);
+        setAnimatingPositions(endPositions);
+        setAnimationCompleted(true);
+        
+        if (afterComplete) {
+          afterComplete();
+        }
+      }
+    };
+    
+    // Запускаем анимацию
+    animationFrameRef.current = requestAnimationFrame(animate);
+  };
+
+  // Общая функция для анимации, используемая для hover и touch
+  const animateShuffle = () => {
     setHovering(true);
     
     // Выбираем только плитки с иконками
@@ -145,39 +257,38 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
     newPositions[randomIndex].x = centerX;
     newPositions[randomIndex].y = centerY;
     
-    // Увеличиваем выбранную плитку в 2.5 раза
+    // Увеличиваем выбранную плитку до 3.2
     newPositions[randomIndex].scale = 3.2;
     
     // Сохраняем целевые позиции
     setTargetPositions(newPositions);
     
-    // Создаем начальные позиции для анимации, где выбранная плитка еще в исходном положении
+    // Создаем начальные позиции для анимации
     const startPositions = [...animatingPositions].map(pos => ({...pos}));
     
-    // Запускаем анимацию перемещения
-    animationStartTimeRef.current = performance.now();
-    animateTiles(animationStartTimeRef.current, startPositions, newPositions);
+    // Запускаем анимацию
+    runAnimation(startPositions, newPositions);
   };
   
   // Возврат к исходному состоянию
   const resetAnimation = () => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    
     setHovering(false);
     
     if (randomTile !== null) {
-      // Создаем целевые позиции, где все плитки вернутся к исходному размеру
-      const resetPositions = [...animatingPositions].map(tile => ({
+      // Создаем целевые позиции, где все плитки вернутся к исходному размеру,
+      // но останутся на своих текущих позициях
+      const resetPositions = (targetPositions || animatingPositions).map(tile => ({
         ...tile, 
         scale: 1
       }));
       
-      // Запускаем анимацию возврата
-      animationStartTimeRef.current = performance.now();
-      animateTiles(animationStartTimeRef.current, animatingPositions, resetPositions, 500);
-      setRandomTile(null);
+      // Создаем начальные позиции для анимации возврата
+      const startPositions = [...animatingPositions].map(pos => ({...pos}));
+      
+      // Запускаем быструю анимацию возврата к нормальному размеру
+      runAnimation(startPositions, resetPositions, 400, () => {
+        setRandomTile(null);
+      });
     }
   };
 
@@ -201,10 +312,9 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
     // Добавляем небольшую задержку перед сбросом для мобильных устройств
     touchTimeoutRef.current = setTimeout(() => {
       resetAnimation();
-    }, 1500); // Держим анимацию чуть дольше на мобильных устройствах
+    }, 1800); // Держим анимацию чуть дольше на мобильных устройствах
   };
 
-  // Создаем четкий SVG с улучшенным разрешением
   return (
     <svg 
       width={width} 
