@@ -1137,6 +1137,45 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	listing.Translations = translations
 	//    log.Printf("Final translations for listing %d: %+v", id, translations)
 	//    log.Printf("Original language: %s", listing.OriginalLanguage)
+	// Достаем информацию о пути категории
+	if listing.CategoryID > 0 {
+		query := `
+        WITH RECURSIVE category_path AS (
+            SELECT id, name, slug, parent_id, 1 as level
+            FROM marketplace_categories
+            WHERE id = $1
 
+            UNION ALL
+
+            SELECT c.id, c.name, c.slug, c.parent_id, cp.level + 1
+            FROM marketplace_categories c
+            JOIN category_path cp ON c.id = cp.parent_id
+        )
+        SELECT id, name, slug
+        FROM category_path
+        ORDER BY level DESC
+    `
+		rows, err := s.pool.Query(ctx, query, listing.CategoryID)
+		if err == nil {
+			defer rows.Close()
+			var categoryIds []int
+			var categoryNames []string
+			var categorySlugs []string
+
+			for rows.Next() {
+				var id int
+				var name, slug string
+				if err := rows.Scan(&id, &name, &slug); err == nil {
+					categoryIds = append(categoryIds, id)
+					categoryNames = append(categoryNames, name)
+					categorySlugs = append(categorySlugs, slug)
+				}
+			}
+
+			listing.CategoryPathIds = categoryIds
+			listing.CategoryPathNames = categoryNames
+			listing.CategoryPathSlugs = categorySlugs
+		}
+	}
 	return listing, nil
 }

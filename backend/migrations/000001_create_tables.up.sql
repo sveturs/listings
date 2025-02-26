@@ -890,15 +890,15 @@ INSERT INTO translations (id, entity_type, entity_id, language, field_name, tran
 SELECT setval('translations_id_seq', 185, true);
 -- начало перевода груп
 -- Insert translations for categories (English translations)
--- INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified, created_at, updated_at) VALUES
---('category', 2, 'en', 'name', 'Transport', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
+INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified, created_at, updated_at) VALUES
+('category', 2, 'en', 'name', 'Transport', true, true, '2025-02-07 07:13:52.985682', '2025-02-07 07:13:52.985682'),
 
---('category', 2, 'ru', 'name', 'Транспорт', true, true, NOW(), NOW());
+('category', 2, 'ru', 'name', 'Транспорт', true, true, NOW(), NOW());
 
 
 
 -- Set updated sequence value
--- SELECT setval('translations_id_seq', (SELECT MAX(id) FROM translations), true);
+SELECT setval('translations_id_seq', (SELECT MAX(id) FROM translations), true);
 -- конец перевода груп
 
 -- Set initial schema version

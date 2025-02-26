@@ -146,9 +146,21 @@ const ListingDetailsPage = () => {
     }, [fetchListing]);
 
     useEffect(() => {
-        if (listing?.category_id && categories.length > 0) {
-            const path = findCategoryPath(listing.category_id, categories);
-            setCategoryPath(path);
+        if (listing) {
+            if (listing.category_path_ids && listing.category_path_ids.length > 0) {
+                // Если с сервера пришла полная цепочка категорий, используем её
+                const fullPath = listing.category_path_ids.map((id, index) => ({
+                    id,
+                    name: listing.category_path_names[index],
+                    slug: listing.category_path_slugs[index],
+                    translations: {} // По умолчанию пустые переводы
+                }));
+                setCategoryPath(fullPath);
+            } else if (listing.category_id && categories.length > 0) {
+                // Иначе используем старый метод построения пути
+                const path = findCategoryPath(listing.category_id, categories);
+                setCategoryPath(path);
+            }
         }
     }, [listing, categories, findCategoryPath]);
 

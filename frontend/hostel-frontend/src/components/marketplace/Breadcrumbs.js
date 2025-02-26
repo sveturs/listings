@@ -15,19 +15,38 @@ const Breadcrumbs = ({ paths, categories }) => {
     const navigate = useNavigate();
 
     const getTranslatedName = (pathCategory) => {
-     //   console.log('Current language:', i18n.language);
-     //   console.log('All translations:', pathCategory.translations);
-      //  console.log('Serbian translation:', pathCategory.translations?.sr);
-      //  console.log('Russian translation:', pathCategory.translations?.ru);
+        if (!pathCategory) return '';
         
-        // Сначала пробуем найти перевод для текущего языка
-        if (i18n.language === 'sr' && pathCategory.translations?.sr) {
-            return pathCategory.translations.sr;
+        // Если у категории есть переводы, пробуем их использовать
+        if (pathCategory.translations && Object.keys(pathCategory.translations).length > 0) {
+            if (i18n.language && pathCategory.translations[i18n.language]) {
+                return pathCategory.translations[i18n.language];
+            }
+            
+            // Приоритеты языков
+            const langPriority = [i18n.language, 'sr', 'ru', 'en'];
+            for (const lang of langPriority) {
+                if (pathCategory.translations[lang]) {
+                    return pathCategory.translations[lang];
+                }
+            }
         }
-    
-        // Если не нашли, возвращаем в порядке sr -> ru -> en -> name
-        const translations = pathCategory.translations || {};
-        return translations[i18n.language] || translations.sr || translations.ru || translations.en || pathCategory.name;
+        
+        // Если переводов нет или они не подходят, ищем категорию в общем списке
+        if (categories && Array.isArray(categories)) {
+            const categoryFromList = categories.find(c => String(c.id) === String(pathCategory.id));
+            if (categoryFromList && categoryFromList.translations) {
+                const langPriority = [i18n.language, 'sr', 'ru', 'en'];
+                for (const lang of langPriority) {
+                    if (categoryFromList.translations[lang]) {
+                        return categoryFromList.translations[lang];
+                    }
+                }
+            }
+        }
+        
+        // Если ничего не найдено, возвращаем исходное имя
+        return pathCategory.name;
     };
     if (!paths || paths.length === 0) {
         return null;

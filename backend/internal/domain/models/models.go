@@ -55,6 +55,7 @@ type MarketplaceListing struct {
 	CategoryPathIds   []int                `json:"category_path_ids,omitempty"`
 	CategoryPathSlugs []string             `json:"category_path_slugs,omitempty"`
 	CategoryPath      []string             `json:"category_path,omitempty"`
+
 }
 
 type MarketplaceCategory struct {
