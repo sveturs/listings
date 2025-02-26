@@ -277,9 +277,10 @@ const Layout = ({ children }) => {
                       <ShoppingBag fontSize="small" sx={{ mr: 1 }} />
                       {t('navigation.myListings')}
                     </MenuItem>
-                    <MenuItem component={Link} to="/storefronts" onClick={handleCloseMenu}>
+
+<MenuItem component={Link} to="/storefronts" onClick={handleCloseMenu}>
   <Store fontSize="small" sx={{ mr: 1 }} />
-  {t('navigation.storefronts')}
+  {t('navigation.storefronts', { defaultValue: 'Мои витрины' })}
 </MenuItem>
                     <MenuItem component={Link} to="/favorites">
                       <Bookmark fontSize="small" sx={{ mr: 1 }} />

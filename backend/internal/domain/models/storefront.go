@@ -21,18 +21,18 @@ type Storefront struct {
 
 // ImportSource представляет источник данных для импорта
 type ImportSource struct {
-	ID               int             `json:"id"`
-	StorefrontID     int             `json:"storefront_id"`
-	Type             string          `json:"type"` // csv, xml, json
-	URL              string          `json:"url"`
-	AuthData         json.RawMessage `json:"auth_data,omitempty"`
-	Schedule         string          `json:"schedule,omitempty"`
-	Mapping          json.RawMessage `json:"mapping,omitempty"`
-	LastImportAt     *time.Time      `json:"last_import_at,omitempty"`
-	LastImportStatus string          `json:"last_import_status,omitempty"`
-	LastImportLog    string          `json:"last_import_log,omitempty"`
-	CreatedAt        time.Time       `json:"created_at"`
-	UpdatedAt        time.Time       `json:"updated_at"`
+    ID               int             `json:"id"`
+    StorefrontID     int             `json:"storefront_id"`
+    Type             string          `json:"type"` // csv, xml, json
+    URL              string          `json:"url"`
+    AuthData         json.RawMessage `json:"auth_data,omitempty"`
+    Schedule         string          `json:"schedule,omitempty"`
+    Mapping          json.RawMessage `json:"mapping,omitempty"`
+    LastImportAt     *time.Time      `json:"last_import_at,omitempty"`
+    LastImportStatus string          `json:"last_import_status,omitempty"` // Изменяем на обычную строку, но обрабатываем NULL при сканировании
+    LastImportLog    string          `json:"last_import_log,omitempty"`    // Изменяем на обычную строку, но обрабатываем NULL при сканировании
+    CreatedAt        time.Time       `json:"created_at"`
+    UpdatedAt        time.Time       `json:"updated_at"`
 }
 
 // ImportHistory представляет запись об импорте

@@ -19,6 +19,7 @@ type StorefrontServiceInterface interface {
 	UpdateImportSource(ctx context.Context, source *models.ImportSource, userID int) error
 	DeleteImportSource(ctx context.Context, id int, userID int) error
 	GetImportSources(ctx context.Context, storefrontID int, userID int) ([]models.ImportSource, error)
+	GetImportSourceByID(ctx context.Context, id int, userID int) (*models.ImportSource, error)
 	
 	// Импорт данных
 	RunImport(ctx context.Context, sourceID int, userID int) (*models.ImportHistory, error)

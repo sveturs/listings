@@ -4,6 +4,8 @@ import (
 	"backend/internal/domain/models"
 	"context"
 	"time"
+		"database/sql"
+		"fmt"
 )
 
 // CreateStorefront создает новую витрину
@@ -97,88 +99,141 @@ func (db *Database) DeleteStorefront(ctx context.Context, id int) error {
 
 // CreateImportSource создает новый источник импорта
 func (db *Database) CreateImportSource(ctx context.Context, source *models.ImportSource) (int, error) {
-	var id int
-	err := db.pool.QueryRow(ctx, `
-		INSERT INTO import_sources (
-			storefront_id, type, url, auth_data, schedule, mapping,
-			created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id
-	`,
-		source.StorefrontID, source.Type, source.URL, source.AuthData,
-		source.Schedule, source.Mapping, source.CreatedAt, source.UpdatedAt,
-	).Scan(&id)
+    var id int
+    err := db.pool.QueryRow(ctx, `
+        INSERT INTO import_sources (
+            storefront_id, type, url, auth_data, schedule, mapping,
+            created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id
+    `,
+        source.StorefrontID, source.Type, source.URL, source.AuthData,
+        source.Schedule, source.Mapping, source.CreatedAt, source.UpdatedAt,
+    ).Scan(&id)
 
-	return id, err
+    if err != nil {
+        return 0, fmt.Errorf("error creating import source: %w", err)
+    }
+
+    return id, nil
 }
 
 // GetImportSourceByID возвращает источник импорта по ID
 func (db *Database) GetImportSourceByID(ctx context.Context, id int) (*models.ImportSource, error) {
-	var s models.ImportSource
-	err := db.pool.QueryRow(ctx, `
-		SELECT id, storefront_id, type, url, auth_data, schedule, mapping,
-		       last_import_at, last_import_status, last_import_log,
-		       created_at, updated_at
-		FROM import_sources
-		WHERE id = $1
-	`, id).Scan(
-		&s.ID, &s.StorefrontID, &s.Type, &s.URL, &s.AuthData,
-		&s.Schedule, &s.Mapping, &s.LastImportAt, &s.LastImportStatus,
-		&s.LastImportLog, &s.CreatedAt, &s.UpdatedAt,
-	)
-	if err != nil {
-		return nil, err
-	}
+    var s models.ImportSource
+    var lastImportStatus, lastImportLog sql.NullString
+    
+    err := db.pool.QueryRow(ctx, `
+        SELECT id, storefront_id, type, url, 
+               COALESCE(auth_data, '{}'::jsonb), 
+               schedule, 
+               COALESCE(mapping, '{}'::jsonb),
+               last_import_at, 
+               last_import_status, 
+               last_import_log,
+               created_at, updated_at
+        FROM import_sources
+        WHERE id = $1
+    `, id).Scan(
+        &s.ID, &s.StorefrontID, &s.Type, &s.URL, &s.AuthData,
+        &s.Schedule, &s.Mapping, &s.LastImportAt, &lastImportStatus,
+        &lastImportLog, &s.CreatedAt, &s.UpdatedAt,
+    )
+    if err != nil {
+        return nil, fmt.Errorf("error scanning import source: %w", err)
+    }
 
-	return &s, nil
+    // Преобразуем sql.NullString в строку
+    if lastImportStatus.Valid {
+        s.LastImportStatus = lastImportStatus.String
+    } else {
+        s.LastImportStatus = ""
+    }
+
+    // Преобразуем sql.NullString в строку
+    if lastImportLog.Valid {
+        s.LastImportLog = lastImportLog.String
+    } else {
+        s.LastImportLog = ""
+    }
+
+    return &s, nil
 }
 
 // GetImportSources возвращает источники импорта для витрины
 func (db *Database) GetImportSources(ctx context.Context, storefrontID int) ([]models.ImportSource, error) {
-	rows, err := db.pool.Query(ctx, `
-		SELECT id, storefront_id, type, url, auth_data, schedule, mapping,
-		       last_import_at, last_import_status, last_import_log,
-		       created_at, updated_at
-		FROM import_sources
-		WHERE storefront_id = $1
-		ORDER BY created_at DESC
-	`, storefrontID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    rows, err := db.pool.Query(ctx, `
+        SELECT id, storefront_id, type, url, 
+               COALESCE(auth_data, '{}'::jsonb), 
+               schedule, 
+               COALESCE(mapping, '{}'::jsonb),
+               last_import_at, 
+               last_import_status, 
+               last_import_log,
+               created_at, updated_at
+        FROM import_sources
+        WHERE storefront_id = $1
+        ORDER BY created_at DESC
+    `, storefrontID)
+    if err != nil {
+        return nil, fmt.Errorf("error getting import sources: %w", err)
+    }
+    defer rows.Close()
 
-	var sources []models.ImportSource
-	for rows.Next() {
-		var s models.ImportSource
-		err := rows.Scan(
-			&s.ID, &s.StorefrontID, &s.Type, &s.URL, &s.AuthData,
-			&s.Schedule, &s.Mapping, &s.LastImportAt, &s.LastImportStatus,
-			&s.LastImportLog, &s.CreatedAt, &s.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-		sources = append(sources, s)
-	}
+    var sources []models.ImportSource
+    for rows.Next() {
+        var s models.ImportSource
+        var lastImportStatus, lastImportLog sql.NullString
+        
+        err := rows.Scan(
+            &s.ID, &s.StorefrontID, &s.Type, &s.URL, &s.AuthData,
+            &s.Schedule, &s.Mapping, &s.LastImportAt, &lastImportStatus,
+            &lastImportLog, &s.CreatedAt, &s.UpdatedAt,
+        )
+        if err != nil {
+            return nil, fmt.Errorf("error scanning import source row: %w", err)
+        }
+        
+        // Преобразуем sql.NullString в строку
+        if lastImportStatus.Valid {
+            s.LastImportStatus = lastImportStatus.String
+        } else {
+            s.LastImportStatus = ""
+        }
 
-	return sources, rows.Err()
+        // Преобразуем sql.NullString в строку
+        if lastImportLog.Valid {
+            s.LastImportLog = lastImportLog.String
+        } else {
+            s.LastImportLog = ""
+        }
+        
+        sources = append(sources, s)
+    }
+
+    return sources, rows.Err()
 }
 
 // UpdateImportSource обновляет источник импорта
 func (db *Database) UpdateImportSource(ctx context.Context, source *models.ImportSource) error {
-	_, err := db.pool.Exec(ctx, `
-		UPDATE import_sources
-		SET type = $1, url = $2, auth_data = $3, schedule = $4, mapping = $5,
-		    last_import_at = $6, last_import_status = $7, last_import_log = $8,
-		    updated_at = $9
-		WHERE id = $10
-	`,
-		source.Type, source.URL, source.AuthData, source.Schedule, source.Mapping,
-		source.LastImportAt, source.LastImportStatus, source.LastImportLog,
-		time.Now(), source.ID,
-	)
-	return err
+    // Используем COALESCE для NULL значений
+    _, err := db.pool.Exec(ctx, `
+        UPDATE import_sources
+        SET type = $1, url = $2, auth_data = $3, schedule = $4, mapping = $5,
+            last_import_at = $6, last_import_status = $7, last_import_log = $8,
+            updated_at = $9
+        WHERE id = $10
+    `,
+        source.Type, source.URL, source.AuthData, source.Schedule, source.Mapping,
+        source.LastImportAt, source.LastImportStatus, source.LastImportLog,
+        time.Now(), source.ID,
+    )
+    
+    if err != nil {
+        return fmt.Errorf("error updating import source: %w", err)
+    }
+    
+    return nil
 }
 
 // DeleteImportSource удаляет источник импорта

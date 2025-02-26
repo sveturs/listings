@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"strconv"
+	"log"
 )
 
 type StorefrontHandler struct {
@@ -183,39 +184,69 @@ func (h *StorefrontHandler) DeleteImportSource(c *fiber.Ctx) error {
 
 // RunImport запускает импорт данных
 func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
-	sourceID, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid import source ID")
-	}
+    userID := c.Locals("user_id").(int)
+    sourceID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid import source ID")
+    }
 
-	// Получение файла из формы, если он есть
-	file, err := c.FormFile("file")
-	if err != nil && err != fiber.ErrUnprocessableEntity {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Error processing file")
-	}
+    // Отладочный лог
+    log.Printf("Running import for source ID: %d, user ID: %d", sourceID, userID)
 
-	var history *models.ImportHistory
+    // Сначала проверим, существует ли источник импорта
+    source, err := h.services.Storefront().GetImportSourceByID(c.Context(), sourceID, userID)
+    if err != nil {
+        log.Printf("Error fetching source %d: %v", sourceID, err)
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Import source not found or access denied: %v", err))
+    }
 
-	if file != nil {
-		// Обработка загруженного файла
-		fileHandle, err := file.Open()
-		if err != nil {
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error opening file")
-		}
-		defer fileHandle.Close()
+    // Отладочный лог
+    log.Printf("Found import source: %+v", source)
 
-		history, err = h.services.Storefront().ImportCSV(c.Context(), sourceID, fileHandle, userID)
-	} else {
-		// Запуск импорта по URL
-		history, err = h.services.Storefront().RunImport(c.Context(), sourceID, userID)
-	}
+    // Получение файла из формы, если он есть
+    file, err := c.FormFile("file")
+    if err != nil && err != fiber.ErrUnprocessableEntity {
+        log.Printf("Error processing form file: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Error processing file: %v", err))
+    }
 
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to run import")
-	}
+    var history *models.ImportHistory
 
-	return utils.SuccessResponse(c, history)
+    if file != nil {
+        // Отладочный лог
+        log.Printf("Processing uploaded file: %s, size: %d", file.Filename, file.Size)
+        
+        // Обработка загруженного файла
+        fileHandle, err := file.Open()
+        if err != nil {
+            log.Printf("Error opening file: %v", err)
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening file: %v", err))
+        }
+        defer fileHandle.Close()
+
+        history, err = h.services.Storefront().ImportCSV(c.Context(), sourceID, fileHandle, userID)
+        if err != nil {
+            log.Printf("Error importing CSV: %v", err)
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to import CSV: %v", err))
+        }
+    } else {
+        // Проверяем, есть ли URL для импорта
+        if source.URL == "" {
+            return utils.ErrorResponse(c, fiber.StatusBadRequest, "No file uploaded and no URL configured for import")
+        }
+        
+        // Запуск импорта по URL
+        history, err = h.services.Storefront().RunImport(c.Context(), sourceID, userID)
+        if err != nil {
+            log.Printf("Error running import: %v", err)
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to run import: %v", err))
+        }
+    }
+
+    // Отладочный лог
+    log.Printf("Import completed successfully, history: %+v", history)
+
+    return utils.SuccessResponse(c, history)
 }
 
 // GetImportHistory возвращает историю импорта

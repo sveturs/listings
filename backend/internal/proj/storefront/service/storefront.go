@@ -10,6 +10,8 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+	"log"
+	"strconv"
 )
 
 const (
@@ -283,13 +285,13 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
     // Получаем информацию об источнике
     source, err := s.storage.GetImportSourceByID(ctx, sourceID)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error getting import source: %w", err)
     }
 
     // Проверяем права доступа
     storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error getting storefront: %w", err)
     }
 
     if storefront.UserID != userID {
@@ -305,13 +307,15 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 
     historyID, err := s.storage.CreateImportHistory(ctx, history)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error creating import history: %w", err)
     }
     history.ID = historyID
 
     // Читаем CSV файл
     csvReader := csv.NewReader(reader)
     csvReader.Comma = ';'  // Используем точку с запятой как разделитель
+    csvReader.LazyQuotes = true  // Разрешаем нестрогие кавычки
+    csvReader.TrimLeadingSpace = true  // Убираем начальные пробелы
 
     // Читаем заголовок
     headers, err := csvReader.Read()
@@ -324,11 +328,36 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
         return history, fmt.Errorf("failed to read CSV header: %w", err)
     }
 
-    // В реальной реализации здесь бы использовались headers для маппинга полей
-    _ = headers // явно отмечаем, что мы знаем о неиспользуемой переменной
+    // Логируем заголовки
+    log.Printf("CSV Import: Headers received: %v", headers)
 
-    // TODO: Реализовать полноценный импорт CSV с учетом маппинга полей
-    // В этом примере будем просто считать строки
+    // Создаем маппинг колонок
+    columnMap := make(map[string]int)
+    for i, header := range headers {
+        header = strings.TrimSpace(header)
+        columnMap[header] = i
+    }
+
+    // Проверяем наличие обязательных полей
+    requiredFields := []string{"id", "title", "description", "price", "category_id"}
+    missing := []string{}
+    for _, field := range requiredFields {
+        if _, ok := columnMap[field]; !ok {
+            missing = append(missing, field)
+        }
+    }
+    
+    if len(missing) > 0 {
+        errMsg := fmt.Sprintf("Missing required fields: %s", strings.Join(missing, ", "))
+        history.Status = "failed"
+        history.Log = errMsg
+        finishTime := time.Now()
+        history.FinishedAt = &finishTime
+        s.storage.UpdateImportHistory(ctx, history)
+        return history, fmt.Errorf(errMsg)
+    }
+
+    // Обработка строк
     var itemsTotal, itemsImported, itemsFailed int
     var errorLog strings.Builder
 
@@ -344,9 +373,121 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
         }
 
         itemsTotal++
-        // TODO: Обработка строки и создание объявления
-        // Здесь будет код для преобразования строки CSV в объявление
-        _ = row // явно отмечаем, что мы знаем о неиспользуемой переменной
+        
+        // Извлекаем данные из строки
+        var listingData models.MarketplaceListing
+        
+        // Проверяем, что индексы не выходят за пределы массива
+        idIdx, ok := columnMap["id"]
+        if !ok || idIdx >= len(row) {
+            itemsFailed++
+            errorLog.WriteString("Row missing required 'id' field\n")
+            continue
+        }
+        
+        // Получаем title
+        titleIdx, ok := columnMap["title"]
+        if !ok || titleIdx >= len(row) {
+            itemsFailed++
+            errorLog.WriteString("Row missing required 'title' field\n")
+            continue
+        }
+        listingData.Title = strings.TrimSpace(row[titleIdx])
+        
+        // Получаем description
+        descIdx, ok := columnMap["description"]
+        if !ok || descIdx >= len(row) {
+            itemsFailed++
+            errorLog.WriteString("Row missing required 'description' field\n")
+            continue
+        }
+        listingData.Description = strings.TrimSpace(row[descIdx])
+        
+        // Получаем price
+        priceIdx, ok := columnMap["price"]
+        if !ok || priceIdx >= len(row) {
+            itemsFailed++
+            errorLog.WriteString("Row missing required 'price' field\n")
+            continue
+        }
+        price, err := strconv.ParseFloat(strings.TrimSpace(row[priceIdx]), 64)
+        if err != nil {
+            itemsFailed++
+            errorLog.WriteString(fmt.Sprintf("Invalid price value '%s': %v\n", row[priceIdx], err))
+            continue
+        }
+        listingData.Price = price
+        
+        // Получаем category_id
+        catIdx, ok := columnMap["category_id"]
+        if !ok || catIdx >= len(row) {
+            itemsFailed++
+            errorLog.WriteString("Row missing required 'category_id' field\n")
+            continue
+        }
+        categoryID, err := strconv.Atoi(strings.TrimSpace(row[catIdx]))
+        if err != nil {
+            itemsFailed++
+            errorLog.WriteString(fmt.Sprintf("Invalid category_id value '%s': %v\n", row[catIdx], err))
+            continue
+        }
+        listingData.CategoryID = categoryID
+        
+        // Получаем condition
+        if condIdx, ok := columnMap["condition"]; ok && condIdx < len(row) {
+            condition := strings.TrimSpace(row[condIdx])
+            if condition != "new" && condition != "used" {
+                condition = "new"  // По умолчанию новый товар
+            }
+            listingData.Condition = condition
+        } else {
+            listingData.Condition = "new"  // По умолчанию новый товар
+        }
+        
+        // Получаем status
+        if statusIdx, ok := columnMap["status"]; ok && statusIdx < len(row) {
+            status := strings.TrimSpace(row[statusIdx])
+            if status != "active" && status != "inactive" {
+                status = "active"  // По умолчанию активный товар
+            }
+            listingData.Status = status
+        } else {
+            listingData.Status = "active"  // По умолчанию активный товар
+        }
+        
+        // Устанавливаем связь с витриной
+        listingData.UserID = userID
+        listingData.StorefrontID = &storefront.ID
+        listingData.ShowOnMap = false  // Товары из витрины не показываем на карте
+        
+        // Создание объявления
+        listingID, err := s.storage.CreateListing(ctx, &listingData)
+        if err != nil {
+            itemsFailed++
+            errorLog.WriteString(fmt.Sprintf("Error creating listing: %v\n", err))
+            continue
+        }
+        
+        // Если есть колонка с изображениями, обрабатываем их
+        if imagesIdx, ok := columnMap["images"]; ok && imagesIdx < len(row) && row[imagesIdx] != "" {
+            imagesList := strings.Split(row[imagesIdx], ",")
+            for i, imagePath := range imagesList {
+                image := &models.MarketplaceImage{
+                    ListingID:   listingID,
+                    FilePath:    strings.TrimSpace(imagePath),
+                    FileName:    strings.TrimSpace(imagePath),
+                    FileSize:    0,  // Неизвестно
+                    ContentType: "image/jpeg",  // Предполагаем jpeg
+                    IsMain:      i == 0,  // Первое изображение - основное
+                }
+                
+                _, err := s.storage.AddListingImage(ctx, image)
+                if err != nil {
+                    errorLog.WriteString(fmt.Sprintf("Error adding image %s to listing %d: %v\n", imagePath, listingID, err))
+                    // Не увеличиваем itemsFailed, так как само объявление создалось успешно
+                }
+            }
+        }
         
         itemsImported++
     }
@@ -415,4 +556,36 @@ func generateSlug(name string) string {
 	randomSuffix := rand.Intn(10000)
 	
 	return fmt.Sprintf("%s-%d", slug, randomSuffix)
+}
+// GetImportSourceByID возвращает источник импорта по ID с проверкой прав доступа
+func (s *StorefrontService) GetImportSourceByID(ctx context.Context, id int, userID int) (*models.ImportSource, error) {
+    // Отладочный лог
+    log.Printf("Getting import source ID: %d for user: %d", id, userID)
+    
+    // Получаем информацию об источнике
+    source, err := s.storage.GetImportSourceByID(ctx, id)
+    if err != nil {
+        log.Printf("Error getting import source: %v", err)
+        return nil, fmt.Errorf("error getting import source: %w", err)
+    }
+
+    // Отладочный лог
+    log.Printf("Found import source: %+v", source)
+
+    // Проверяем права доступа
+    storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
+    if err != nil {
+        log.Printf("Error getting storefront: %v", err)
+        return nil, fmt.Errorf("error getting storefront: %w", err)
+    }
+
+    // Отладочный лог
+    log.Printf("Found storefront: %+v", storefront)
+
+    if storefront.UserID != userID {
+        log.Printf("Access denied - storefront owner: %d, requesting user: %d", storefront.UserID, userID)
+        return nil, fmt.Errorf("access denied")
+    }
+
+    return source, nil
 }
