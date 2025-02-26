@@ -89,8 +89,18 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
     
     setHovering(true);
     
-    // Выбираем случайную плитку для увеличения
-    const randomIndex = Math.floor(Math.random() * 9);
+    // Выбираем только плитки с иконками
+    const tilesWithIcons = positions
+      .map((tile, index) => ({ tile, index }))
+      .filter(item => item.tile.icon !== "");
+    
+    // Если нет плиток с иконками, ничего не делаем
+    if (tilesWithIcons.length === 0) return;
+    
+    // Выбираем случайную плитку с иконкой
+    const randomIconTile = tilesWithIcons[Math.floor(Math.random() * tilesWithIcons.length)];
+    const randomIndex = randomIconTile.index;
+    
     setRandomTile(randomIndex);
     
     // Создаем копию позиций и перемешиваем
@@ -136,7 +146,7 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
     newPositions[randomIndex].y = centerY;
     
     // Увеличиваем выбранную плитку в 2.5 раза
-    newPositions[randomIndex].scale = 2.5;
+    newPositions[randomIndex].scale = 3.2;
     
     // Сохраняем целевые позиции
     setTargetPositions(newPositions);
