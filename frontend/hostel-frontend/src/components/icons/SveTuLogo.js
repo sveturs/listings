@@ -20,11 +20,11 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
     const initialPositions = [
       { id: 0, x: 0, y: 0, color: "#ffcc00", icon: "🛒", scale: 1 },
       { id: 1, x: 74, y: 0, color: "#ff6b6b", icon: "🏪", scale: 1 },
-      { id: 2, x: 148, y: 0, color: "#4ecdc4", icon: "", scale: 1 },
+      { id: 2, x: 148, y: 0, color: "#4ecdc4", icon: "🔍", scale: 1 },
       { id: 3, x: 0, y: 74, color: "#1a535c", icon: "📦", scale: 1 },
-      { id: 4, x: 74, y: 74, color: "#ffe66d", icon: "", scale: 1 },
+      { id: 4, x: 74, y: 74, color: "#ffe66d", icon: "🏠", scale: 1 },
       { id: 5, x: 148, y: 74, color: "#f7fff7", icon: "🏷️", scale: 1 },
-      { id: 6, x: 0, y: 148, color: "#ff6b6b", icon: "", scale: 1 },
+      { id: 6, x: 0, y: 148, color: "#ff6b6b", icon: "📱", scale: 1 },
       { id: 7, x: 74, y: 148, color: "#4ecdc4", icon: "📍", scale: 1 },
       { id: 8, x: 148, y: 148, color: "#1a535c", icon: "💰", scale: 1 }
     ];
@@ -201,15 +201,11 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
   const animateShuffle = () => {
     setHovering(true);
     
-    // Выбираем только плитки с иконками
+    // Теперь все плитки имеют иконки, так что выбираем из всех
     const tilesWithIcons = positions
-      .map((tile, index) => ({ tile, index }))
-      .filter(item => item.tile.icon !== "");
+      .map((tile, index) => ({ tile, index }));
     
-    // Если нет плиток с иконками, ничего не делаем
-    if (tilesWithIcons.length === 0) return;
-    
-    // Выбираем случайную плитку с иконкой
+    // Выбираем случайную плитку
     const randomIconTile = tilesWithIcons[Math.floor(Math.random() * tilesWithIcons.length)];
     const randomIndex = randomIconTile.index;
     
@@ -366,7 +362,7 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
                 <text 
                   x={tile.x + 32} 
                   y={tile.y + 38} 
-                  fontSize={28} 
+                  fontSize={45} // размер иконок
                   fill={tile.color === "#f7fff7" ? "#000" : "#fff"} 
                   textAnchor="middle"
                   dominantBaseline="middle"
@@ -414,7 +410,7 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
                     <text 
                       x={tile.x + 32} 
                       y={tile.y + 38} 
-                      fontSize={28} 
+                      fontSize={56} // Увеличил размер иконок в 2 раза
                       fill={tile.color === "#f7fff7" ? "#000" : "#fff"} 
                       textAnchor="middle"
                       dominantBaseline="middle"
