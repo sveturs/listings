@@ -213,9 +213,14 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
     const { t, i18n } = useTranslation('marketplace'); // Добавляем i18n
 
     const getTranslatedName = (category) => {
+        if (!category) return '';
+
+        // Если у категории есть переводы для текущего языка
         if (category.translations && category.translations[i18n.language]) {
-            return category.translations[i18n.language];
+            return category.translations[i18n.language].name || category.name;
         }
+
+        // Если переводов нет или они не подходят, возвращаем исходное имя
         return category.name;
     };
 
@@ -234,25 +239,34 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
 
     // Получаем текущие категории для отображения
     const getCurrentCategories = () => {
+        // Если нет текущей категории, показываем только корневые категории
         if (!currentCategory) {
-            return categories || [];
+            return categories.filter(category => !category.parent_id) || [];
         }
-        return currentCategory.children || [];
+
+        // Иначе показываем только дочерние категории текущей категории
+        return categories.filter(category =>
+            category.parent_id && String(category.parent_id) === String(currentCategory.id)
+        ) || [];
     };
 
     const handleCategoryClick = (category) => {
         const hasChildren = category.children && category.children.length > 0;
-
+    
+        // Устанавливаем выбранную категорию в фильтрах, даже если у неё есть дочерние элементы
+        setTempFilters(prev => ({
+            ...prev,
+            category_id: category.id
+        }));
+    
+        // Если есть дочерние категории, переходим в них
         if (hasChildren) {
             setNavigationHistory(prev => [...prev, currentCategory]);
             setCurrentCategory(category);
-        } else {
-            setTempFilters(prev => ({
-                ...prev,
-                category_id: category.id
-            }));
         }
+        // Не закрываем фильтры автоматически
     };
+    
 
     const handleBack = () => {
         if (navigationHistory.length > 0) {
@@ -434,10 +448,16 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
                                             sx={{
                                                 flex: 1,
                                                 textAlign: 'left',
-                                                fontWeight: isSelected ? 500 : 400
+                                                fontWeight: isSelected ? 600 : 400,
+                                                color: isSelected ? 'primary.main' : 'text.primary'
                                             }}
                                         >
                                             {getTranslatedName(category)}
+                                            {isSelected && (
+                                                <Box component="span" sx={{ ml: 1, color: 'primary.main' }}>
+                                                    ✓
+                                                </Box>
+                                            )}
                                         </Typography>
                                         {hasChildren && (
                                             <ChevronRight
