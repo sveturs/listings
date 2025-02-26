@@ -9,6 +9,7 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
   const [targetPositions, setTargetPositions] = useState(null);
   const animationFrameRef = useRef(null);
   const animationStartTimeRef = useRef(null);
+  const touchTimeoutRef = useRef(null);
   
   // Инициализируем начальные позиции
   useEffect(() => {
@@ -41,20 +42,6 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
     const currentPositions = fromPositions.map((startPos, index) => {
       const targetPos = toPositions[index];
       
-      // Добавляем колебания во время движения, сильнее для выбранной плитки
-      let wobbleFactor;
-      
-      if (startPos.id === randomTile) {
-        // Для выбранной плитки: больше колебаний в середине пути и меньше в начале и конце
-        wobbleFactor = Math.sin(progress * Math.PI * 4) * 10 * (progress * (1 - progress) * 4);
-      } else {
-        // Для остальных плиток: меньше колебаний
-        wobbleFactor = Math.sin(progress * Math.PI * (2 + index % 3)) * 3 * (1 - progress);
-      }
-      
-      const wobbleX = wobbleFactor * 1.2;
-      const wobbleY = wobbleFactor * 0.8;
-      
       // Промежуточный scale - плавное увеличение выбранной плитки
       const currentScale = startPos.id === randomTile 
         ? startPos.scale + (targetPos.scale - startPos.scale) * easedProgress
@@ -62,10 +49,9 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
         
       return {
         ...startPos,
-        x: startPos.x + (targetPos.x - startPos.x) * easedProgress + wobbleX,
-        y: startPos.y + (targetPos.y - startPos.y) * easedProgress + wobbleY,
-        scale: currentScale,
-        wobble: wobbleFactor
+        x: startPos.x + (targetPos.x - startPos.x) * easedProgress,
+        y: startPos.y + (targetPos.y - startPos.y) * easedProgress,
+        scale: currentScale
       };
     });
     
@@ -89,11 +75,14 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (touchTimeoutRef.current) {
+        clearTimeout(touchTimeoutRef.current);
+      }
     };
   }, []);
 
-  // Перемешивание плиток и увеличение случайной плитки при наведении
-  const handleMouseEnter = () => {
+  // Общая функция для анимации, используемая и для hover и для touch
+  const animateShuffle = () => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
@@ -159,9 +148,9 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
     animationStartTimeRef.current = performance.now();
     animateTiles(animationStartTimeRef.current, startPositions, newPositions);
   };
-
-  // Восстановление исходного состояния при убирании курсора
-  const handleMouseLeave = () => {
+  
+  // Возврат к исходному состоянию
+  const resetAnimation = () => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
@@ -182,6 +171,29 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
     }
   };
 
+  // Обработчики событий для hover
+  const handleMouseEnter = () => {
+    animateShuffle();
+  };
+
+  const handleMouseLeave = () => {
+    resetAnimation();
+  };
+  
+  // Обработчики touch-событий для мобильных устройств
+  const handleTouchStart = (e) => {
+    // Предотвращаем скролл при касании логотипа
+    e.preventDefault();
+    animateShuffle();
+  };
+  
+  const handleTouchEnd = () => {
+    // Добавляем небольшую задержку перед сбросом для мобильных устройств
+    touchTimeoutRef.current = setTimeout(() => {
+      resetAnimation();
+    }, 1500); // Держим анимацию чуть дольше на мобильных устройствах
+  };
+
   // Создаем четкий SVG с улучшенным разрешением
   return (
     <svg 
@@ -196,6 +208,8 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       <defs>
         <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
