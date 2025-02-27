@@ -7,9 +7,9 @@ import {
     Box, Button, IconButton, Typography, InputBase, Toolbar, TextField, Select, MenuItem,
     Paper, Grid, Drawer, Stack
 } from '@mui/material';
-import { Search as SearchIcon, Filter, X, Check, ArrowLeft, ChevronRight, Plus, Store  } from 'lucide-react';
+import { Search as SearchIcon, Filter, X, Check, ArrowLeft, ChevronRight, Plus, Store } from 'lucide-react';
 import { debounce } from 'lodash';
- 
+
 // Компонент MobileHeader
 export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValue }) => {
     const { t } = useTranslation('marketplace', 'common');
@@ -152,6 +152,18 @@ export const MobileListingCard = ({ listing }) => {
             maximumFractionDigits: 0
         }).format(price || 0);
     };
+    const handleShopButtonClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Важно: останавливаем всплытие события для всех родительских элементов
+        if (e.nativeEvent) {
+            e.nativeEvent.stopImmediatePropagation();
+        }
+        // Используем прямой переход
+        window.location.href = `/shop/${listing.storefront_id}`;
+        // Предотвращаем дальнейшую обработку события
+        return false;
+    };
 
     return (
         <Box sx={{ p: 1 }}>
@@ -164,31 +176,66 @@ export const MobileListingCard = ({ listing }) => {
                     bgcolor: 'grey.100'
                 }}
             >
-                  {/*  бейдж магазина */}
-                  {listing.storefront_id && (
-                    <Box 
-                        sx={{
-                            position: 'absolute',
-                            top: 5,
-                            right: 5,
-                            zIndex: 1,
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            borderRadius: '4px',
-                            px: 0.5,
-                            py: 0.25,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            fontSize: '0.7rem',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        <Store size={12} />
-                        магазин
-                    </Box>
-                )}
-                
+                {/*  бейдж магазина */}
+                {listing.storefront_id && (
+    <Box
+        sx={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            zIndex: 100, // Очень высокий z-index
+            bgcolor: 'primary.main', // MUI тема для цвета
+            color: 'white',
+            borderRadius: '4px',
+            px: 1,
+            py: 0.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            isolation: 'isolate' // Изоляция событий
+        }}
+        // Используем onMouseDown для более раннего перехвата события, чем onClick
+        onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.nativeEvent) {
+                e.nativeEvent.stopImmediatePropagation();
+            }
+            window.location.href = `/shop/${listing.storefront_id}`;
+            return false;
+        }}
+        // Дублируем на onClick для надежности
+        onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.nativeEvent) {
+                e.nativeEvent.stopImmediatePropagation();
+            }
+            window.location.href = `/shop/${listing.storefront_id}`;
+            return false;
+        }}
+        // Дублируем на onTouchStart для надежности на мобильных
+        onTouchStart={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.nativeEvent) {
+                e.nativeEvent.stopImmediatePropagation();
+            }
+            window.location.href = `/shop/${listing.storefront_id}`;
+            return false;
+        }}
+        data-shop-button="true"
+    >
+        <Store size={14} />
+        в магазин
+    </Box>
+)}
+
+
+
                 {listing.images && listing.images[0] && (
                     <img
                         src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}`}
@@ -277,13 +324,13 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
 
     const handleCategoryClick = (category) => {
         const hasChildren = category.children && category.children.length > 0;
-    
+
         // Устанавливаем выбранную категорию в фильтрах, даже если у неё есть дочерние элементы
         setTempFilters(prev => ({
             ...prev,
             category_id: category.id
         }));
-    
+
         // Если есть дочерние категории, переходим в них
         if (hasChildren) {
             setNavigationHistory(prev => [...prev, currentCategory]);
@@ -291,7 +338,7 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
         }
         // Не закрываем фильтры автоматически
     };
-    
+
 
     const handleBack = () => {
         if (navigationHistory.length > 0) {

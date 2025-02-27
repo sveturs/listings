@@ -54,11 +54,15 @@ const MobileListingGrid = ({ listings }) => {
                                 to={`/marketplace/listings/${listing.id}`}
                                 style={{ textDecoration: 'none', color: 'inherit' }}
                                 onClick={(e) => {
-                                    // Если клик был на кнопке магазина, перенаправляем на страницу магазина
-                                    if (listing.storefront_id && e.target.closest('[data-shop-button="true"]')) {
+                                    // Проверяем, был ли клик на кнопке "Магазин тут" или ее потомках
+                                    const shopButton = e.target.closest('[data-shop-button="true"]');
+                                    if (shopButton) {
+                                        // Если клик был на кнопке магазина, отменяем стандартное поведение
                                         e.preventDefault();
-                                        navigate(`/shop/${listing.storefront_id}`);
+                                        // Больше ничего не делаем, т.к. обработчик кнопки уже выполнит переход
+                                        return;
                                     }
+                                    // Для всех остальных кликов - стандартное поведение (переход к деталям товара)
                                 }}
                             >
                                 <MobileListingCard listing={listing} />
