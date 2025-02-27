@@ -136,7 +136,7 @@ const ListingCard = ({ listing, isMobile }) => {
                         data-shop-button="true"
                     >
                         <Store size={14} />
-                        Магазин тут
+                        в магазин
                     </Box>
                 </Tooltip>
             )}
