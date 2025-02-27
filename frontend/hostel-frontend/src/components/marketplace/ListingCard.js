@@ -22,7 +22,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000'
 const ListingCard = ({ listing, isMobile }) => {
     const { t, i18n } = useTranslation('marketplace');
     const [storeName, setStoreName] = useState('Магазин');
-    
+
     // Загружаем название магазина при монтировании компонента
     useEffect(() => {
         const fetchStoreName = async () => {
@@ -58,7 +58,7 @@ const ListingCard = ({ listing, isMobile }) => {
         // Если перевод не найден, возвращаем оригинальный текст
         return listing[field];
     };
-    
+
     const formatPrice = (price) => {
         return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
@@ -104,43 +104,61 @@ const ListingCard = ({ listing, isMobile }) => {
         }}>
             {/* Кнопка "Магазин тут" с всплывающей подсказкой */}
             {listing.storefront_id && (
-                <Tooltip 
+                <Tooltip
                     title={storeName}
                     placement="top"
                     arrow
                 >
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: 10,
-                            right: 10,
-                            zIndex: 10, // Высокий z-index для отображения поверх всех элементов
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            borderRadius: '4px',
-                            px: 1,
-                            py: 0.5,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            fontSize: '0.75rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            pointerEvents: 'auto'
-                        }}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            window.location.href = `/shop/${listing.storefront_id}`;
-                        }}
-                        data-shop-button="true"
-                    >
-                        <Store size={14} />
-                        в магазин
-                    </Box>
+
+                    {listing.storefront_id && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 10,
+                                right: 10,
+                                // Невидимая увеличенная область клика
+                                '&::before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    top: -10,
+                                    left: -10,
+                                    right: -10,
+                                    bottom: -10,
+                                    zIndex: 5
+                                },
+                                zIndex: 10,
+                                bgcolor: 'primary.main',
+                                color: 'white',
+                                borderRadius: '4px',
+                                px: 1,
+                                py: 0.5,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                pointerEvents: 'auto'
+                            }}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.nativeEvent.stopImmediatePropagation();
+                                // Использование setTimeout для предотвращения конфликтов событий
+                                setTimeout(() => {
+                                    window.location.href = `/shop/${listing.storefront_id}`;
+                                }, 10);
+                            }}
+                            data-shop-button="true"
+                        >
+                            <Store size={14} />
+                            Магазин тут
+                        </Box>
+                    )}
+
                 </Tooltip>
             )}
-            
+
             {/* Остальной код без изменений */}
             <Box sx={{ position: 'relative', pt: isMobile ? '100%' : '75%' }}>
                 <CardMedia

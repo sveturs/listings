@@ -29,6 +29,8 @@ import StorefrontPage from "./pages/store/StorefrontPage";
 import StorefrontDetailPage from "./pages/store/StorefrontDetailPage";
 import PublicStorefrontPage from "./pages/store/PublicStorefrontPage";
 
+import EditStorefrontPage from "./pages/store/EditStorefrontPage";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,7 +71,14 @@ function App() {
                           <StorefrontPage />
                         </PrivateRoute>
                       } />
-
+                      <Route
+                        path="/storefronts/:id/edit"
+                        element={
+                          <PrivateRoute>
+                            <EditStorefrontPage />
+                          </PrivateRoute>
+                        }
+                      />
                       {/*<Route path="/storefronts/:id" element={<StorefrontDetailPage />} />*/}
                       <Route path="/storefronts/:id" element={<PrivateRoute><StorefrontDetailPage /></PrivateRoute>} />
                       <Route path="/shop/:id" element={<PublicStorefrontPage />} />
