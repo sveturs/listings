@@ -124,6 +124,19 @@ func (s *StorefrontService) GetStorefrontByID(ctx context.Context, id int, userI
 	return storefront, nil
 }
 
+func (s *StorefrontService) GetPublicStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
+    storefront, err := s.storage.GetStorefrontByID(ctx, id)
+    if err != nil {
+        return nil, err
+    }
+
+    if storefront.Status != "active" {
+        return nil, fmt.Errorf("storefront is not active")
+    }
+
+    return storefront, nil
+}
+
 // UpdateStorefront обновляет информацию о витрине
 func (s *StorefrontService) UpdateStorefront(ctx context.Context, storefront *models.Storefront, userID int) error {
 	// Проверяем права доступа

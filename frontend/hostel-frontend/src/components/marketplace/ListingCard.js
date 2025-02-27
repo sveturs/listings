@@ -18,23 +18,23 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
 const ListingCard = ({ listing, isMobile }) => {
-    const { t, i18n } = useTranslation('marketplace'); 
+    const { t, i18n } = useTranslation('marketplace');
     console.log("Отрисовка карточки товара:", listing.id, "storefront_id:", listing.storefront_id);
 
     const getLocalizedText = (field) => {
         if (!listing || !field) return '';
-    
+
         // Если текущий язык совпадает с языком оригинала
         if (i18n.language === listing.original_language) {
             return listing[field];
         }
-        
+
         // Пытаемся получить перевод
         const translation = listing.translations?.[i18n.language]?.[field];
         if (translation) {
             return translation;
         }
-    
+
         // Если перевод не найден, возвращаем оригинальный текст
         return listing[field];
     };
@@ -60,12 +60,12 @@ const ListingCard = ({ listing, isMobile }) => {
         if (!listing.images || listing.images.length === 0) {
             return '/placeholder.jpg';
         }
-        
+
         const mainImage = listing.images.find(img => img.is_main) || listing.images[0];
         if (!mainImage || !mainImage.file_path) {
             return '/placeholder.jpg';
         }
-        
+
         return `${BACKEND_URL}/uploads/${mainImage.file_path}`;
     };
 
@@ -110,15 +110,15 @@ const ListingCard = ({ listing, isMobile }) => {
                 )}
             </Box>
 
-            <CardContent sx={{ 
-                flexGrow: 1, 
+            <CardContent sx={{
+                flexGrow: 1,
                 p: isMobile ? 1 : 2,
                 '&:last-child': { pb: isMobile ? 1 : 2 }
             }}>
-                <Typography 
-                    variant={isMobile ? "body2" : "h6"} 
+                <Typography
+                    variant={isMobile ? "body2" : "h6"}
                     noWrap
-                    sx={{ 
+                    sx={{
                         fontSize: isMobile ? '0.875rem' : undefined,
                         fontWeight: 'medium'
                     }}
@@ -128,14 +128,14 @@ const ListingCard = ({ listing, isMobile }) => {
 
                 {listing.rating > 0 && (
                     <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 1 }}>
-                        <Rating 
-                            value={listing.rating} 
-                            readOnly 
-                            size="small" 
+                        <Rating
+                            value={listing.rating}
+                            readOnly
+                            size="small"
                             precision={0.1}
                         />
-                        <Typography 
-                            variant="body2" 
+                        <Typography
+                            variant="body2"
                             color="text.secondary"
                         >
                             ({listing.reviews_count})
@@ -143,10 +143,10 @@ const ListingCard = ({ listing, isMobile }) => {
                     </Stack>
                 )}
 
-                <Typography 
-                    variant={isMobile ? "body2" : "h5"} 
-                    color="primary" 
-                    sx={{ 
+                <Typography
+                    variant={isMobile ? "body2" : "h5"}
+                    color="primary"
+                    sx={{
                         mt: 0.5,
                         fontSize: isMobile ? '0.875rem' : undefined,
                         fontWeight: 'bold'
@@ -155,19 +155,36 @@ const ListingCard = ({ listing, isMobile }) => {
                     {formatPrice(listing.price)}
                 </Typography>
                 {listing.storefront_id && (
-    <Box sx={{ 
-        display: 'flex',
-        alignItems: 'center', 
-        gap: 0.5,
-        mt: 1,
-        color: 'text.secondary'
-    }}>
-        <Store size={16} />
-        <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
-            От магазина
-        </Typography>
-    </Box>
-)}
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            zIndex: 1,
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            borderRadius: '4px',
+                            px: 1,
+                            py: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                        }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = `/shop/${listing.storefront_id}`;
+                        }}
+                        data-shop-button="true"
+                    >
+                        <Store size={14} />
+                        Магазин
+                    </Box>
+                )}
+
                 {!isMobile && (
                     <>
                         <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
@@ -190,11 +207,11 @@ const ListingCard = ({ listing, isMobile }) => {
                             fullWidth
                             sx={{ mt: 2 }}
                         >
-                            {t('listings.details.moreDetails')} 
+                            {t('listings.details.moreDetails')}
                         </Button>
                     </>
                 )}
-                
+
             </CardContent>
         </Card>
     );

@@ -478,11 +478,16 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		conditions = append(conditions, fmt.Sprintf("AND l.condition = $%d", argCount))
 		args = append(args, v)
 	}
-
-	// Добавляем условия фильтрации
+	if v, ok := filters["storefront_id"]; ok && v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("AND l.storefront_id = $%d", argCount))
+		args = append(args, v)
+	}
 	if len(conditions) > 0 {
 		baseQuery += " " + strings.Join(conditions, " ")
 	}
+
+
 
 	// Сортировка
 	switch filters["sort_by"] {
@@ -601,10 +606,11 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		if tempCategoryName.Valid {
 			listing.Category.Name = tempCategoryName.String
 		}
-		if tempCategorySlug.Valid {
-			listing.Category.Slug = tempCategorySlug.String
+		if v, ok := filters["storefront_id"]; ok && v != "" {
+			argCount++
+			conditions = append(conditions, fmt.Sprintf("AND l.storefront_id = $%d", argCount))
+			args = append(args, v)
 		}
-
 		// Обработка переводов
 		if err := json.Unmarshal(translationsJSON, &listing.RawTranslations); err != nil {
 			listing.RawTranslations = make(map[string]interface{})

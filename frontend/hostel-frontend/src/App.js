@@ -27,6 +27,8 @@ import { CircularProgress, Box } from '@mui/material';
 import TransactionsPage from './pages/balance/TransactionsPage';
 import StorefrontPage from "./pages/store/StorefrontPage";
 import StorefrontDetailPage from "./pages/store/StorefrontDetailPage";
+import PublicStorefrontPage from "./pages/store/PublicStorefrontPage";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,22 +64,14 @@ function App() {
                       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                       <Route path="/marketplace" element={<MarketplacePage />} />
                       {/*  <Route path="/marketplace/create" element={<CreateListingPage />} />*/}
-                      <Route
-  path="/storefronts"
-  element={
-    <PrivateRoute>
-      <StorefrontPage />
-    </PrivateRoute>
-  }
-/>
-<Route
-  path="/storefronts/:id"
-  element={
-    <PrivateRoute>
-      <StorefrontDetailPage />
-    </PrivateRoute>
-  }
-/>
+                      {/* <Route path="/storefronts/:id" element={<StorefrontDetailPage />} />*/}
+                      <Route path="/storefronts/:id" element={<PrivateRoute><StorefrontDetailPage /></PrivateRoute>}/>
+                      <Route path="/shop/:id" element={<PublicStorefrontPage />} />
+                      <Route path="/storefronts" element={
+                        <PrivateRoute>
+                          <StorefrontPage />
+                        </PrivateRoute>
+                      } />
                       <Route
                         path="/marketplace/create"
                         element={
@@ -100,7 +94,7 @@ function App() {
                       <Route path="/my-listings" element={<MyListingsPage />} />
                       <Route path="/favorites" element={<FavoriteListingsPage />} />
                       <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
-                      <Route   path="/balance"   element={    <PrivateRoute>      <TransactionsPage />    </PrivateRoute>  } />
+                      <Route path="/balance" element={<PrivateRoute>      <TransactionsPage />    </PrivateRoute>} />
                     </Routes>
                   </Layout>
                 </NotificationProvider>

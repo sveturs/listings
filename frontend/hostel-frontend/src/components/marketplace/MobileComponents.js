@@ -185,7 +185,7 @@ export const MobileListingCard = ({ listing }) => {
                         }}
                     >
                         <Store size={12} />
-                        Магазин
+                        Магазин 123
                     </Box>
                 )}
                 

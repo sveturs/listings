@@ -200,6 +200,7 @@ func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
 		"query":       c.Query("query"),
 		"condition":   c.Query("condition"),
 		"sort_by":     c.Query("sort_by"),
+		"storefront_id": c.Query("storefront_id"),
 	}
 
 	page, _ := strconv.Atoi(c.Query("page", "1"))

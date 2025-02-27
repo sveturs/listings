@@ -2,8 +2,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Container,
     Grid,
@@ -28,38 +27,49 @@ import {
 } from '../../components/marketplace/MobileComponents';
 import CompactMarketplaceFilters from '../../components/marketplace/MarketplaceFilters';
 import axios from '../../api/axios';
-import { useSearchParams } from 'react-router-dom';
 
 
-const MobileListingGrid = ({ listings }) => (
-    <Box sx={{ px: 1 }}>
-        <Grid container spacing={1}>
-            {listings.map((listing) => (
-                <Grid item xs={6} key={listing.id}>
-                    <Box
-                        component={Paper}
-                        variant="outlined"
-                        sx={{
-                            height: '100%',
-                            overflow: 'hidden',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            '&:active': {
-                                transform: 'scale(0.98)'
-                            }
-                        }}
-                    >
-                        <Link
-                            to={`/marketplace/listings/${listing.id}`}
-                            style={{ textDecoration: 'none', color: 'inherit' }}
+
+const MobileListingGrid = ({ listings }) => {
+    const navigate = useNavigate();
+
+    return (
+        <Box sx={{ px: 1 }}>
+            <Grid container spacing={1}>
+                {listings.map((listing) => (
+                    <Grid item xs={6} key={listing.id}>
+                        <Box
+                            component={Paper}
+                            variant="outlined"
+                            sx={{
+                                height: '100%',
+                                overflow: 'hidden',
+                                transition: 'transform 0.2s, box-shadow 0.2s',
+                                '&:active': {
+                                    transform: 'scale(0.98)'
+                                }
+                            }}
                         >
-                            <MobileListingCard listing={listing} />
-                        </Link>
-                    </Box>
-                </Grid>
-            ))}
-        </Grid>
-    </Box>
-);
+                            <Link
+                                to={`/marketplace/listings/${listing.id}`}
+                                style={{ textDecoration: 'none', color: 'inherit' }}
+                                onClick={(e) => {
+                                    // Если клик был на кнопке магазина, перенаправляем на страницу магазина
+                                    if (listing.storefront_id && e.target.closest('[data-shop-button="true"]')) {
+                                        e.preventDefault();
+                                        navigate(`/shop/${listing.storefront_id}`);
+                                    }
+                                }}
+                            >
+                                <MobileListingCard listing={listing} />
+                            </Link>
+                        </Box>
+                    </Grid>
+                ))}
+            </Grid>
+        </Box>
+    );
+};
 
 const MarketplacePage = () => {
     const { t } = useTranslation('marketplace');
@@ -101,8 +111,8 @@ const MarketplacePage = () => {
 
             if (response.data?.data?.data) {
                 const listings = response.data.data.data;
-                console.log('Debug: Listings with storefront_id:', 
-                    listings.filter(item => item.storefront_id).map(item => 
+                console.log('Debug: Listings with storefront_id:',
+                    listings.filter(item => item.storefront_id).map(item =>
                         `ID: ${item.id}, Title: ${item.title}, StorefrontID: ${item.storefront_id}`
                     )
                 );
@@ -292,37 +302,19 @@ const MarketplacePage = () => {
             <Grid container spacing={3}>
                 {listings.map((listing) => (
                     <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                        <Box sx={{ position: 'relative' }}>
-                            {listing.storefront_id && (
-                                <Box
-                                    sx={{
-                                        position: 'absolute',
-                                        top: 10,
-                                        right: 10,
-                                        zIndex: 1,
-                                        bgcolor: 'primary.main',
-                                        color: 'white',
-                                        borderRadius: '4px',
-                                        px: 1,
-                                        py: 0.5,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 0.5,
-                                        fontSize: '0.75rem',
-                                        fontWeight: 'bold'
-                                    }}
-                                >
-                                    <Store size={14} />
-                                    Магазин
-                                </Box>
-                            )}
-                            <Link
-                                to={`/marketplace/listings/${listing.id}`}
-                                style={{ textDecoration: 'none' }}
-                            >
-                                <ListingCard listing={listing} />
-                            </Link>
-                        </Box>
+                        <Link
+                            to={`/marketplace/listings/${listing.id}`}
+                            style={{ textDecoration: 'none' }}
+                            onClick={(e) => {
+                                // Если клик был на кнопке магазина, перенаправляем на страницу магазина
+                                if (listing.storefront_id && e.target.closest('[data-shop-button="true"]')) {
+                                    e.preventDefault();
+                                    navigate(`/shop/${listing.storefront_id}`);
+                                }
+                            }}
+                        >
+                            <ListingCard listing={listing} />
+                        </Link>
                     </Grid>
                 ))}
             </Grid>

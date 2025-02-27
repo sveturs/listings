@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
     Container,
     Typography,
@@ -30,7 +30,7 @@ import {
 import { Edit, Trash2, Plus, Database, Upload, Settings, BarChart, RefreshCw, FileType, AlertTriangle } from 'lucide-react';
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
-
+import ListingCard from '../../components/marketplace/ListingCard';
 const TabPanel = (props) => {
     const { children, value, index, ...other } = props;
 
@@ -53,6 +53,7 @@ const TabPanel = (props) => {
 
 const StorefrontDetailPage = () => {
     const { t } = useTranslation(['common', 'marketplace']);
+    const [storeListings, setStoreListings] = useState([]);
     const navigate = useNavigate();
     const { id } = useParams();
     const { user } = useAuth();
@@ -78,13 +79,17 @@ const StorefrontDetailPage = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [storefrontResponse, sourcesResponse] = await Promise.all([
+                const [storefrontResponse, sourcesResponse, listingsResponse] = await Promise.all([
                     axios.get(`/api/v1/storefronts/${id}`),
-                    axios.get(`/api/v1/storefronts/${id}/import-sources`)
+                    axios.get(`/api/v1/storefronts/${id}/import-sources`),
+                    axios.get('/api/v1/marketplace/listings', { 
+                        params: { storefront_id: id } 
+                    })
                 ]);
-
+                
                 setStorefront(storefrontResponse.data.data);
                 setImportSources(sourcesResponse.data.data || []);
+                setStoreListings(listingsResponse.data.data?.data || []);
             } catch (err) {
                 console.error('Error fetching storefront data:', err);
                 setError('Не удалось загрузить данные витрины');
@@ -289,6 +294,38 @@ const StorefrontDetailPage = () => {
                 <Divider />
 
                 <TabPanel value={activeTab} index={0}>
+                    <Box mt={3}>
+                        <Typography variant="h6" gutterBottom>
+                            Товары в витрине
+                        </Typography>
+
+                        <Grid container spacing={3} mt={1}>
+                            {loading ? (
+                                <Box display="flex" justifyContent="center" width="100%" p={4}>
+                                    <CircularProgress />
+                                </Box>
+                            ) : (
+                                <>
+                                    {storeListings && storeListings.length > 0 ? (
+                                        storeListings.map((listing) => (
+                                            <Grid item xs={12} sm={6} md={4} key={listing.id}>
+                                                <Link
+                                                    to={`/marketplace/listings/${listing.id}`}
+                                                    style={{ textDecoration: 'none' }}
+                                                >
+                                                    <ListingCard listing={listing} />
+                                                </Link>
+                                            </Grid>
+                                        ))
+                                    ) : (
+                                        <Box width="100%" p={4} textAlign="center">
+                                            <Typography>В этой витрине пока нет товаров</Typography>
+                                        </Box>
+                                    )}
+                                </>
+                            )}
+                        </Grid>
+                    </Box>
                     <Box mb={3}>
                         <Typography variant="h6" gutterBottom>
                             Источники импорта

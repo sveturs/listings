@@ -20,8 +20,8 @@ import {
     Heart,
     ChevronLeft,
     ChevronRight
-} 
-from 'lucide-react';
+}
+    from 'lucide-react';
 import axios from '../../api/axios';
 import {
     Container, Modal, Paper, Grid, Box, Typography,
@@ -119,6 +119,8 @@ const ListingDetailsPage = () => {
                 ) || false,
                 images: listingData.images || []
             });
+            console.log("Listing data:", listingData);
+            console.log("Storefront ID:", listingData.storefront_id);
         } catch (err) {
             console.error('Error fetching listing:', err);
             setError(t('listings.details.errors.loadFailed'));
@@ -460,25 +462,26 @@ const ListingDetailsPage = () => {
                                 <Typography variant="h4" gutterBottom>
                                     {formatPrice(listing.price)}
                                 </Typography>
-{listing.storefront_id && (
-    <Card elevation={2} sx={{ mt: 2 }}>
-        <CardContent>
-            <Typography variant="h6" gutterBottom>
-                Товар из магазина
-            </Typography>
-            <Button
-                variant="contained"
-                color="primary"
-                startIcon={<Store />}
-                component={Link}
-                to={`/storefronts/${listing.storefront_id}`}
-                sx={{ mt: 1 }}
-            >
-                Перейти в магазин
-            </Button>
-        </CardContent>
-    </Card>
-)}
+                                {listing.storefront_id && (
+                                    <Card elevation={2} sx={{ mt: 2 }}>
+                                        <CardContent>
+                                            <Typography variant="h6" gutterBottom>
+                                                Товар из магазина
+                                            </Typography>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                startIcon={<Store />}
+                                                component={Link}
+                                                to={`/shop/${listing.storefront_id}`}
+                                                sx={{ mt: 1 }}
+                                            >
+                                                Перейти в магазин
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                )}
+
                                 <Stack direction="row" spacing={1}>
                                     <Box sx={{ flex: 1 }}>
                                         <CallButton phone={listing.user?.phone} isMobile={isMobile} />
@@ -629,7 +632,7 @@ const ListingDetailsPage = () => {
                                             {listing.user?.name}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                        {formatMemberDate(listing.user?.created_at)}
+                                            {formatMemberDate(listing.user?.created_at)}
                                         </Typography>
                                     </Box>
                                 </Stack>

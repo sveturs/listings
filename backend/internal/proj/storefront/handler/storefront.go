@@ -72,7 +72,21 @@ func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, storefront)
 }
+ 
+// GetPublicStorefront возвращает публичные данные витрины по ID
+func (h *StorefrontHandler) GetPublicStorefront(c *fiber.Ctx) error {
+    id, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid storefront ID")
+    }
 
+    storefront, err := h.services.Storefront().GetPublicStorefrontByID(c.Context(), id)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get storefront")
+    }
+
+    return utils.SuccessResponse(c, storefront)
+}
 // UpdateStorefront обновляет информацию о витрине
 func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)

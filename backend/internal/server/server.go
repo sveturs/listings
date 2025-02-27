@@ -136,6 +136,8 @@ func (s *Server) setupRoutes() {
 		log.Printf("Received webhook request: %s", string(c.Body()))
 		return s.notifications.Notification.HandleTelegramWebhook(c)
 	})
+    // маршрут для витрин
+    s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
 
 	// Balance routes
 	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequired)
