@@ -64,14 +64,16 @@ function App() {
                       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                       <Route path="/marketplace" element={<MarketplacePage />} />
                       {/*  <Route path="/marketplace/create" element={<CreateListingPage />} />*/}
-                      {/* <Route path="/storefronts/:id" element={<StorefrontDetailPage />} />*/}
-                      <Route path="/storefronts/:id" element={<PrivateRoute><StorefrontDetailPage /></PrivateRoute>}/>
-                      <Route path="/shop/:id" element={<PublicStorefrontPage />} />
                       <Route path="/storefronts" element={
                         <PrivateRoute>
                           <StorefrontPage />
                         </PrivateRoute>
                       } />
+
+                      {/*<Route path="/storefronts/:id" element={<StorefrontDetailPage />} />*/}
+                      <Route path="/storefronts/:id" element={<PrivateRoute><StorefrontDetailPage /></PrivateRoute>} />
+                      <Route path="/shop/:id" element={<PublicStorefrontPage />} />
+
                       <Route
                         path="/marketplace/create"
                         element={

@@ -1,7 +1,8 @@
 // src/components/marketplace/ListingCard.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapPin as LocationIcon, Clock as AccessTime, Camera, Store } from 'lucide-react';
+import axios from '../../api/axios';
 
 import {
     Card,
@@ -12,14 +13,33 @@ import {
     Chip,
     Button,
     Rating,
-    Stack
+    Stack,
+    Tooltip
 } from '@mui/material';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
 const ListingCard = ({ listing, isMobile }) => {
     const { t, i18n } = useTranslation('marketplace');
-    console.log("Отрисовка карточки товара:", listing.id, "storefront_id:", listing.storefront_id);
+    const [storeName, setStoreName] = useState('Магазин');
+    
+    // Загружаем название магазина при монтировании компонента
+    useEffect(() => {
+        const fetchStoreName = async () => {
+            if (listing.storefront_id) {
+                try {
+                    const response = await axios.get(`/api/v1/public/storefronts/${listing.storefront_id}`);
+                    if (response.data?.data?.name) {
+                        setStoreName(response.data.data.name);
+                    }
+                } catch (err) {
+                    console.error('Ошибка загрузки информации о магазине:', err);
+                }
+            }
+        };
+
+        fetchStoreName();
+    }, [listing.storefront_id]);
 
     const getLocalizedText = (field) => {
         if (!listing || !field) return '';
@@ -38,6 +58,7 @@ const ListingCard = ({ listing, isMobile }) => {
         // Если перевод не найден, возвращаем оригинальный текст
         return listing[field];
     };
+    
     const formatPrice = (price) => {
         return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
@@ -74,12 +95,53 @@ const ListingCard = ({ listing, isMobile }) => {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
+            position: 'relative', // Важно для абсолютного позиционирования кнопки
             '&:hover': {
                 transform: 'translateY(-4px)',
                 boxShadow: 3,
                 transition: 'all 0.2s ease-in-out'
             }
         }}>
+            {/* Кнопка "Магазин тут" с всплывающей подсказкой */}
+            {listing.storefront_id && (
+                <Tooltip 
+                    title={storeName}
+                    placement="top"
+                    arrow
+                >
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            zIndex: 10, // Высокий z-index для отображения поверх всех элементов
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            borderRadius: '4px',
+                            px: 1,
+                            py: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            pointerEvents: 'auto'
+                        }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = `/shop/${listing.storefront_id}`;
+                        }}
+                        data-shop-button="true"
+                    >
+                        <Store size={14} />
+                        Магазин тут
+                    </Box>
+                </Tooltip>
+            )}
+            
+            {/* Остальной код без изменений */}
             <Box sx={{ position: 'relative', pt: isMobile ? '100%' : '75%' }}>
                 <CardMedia
                     component="img"
@@ -154,36 +216,6 @@ const ListingCard = ({ listing, isMobile }) => {
                 >
                     {formatPrice(listing.price)}
                 </Typography>
-                {listing.storefront_id && (
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: 10,
-                            right: 10,
-                            zIndex: 1,
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            borderRadius: '4px',
-                            px: 1,
-                            py: 0.5,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            fontSize: '0.75rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
-                        }}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            window.location.href = `/shop/${listing.storefront_id}`;
-                        }}
-                        data-shop-button="true"
-                    >
-                        <Store size={14} />
-                        Магазин
-                    </Box>
-                )}
 
                 {!isMobile && (
                     <>
@@ -211,7 +243,6 @@ const ListingCard = ({ listing, isMobile }) => {
                         </Button>
                     </>
                 )}
-
             </CardContent>
         </Card>
     );
