@@ -408,6 +408,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         l.updated_at,
         l.show_on_map,
         l.original_language,
+		l.storefront_id,
         u.name as user_name, 
         u.email as user_email,
 		u.created_at as user_created_at,
@@ -524,6 +525,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			tempCountry      sql.NullString
 			tempCategoryName sql.NullString
 			tempCategorySlug sql.NullString
+			tempStorefrontID   sql.NullInt32 
 		)
 
 		err := rows.Scan(
@@ -545,6 +547,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			&listing.UpdatedAt,
 			&listing.ShowOnMap,
 			&listing.OriginalLanguage,
+			&tempStorefrontID,
 			&listing.User.Name,
 			&tempEmail,
 			&listing.User.CreatedAt,
@@ -572,6 +575,10 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		// Обработка NULL значений
 		if tempLocation.Valid {
 			listing.Location = tempLocation.String
+		}
+		if tempStorefrontID.Valid {
+			sfID := int(tempStorefrontID.Int32)
+			listing.StorefrontID = &sfID
 		}
 		if tempLatitude.Valid {
 			listing.Latitude = &tempLatitude.Float64

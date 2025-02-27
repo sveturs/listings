@@ -17,8 +17,8 @@ import {
     Paper,
     Chip,
 }
-from '@mui/material';
-import { Plus, Search as SearchIcon, X } from 'lucide-react';
+    from '@mui/material';
+import { Plus, Search as SearchIcon, X, Store } from 'lucide-react';
 import ListingCard from '../../components/marketplace/ListingCard';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import {
@@ -100,7 +100,13 @@ const MarketplacePage = () => {
             const response = await axios.get('/api/v1/marketplace/listings', { params });
 
             if (response.data?.data?.data) {
-                setListings(response.data.data.data);
+                const listings = response.data.data.data;
+                console.log('Debug: Listings with storefront_id:', 
+                    listings.filter(item => item.storefront_id).map(item => 
+                        `ID: ${item.id}, Title: ${item.title}, StorefrontID: ${item.storefront_id}`
+                    )
+                );
+                setListings(listings);
             } else {
                 setListings([]);
             }
@@ -157,10 +163,10 @@ const MarketplacePage = () => {
         if (!categoryId || !categoriesTree || categoriesTree.length === 0) {
             return [];
         }
-        
+
         // Создаем плоскую карту всех категорий для быстрого поиска
         const categoryMap = new Map();
-        
+
         const flattenCategories = (categories) => {
             for (const category of categories) {
                 categoryMap.set(String(category.id), category);
@@ -169,18 +175,18 @@ const MarketplacePage = () => {
                 }
             }
         };
-        
+
         // Заполняем карту всеми категориями
         flattenCategories(categoriesTree);
-        
+
         // Строим путь от выбранной категории до корня
         const path = [];
         let currentId = String(categoryId);
-        
+
         while (currentId) {
             const category = categoryMap.get(currentId);
             if (!category) break;
-            
+
             // Добавляем категорию в начало пути
             path.unshift({
                 id: category.id,
@@ -188,11 +194,11 @@ const MarketplacePage = () => {
                 slug: category.slug,
                 translations: category.translations
             });
-            
+
             // Переходим к родителю
             currentId = category.parent_id ? String(category.parent_id) : null;
         }
-        
+
         return path;
     };
 
@@ -286,15 +292,41 @@ const MarketplacePage = () => {
             <Grid container spacing={3}>
                 {listings.map((listing) => (
                     <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                        <Link
-                            to={`/marketplace/listings/${listing.id}`}
-                            style={{ textDecoration: 'none' }}
-                        >
-                            <ListingCard listing={listing} />
-                        </Link>
+                        <Box sx={{ position: 'relative' }}>
+                            {listing.storefront_id && (
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 10,
+                                        right: 10,
+                                        zIndex: 1,
+                                        bgcolor: 'primary.main',
+                                        color: 'white',
+                                        borderRadius: '4px',
+                                        px: 1,
+                                        py: 0.5,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 0.5,
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    <Store size={14} />
+                                    Магазин
+                                </Box>
+                            )}
+                            <Link
+                                to={`/marketplace/listings/${listing.id}`}
+                                style={{ textDecoration: 'none' }}
+                            >
+                                <ListingCard listing={listing} />
+                            </Link>
+                        </Box>
                     </Grid>
                 ))}
             </Grid>
+
         );
     };
 

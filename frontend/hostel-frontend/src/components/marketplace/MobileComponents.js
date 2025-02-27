@@ -7,9 +7,9 @@ import {
     Box, Button, IconButton, Typography, InputBase, Toolbar, TextField, Select, MenuItem,
     Paper, Grid, Drawer, Stack
 } from '@mui/material';
-import { Search as SearchIcon, Filter, X, Check, ArrowLeft, ChevronRight, Plus } from 'lucide-react';
+import { Search as SearchIcon, Filter, X, Check, ArrowLeft, ChevronRight, Plus, Store  } from 'lucide-react';
 import { debounce } from 'lodash';
-
+ 
 // Компонент MobileHeader
 export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValue }) => {
     const { t } = useTranslation('marketplace', 'common');
@@ -164,6 +164,31 @@ export const MobileListingCard = ({ listing }) => {
                     bgcolor: 'grey.100'
                 }}
             >
+                  {/*  бейдж магазина */}
+                  {listing.storefront_id && (
+                    <Box 
+                        sx={{
+                            position: 'absolute',
+                            top: 5,
+                            right: 5,
+                            zIndex: 1,
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            borderRadius: '4px',
+                            px: 0.5,
+                            py: 0.25,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            fontSize: '0.7rem',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        <Store size={12} />
+                        Магазин
+                    </Box>
+                )}
+                
                 {listing.images && listing.images[0] && (
                     <img
                         src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}`}

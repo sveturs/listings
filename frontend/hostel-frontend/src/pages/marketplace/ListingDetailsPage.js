@@ -12,6 +12,8 @@ import ReviewsSection from '../../components/reviews/ReviewsSection';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import CallButton from '../../components/marketplace/CallButton';
+import { Link } from 'react-router-dom';
+import { Store } from 'lucide-react';
 import {
     MapPin,
     Calendar,
@@ -458,7 +460,25 @@ const ListingDetailsPage = () => {
                                 <Typography variant="h4" gutterBottom>
                                     {formatPrice(listing.price)}
                                 </Typography>
-
+{listing.storefront_id && (
+    <Card elevation={2} sx={{ mt: 2 }}>
+        <CardContent>
+            <Typography variant="h6" gutterBottom>
+                Товар из магазина
+            </Typography>
+            <Button
+                variant="contained"
+                color="primary"
+                startIcon={<Store />}
+                component={Link}
+                to={`/storefronts/${listing.storefront_id}`}
+                sx={{ mt: 1 }}
+            >
+                Перейти в магазин
+            </Button>
+        </CardContent>
+    </Card>
+)}
                                 <Stack direction="row" spacing={1}>
                                     <Box sx={{ flex: 1 }}>
                                         <CallButton phone={listing.user?.phone} isMobile={isMobile} />

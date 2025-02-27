@@ -1,6 +1,8 @@
 // src/components/marketplace/ListingCard.js
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { MapPin as LocationIcon, Clock as AccessTime, Camera, Store } from 'lucide-react';
+
 import {
     Card,
     CardContent,
@@ -12,13 +14,13 @@ import {
     Rating,
     Stack
 } from '@mui/material';
-import { MapPin as LocationIcon, Clock as AccessTime, Camera } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
 const ListingCard = ({ listing, isMobile }) => {
     const { t, i18n } = useTranslation('marketplace'); 
-    
+    console.log("Отрисовка карточки товара:", listing.id, "storefront_id:", listing.storefront_id);
+
     const getLocalizedText = (field) => {
         if (!listing || !field) return '';
     
@@ -152,7 +154,20 @@ const ListingCard = ({ listing, isMobile }) => {
                 >
                     {formatPrice(listing.price)}
                 </Typography>
-
+                {listing.storefront_id && (
+    <Box sx={{ 
+        display: 'flex',
+        alignItems: 'center', 
+        gap: 0.5,
+        mt: 1,
+        color: 'text.secondary'
+    }}>
+        <Store size={16} />
+        <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
+            От магазина
+        </Typography>
+    </Box>
+)}
                 {!isMobile && (
                     <>
                         <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
@@ -175,10 +190,11 @@ const ListingCard = ({ listing, isMobile }) => {
                             fullWidth
                             sx={{ mt: 2 }}
                         >
-                            {t('listings.details.moreDetails')}
+                            {t('listings.details.moreDetails')} 
                         </Button>
                     </>
                 )}
+                
             </CardContent>
         </Card>
     );
