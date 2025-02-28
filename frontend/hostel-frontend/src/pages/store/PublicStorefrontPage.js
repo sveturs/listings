@@ -43,14 +43,14 @@ const PublicStorefrontPage = () => {
                 setStoreListings(listingsResponse.data.data?.data || []);
             } catch (err) {
                 console.error('Error fetching storefront data:', err);
-                setError('Не удалось загрузить данные витрины');
+                setError(t('marketplace:listings.errors.loadFailed'));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [id]);
+    }, [id, t]);
 
     if (loading) {
         return (
@@ -66,7 +66,7 @@ const PublicStorefrontPage = () => {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
                 <Alert severity="error" sx={{ mb: 3 }}>
-                    {error || 'Витрина не найдена'}
+                    {error || t('common:common.notFound')}
                 </Alert>
             </Container>
         );
@@ -92,7 +92,7 @@ const PublicStorefrontPage = () => {
                             {storefront.name}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Магазин открыт с {new Date(storefront.created_at).toLocaleDateString()}
+                            {t('marketplace:store.openSince', { date: new Date(storefront.created_at).toLocaleDateString() })}
                         </Typography>
                     </Box>
                 </Box>
@@ -105,12 +105,12 @@ const PublicStorefrontPage = () => {
             </Paper>
 
             <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
-                Товары в магазине
+                {t('marketplace:store.storeProducts')}
             </Typography>
 
             {storeListings.length === 0 ? (
                 <Alert severity="info">
-                    В данный момент в магазине нет товаров
+                    {t('marketplace:store.noProductsMessage')}
                 </Alert>
             ) : (
                 <Grid container spacing={3}>

@@ -41,14 +41,14 @@ const EditStorefrontPage = () => {
                 }
             } catch (err) {
                 console.error('Error fetching storefront:', err);
-                setError('Не удалось загрузить данные витрины');
+                setError(t('marketplace:store.errors.loadFailed'));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchStorefront();
-    }, [id]);
+    }, [id, t]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -64,7 +64,7 @@ const EditStorefrontPage = () => {
             }, 1500);
         } catch (err) {
             console.error('Error updating storefront:', err);
-            setError('Не удалось обновить данные витрины');
+            setError(t('marketplace:store.errors.updateFailed'));
         } finally {
             setSaving(false);
         }
@@ -82,7 +82,7 @@ const EditStorefrontPage = () => {
         return (
             <Container maxWidth="md" sx={{ py: 4, textAlign: 'center' }}>
                 <CircularProgress />
-                <Typography sx={{ mt: 2 }}>Загрузка данных витрины...</Typography>
+                <Typography sx={{ mt: 2 }}>{t('common:common.loading')}</Typography>
             </Container>
         );
     }
@@ -90,7 +90,7 @@ const EditStorefrontPage = () => {
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom>
-                Редактирование витрины
+                {t('marketplace:store.edit.title')}
             </Typography>
 
             {error && (
@@ -101,7 +101,7 @@ const EditStorefrontPage = () => {
 
             {success && (
                 <Alert severity="success" sx={{ mb: 3 }}>
-                    Витрина успешно обновлена
+                    {t('marketplace:store.edit.success')}
                 </Alert>
             )}
 
@@ -111,7 +111,7 @@ const EditStorefrontPage = () => {
                         <Grid item xs={12}>
                             <TextField
                                 name="name"
-                                label="Название магазина"
+                                label={t('marketplace:store.settings.name')}
                                 value={storefront.name || ''}
                                 onChange={handleChange}
                                 fullWidth
@@ -123,11 +123,11 @@ const EditStorefrontPage = () => {
                         <Grid item xs={12}>
                             <TextField
                                 name="slug"
-                                label="URL (slug)"
+                                label={t('marketplace:store.settings.slug')}
                                 value={storefront.slug || ''}
                                 onChange={handleChange}
                                 fullWidth
-                                helperText="Уникальный идентификатор для URL адреса витрины"
+                                helperText={t('marketplace:store.edit.slugHelp')}
                                 disabled={saving}
                             />
                         </Grid>
@@ -135,7 +135,7 @@ const EditStorefrontPage = () => {
                         <Grid item xs={12}>
                             <TextField
                                 name="description"
-                                label="Описание"
+                                label={t('common:common.description')}
                                 value={storefront.description || ''}
                                 onChange={handleChange}
                                 fullWidth
@@ -152,14 +152,14 @@ const EditStorefrontPage = () => {
                                     onClick={() => navigate(`/storefronts/${id}`)}
                                     disabled={saving}
                                 >
-                                    Отмена
+                                    {t('common:buttons.cancel')}
                                 </Button>
                                 <Button
                                     type="submit"
                                     variant="contained"
                                     disabled={saving}
                                 >
-                                    {saving ? 'Сохранение...' : 'Сохранить изменения'}
+                                    {saving ? t('marketplace:store.edit.saving') : t('marketplace:store.edit.saveChanges')}
                                 </Button>
                             </Box>
                         </Grid>

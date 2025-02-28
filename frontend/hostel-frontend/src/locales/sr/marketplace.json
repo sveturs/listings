@@ -2,18 +2,18 @@
   "favorites": {
     "title": "Омиљени огласи",
     "empty": "Још увек немате омиљених огласа",
-    "authRequired": "Пријавите се да бисте видели омиљене огласе",
+    "authRequired": "Потребно је да се пријавите да бисте видели омиљене огласе",
     "errors": {
-      "loadFailed": "Грешка при учитавању омиљених огласа"
+      "loadFailed": "Није успело учитавање омиљених огласа"
     }
   },
   "listings": {
     "myListings": "Моји огласи",
-    "Youdonthave": "Још увек немате огласа. Направите свој први оглас одмах!",
+    "Youdonthave": "Још увек немате огласе. Креирајте свој први оглас одмах!",
     "edit": {
       "title": "Уређивање огласа",
-      "translationNote": "Ви уређујете превод. Оригинал је на другом језику.",
-      "saveChanges": "Сачувај промене",
+      "translationNote": "Уређујете превод. Оригинал је на другом језику.",
+      "saveChanges": "Сачувај измене",
       "location": {
         "title": "Локација",
         "showOnMap": "Прикажи локацију на мапи"
@@ -28,13 +28,13 @@
         "loadFailed": "Грешка при учитавању података",
         "updateFailed": "Грешка при ажурирању огласа",
         "imageUpload": {
-          "invalidType": "Могу се отпремити само слике",
+          "invalidType": "Могу се учитати само слике",
           "tooLarge": "Величина датотеке не сме прећи 15MB"
         }
       }
     },
     "create": {
-      "title": "Направи оглас",
+      "title": "Креирај оглас",
       "category": "Категорија",
       "сategories": "Категорије",
       "name": "Назив производа",
@@ -49,19 +49,19 @@
       "location": {
         "label": "Локација",
         "showOnMap": "Прикажи локацију на мапи",
-        "searchPlaceholder": "Претрага по адреси...",
+        "searchPlaceholder": "Претражи по адреси...",
         "currentLocation": "Моја локација",
         "mapInstructions": "Кликните на мапу или унесите адресу"
       },
       "photos": {
-        "upload": "Отпремите фотографије",
+        "upload": "Отпреми фотографије",
         "processing": "Обрада ({{progress}}%)",
-        "addWatermark": "Додајемо водени жиг...",
+        "addWatermark": "Додавање воденог жига...",
         "maxCount": "Максималан број фотографија: {{count}}",
         "onlyImages": "Могу се отпремити само слике",
         "processingError": "Грешка при обради слика"
       },
-      "submit": "Направи оглас",
+      "submit": "Креирај оглас",
       "success": "Оглас је успешно креиран!",
       "error": "Грешка при креирању огласа"
     },
@@ -87,7 +87,7 @@
         }
       },
       "price": "Цена",
-      "moreDetails": "Детаљније",
+      "moreDetails": "Више детаља",
       "ChooseAcategory": "Изаберите категорију...",
       "condition": "Стање",
       "location": "Локација",
@@ -99,10 +99,10 @@
       },
       "contact": {
         "call": "Позови",
-        "message": "Порука",
+        "message": "Пошаљи поруку",
         "share": "Подели",
         "errors": {
-          "noPhone": "Број телефона продавца није доступан"
+          "noPhone": "Продавац није навео број телефона"
         }
       },
       "actions": {
@@ -111,8 +111,8 @@
         "deleteConfirm": "Да ли сте сигурни да желите да обришете овај оглас?"
       },
       "favorite": {
-        "add": "Додај у омиљено",
-        "remove": "У омиљеном"
+        "add": "Додај у омиљене",
+        "remove": "Уклони из омиљених"
       },
       "location": {
         "show": "Прикажи на мапи",
@@ -121,7 +121,7 @@
         "collapse": "Скупи мапу"
       },
       "errors": {
-        "loadFailed": "Грешка при учитавању огласа",
+        "loadFailed": "Није успело учитавање огласа",
         "deleteFailed": "Грешка при брисању огласа",
         "updateFailed": "Грешка при ажурирању огласа"
       }
@@ -134,7 +134,7 @@
         "max": "До"
       },
       "sort": {
-        "label": "Сортирање",
+        "label": "Сортирај по",
         "newest": "Најновије прво",
         "cheapest": "Цена: од најниже",
         "expensive": "Цена: од највише"
@@ -151,17 +151,17 @@
     "rating": "Укупна оцена",
     "comment": "Коментар",
     "pros": "Предности",
-    "cons": "Мане",
-    "photos": "Фотографије",
-    "uploadupto10": "Можеш да отпремите до 10 слика",
-    "writeResponse": "Напишите одговор...",
+    "cons": "Недостаци",
     "save": "Сачувај",
     "delete": "Обриши",
+    "photos": "Фотографије",
+    "uploadupto10": "Можете отпремити до 10 фотографија",
+    "writeResponse": "Напишите одговор...",
     "helpful": "Корисно",
     "notHelpful": "Није корисно",
     "reply": "Одговори",
     "report": "Пријави",
-    "verifiedPurchase": "Проверена куповина",
+    "verifiedPurchase": "Потврђена куповина",
     "responses": "Одговори",
     "submit": "Пошаљи",
     "cancel": "Откажи"
@@ -170,44 +170,150 @@
     "newMessage": "Нова порука",
     "reply": "Одговори",
     "typing": "куца...",
-    "placeholder": "Унесите поруку...",
+    "placeholder": "Напишите поруку...",
     "send": "Пошаљи",
-    "empty": "Изаберите разговор за почетак",
-    "openlisting": "Отвори оглас",
+    "empty": "Изаберите разговор да бисте започели дописивање",
     "noMessages": "Још увек немате порука",
+    "openlisting": "Отвори оглас",
     "archive": "Архивирај",
-    "sending": "Sending...",
+    "sending": "Слање...",
+    "call": "Позови",
+    "copyPhone": "Копирај број телефона",
     "errors": {
-      "sendFailed": "Failed to send message. Please try again later."
+      "sendFailed": "Није успело слање поруке. Покушајте поново касније."
     }
   },
   "notifications": {
-    "title": "Podešavanja obaveštenja",
-    "channels": "Kanali obaveštenja",
+    "title": "Подешавања обавештења",
+    "channels": "Канали обавештења",
     "telegram": {
-      "description": "Povežite Telegram za primanje obaveštenja",
-      "scanQr": "Skenirajte QR kod",
-      "or": "ili",
-      "connect": "Povežite Telegram",
-      "connecting": "Povezivanje...",
-      "connected": "Telegram uspešno povezan"
+      "description": "Повежите Телеграм да бисте примали обавештења",
+      "clickToOpen": "Кликните да отворите у Телеграму",
+      "scanQr": "Скенирајте QR код",
+      "or": "или",
+      "connect": "Повежи Телеграм",
+      "connecting": "Повезивање...",
+      "connected": "Телеграм је успешно повезан"
     },
     "types": {
-      "newMessage": "Nove poruke",
-      "newReview": "Nove recenzije",
-      "reviewVote": "Glasovi za recenzije",
-      "reviewResponse": "Odgovori na recenzije",
-      "listingStatus": "Status oglasa",
-      "favoritePrice": "Cene u omiljenim",
-      "notificationschatmessage": "Obaveštenja o porukama u četu",
-      "newMessageDescription": "Obaveštenja o novim porukama u četu",
-      "newReviewDescription": "Obaveštenja o novim recenzijama vaših oglasa",
-      "reviewVoteDescription": "Obaveštenja o glasovima na vašim recenzijama",
-      "reviewResponseDescription": "Obaveštenja o odgovorima na vaše recenzije",
-      "listingStatusDescription": "Obaveštenja o promenama statusa vaših oglasa",
-      "favoritePriceDescription": "Obaveštenja o promenama cena u omiljenim oglasima"
+      "newMessage": "Нове поруке",
+      "newReview": "Нове рецензије",
+      "reviewVote": "Гласови за рецензије",
+      "reviewResponse": "Одговори на рецензије",
+      "listingStatus": "Статус огласа",
+      "favoritePrice": "Ажурирања цена омиљених",
+      "notificationschatmessage": "Обавештења о порукама у разговору",
+      "newMessageDescription": "Обавештења о новим порукама у разговору",
+      "newReviewDescription": "Обавештења о новим рецензијама на ваше огласе",
+      "reviewVoteDescription": "Обавештења о гласовима на ваше рецензије",
+      "reviewResponseDescription": "Обавештења о одговорима на ваше рецензије",
+      "listingStatusDescription": "Обавештења о променама статуса ваших огласа",
+      "favoritePriceDescription": "Обавештења о променама цена у вашим омиљеним огласима"
     },
-    "test": "Pošalji test obaveštenje",
-    "inDevelopment": "U razvoju"
+    "test": "Пошаљи пробно обавештење",
+    "inDevelopment": "У развоју"
+  },
+  "store": {
+    "myStorefronts": "Моје продавнице",
+    "noStorefronts": "Још увек немате продавнице",
+    "createFirstStorefront": "Креирајте продавницу да бисте почели да продајете производе у својој радњи",
+    "openSince": "Продавница отворена од {{date}}",
+    "storeProducts": "Производи у продавници",
+    "noProductsMessage": "Тренутно нема производа у овој продавници",
+    "noProducts": "Ова продавница још нема производа",
+    "notFound": "Продавница није пронађена",
+    "backToList": "Назад на листу продавница",
+    "manage": "Управљање",
+    "created": "Створено",
+    "statusActive": "Активно",
+    "statusInactive": "Неактивно",
+    "noDescription": "Нема описа",
+    "errors": {
+      "loadFailed": "Није успело учитавање података о продавници",
+      "updateFailed": "Није успело ажурирање података о продавници"
+    },
+    "tabs": {
+      "import": "Увоз производа",
+      "settings": "Подешавања",
+      "stats": "Статистика"
+    },
+    "create": {
+      "title": "Креирај продавницу",
+      "button": "Креирај продавницу",
+      "creating": "Креирање...",
+      "nameRequired": "Молимо унесите име продавнице",
+      "insufficientFunds": "Недовољно средстава за креирање продавнице. Потребно је 15000 РСД.",
+      "error": "Није успело креирање продавнице",
+      "costNote": "Креирање продавнице кошта 15000 РСД. Овај износ ће бити наплаћен са вашег рачуна.",
+      "yourBalance": "Ваше стање",
+      "balanceWarning": "За креирање продавнице потребно је најмање 15000 РСД на вашем рачуну. Тренутно стање: {{balance}} РСД."
+    },
+    "edit": {
+      "title": "Уреди продавницу",
+      "saving": "Чување...",
+      "saveChanges": "Сачувај измене",
+      "success": "Продавница је успешно ажурирана",
+      "slugHelp": "Јединствени идентификатор за URL ваше продавнице"
+    },
+    "settings": {
+      "title": "Подешавања продавнице",
+      "basic": "Основна подешавања",
+      "additional": "Додатна подешавања",
+      "name": "Име продавнице",
+      "slug": "URL (slug)",
+      "statusActive": "Активна",
+      "statusInactive": "Неактивна",
+      "created": "Креирано",
+      "updated": "Ажурирано"
+    },
+    "stats": {
+      "title": "Статистика продавнице",
+      "description": "Овде ћете видети статистику о продаји и посетама ваше продавнице.",
+      "notAvailable": "Статистика ће бити доступна након додавања производа у вашу продавницу."
+    },
+    "import": {
+      "button": "Увоз",
+      "sources": "Извори увоза",
+      "createSourceDescription": "Креирајте извор података за увоз производа у вашу продавницу. Подржани су CSV, XML и JSON формати.",
+      "addSource": "Додај извор",
+      "noSources": "Нема креираних извора увоза",
+      "createFirstSource": "Креирајте извор увоза да бисте почели да отпремате производе у своју продавницу",
+      "sourceType": "Извор: {{type}}",
+      "created": "Креирано: {{date}}",
+      "urlSource": "URL: {{url}}",
+      "manualUpload": "Ручно отпремање датотека",
+      "lastImport": "Последњи увоз",
+      "never": "Никада",
+      "notRun": "Још није покренут",
+      "history": "Историја",
+      "selectFile": "Изабери датотеку",
+      "importing": "Увоз...",
+      "uploadAndImport": "Отпреми и увези",
+      "runImport": "Покрени увоз",
+      "kb": "КБ",
+      "historyTitle": "Историја увоза",
+      "imported": "Увезено",
+      "statusSuccess": "Успешно",
+      "statusPartial": "Делимично",
+      "statusError": "Грешка",
+      "createSourceTitle": "Креирај извор увоза",
+      "typeLabel": "Тип увоза",
+      "typeCSV": "CSV - вредности раздвојене зарезом/тачком-зарезом",
+      "typeXML": "XML - структурирани подаци",
+      "typeJSON": "JSON - JavaScript Object Notation",
+      "urlLabel": "URL извора (опционо)",
+      "urlPlaceholder": "Може остати празно за ручно отпремање датотека",
+      "urlHelp": "Наведите URL ако желите да увезете податке из спољног извора",
+      "creating": "Креирање...",
+      "createSource": "Креирај извор",
+      "selectTypeError": "Молимо изаберите тип увоза",
+      "createError": "Није успело креирање извора увоза",
+      "sourceCreated": "Извор увоза је успешно креиран! Сада можете отпремити датотеку помоћу дугмета \"Покрени увоз\".",
+      "deleteConfirm": "Да ли сте сигурни да желите да обришете овај извор увоза?",
+      "deleteError": "Није успело брисање извора увоза",
+      "needFileOrUrl": "Потребно је или да отпремите датотеку или да конфигуришете URL извора за увоз",
+      "completed": "Увоз завршен. Статус: {{status}}. Обрађено: {{imported}} од {{total}}",
+      "error": "Грешка при увозу: {{message}}"
+    }
   }
 }

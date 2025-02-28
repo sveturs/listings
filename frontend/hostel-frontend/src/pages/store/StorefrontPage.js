@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/pages/store/StorefrontPage.js
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -49,14 +50,14 @@ const StorefrontPage = () => {
         setBalance(balanceResponse.data.data?.balance || 0);
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError('Не удалось загрузить данные');
+        setError(t('marketplace:store.errors.loadFailed'));
       } finally {
         setLoading(false);
       }
     };
     
     fetchData();
-  }, []);
+  }, [t]);
 
   const handleCreateStorefront = async () => {
     try {
@@ -64,7 +65,7 @@ const StorefrontPage = () => {
       setCreationError(null);
       
       if (!createForm.name.trim()) {
-        setCreationError('Укажите название магазина');
+        setCreationError(t('marketplace:store.create.nameRequired'));
         return;
       }
       
@@ -79,9 +80,9 @@ const StorefrontPage = () => {
     } catch (err) {
       console.error('Error creating storefront:', err);
       if (err.response?.status === 402) {
-        setCreationError('Недостаточно средств для создания витрины. Требуется 15000 RSD.');
+        setCreationError(t('marketplace:store.create.insufficientFunds'));
       } else {
-        setCreationError('Не удалось создать витрину');
+        setCreationError(t('marketplace:store.create.error'));
       }
     } finally {
       setCreationLoading(false);
@@ -106,7 +107,7 @@ const StorefrontPage = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
         <Typography variant="h4" component="h1">
-          Мои витрины
+          {t('marketplace:store.myStorefronts')}
         </Typography>
         <Button
           variant="contained"
@@ -114,21 +115,20 @@ const StorefrontPage = () => {
           onClick={() => setOpenCreateModal(true)}
           disabled={balance < 15000}
         >
-          Создать витрину
+          {t('marketplace:store.create.button')}
         </Button>
       </Box>
 
       {balance < 15000 && (
         <Alert severity="warning" sx={{ mb: 3 }}>
-          Для создания витрины необходимо иметь на балансе не менее 15000 RSD. 
-          Ваш текущий баланс: {balance.toLocaleString()} RSD.
+          {t('marketplace:store.create.balanceWarning', { balance: balance.toLocaleString() })}
           <Button 
             variant="outlined" 
             size="small" 
             sx={{ ml: 2 }}
             onClick={() => navigate('/balance')}
           >
-            Пополнить баланс
+            {t('common:balance.deposit')}
           </Button>
         </Alert>
       )}
@@ -143,10 +143,10 @@ const StorefrontPage = () => {
         <Card sx={{ p: 4, textAlign: 'center' }}>
           <Store size={64} stroke={1} style={{ margin: '20px auto', opacity: 0.5 }} />
           <Typography variant="h6" gutterBottom>
-            У вас пока нет витрин
+            {t('marketplace:store.noStorefronts')}
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph>
-            Создайте витрину, чтобы начать продавать товары в своем магазине
+            {t('marketplace:store.createFirstStorefront')}
           </Typography>
           <Button
             variant="contained"
@@ -154,7 +154,7 @@ const StorefrontPage = () => {
             onClick={() => setOpenCreateModal(true)}
             disabled={balance < 15000}
           >
-            Создать витрину
+            {t('marketplace:store.create.button')}
           </Button>
         </Card>
       ) : (
@@ -167,27 +167,29 @@ const StorefrontPage = () => {
                     {storefront.name}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" paragraph>
-                    {storefront.description || 'Нет описания'}
+                    {storefront.description || t('marketplace:store.noDescription')}
                   </Typography>
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="caption" color="text.secondary">
-                      Создана: {new Date(storefront.created_at).toLocaleDateString()}
+                      {t('marketplace:store.created')}: {new Date(storefront.created_at).toLocaleDateString()}
                     </Typography>
                     <Typography
                       variant="caption"
                       color={storefront.status === 'active' ? 'success.main' : 'error.main'}
                     >
-                      {storefront.status === 'active' ? 'Активна' : 'Не активна'}
+                      {storefront.status === 'active' 
+                        ? t('marketplace:store.statusActive') 
+                        : t('marketplace:store.statusInactive')}
                     </Typography>
                   </Box>
                 </CardContent>
                 <Divider />
                 <CardActions>
                   <Button size="small" onClick={() => navigateToStorefront(storefront.id)}>
-                    Управление
+                    {t('marketplace:store.manage')}
                   </Button>
                   <Button size="small" startIcon={<Upload />}>
-                    Импорт
+                    {t('marketplace:store.import.button')}
                   </Button>
                 </CardActions>
               </Card>
@@ -215,16 +217,16 @@ const StorefrontPage = () => {
           }}
         >
           <Typography variant="h5" component="h2" gutterBottom>
-            Создание витрины
+            {t('marketplace:store.create.title')}
           </Typography>
           
           <Typography variant="body2" color="text.secondary" paragraph>
-            Стоимость создания витрины составляет 15000 RSD. Эта сумма будет списана с вашего баланса.
+            {t('marketplace:store.create.costNote')}
           </Typography>
           
           <Box mb={2}>
             <Typography variant="body2" fontWeight="bold">
-              Ваш баланс: {balance.toLocaleString()} RSD
+              {t('marketplace:store.create.yourBalance')}: {balance.toLocaleString()} RSD
             </Typography>
           </Box>
           
@@ -236,7 +238,7 @@ const StorefrontPage = () => {
           
           <Stack spacing={2} mb={3}>
             <TextField
-              label="Название магазина"
+              label={t('marketplace:store.settings.name')}
               fullWidth
               required
               value={createForm.name}
@@ -245,7 +247,7 @@ const StorefrontPage = () => {
             />
             
             <TextField
-              label="Описание"
+              label={t('common:common.description')}
               fullWidth
               multiline
               rows={3}
@@ -261,7 +263,7 @@ const StorefrontPage = () => {
               onClick={() => setOpenCreateModal(false)}
               disabled={creationLoading}
             >
-              Отмена
+              {t('common:buttons.cancel')}
             </Button>
             
             <Button
@@ -270,13 +272,13 @@ const StorefrontPage = () => {
               disabled={creationLoading || !createForm.name.trim() || balance < 15000}
               startIcon={creationLoading ? <CircularProgress size={20} /> : <Store />}
             >
-              {creationLoading ? 'Создание...' : 'Создать витрину'}
+              {creationLoading ? t('marketplace:store.create.creating') : t('marketplace:store.create.button')}
             </Button>
           </Box>
           
           {balance < 15000 && (
             <Alert severity="warning" sx={{ mt: 2 }} icon={<AlertTriangle />}>
-              Недостаточно средств для создания витрины. Пополните баланс.
+              {t('marketplace:store.create.insufficientFunds')}
             </Alert>
           )}
         </Paper>

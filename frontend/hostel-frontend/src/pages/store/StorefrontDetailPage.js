@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/pages/store/StorefrontDetailPage.js
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -31,6 +32,7 @@ import { Edit, Trash2, Plus, Database, Upload, Settings, BarChart, RefreshCw, Fi
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import ListingCard from '../../components/marketplace/ListingCard';
+
 const TabPanel = (props) => {
     const { children, value, index, ...other } = props;
 
@@ -92,14 +94,14 @@ const StorefrontDetailPage = () => {
                 setStoreListings(listingsResponse.data.data?.data || []);
             } catch (err) {
                 console.error('Error fetching storefront data:', err);
-                setError('Не удалось загрузить данные витрины');
+                setError(t('marketplace:store.errors.loadFailed'));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [id]);
+    }, [id, t]);
 
     const fetchImportHistory = async (sourceId) => {
         try {
@@ -119,7 +121,7 @@ const StorefrontDetailPage = () => {
             setImportError(null);
 
             if (!importForm.type) {
-                setImportError('Выберите тип импорта');
+                setImportError(t('marketplace:store.import.selectTypeError'));
                 return;
             }
 
@@ -141,18 +143,18 @@ const StorefrontDetailPage = () => {
             });
             setImportFile(null);
 
-            // Покажем успешное сообщение с инструкцией
-            alert('Источник импорта успешно создан! Теперь вы можете загрузить файл через кнопку "Запустить импорт".');
+            // Показываем успешное сообщение с инструкцией
+            alert(t('marketplace:store.import.sourceCreated'));
         } catch (err) {
             console.error('Error creating import source:', err);
-            setImportError(`Не удалось создать источник импорта: ${err.response?.data?.error || err.message}`);
+            setImportError(`${t('marketplace:store.import.createError')}: ${err.response?.data?.error || err.message}`);
         } finally {
             setImportLoading(false);
         }
     };
 
     const handleDeleteImportSource = async (sourceId) => {
-        if (!window.confirm('Вы уверены, что хотите удалить этот источник импорта?')) {
+        if (!window.confirm(t('marketplace:store.import.deleteConfirm'))) {
             return;
         }
 
@@ -161,7 +163,7 @@ const StorefrontDetailPage = () => {
             setImportSources(prev => prev.filter(source => source.id !== sourceId));
         } catch (err) {
             console.error(`Error deleting import source ${sourceId}:`, err);
-            alert('Не удалось удалить источник импорта');
+            alert(t('marketplace:store.import.deleteError'));
         }
     };
 
@@ -174,7 +176,7 @@ const StorefrontDetailPage = () => {
             // Если нет ни файла, ни URL, показываем ошибку
             const source = importSources.find(s => s.id === sourceId);
             if (!importFile && (!source || !source.url)) {
-                alert("Для импорта нужно либо загрузить файл, либо настроить URL источника");
+                alert(t('marketplace:store.import.needFileOrUrl'));
                 setRunningImport(null);
                 return;
             }
@@ -219,11 +221,17 @@ const StorefrontDetailPage = () => {
 
             // Показываем результат импорта
             const importResult = response.data.data;
-            alert(`Импорт завершен. Статус: ${importResult.status}.\nОбработано: ${importResult.items_imported} из ${importResult.items_total}`);
+            alert(t('marketplace:store.import.completed', {
+                status: importResult.status,
+                imported: importResult.items_imported,
+                total: importResult.items_total
+            }));
 
         } catch (err) {
             console.error(`Error running import for source ${sourceId}:`, err);
-            alert(`Ошибка при импорте: ${err.response?.data?.error || err.message}`);
+            alert(t('marketplace:store.import.error', {
+                message: err.response?.data?.error || err.message
+            }));
         } finally {
             setRunningImport(null);
         }
@@ -254,10 +262,10 @@ const StorefrontDetailPage = () => {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
                 <Alert severity="error" sx={{ mb: 3 }}>
-                    {error || 'Витрина не найдена'}
+                    {error || t('marketplace:store.notFound')}
                 </Alert>
                 <Button variant="outlined" onClick={() => navigate('/storefronts')}>
-                    Вернуться к списку витрин
+                    {t('marketplace:store.backToList')}
                 </Button>
             </Container>
         );
@@ -274,7 +282,7 @@ const StorefrontDetailPage = () => {
                     startIcon={<Edit />}
                     onClick={() => navigate(`/storefronts/${id}/edit`)}
                 >
-                    Редактировать
+                    {t('common:buttons.edit')}
                 </Button>
             </Box>
 
@@ -286,9 +294,9 @@ const StorefrontDetailPage = () => {
                     variant="scrollable"
                     scrollButtons="auto"
                 >
-                    <Tab label="Импорт товаров" icon={<Database />} iconPosition="start" />
-                    <Tab label="Настройки" icon={<Settings />} iconPosition="start" />
-                    <Tab label="Статистика" icon={<BarChart />} iconPosition="start" />
+                    <Tab label={t('marketplace:store.tabs.import')} icon={<Database />} iconPosition="start" />
+                    <Tab label={t('marketplace:store.tabs.settings')} icon={<Settings />} iconPosition="start" />
+                    <Tab label={t('marketplace:store.tabs.stats')} icon={<BarChart />} iconPosition="start" />
                 </Tabs>
 
                 <Divider />
@@ -296,7 +304,7 @@ const StorefrontDetailPage = () => {
                 <TabPanel value={activeTab} index={0}>
                     <Box mt={3}>
                         <Typography variant="h6" gutterBottom>
-                            Товары в витрине
+                            {t('marketplace:store.storeProducts')}
                         </Typography>
 
                         <Grid container spacing={3} mt={1}>
@@ -319,7 +327,7 @@ const StorefrontDetailPage = () => {
                                         ))
                                     ) : (
                                         <Box width="100%" p={4} textAlign="center">
-                                            <Typography>В этой витрине пока нет товаров</Typography>
+                                            <Typography>{t('marketplace:store.noProducts')}</Typography>
                                         </Box>
                                     )}
                                 </>
@@ -328,11 +336,10 @@ const StorefrontDetailPage = () => {
                     </Box>
                     <Box mb={3}>
                         <Typography variant="h6" gutterBottom>
-                            Источники импорта
+                            {t('marketplace:store.import.sources')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" paragraph>
-                            Создайте источник данных для импорта товаров в вашу витрину.
-                            Поддерживаются форматы CSV, XML и JSON.
+                            {t('marketplace:store.import.createSourceDescription')}
                         </Typography>
                     </Box>
 
@@ -342,7 +349,7 @@ const StorefrontDetailPage = () => {
                             startIcon={<Plus />}
                             onClick={() => setOpenImportModal(true)}
                         >
-                            Добавить источник
+                            {t('marketplace:store.import.addSource')}
                         </Button>
                     </Box>
 
@@ -350,17 +357,17 @@ const StorefrontDetailPage = () => {
                         <Paper sx={{ p: 4, textAlign: 'center' }}>
                             <Database size={64} stroke={1} style={{ margin: '20px auto', opacity: 0.5 }} />
                             <Typography variant="h6" gutterBottom>
-                                Источники импорта не созданы
+                                {t('marketplace:store.import.noSources')}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" paragraph>
-                                Создайте источник импорта, чтобы загружать товары в свою витрину
+                                {t('marketplace:store.import.createFirstSource')}
                             </Typography>
                             <Button
                                 variant="contained"
                                 startIcon={<Plus />}
                                 onClick={() => setOpenImportModal(true)}
                             >
-                                Добавить источник
+                                {t('marketplace:store.import.addSource')}
                             </Button>
                         </Paper>
                     ) : (
@@ -369,8 +376,8 @@ const StorefrontDetailPage = () => {
                                 <Grid item xs={12} md={6} key={source.id}>
                                     <Card sx={{ height: '100%' }}>
                                         <CardHeader
-                                            title={`Источник: ${source.type.toUpperCase()}`}
-                                            subheader={`Создан: ${new Date(source.created_at).toLocaleDateString()}`}
+                                            title={t('marketplace:store.import.sourceType', { type: source.type.toUpperCase() })}
+                                            subheader={t('marketplace:store.import.created', { date: new Date(source.created_at).toLocaleDateString() })}
                                             action={
                                                 <IconButton onClick={() => handleDeleteImportSource(source.id)}>
                                                     <Trash2 size={18} />
@@ -380,14 +387,17 @@ const StorefrontDetailPage = () => {
                                         <Divider />
                                         <CardContent>
                                             <Typography variant="subtitle1" gutterBottom>
-                                                {source.url ? `URL: ${source.url}` : 'Ручная загрузка файлов'}
+                                                {source.url 
+                                                    ? t('marketplace:store.import.urlSource', { url: source.url }) 
+                                                    : t('marketplace:store.import.manualUpload')
+                                                }
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary" paragraph>
-                                                Последний импорт: {source.last_import_at ?
-                                                    new Date(source.last_import_at).toLocaleString() : 'Никогда'}
+                                                {t('marketplace:store.import.lastImport')}: {source.last_import_at ?
+                                                    new Date(source.last_import_at).toLocaleString() : t('marketplace:store.import.never')}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
-                                                Статус: {source.last_import_status || 'Не запускался'}
+                                                {t('common:balance.status')}: {source.last_import_status || t('marketplace:store.import.notRun')}
                                             </Typography>
 
                                             <Box sx={{ mt: 2 }}>
@@ -396,13 +406,7 @@ const StorefrontDetailPage = () => {
                                                     id={`file-upload-${source.id}`}
                                                     accept=".csv,.xml,.json"
                                                     style={{ display: 'none' }}
-                                                    onChange={(e) => {
-                                                        const files = e.target.files;
-                                                        if (files && files.length > 0) {
-                                                            setImportFile(files[0]);
-                                                            // Не запускаем импорт автоматически, даем пользователю нажать кнопку
-                                                        }
-                                                    }}
+                                                    onChange={handleFileChange}
                                                 />
 
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -412,7 +416,7 @@ const StorefrontDetailPage = () => {
                                                         startIcon={<BarChart />}
                                                         onClick={() => fetchImportHistory(source.id)}
                                                     >
-                                                        История
+                                                        {t('marketplace:store.import.history')}
                                                     </Button>
 
                                                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -423,7 +427,7 @@ const StorefrontDetailPage = () => {
                                                             htmlFor={`file-upload-${source.id}`}
                                                             startIcon={<Upload />}
                                                         >
-                                                            Выбрать файл
+                                                            {t('marketplace:store.import.selectFile')}
                                                         </Button>
 
                                                         <Button
@@ -433,7 +437,11 @@ const StorefrontDetailPage = () => {
                                                             onClick={() => handleRunImport(source.id)}
                                                             disabled={runningImport === source.id}
                                                         >
-                                                            {runningImport === source.id ? 'Импорт...' : importFile ? 'Загрузить и импорт.' : 'Запустить'}
+                                                            {runningImport === source.id 
+                                                                ? t('marketplace:store.import.importing') 
+                                                                : importFile 
+                                                                    ? t('marketplace:store.import.uploadAndImport') 
+                                                                    : t('marketplace:store.import.runImport')}
                                                         </Button>
                                                     </Box>
                                                 </Box>
@@ -443,7 +451,7 @@ const StorefrontDetailPage = () => {
                                                     <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
                                                         <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                             <FileType size={16} />
-                                                            {importFile.name} ({Math.round(importFile.size / 1024)} КБ)
+                                                            {importFile.name} ({Math.round(importFile.size / 1024)} {t('marketplace:store.import.kb')})
                                                         </Typography>
                                                     </Box>
                                                 )}
@@ -452,15 +460,15 @@ const StorefrontDetailPage = () => {
                                             {importHistories[source.id] && importHistories[source.id].length > 0 && (
                                                 <Box mt={3}>
                                                     <Typography variant="subtitle2" gutterBottom>
-                                                        История импорта
+                                                        {t('marketplace:store.import.historyTitle')}
                                                     </Typography>
                                                     <TableContainer component={Paper} variant="outlined">
                                                         <Table size="small">
                                                             <TableHead>
                                                                 <TableRow>
-                                                                    <TableCell>Дата</TableCell>
-                                                                    <TableCell>Статус</TableCell>
-                                                                    <TableCell align="right">Импортировано</TableCell>
+                                                                    <TableCell>{t('common:balance.date')}</TableCell>
+                                                                    <TableCell>{t('common:balance.status')}</TableCell>
+                                                                    <TableCell align="right">{t('marketplace:store.import.imported')}</TableCell>
                                                                 </TableRow>
                                                             </TableHead>
                                                             <TableBody>
@@ -470,8 +478,11 @@ const StorefrontDetailPage = () => {
                                                                             {new Date(history.started_at).toLocaleDateString()}
                                                                         </TableCell>
                                                                         <TableCell>
-                                                                            {history.status === 'success' ? 'Успешно' :
-                                                                                history.status === 'partial' ? 'Частично' : 'Ошибка'}
+                                                                            {history.status === 'success' 
+                                                                                ? t('marketplace:store.import.statusSuccess')
+                                                                                : history.status === 'partial' 
+                                                                                    ? t('marketplace:store.import.statusPartial') 
+                                                                                    : t('marketplace:store.import.statusError')}
                                                                         </TableCell>
                                                                         <TableCell align="right">
                                                                             {history.items_imported}/{history.items_total}
@@ -494,25 +505,25 @@ const StorefrontDetailPage = () => {
                 <TabPanel value={activeTab} index={1}>
                     <Box mb={3}>
                         <Typography variant="h6" gutterBottom>
-                            Настройки витрины
+                            {t('marketplace:store.settings.title')}
                         </Typography>
                     </Box>
 
                     <Grid container spacing={3}>
                         <Grid item xs={12} md={6}>
                             <Card>
-                                <CardHeader title="Основные настройки" />
+                                <CardHeader title={t('marketplace:store.settings.basic')} />
                                 <Divider />
                                 <CardContent>
                                     <Stack spacing={2}>
                                         <TextField
-                                            label="Название витрины"
+                                            label={t('marketplace:store.settings.name')}
                                             fullWidth
                                             value={storefront.name}
                                             disabled
                                         />
                                         <TextField
-                                            label="Описание"
+                                            label={t('common:common.description')}
                                             fullWidth
                                             multiline
                                             rows={3}
@@ -520,7 +531,7 @@ const StorefrontDetailPage = () => {
                                             disabled
                                         />
                                         <TextField
-                                            label="Slug (URL)"
+                                            label={t('marketplace:store.settings.slug')}
                                             fullWidth
                                             value={storefront.slug || ''}
                                             disabled
@@ -532,17 +543,19 @@ const StorefrontDetailPage = () => {
 
                         <Grid item xs={12} md={6}>
                             <Card>
-                                <CardHeader title="Дополнительные настройки" />
+                                <CardHeader title={t('marketplace:store.settings.additional')} />
                                 <Divider />
                                 <CardContent>
                                     <Typography variant="body1" paragraph>
-                                        Статус: {storefront.status === 'active' ? 'Активна' : 'Не активна'}
+                                        {t('common:balance.status')}: {storefront.status === 'active' 
+                                            ? t('marketplace:store.settings.statusActive') 
+                                            : t('marketplace:store.settings.statusInactive')}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Создана: {new Date(storefront.created_at).toLocaleString()}
+                                        {t('marketplace:store.settings.created')}: {new Date(storefront.created_at).toLocaleString()}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Обновлена: {new Date(storefront.updated_at).toLocaleString()}
+                                        {t('marketplace:store.settings.updated')}: {new Date(storefront.updated_at).toLocaleString()}
                                     </Typography>
                                 </CardContent>
                             </Card>
@@ -553,15 +566,15 @@ const StorefrontDetailPage = () => {
                 <TabPanel value={activeTab} index={2}>
                     <Box mb={3}>
                         <Typography variant="h6" gutterBottom>
-                            Статистика витрины
+                            {t('marketplace:store.stats.title')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Здесь будет отображаться статистика по продажам и посещаемости вашей витрины.
+                            {t('marketplace:store.stats.description')}
                         </Typography>
                     </Box>
 
                     <Alert severity="info">
-                        Статистика будет доступна после добавления товаров в витрину.
+                        {t('marketplace:store.stats.notAvailable')}
                     </Alert>
                 </TabPanel>
             </Paper>
@@ -585,7 +598,7 @@ const StorefrontDetailPage = () => {
                     }}
                 >
                     <Typography variant="h5" component="h2" gutterBottom>
-                        Создание источника импорта
+                        {t('marketplace:store.import.createSourceTitle')}
                     </Typography>
 
                     {importError && (
@@ -597,7 +610,7 @@ const StorefrontDetailPage = () => {
                     <Stack spacing={2} mb={3}>
                         <TextField
                             select
-                            label="Тип импорта"
+                            label={t('marketplace:store.import.typeLabel')}
                             fullWidth
                             required
                             value={importForm.type}
@@ -607,19 +620,19 @@ const StorefrontDetailPage = () => {
                                 native: true
                             }}
                         >
-                            <option value="csv">CSV - разделенные запятыми/точкой с запятой значения</option>
-                            <option value="xml">XML - структурированные данные</option>
-                            <option value="json">JSON - JavaScript Object Notation</option>
+                            <option value="csv">{t('marketplace:store.import.typeCSV')}</option>
+                            <option value="xml">{t('marketplace:store.import.typeXML')}</option>
+                            <option value="json">{t('marketplace:store.import.typeJSON')}</option>
                         </TextField>
 
                         <TextField
-                            label="URL источника (необязательно)"
+                            label={t('marketplace:store.import.urlLabel')}
                             fullWidth
                             value={importForm.url}
                             onChange={(e) => setImportForm({ ...importForm, url: e.target.value })}
                             disabled={importLoading}
-                            placeholder="Можно оставить пустым для ручной загрузки файлов"
-                            helperText="Укажите URL, если хотите импортировать данные из внешнего источника"
+                            placeholder={t('marketplace:store.import.urlPlaceholder')}
+                            helperText={t('marketplace:store.import.urlHelp')}
                         />
                     </Stack>
 
@@ -629,7 +642,7 @@ const StorefrontDetailPage = () => {
                             onClick={() => setOpenImportModal(false)}
                             disabled={importLoading}
                         >
-                            Отмена
+                            {t('common:buttons.cancel')}
                         </Button>
 
                         <Button
@@ -638,7 +651,7 @@ const StorefrontDetailPage = () => {
                             disabled={importLoading}
                             startIcon={importLoading ? <CircularProgress size={20} /> : <Plus />}
                         >
-                            {importLoading ? 'Создание...' : 'Создать источник'}
+                            {importLoading ? t('marketplace:store.import.creating') : t('marketplace:store.import.createSource')}
                         </Button>
                     </Box>
                 </Paper>
