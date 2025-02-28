@@ -213,6 +213,40 @@
     "test": "Пошаљи пробно обавештење",
     "inDevelopment": "У развоју"
   },
+  "balance": {
+    "title": "Стање рачуна и трансакције",
+    "available": "Доступно стање",
+    "deposit": "Допуни",
+    "confirmDeposit": "Потврди допуну",
+    "processing": "Обрада...",
+    "amount": "Износ",
+    "paymentMethod": "Начин плаћања",
+    "date": "Датум",
+    "type": "Тип",
+    "description": "Опис",
+    "status": "Статус",
+    "fee": "Провизија: {{fixed}} РСД + {{percent}}%",
+    "minAmount": "Минимални износ",
+    "maxAmount": "Максимални износ",
+    "paymentSuccess": "Плаћање је успешно обављено",
+    "paymentCanceled": "Плаћање је отказано",
+    "types": {
+      "deposit": "Допуна",
+      "withdrawal": "Подизање",
+      "payment": "Плаћање",
+      "transfer": "Пренос"
+    },
+    "statuses": {
+      "pending": "У обради",
+      "completed": "Завршено",
+      "failed": "Грешка"
+    },
+    "errors": {
+      "loadFailed": "Није успело учитавање података о стању",
+      "depositFailed": "Грешка при допуни стања",
+      "loadPaymentMethods": "Није успело учитавање начина плаћања"
+    }
+  },
   "store": {
     "myStorefronts": "Моје продавнице",
     "noStorefronts": "Још увек немате продавнице",

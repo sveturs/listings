@@ -2,14 +2,14 @@
   "favorites": {
     "title": "Favorite Listings",
     "empty": "You don't have any favorite listings yet",
-    "authRequired": "Please sign in to view your favorite listings",
+    "authRequired": "You need to be logged in to view your favorite listings",
     "errors": {
       "loadFailed": "Failed to load favorite listings"
     }
   },
   "listings": {
     "myListings": "My Listings",
-    "Youdonthave": "You don't have any listings yet. Create your first listing right now!",
+    "Youdonthave": "You don't have any listings yet. Create your first listing now!",
     "edit": {
       "title": "Edit Listing",
       "translationNote": "You are editing a translation. Original is in another language.",
@@ -37,7 +37,7 @@
       "title": "Create Listing",
       "category": "Category",
       "сategories": "Categories",
-      "name": "Item Name",
+      "name": "Product Name",
       "description": "Description",
       "price": "Price",
       "condition": {
@@ -51,7 +51,7 @@
         "showOnMap": "Show location on map",
         "searchPlaceholder": "Search by address...",
         "currentLocation": "My location",
-        "mapInstructions": "Click on the map or enter address"
+        "mapInstructions": "Click on the map or enter an address"
       },
       "photos": {
         "upload": "Upload photos",
@@ -87,7 +87,7 @@
         }
       },
       "price": "Price",
-      "moreDetails": "More details",
+      "moreDetails": "More Details",
       "ChooseAcategory": "Choose a category...",
       "condition": "Condition",
       "location": "Location",
@@ -102,7 +102,7 @@
         "message": "Message",
         "share": "Share",
         "errors": {
-          "noPhone": "Seller's phone number is not available"
+          "noPhone": "Seller has not provided a phone number"
         }
       },
       "actions": {
@@ -112,7 +112,7 @@
       },
       "favorite": {
         "add": "Add to favorites",
-        "remove": "In favorites"
+        "remove": "Remove from favorites"
       },
       "location": {
         "show": "Show on map",
@@ -134,31 +134,31 @@
         "max": "To"
       },
       "sort": {
-        "label": "Sort",
+        "label": "Sort by",
         "newest": "Newest first",
-        "cheapest": "Price: Low to High",
-        "expensive": "Price: High to Low"
+        "cheapest": "Price: low to high",
+        "expensive": "Price: high to low"
       },
-      "apply": "Show Results",
+      "apply": "Show results",
       "reset": "Reset",
       "noResults": "No results found for your search"
     }
   },
   "reviews": {
     "title": "Reviews",
-    "write": "Write a Review",
-    "edit": "Edit Review",
-    "rating": "Overall Rating",
+    "write": "Write a review",
+    "edit": "Edit review",
+    "rating": "Overall rating",
     "comment": "Comment",
     "pros": "Pros",
     "cons": "Cons",
+    "save": "Save",
+    "delete": "Delete",
     "photos": "Photos",
     "uploadupto10": "You can upload up to 10 photos",
     "writeResponse": "Write a response...",
-    "delete": "Delete",
-    "save": "Save",
     "helpful": "Helpful",
-    "notHelpful": "Not Helpful",
+    "notHelpful": "Not helpful",
     "reply": "Reply",
     "report": "Report",
     "verifiedPurchase": "Verified Purchase",
@@ -166,25 +166,43 @@
     "submit": "Submit",
     "cancel": "Cancel"
   },
+  "chat": {
+    "newMessage": "New message",
+    "reply": "Reply",
+    "typing": "typing...",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "empty": "Select a chat to start messaging",
+    "noMessages": "You don't have any messages yet",
+    "openlisting": "Open listing",
+    "archive": "Archive",
+    "sending": "Sending...",
+    "call": "Call",
+    "copyPhone": "Copy phone number",
+    "errors": {
+      "sendFailed": "Failed to send message. Please try again later."
+    }
+  },
   "notifications": {
     "title": "Notification Settings",
     "channels": "Notification Channels",
     "telegram": {
       "description": "Connect Telegram to receive notifications",
-      "scanQr": "Scan QR Code",
+      "clickToOpen": "Click to open in Telegram",
+      "scanQr": "Scan QR code",
       "or": "or",
       "connect": "Connect Telegram",
       "connecting": "Connecting...",
-      "connected": "Telegram successfully connected"
+      "connected": "Telegram connected successfully"
     },
     "types": {
-      "newMessage": "New Messages",
-      "newReview": "New Reviews",
-      "reviewVote": "Review Votes",
-      "reviewResponse": "Review Responses",
-      "listingStatus": "Listing Status",
-      "favoritePrice": "Favorite Prices",
-      "notificationschatmessage": "Chat Message Notifications",
+      "newMessage": "New messages",
+      "newReview": "New reviews",
+      "reviewVote": "Review votes",
+      "reviewResponse": "Review responses",
+      "listingStatus": "Listing status",
+      "favoritePrice": "Favorites price updates",
+      "notificationschatmessage": "Chat message notifications",
       "newMessageDescription": "Notifications about new chat messages",
       "newReviewDescription": "Notifications about new reviews on your listings",
       "reviewVoteDescription": "Notifications about votes on your reviews",
@@ -192,7 +210,144 @@
       "listingStatusDescription": "Notifications about changes to your listing status",
       "favoritePriceDescription": "Notifications about price changes in your favorite listings"
     },
-    "test": "Send Test Notification",
-    "inDevelopment": "In Development"
+    "test": "Send test notification",
+    "inDevelopment": "In development"
+  },
+  "balance": {
+    "title": "Balance and Transactions",
+    "available": "Available Balance",
+    "deposit": "Deposit",
+    "confirmDeposit": "Confirm Deposit",
+    "processing": "Processing...",
+    "amount": "Amount",
+    "paymentMethod": "Payment Method",
+    "date": "Date",
+    "type": "Type",
+    "description": "Description",
+    "status": "Status",
+    "fee": "Fee: {{fixed}} RSD + {{percent}}%",
+    "minAmount": "Minimum amount",
+    "maxAmount": "Maximum amount",
+    "paymentSuccess": "Payment completed successfully",
+    "paymentCanceled": "Payment canceled",
+    "types": {
+      "deposit": "Deposit",
+      "withdrawal": "Withdrawal",
+      "payment": "Payment",
+      "transfer": "Transfer"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "errors": {
+      "loadFailed": "Failed to load balance data",
+      "depositFailed": "Error making deposit",
+      "loadPaymentMethods": "Failed to load payment methods"
+    }
+  },
+  "store": {
+    "myStorefronts": "My Storefronts",
+    "noStorefronts": "You don't have any storefronts yet",
+    "createFirstStorefront": "Create a storefront to start selling products in your own shop",
+    "openSince": "Store open since {{date}}",
+    "storeProducts": "Products in store",
+    "noProductsMessage": "There are currently no products in this store",
+    "noProducts": "This storefront doesn't have any products yet",
+    "notFound": "Storefront not found",
+    "backToList": "Back to storefront list",
+    "manage": "Manage",
+    "created": "Created",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "noDescription": "No description",
+    "errors": {
+      "loadFailed": "Failed to load storefront data",
+      "updateFailed": "Failed to update storefront data"
+    },
+    "tabs": {
+      "import": "Import Products",
+      "settings": "Settings",
+      "stats": "Statistics"
+    },
+    "create": {
+      "title": "Create Storefront",
+      "button": "Create Storefront",
+      "creating": "Creating...",
+      "nameRequired": "Please enter a store name",
+      "insufficientFunds": "Insufficient funds to create a storefront. 15000 RSD required.",
+      "error": "Failed to create storefront",
+      "costNote": "Creating a storefront costs 15000 RSD. This amount will be charged from your balance.",
+      "yourBalance": "Your balance",
+      "balanceWarning": "To create a storefront, you need at least 15000 RSD in your account. Your current balance: {{balance}} RSD."
+    },
+    "edit": {
+      "title": "Edit Storefront",
+      "saving": "Saving...",
+      "saveChanges": "Save Changes",
+      "success": "Storefront updated successfully",
+      "slugHelp": "Unique identifier for your storefront URL"
+    },
+    "settings": {
+      "title": "Storefront Settings",
+      "basic": "Basic Settings",
+      "additional": "Additional Settings",
+      "name": "Store Name",
+      "slug": "URL (slug)",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "created": "Created",
+      "updated": "Updated"
+    },
+    "stats": {
+      "title": "Storefront Statistics",
+      "description": "Here you will see statistics about your storefront sales and visits.",
+      "notAvailable": "Statistics will be available after adding products to your storefront."
+    },
+    "import": {
+      "button": "Import",
+      "sources": "Import Sources",
+      "createSourceDescription": "Create a data source to import products into your storefront. CSV, XML and JSON formats are supported.",
+      "addSource": "Add Source",
+      "noSources": "No import sources created",
+      "createFirstSource": "Create an import source to start uploading products to your storefront",
+      "sourceType": "Source: {{type}}",
+      "created": "Created: {{date}}",
+      "urlSource": "URL: {{url}}",
+      "manualUpload": "Manual file upload",
+      "lastImport": "Last import",
+      "never": "Never",
+      "notRun": "Not run yet",
+      "history": "History",
+      "selectFile": "Select File",
+      "importing": "Importing...",
+      "uploadAndImport": "Upload & Import",
+      "runImport": "Run Import",
+      "kb": "KB",
+      "historyTitle": "Import History",
+      "imported": "Imported",
+      "statusSuccess": "Success",
+      "statusPartial": "Partial",
+      "statusError": "Error",
+      "createSourceTitle": "Create Import Source",
+      "typeLabel": "Import Type",
+      "typeCSV": "CSV - comma/semicolon separated values",
+      "typeXML": "XML - structured data",
+      "typeJSON": "JSON - JavaScript Object Notation",
+      "urlLabel": "Source URL (optional)",
+      "urlPlaceholder": "Can be left empty for manual file uploads",
+      "urlHelp": "Specify a URL if you want to import data from an external source",
+      "creating": "Creating...",
+      "createSource": "Create Source",
+      "selectTypeError": "Please select an import type",
+      "createError": "Failed to create import source",
+      "sourceCreated": "Import source created successfully! You can now upload a file using the \"Run Import\" button.",
+      "deleteConfirm": "Are you sure you want to delete this import source?",
+      "deleteError": "Failed to delete import source",
+      "needFileOrUrl": "You need to either upload a file or configure a source URL for import",
+      "completed": "Import completed. Status: {{status}}. Processed: {{imported}} out of {{total}}",
+      "error": "Import error: {{message}}"
+    }
   }
 }
