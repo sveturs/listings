@@ -14,14 +14,14 @@ import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import CallButton from '../../components/marketplace/CallButton';
 import { Link } from 'react-router-dom';
 import { Store } from 'lucide-react';
+import GalleryViewer from '../../components/shared/GalleryViewer';
 import {
     MapPin,
     Calendar,
     Heart,
     ChevronLeft,
     ChevronRight
-}
-    from 'lucide-react';
+} from 'lucide-react';
 import axios from '../../api/axios';
 import {
     Container, Modal, Paper, Grid, Box, Typography,
@@ -50,6 +50,7 @@ const ListingDetailsPage = () => {
     const [categoryPath, setCategoryPath] = useState([]);
     const [isMapExpanded, setIsMapExpanded] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [galleryOpen, setGalleryOpen] = useState(false);
 
     const findCategoryPath = useCallback((categoryId, categoriesTree) => {
         const path = [];
@@ -251,6 +252,22 @@ const ListingDetailsPage = () => {
 
         return '';
     };
+
+    // Функция для получения всех путей к изображениям для галереи
+    const getImagePaths = () => {
+        if (!listing || !listing.images || listing.images.length === 0) {
+            return [];
+        }
+        
+        // Возвращаем пути file_path для передачи в GalleryViewer
+        return listing.images.map(img => img.file_path);
+    };
+
+    // Обработчик клика по основному изображению
+    const handleMainImageClick = () => {
+        setGalleryOpen(true);
+    };
+
     const formatMemberDate = (dateString) => {
         if (!dateString) return t('listings.details.seller.unknownDate');
 
@@ -264,6 +281,7 @@ const ListingDetailsPage = () => {
         // Используем переведенный шаблон из JSON с отформатированной датой
         return t('listings.details.seller.memberSince', { date });
     };
+    
     if (loading) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -308,8 +326,10 @@ const ListingDetailsPage = () => {
                                         width: '100%',
                                         height: isMobile ? '300px' : '500px',
                                         objectFit: 'cover',
-                                        borderRadius: 2
+                                        borderRadius: 2,
+                                        cursor: 'pointer' // Курсор указывает, что изображение кликабельно
                                     }}
+                                    onClick={handleMainImageClick} // Открываем галерею при клике
                                 />
                                 {listing.images.length > 1 && (
                                     <>
@@ -323,9 +343,12 @@ const ListingDetailsPage = () => {
                                                 bgcolor: 'background.paper',
                                                 '&:hover': { bgcolor: 'background.paper' }
                                             }}
-                                            onClick={() => setCurrentImageIndex(prev =>
-                                                prev > 0 ? prev - 1 : listing.images.length - 1
-                                            )}
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Предотвращаем открытие галереи
+                                                setCurrentImageIndex(prev =>
+                                                    prev > 0 ? prev - 1 : listing.images.length - 1
+                                                );
+                                            }}
                                         >
                                             <ChevronLeft />
                                         </IconButton>
@@ -339,9 +362,12 @@ const ListingDetailsPage = () => {
                                                 bgcolor: 'background.paper',
                                                 '&:hover': { bgcolor: 'background.paper' }
                                             }}
-                                            onClick={() => setCurrentImageIndex(prev =>
-                                                prev < listing.images.length - 1 ? prev + 1 : 0
-                                            )}
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Предотвращаем открытие галереи
+                                                setCurrentImageIndex(prev =>
+                                                    prev < listing.images.length - 1 ? prev + 1 : 0
+                                                );
+                                            }}
                                         >
                                             <ChevronRight />
                                         </IconButton>
@@ -641,6 +667,17 @@ const ListingDetailsPage = () => {
                     </Box>
                 </Grid>
             </Grid>
+
+            {/* Полноэкранная галерея */}
+            {listing.images && listing.images.length > 0 && (
+                <GalleryViewer
+                    images={getImagePaths()}
+                    open={galleryOpen}
+                    onClose={() => setGalleryOpen(false)}
+                    initialIndex={currentImageIndex}
+                    galleryMode="fullscreen"
+                />
+            )}
         </Container>
     );
 };

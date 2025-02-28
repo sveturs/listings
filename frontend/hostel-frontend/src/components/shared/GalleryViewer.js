@@ -7,11 +7,15 @@ import {
     Grid,
     DialogContent,
     Stack,
+    Tooltip,
+    Zoom,
 } from '@mui/material';
 import {
     Close as CloseIcon,
     ChevronLeft as ChevronLeftIcon,
     ChevronRight as ChevronRightIcon,
+    ZoomIn as ZoomInIcon,
+    ZoomOut as ZoomOutIcon,
 } from '@mui/icons-material';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -26,6 +30,7 @@ const GalleryViewer = ({
     gridColumns = { xs: 4, sm: 3, md: 2 }
 }) => {
     const [selectedIndex, setSelectedIndex] = useState(galleryMode === 'fullscreen' ? initialIndex : null);
+    const [isZoomed, setIsZoomed] = useState(false);
     const isOpen = externalOpen !== undefined ? externalOpen : selectedIndex !== null;
 
     if (!images || images.length === 0) return null;
@@ -39,11 +44,13 @@ const GalleryViewer = ({
 
     const handleOpen = (index) => {
         setSelectedIndex(index);
+        setIsZoomed(false);
     };
 
     const handleClose = (e) => {
         e?.stopPropagation();
         setSelectedIndex(null);
+        setIsZoomed(false);
         if (externalClose) {
             externalClose();
         }
@@ -51,12 +58,19 @@ const GalleryViewer = ({
 
     const handlePrev = (e) => {
         e?.stopPropagation();
+        setIsZoomed(false);
         setSelectedIndex(prev => (prev > 0 ? prev - 1 : images.length - 1));
     };
 
     const handleNext = (e) => {
         e?.stopPropagation();
+        setIsZoomed(false);
         setSelectedIndex(prev => (prev < images.length - 1 ? prev + 1 : 0));
+    };
+
+    const toggleZoom = (e) => {
+        e.stopPropagation();
+        setIsZoomed(!isZoomed);
     };
 
     return (
@@ -100,6 +114,9 @@ const GalleryViewer = ({
                     '.MuiDialog-paper': {
                         m: 0,
                         maxHeight: '100vh',
+                        maxWidth: '100vw',
+                        width: '100%',
+                        height: '100%',
                         bgcolor: 'black'
                     }
                 }}
@@ -112,7 +129,8 @@ const GalleryViewer = ({
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'space-between'
+                        justifyContent: 'space-between',
+                        overflow: isZoomed ? 'auto' : 'hidden'
                     }}
                 >
                     {/* Основное изображение */}
@@ -122,32 +140,52 @@ const GalleryViewer = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        position: 'relative'
+                        position: 'relative',
+                        overflow: isZoomed ? 'auto' : 'hidden'
                     }}>
                         <IconButton
                             onClick={handleClose}
                             sx={{
                                 position: 'absolute',
-                                right: 8,
-                                top: 8,
+                                right: 16,
+                                top: 16,
                                 color: 'white',
-                                zIndex: 1,
-                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                zIndex: 10,
+                                bgcolor: 'rgba(0, 0, 0, 0.3)',
+                                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.5)' }
                             }}
                         >
                             <CloseIcon />
                         </IconButton>
 
-                        {images.length > 1 && (
+                        <Tooltip title={isZoomed ? "Уменьшить" : "Увеличить до оригинального размера"}>
+                            <IconButton
+                                onClick={toggleZoom}
+                                sx={{
+                                    position: 'absolute',
+                                    right: 16,
+                                    top: 70,
+                                    color: 'white',
+                                    zIndex: 10,
+                                    bgcolor: 'rgba(0, 0, 0, 0.3)',
+                                    '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.5)' }
+                                }}
+                            >
+                                {isZoomed ? <ZoomOutIcon /> : <ZoomInIcon />}
+                            </IconButton>
+                        </Tooltip>
+
+                        {images.length > 1 && !isZoomed && (
                             <>
                                 <IconButton
                                     onClick={handlePrev}
                                     sx={{
                                         position: 'absolute',
-                                        left: 8,
+                                        left: 16,
+                                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
                                         color: 'white',
-                                        zIndex: 1,
-                                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                        zIndex: 10,
+                                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.5)' }
                                     }}
                                 >
                                     <ChevronLeftIcon />
@@ -156,10 +194,11 @@ const GalleryViewer = ({
                                     onClick={handleNext}
                                     sx={{
                                         position: 'absolute',
-                                        right: 8,
+                                        right: 16,
+                                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
                                         color: 'white',
-                                        zIndex: 1,
-                                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                        zIndex: 10,
+                                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.5)' }
                                     }}
                                 >
                                     <ChevronRightIcon />
@@ -172,22 +211,23 @@ const GalleryViewer = ({
                             src={getImageUrl(images[selectedIndex || 0])}
                             alt={`Image ${(selectedIndex || 0) + 1}`}
                             sx={{
-                                maxWidth: '100%',
-                                maxHeight: 'calc(100vh - 120px)', // Оставляем место для превью
+                                maxWidth: isZoomed ? 'none' : '100%',
+                                maxHeight: isZoomed ? 'none' : 'calc(100vh - 120px)', // Оставляем место для превью
+                                width: isZoomed ? 'auto' : 'auto',
+                                height: isZoomed ? 'auto' : 'auto',
                                 objectFit: 'contain',
-                                cursor: 'pointer'
+                                cursor: isZoomed ? 'zoom-out' : 'zoom-in',
+                                transition: 'transform 0.3s ease'
                             }}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (images.length > 1) {
-                                    handleNext(e);
-                                }
+                                toggleZoom(e);
                             }}
                         />
                     </Box>
 
                     {/* Полоса превью */}
-                    {images.length > 1 && (
+                  11  {images.length > 1 && !isZoomed && (
                         <Stack
                             direction="row"
                             spacing={1}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapPin as LocationIcon, Clock as AccessTime, Camera, Store } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Используем хук для навигации
 import axios from '../../api/axios';
 
 import {
@@ -19,9 +20,10 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
-const ListingCard = ({ listing, isMobile }) => {
+const ListingCard = ({ listing, isMobile, onClick }) => {
     const { t, i18n } = useTranslation('marketplace');
     const [storeName, setStoreName] = useState('Магазин');
+    const navigate = useNavigate();
 
     // Загружаем название магазина при монтировании компонента
     useEffect(() => {
@@ -90,18 +92,48 @@ const ListingCard = ({ listing, isMobile }) => {
         return `${BACKEND_URL}/uploads/${mainImage.file_path}`;
     };
 
+    const handleCardClick = (e) => {
+        // Если клик был внутри элемента с атрибутом data-shop-button или detailsButton, не выполняем навигацию
+        if (e.target.closest('[data-shop-button="true"]') || e.target.closest('#detailsButton')) {
+            return;
+        }
+        
+        if (onClick) {
+            onClick(listing);
+        } else {
+            // Используем navigate вместо window.location
+            navigate(`/marketplace/listings/${listing.id}`);
+        }
+    };
+
+    const handleShopButtonClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(`/shop/${listing.storefront_id}`);
+    };
+
+    const handleDetailsButtonClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(`/marketplace/listings/${listing.id}`);
+    };
+
     return (
-        <Card sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative', // Важно для абсолютного позиционирования кнопки
-            '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: 3,
-                transition: 'all 0.2s ease-in-out'
-            }
-        }}>
+        <Card 
+            sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative', // Важно для абсолютного позиционирования кнопки
+                '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 3,
+                    transition: 'all 0.2s ease-in-out'
+                },
+                cursor: 'pointer'
+            }}
+            onClick={handleCardClick}
+        >
             {/* Кнопка "Магазин тут" с всплывающей подсказкой */}
             {listing.storefront_id && (
                 <Tooltip
@@ -109,57 +141,44 @@ const ListingCard = ({ listing, isMobile }) => {
                     placement="top"
                     arrow
                 >
-
-                    {listing.storefront_id && (
-                        <Box
-                            sx={{
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            // Невидимая увеличенная область клика
+                            '&::before': {
+                                content: '""',
                                 position: 'absolute',
-                                top: 10,
-                                right: 10,
-                                // Невидимая увеличенная область клика
-                                '&::before': {
-                                    content: '""',
-                                    position: 'absolute',
-                                    top: -10,
-                                    left: -10,
-                                    right: -10,
-                                    bottom: -10,
-                                    zIndex: 5
-                                },
-                                zIndex: 10,
-                                bgcolor: 'primary.main',
-                                color: 'white',
-                                borderRadius: '4px',
-                                px: 1,
-                                py: 0.5,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 0.5,
-                                fontSize: '0.75rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                pointerEvents: 'auto'
-                            }}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                e.nativeEvent.stopImmediatePropagation();
-                                // Использование setTimeout для предотвращения конфликтов событий
-                                setTimeout(() => {
-                                    window.location.href = `/shop/${listing.storefront_id}`;
-                                }, 10);
-                            }}
-                            data-shop-button="true"
-                        >
-                            <Store size={14} />
-                            в магазин
-                        </Box>
-                    )}
-
+                                top: -10,
+                                left: -10,
+                                right: -10,
+                                bottom: -10,
+                                zIndex: 5
+                            },
+                            zIndex: 10,
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            borderRadius: '4px',
+                            px: 1,
+                            py: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            pointerEvents: 'auto'
+                        }}
+                        onClick={handleShopButtonClick}
+                        data-shop-button="true"
+                    >
+                        <Store size={14} />
+                        в магазин
+                    </Box>
                 </Tooltip>
             )}
 
-            {/* Остальной код без изменений */}
             <Box sx={{ position: 'relative', pt: isMobile ? '100%' : '75%' }}>
                 <CardMedia
                     component="img"
@@ -177,7 +196,7 @@ const ListingCard = ({ listing, isMobile }) => {
                 {listing.images && listing.images.length > 1 && !isMobile && (
                     <Chip
                         icon={<Camera size={16} />}
-                        label={`${listing.images.length} фото`}
+                        label={`${listing.images.length} ${t('listings.details.title.photoCount', { count: listing.images.length }).split(' ')[1]}`}
                         size="small"
                         sx={{
                             position: 'absolute',
@@ -256,6 +275,7 @@ const ListingCard = ({ listing, isMobile }) => {
                             variant="contained"
                             fullWidth
                             sx={{ mt: 2 }}
+                            onClick={handleDetailsButtonClick}
                         >
                             {t('listings.details.moreDetails')}
                         </Button>
