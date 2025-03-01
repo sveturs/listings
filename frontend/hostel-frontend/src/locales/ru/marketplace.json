@@ -164,7 +164,21 @@
     "verifiedPurchase": "Проверенная покупка",
     "responses": "Ответы",
     "submit": "Опубликовать",
-    "cancel": "Отмена"
+    "cancel": "Отмена",
+    "sellerRating": "Рейтинг продавца",
+    "storeRating": "Рейтинг магазина",
+    "basedOn": "На основе {{count}} отзывов",
+    "noRatingsYet": "Пока нет отзывов",
+    "seeAllReviews": "Смотреть все отзывы",
+    "hideReviews": "Скрыть отзывы",
+    "allUserReviews": "Все отзывы пользователя",
+    "allStoreReviews": "Все отзывы магазина",
+    "memberSince": "Участник с {{date}}",
+    "forListing": "К объявлению",
+    "viewListing": "Просмотр объявления",
+    "userNotFound": "Пользователь не найден",
+    "storefrontNotFound": "Магазин не найден",
+    "noReviewsYet": "Пока нет отзывов"
   },
   "chat": {
     "newMessage": "Новое сообщение",
@@ -248,6 +262,9 @@
     }
   },
   "store": {
+    "seeAllReviews": "Все отзывы о магазине",
+    "backToStore": "Вернуться в магазин",
+    "createdAt": "Создан {{date}}",
     "myStorefronts": "Мои витрины",
     "noStorefronts": "У вас пока нет витрин",
     "createFirstStorefront": "Создайте витрину, чтобы начать продавать товары в своем магазине",

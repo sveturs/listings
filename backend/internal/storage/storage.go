@@ -35,6 +35,12 @@ type Storage interface {
 	QueryRow(ctx context.Context, sql string, args ...interface{}) Row
 	Query(ctx context.Context, sql string, args ...interface{}) (Rows, error)
 
+    GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error)
+    GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error)
+    GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error)
+    GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error)
+
+
 	// Notification methods
 	GetNotificationSettings(ctx context.Context, userID int) ([]models.NotificationSettings, error)
 	UpdateNotificationSettings(ctx context.Context, settings *models.NotificationSettings) error

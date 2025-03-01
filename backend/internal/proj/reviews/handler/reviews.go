@@ -38,47 +38,49 @@ func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
 // internal/handlers/reviews.go
 
 func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
-    log.Printf("Starting CreateReview handler")
-    userID := c.Locals("user_id").(int)
+	log.Printf("Starting CreateReview handler")
+	userID := c.Locals("user_id").(int)
 
-    var request models.CreateReviewRequest
-    if err := c.BodyParser(&request); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input")
-    }
+	var request models.CreateReviewRequest
+	if err := c.BodyParser(&request); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input")
+	}
 
-    // Определяем язык текста до создания отзыва
-    if request.Comment != "" {
-        detectedLang, _, err := h.services.Translation().DetectLanguage(c.Context(), request.Comment)
-        if err != nil {
-            log.Printf("Failed to detect language: %v", err)
-            detectedLang = "en"
-        }
-        request.OriginalLanguage = detectedLang
-    }
+	// Определяем язык текста до создания отзыва
+	if request.Comment != "" {
+		detectedLang, _, err := h.services.Translation().DetectLanguage(c.Context(), request.Comment)
+		if err != nil {
+			log.Printf("Failed to detect language: %v", err)
+			detectedLang = "en"
+		}
+		request.OriginalLanguage = detectedLang
+	}
 
-    // Проверяем входные данные
-    if request.EntityID == 0 || request.Rating == 0 {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Required fields missing")
-    }
+	// Проверяем входные данные
+	if request.EntityID == 0 || request.Rating == 0 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Required fields missing")
+	}
 
-    // Получаем информацию об объявлении
-    listing, err := h.services.Marketplace().GetListingByID(c.Context(), request.EntityID)
-    if err != nil {
-        log.Printf("Failed to get listing %d: %v", request.EntityID, err)
-        return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
-    }
+	// Получаем информацию об объявлении
+	listing, err := h.services.Marketplace().GetListingByID(c.Context(), request.EntityID)
+	if err != nil {
+		log.Printf("Failed to get listing %d: %v", request.EntityID, err)
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+	}
 
-    // Создаем отзыв через сервис
-    createdReview, err := h.services.Review().CreateReview(c.Context(), userID, &request)
-    if err != nil {
-        log.Printf("Failed to create review: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating review")
-    }
-
+	if listing.StorefrontID != nil {
+		// Если объявление относится к витрине, сохраняем эту информацию
+		storefrontID := *listing.StorefrontID
+		request.StorefrontID = &storefrontID
+	}
+	// Создаем отзыв через сервис
+	createdReview, err := h.services.Review().CreateReview(c.Context(), userID, &request)
+	if err != nil {
+		log.Printf("Failed to create review: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating review")
+	}
 
 	log.Printf("Parsed request: %+v", request)
-
-	
 
 	// Проверяем созданный отзыв
 	if createdReview == nil {
@@ -397,4 +399,64 @@ func (h *ReviewHandler) GetEntityStats(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, stats)
+}
+
+// GetUserReviews получает все отзывы для пользователя
+func (h *ReviewHandler) GetUserReviews(c *fiber.Ctx) error {
+	userID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID пользователя")
+	}
+
+	reviews, err := h.services.Review().GetUserReviews(c.Context(), userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении отзывов пользователя")
+	}
+
+	return utils.SuccessResponse(c, reviews)
+}
+
+// GetStorefrontReviews получает все отзывы для витрины
+func (h *ReviewHandler) GetStorefrontReviews(c *fiber.Ctx) error {
+	storefrontID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID витрины")
+	}
+
+	reviews, err := h.services.Review().GetStorefrontReviews(c.Context(), storefrontID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении отзывов витрины")
+	}
+
+	return utils.SuccessResponse(c, reviews)
+}
+
+// GetUserRatingSummary получает сводные данные о рейтинге пользователя
+func (h *ReviewHandler) GetUserRatingSummary(c *fiber.Ctx) error {
+	userID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID пользователя")
+	}
+
+	summary, err := h.services.Review().GetUserRatingSummary(c.Context(), userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении сводки рейтинга пользователя")
+	}
+
+	return utils.SuccessResponse(c, summary)
+}
+
+// GetStorefrontRatingSummary получает сводные данные о рейтинге витрины
+func (h *ReviewHandler) GetStorefrontRatingSummary(c *fiber.Ctx) error {
+	storefrontID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID витрины")
+	}
+
+	summary, err := h.services.Review().GetStorefrontRatingSummary(c.Context(), storefrontID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении сводки рейтинга витрины")
+	}
+
+	return utils.SuccessResponse(c, summary)
 }

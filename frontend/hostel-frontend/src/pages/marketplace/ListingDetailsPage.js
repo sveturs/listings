@@ -15,6 +15,8 @@ import CallButton from '../../components/marketplace/CallButton';
 import { Link } from 'react-router-dom';
 import { Store } from 'lucide-react';
 import GalleryViewer from '../../components/shared/GalleryViewer';
+import UserRating from '../../components/user/UserRating';
+
 import {
     MapPin,
     Calendar,
@@ -258,7 +260,7 @@ const ListingDetailsPage = () => {
         if (!listing || !listing.images || listing.images.length === 0) {
             return [];
         }
-        
+
         // Возвращаем пути file_path для передачи в GalleryViewer
         return listing.images.map(img => img.file_path);
     };
@@ -281,7 +283,7 @@ const ListingDetailsPage = () => {
         // Используем переведенный шаблон из JSON с отформатированной датой
         return t('listings.details.seller.memberSince', { date });
     };
-    
+
     if (loading) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -647,7 +649,7 @@ const ListingDetailsPage = () => {
                                 <Typography variant="h6" gutterBottom>
                                     {t('listings.details.seller.title')}
                                 </Typography>
-                                <Stack direction="row" spacing={2} alignItems="center">
+                                <Stack direction="row" spacing={2} alignItems="center" mb={2}>
                                     <Avatar
                                         src={listing.user?.picture_url}
                                         alt={listing.user?.name}
@@ -660,8 +662,18 @@ const ListingDetailsPage = () => {
                                         <Typography variant="body2" color="text.secondary">
                                             {formatMemberDate(listing.user?.created_at)}
                                         </Typography>
+                                        <Button
+                                            component={Link}
+                                            to={`/user/${listing.user_id}/reviews`}
+                                            size="small"
+                                            variant="text"
+                                            sx={{ p: 0, minWidth: 'auto' }}
+                                        >
+                                            {t('listings.details.seller.seeAllReviews')}
+                                        </Button>
                                     </Box>
                                 </Stack>
+                                <UserRating userId={listing.user_id} />
                             </CardContent>
                         </Card>
                     </Box>

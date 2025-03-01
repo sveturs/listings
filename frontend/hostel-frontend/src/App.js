@@ -28,7 +28,8 @@ import TransactionsPage from './pages/balance/TransactionsPage';
 import StorefrontPage from "./pages/store/StorefrontPage";
 import StorefrontDetailPage from "./pages/store/StorefrontDetailPage";
 import PublicStorefrontPage from "./pages/store/PublicStorefrontPage";
-
+import UserReviewsPage from './pages/user/UserReviewsPage';
+import StorefrontReviewsPage from './pages/store/StorefrontReviewsPage';
 import EditStorefrontPage from "./pages/store/EditStorefrontPage";
 
 
@@ -82,7 +83,8 @@ function App() {
                       {/*<Route path="/storefronts/:id" element={<StorefrontDetailPage />} />*/}
                       <Route path="/storefronts/:id" element={<PrivateRoute><StorefrontDetailPage /></PrivateRoute>} />
                       <Route path="/shop/:id" element={<PublicStorefrontPage />} />
-
+                      <Route path="/user/:id/reviews" element={<UserReviewsPage />} />
+                      <Route path="/shop/:id/reviews" element={<StorefrontReviewsPage />} />
                       <Route
                         path="/marketplace/create"
                         element={

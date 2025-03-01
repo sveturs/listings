@@ -40,61 +40,60 @@ type Server struct {
 
 // Обновить функцию NewServer:
 func NewServer(cfg *config.Config) (*Server, error) {
-    db, err := postgres.NewDatabase(cfg.DatabaseURL)
-    if err != nil {
-        return nil, fmt.Errorf("failed to initialize database: %w", err)
-    }
+	db, err := postgres.NewDatabase(cfg.DatabaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize database: %w", err)
+	}
 
-    translationService, err := marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
-    if err != nil {
-        return nil, fmt.Errorf("failed to create translation service: %w", err)
-    }
+	translationService, err := marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create translation service: %w", err)
+	}
 
-    services := globalService.NewService(db, cfg, translationService)
-    
-    usersHandler := userHandler.NewHandler(services)
-    reviewHandler := reviewHandler.NewHandler(services)
-    marketplaceHandler := marketplaceHandler.NewHandler(services)
-    notificationsHandler := notificationHandler.NewHandler(services)
-    balanceHandler := balanceHandler.NewHandler(services)
-    storefrontHandler := storefrontHandler.NewHandler(services)  // Вот эта строка вызывает ошибку
-    middleware := middleware.NewMiddleware(cfg, services)
+	services := globalService.NewService(db, cfg, translationService)
 
-    app := fiber.New(fiber.Config{
-        ErrorHandler: middleware.ErrorHandler,
-        BodyLimit:    20 * 1024 * 1024, // 20MB
-        // Добавляем конфигурацию для WebSocket
-        EnableTrustedProxyCheck: true,
-        TrustedProxies: []string{"127.0.0.1", "::1"},
-    })
+	usersHandler := userHandler.NewHandler(services)
+	reviewHandler := reviewHandler.NewHandler(services)
+	marketplaceHandler := marketplaceHandler.NewHandler(services)
+	notificationsHandler := notificationHandler.NewHandler(services)
+	balanceHandler := balanceHandler.NewHandler(services)
+	storefrontHandler := storefrontHandler.NewHandler(services) // Вот эта строка вызывает ошибку
+	middleware := middleware.NewMiddleware(cfg, services)
 
-    // Initialize server
-    server := &Server{
-        app:           app,
-        cfg:           cfg,
-        users:         usersHandler,
-        middleware:    middleware,
-        review:        reviewHandler,
-        marketplace:   marketplaceHandler,
-        notifications: notificationsHandler,
-        balance:       balanceHandler,
-        storefront:    storefrontHandler,
-        payments:      services.Payment(), 
-    }
+	app := fiber.New(fiber.Config{
+		ErrorHandler: middleware.ErrorHandler,
+		BodyLimit:    20 * 1024 * 1024, // 20MB
+		// Добавляем конфигурацию для WebSocket
+		EnableTrustedProxyCheck: true,
+		TrustedProxies:          []string{"127.0.0.1", "::1"},
+	})
 
-    // Инициализируем webhooks для телеграма
-    notificationsHandler.Notification.ConnectTelegramWebhook()
+	// Initialize server
+	server := &Server{
+		app:           app,
+		cfg:           cfg,
+		users:         usersHandler,
+		middleware:    middleware,
+		review:        reviewHandler,
+		marketplace:   marketplaceHandler,
+		notifications: notificationsHandler,
+		balance:       balanceHandler,
+		storefront:    storefrontHandler,
+		payments:      services.Payment(),
+	}
 
-    // Устанавливаем глобальные middleware до настройки роутов
-    server.setupMiddleware()
-    
-    // Настраиваем роуты
-    server.setupRoutes()
+	// Инициализируем webhooks для телеграма
+	notificationsHandler.Notification.ConnectTelegramWebhook()
 
-    return server, nil
+	// Устанавливаем глобальные middleware до настройки роутов
+	server.setupMiddleware()
+
+	// Настраиваем роуты
+	server.setupRoutes()
+
+	return server, nil
 }
 
-// Новый метод для настройки middleware
 func (s *Server) setupMiddleware() {
 	// Глобальные middleware
 	s.app.Use(s.middleware.CORS())
@@ -136,8 +135,8 @@ func (s *Server) setupRoutes() {
 		log.Printf("Received webhook request: %s", string(c.Body()))
 		return s.notifications.Notification.HandleTelegramWebhook(c)
 	})
-    // маршрут для витрин
-    s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
+	// маршрут для витрин
+	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
 
 	// Balance routes
 	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequired)
@@ -191,28 +190,34 @@ func (s *Server) setupRoutes() {
 	protectedReviews.Post("/:id/vote", s.review.Review.VoteForReview)
 	protectedReviews.Post("/:id/response", s.review.Review.AddResponse)
 	protectedReviews.Post("/:id/photos", s.review.Review.UploadPhotos)
-    // маршруты для витрин
-    storefronts := api.Group("/storefronts")
-    storefronts.Get("/", s.storefront.Storefront.GetUserStorefronts)
-    storefronts.Post("/", s.storefront.Storefront.CreateStorefront)
-    storefronts.Get("/:id", s.storefront.Storefront.GetStorefront)
-    storefronts.Put("/:id", s.storefront.Storefront.UpdateStorefront)
-    storefronts.Delete("/:id", s.storefront.Storefront.DeleteStorefront)
+	// маршруты для витрин
+	storefronts := api.Group("/storefronts")
+	storefronts.Get("/", s.storefront.Storefront.GetUserStorefronts)
+	storefronts.Post("/", s.storefront.Storefront.CreateStorefront)
+	storefronts.Get("/:id", s.storefront.Storefront.GetStorefront)
+	storefronts.Put("/:id", s.storefront.Storefront.UpdateStorefront)
+	storefronts.Delete("/:id", s.storefront.Storefront.DeleteStorefront)
 
-    // Маршруты для источников импорта
-    storefronts.Get("/:id/import-sources", s.storefront.Storefront.GetImportSources)
-    storefronts.Post("/import-sources", s.storefront.Storefront.CreateImportSource)
-    storefronts.Put("/import-sources/:id", s.storefront.Storefront.UpdateImportSource)
-    storefronts.Delete("/import-sources/:id", s.storefront.Storefront.DeleteImportSource)
-    
-    // Маршруты для импорта данных
-    storefronts.Post("/import-sources/:id/run", s.storefront.Storefront.RunImport)
-    storefronts.Get("/import-sources/:id/history", s.storefront.Storefront.GetImportHistory)
-    
+	// Маршруты для источников импорта
+	storefronts.Get("/:id/import-sources", s.storefront.Storefront.GetImportSources)
+	storefronts.Post("/import-sources", s.storefront.Storefront.CreateImportSource)
+	storefronts.Put("/import-sources/:id", s.storefront.Storefront.UpdateImportSource)
+	storefronts.Delete("/import-sources/:id", s.storefront.Storefront.DeleteImportSource)
+
+	// Маршруты для импорта данных
+	storefronts.Post("/import-sources/:id/run", s.storefront.Storefront.RunImport)
+	storefronts.Get("/import-sources/:id/history", s.storefront.Storefront.GetImportHistory)
+
 	// Entity stats routes
 	entityStats := api.Group("/entity")
 	entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating)
 	entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)
+
+	// Маршруты для отзывов пользователей и витрин
+	api.Get("/users/:id/reviews", s.review.Review.GetUserReviews)
+	api.Get("/users/:id/rating", s.review.Review.GetUserRatingSummary)
+	api.Get("/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
+	api.Get("/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
 
 	// Protected user routes
 	users := api.Group("/users")

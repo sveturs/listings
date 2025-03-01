@@ -188,3 +188,56 @@ func (s *ReviewService) UpdateReviewPhotos(ctx context.Context, reviewId int, ph
     // Сохраняем изменения
     return s.storage.UpdateReview(ctx, review)
 }
+// GetUserReviews возвращает все отзывы, связанные с пользователем
+func (s *ReviewService) GetUserReviews(ctx context.Context, userID int) ([]models.Review, error) {
+    filter := models.ReviewsFilter{
+        Status: "published",
+        Limit:  1000, // достаточно большое число
+        Page:   1,
+    }
+    
+    // SQL-запрос для получения отзывов выполняется в хранилище
+    reviews, err := s.storage.GetUserReviews(ctx, userID, filter)
+    if err != nil {
+        return nil, err
+    }
+    
+    return reviews, nil
+}
+
+// GetStorefrontReviews возвращает все отзывы, связанные с витриной
+func (s *ReviewService) GetStorefrontReviews(ctx context.Context, storefrontID int) ([]models.Review, error) {
+    filter := models.ReviewsFilter{
+        Status: "published",
+        Limit:  1000, // достаточно большое число
+        Page:   1,
+    }
+    
+    // SQL-запрос для получения отзывов выполняется в хранилище
+    reviews, err := s.storage.GetStorefrontReviews(ctx, storefrontID, filter)
+    if err != nil {
+        return nil, err
+    }
+    
+    return reviews, nil
+}
+
+// GetUserRatingSummary возвращает сводную информацию о рейтинге пользователя
+func (s *ReviewService) GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error) {
+    summary, err := s.storage.GetUserRatingSummary(ctx, userID)
+    if err != nil {
+        return nil, err
+    }
+    
+    return summary, nil
+}
+
+// GetStorefrontRatingSummary возвращает сводную информацию о рейтинге витрины
+func (s *ReviewService) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
+    summary, err := s.storage.GetStorefrontRatingSummary(ctx, storefrontID)
+    if err != nil {
+        return nil, err
+    }
+    
+    return summary, nil
+}

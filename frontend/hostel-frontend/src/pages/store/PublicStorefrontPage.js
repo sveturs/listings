@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
+import StorefrontRating from '../../components/store/StorefrontRating';
+
 import {
     Container,
     Typography,
@@ -13,7 +15,8 @@ import {
     CardContent,
     Divider,
     Paper,
-    Avatar
+    Avatar,
+    Button
 } from '@mui/material';
 import { Store } from 'lucide-react';
 import axios from '../../api/axios';
@@ -22,7 +25,7 @@ import ListingCard from '../../components/marketplace/ListingCard';
 const PublicStorefrontPage = () => {
     const { t } = useTranslation(['common', 'marketplace']);
     const { id } = useParams();
-    
+
     const [loading, setLoading] = useState(true);
     const [storefront, setStorefront] = useState(null);
     const [storeListings, setStoreListings] = useState([]);
@@ -34,11 +37,11 @@ const PublicStorefrontPage = () => {
                 setLoading(true);
                 const [storefrontResponse, listingsResponse] = await Promise.all([
                     axios.get(`/api/v1/public/storefronts/${id}`),
-                    axios.get('/api/v1/marketplace/listings', { 
-                        params: { storefront_id: id } 
+                    axios.get('/api/v1/marketplace/listings', {
+                        params: { storefront_id: id }
                     })
                 ]);
-                
+
                 setStorefront(storefrontResponse.data.data);
                 setStoreListings(listingsResponse.data.data?.data || []);
             } catch (err) {
@@ -78,8 +81,8 @@ const PublicStorefrontPage = () => {
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Avatar sx={{ bgcolor: 'primary.main', width: 64, height: 64 }}>
                         {storefront.logo_path ? (
-                            <img 
-                                src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${storefront.logo_path}`} 
+                            <img
+                                src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${storefront.logo_path}`}
                                 alt={storefront.name}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
@@ -96,12 +99,23 @@ const PublicStorefrontPage = () => {
                         </Typography>
                     </Box>
                 </Box>
-                
+
                 {storefront.description && (
                     <Typography variant="body1" paragraph>
                         {storefront.description}
                     </Typography>
                 )}
+                <StorefrontRating storefrontId={id} />
+                {/* Кнопка для просмотра всех отзывов */}
+                <Box display="flex" justifyContent="center" mt={2}>
+                    <Button
+                        component={Link}
+                        to={`/shop/${id}/reviews`}
+                        variant="outlined"
+                    >
+                        {t('store.seeAllReviews')}
+                    </Button>
+                </Box>
             </Paper>
 
             <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>

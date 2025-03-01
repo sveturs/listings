@@ -409,3 +409,19 @@ func (t *pgxTransaction) Commit() error {
 func (t *pgxTransaction) Rollback() error {
     return t.tx.Rollback(context.Background())
 }
+
+func (db *Database) GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error) {
+    return db.reviewDB.GetUserReviews(ctx, userID, filter)
+}
+
+func (db *Database) GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error) {
+    return db.reviewDB.GetStorefrontReviews(ctx, storefrontID, filter)
+}
+
+func (db *Database) GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error) {
+    return db.reviewDB.GetUserRatingSummary(ctx, userID)
+}
+
+func (db *Database) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
+    return db.reviewDB.GetStorefrontRatingSummary(ctx, storefrontID)
+}

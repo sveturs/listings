@@ -612,3 +612,303 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 
 	return stats, nil
 }
+// GetUserReviews получает все отзывы, связанные с пользователем
+func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error) {
+    // Базовый запрос для получения отзывов, связанных с пользователем
+    query := `
+    WITH vote_counts AS (
+        SELECT 
+            review_id,
+            COUNT(*) FILTER (WHERE vote_type = 'helpful') as helpful_votes,
+            COUNT(*) FILTER (WHERE vote_type = 'not_helpful') as not_helpful_votes
+        FROM review_votes 
+        GROUP BY review_id
+    ),
+    translations_agg AS (
+        SELECT 
+            entity_id,
+            jsonb_object_agg(
+                t.language,
+                jsonb_build_object(t.field_name, t.translated_text)
+            ) as translations
+        FROM translations t
+        WHERE entity_type = 'review'
+        GROUP BY entity_id
+    )
+    SELECT 
+        r.id, r.user_id, r.entity_type, r.entity_id, r.rating, 
+        r.comment, r.pros, r.cons, r.photos, r.likes_count,
+        r.is_verified_purchase, r.status, r.created_at, r.updated_at,
+        r.original_language, r.entity_origin_type, r.entity_origin_id,
+        COALESCE(vc.helpful_votes, 0) as helpful_votes,
+        COALESCE(vc.not_helpful_votes, 0) as not_helpful_votes,
+        u.name as user_name, u.email as user_email, u.picture_url as user_picture,
+        COALESCE(ta.translations, '{}'::jsonb) as translations,
+        (
+            SELECT vote_type 
+            FROM review_votes 
+            WHERE review_id = r.id AND user_id = $1
+            LIMIT 1
+        ) as current_user_vote
+    FROM reviews r
+    LEFT JOIN users u ON r.user_id = u.id
+    LEFT JOIN vote_counts vc ON vc.review_id = r.id
+    LEFT JOIN translations_agg ta ON ta.entity_id = r.id
+    WHERE (r.entity_origin_type = 'user' AND r.entity_origin_id = $2)
+       OR (r.entity_type = 'listing' AND 
+           EXISTS (SELECT 1 FROM marketplace_listings ml WHERE ml.id = r.entity_id AND ml.user_id = $2)
+          )
+    ORDER BY r.created_at DESC
+    `
+
+    rows, err := s.pool.Query(ctx, query, userID, userID)
+    if err != nil {
+        return nil, fmt.Errorf("error executing query: %w", err)
+    }
+    defer rows.Close()
+
+    var reviews []models.Review
+    for rows.Next() {
+        var r models.Review
+        r.User = &models.User{}
+        var currentUserVote *string
+        var translationsJSON []byte
+        var pros, cons *string
+        var userEmail, userPicture *string
+        var entityOriginType *string
+        var entityOriginID *int
+
+        err := rows.Scan(
+            &r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
+            &r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
+            &r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
+            &r.OriginalLanguage, &entityOriginType, &entityOriginID,
+            &r.HelpfulVotes, &r.NotHelpfulVotes,
+            &r.User.Name, &userEmail, &userPicture,
+            &translationsJSON,
+            &currentUserVote,
+        )
+        if err != nil {
+            return nil, fmt.Errorf("error scanning row: %w", err)
+        }
+
+        // Обрабатываем NULL значения
+        if pros != nil {
+            r.Pros = *pros
+        }
+        if cons != nil {
+            r.Cons = *cons
+        }
+        if userEmail != nil {
+            r.User.Email = *userEmail
+        }
+        if userPicture != nil {
+            r.User.PictureURL = *userPicture
+        }
+        if entityOriginType != nil {
+            r.EntityOriginType = *entityOriginType
+        }
+        if entityOriginID != nil {
+            r.EntityOriginID = *entityOriginID
+        }
+
+        // Парсим переводы из JSON
+        if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
+            log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
+            r.Translations = make(map[string]map[string]string)
+        }
+
+        r.VotesCount = struct {
+            Helpful    int `json:"helpful"`
+            NotHelpful int `json:"not_helpful"`
+        }{
+            Helpful:    r.HelpfulVotes,
+            NotHelpful: r.NotHelpfulVotes,
+        }
+
+        if currentUserVote != nil {
+            r.CurrentUserVote = *currentUserVote
+        }
+
+        reviews = append(reviews, r)
+    }
+
+    return reviews, rows.Err()
+}
+
+// GetStorefrontReviews получает все отзывы, связанные с витриной
+func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error) {
+    // Базовый запрос для получения отзывов, связанных с витриной
+    query := `
+    WITH vote_counts AS (
+        SELECT 
+            review_id,
+            COUNT(*) FILTER (WHERE vote_type = 'helpful') as helpful_votes,
+            COUNT(*) FILTER (WHERE vote_type = 'not_helpful') as not_helpful_votes
+        FROM review_votes 
+        GROUP BY review_id
+    ),
+    translations_agg AS (
+        SELECT 
+            entity_id,
+            jsonb_object_agg(
+                t.language,
+                jsonb_build_object(t.field_name, t.translated_text)
+            ) as translations
+        FROM translations t
+        WHERE entity_type = 'review'
+        GROUP BY entity_id
+    )
+    SELECT 
+        r.id, r.user_id, r.entity_type, r.entity_id, r.rating, 
+        r.comment, r.pros, r.cons, r.photos, r.likes_count,
+        r.is_verified_purchase, r.status, r.created_at, r.updated_at,
+        r.original_language, r.entity_origin_type, r.entity_origin_id,
+        COALESCE(vc.helpful_votes, 0) as helpful_votes,
+        COALESCE(vc.not_helpful_votes, 0) as not_helpful_votes,
+        u.name as user_name, u.email as user_email, u.picture_url as user_picture,
+        COALESCE(ta.translations, '{}'::jsonb) as translations,
+        (
+            SELECT vote_type 
+            FROM review_votes 
+            WHERE review_id = r.id AND user_id = $1
+            LIMIT 1
+        ) as current_user_vote
+    FROM reviews r
+    LEFT JOIN users u ON r.user_id = u.id
+    LEFT JOIN vote_counts vc ON vc.review_id = r.id
+    LEFT JOIN translations_agg ta ON ta.entity_id = r.id
+    WHERE (r.entity_origin_type = 'storefront' AND r.entity_origin_id = $2)
+       OR (r.entity_type = 'listing' AND
+           EXISTS (SELECT 1 FROM marketplace_listings ml WHERE ml.id = r.entity_id AND ml.storefront_id = $2)
+          )
+    ORDER BY r.created_at DESC
+    `
+
+    rows, err := s.pool.Query(ctx, query, 0, storefrontID)
+
+    if err != nil {
+        return nil, fmt.Errorf("error executing query: %w", err)
+    }
+    defer rows.Close()
+
+    var reviews []models.Review
+    for rows.Next() {
+        var r models.Review
+        r.User = &models.User{}
+        var currentUserVote *string
+        var translationsJSON []byte
+        var pros, cons *string
+        var userEmail, userPicture *string
+        var entityOriginType *string
+        var entityOriginID *int
+
+        err := rows.Scan(
+            &r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
+            &r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
+            &r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
+            &r.OriginalLanguage, &entityOriginType, &entityOriginID,
+            &r.HelpfulVotes, &r.NotHelpfulVotes,
+            &r.User.Name, &userEmail, &userPicture,
+            &translationsJSON,
+            &currentUserVote,
+        )
+        if err != nil {
+            return nil, fmt.Errorf("error scanning row: %w", err)
+        }
+
+        // Обрабатываем NULL значения
+        if pros != nil {
+            r.Pros = *pros
+        }
+        if cons != nil {
+            r.Cons = *cons
+        }
+        if userEmail != nil {
+            r.User.Email = *userEmail
+        }
+        if userPicture != nil {
+            r.User.PictureURL = *userPicture
+        }
+        if entityOriginType != nil {
+            r.EntityOriginType = *entityOriginType
+        }
+        if entityOriginID != nil {
+            r.EntityOriginID = *entityOriginID
+        }
+
+        // Парсим переводы из JSON
+        if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
+            log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
+            r.Translations = make(map[string]map[string]string)
+        }
+
+        r.VotesCount = struct {
+            Helpful    int `json:"helpful"`
+            NotHelpful int `json:"not_helpful"`
+        }{
+            Helpful:    r.HelpfulVotes,
+            NotHelpful: r.NotHelpfulVotes,
+        }
+
+        if currentUserVote != nil {
+            r.CurrentUserVote = *currentUserVote
+        }
+
+        reviews = append(reviews, r)
+    }
+
+    return reviews, rows.Err()
+}
+
+// GetUserRatingSummary получает сводные данные о рейтинге пользователя
+func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error) {
+    var summary models.UserRatingSummary
+    
+    query := `
+    SELECT 
+        user_id, name, total_reviews, average_rating,
+        rating_1, rating_2, rating_3, rating_4, rating_5
+    FROM user_rating_summary
+    WHERE user_id = $1
+    `
+    
+    err := s.pool.QueryRow(ctx, query, userID).Scan(
+        &summary.UserID, &summary.Name, &summary.TotalReviews, &summary.AverageRating,
+        &summary.Rating1, &summary.Rating2, &summary.Rating3, &summary.Rating4, &summary.Rating5)
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            // Если нет данных, создаем пустую сводку
+            return &models.UserRatingSummary{UserID: userID}, nil
+        }
+        return nil, fmt.Errorf("error getting user rating summary: %w", err)
+    }
+    
+    return &summary, nil
+}
+
+// GetStorefrontRatingSummary получает сводные данные о рейтинге витрины
+func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
+    var summary models.StorefrontRatingSummary
+    
+    query := `
+    SELECT 
+        storefront_id, name, total_reviews, average_rating,
+        rating_1, rating_2, rating_3, rating_4, rating_5
+    FROM storefront_rating_summary
+    WHERE storefront_id = $1
+    `
+    
+    err := s.pool.QueryRow(ctx, query, storefrontID).Scan(
+        &summary.StorefrontID, &summary.Name, &summary.TotalReviews, &summary.AverageRating,
+        &summary.Rating1, &summary.Rating2, &summary.Rating3, &summary.Rating4, &summary.Rating5)
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            // Если нет данных, создаем пустую сводку
+            return &models.StorefrontRatingSummary{StorefrontID: storefrontID}, nil
+        }
+        return nil, fmt.Errorf("error getting storefront rating summary: %w", err)
+    }
+    
+    return &summary, nil
+}

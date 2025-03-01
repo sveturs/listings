@@ -16,4 +16,10 @@ type ReviewServiceInterface interface {
     GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error)
     GetReviewStats(ctx context.Context, entityType string, entityId int) (*models.ReviewStats, error)
     UpdateReviewPhotos(ctx context.Context, reviewId int, photoUrls []string) error
+
+    GetUserReviews(ctx context.Context, userID int) ([]models.Review, error)
+    GetStorefrontReviews(ctx context.Context, storefrontID int) ([]models.Review, error)
+    GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error)
+    GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error)
+
 }
