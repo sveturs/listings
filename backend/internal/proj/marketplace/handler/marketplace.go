@@ -273,40 +273,40 @@ func (h *MarketplaceHandler) GetSubcategories(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, categories)
 }
 func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
-	// Получаем user_id из контекста, если пользователь авторизован
-	var userID int
-	if uid := c.Locals("user_id"); uid != nil {
-		var ok bool
-		userID, ok = uid.(int)
-		if !ok {
-			log.Printf("Invalid user_id type in context: %T", uid)
-			userID = 0
-		}
-	}
+    // Получаем user_id из контекста, если пользователь авторизован
+    var userID int
+    if uid := c.Locals("user_id"); uid != nil {
+        var ok bool
+        userID, ok = uid.(int)
+        if !ok {
+            log.Printf("Invalid user_id type in context: %T", uid)
+            userID = 0
+        }
+    }
 
-	id, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-	}
+    id, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+    }
+    
+    // Добавить проверку на валидность ID
+    if id <= 0 {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+    }
 
-	//log.Printf("GetListing: userID=%d, listingID=%d", userID, id)
+    // Создаем контекст с user_id
+    ctx := context.WithValue(c.Context(), "user_id", userID)
 
-	// Создаем контекст с user_id
-	ctx := context.WithValue(c.Context(), "user_id", userID)
+    listing, err := h.marketplaceService.GetListingByID(ctx, id)
+    if err != nil {
+        log.Printf("Error getting listing %d: %v", id, err)
+        if err.Error() == "listing not found" {
+            return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+        }
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listing")
+    }
 
-	listing, err := h.marketplaceService.GetListingByID(ctx, id)
-	if err != nil {
-		log.Printf("Error getting listing %d: %v", id, err)
-		if err.Error() == "listing not found" {
-			return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
-		}
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listing")
-	}
-
-	// Добавляем логирование для отладки
-	//log.Printf("GetListing result: listingID=%d, isFavorite=%v, userID=%d", id, listing.IsFavorite, userID)
-
-	return utils.SuccessResponse(c, listing)
+    return utils.SuccessResponse(c, listing)
 }
 
 // UpdateListing - обновление объявления
@@ -578,27 +578,49 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 
 // GetSuggestions возвращает предложения автодополнения
 func (h *MarketplaceHandler) GetSuggestions(c *fiber.Ctx) error {
-	prefix := c.Query("q", "")
-	size := c.QueryInt("size", 5)
-
-	if prefix == "" {
-		return utils.SuccessResponse(c, fiber.Map{
-			"data": []string{},
-		})
-	}
-
-	suggestions, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, size)
-	if err != nil {
-		log.Printf("Ошибка получения предложений: %v", err)
-		// В случае ошибки возвращаем пустой массив, чтобы не ломать фронтенд
-		return utils.SuccessResponse(c, fiber.Map{
-			"data": []string{},
-		})
-	}
-
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": suggestions,
-	})
+    prefix := c.Query("q", "")
+    size := c.QueryInt("size", 5)
+    
+    if prefix == "" {
+        return utils.SuccessResponse(c, fiber.Map{
+            "data": []string{},
+        })
+    }
+    
+    // Пытаемся получить предложения из OpenSearch
+    suggestions, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, size)
+    if err != nil {
+        log.Printf("Ошибка получения предложений из OpenSearch: %v", err)
+        
+        // Используем более простой поиск через базу данных
+        // Здесь можно реализовать запасной вариант поиска по префиксу в PostgreSQL
+        filters := map[string]string{
+            "query": prefix + "%", // Используем префикс для LIKE запроса
+        }
+        
+        listings, _, err := h.marketplaceService.GetListings(c.Context(), filters, size, 0)
+        if err != nil {
+            log.Printf("Ошибка запасного поиска: %v", err)
+            // В случае полной неудачи возвращаем пустой массив
+            return utils.SuccessResponse(c, fiber.Map{
+                "data": []string{},
+            })
+        }
+        
+        // Извлекаем названия из найденных объявлений
+        titles := make([]string, 0, len(listings))
+        for _, listing := range listings {
+            titles = append(titles, listing.Title)
+        }
+        
+        return utils.SuccessResponse(c, fiber.Map{
+            "data": titles,
+        })
+    }
+    
+    return utils.SuccessResponse(c, fiber.Map{
+        "data": suggestions,
+    })
 }
 
 // ReindexAll переиндексирует все объявления

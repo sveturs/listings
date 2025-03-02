@@ -78,32 +78,32 @@ const ListingMapping = `
       "id": {
         "type": "keyword"
       },
-      "title": {
-        "type": "text",
-        "analyzer": "default_analyzer",
-        "fields": {
-          "serbian": {
+"title": {
+    "type": "text",
+    "analyzer": "default_analyzer",
+    "fields": {
+        "serbian": {
             "type": "text",
             "analyzer": "serbian_analyzer"
-          },
-          "russian": {
+        },
+        "russian": {
             "type": "text",
             "analyzer": "russian_analyzer"
-          },
-          "english": {
+        },
+        "english": {
             "type": "text",
             "analyzer": "english_analyzer"
-          },
-          "autocomplete": {
+        },
+        "autocomplete": {
             "type": "text",
             "analyzer": "autocomplete"
-          },
-          "keyword": {
+        },
+        "keyword": {
             "type": "keyword"
-          }
         }
-      },
-      "description": {
+    }
+},
+	      "description": {
         "type": "text",
         "analyzer": "default_analyzer",
         "fields": {
@@ -124,9 +124,14 @@ const ListingMapping = `
       "price": {
         "type": "double"
       },
-      "condition": {
-        "type": "keyword"
-      },
+	"condition": {
+		"type": "text",
+		"fields": {
+			"keyword": {
+				"type": "keyword"
+			}
+		}
+	},
       "status": {
         "type": "keyword"
       },

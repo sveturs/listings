@@ -97,40 +97,39 @@ const MarketplacePage = () => {
 
     const fetchListings = useCallback(async (currentFilters = {}) => {
         try {
-          setLoading(true);
-          setError(null);
-      
-          const params = {};
-          Object.entries(currentFilters).forEach(([key, value]) => {
-            if (value !== '') {
-              params[key] = value;
+            setLoading(true);
+            setError(null);
+    
+            const params = {};
+            Object.entries(currentFilters).forEach(([key, value]) => {
+                if (value !== '') {
+                    params[key] = value;
+                }
+            });
+    
+            // Добавим логирование для отладки
+            console.log('Отправляем запрос с параметрами:', params);
+    
+            // Используем endpoint для поиска
+            const response = await axios.get('/api/v1/marketplace/search', { params });
+    
+            console.log('Получен ответ API:', response.data);
+    
+            // Проверяем структуру данных в ответе
+            if (response.data && response.data.data) {
+                setListings(response.data.data);
+            } else {
+                console.error('Ответ API не содержит ожидаемую структуру данных:', response.data);
+                setListings([]);
             }
-          });
-      
-          // Используем новый endpoint для поиска
-          const response = await axios.get('/api/v1/marketplace/search', { params });
-          
-          console.log('API response:', response.data);
-          
-          // Проверяем различные варианты структуры данных
-          if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
-            // Случай с двойным вложением data
-            setListings(response.data.data.data);
-          } else if (response.data?.data && Array.isArray(response.data.data)) {
-            // Случай с одинарным вложением data
-            setListings(response.data.data);
-          } else {
-            console.error('Ответ API не содержит массив данных:', response.data);
-            setListings([]);
-          }
         } catch (err) {
-          console.error('Error fetching listings:', err);
-          setError('Не удалось загрузить объявления');
-          setListings([]);
+            console.error('Ошибка при получении объявлений:', err);
+            setError('Не удалось загрузить объявления');
+            setListings([]);
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      }, []);
+    }, []);
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -275,7 +274,7 @@ const MarketplacePage = () => {
                 </Box>
             );
         }
-    
+
         if (error) {
             return (
                 <Alert
@@ -291,7 +290,7 @@ const MarketplacePage = () => {
                 </Alert>
             );
         }
-    
+
         // Проверяем, что listings - это массив
         if (!listings || !Array.isArray(listings) || listings.length === 0) {
             return (
@@ -300,13 +299,13 @@ const MarketplacePage = () => {
                 </Alert>
             );
         }
-    
+
         return isMobile ? (
             <MobileListingGrid listings={listings} />
         ) : (
             <Grid container spacing={3}>
-                {listings.map((listing) => (
-                    <Grid item xs={12} sm={6} md={4} key={listing.id}>
+                {listings.map((listing, index) => (
+                    <Grid item xs={12} sm={6} md={4} key={listing.id || `listing-${index}`}>
                         <Link
                             to={`/marketplace/listings/${listing.id}`}
                             style={{ textDecoration: 'none' }}

@@ -2,38 +2,75 @@
 package opensearch
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	//"strconv"
-	"time"
-
-	"backend/internal/domain/models"
-	"backend/internal/storage"
-	osClient "backend/internal/storage/opensearch"
-	"backend/internal/domain/search" 
+    "context"
+    "encoding/json"
+    "fmt"
+    "log"
+    //"strconv"
+    "time"
+    
+    "backend/internal/domain/models"
+    "backend/internal/storage"
+    "backend/internal/domain/search" 
+    osClient "backend/internal/storage/opensearch" // Используем псевдоним для импорта
 )
 
 // Repository реализует интерфейс MarketplaceSearchRepository
 type Repository struct {
-	client    *osClient.OpenSearchClient
-	indexName string
-	storage   storage.Storage // Для доступа к оригинальным данным при индексации
+    client    *osClient.OpenSearchClient
+    indexName string
+    storage   storage.Storage // Для доступа к оригинальным данным при индексации
 }
 
 // NewRepository создает новый репозиторий
 func NewRepository(client *osClient.OpenSearchClient, indexName string, storage storage.Storage) *Repository {
-	return &Repository{
-		client:    client,
-		indexName: indexName,
-		storage:   storage,
-	}
+    return &Repository{
+        client:    client,
+        indexName: indexName,
+        storage:   storage,
+    }
 }
-
 // PrepareIndex подготавливает индекс (создает, если не существует)
 func (r *Repository) PrepareIndex(ctx context.Context) error {
-	return r.client.CreateIndex(r.indexName, osClient.ListingMapping)
+    // Проверяем существование индекса
+    exists, err := r.client.IndexExists(r.indexName)
+    if err != nil {
+        return fmt.Errorf("ошибка проверки индекса: %w", err)
+    }
+    
+    log.Printf("Проверка индекса %s: существует=%v", r.indexName, exists)
+    
+    // Если индекс не существует, создаем его
+    if !exists {
+        log.Printf("Создание индекса %s...", r.indexName)
+        if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
+            return fmt.Errorf("ошибка создания индекса: %w", err)
+        }
+        log.Printf("Индекс %s успешно создан", r.indexName)
+        
+        // Получаем все объявления из БД
+        allListings, _, err := r.storage.GetListings(ctx, map[string]string{}, 1000, 0)
+        if err != nil {
+            log.Printf("Ошибка получения объявлений: %v", err)
+            return err
+        }
+        
+        // Преобразуем в указатели
+        listingPtrs := make([]*models.MarketplaceListing, len(allListings))
+        for i := range allListings {
+            listingPtrs[i] = &allListings[i]
+        }
+        
+        // Индексируем все объявления
+        if err := r.BulkIndexListings(ctx, listingPtrs); err != nil {
+            log.Printf("Ошибка индексации объявлений: %v", err)
+            return err
+        }
+        
+        log.Printf("Успешно проиндексировано %d объявлений", len(allListings))
+    }
+    
+    return nil
 }
 
 // IndexListing индексирует объявление
@@ -88,59 +125,52 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
     
     return result, nil
 }
-
 // SuggestListings предлагает автодополнение для поиска
 func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-    // Создаем запрос на поиск с автодополнением
+    if prefix == "" {
+        return []string{}, nil
+    }
+    // Создаем запрос для поиска с префиксом
     query := map[string]interface{}{
-        "size": 0,
-        "suggest": map[string]interface{}{
-            "title_suggest": map[string]interface{}{
-                "prefix": prefix,
-                "completion": map[string]interface{}{
-                    "field": "title",
-                    "size": size,
-                    "fuzzy": map[string]interface{}{
-                        "fuzziness": 2,
-                    },
-                },
+        "size": size,
+        "query": map[string]interface{}{
+            "match_phrase_prefix": map[string]interface{}{
+                "title": prefix,
             },
         },
+        "_source": []string{"title"}, // Получаем только заголовок
     }
-    
     // Выполняем поиск
     responseBytes, err := r.client.Search(r.indexName, query)
     if err != nil {
-        return nil, fmt.Errorf("ошибка выполнения автодополнения: %w", err)
+        return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
     }
     
-    // Разбираем ответ
+    // Парсим JSON ответ
     var searchResponse map[string]interface{}
     if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
         return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
     }
     
-    // Извлекаем предложения
-    suggestions := make([]string, 0)
-    if suggest, ok := searchResponse["suggest"].(map[string]interface{}); ok {
-        if titleSuggest, ok := suggest["title_suggest"].([]interface{}); ok && len(titleSuggest) > 0 {
-            if suggestData, ok := titleSuggest[0].(map[string]interface{}); ok {
-                if options, ok := suggestData["options"].([]interface{}); ok {
-                    for _, option := range options {
-                        if opt, ok := option.(map[string]interface{}); ok {
-                            if text, ok := opt["text"].(string); ok {
-                                suggestions = append(suggestions, text)
-                            }
+    // Извлекаем результаты
+    suggestions := make([]string, 0, size)
+    if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
+        if hitsArray, ok := hits["hits"].([]interface{}); ok {
+            for _, hit := range hitsArray {
+                if hitObj, ok := hit.(map[string]interface{}); ok {
+                    if source, ok := hitObj["_source"].(map[string]interface{}); ok {
+                        if title, ok := source["title"].(string); ok {
+                            suggestions = append(suggestions, title)
                         }
                     }
                 }
             }
         }
     }
-    
     return suggestions, nil
 }
 
+// ReindexAll переиндексирует все объявления
 // ReindexAll переиндексирует все объявления
 func (r *Repository) ReindexAll(ctx context.Context) error {
 	// Удаляем индекс, если он существует
@@ -155,9 +185,13 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 		}
 	}
 
-	// Создаем индекс заново
-	if err := r.PrepareIndex(ctx); err != nil {
-		return fmt.Errorf("ошибка создания индекса: %w", err)
+	// Создаем индекс заново без вызова PrepareIndex
+	if !exists {
+		log.Printf("Создание индекса %s...", r.indexName)
+		if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
+			return fmt.Errorf("ошибка создания индекса: %w", err)
+		}
+		log.Printf("Индекс %s успешно создан", r.indexName)
 	}
 
 	// Получаем все объявления из БД
@@ -322,7 +356,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 	if params.Condition != "" {
 		filterClauses = append(filterClauses, map[string]interface{}{
 			"term": map[string]interface{}{
-				"condition": params.Condition,
+				"condition.keyword": params.Condition,
 			},
 		})
 	}
@@ -454,7 +488,7 @@ if params.Sort != "" {
 
 	aggregations["conditions"] = map[string]interface{}{
 		"terms": map[string]interface{}{
-			"field": "condition",
+			"field": "condition.keyword",
 			"size":  10,
 		},
 	}

@@ -185,6 +185,7 @@ func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation 
     return err
 }
 func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
+    log.Printf("Запрос поиска с параметрами: %+v", params)
     // Преобразуем параметры для OpenSearch
     osParams := &search.SearchParams{
         Query:        params.Query,
@@ -244,11 +245,16 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
         osParams.Distance = params.Distance
     }
     
-    // Выполняем поиск
+        // Выполняем поиск
+
+    log.Printf("Отправляем запрос в OpenSearch: %+v", osParams)
     osResult, err := s.storage.SearchListingsOpenSearch(ctx, osParams)
     if err != nil {
+        log.Printf("Ошибка поиска в OpenSearch: %v", err)
         return nil, fmt.Errorf("ошибка поиска: %w", err)
     }
+    
+    log.Printf("Получен ответ из OpenSearch: найдено %d результатов", osResult.Total)
     
     // Преобразуем результат
     result := &search.ServiceResult{
