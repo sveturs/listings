@@ -2,81 +2,85 @@
 package opensearch
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "log"
-    //"strconv"
-    "time"
-    
-    "backend/internal/domain/models"
-    "backend/internal/storage"
-    "backend/internal/domain/search" 
-    osClient "backend/internal/storage/opensearch" // Используем псевдоним для импорта
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"strconv"
+	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/domain/search"
+	"backend/internal/storage"
+	osClient "backend/internal/storage/opensearch" // Используем псевдоним для импорта
 )
 
 // Repository реализует интерфейс MarketplaceSearchRepository
 type Repository struct {
-    client    *osClient.OpenSearchClient
-    indexName string
-    storage   storage.Storage // Для доступа к оригинальным данным при индексации
+	client    *osClient.OpenSearchClient
+	indexName string
+	storage   storage.Storage // Для доступа к оригинальным данным при индексации
 }
 
 // NewRepository создает новый репозиторий
 func NewRepository(client *osClient.OpenSearchClient, indexName string, storage storage.Storage) *Repository {
-    return &Repository{
-        client:    client,
-        indexName: indexName,
-        storage:   storage,
-    }
-}
-// PrepareIndex подготавливает индекс (создает, если не существует)
-func (r *Repository) PrepareIndex(ctx context.Context) error {
-    // Проверяем существование индекса
-    exists, err := r.client.IndexExists(r.indexName)
-    if err != nil {
-        return fmt.Errorf("ошибка проверки индекса: %w", err)
-    }
-    
-    log.Printf("Проверка индекса %s: существует=%v", r.indexName, exists)
-    
-    // Если индекс не существует, создаем его
-    if !exists {
-        log.Printf("Создание индекса %s...", r.indexName)
-        if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
-            return fmt.Errorf("ошибка создания индекса: %w", err)
-        }
-        log.Printf("Индекс %s успешно создан", r.indexName)
-        
-        // Получаем все объявления из БД
-        allListings, _, err := r.storage.GetListings(ctx, map[string]string{}, 1000, 0)
-        if err != nil {
-            log.Printf("Ошибка получения объявлений: %v", err)
-            return err
-        }
-        
-        // Преобразуем в указатели
-        listingPtrs := make([]*models.MarketplaceListing, len(allListings))
-        for i := range allListings {
-            listingPtrs[i] = &allListings[i]
-        }
-        
-        // Индексируем все объявления
-        if err := r.BulkIndexListings(ctx, listingPtrs); err != nil {
-            log.Printf("Ошибка индексации объявлений: %v", err)
-            return err
-        }
-        
-        log.Printf("Успешно проиндексировано %d объявлений", len(allListings))
-    }
-    
-    return nil
+	return &Repository{
+		client:    client,
+		indexName: indexName,
+		storage:   storage,
+	}
 }
 
-// IndexListing индексирует объявление
+// PrepareIndex подготавливает индекс (создает, если не существует)
+func (r *Repository) PrepareIndex(ctx context.Context) error {
+	// Проверяем существование индекса
+	exists, err := r.client.IndexExists(r.indexName)
+	if err != nil {
+		return fmt.Errorf("ошибка проверки индекса: %w", err)
+	}
+
+	log.Printf("Проверка индекса %s: существует=%v", r.indexName, exists)
+
+	// Если индекс не существует, создаем его
+	if !exists {
+		log.Printf("Создание индекса %s...", r.indexName)
+		if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
+			return fmt.Errorf("ошибка создания индекса: %w", err)
+		}
+		log.Printf("Индекс %s успешно создан", r.indexName)
+
+		// Получаем все объявления из БД
+		allListings, _, err := r.storage.GetListings(ctx, map[string]string{}, 1000, 0)
+		if err != nil {
+			log.Printf("Ошибка получения объявлений: %v", err)
+			return err
+		}
+
+		// Преобразуем в указатели
+		listingPtrs := make([]*models.MarketplaceListing, len(allListings))
+		for i := range allListings {
+			listingPtrs[i] = &allListings[i]
+		}
+
+		// Индексируем все объявления
+		if err := r.BulkIndexListings(ctx, listingPtrs); err != nil {
+			log.Printf("Ошибка индексации объявлений: %v", err)
+			return err
+		}
+
+		log.Printf("Успешно проиндексировано %d объявлений", len(allListings))
+	}
+
+	return nil
+}
+
 func (r *Repository) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
 	// Преобразуем объект модели в документ для индексации
 	doc := r.listingToDoc(listing)
+
+	// Логирование для отладки
+	docJSON, _ := json.MarshalIndent(doc, "", "  ")
+	log.Printf("Индексация объявления %d с данными: %s", listing.ID, string(docJSON))
 
 	// Индексируем документ
 	return r.client.IndexDocument(r.indexName, fmt.Sprintf("%d", listing.ID), doc)
@@ -88,7 +92,18 @@ func (r *Repository) BulkIndexListings(ctx context.Context, listings []*models.M
 
 	for _, listing := range listings {
 		doc := r.listingToDoc(listing)
-		doc["id"] = listing.ID // Добавляем ID для использования в BulkIndex
+
+		// Логирование ID при индексации
+		log.Printf("Индексация объявления с ID: %d, категория: %d, название: %s",
+			listing.ID, listing.CategoryID, listing.Title)
+
+		// Гарантируем, что ID всегда установлен
+		if listing.ID == 0 {
+			log.Printf("ВНИМАНИЕ: Объявление с нулевым ID: %s (категория: %d)",
+				listing.Title, listing.CategoryID)
+		}
+
+		doc["id"] = listing.ID // Используем явно указанный ID для индексации
 		docs = append(docs, doc)
 	}
 
@@ -100,77 +115,103 @@ func (r *Repository) DeleteListing(ctx context.Context, listingID string) error 
 	return r.client.DeleteDocument(r.indexName, listingID)
 }
 
-// SearchListings выполняет поиск объявлений
-func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-    // Строим запрос к OpenSearch
-    query := r.buildSearchQuery(params)
-    
-    // Выполняем поиск
-    responseBytes, err := r.client.Search(r.indexName, query)
-    if err != nil {
-        return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
-    }
-    
-    // Разбираем ответ
-    var searchResponse map[string]interface{}
-    if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
-        return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
-    }
-    
-    // Извлекаем результаты
-    result, err := r.parseSearchResponse(searchResponse, params.Language)
-    if err != nil {
-        return nil, fmt.Errorf("ошибка обработки результатов: %w", err)
-    }
-    
-    return result, nil
-}
-// SuggestListings предлагает автодополнение для поиска
-func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-    if prefix == "" {
-        return []string{}, nil
-    }
-    // Создаем запрос для поиска с префиксом
-    query := map[string]interface{}{
-        "size": size,
-        "query": map[string]interface{}{
-            "match_phrase_prefix": map[string]interface{}{
-                "title": prefix,
-            },
-        },
-        "_source": []string{"title"}, // Получаем только заголовок
-    }
-    // Выполняем поиск
-    responseBytes, err := r.client.Search(r.indexName, query)
-    if err != nil {
-        return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
-    }
-    
-    // Парсим JSON ответ
-    var searchResponse map[string]interface{}
-    if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
-        return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
-    }
-    
-    // Извлекаем результаты
-    suggestions := make([]string, 0, size)
-    if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
-        if hitsArray, ok := hits["hits"].([]interface{}); ok {
-            for _, hit := range hitsArray {
-                if hitObj, ok := hit.(map[string]interface{}); ok {
-                    if source, ok := hitObj["_source"].(map[string]interface{}); ok {
-                        if title, ok := source["title"].(string); ok {
-                            suggestions = append(suggestions, title)
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return suggestions, nil
+// Метод для извлечения ID из документа OpenSearch
+func (r *Repository) extractDocumentID(hit map[string]interface{}) (int, error) {
+	// Сначала пытаемся получить ID из _id OpenSearch
+	if idStr, ok := hit["_id"].(string); ok {
+		if id, err := strconv.Atoi(idStr); err == nil {
+			return id, nil
+		}
+	}
+
+	// Затем попробуем из исходного документа
+	if source, ok := hit["_source"].(map[string]interface{}); ok {
+		if idFloat, ok := source["id"].(float64); ok {
+			return int(idFloat), nil
+		} else if idInt, ok := source["id"].(int); ok {
+			return idInt, nil
+		} else if idStr, ok := source["id"].(string); ok {
+			if id, err := strconv.Atoi(idStr); err == nil {
+				return id, nil
+			}
+		}
+	}
+
+	// Если не удалось получить ID, возможно нам нужно сделать дополнительный запрос
+	return 0, fmt.Errorf("не удалось получить ID объявления из документа")
 }
 
-// ReindexAll переиндексирует все объявления
+// SearchListings выполняет поиск объявлений
+func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
+	// Строим запрос к OpenSearch
+	query := r.buildSearchQuery(params)
+
+	// Выполняем поиск
+	responseBytes, err := r.client.Search(r.indexName, query)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
+	}
+
+	// Разбираем ответ
+	var searchResponse map[string]interface{}
+	if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
+		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
+	}
+
+	// Извлекаем результаты
+	result, err := r.parseSearchResponse(searchResponse, params.Language)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка обработки результатов: %w", err)
+	}
+
+	return result, nil
+}
+
+// SuggestListings предлагает автодополнение для поиска
+func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
+	if prefix == "" {
+		return []string{}, nil
+	}
+	// Создаем запрос для поиска с префиксом
+	query := map[string]interface{}{
+		"size": size,
+		"query": map[string]interface{}{
+			"match_phrase_prefix": map[string]interface{}{
+				"title": prefix,
+			},
+		},
+		"_source": []string{"title"}, // Получаем только заголовок
+	}
+	// Выполняем поиск
+	responseBytes, err := r.client.Search(r.indexName, query)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
+	}
+
+	// Парсим JSON ответ
+	var searchResponse map[string]interface{}
+	if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
+		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
+	}
+
+	// Извлекаем результаты
+	suggestions := make([]string, 0, size)
+	if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
+		if hitsArray, ok := hits["hits"].([]interface{}); ok {
+			for _, hit := range hitsArray {
+				if hitObj, ok := hit.(map[string]interface{}); ok {
+					if source, ok := hitObj["_source"].(map[string]interface{}); ok {
+						if title, ok := source["title"].(string); ok {
+							suggestions = append(suggestions, title)
+						}
+					}
+				}
+			}
+		}
+	}
+	return suggestions, nil
+}
+
 // ReindexAll переиндексирует все объявления
 func (r *Repository) ReindexAll(ctx context.Context) error {
 	// Удаляем индекс, если он существует
@@ -180,34 +221,66 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 	}
 
 	if exists {
+		log.Printf("Удаляем существующий индекс %s", r.indexName)
 		if err := r.client.DeleteIndex(r.indexName); err != nil {
 			return fmt.Errorf("ошибка удаления индекса: %w", err)
 		}
+		// Дадим кластеру время обработать удаление
+		time.Sleep(1 * time.Second)
 	}
 
-	// Создаем индекс заново без вызова PrepareIndex
-	if !exists {
-		log.Printf("Создание индекса %s...", r.indexName)
-		if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
-			return fmt.Errorf("ошибка создания индекса: %w", err)
+	// Создаем индекс заново
+	log.Printf("Создаем индекс %s заново", r.indexName)
+	if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
+		return fmt.Errorf("ошибка создания индекса: %w", err)
+	}
+
+	// Получаем все объявления из БД с пагинацией, чтобы обрабатывать большие наборы данных
+	const batchSize = 100
+	offset := 0
+	totalIndexed := 0
+
+	for {
+		log.Printf("Получение пакета объявлений (размер: %d, смещение: %d)", batchSize, offset)
+		listings, total, err := r.storage.GetListings(ctx, map[string]string{}, batchSize, offset)
+		if err != nil {
+			return fmt.Errorf("ошибка получения объявлений: %w", err)
 		}
-		log.Printf("Индекс %s успешно создан", r.indexName)
+
+		if len(listings) == 0 {
+			break // Больше нет объявлений
+		}
+
+		log.Printf("Получено %d объявлений из %d всего (пакет %d)", len(listings), total, offset/batchSize+1)
+
+		// Логируем ID каждого объявления для отладки
+		for i, listing := range listings {
+			log.Printf("Объявление %d/%d: ID=%d, Категория=%d, Название=%s",
+				i+1, len(listings), listing.ID, listing.CategoryID, listing.Title)
+		}
+
+		// Преобразуем в указатели для BulkIndexListings
+		listingPtrs := make([]*models.MarketplaceListing, len(listings))
+		for i := range listings {
+			listingPtrs[i] = &listings[i]
+		}
+
+		// Индексируем пакет объявлений
+		if err := r.BulkIndexListings(ctx, listingPtrs); err != nil {
+			return fmt.Errorf("ошибка массовой индексации (пакет %d): %w", offset/batchSize+1, err)
+		}
+
+		totalIndexed += len(listings)
+		offset += batchSize
+
+		// Если получили меньше объявлений, чем размер пакета, значит это последний пакет
+		if len(listings) < batchSize {
+			break
+		}
 	}
 
-	// Получаем все объявления из БД
-	allListings, _, err := r.storage.GetListings(ctx, map[string]string{}, 1000, 0)
-	if err != nil {
-		return fmt.Errorf("ошибка получения объявлений: %w", err)
-	}
-
-	// Преобразуем в указатели для BulkIndexListings
-	listingPtrs := make([]*models.MarketplaceListing, len(allListings))
-	for i := range allListings {
-		listingPtrs[i] = &allListings[i]
-	}
-
-	// Индексируем все объявления
-	return r.BulkIndexListings(ctx, listingPtrs)
+	log.Printf("Успешно проиндексировано %d объявлений", totalIndexed)
+	return nil
 }
 
 // listingToDoc преобразует объект модели в документ для индексации
@@ -246,9 +319,32 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	}
 
 	// Добавляем путь категорий, если есть
-	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
-		doc["category_path_ids"] = listing.CategoryPathIds
-	}
+	// Добавляем путь категорий, если есть
+if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
+    doc["category_path_ids"] = listing.CategoryPathIds
+} else {
+    // Если путь категорий не задан, нужно его создать
+    // Для этого выполним дополнительный запрос к базе данных
+    parentID := listing.CategoryID
+    pathIDs := []int{parentID}
+    
+    for parentID > 0 {
+        var cat models.MarketplaceCategory
+        err := r.storage.QueryRow(context.Background(),
+            "SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
+            Scan(&cat.ParentID)
+        
+        if err != nil || cat.ParentID == nil {
+            break
+        }
+        
+        parentID = *cat.ParentID
+        pathIDs = append([]int{parentID}, pathIDs...)
+    }
+    
+    doc["category_path_ids"] = pathIDs
+    log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
+}
 
 	// Добавляем информацию о категории, если есть
 	if listing.Category != nil {
@@ -286,55 +382,84 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 
 // buildSearchQuery создает поисковый запрос OpenSearch
 func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]interface{} {
-    query := map[string]interface{}{
-        "from": (params.Page - 1) * params.Size,
-        "size": params.Size,
-        "query": map[string]interface{}{
-            "bool": map[string]interface{}{
-                "must":   []interface{}{},
-                "filter": []interface{}{},
-            },
-        },
-    }
+	log.Printf("Строим запрос: категория = %v, язык = %s", params.CategoryID, params.Language)
+	query := map[string]interface{}{
+		"from": (params.Page - 1) * params.Size,
+		"size": params.Size,
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must":   []interface{}{},
+				"filter": []interface{}{},
+			},
+		},
+	}
 
 	mustClauses := []interface{}{}
 	filterClauses := []interface{}{}
+// Добавляем текстовый поиск, если указан
+if params.Query != "" {
+    log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
+    
+    // Определяем поля для поиска с учетом языка
+    searchFields := []string{"title^3", "description"}
+    if params.Language != "" {
+        // Добавляем языко-специфичные поля, если указан язык
+        searchFields = append(
+            searchFields,
+            fmt.Sprintf("title.%s^4", params.Language),
+            fmt.Sprintf("description.%s", params.Language),
+            fmt.Sprintf("translations.%s.title^4", params.Language),
+            fmt.Sprintf("translations.%s.description", params.Language),
+        )
+    }
+    
+    mustClauses = append(mustClauses, map[string]interface{}{
+        "multi_match": map[string]interface{}{
+            "query":     params.Query,
+            "fields":    searchFields,
+            "type":      "best_fields",
+            "fuzziness": "AUTO",
+            "operator":  "OR",
+        },
+    })
+    
+    log.Printf("Добавлен поисковый запрос '%s' для полей: %v", params.Query, searchFields)
+}
 
-	// Добавляем текстовый поиск, если указан
-	if params.Query != "" {
-		// Определяем поля для поиска с учетом языка
-		searchFields := []string{"title^3", "description"}
-		if params.Language != "" {
-			// Добавляем языко-специфичные поля, если указан язык
-			searchFields = append(
-				searchFields,
-				fmt.Sprintf("title.%s^4", params.Language),
-				fmt.Sprintf("description.%s", params.Language),
-				fmt.Sprintf("translations.%s.title^4", params.Language),
-				fmt.Sprintf("translations.%s.description", params.Language),
-			)
-		}
-
-		mustClauses = append(mustClauses, map[string]interface{}{
-			"multi_match": map[string]interface{}{
-				"query":     params.Query,
-				"fields":    searchFields,
-				"type":      "best_fields",
-				"fuzziness": "AUTO",
-				"operator":  "OR",
-			},
-		})
-	}
-
-	// Добавляем фильтры по категории
-	if params.CategoryID != nil {
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"terms": map[string]interface{}{
-				"category_path_ids": []int{*params.CategoryID},
-			},
-		})
-	}
-
+// Добавляем фильтры по категории
+if params.CategoryID != nil {
+    categoryID := *params.CategoryID
+    log.Printf("Фильтрация по CategoryID: %d", categoryID)
+    
+    // Если категория = 2 (Автомобили), то ищем все объявления с category_id=22, т.к. это подкатегория Автомобилей
+    if categoryID == 2 {
+        log.Printf("Специальная обработка для категории Автомобили (ID=2)")
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "bool": map[string]interface{}{
+                "should": []interface{}{
+                    map[string]interface{}{
+                        "term": map[string]interface{}{
+                            "category_id": 2,
+                        },
+                    },
+                    map[string]interface{}{
+                        "terms": map[string]interface{}{
+                            "category_id": []int{8, 9, 10, 12, 13, 22}, // Перечислите все подкатегории Автомобилей
+                        },
+                    },
+                },
+                "minimum_should_match": 1,
+            },
+        })
+    } else {
+        // Стандартная обработка для других категорий
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "term": map[string]interface{}{
+                "category_id": categoryID,
+            },
+        })
+    }
+}
 	// Добавляем фильтры по цене
 	if params.PriceMin != nil || params.PriceMax != nil {
 		priceRange := map[string]interface{}{}
@@ -397,81 +522,81 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	// Добавляем геопоиск, если указаны координаты
 	if params.Location != nil && params.Distance != "" {
-        filterClauses = append(filterClauses, map[string]interface{}{
-            "geo_distance": map[string]interface{}{
-                "distance": params.Distance,
-                "coordinates": map[string]interface{}{
-                    "lat": params.Location.Lat,
-                    "lon": params.Location.Lon,
-                },
-            },
-        })
-    }
+		filterClauses = append(filterClauses, map[string]interface{}{
+			"geo_distance": map[string]interface{}{
+				"distance": params.Distance,
+				"coordinates": map[string]interface{}{
+					"lat": params.Location.Lat,
+					"lon": params.Location.Lon,
+				},
+			},
+		})
+	}
 
 	// Добавляем clauses в запрос
 	if len(mustClauses) > 0 {
+		log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
 	}
 
 	if len(filterClauses) > 0 {
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
 	}
+	// Добавляем настройки сортировки
+	sortOpt := []interface{}{}
 
-// Добавляем настройки сортировки
-sortOpt := []interface{}{}
+	if params.Sort != "" {
+		direction := "desc"
+		if params.SortDirection == "asc" {
+			direction = "asc"
+		}
 
-if params.Sort != "" {
-    direction := "desc"
-    if params.SortDirection == "asc" {
-        direction = "asc"
-    }
-    
-    // Проверяем специальные случаи сортировки
-    sortField := params.Sort
-    if sortField == "date_desc" || sortField == "date_asc" {
-        sortField = "created_at"
-        if sortField == "date_desc" {
-            direction = "desc"
-        } else {
-            direction = "asc"
-        }
-    } else if sortField == "price_desc" || sortField == "price_asc" {
-        sortField = "price"
-        if sortField == "price_desc" {
-            direction = "desc"
-        } else {
-            direction = "asc"
-        }
-    }
+		// Проверяем специальные случаи сортировки
+		sortField := params.Sort
+		if sortField == "date_desc" {
+			sortField = "created_at"
+			direction = "desc" // Явно указываем desc
+		} else if sortField == "date_asc" {
+			sortField = "created_at"
+			direction = "asc" // Явно указываем asc
+		} else if sortField == "price_desc" {
+			sortField = "price"
+			direction = "desc" // Явно указываем desc
+		} else if sortField == "price_asc" {
+			sortField = "price"
+			direction = "asc" // Явно указываем asc
+		}
 
-    // Особая обработка для геосортировки
-    if sortField == "distance" && params.Location != nil {
-        sortOpt = append(sortOpt, map[string]interface{}{
-            "_geo_distance": map[string]interface{}{
-                "coordinates": map[string]interface{}{
-                    "lat": params.Location.Lat,
-                    "lon": params.Location.Lon,
-                },
-                "order": direction,
-                "unit":  "km",
-            },
-        })
-    } else {
-        // Стандартная сортировка
-        sortOpt = append(sortOpt, map[string]interface{}{
-            sortField: map[string]interface{}{
-                "order": direction,
-            },
-        })
-    }
-} else {
-    // По умолчанию сортируем по дате создания
-    sortOpt = append(sortOpt, map[string]interface{}{
-        "created_at": map[string]interface{}{
-            "order": "desc",
-        },
-    })
-}
+		log.Printf("Сортировка по полю %s в порядке %s", sortField, direction)
+
+		// Особая обработка для геосортировки
+		if sortField == "distance" && params.Location != nil {
+			sortOpt = append(sortOpt, map[string]interface{}{
+				"_geo_distance": map[string]interface{}{
+					"coordinates": map[string]interface{}{
+						"lat": params.Location.Lat,
+						"lon": params.Location.Lon,
+					},
+					"order": direction,
+					"unit":  "km",
+				},
+			})
+		} else {
+			// Стандартная сортировка
+			sortOpt = append(sortOpt, map[string]interface{}{
+				sortField: map[string]interface{}{
+					"order": direction,
+				},
+			})
+		}
+	} else {
+		// По умолчанию сортируем по дате создания по убыванию
+		sortOpt = append(sortOpt, map[string]interface{}{
+			"created_at": map[string]interface{}{
+				"order": "desc", // Изменено с asc на desc
+			},
+		})
+	}
 
 	query["sort"] = sortOpt
 
@@ -519,7 +644,8 @@ if params.Sort != "" {
 			},
 		},
 	}
-
+	queryJSON, _ := json.MarshalIndent(query, "", "  ")
+	log.Printf("Сформированный запрос: %s", queryJSON)
 	// Запрашиваем только нужные агрегации
 	requestedAggs := map[string]interface{}{}
 	if len(params.Aggregations) > 0 {
@@ -565,134 +691,162 @@ if params.Sort != "" {
 
 // parseSearchResponse обрабатывает ответ от OpenSearch
 func (r *Repository) parseSearchResponse(response map[string]interface{}, language string) (*search.SearchResult, error) {
-    result := &search.SearchResult{
-        Listings:     make([]*models.MarketplaceListing, 0),
-        Aggregations: make(map[string][]search.Bucket),
-        Suggestions:  make([]string, 0),
-    }
-    
-    // Получаем статистику
-    if took, ok := response["took"].(float64); ok {
-        result.Took = int64(took)
-    }
-    
-    // Получаем результаты поиска
-    if hits, ok := response["hits"].(map[string]interface{}); ok {
-        // Общее количество результатов
-        if total, ok := hits["total"].(map[string]interface{}); ok {
-            if value, ok := total["value"].(float64); ok {
-                result.Total = int(value)
-            }
-        }
-        
-        // Получаем документы
-        if hitsArray, ok := hits["hits"].([]interface{}); ok {
-            for _, hitI := range hitsArray {
-                if hit, ok := hitI.(map[string]interface{}); ok {
-                    if source, ok := hit["_source"].(map[string]interface{}); ok {
-                        // Преобразуем документ в объект MarketplaceListing
-                        listing, err := r.docToListing(source, language)
-                        if err != nil {
-                            log.Printf("Ошибка преобразования документа: %v", err)
-                            continue
-                        }
-                        result.Listings = append(result.Listings, listing)
-                    }
-                }
-            }
-        }
-    }
-    
-    // Получаем агрегации (фасеты)
-    if aggs, ok := response["aggregations"].(map[string]interface{}); ok {
-        for name, aggI := range aggs {
-            if agg, ok := aggI.(map[string]interface{}); ok {
-                buckets := make([]search.Bucket, 0)
-                
-                // Обработка обычных агрегаций terms
-                if bucketsArray, ok := agg["buckets"].([]interface{}); ok {
-                    for _, bucketI := range bucketsArray {
-                        if bucket, ok := bucketI.(map[string]interface{}); ok {
-                            var key string
-                            var count int
-                            
-                            if keyVal, ok := bucket["key"].(string); ok {
-                                key = keyVal
-                            } else if keyVal, ok := bucket["key"].(float64); ok {
-                                key = fmt.Sprintf("%v", keyVal)
-                            } else {
-                                continue
-                            }
-                            
-                            if docCount, ok := bucket["doc_count"].(float64); ok {
-                                count = int(docCount)
-                            }
-                            
-                            buckets = append(buckets, search.Bucket{
-                                Key:   key,
-                                Count: count,
-                            })
-                        }
-                    }
-                    
-                    result.Aggregations[name] = buckets
-                }
-                
-                // Обработка range агрегаций
-                if bucketsArray, ok := agg["buckets"].([]interface{}); ok {
-                    for _, bucketI := range bucketsArray {
-                        if bucket, ok := bucketI.(map[string]interface{}); ok {
-                            var key string
-                            var count int
-                            
-                            from, fromOk := bucket["from"].(float64)
-                            to, toOk := bucket["to"].(float64)
-                            
-                            if fromOk && toOk {
-                                key = fmt.Sprintf("%v-%v", from, to)
-                            } else if fromOk {
-                                key = fmt.Sprintf("%v+", from)
-                            } else if toOk {
-                                key = fmt.Sprintf("0-%v", to)
-                            } else {
-                                continue
-                            }
-                            
-                            if docCount, ok := bucket["doc_count"].(float64); ok {
-                                count = int(docCount)
-                            }
-                            
-                            buckets = append(buckets, search.Bucket{
-                                Key:   key,
-                                Count: count,
-                            })
-                        }
-                    }
-                    
-                    result.Aggregations[name] = buckets
-                }
-            }
-        }
-    }
-    
-    // Получаем предложения (для исправления опечаток)
-    if suggest, ok := response["suggest"].(map[string]interface{}); ok {
-        if simplePhrases, ok := suggest["simple_phrase"].([]interface{}); ok && len(simplePhrases) > 0 {
-            if phrase, ok := simplePhrases[0].(map[string]interface{}); ok {
-                if options, ok := phrase["options"].([]interface{}); ok {
-                    for _, optionI := range options {
-                        if option, ok := optionI.(map[string]interface{}); ok {
-                            if text, ok := option["text"].(string); ok {
-                                result.Suggestions = append(result.Suggestions, text)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    return result, nil
+	result := &search.SearchResult{
+		Listings:     make([]*models.MarketplaceListing, 0),
+		Aggregations: make(map[string][]search.Bucket),
+		Suggestions:  make([]string, 0),
+	}
+
+	// Получаем статистику
+	if took, ok := response["took"].(float64); ok {
+		result.Took = int64(took)
+	}
+
+	// Получаем результаты поиска
+	if hits, ok := response["hits"].(map[string]interface{}); ok {
+		// Общее количество результатов
+		if total, ok := hits["total"].(map[string]interface{}); ok {
+			if value, ok := total["value"].(float64); ok {
+				result.Total = int(value)
+			}
+		}
+
+		// Получаем документы
+		// В части получения документов внутри parseSearchResponse
+		if hitsArray, ok := hits["hits"].([]interface{}); ok {
+			for _, hitI := range hitsArray {
+				if hit, ok := hitI.(map[string]interface{}); ok {
+					// Извлекаем источник документа
+					if source, ok := hit["_source"].(map[string]interface{}); ok {
+						// Получаем ID из поля _id в ответе OpenSearch
+						if idStr, ok := hit["_id"].(string); ok {
+							// Пытаемся преобразовать строку в число
+							if id, err := strconv.Atoi(idStr); err == nil {
+								// Обновляем ID в source для правильного преобразования
+								source["id"] = float64(id)
+							}
+						}
+
+						// Преобразуем документ в объект MarketplaceListing
+						listing, err := r.docToListing(source, language)
+						if err != nil {
+							log.Printf("Ошибка преобразования документа: %v", err)
+							continue
+						}
+
+						// Если ID всё еще равен 0, пытаемся восстановить его из базы данных
+						if listing.ID == 0 {
+							// Пытаемся найти по комбинации полей
+							filters := map[string]string{
+								"title": listing.Title,
+							}
+							if listing.CategoryID > 0 {
+								filters["category_id"] = fmt.Sprintf("%d", listing.CategoryID)
+							}
+
+							// Логируем попытку восстановления
+							log.Printf("Попытка восстановить ID для объявления: %+v", filters)
+
+							// Здесь можно добавить код для поиска в базе данных, но это необязательно
+						}
+
+						result.Listings = append(result.Listings, listing)
+					}
+				}
+			}
+		}
+	}
+
+	// Получаем агрегации (фасеты)
+	if aggs, ok := response["aggregations"].(map[string]interface{}); ok {
+		for name, aggI := range aggs {
+			if agg, ok := aggI.(map[string]interface{}); ok {
+				buckets := make([]search.Bucket, 0)
+
+				// Обработка обычных агрегаций terms
+				if bucketsArray, ok := agg["buckets"].([]interface{}); ok {
+					for _, bucketI := range bucketsArray {
+						if bucket, ok := bucketI.(map[string]interface{}); ok {
+							var key string
+							var count int
+
+							if keyVal, ok := bucket["key"].(string); ok {
+								key = keyVal
+							} else if keyVal, ok := bucket["key"].(float64); ok {
+								key = fmt.Sprintf("%v", keyVal)
+							} else {
+								continue
+							}
+
+							if docCount, ok := bucket["doc_count"].(float64); ok {
+								count = int(docCount)
+							}
+
+							buckets = append(buckets, search.Bucket{
+								Key:   key,
+								Count: count,
+							})
+						}
+					}
+
+					result.Aggregations[name] = buckets
+				}
+
+				// Обработка range агрегаций
+				if bucketsArray, ok := agg["buckets"].([]interface{}); ok {
+					for _, bucketI := range bucketsArray {
+						if bucket, ok := bucketI.(map[string]interface{}); ok {
+							var key string
+							var count int
+
+							from, fromOk := bucket["from"].(float64)
+							to, toOk := bucket["to"].(float64)
+
+							if fromOk && toOk {
+								key = fmt.Sprintf("%v-%v", from, to)
+							} else if fromOk {
+								key = fmt.Sprintf("%v+", from)
+							} else if toOk {
+								key = fmt.Sprintf("0-%v", to)
+							} else {
+								continue
+							}
+
+							if docCount, ok := bucket["doc_count"].(float64); ok {
+								count = int(docCount)
+							}
+
+							buckets = append(buckets, search.Bucket{
+								Key:   key,
+								Count: count,
+							})
+						}
+					}
+
+					result.Aggregations[name] = buckets
+				}
+			}
+		}
+	}
+
+	// Получаем предложения (для исправления опечаток)
+	if suggest, ok := response["suggest"].(map[string]interface{}); ok {
+		if simplePhrases, ok := suggest["simple_phrase"].([]interface{}); ok && len(simplePhrases) > 0 {
+			if phrase, ok := simplePhrases[0].(map[string]interface{}); ok {
+				if options, ok := phrase["options"].([]interface{}); ok {
+					for _, optionI := range options {
+						if option, ok := optionI.(map[string]interface{}); ok {
+							if text, ok := option["text"].(string); ok {
+								result.Suggestions = append(result.Suggestions, text)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return result, nil
 }
 
 // docToListing преобразует документ из OpenSearch в модель
@@ -703,8 +857,21 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 	}
 
 	// Извлекаем базовые поля
-	if id, ok := doc["id"].(float64); ok {
-		listing.ID = int(id)
+	if idFloat, ok := doc["id"].(float64); ok {
+		listing.ID = int(idFloat)
+	} else if idInt, ok := doc["id"].(int); ok {
+		listing.ID = idInt
+	} else if idStr, ok := doc["id"].(string); ok {
+		if id, err := strconv.Atoi(idStr); err == nil {
+			listing.ID = id
+		}
+	} else {
+		// Пытаемся извлечь ID из _id поля (в OpenSearch)
+		if idVal, ok := doc["_id"].(string); ok {
+			if id, err := strconv.Atoi(idVal); err == nil {
+				listing.ID = id
+			}
+		}
 	}
 
 	if title, ok := doc["title"].(string); ok {
@@ -819,7 +986,19 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 			listing.User.Email = email
 		}
 	}
-
+	// Обрабатываем путь категорий
+	if categoryPathIDs, ok := doc["category_path_ids"].([]interface{}); ok && len(categoryPathIDs) > 0 {
+		pathIds := make([]int, len(categoryPathIDs))
+		for i, v := range categoryPathIDs {
+			if id, ok := v.(float64); ok {
+				pathIds[i] = int(id)
+			}
+		}
+		listing.CategoryPathIds = pathIds
+	} else {
+		// Если путь категорий не найден, хотя бы добавим текущую категорию
+		listing.CategoryPathIds = []int{listing.CategoryID}
+	}
 	// Обрабатываем изображения
 	if imagesArray, ok := doc["images"].([]interface{}); ok {
 		images := make([]models.MarketplaceImage, 0, len(imagesArray))

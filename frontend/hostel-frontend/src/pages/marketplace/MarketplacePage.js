@@ -36,36 +36,26 @@ const MobileListingGrid = ({ listings }) => {
     return (
         <Box sx={{ px: 1 }}>
             <Grid container spacing={1}>
-                {listings.map((listing) => (
-                    <Grid item xs={6} key={listing.id}>
-                        <Box
-                            component={Paper}
-                            variant="outlined"
-                            sx={{
-                                height: '100%',
-                                overflow: 'hidden',
-                                transition: 'transform 0.2s, box-shadow 0.2s',
-                                '&:active': {
-                                    transform: 'scale(0.98)'
+                {listings.map((listing, index) => {
+                    // Создаем уникальный идентификатор из других полей, если ID = 0
+                    const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                    return (
+                        <Grid item xs={12} sm={6} md={4} key={effectiveId}>
+                            <div onClick={() => {
+                                if (listing.id) {
+                                    navigate(`/marketplace/listings/${listing.id}`);
+                                } else {
+                                    // Используем стандартный поиск для получения объявления по другим параметрам
+                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                    console.log("Переход к объявлению с временным URL:", url);
+                                    // Можно показать уведомление пользователю, что фильтр применен
                                 }
-                            }}
-                        >
-                            <Link
-                                to={`/marketplace/listings/${listing.id}`}
-                                style={{ textDecoration: 'none', color: 'inherit' }}
-                                onClick={(e) => {
-                                    const shopButton = e.target.closest('[data-shop-button="true"]');
-                                    if (shopButton) {
-                                        e.preventDefault();
-                                        return;
-                                    }
-                                }}
-                            >
-                                <MobileListingCard listing={listing} />
-                            </Link>
-                        </Box>
-                    </Grid>
-                ))}
+                            }}>
+                                <ListingCard listing={listing} />
+                            </div>
+                        </Grid>
+                    );
+                })}
             </Grid>
         </Box>
     );
@@ -107,17 +97,23 @@ const MarketplacePage = () => {
                 }
             });
     
-            // Добавим логирование для отладки
             console.log('Отправляем запрос с параметрами:', params);
-    
-            // Используем endpoint для поиска
             const response = await axios.get('/api/v1/marketplace/search', { params });
-    
             console.log('Получен ответ API:', response.data);
     
-            // Проверяем структуру данных в ответе
+            // Улучшенная обработка данных с дополнительными проверками
             if (response.data && response.data.data) {
-                setListings(response.data.data);
+                if (Array.isArray(response.data.data)) {
+                    console.log('Найдено объявлений:', response.data.data.length);
+                    setListings(response.data.data);
+                } else if (response.data.data.data && Array.isArray(response.data.data.data)) {
+                    // Если структура вложенная
+                    console.log('Найдено объявлений (вложенная структура):', response.data.data.data.length);
+                    setListings(response.data.data.data);
+                } else {
+                    console.error('Данные не являются массивом:', response.data.data);
+                    setListings([]);
+                }
             } else {
                 console.error('Ответ API не содержит ожидаемую структуру данных:', response.data);
                 setListings([]);
@@ -274,28 +270,22 @@ const MarketplacePage = () => {
                 </Box>
             );
         }
-
+    
         if (error) {
             return (
-                <Alert
-                    severity="error"
-                    sx={{ m: 2 }}
-                    action={
-                        <IconButton size="small" onClick={() => setError(null)}>
-                            <X size={16} />
-                        </IconButton>
-                    }
-                >
+                <Alert severity="error" sx={{ m: 2 }}>
                     {error}
                 </Alert>
             );
         }
-
-        // Проверяем, что listings - это массив
+    
+        console.log("Listings before rendering:", listings);
+    
+        // Проверка, что listings - это массив
         if (!listings || !Array.isArray(listings) || listings.length === 0) {
             return (
                 <Alert severity="info" sx={{ m: 2 }}>
-                    {t('listings.filters.noResults')}
+                    No results found for your search
                 </Alert>
             );
         }
@@ -304,22 +294,26 @@ const MarketplacePage = () => {
             <MobileListingGrid listings={listings} />
         ) : (
             <Grid container spacing={3}>
-                {listings.map((listing, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={listing.id || `listing-${index}`}>
-                        <Link
-                            to={`/marketplace/listings/${listing.id}`}
-                            style={{ textDecoration: 'none' }}
-                            onClick={(e) => {
-                                if (listing.storefront_id && e.target.closest('[data-shop-button="true"]')) {
-                                    e.preventDefault();
-                                    navigate(`/shop/${listing.storefront_id}`);
+                {listings.map((listing, index) => {
+                    // Создаем уникальный идентификатор из других полей, если ID = 0
+                    const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                    return (
+                        <Grid item xs={12} sm={6} md={4} key={effectiveId}>
+                            <div onClick={() => {
+                                if (listing.id) {
+                                    navigate(`/marketplace/listings/${listing.id}`);
+                                } else {
+                                    // Используем стандартный поиск для получения объявления по другим параметрам
+                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                    console.log("Переход к объявлению с временным URL:", url);
+                                    // Можно показать уведомление пользователю, что фильтр применен
                                 }
-                            }}
-                        >
-                            <ListingCard listing={listing} />
-                        </Link>
-                    </Grid>
-                ))}
+                            }}>
+                                <ListingCard listing={listing} />
+                            </div>
+                        </Grid>
+                    );
+                })}
             </Grid>
         );
     };
