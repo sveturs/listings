@@ -460,7 +460,7 @@ func (h *MarketplaceHandler) GetFavorites(c *fiber.Ctx) error {
 func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	// Получаем параметры поиска
 	params := &search.ServiceParams{
-		Query:         c.Query("q", ""),
+		Query:         c.Query("q", ""), 
 		CategoryID:    c.Query("category_id", ""),
 		Condition:     c.Query("condition", ""),
 		City:          c.Query("city", ""),
@@ -473,7 +473,7 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		Size:          c.QueryInt("size", 20),
 		Language:      c.Query("language", ""),
 	}
-
+    log.Printf("Полученный поисковый запрос: %s", params.Query)
 	// Обрабатываем числовые параметры - добавим защиту от ошибок
 	if priceMin := c.Query("min_price", ""); priceMin != "" {
 		if val, err := strconv.ParseFloat(priceMin, 64); err == nil && val >= 0 {

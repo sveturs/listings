@@ -320,31 +320,31 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 
 	// Добавляем путь категорий, если есть
 	// Добавляем путь категорий, если есть
-if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
-    doc["category_path_ids"] = listing.CategoryPathIds
-} else {
-    // Если путь категорий не задан, нужно его создать
-    // Для этого выполним дополнительный запрос к базе данных
-    parentID := listing.CategoryID
-    pathIDs := []int{parentID}
-    
-    for parentID > 0 {
-        var cat models.MarketplaceCategory
-        err := r.storage.QueryRow(context.Background(),
-            "SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
-            Scan(&cat.ParentID)
-        
-        if err != nil || cat.ParentID == nil {
-            break
-        }
-        
-        parentID = *cat.ParentID
-        pathIDs = append([]int{parentID}, pathIDs...)
-    }
-    
-    doc["category_path_ids"] = pathIDs
-    log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
-}
+	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
+		doc["category_path_ids"] = listing.CategoryPathIds
+	} else {
+		// Если путь категорий не задан, нужно его создать
+		// Для этого выполним дополнительный запрос к базе данных
+		parentID := listing.CategoryID
+		pathIDs := []int{parentID}
+
+		for parentID > 0 {
+			var cat models.MarketplaceCategory
+			err := r.storage.QueryRow(context.Background(),
+				"SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
+				Scan(&cat.ParentID)
+
+			if err != nil || cat.ParentID == nil {
+				break
+			}
+
+			parentID = *cat.ParentID
+			pathIDs = append([]int{parentID}, pathIDs...)
+		}
+
+		doc["category_path_ids"] = pathIDs
+		log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
+	}
 
 	// Добавляем информацию о категории, если есть
 	if listing.Category != nil {
@@ -382,7 +382,8 @@ if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
 
 // buildSearchQuery создает поисковый запрос OpenSearch
 func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]interface{} {
-	log.Printf("Строим запрос: категория = %v, язык = %s", params.CategoryID, params.Language)
+    log.Printf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s", 
+               params.CategoryID, params.Language, params.Query)
 	query := map[string]interface{}{
 		"from": (params.Page - 1) * params.Size,
 		"size": params.Size,
@@ -396,70 +397,53 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	mustClauses := []interface{}{}
 	filterClauses := []interface{}{}
-// Добавляем текстовый поиск, если указан
-if params.Query != "" {
-    log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
-    
-    // Определяем поля для поиска с учетом языка
-    searchFields := []string{"title^3", "description"}
-    if params.Language != "" {
-        // Добавляем языко-специфичные поля, если указан язык
-        searchFields = append(
-            searchFields,
-            fmt.Sprintf("title.%s^4", params.Language),
-            fmt.Sprintf("description.%s", params.Language),
-            fmt.Sprintf("translations.%s.title^4", params.Language),
-            fmt.Sprintf("translations.%s.description", params.Language),
-        )
+	// Добавляем текстовый поиск, если указан
+    if params.Query != "" {
+        log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
+        
+        // Определяем поля для поиска с учетом языка
+        searchFields := []string{"title^3", "description"}
+        if params.Language != "" {
+            // Добавляем языко-специфичные поля, если указан язык
+            searchFields = append(
+                searchFields,
+                fmt.Sprintf("title.%s^4", params.Language),
+                fmt.Sprintf("description.%s", params.Language),
+                fmt.Sprintf("translations.%s.title^4", params.Language),
+                fmt.Sprintf("translations.%s.description", params.Language),
+            )
+        }
+        
+        // Создаем запрос для поиска
+        queryObj := map[string]interface{}{
+            "multi_match": map[string]interface{}{
+                "query":                params.Query,
+                "fields":               searchFields,
+                "type":                 "best_fields",
+                "fuzziness":            "AUTO",
+                "operator":             "AND", 
+                "minimum_should_match": "70%",
+            },
+        }
+        
+        // Добавляем запрос в mustClauses
+        mustClauses = append(mustClauses, queryObj)
+        
+        log.Printf("Добавлен поисковый запрос для полей: %v", searchFields)
     }
-    
-    mustClauses = append(mustClauses, map[string]interface{}{
-        "multi_match": map[string]interface{}{
-            "query":     params.Query,
-            "fields":    searchFields,
-            "type":      "best_fields",
-            "fuzziness": "AUTO",
-            "operator":  "OR",
-        },
-    })
-    
-    log.Printf("Добавлен поисковый запрос '%s' для полей: %v", params.Query, searchFields)
-}
 
-// Добавляем фильтры по категории
-if params.CategoryID != nil {
-    categoryID := *params.CategoryID
-    log.Printf("Фильтрация по CategoryID: %d", categoryID)
-    
-    // Если категория = 2 (Автомобили), то ищем все объявления с category_id=22, т.к. это подкатегория Автомобилей
-    if categoryID == 2 {
-        log.Printf("Специальная обработка для категории Автомобили (ID=2)")
-        filterClauses = append(filterClauses, map[string]interface{}{
-            "bool": map[string]interface{}{
-                "should": []interface{}{
-                    map[string]interface{}{
-                        "term": map[string]interface{}{
-                            "category_id": 2,
-                        },
-                    },
-                    map[string]interface{}{
-                        "terms": map[string]interface{}{
-                            "category_id": []int{8, 9, 10, 12, 13, 22}, // Перечислите все подкатегории Автомобилей
-                        },
-                    },
-                },
-                "minimum_should_match": 1,
-            },
-        })
-    } else {
-        // Стандартная обработка для других категорий
-        filterClauses = append(filterClauses, map[string]interface{}{
-            "term": map[string]interface{}{
-                "category_id": categoryID,
-            },
-        })
-    }
-}
+	// Добавляем фильтры по категории
+	if params.CategoryID != nil {
+		categoryID := *params.CategoryID
+		log.Printf("Фильтрация по CategoryID: %d", categoryID)
+
+		// Используем фильтр по category_path_ids
+		filterClauses = append(filterClauses, map[string]interface{}{
+			"term": map[string]interface{}{
+				"category_path_ids": categoryID,
+			},
+		})
+	}
 	// Добавляем фильтры по цене
 	if params.PriceMin != nil || params.PriceMax != nil {
 		priceRange := map[string]interface{}{}
@@ -534,10 +518,14 @@ if params.CategoryID != nil {
 	}
 
 	// Добавляем clauses в запрос
-	if len(mustClauses) > 0 {
-		log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
-		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
-	}
+    if len(mustClauses) > 0 {
+        log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
+        
+        // Добавим лог содержимого must-клауз
+        mustClausesJSON, _ := json.Marshal(mustClauses)
+        log.Printf("Must-клаузы: %s", string(mustClausesJSON))
+    }
 
 	if len(filterClauses) > 0 {
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
@@ -686,7 +674,9 @@ if params.CategoryID != nil {
 		}
 	}
 
-	return query
+    log.Printf("Сформированный запрос: %s", queryJSON)
+    
+    return query
 }
 
 // parseSearchResponse обрабатывает ответ от OpenSearch

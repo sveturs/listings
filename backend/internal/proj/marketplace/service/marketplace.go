@@ -188,13 +188,13 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
     log.Printf("Запрос поиска с параметрами: %+v", params)
     // Преобразуем параметры для OpenSearch
     osParams := &search.SearchParams{
-        Query:        params.Query,
+        Query:        params.Query, 
         Page:         params.Page,
         Size:         params.Size,
         Aggregations: params.Aggregations,
         Language:     params.Language,
     }
-    
+    log.Printf("Преобразованные параметры поиска: %+v", osParams)
     // Добавляем фильтры
     if params.CategoryID != "" {
         categoryID, err := strconv.Atoi(params.CategoryID)
@@ -244,7 +244,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
         }
         osParams.Distance = params.Distance
     }
-    
+
         // Выполняем поиск
 
     log.Printf("Отправляем запрос в OpenSearch: %+v", osParams)

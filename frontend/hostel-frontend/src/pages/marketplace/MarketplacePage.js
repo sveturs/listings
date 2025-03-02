@@ -93,12 +93,18 @@ const MarketplacePage = () => {
             const params = {};
             Object.entries(currentFilters).forEach(([key, value]) => {
                 if (value !== '') {
-                    params[key] = value;
+                    // Переименовываем query в q для соответствия ожиданиям бэкенда
+                    if (key === 'query') {
+                        params['q'] = value; // Изменить на 'q' вместо 'query'
+                    } else {
+                        params[key] = value;
+                    }
                 }
             });
     
             console.log('Отправляем запрос с параметрами:', params);
             const response = await axios.get('/api/v1/marketplace/search', { params });
+        
             console.log('Получен ответ API:', response.data);
     
             // Улучшенная обработка данных с дополнительными проверками

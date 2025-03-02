@@ -22,17 +22,24 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
         onFilterChange({ ...filters, category_id: id });
     }, [filters, onFilterChange]);
 
+    // Проверяем правильность передачи поискового запроса
+    const handleSearchChange = (value) => {
+        console.log("Поисковый запрос изменен на:", value);
+        onFilterChange({ ...filters, query: value });
+    };
+
     return (
         <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Поиск с автодополнением */}
             <Box sx={{ p: 2, backgroundColor: 'background.default', boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)', zIndex: 1 }}>
                 <AutocompleteInput
                     value={filters.query || ''}
-                    onChange={(value) => onFilterChange({ ...filters, query: value })}
+                    onChange={handleSearchChange}
                     onSearch={(value) => onFilterChange({ ...filters, query: value })}
                     placeholder={t('buttons.search', { ns: 'common' })}
                 />
             </Box>
+
 
             {/* Основные фильтры */}
             <Box sx={{ p: 2 }}>
