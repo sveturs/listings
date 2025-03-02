@@ -29,4 +29,6 @@ type MarketplaceServiceInterface interface {
     SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error)
     GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error)
     ReindexAllListings(ctx context.Context) error
+    GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error)
+
 }

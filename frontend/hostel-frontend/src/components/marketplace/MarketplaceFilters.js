@@ -1,4 +1,4 @@
-//frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
+// frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import AutocompleteInput from '../shared/AutocompleteInput';
@@ -34,12 +34,18 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
             <Box sx={{ p: 2, backgroundColor: 'background.default', boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)', zIndex: 1 }}>
                 <AutocompleteInput
                     value={filters.query || ''}
-                    onChange={handleSearchChange}
-                    onSearch={(value) => onFilterChange({ ...filters, query: value })}
+                    onChange={(value) => handleSearchChange(value)} // Здесь меняем на handleSearchChange
+                    onSearch={(value, categoryId) => {
+                        // Если предоставлен categoryId, обновляем и категорию
+                        if (categoryId) {
+                            onFilterChange({ query: value, category_id: categoryId });
+                        } else {
+                            onFilterChange({ query: value });
+                        }
+                    }}
                     placeholder={t('buttons.search', { ns: 'common' })}
                 />
             </Box>
-
 
             {/* Основные фильтры */}
             <Box sx={{ p: 2 }}>
@@ -80,9 +86,9 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                     {t('listings.create.сategories')}
                 </Typography>
                 <VirtualizedCategoryTree
-    selectedId={selectedCategoryId}
-    onSelectCategory={handleCategorySelect}
-/>
+                    selectedId={selectedCategoryId}
+                    onSelectCategory={handleCategorySelect}
+                />
             </Box>
         </Paper>
     );

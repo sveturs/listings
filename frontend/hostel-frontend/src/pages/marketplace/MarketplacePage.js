@@ -84,29 +84,29 @@ const MarketplacePage = () => {
         condition: searchParams.get('condition') || '',
         sort_by: searchParams.get('sort_by') || 'date_desc'
     });
+    const [spellingSuggestion, setSpellingSuggestion] = useState(null);
 
     const fetchListings = useCallback(async (currentFilters = {}) => {
         try {
             setLoading(true);
             setError(null);
-    
+            setSpellingSuggestion(null); // Сбрасываем предыдущее предложение
+            
             const params = {};
             Object.entries(currentFilters).forEach(([key, value]) => {
                 if (value !== '') {
-                    // Переименовываем query в q для соответствия ожиданиям бэкенда
                     if (key === 'query') {
-                        params['q'] = value; // Изменить на 'q' вместо 'query'
+                        params['q'] = value;
                     } else {
                         params[key] = value;
                     }
                 }
             });
-    
+            
             console.log('Отправляем запрос с параметрами:', params);
             const response = await axios.get('/api/v1/marketplace/search', { params });
-        
             console.log('Получен ответ API:', response.data);
-    
+        
             // Улучшенная обработка данных с дополнительными проверками
             if (response.data && response.data.data) {
                 if (Array.isArray(response.data.data)) {
@@ -123,6 +123,9 @@ const MarketplacePage = () => {
             } else {
                 console.error('Ответ API не содержит ожидаемую структуру данных:', response.data);
                 setListings([]);
+            }
+            if (response.data.meta && response.data.meta.spelling_suggestion) {
+                setSpellingSuggestion(response.data.meta.spelling_suggestion);
             }
         } catch (err) {
             console.error('Ошибка при получении объявлений:', err);
@@ -226,10 +229,15 @@ const MarketplacePage = () => {
         }
     }, [filters.category_id, categories]);
 
-    const handleFilterChange = useCallback((newFilters) => {
+    const handleFilterChange = useCallback((newFilters, categoryId = null) => {
         setFilters(prev => {
+            // Если передана категория, добавляем её в фильтры
+            if (categoryId !== null) {
+                newFilters.category_id = categoryId;
+            }
+            
             const updated = { ...prev, ...newFilters };
-
+    
             const nextParams = new URLSearchParams(searchParams);
             Object.entries(updated).forEach(([key, value]) => {
                 if (value) {
@@ -238,7 +246,7 @@ const MarketplacePage = () => {
                     nextParams.delete(key);
                 }
             });
-
+    
             if (!window.location.pathname.includes('/marketplace')) {
                 navigate({
                     pathname: '/marketplace',
@@ -247,7 +255,7 @@ const MarketplacePage = () => {
             } else {
                 setSearchParams(nextParams);
             }
-
+    
             const cleanFilters = {};
             Object.entries(updated).forEach(([key, value]) => {
                 if (value !== '') {
@@ -258,6 +266,7 @@ const MarketplacePage = () => {
             return updated;
         });
     }, [searchParams, setSearchParams, navigate, fetchListings]);
+    
 
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
@@ -295,7 +304,30 @@ const MarketplacePage = () => {
                 </Alert>
             );
         }
-
+        if (spellingSuggestion && listings.length === 0) {
+            return (
+                <>
+                    <Alert 
+                        severity="info" 
+                        sx={{ m: 2 }}
+                        action={
+                            <Button 
+                                color="inherit" 
+                                size="small"
+                                onClick={() => handleFilterChange({ query: spellingSuggestion })}
+                            >
+                                {t('search.usesuggestion')}
+                            </Button>
+                        }
+                    >
+                        {t('search.didyoumean')} <strong>{spellingSuggestion}</strong>?
+                    </Alert>
+                    <Box sx={{ m: 2, textAlign: 'center' }}>
+                        {t('search.noresults')}
+                    </Box>
+                </>
+            );
+        }
         return isMobile ? (
             <MobileListingGrid listings={listings} />
         ) : (

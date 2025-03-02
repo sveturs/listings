@@ -77,7 +77,75 @@ func (s *MarketplaceService) GetFavoritedUsers(ctx context.Context, listingID in
 func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
     return s.storage.GetListingByID(ctx, id)
 }
-
+// GetCategorySuggestions возвращает предложения категорий на основе поискового запроса
+func (s *MarketplaceService) GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error) {
+    // Для простой реализации можем использовать поиск в базе данных
+    // В продвинутой версии можно использовать OpenSearch
+    
+    sqlQuery := `
+        WITH RECURSIVE category_tree AS (
+            SELECT 
+                c.id, c.name, c.parent_id
+            FROM marketplace_categories c
+            
+            UNION ALL
+            
+            SELECT 
+                c.id, c.name, c.parent_id
+            FROM marketplace_categories c
+            JOIN category_tree ct ON c.parent_id = ct.id
+        ),
+        matching_listings AS (
+            SELECT 
+                category_id,
+                COUNT(*) as count
+            FROM marketplace_listings
+            WHERE (LOWER(title) LIKE LOWER($1) OR LOWER(description) LIKE LOWER($1))
+            AND status = 'active'
+            GROUP BY category_id
+        ),
+        matching_categories AS (
+            SELECT 
+                c.id,
+                c.name,
+                COALESCE(ml.count, 0) as listing_count,
+                -- Приоритет: прямое совпадение названия категории + количество объявлений
+                (CASE 
+                    WHEN LOWER(c.name) LIKE LOWER($1) THEN 10000
+                    ELSE 0
+                END) + COALESCE(ml.count, 0) as relevance
+            FROM marketplace_categories c
+            LEFT JOIN matching_listings ml ON c.id = ml.category_id
+            WHERE 
+                LOWER(c.name) LIKE LOWER($1) OR 
+                c.id IN (SELECT category_id FROM matching_listings)
+        )
+        SELECT 
+            id, name, listing_count
+        FROM matching_categories
+        WHERE listing_count > 0
+        ORDER BY relevance DESC
+        LIMIT $2
+    `
+    
+    rows, err := s.storage.Query(ctx, sqlQuery, "%"+query+"%", size)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка запроса категорий: %w", err)
+    }
+    defer rows.Close()
+    
+    var suggestions []models.CategorySuggestion
+    for rows.Next() {
+        var suggestion models.CategorySuggestion
+        if err := rows.Scan(&suggestion.ID, &suggestion.Name, &suggestion.ListingCount); err != nil {
+            log.Printf("Ошибка сканирования предложения категории: %v", err)
+            continue
+        }
+        suggestions = append(suggestions, suggestion)
+    }
+    
+    return suggestions, nil
+}
 func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
     // Вызываем существующий метод для обновления объявления в БД
     if err := s.storage.UpdateListing(ctx, listing); err != nil {
@@ -277,6 +345,15 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
     // Добавляем предложения
     if len(osResult.Suggestions) > 0 {
         result.Suggestions = osResult.Suggestions
+    }
+    
+    if len(result.Items) == 0 && params.Query != "" {
+        // Получаем предложения исправлений
+        suggestions, err := s.storage.SuggestListings(ctx, params.Query, 1)
+        if err == nil && len(suggestions) > 0 {
+            // Добавляем предложение исправления
+            result.SpellingSuggestion = suggestions[0]
+        }
     }
     
     return result, nil

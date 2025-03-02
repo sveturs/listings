@@ -67,13 +67,14 @@ type ServiceParams struct {
 }
 
 // ServiceResult результаты для сервисного слоя
-type ServiceResult struct {
-    Items        []*models.MarketplaceListing // Найденные объявления
-    Total        int                         // Общее количество найденных объявлений
-    Page         int                         // Текущая страница
-    Size         int                         // Размер страницы
-    TotalPages   int                         // Общее количество страниц
-    Facets       map[string][]Bucket        // Фасеты для фильтров
-    Suggestions  []string                    // Подсказки (для исправления опечаток)
-    Took         int64                       // Время выполнения запроса (мс)
+ type ServiceResult struct {
+    Items             []*models.MarketplaceListing `json:"items"`
+    Total             int                         `json:"total"`
+    Page              int                         `json:"page"`
+    Size              int                         `json:"size"`
+    TotalPages        int                         `json:"total_pages"`
+    Took              int64                       `json:"took_ms"`
+    Facets            map[string][]Bucket        `json:"facets,omitempty"`
+    Suggestions       []string                    `json:"suggestions,omitempty"`
+    SpellingSuggestion string                     `json:"spelling_suggestion,omitempty"` // Добавленное поле
 }

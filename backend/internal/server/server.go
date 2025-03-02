@@ -14,15 +14,15 @@ import (
 	reviewHandler "backend/internal/proj/reviews/handler"
 	storefrontHandler "backend/internal/proj/storefront/handler"
 	userHandler "backend/internal/proj/users/handler"
+	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"context"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 	"log"
 	"os"
 	"time"
-	"backend/internal/storage/opensearch" 
-	"github.com/gofiber/fiber/v2"
 )
 
 type Server struct {
@@ -57,7 +57,6 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	} else {
 		log.Println("OpenSearch URL не указан, поиск будет отключен")
 	}
-	
 
 	// Инициализируем базу данных с OpenSearch
 	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex)
@@ -188,7 +187,7 @@ func (s *Server) setupRoutes() {
 
 	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced) // маршрут поиска
 	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)    // маршрут автодополнения
-
+ 	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
 	// Public review routes
 	review := s.app.Group("/api/v1/reviews")
 	review.Get("/", s.review.Review.GetReviews)
@@ -263,7 +262,7 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Put("/translations/:id", s.marketplace.Marketplace.UpdateTranslations)
 
 	// Административный маршрут для переиндексации
-	
+
 	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
 	// Chat routes
 	chat := api.Group("/marketplace/chat")

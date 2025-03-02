@@ -50,6 +50,14 @@ const ListingMapping = `
             "lowercase",
             "autocomplete_filter"
           ]
+        },
+        "shingle_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "shingle_filter"
+          ]
         }
       },
       "filter": {
@@ -69,6 +77,11 @@ const ListingMapping = `
           "type": "edge_ngram",
           "min_gram": 1,
           "max_gram": 20
+        },
+        "shingle_filter": {
+          "type": "shingle",
+          "min_shingle_size": 2,
+          "max_shingle_size": 3
         }
       }
     }
@@ -78,32 +91,36 @@ const ListingMapping = `
       "id": {
         "type": "keyword"
       },
-"title": {
-    "type": "text",
-    "analyzer": "default_analyzer",
-    "fields": {
-        "serbian": {
+      "title": {
+        "type": "text",
+        "analyzer": "default_analyzer",
+        "fields": {
+          "serbian": {
             "type": "text",
             "analyzer": "serbian_analyzer"
-        },
-        "russian": {
+          },
+          "russian": {
             "type": "text",
             "analyzer": "russian_analyzer"
-        },
-        "english": {
+          },
+          "english": {
             "type": "text",
             "analyzer": "english_analyzer"
-        },
-        "autocomplete": {
+          },
+          "autocomplete": {
             "type": "text",
             "analyzer": "autocomplete"
-        },
-        "keyword": {
+          },
+          "keyword": {
             "type": "keyword"
+          },
+          "shingles": {
+            "type": "text",
+            "analyzer": "shingle_analyzer"
+          }
         }
-    }
-},
-	      "description": {
+      },
+      "description": {
         "type": "text",
         "analyzer": "default_analyzer",
         "fields": {
@@ -124,14 +141,14 @@ const ListingMapping = `
       "price": {
         "type": "double"
       },
-	"condition": {
-		"type": "text",
-		"fields": {
-			"keyword": {
-				"type": "keyword"
-			}
-		}
-	},
+      "condition": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
       "status": {
         "type": "keyword"
       },

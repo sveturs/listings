@@ -457,6 +457,30 @@ func (h *MarketplaceHandler) GetFavorites(c *fiber.Ctx) error {
 	//  log.Printf("GetFavorites: found %d favorites for userID=%d", len(favorites), userID)
 	return utils.SuccessResponse(c, favorites)
 }
+// GetCategorySuggestions возвращает предложения категорий на основе поискового запроса
+func (h *MarketplaceHandler) GetCategorySuggestions(c *fiber.Ctx) error {
+    query := c.Query("q", "")
+    size := c.QueryInt("size", 3)
+    
+    if query == "" {
+        return utils.SuccessResponse(c, fiber.Map{
+            "data": []interface{}{},
+        })
+    }
+    
+    // Получаем предложения категорий из сервиса
+    categories, err := h.marketplaceService.GetCategorySuggestions(c.Context(), query, size)
+    if err != nil {
+        log.Printf("Ошибка получения предложений категорий: %v", err)
+        return utils.SuccessResponse(c, fiber.Map{
+            "data": []interface{}{},
+        })
+    }
+    
+    return utils.SuccessResponse(c, fiber.Map{
+        "data": categories,
+    })
+}
 func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	// Получаем параметры поиска
 	params := &search.ServiceParams{
