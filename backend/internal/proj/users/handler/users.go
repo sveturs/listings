@@ -1,13 +1,13 @@
-// backend/internal/proj/users/handler/users.go
 package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	//    "backend/internal/types"
 	"backend/internal/domain/models"
     globalService "backend/internal/proj/global/service"
     "backend/internal/proj/users/service" 
 	"backend/pkg/utils"
+	"strconv" // Добавляем импорт для strconv
+//	"encoding/json" // Добавляем импорт для json
 )
 
 type UserHandler struct {
@@ -78,4 +78,25 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		"message": "Пользователь успешно зарегистрирован",
 		"user":    user,
 	})
+}
+
+func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
+    id, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
+    }
+
+    user, err := h.userService.GetUserByID(c.Context(), id)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusNotFound, "User not found")
+    }
+
+    // Получаем только данные пользователя из User и возвращаем их
+    return utils.SuccessResponse(c, fiber.Map{
+        "id": user.ID,
+        "name": user.Name,
+        "email": user.Email,
+        "picture_url": user.PictureURL,
+        "created_at": user.CreatedAt,
+    })
 }

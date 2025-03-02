@@ -89,7 +89,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
 
     const handleSubmit = (e) => {
         e.preventDefault();
-    
+
         const reviewData = {
             entity_type: entityType,
             entity_id: entityId,
@@ -99,7 +99,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
             cons: formData.cons,
             original_language: i18n.language
         };
-    
+
         let photosFormData = null;
         if (photoFiles.length > 0) {
             photosFormData = new FormData();
@@ -107,7 +107,7 @@ const ReviewForm = ({ onSubmit, initialData = null, onCancel, entityType, entity
                 photosFormData.append('photos', file);
             });
         }
-    
+
         onSubmit({ reviewData, photosFormData });
     };
 
@@ -229,18 +229,24 @@ const ReviewCard = ({ review, currentUserId, onVote, onReply, onEdit, onDelete, 
         onVote(review.id, voteType);
     };
 
+    // В функции getTranslatedContent добавить проверку:
     const getTranslatedContent = (field) => {
         if (!review || !field) return '';
-    
+
         if (i18n.language === review.original_language) {
             return review[field];
         }
-    
-        const translation = review.translations?.[i18n.language]?.[field];
+
+        // Проверяем, что translations существует
+        if (!review.translations || !review.translations[i18n.language]) {
+            return review[field];
+        }
+
+        const translation = review.translations[i18n.language][field];
         if (translation) {
             return translation;
         }
-    
+
         return review[field];
     };
 

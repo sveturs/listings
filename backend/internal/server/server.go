@@ -226,6 +226,8 @@ func (s *Server) setupRoutes() {
 	users.Put("/me", s.users.User.UpdateProfile)
 	users.Get("/profile", s.users.User.GetProfile)
 	users.Put("/profile", s.users.User.UpdateProfile)
+	users.Get("/:id/profile", s.users.User.GetProfileByID)
+
 
 	// Protected marketplace routes
 	marketplaceProtected := api.Group("/marketplace")
