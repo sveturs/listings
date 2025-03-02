@@ -3,18 +3,19 @@ package handler
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/domain/search"
 	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
+	"context"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"log"
 	"math"
-	"time"
-	"backend/internal/proj/marketplace/service"
-	"context"
 	"strconv"
+	"strings"
 	"sync"
-
-	"github.com/gofiber/fiber/v2"
+	"time"
 )
 
 type MarketplaceHandler struct {
@@ -52,72 +53,73 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 	}
 
 	// Создаем объявление
-    listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
-    }
+	listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
+	}
 
-    // Обновляем материализованное представление
-    if err := h.marketplaceService.RefreshCategoryListingCounts(c.Context()); err != nil {
-        log.Printf("Error refreshing category counts: %v", err)
-    }
+	// Обновляем материализованное представление
+	if err := h.marketplaceService.RefreshCategoryListingCounts(c.Context()); err != nil {
+		log.Printf("Error refreshing category counts: %v", err)
+	}
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "id":      listingID,
-        "message": "Объявление успешно создано",
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"id":      listingID,
+		"message": "Объявление успешно создано",
+	})
 }
+
 var (
-    categoryTreeCache []models.CategoryTreeNode
-    categoryTreeLastUpdate time.Time
-    categoryTreeMutex sync.RWMutex
+	categoryTreeCache      []models.CategoryTreeNode
+	categoryTreeLastUpdate time.Time
+	categoryTreeMutex      sync.RWMutex
 )
 
 func (h *MarketplaceHandler) GetCategoryTree(c *fiber.Ctx) error {
-    categoryTreeMutex.RLock()
-    if time.Since(categoryTreeLastUpdate) < 5*time.Minute && categoryTreeCache != nil && len(categoryTreeCache) > 0 {
-        categories := categoryTreeCache
-        categoryTreeMutex.RUnlock()
-        return utils.SuccessResponse(c, categories)
-    }
-    categoryTreeMutex.RUnlock()
+	categoryTreeMutex.RLock()
+	if time.Since(categoryTreeLastUpdate) < 5*time.Minute && categoryTreeCache != nil && len(categoryTreeCache) > 0 {
+		categories := categoryTreeCache
+		categoryTreeMutex.RUnlock()
+		return utils.SuccessResponse(c, categories)
+	}
+	categoryTreeMutex.RUnlock()
 
-    categoryTreeMutex.Lock()
-    defer categoryTreeMutex.Unlock()
+	categoryTreeMutex.Lock()
+	defer categoryTreeMutex.Unlock()
 
-    // Повторная проверка после получения блокировки
-    if time.Since(categoryTreeLastUpdate) < 5*time.Minute && categoryTreeCache != nil && len(categoryTreeCache) > 0 {
-        return utils.SuccessResponse(c, categoryTreeCache)
-    }
+	// Повторная проверка после получения блокировки
+	if time.Since(categoryTreeLastUpdate) < 5*time.Minute && categoryTreeCache != nil && len(categoryTreeCache) > 0 {
+		return utils.SuccessResponse(c, categoryTreeCache)
+	}
 
-    categories, err := h.marketplaceService.GetCategoryTree(c.Context())
-    if err != nil {
-        // В случае ошибки очищаем кеш
-        categoryTreeCache = nil
-        categoryTreeLastUpdate = time.Time{}
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching category tree")
-    }
+	categories, err := h.marketplaceService.GetCategoryTree(c.Context())
+	if err != nil {
+		// В случае ошибки очищаем кеш
+		categoryTreeCache = nil
+		categoryTreeLastUpdate = time.Time{}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching category tree")
+	}
 
-    // Проверяем валидность полученных данных
-    if len(categories) == 0 {
-        // Если данные пустые, не кешируем их
-        categoryTreeCache = nil
-        categoryTreeLastUpdate = time.Time{}
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Received empty category tree")
-    }
+	// Проверяем валидность полученных данных
+	if len(categories) == 0 {
+		// Если данные пустые, не кешируем их
+		categoryTreeCache = nil
+		categoryTreeLastUpdate = time.Time{}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Received empty category tree")
+	}
 
-    // Сохраняем только валидные данные
-    categoryTreeCache = categories
-    categoryTreeLastUpdate = time.Now()
+	// Сохраняем только валидные данные
+	categoryTreeCache = categories
+	categoryTreeLastUpdate = time.Now()
 
-    return utils.SuccessResponse(c, categories)
+	return utils.SuccessResponse(c, categories)
 }
 
 func (h *MarketplaceHandler) InvalidateCategoryCache() {
-    categoryTreeMutex.Lock()
-    defer categoryTreeMutex.Unlock()
-    categoryTreeCache = nil
-    categoryTreeLastUpdate = time.Time{}
+	categoryTreeMutex.Lock()
+	defer categoryTreeMutex.Unlock()
+	categoryTreeCache = nil
+	categoryTreeLastUpdate = time.Time{}
 }
 func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 	log.Printf("Starting image upload for listing ID: %v", c.Params("id"))
@@ -193,13 +195,13 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 }
 func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
 	filters := map[string]string{
-		"category_id": c.Query("category_id"),
-		"city":        c.Query("city"),
-		"min_price":   c.Query("min_price"),
-		"max_price":   c.Query("max_price"),
-		"query":       c.Query("query"),
-		"condition":   c.Query("condition"),
-		"sort_by":     c.Query("sort_by"),
+		"category_id":   c.Query("category_id"),
+		"city":          c.Query("city"),
+		"min_price":     c.Query("min_price"),
+		"max_price":     c.Query("max_price"),
+		"query":         c.Query("query"),
+		"condition":     c.Query("condition"),
+		"sort_by":       c.Query("sort_by"),
 		"storefront_id": c.Query("storefront_id"),
 	}
 
@@ -256,18 +258,19 @@ func (h *MarketplaceHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 		"message": "Removed from favorites successfully",
 	})
 }
+
 // Добавить новый метод
 func (h *MarketplaceHandler) GetSubcategories(c *fiber.Ctx) error {
-    parentID := c.Query("parent_id")
-    limit := c.QueryInt("limit", 20)
-    offset := c.QueryInt("offset", 0)
+	parentID := c.Query("parent_id")
+	limit := c.QueryInt("limit", 20)
+	offset := c.QueryInt("offset", 0)
 
-    categories, err := h.marketplaceService.GetSubcategories(c.Context(), parentID, limit, offset)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching subcategories")
-    }
+	categories, err := h.marketplaceService.GetSubcategories(c.Context(), parentID, limit, offset)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching subcategories")
+	}
 
-    return utils.SuccessResponse(c, categories)
+	return utils.SuccessResponse(c, categories)
 }
 func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 	// Получаем user_id из контекста, если пользователь авторизован
@@ -453,4 +456,170 @@ func (h *MarketplaceHandler) GetFavorites(c *fiber.Ctx) error {
 
 	//  log.Printf("GetFavorites: found %d favorites for userID=%d", len(favorites), userID)
 	return utils.SuccessResponse(c, favorites)
+}
+func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
+	// Получаем параметры поиска
+	params := &search.ServiceParams{
+		Query:         c.Query("q", ""),
+		CategoryID:    c.Query("category_id", ""),
+		Condition:     c.Query("condition", ""),
+		City:          c.Query("city", ""),
+		Country:       c.Query("country", ""),
+		StorefrontID:  c.Query("storefront_id", ""),
+		Sort:          c.Query("sort_by", ""),
+		SortDirection: c.Query("sort_direction", "desc"),
+		Distance:      c.Query("distance", "10km"),
+		Page:          c.QueryInt("page", 1),
+		Size:          c.QueryInt("size", 20),
+		Language:      c.Query("language", ""),
+	}
+
+	// Обрабатываем числовые параметры - добавим защиту от ошибок
+	if priceMin := c.Query("min_price", ""); priceMin != "" {
+		if val, err := strconv.ParseFloat(priceMin, 64); err == nil && val >= 0 {
+			params.PriceMin = val
+		}
+	}
+
+	if priceMax := c.Query("max_price", ""); priceMax != "" {
+		if val, err := strconv.ParseFloat(priceMax, 64); err == nil && val >= 0 {
+			params.PriceMax = val
+		}
+	}
+
+	// Обрабатываем координаты - добавим защиту от ошибок
+	if lat := c.Query("lat", ""); lat != "" {
+		if val, err := strconv.ParseFloat(lat, 64); err == nil {
+			params.Latitude = val
+		}
+	}
+
+	if lon := c.Query("lon", ""); lon != "" {
+		if val, err := strconv.ParseFloat(lon, 64); err == nil {
+			params.Longitude = val
+		}
+	}
+
+	// Запрашиваемые агрегации
+	if aggs := c.Query("aggs", ""); aggs != "" {
+		params.Aggregations = strings.Split(aggs, ",")
+	}
+
+	// Если не указан язык, берем из context
+	if params.Language == "" {
+		if lang, ok := c.Locals("language").(string); ok && lang != "" {
+			params.Language = lang
+		} else {
+			params.Language = "sr"
+		}
+	}
+
+	// В случае ошибки с OpenSearch, используем обычный поиск
+	result, err := h.marketplaceService.SearchListingsAdvanced(c.Context(), params)
+	if err != nil {
+		log.Printf("Ошибка поиска: %v", err)
+
+		// Используем стандартный поиск
+		filters := map[string]string{
+			"category_id":   params.CategoryID,
+			"condition":     params.Condition,
+			"city":          params.City,
+			"country":       params.Country,
+			"storefront_id": params.StorefrontID,
+			"sort_by":       params.Sort,
+		}
+
+		// Добавляем числовые фильтры, если они указаны
+		if params.PriceMin > 0 {
+			filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
+		}
+		if params.PriceMax > 0 {
+			filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
+		}
+
+		// Добавляем текстовый поиск
+		if params.Query != "" {
+			filters["query"] = params.Query
+		}
+
+		// Пробуем получить обычным методом
+		listings, total, err := h.marketplaceService.GetListings(c.Context(), filters, params.Size, (params.Page-1)*params.Size)
+		if err != nil {
+			log.Printf("Ошибка стандартного поиска: %v", err)
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка выполнения поиска")
+		}
+
+		// Формируем такой же ответ, как от OpenSearch
+		return utils.SuccessResponse(c, fiber.Map{
+			"data": listings,
+			"meta": fiber.Map{
+				"total":       total,
+				"page":        params.Page,
+				"size":        params.Size,
+				"total_pages": (total + int64(params.Size) - 1) / int64(params.Size),
+			},
+		})
+	}
+
+	// Если OpenSearch ответил успешно
+	return utils.SuccessResponse(c, fiber.Map{
+		"data": result.Items,
+		"meta": fiber.Map{
+			"total":       result.Total,
+			"page":        result.Page,
+			"size":        result.Size,
+			"total_pages": result.TotalPages,
+			"facets":      result.Facets,
+			"suggestions": result.Suggestions,
+			"took_ms":     result.Took,
+		},
+	})
+}
+
+// GetSuggestions возвращает предложения автодополнения
+func (h *MarketplaceHandler) GetSuggestions(c *fiber.Ctx) error {
+	prefix := c.Query("q", "")
+	size := c.QueryInt("size", 5)
+
+	if prefix == "" {
+		return utils.SuccessResponse(c, fiber.Map{
+			"data": []string{},
+		})
+	}
+
+	suggestions, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, size)
+	if err != nil {
+		log.Printf("Ошибка получения предложений: %v", err)
+		// В случае ошибки возвращаем пустой массив, чтобы не ломать фронтенд
+		return utils.SuccessResponse(c, fiber.Map{
+			"data": []string{},
+		})
+	}
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"data": suggestions,
+	})
+}
+
+// ReindexAll переиндексирует все объявления
+func (h *MarketplaceHandler) ReindexAll(c *fiber.Ctx) error {
+	// Проверяем административные права
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
+
+	// Запускаем процесс переиндексации в фоне
+	go func() {
+		ctx := context.Background()
+		if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
+			log.Printf("Ошибка переиндексации: %v", err)
+		} else {
+			log.Println("Переиндексация успешно завершена")
+		}
+	}()
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Запущена переиндексация всех объявлений",
+	})
 }

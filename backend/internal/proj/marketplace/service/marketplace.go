@@ -10,6 +10,8 @@ import (
     "fmt"
     "time"
     "strconv"
+        "backend/internal/domain/search"
+        "log"
 )
 
 type MarketplaceService struct {
@@ -26,12 +28,32 @@ func (s *MarketplaceService) GetUserFavorites(ctx context.Context, userID int) (
 }
 func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
     // Устанавливаем начальные значения
-    
     listing.Status = "active"
     listing.ViewsCount = 0
     
-    return s.storage.CreateListing(ctx, listing)
+    // Вызываем существующий метод для создания объявления в БД
+    listingID, err := s.storage.CreateListing(ctx, listing)
+    if err != nil {
+        return 0, err
+    }
+    
+    // Синхронизируем с OpenSearch
+    listing.ID = listingID
+    
+    // Получаем полное объявление со всеми связанными данными
+    fullListing, err := s.storage.GetListingByID(ctx, listingID)
+    if err != nil {
+        log.Printf("Ошибка получения полного объявления для индексации: %v", err)
+    } else {
+        // Индексируем объявление в OpenSearch
+        if err := s.storage.IndexListing(ctx, fullListing); err != nil {
+            log.Printf("Ошибка индексации объявления в OpenSearch: %v", err)
+        }
+    }
+    
+    return listingID, nil
 }
+
 func (s *MarketplaceService) GetSubcategories(ctx context.Context, parentID string, limit, offset int) ([]models.CategoryTreeNode, error) {
     var parentIDInt *int
     
@@ -57,7 +79,24 @@ func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*model
 }
 
 func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-    return s.storage.UpdateListing(ctx, listing)
+    // Вызываем существующий метод для обновления объявления в БД
+    if err := s.storage.UpdateListing(ctx, listing); err != nil {
+        return err
+    }
+    
+    // Получаем полное объявление со всеми связанными данными
+    fullListing, err := s.storage.GetListingByID(ctx, listing.ID)
+    if err != nil {
+        log.Printf("Ошибка получения полного объявления для обновления индекса: %v", err)
+        return nil
+    }
+    
+    // Обновляем объявление в OpenSearch
+    if err := s.storage.IndexListing(ctx, fullListing); err != nil {
+        log.Printf("Ошибка обновления объявления в OpenSearch: %v", err)
+    }
+    
+    return nil
 }
 func (s *MarketplaceService) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
     return s.storage.GetCategoryTree(ctx)
@@ -67,17 +106,17 @@ func (s *MarketplaceService) RefreshCategoryListingCounts(ctx context.Context) e
     return err
 }
 func (s *MarketplaceService) DeleteListing(ctx context.Context, id int, userID int) error {
-    // Проверяем, что пользователь является владельцем объявления
-    listing, err := s.storage.GetListingByID(ctx, id)
-    if err != nil {
+    // Вызываем существующий метод для удаления объявления из БД
+    if err := s.storage.DeleteListing(ctx, id, userID); err != nil {
         return err
     }
     
-    if listing.UserID != userID {
-        return fmt.Errorf("не хватает прав для удаления объявления")
+    // Удаляем объявление из OpenSearch
+    if err := s.storage.DeleteListingIndex(ctx, fmt.Sprintf("%d", id)); err != nil {
+        log.Printf("Ошибка удаления объявления из OpenSearch: %v", err)
     }
     
-    return s.storage.DeleteListing(ctx, id, userID)
+    return nil
 }
 
 func (s *MarketplaceService) ProcessImage(file *multipart.FileHeader) (string, error) {
@@ -144,4 +183,104 @@ func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation 
         translation.IsVerified)
 
     return err
+}
+func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
+    // Преобразуем параметры для OpenSearch
+    osParams := &search.SearchParams{
+        Query:        params.Query,
+        Page:         params.Page,
+        Size:         params.Size,
+        Aggregations: params.Aggregations,
+        Language:     params.Language,
+    }
+    
+    // Добавляем фильтры
+    if params.CategoryID != "" {
+        categoryID, err := strconv.Atoi(params.CategoryID)
+        if err == nil {
+            osParams.CategoryID = &categoryID
+        }
+    }
+    
+    if params.PriceMin > 0 {
+        osParams.PriceMin = &params.PriceMin
+    }
+    
+    if params.PriceMax > 0 {
+        osParams.PriceMax = &params.PriceMax
+    }
+    
+    if params.Condition != "" {
+        osParams.Condition = params.Condition
+    }
+    
+    if params.City != "" {
+        osParams.City = params.City
+    }
+    
+    if params.Country != "" {
+        osParams.Country = params.Country
+    }
+    
+    if params.StorefrontID != "" {
+        storefrontID, err := strconv.Atoi(params.StorefrontID)
+        if err == nil {
+            osParams.StorefrontID = &storefrontID
+        }
+    }
+    
+    // Устанавливаем сортировку
+    if params.Sort != "" {
+        osParams.Sort = params.Sort
+        osParams.SortDirection = params.SortDirection
+    }
+    
+    // Добавляем геолокацию
+    if params.Latitude != 0 && params.Longitude != 0 {
+        osParams.Location = &search.GeoLocation{
+            Lat: params.Latitude,
+            Lon: params.Longitude,
+        }
+        osParams.Distance = params.Distance
+    }
+    
+    // Выполняем поиск
+    osResult, err := s.storage.SearchListingsOpenSearch(ctx, osParams)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка поиска: %w", err)
+    }
+    
+    // Преобразуем результат
+    result := &search.ServiceResult{
+        Items:      osResult.Listings,
+        Total:      osResult.Total,
+        Page:       params.Page,
+        Size:       params.Size,
+        TotalPages: (osResult.Total + params.Size - 1) / params.Size,
+        Took:       osResult.Took,
+    }
+    
+    // Добавляем фасеты
+    if len(osResult.Aggregations) > 0 {
+        result.Facets = make(map[string][]search.Bucket)
+        for name, buckets := range osResult.Aggregations {
+            result.Facets[name] = buckets
+        }
+    }
+    
+    // Добавляем предложения
+    if len(osResult.Suggestions) > 0 {
+        result.Suggestions = osResult.Suggestions
+    }
+    
+    return result, nil
+}
+
+
+func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error) {
+    return s.storage.SuggestListings(ctx, prefix, size)
+}
+
+func (s *MarketplaceService) ReindexAllListings(ctx context.Context) error {
+    return s.storage.ReindexAllListings(ctx)
 }

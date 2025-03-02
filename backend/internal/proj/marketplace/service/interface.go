@@ -1,11 +1,10 @@
-// backend/internal/proj/marketplace/service/interface.go
 package service
 
 import (
-    "context"
     "backend/internal/domain/models"
+    "backend/internal/domain/search"
+    "context"
     "mime/multipart"
-    
 )
 
 type MarketplaceServiceInterface interface {
@@ -25,4 +24,9 @@ type MarketplaceServiceInterface interface {
     UpdateTranslation(ctx context.Context, translation *models.Translation) error
     GetSubcategories(ctx context.Context, parentID string, limit int, offset int) ([]models.CategoryTreeNode, error)
     RefreshCategoryListingCounts(ctx context.Context) error
+    
+    // OpenSearch методы
+    SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error)
+    GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error)
+    ReindexAllListings(ctx context.Context) error
 }

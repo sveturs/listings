@@ -1,6 +1,7 @@
 //frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import AutocompleteInput from '../shared/AutocompleteInput';
 
 import {
     Paper,
@@ -23,32 +24,13 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
 
     return (
         <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            {/* Поиск */}
+            {/* Поиск с автодополнением */}
             <Box sx={{ p: 2, backgroundColor: 'background.default', boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)', zIndex: 1 }}>
-                <TextField
-                    fullWidth
-                    size="small"
-                    placeholder={t('buttons.search', { ns: 'common' })}
+                <AutocompleteInput
                     value={filters.query || ''}
-                    onChange={(e) => onFilterChange({ ...filters, query: e.target.value })}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <Search size={16} color="gray" />
-                            </InputAdornment>
-                        ),
-                        endAdornment: filters.query && (
-                            <InputAdornment position="end">
-                                <IconButton
-                                    edge="end"
-                                    size="small"
-                                    onClick={() => onFilterChange({ ...filters, query: '' })}
-                                >
-                                    <X size={14} />
-                                </IconButton>
-                            </InputAdornment>
-                        )
-                    }}
+                    onChange={(value) => onFilterChange({ ...filters, query: value })}
+                    onSearch={(value) => onFilterChange({ ...filters, query: value })}
+                    placeholder={t('buttons.search', { ns: 'common' })}
                 />
             </Box>
 

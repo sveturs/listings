@@ -10,6 +10,8 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+    "backend/internal/domain/search"
+	"log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -19,17 +21,22 @@ import (
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
 	reviewStorage "backend/internal/proj/reviews/storage/postgres"
 	userStorage "backend/internal/proj/users/storage/postgres"
+	
+ 
+	osClient "backend/internal/storage/opensearch"
+ 	"backend/internal/proj/marketplace/storage/opensearch"
 )
 
 type Database struct {
-	pool            *pgxpool.Pool
-	marketplaceDB   *marketplaceStorage.Storage
-	reviewDB        *reviewStorage.Storage
-	usersDB         *userStorage.Storage
-	notificationsDB *notificationStorage.Storage
+	pool              *pgxpool.Pool
+	marketplaceDB     *marketplaceStorage.Storage
+	reviewDB          *reviewStorage.Storage
+	usersDB           *userStorage.Storage
+	notificationsDB   *notificationStorage.Storage
+	osMarketplaceRepo opensearch.MarketplaceSearchRepository
 }
 
-func NewDatabase(dbURL string) (*Database, error) {
+func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string) (*Database, error) {
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
 		return nil, fmt.Errorf("error creating connection pool: %w", err)
@@ -41,13 +48,24 @@ func NewDatabase(dbURL string) (*Database, error) {
 		return nil, fmt.Errorf("error creating translation service: %w", err)
 	}
 
-	return &Database{
+	db := &Database{
 		pool:            pool,
 		marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
 		reviewDB:        reviewStorage.NewStorage(pool, translationService),
 		usersDB:         userStorage.NewStorage(pool),
 		notificationsDB: notificationStorage.NewNotificationStorage(pool),
-	}, nil
+	}
+	
+	// Инициализируем репозиторий OpenSearch, если клиент передан
+	if osClient != nil {
+		db.osMarketplaceRepo = opensearch.NewRepository(osClient, indexName, db)
+		// Подготавливаем индекс
+		if err := db.osMarketplaceRepo.PrepareIndex(context.Background()); err != nil {
+			log.Printf("Ошибка подготовки индекса OpenSearch: %v", err)
+		}
+	}
+
+	return db, nil
 }
 
 var _ storage.Storage = (*Database)(nil)
@@ -56,6 +74,44 @@ func (db *Database) Close() {
 	if db.pool != nil {
 		db.pool.Close()
 	}
+}
+func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
+    if db.osMarketplaceRepo == nil {
+        return nil, fmt.Errorf("OpenSearch не настроен")
+    }
+    
+    return db.osMarketplaceRepo.SearchListings(ctx, params)
+}
+func (db *Database) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
+    if db.osMarketplaceRepo == nil {
+        return fmt.Errorf("OpenSearch не настроен")
+    }
+    
+    return db.osMarketplaceRepo.IndexListing(ctx, listing)
+}
+
+func (db *Database) DeleteListingIndex(ctx context.Context, id string) error {
+    if db.osMarketplaceRepo == nil {
+        return fmt.Errorf("OpenSearch не настроен")
+    }
+    
+    return db.osMarketplaceRepo.DeleteListing(ctx, id)
+}
+
+func (db *Database) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
+    if db.osMarketplaceRepo == nil {
+        return nil, fmt.Errorf("OpenSearch не настроен")
+    }
+    
+    return db.osMarketplaceRepo.SuggestListings(ctx, prefix, size)
+}
+
+func (db *Database) ReindexAllListings(ctx context.Context) error {
+    if db.osMarketplaceRepo == nil {
+        return fmt.Errorf("OpenSearch не настроен")
+    }
+    
+    return db.osMarketplaceRepo.ReindexAll(ctx)
 }
 
 func (db *Database) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
@@ -105,8 +161,6 @@ func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int
 
 	return userIDs, nil
 }
-
-
 
 type pgxResult struct {
 	ct pgconn.CommandTag
@@ -369,59 +423,60 @@ func (db *Database) MarkNotificationAsRead(ctx context.Context, userID int, noti
 func (db *Database) DeleteNotification(ctx context.Context, userID int, notificationID int) error {
 	return db.notificationsDB.DeleteNotification(ctx, userID, notificationID)
 }
+
 type pgxTransaction struct {
-    tx pgx.Tx
+	tx pgx.Tx
 }
 
 func (db *Database) BeginTx(ctx context.Context, opts *sql.TxOptions) (storage.Transaction, error) {
-    tx, err := db.pool.Begin(ctx)
-    if err != nil {
-        return nil, err
-    }
-    return &pgxTransaction{tx: tx}, nil
+	tx, err := db.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &pgxTransaction{tx: tx}, nil
 }
 
 // Реализация методов интерфейса Transaction
 func (t *pgxTransaction) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-    ct, err := t.tx.Exec(ctx, query, args...)
-    if err != nil {
-        return nil, err
-    }
-    return &pgxResult{ct: ct}, nil
+	ct, err := t.tx.Exec(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return &pgxResult{ct: ct}, nil
 }
 
 func (t *pgxTransaction) Query(ctx context.Context, query string, args ...interface{}) (storage.Rows, error) {
-    rows, err := t.tx.Query(ctx, query, args...)
-    if err != nil {
-        return nil, err
-    }
-    return &RowsWrapper{rows: rows}, nil
+	rows, err := t.tx.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return &RowsWrapper{rows: rows}, nil
 }
 
 func (t *pgxTransaction) QueryRow(ctx context.Context, query string, args ...interface{}) storage.Row {
-    return t.tx.QueryRow(ctx, query, args...)
+	return t.tx.QueryRow(ctx, query, args...)
 }
 
 func (t *pgxTransaction) Commit() error {
-    return t.tx.Commit(context.Background())
+	return t.tx.Commit(context.Background())
 }
 
 func (t *pgxTransaction) Rollback() error {
-    return t.tx.Rollback(context.Background())
+	return t.tx.Rollback(context.Background())
 }
 
 func (db *Database) GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error) {
-    return db.reviewDB.GetUserReviews(ctx, userID, filter)
+	return db.reviewDB.GetUserReviews(ctx, userID, filter)
 }
 
 func (db *Database) GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error) {
-    return db.reviewDB.GetStorefrontReviews(ctx, storefrontID, filter)
+	return db.reviewDB.GetStorefrontReviews(ctx, storefrontID, filter)
 }
 
 func (db *Database) GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error) {
-    return db.reviewDB.GetUserRatingSummary(ctx, userID)
+	return db.reviewDB.GetUserRatingSummary(ctx, userID)
 }
 
 func (db *Database) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
-    return db.reviewDB.GetStorefrontRatingSummary(ctx, storefrontID)
+	return db.reviewDB.GetStorefrontRatingSummary(ctx, storefrontID)
 }

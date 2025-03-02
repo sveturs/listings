@@ -42,3 +42,23 @@ func (m *Middleware) ErrorHandler(c *fiber.Ctx, err error) error {
 
     return utils.ErrorResponse(c, code, message)
 }
+ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
+	// Сначала проверяем авторизацию
+	if err := m.AuthRequired(c); err != nil {
+		return err
+	}
+	
+	// Затем проверяем, является ли пользователь администратором
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
+	
+	// В этой простой версии считаем администраторами только пользователей с ID 1, 2, 3
+	// В реальном приложении здесь будет проверка на роль в базе данных
+	if userID != 1 && userID != 2 && userID != 3 {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "Отказано в доступе")
+	}
+	
+	return c.Next()
+}

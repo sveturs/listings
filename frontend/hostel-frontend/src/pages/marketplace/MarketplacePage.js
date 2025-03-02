@@ -97,36 +97,40 @@ const MarketplacePage = () => {
 
     const fetchListings = useCallback(async (currentFilters = {}) => {
         try {
-            setLoading(true);
-            setError(null);
-
-            const params = {};
-            Object.entries(currentFilters).forEach(([key, value]) => {
-                if (value !== '') {
-                    params[key] = value;
-                }
-            });
-
-            const response = await axios.get('/api/v1/marketplace/listings', { params });
-
-            if (response.data?.data?.data) {
-                const listings = response.data.data.data;
-                console.log('Debug: Listings with storefront_id:',
-                    listings.filter(item => item.storefront_id).map(item =>
-                        `ID: ${item.id}, Title: ${item.title}, StorefrontID: ${item.storefront_id}`
-                    )
-                );
-                setListings(listings);
-            } else {
-                setListings([]);
+          setLoading(true);
+          setError(null);
+      
+          const params = {};
+          Object.entries(currentFilters).forEach(([key, value]) => {
+            if (value !== '') {
+              params[key] = value;
             }
+          });
+      
+          // Используем новый endpoint для поиска
+          const response = await axios.get('/api/v1/marketplace/search', { params });
+          
+          console.log('API response:', response.data);
+          
+          // Проверяем различные варианты структуры данных
+          if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
+            // Случай с двойным вложением data
+            setListings(response.data.data.data);
+          } else if (response.data?.data && Array.isArray(response.data.data)) {
+            // Случай с одинарным вложением data
+            setListings(response.data.data);
+          } else {
+            console.error('Ответ API не содержит массив данных:', response.data);
+            setListings([]);
+          }
         } catch (err) {
-            console.error('Error fetching listings:', err);
-            setError('Не удалось загрузить объявления');
+          console.error('Error fetching listings:', err);
+          setError('Не удалось загрузить объявления');
+          setListings([]);
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
-    }, []);
+      }, []);
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -271,7 +275,7 @@ const MarketplacePage = () => {
                 </Box>
             );
         }
-
+    
         if (error) {
             return (
                 <Alert
@@ -287,15 +291,16 @@ const MarketplacePage = () => {
                 </Alert>
             );
         }
-
-        if (listings.length === 0) {
+    
+        // Проверяем, что listings - это массив
+        if (!listings || !Array.isArray(listings) || listings.length === 0) {
             return (
                 <Alert severity="info" sx={{ m: 2 }}>
                     {t('listings.filters.noResults')}
                 </Alert>
             );
         }
-
+    
         return isMobile ? (
             <MobileListingGrid listings={listings} />
         ) : (
@@ -306,7 +311,6 @@ const MarketplacePage = () => {
                             to={`/marketplace/listings/${listing.id}`}
                             style={{ textDecoration: 'none' }}
                             onClick={(e) => {
-                                // Если клик был на кнопке магазина, перенаправляем на страницу магазина
                                 if (listing.storefront_id && e.target.closest('[data-shop-button="true"]')) {
                                     e.preventDefault();
                                     navigate(`/shop/${listing.storefront_id}`);
@@ -318,7 +322,6 @@ const MarketplacePage = () => {
                     </Grid>
                 ))}
             </Grid>
-
         );
     };
 

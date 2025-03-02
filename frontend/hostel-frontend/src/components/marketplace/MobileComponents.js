@@ -1,7 +1,7 @@
 // frontend/hostel-frontend/src/components/marketplace/MobileComponents.js
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-
+import AutocompleteInput from '../shared/AutocompleteInput';
 import { Link } from 'react-router-dom';
 import {
     Box, Button, IconButton, Typography, InputBase, Toolbar, TextField, Select, MenuItem,
@@ -13,12 +13,6 @@ import { debounce } from 'lodash';
 // Компонент MobileHeader
 export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValue }) => {
     const { t } = useTranslation('marketplace', 'common');
-
-    const [localSearchValue, setLocalSearchValue] = useState(searchValue || '');
-    const debouncedSearch = useCallback(
-        debounce((value) => onSearch(value), 500),
-        [onSearch]
-    );
 
     return (
         <Box sx={{
@@ -85,49 +79,12 @@ export const MobileHeader = ({ onOpenFilters, filtersCount, onSearch, searchValu
             </Toolbar>
 
             <Box sx={{ px: 2, pb: 2 }}>
-                <Paper
-                    elevation={0}
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        px: 2,
-                        py: 1,
-                        bgcolor: 'grey.100',
-                        borderRadius: 2
-                    }}
-                >
-                    <InputBase
-                        fullWidth
-                        placeholder={t('buttons.search', { ns: 'common' })}
-                        value={localSearchValue}
-                        onChange={(e) => {
-                            setLocalSearchValue(e.target.value);
-                            debouncedSearch(e.target.value);
-                        }}
-                        startAdornment={
-                            <SearchIcon style={{ color: 'text.secondary', marginRight: 8 }} size={20} />
-                        }
-                        endAdornment={
-                            localSearchValue && (
-                                <IconButton
-                                    size="small"
-                                    onClick={() => {
-                                        setLocalSearchValue('');
-                                        onSearch('');
-                                    }}
-                                >
-                                    <X size={16} />
-                                </IconButton>
-                            )
-                        }
-                        sx={{
-                            '& input': {
-                                p: '6px 0',
-                                fontSize: '0.875rem'
-                            }
-                        }}
-                    />
-                </Paper>
+                <AutocompleteInput
+                    value={searchValue}
+                    onChange={onSearch}
+                    onSearch={onSearch}
+                    placeholder={t('buttons.search', { ns: 'common' })}
+                />
             </Box>
         </Box>
     );

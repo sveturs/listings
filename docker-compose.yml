@@ -21,6 +21,37 @@ services:
     stop_signal: SIGINT
     networks:
      - hostel_network
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: opensearch
+    environment:
+      - "discovery.type=single-node"
+      - "bootstrap.memory_lock=true"
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - hostel_network
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.0
+    container_name: opensearch-dashboards
+    ports:
+      - "5601:5601"
+    environment:
+      - "OPENSEARCH_HOSTS=http://opensearch:9200"
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+    networks:
+      - hostel_network
+    depends_on:
+      - opensearch
 
   backend:
     build:
@@ -33,10 +64,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      opensearch:
+        condition: service_started  # Добавьте эту зависимость
     volumes:
       - ./backend/uploads:/app/uploads
     environment:
       - UPLOAD_DIR=/app/uploads
+      - DATABASE_URL=postgres://postgres:password@db:5432/hostel_db?sslmode=disable
+      - OPENSEARCH_URL=http://opensearch:9200  # Явно указываем URL для OpenSearch
+      - OPENSEARCH_MARKETPLACE_INDEX=marketplace  # Указываем имя индекса
     stop_grace_period: 10s
     stop_signal: SIGTERM
     init: true
@@ -75,6 +111,7 @@ services:
       - hostel_network
 volumes:
   postgres_data:
+  opensearch-data:
 
 networks:
   hostel_network:

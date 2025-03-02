@@ -3,6 +3,7 @@ package storage
 
 import (
 	"backend/internal/domain/models"
+    "backend/internal/domain/search"
 	"backend/internal/types"
 	"context"
 	"database/sql"
@@ -35,11 +36,10 @@ type Storage interface {
 	QueryRow(ctx context.Context, sql string, args ...interface{}) Row
 	Query(ctx context.Context, sql string, args ...interface{}) (Rows, error)
 
-    GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error)
-    GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error)
-    GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error)
-    GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error)
-
+	GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error)
+	GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error)
+	GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error)
+	GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error)
 
 	// Notification methods
 	GetNotificationSettings(ctx context.Context, userID int) ([]models.NotificationSettings, error)
@@ -103,11 +103,18 @@ type Storage interface {
 	UpdateImportSource(ctx context.Context, source *models.ImportSource) error
 	DeleteImportSource(ctx context.Context, id int) error
 
+	// OpenSearch методы
+	SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
+	SuggestListings(ctx context.Context, prefix string, size int) ([]string, error)
+	ReindexAllListings(ctx context.Context) error
+	IndexListing(ctx context.Context, listing *models.MarketplaceListing) error
+	DeleteListingIndex(ctx context.Context, id string) error
+
 	// Import History methods
 	CreateImportHistory(ctx context.Context, history *models.ImportHistory) (int, error)
 	GetImportHistory(ctx context.Context, sourceID int, limit, offset int) ([]models.ImportHistory, error)
 	UpdateImportHistory(ctx context.Context, history *models.ImportHistory) error
-	
+
 	// Database connection
 	Close()
 	Ping(ctx context.Context) error

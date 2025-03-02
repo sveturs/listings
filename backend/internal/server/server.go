@@ -21,7 +21,7 @@ import (
 	"log"
 	"os"
 	"time"
-
+	"backend/internal/storage/opensearch" 
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -40,7 +40,27 @@ type Server struct {
 
 // Обновить функцию NewServer:
 func NewServer(cfg *config.Config) (*Server, error) {
-	db, err := postgres.NewDatabase(cfg.DatabaseURL)
+	// Инициализируем клиент OpenSearch
+	var osClient *opensearch.OpenSearchClient
+	if cfg.OpenSearch.URL != "" {
+		var err error
+		osClient, err = opensearch.NewOpenSearchClient(opensearch.Config{
+			URL:      cfg.OpenSearch.URL,
+			Username: cfg.OpenSearch.Username,
+			Password: cfg.OpenSearch.Password,
+		})
+		if err != nil {
+			log.Printf("Ошибка подключения к OpenSearch: %v", err)
+		} else {
+			log.Println("Успешное подключение к OpenSearch")
+		}
+	} else {
+		log.Println("OpenSearch URL не указан, поиск будет отключен")
+	}
+	
+
+	// Инициализируем базу данных с OpenSearch
+	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
@@ -166,6 +186,9 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)
 	marketplace.Get("/subcategories", s.marketplace.Marketplace.GetSubcategories)
 
+	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced) // маршрут поиска
+	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)    // маршрут автодополнения
+
 	// Public review routes
 	review := s.app.Group("/api/v1/reviews")
 	review.Get("/", s.review.Review.GetReviews)
@@ -228,7 +251,6 @@ func (s *Server) setupRoutes() {
 	users.Put("/profile", s.users.User.UpdateProfile)
 	users.Get("/:id/profile", s.users.User.GetProfileByID)
 
-
 	// Protected marketplace routes
 	marketplaceProtected := api.Group("/marketplace")
 	marketplaceProtected.Post("/listings", s.marketplace.Marketplace.CreateListing)
@@ -240,6 +262,9 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
 	marketplaceProtected.Put("/translations/:id", s.marketplace.Marketplace.UpdateTranslations)
 
+	// Административный маршрут для переиндексации
+	
+	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
 	// Chat routes
 	chat := api.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)
