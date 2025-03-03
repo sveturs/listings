@@ -169,78 +169,125 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 
 // SuggestListings предлагает автодополнение для поиска
 func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-	if prefix == "" {
-		return []string{}, nil
-	}
+    if prefix == "" {
+        return []string{}, nil
+    }
 
-	// Создаем запрос для поиска с префиксом
-	query := map[string]interface{}{
-		"size":    size,
-		"_source": []string{"title"},
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"should": []map[string]interface{}{
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"title": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-								"slop":           2,
-							},
-						},
-					},
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"title_variations": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-							},
-						},
-					},
-					{
-						"fuzzy": map[string]interface{}{
-							"title": map[string]interface{}{
-								"value":     prefix,
-								"fuzziness": "AUTO",
-							},
-						},
-					},
-				},
-				"minimum_should_match": 1,
-			},
-		},
-	}
+    // Журналирование для отладки
+    log.Printf("Запрос автодополнения для: '%s', размер: %d", prefix, size)
 
-	// Выполняем поиск
-	responseBytes, err := r.client.Search(r.indexName, query)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
-	}
+    // Создаем запрос для поиска с префиксом
+    query := map[string]interface{}{
+        "size":    size,
+        "_source": []string{"title"},
+        "query": map[string]interface{}{
+            "bool": map[string]interface{}{
+                "should": []map[string]interface{}{
+                    {
+                        "match_phrase_prefix": map[string]interface{}{
+                            "title": map[string]interface{}{
+                                "query":          prefix,
+                                "max_expansions": 10,
+                                "slop":           2,
+                            },
+                        },
+                    },
+                    {
+                        "match_phrase_prefix": map[string]interface{}{
+                            "title_variations": map[string]interface{}{
+                                "query":          prefix,
+                                "max_expansions": 10,
+                            },
+                        },
+                    },
+                    {
+                        "fuzzy": map[string]interface{}{
+                            "title": map[string]interface{}{
+                                "value":     prefix,
+                                "fuzziness": "AUTO",
+                            },
+                        },
+                    },
+                },
+                "minimum_should_match": 1,
+            },
+        },
+    }
 
-	// Парсим JSON ответ
-	var searchResponse map[string]interface{}
-	if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
-		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
-	}
+    // Дополнительно добавляем suggest API для классического автодополнения
+    query["suggest"] = map[string]interface{}{
+        "title_suggest": map[string]interface{}{
+            "prefix": prefix,
+            "completion": map[string]interface{}{
+                "field": "title_suggest",
+                "size":  size,
+            },
+        },
+    }
 
-	// Извлекаем результаты
-	suggestions := make([]string, 0, size)
-	if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
-		if hitsArray, ok := hits["hits"].([]interface{}); ok {
-			for _, hit := range hitsArray {
-				if hitObj, ok := hit.(map[string]interface{}); ok {
-					if source, ok := hitObj["_source"].(map[string]interface{}); ok {
-						if title, ok := source["title"].(string); ok {
-							suggestions = append(suggestions, title)
-						}
-					}
-				}
-			}
-		}
-	}
+    // Выполняем поиск
+    responseBytes, err := r.client.Search(r.indexName, query)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
+    }
 
-	return suggestions, nil
+    // Парсим JSON ответ
+    var searchResponse map[string]interface{}
+    if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
+        return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
+    }
+
+    // Извлекаем результаты из hits
+    suggestions := make([]string, 0, size)
+    if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
+        if hitsArray, ok := hits["hits"].([]interface{}); ok {
+            for _, hit := range hitsArray {
+                if hitObj, ok := hit.(map[string]interface{}); ok {
+                    if source, ok := hitObj["_source"].(map[string]interface{}); ok {
+                        if title, ok := source["title"].(string); ok {
+                            suggestions = append(suggestions, title)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Также проверяем результаты из suggest API
+    if suggest, ok := searchResponse["suggest"].(map[string]interface{}); ok {
+        if titleSuggest, ok := suggest["title_suggest"].([]interface{}); ok && len(titleSuggest) > 0 {
+            if suggItem, ok := titleSuggest[0].(map[string]interface{}); ok {
+                if options, ok := suggItem["options"].([]interface{}); ok {
+                    for _, option := range options {
+                        if optObj, ok := option.(map[string]interface{}); ok {
+                            if text, ok := optObj["text"].(string); ok {
+                                if !contains(suggestions, text) {
+                                    suggestions = append(suggestions, text)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Логируем результаты для отладки
+    log.Printf("Найдено %d подсказок для '%s': %v", len(suggestions), prefix, suggestions)
+
+    return suggestions, nil
 }
+
+// Вспомогательная функция для проверки наличия элемента в слайсе
+func contains(arr []string, str string) bool {
+    for _, a := range arr {
+        if a == str {
+            return true
+        }
+    }
+    return false
+}
+
 
 // ReindexAll переиндексирует все объявления
 func (r *Repository) ReindexAll(ctx context.Context) error {

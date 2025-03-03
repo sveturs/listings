@@ -27,30 +27,115 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             setCategorySuggestions([]);
             return;
         }
-
+    
         try {
             setLoading(true);
+            
             // Запрос на подсказки автодополнения
             const suggestResponse = await axios.get('/api/v1/marketplace/suggestions', {
                 params: { q: text, size: 5 }
             });
-
-            // Улучшенная обработка результатов
-            if (suggestResponse.data && suggestResponse.data.data) {
-                let suggestionData = suggestResponse.data.data;
-                // Проверяем, является ли результат массивом
-                if (!Array.isArray(suggestionData) && typeof suggestionData === 'object') {
-                    // Пытаемся извлечь массив из вложенного объекта
-                    suggestionData = suggestionData.data || [];
+    
+            console.log('Received suggestions response:', suggestResponse.data);
+    
+            // Отладочный вывод структуры данных
+            console.log('Response data structure:', JSON.stringify(suggestResponse.data, null, 2));
+    
+            let suggestionsList = [];
+    
+            // Проверяем структуру ответа и извлекаем подсказки
+            if (suggestResponse.data) {
+                // Попытка 1: Извлечение из data.suggestions (предполагаемая структура API)
+                if (suggestResponse.data.data && Array.isArray(suggestResponse.data.data.suggestions)) {
+                    suggestionsList = suggestResponse.data.data.suggestions;
+                } 
+                // Попытка 2: Извлечение напрямую из data, если это массив
+                else if (suggestResponse.data.data && Array.isArray(suggestResponse.data.data)) {
+                    suggestionsList = suggestResponse.data.data;
                 }
-                // Обеспечиваем уникальность результатов
-                const uniqueSuggestions = [...new Set(suggestionData)];
-                setSuggestions(uniqueSuggestions);
-            } else {
-                setSuggestions([]);
+                // Попытка 3: Если data.data содержит объект с hits/options
+                else if (suggestResponse.data.data && typeof suggestResponse.data.data === 'object') {
+                    // Поиск в различных стандартных местах ответа OpenSearch
+                    if (suggestResponse.data.data.hits && 
+                        suggestResponse.data.data.hits.hits && 
+                        Array.isArray(suggestResponse.data.data.hits.hits)) {
+                        // Получение из hits.hits._source.title (обычный поисковый результат)
+                        suggestionsList = suggestResponse.data.data.hits.hits
+                            .filter(hit => hit._source && hit._source.title)
+                            .map(hit => hit._source.title);
+                    } 
+                    // Поиск в структуре suggest API
+                    else if (suggestResponse.data.data.suggest) {
+                        // Обработка различных полей suggest API
+                        Object.keys(suggestResponse.data.data.suggest).forEach(key => {
+                            const suggestField = suggestResponse.data.data.suggest[key];
+                            if (Array.isArray(suggestField) && suggestField.length > 0) {
+                                // Извлекаем options из каждого элемента suggest
+                                suggestField.forEach(item => {
+                                    if (item.options && Array.isArray(item.options)) {
+                                        const texts = item.options
+                                            .filter(opt => opt.text)
+                                            .map(opt => opt.text);
+                                        suggestionsList = [...suggestionsList, ...texts];
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+                
+                // Последняя попытка: прямой поиск в корне ответа
+                else if (typeof suggestResponse.data === 'object') {
+                    // Поиск полей, которые могут содержать массивы строк
+                    Object.keys(suggestResponse.data).forEach(key => {
+                        const value = suggestResponse.data[key];
+                        if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+                            suggestionsList = [...suggestionsList, ...value];
+                        }
+                    });
+                }
             }
-
-            // Остальной код без изменений...
+    
+            // Обеспечиваем уникальность и удаляем пустые значения
+            const uniqueSuggestions = [...new Set(suggestionsList.filter(item => item && typeof item === 'string'))]
+                .map(text => text.trim());
+                
+            setSuggestions(uniqueSuggestions);
+            console.log('Processed suggestions:', uniqueSuggestions);
+            
+            // Если мы всё ещё не нашли подсказок, но поисковый запрос возвращает результаты,
+            // используем заголовки объявлений как подсказки
+            if (uniqueSuggestions.length === 0) {
+                try {
+                    const searchResponse = await axios.get('/api/v1/marketplace/search', {
+                        params: { q: text, size: 3 }
+                    });
+                    
+                    console.log('Fallback to search API for suggestions');
+                    
+                    if (searchResponse.data && searchResponse.data.data) {
+                        let listings = [];
+                        
+                        if (Array.isArray(searchResponse.data.data)) {
+                            listings = searchResponse.data.data;
+                        } else if (searchResponse.data.data.data && Array.isArray(searchResponse.data.data.data)) {
+                            listings = searchResponse.data.data.data;
+                        }
+                        
+                        if (listings.length > 0) {
+                            const titles = listings
+                                .filter(listing => listing.title && listing.title.toLowerCase().includes(text.toLowerCase()))
+                                .map(listing => listing.title);
+                                
+                            setSuggestions([...new Set(titles)]);
+                            console.log('Fallback suggestions from search results:', titles);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка запроса к fallback API:', error);
+                }
+            }
+            
         } catch (error) {
             console.error('Ошибка при получении подсказок:', error);
             setSuggestions([]);
@@ -59,7 +144,8 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             setLoading(false);
         }
     };
-
+    
+    
     // Обработка изменения ввода с дебаунсом
     const handleInputChange = (e) => {
         const newValue = e.target.value;
