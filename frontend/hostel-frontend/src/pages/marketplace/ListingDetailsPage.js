@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import ShareButton from '../../components/marketplace/ShareButton';
 import ChatButton from '../../components/marketplace/chat/ChatButton';
 import ReviewsSection from '../../components/reviews/ReviewsSection';
-import { GoogleMap, Marker } from '@react-google-maps/api';
+import FullscreenMap from '../../components/maps/FullscreenMap';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import CallButton from '../../components/marketplace/CallButton';
 import { Link } from 'react-router-dom';
@@ -601,31 +601,11 @@ const ListingDetailsPage = () => {
                                                 overflow: 'hidden'
                                             }}
                                         >
-                                            <GoogleMap
-                                                mapContainerStyle={{
-                                                    width: '100%',
-                                                    height: '80vh'
-                                                }}
-                                                center={{
-                                                    lat: listing.latitude,
-                                                    lng: listing.longitude
-                                                }}
-                                                zoom={15}
-                                                options={{
-                                                    zoomControl: true,
-                                                    mapTypeControl: true,
-                                                    streetViewControl: true,
-                                                    gestureHandling: "greedy"
-                                                }}
-                                            >
-                                                <Marker
-                                                    position={{
-                                                        lat: listing.latitude,
-                                                        lng: listing.longitude
-                                                    }}
-                                                    title={listing.title}
-                                                />
-                                            </GoogleMap>
+                                            <FullscreenMap
+                                                latitude={listing.latitude}
+                                                longitude={listing.longitude}
+                                                title={listing.title}
+                                            />
                                         </Paper>
                                     </Modal>
                                 </>

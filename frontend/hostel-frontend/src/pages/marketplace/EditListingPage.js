@@ -7,7 +7,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import LocationPicker from '../../components/global/LocationPicker';
 import MiniMap from '../../components/maps/MiniMap';
 import ImageUploader from '../../components/marketplace/ImageUploader';
-import { GoogleMap, Marker } from '@react-google-maps/api';
+import FullscreenMap from '../../components/maps/FullscreenMap';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import {
     Container,
@@ -15,7 +15,7 @@ import {
     Button,
     Typography,
     Box,
-    Alert, 
+    Alert,
     Grid,
     FormControlLabel,
     Switch,
@@ -66,23 +66,23 @@ const EditListingPage = () => {
                     axios.get(`/api/v1/marketplace/listings/${id}`),
                     axios.get("/api/v1/marketplace/categories")
                 ]);
-    
+
                 const listingData = listingResponse.data.data;
-    
+
                 if (listingData.user_id !== user?.id) {
                     navigate('/marketplace');
                     return;
                 }
-    
+
                 // Получаем текст на нужном языке
                 const title = i18n.language === listingData.original_language
                     ? listingData.title
                     : listingData.translations?.[i18n.language]?.title || listingData.title;
-    
+
                 const description = i18n.language === listingData.original_language
                     ? listingData.description
                     : listingData.translations?.[i18n.language]?.description || listingData.description;
-    
+
                 setListing({
                     ...listingData,
                     title,
@@ -97,13 +97,13 @@ const EditListingPage = () => {
                     latitude: listingData.latitude,
                     longitude: listingData.longitude
                 });
-    
+
                 if (listingData.images) {
                     setPreviewUrls(listingData.images.map(img =>
                         `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
                     ));
                 }
-    
+
                 setCategories(categoriesResponse.data.data || []);
                 setLoading(false);
             } catch (err) {
@@ -111,28 +111,28 @@ const EditListingPage = () => {
                 setLoading(false);
             }
         };
-    
+
         if (user?.id) {
             fetchData();
         }
     }, [id, user, navigate, t, i18n.language]); // Добавляем i18n.language в зависимости
-    
+
     // Добавляем эффект для отслеживания изменения языка
     useEffect(() => {
         const updateContent = async () => {
             try {
                 const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
                 const listingData = response.data.data;
-    
+
                 // Получаем текст на выбранном языке
                 const title = i18n.language === listingData.original_language
                     ? listingData.title
                     : listingData.translations?.[i18n.language]?.title || listingData.title;
-    
+
                 const description = i18n.language === listingData.original_language
                     ? listingData.description
                     : listingData.translations?.[i18n.language]?.description || listingData.description;
-    
+
                 setListing(prev => ({
                     ...prev,
                     title,
@@ -142,7 +142,7 @@ const EditListingPage = () => {
                 console.error('Error updating content for new language:', error);
             }
         };
-    
+
         if (currentLanguage !== i18n.language) {
             updateContent();
             setCurrentLanguage(i18n.language);
@@ -162,7 +162,7 @@ const EditListingPage = () => {
     useEffect(() => {
         if (listing && listing.translations) {
             const newListing = { ...listing };
-            
+
             // Если текущий язык совпадает с оригинальным
             if (i18n.language === listing.original_language) {
                 newListing.title = listing.title;
@@ -175,7 +175,7 @@ const EditListingPage = () => {
                     newListing.description = translation.description || listing.description;
                 }
             }
-            
+
             setListing(newListing);
             setCurrentLanguage(i18n.language);
         }
@@ -186,7 +186,7 @@ const EditListingPage = () => {
         e.preventDefault();
         setError("");
         setSuccess(false);
-    
+
         try {
             if (i18n.language === listing.original_language) {
                 // Сначала обновляем основные данные
@@ -194,14 +194,14 @@ const EditListingPage = () => {
                     ...listing,
                     price: parseFloat(listing.price)
                 });
-    
+
                 // Отправляем новые изображения, если они есть
                 if (images.length > 0) {
                     const formData = new FormData();
                     images.forEach((file) => {
                         formData.append('images', file);
                     });
-                    
+
                     await axios.post(
                         `/api/v1/marketplace/listings/${id}/images`,
                         formData,
@@ -222,7 +222,7 @@ const EditListingPage = () => {
                     is_verified: true
                 });
             }
-    
+
             setSuccess(true);
             setTimeout(() => {
                 navigate(`/marketplace/listings/${id}`);
@@ -437,7 +437,7 @@ const EditListingPage = () => {
                                         size="large"
                                         onClick={() => navigate(`/marketplace/listings/${id}`)}
                                     >
-                                      {t('buttons.cancel', { ns: 'common' })}
+                                        {t('buttons.cancel', { ns: 'common' })}
                                     </Button>
                                 </Box>
                             </Grid>
@@ -466,31 +466,11 @@ const EditListingPage = () => {
                             overflow: 'hidden'
                         }}
                     >
-                        <GoogleMap
-                            mapContainerStyle={{
-                                width: '100%',
-                                height: '80vh'
-                            }}
-                            center={{
-                                lat: listing.latitude,
-                                lng: listing.longitude
-                            }}
-                            zoom={15}
-                            options={{
-                                zoomControl: true,
-                                mapTypeControl: true,
-                                streetViewControl: true,
-                                gestureHandling: "greedy"
-                            }}
-                        >
-                            <Marker
-                                position={{
-                                    lat: listing.latitude,
-                                    lng: listing.longitude
-                                }}
-                                title={listing.title}
-                            />
-                        </GoogleMap>
+                        <FullscreenMap
+                            latitude={listing.latitude}
+                            longitude={listing.longitude}
+                            title={listing.title}
+                        />
                     </Paper>
                 </Modal>
             )}

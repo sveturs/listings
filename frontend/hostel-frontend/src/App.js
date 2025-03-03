@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react';
+import 'leaflet/dist/leaflet.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { AuthProvider } from "./contexts/AuthContext";
