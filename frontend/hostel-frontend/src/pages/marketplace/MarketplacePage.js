@@ -1,7 +1,7 @@
 //frontend/hostel-frontend/src/pages/marketplace/MarketplacePage.js
 import { useTranslation } from 'react-i18next';
-
-import { useEffect, useState, useCallback } from 'react';
+import { Map as MapIcon } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Container,
@@ -15,9 +15,11 @@ import {
     Alert,
     Paper,
     Chip,
+    Fab,
+    Tooltip,
 }
     from '@mui/material';
-import { Plus, Search as SearchIcon, X, Store } from 'lucide-react';
+    import { Plus, Search, X, List } from 'lucide-react';
 import ListingCard from '../../components/marketplace/ListingCard';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import {
@@ -26,9 +28,8 @@ import {
     MobileHeader,
 } from '../../components/marketplace/MobileComponents';
 import CompactMarketplaceFilters from '../../components/marketplace/MarketplaceFilters';
+import MapView from '../../components/marketplace/MapView';
 import axios from '../../api/axios';
-
-
 
 const MobileListingGrid = ({ listings }) => {
     const navigate = useNavigate();
@@ -74,6 +75,8 @@ const MarketplacePage = () => {
     const [error, setError] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [categoryPath, setCategoryPath] = useState([]);
+    const [mapViewActive, setMapViewActive] = useState(false);
+    const [userLocation, setUserLocation] = useState(null);
     const [filters, setFilters] = useState({
         query: searchParams.get('query') || '',
         category_id: searchParams.get('category_id') || '',
@@ -82,9 +85,37 @@ const MarketplacePage = () => {
         city: searchParams.get('city') || '',
         country: searchParams.get('country') || '',
         condition: searchParams.get('condition') || '',
-        sort_by: searchParams.get('sort_by') || 'date_desc'
+        sort_by: searchParams.get('sort_by') || 'date_desc',
+        distance: searchParams.get('distance') || '',
+        latitude: searchParams.get('latitude') ? parseFloat(searchParams.get('latitude')) : null,
+        longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')) : null,
     });
     const [spellingSuggestion, setSpellingSuggestion] = useState(null);
+
+    // Получаем текущее местоположение пользователя
+    useEffect(() => {
+        if (filters.latitude && filters.longitude) {
+            setUserLocation({
+                latitude: filters.latitude,
+                longitude: filters.longitude
+            });
+        }
+        // Удаляем автоматический запрос местоположения при viewMode=map
+        // Просто устанавливаем режим карты без определения местоположения
+        if (searchParams.get('viewMode') === 'map') {
+            setMapViewActive(true);
+        }
+    }, [searchParams, filters.latitude, filters.longitude]);
+
+    // Проверяем, запрошен ли режим карты в URL
+    useEffect(() => {
+        const viewMode = searchParams.get('viewMode');
+        if (viewMode === 'map') {
+            setMapViewActive(true);
+        } else if (viewMode === 'list') {
+            setMapViewActive(false);
+        }
+    }, [searchParams]);
 
     const fetchListings = useCallback(async (currentFilters = {}) => {
         try {
@@ -154,7 +185,10 @@ const MarketplacePage = () => {
                     city: searchParams.get('city') || '',
                     country: searchParams.get('country') || '',
                     condition: searchParams.get('condition') || '',
-                    sort_by: searchParams.get('sort_by') || 'date_desc'
+                    sort_by: searchParams.get('sort_by') || 'date_desc',
+                    distance: searchParams.get('distance') || '',
+                    latitude: searchParams.get('latitude') ? parseFloat(searchParams.get('latitude')) : null,
+                    longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')) : null,
                 };
 
                 setFilters(initialFilters);
@@ -166,7 +200,7 @@ const MarketplacePage = () => {
         };
 
         fetchInitialData();
-    }, [searchParams]);
+    }, [searchParams, fetchListings]);
 
     useEffect(() => {
         if (!window.location.pathname.includes('/marketplace')) {
@@ -175,16 +209,16 @@ const MarketplacePage = () => {
                 search: window.location.search
             }, { replace: true });
         }
-    }, []);
+    }, [navigate]);
 
     const findCategoryPath = (categoryId, categoriesTree) => {
         if (!categoryId || !categoriesTree || categoriesTree.length === 0) {
             return [];
         }
-
+    
         // Создаем плоскую карту всех категорий для быстрого поиска
-        const categoryMap = new Map();
-
+        const categoryMap = new Map(); // Используем нативный Map, а не компонент из lucide-react
+    
         const flattenCategories = (categories) => {
             for (const category of categories) {
                 categoryMap.set(String(category.id), category);
@@ -193,18 +227,18 @@ const MarketplacePage = () => {
                 }
             }
         };
-
+    
         // Заполняем карту всеми категориями
         flattenCategories(categoriesTree);
-
+    
         // Строим путь от выбранной категории до корня
         const path = [];
         let currentId = String(categoryId);
-
+    
         while (currentId) {
             const category = categoryMap.get(currentId);
             if (!category) break;
-
+    
             // Добавляем категорию в начало пути
             path.unshift({
                 id: category.id,
@@ -212,11 +246,11 @@ const MarketplacePage = () => {
                 slug: category.slug,
                 translations: category.translations
             });
-
+    
             // Переходим к родителю
             currentId = category.parent_id ? String(category.parent_id) : null;
         }
-
+    
         return path;
     };
 
@@ -288,8 +322,30 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
         return updated;
     });
 }, [searchParams, setSearchParams, navigate, fetchListings]);
-    
 
+    // Обработчик переключения режима просмотра (список/карта)
+    const handleToggleMapView = useCallback(() => {
+        const nextParams = new URLSearchParams(searchParams);
+        
+        if (mapViewActive) {
+            // Переключаемся на список
+            nextParams.set('viewMode', 'list');
+            setMapViewActive(false);
+        } else {
+            // Переключаемся на карту без автоопределения местоположения
+            nextParams.set('viewMode', 'map');
+            setMapViewActive(true);
+            
+            // Используем уже имеющиеся координаты, если они есть
+            if (filters.latitude && filters.longitude) {
+                nextParams.set('latitude', filters.latitude);
+                nextParams.set('longitude', filters.longitude);
+                nextParams.set('distance', filters.distance || '5km');
+            }
+            
+            setSearchParams(nextParams);
+        }
+    }, [mapViewActive, searchParams, setSearchParams, filters]);
 
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
@@ -314,6 +370,19 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
                 <Alert severity="error" sx={{ m: 2 }}>
                     {error}
                 </Alert>
+            );
+        }
+
+        // Если активен режим карты
+        if (mapViewActive) {
+            return (
+                <MapView 
+                    listings={listings}
+                    userLocation={userLocation}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onMapClose={handleToggleMapView}
+                />
             );
         }
 
@@ -397,17 +466,17 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
                     borderBottom: 1,
                     borderColor: 'divider'
                 }}>
-
-
                     {/* Активные фильтры */}
                     {Object.entries(filters).some(([key, value]) => value && key !== 'sort_by') && (
                         <Box sx={{ px: 2, py: 1, display: 'flex', gap: 1, overflowX: 'auto' }}>
                             {Object.entries(filters).map(([key, value]) => {
-                                if (!value || key === 'sort_by') return null;
+                                if (!value || key === 'sort_by' || key === 'latitude' || key === 'longitude') return null;
                                 let label = value;
                                 if (key === 'category_id') {
                                     const category = categories.find(c => String(c.id) === String(value));
                                     label = category ? category.name : value;
+                                } else if (key === 'distance') {
+                                    label = `Радиус: ${value}`;
                                 }
                                 return (
                                     <Chip
@@ -422,9 +491,18 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
                     )}
                 </Box>
 
-                <Box sx={{ flex: 1, bgcolor: 'grey.50' }}>
+                <Box sx={{ flex: 1, bgcolor: mapViewActive ? 'transparent' : 'grey.50' }}>
                     {renderContent()}
                 </Box>
+
+                {/* Плавающая кнопка переключения режима просмотра */}
+                <Fab
+                    color={mapViewActive ? "default" : "primary"}
+                    sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 1050 }}
+                    onClick={handleToggleMapView}
+                >
+                    {mapViewActive ? <List /> : <MapIcon />}
+                </Fab>
 
                 <MobileFilters
                     open={isFilterOpen}
@@ -432,6 +510,7 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
                     filters={filters}
                     onFilterChange={handleFilterChange}
                     categories={categories}
+                    onToggleMapView={handleToggleMapView}
                 />
             </Box>
         );
@@ -458,10 +537,7 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
                     onClick={() => navigate('/marketplace/create')}
                     startIcon={<Plus />}
                 >
-
                     {t('listings.create.title')}
-
-
                 </Button>
             </Box>
 
@@ -473,6 +549,7 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
                         categories={categories}
                         selectedCategoryId={filters.category_id}
                         isLoading={loading}
+                        onToggleMapView={handleToggleMapView}
                     />
                 </Grid>
                 <Grid item xs={12} md={9}>

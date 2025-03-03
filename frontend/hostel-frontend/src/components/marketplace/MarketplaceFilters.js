@@ -2,7 +2,7 @@
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import AutocompleteInput from '../shared/AutocompleteInput';
-
+import { Search, X, Map } from 'lucide-react';
 import {
     Paper,
     Box,
@@ -11,11 +11,20 @@ import {
     IconButton,
     Typography,
     Stack,
+    Divider,
+    Button,
+    FormControl,
+    FormControlLabel,
+    Select,
+    MenuItem,
+    InputLabel,
+    RadioGroup,
+    Radio
 } from '@mui/material';
-import { Search, X } from 'lucide-react';
+
 import VirtualizedCategoryTree from './VirtualizedCategoryTree';
 
-const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId }) => {
+const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId, onToggleMapView }) => {
     const { t } = useTranslation('marketplace', 'common');
 
     const handleCategorySelect = useCallback((id) => {
@@ -36,6 +45,11 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
         onFilterChange({ ...filters, query: value });
     }, [filters, onFilterChange]);
 
+    // Определяем, доступна ли карта (не используется в запросе distance без координат)
+    const isMapAvailable = useMemo(() => {
+        return !filters.distance || (filters.latitude && filters.longitude);
+    }, [filters.distance, filters.latitude, filters.longitude]);
+
     return (
         <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Поиск с автодополнением */}
@@ -55,8 +69,32 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                 />
             </Box>
 
+            {/* Кнопка просмотра на карте */}
+            <Box sx={{ px: 2, py: 1, display: 'flex', justifyContent: 'center' }}>
+                <Button
+                    variant="outlined"
+                    startIcon={<Map />}
+                    fullWidth
+                    onClick={onToggleMapView}
+                    disabled={!isMapAvailable && filters.distance}
+                >
+                    {t('listings.map.showOnMap')}
+                </Button>
+            </Box>
+
+            {/* Предупреждение о необходимости выбрать местоположение */}
+            {!isMapAvailable && filters.distance && (
+                <Box sx={{ px: 2, py: 1, color: 'warning.main' }}>
+                    <Typography variant="caption">
+                        {t('listings.map.needLocation')}
+                    </Typography>
+                </Box>
+            )}
+            
+            <Divider sx={{ my: 1 }} />
+
             {/* Основные фильтры */}
-            <Box sx={{ p: 2 }}>
+            <Box sx={{ p: 2, overflowY: 'auto' }}>
                 <Typography variant="subtitle1" gutterBottom>{t('listings.filters.title')}</Typography>
                 <Stack spacing={2}>
                     <Box>
@@ -77,6 +115,56 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                                 onChange={(e) => onFilterChange({ ...filters, max_price: e.target.value })}
                             />
                         </Stack>
+                    </Box>
+
+                    {/* Фильтр по расстоянию (для карты) */}
+                    <Box>
+                        <Typography gutterBottom>{t('listings.filters.distance.label')}</Typography>
+                        <FormControl fullWidth size="small">
+                            <Select
+                                value={filters.distance || ''}
+                                onChange={(e) => onFilterChange({ ...filters, distance: e.target.value })}
+                                displayEmpty
+                            >
+                                <MenuItem value="">{t('listings.filters.distance.any')}</MenuItem>
+                                <MenuItem value="1km">1 км</MenuItem>
+                                <MenuItem value="3km">3 км</MenuItem>
+                                <MenuItem value="5km">5 км</MenuItem>
+                                <MenuItem value="10km">10 км</MenuItem>
+                                <MenuItem value="15km">15 км</MenuItem>
+                                <MenuItem value="30km">30 км</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <Typography variant="caption" color="text.secondary">
+                            {filters.latitude && filters.longitude 
+                                ? t('listings.filters.distance.fromYourLocation')
+                                : t('listings.filters.distance.needLocation')}
+                        </Typography>
+                    </Box>
+
+                    {/* Фильтр по состоянию */}
+                    <Box>
+                        <Typography gutterBottom>{t('listings.filters.condition.label')}</Typography>
+                        <RadioGroup
+                            value={filters.condition || ''}
+                            onChange={(e) => onFilterChange({ ...filters, condition: e.target.value })}
+                        >
+                            <FormControlLabel 
+                                value="" 
+                                control={<Radio size="small" />} 
+                                label={t('listings.filters.condition.any')} 
+                            />
+                            <FormControlLabel 
+                                value="new" 
+                                control={<Radio size="small" />} 
+                                label={t('listings.conditions.new')} 
+                            />
+                            <FormControlLabel 
+                                value="used" 
+                                control={<Radio size="small" />} 
+                                label={t('listings.conditions.used')} 
+                            />
+                        </RadioGroup>
                     </Box>
                 </Stack>
             </Box>
