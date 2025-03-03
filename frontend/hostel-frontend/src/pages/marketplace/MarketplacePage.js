@@ -229,57 +229,65 @@ const MarketplacePage = () => {
         }
     }, [filters.category_id, categories]);
 
-    const handleFilterChange = useCallback((newFilters, categoryId = null) => {
-        setFilters(prev => {
-            // Создаем копию текущих фильтров
-            const updated = { ...prev, ...newFilters };
+ 
+const handleFilterChange = useCallback((newFilters, categoryId = null) => {
+    console.log(`MarketplacePage: handleFilterChange вызван с фильтрами:`, newFilters);
+    if (categoryId !== null) {
+        console.log(`MarketplacePage: передан отдельный categoryId: ${categoryId}`);
+    }
+    
+    setFilters(prev => {
+        // Создаем копию текущих фильтров
+        const updated = { ...prev, ...newFilters };
+        
+        // Если передана категория, добавляем её в фильтры
+        if (categoryId !== null) {
+            console.log(`MarketplacePage: устанавливаем category_id = ${categoryId}`);
+            updated.category_id = categoryId;
             
-            // Если передана категория, добавляем её в фильтры
-            if (categoryId !== null) {
-                updated.category_id = categoryId;
-                
-                // Если выбирается категория через автодополнение, очищаем текстовый запрос
-                if (updated.query && updated.category_id) {
-                    updated.query = '';
-                }
+            // Если выбирается категория через автодополнение, очищаем текстовый запрос
+            if (updated.query && updated.category_id) {
+                console.log('MarketplacePage: очищаем query при установке category_id');
+                updated.query = '';
             }
-    
-            // Обновляем URL
-            const nextParams = new URLSearchParams(searchParams);
-            Object.entries(updated).forEach(([key, value]) => {
-                if (value) {
-                    nextParams.set(key, value);
-                } else {
-                    nextParams.delete(key);
-                }
-            });
-    
-            if (!window.location.pathname.includes('/marketplace')) {
-                navigate({
-                    pathname: '/marketplace',
-                    search: nextParams.toString()
-                });
+        }
+
+        // Обновляем URL
+        const nextParams = new URLSearchParams(searchParams);
+        Object.entries(updated).forEach(([key, value]) => {
+            if (value) {
+                nextParams.set(key, value);
             } else {
-                setSearchParams(nextParams);
+                nextParams.delete(key);
             }
-    
-            // Подготавливаем чистые фильтры без пустых значений для запроса
-            const cleanFilters = {};
-            Object.entries(updated).forEach(([key, value]) => {
-                if (value !== '') {
-                    cleanFilters[key] = value;
-                }
-            });
-            
-            // Выводим для отладки информацию о запросе
-            console.log('Отправка фильтров на поиск:', cleanFilters);
-            
-            // Выполняем запрос с новыми фильтрами
-            fetchListings(cleanFilters);
-            
-            return updated;
         });
-    }, [searchParams, setSearchParams, navigate, fetchListings]);
+
+        if (!window.location.pathname.includes('/marketplace')) {
+            navigate({
+                pathname: '/marketplace',
+                search: nextParams.toString()
+            });
+        } else {
+            setSearchParams(nextParams);
+        }
+
+        // Подготавливаем чистые фильтры без пустых значений для запроса
+        const cleanFilters = {};
+        Object.entries(updated).forEach(([key, value]) => {
+            if (value !== '') {
+                cleanFilters[key] = value;
+            }
+        });
+        
+        // Выводим для отладки информацию о запросе
+        console.log('MarketplacePage: отправка фильтров на поиск:', cleanFilters);
+        
+        // Выполняем запрос с новыми фильтрами
+        fetchListings(cleanFilters);
+        
+        return updated;
+    });
+}, [searchParams, setSearchParams, navigate, fetchListings]);
     
 
 

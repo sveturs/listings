@@ -19,6 +19,8 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
     const { t } = useTranslation('marketplace', 'common');
 
     const handleCategorySelect = useCallback((id) => {
+        console.log(`MarketplaceFilters: Выбрана категория с ID: ${id}`);
+        
         // Вызываем onFilterChange, но с пустым запросом, чтобы показать все товары категории
         onFilterChange({ 
             ...filters, 

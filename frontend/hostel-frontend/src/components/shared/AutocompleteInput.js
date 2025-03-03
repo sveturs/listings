@@ -250,28 +250,46 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             if (onChange) onChange(suggestion.title);
             if (onSearch) onSearch(suggestion.title);
             setShowSuggestions(false);
-
+    
             // Если доступен ID товара, перенаправляем на его страницу
             if (suggestion.id) {
                 window.location.href = `/marketplace/listings/${suggestion.id}`;
             }
         } else if (suggestion.type === 'category') {
-            // Для категории - фильтруем по категории
-
-            // Очищаем текст поиска при выборе категории, чтобы показать все товары категории
+            // Для категории - переходим на страницу категории
             setInputValue("");
             if (onChange) onChange("");
-
-            // Вызываем поиск с указанием только категории
-            // Передаем пустую строку как первый параметр, чтобы очистить поисковый запрос
-            if (onSearch) onSearch("", suggestion.id);
-
+            
+            console.log(`Прямой переход в категорию: ${suggestion.title} (ID: ${suggestion.id})`);
+            
+            // ВАЖНО: Вместо вызова onSearch мы напрямую строим URL с параметром category_id
+            // и выполняем переход по этому URL
+            const url = new URL(window.location.href);
+            
+            // Устанавливаем базовый путь на /marketplace
+            url.pathname = '/marketplace';
+            
+            // Создаем новые параметры URL
+            const params = new URLSearchParams(url.search);
+            
+            // Устанавливаем ID категории
+            params.set('category_id', suggestion.id);
+            
+            // Удаляем поисковый запрос если он есть
+            params.delete('query');
+            
+            // Обновляем параметры в URL
+            url.search = params.toString();
+            
+            // Переходим по новому URL
+            window.location.href = url.toString();
+            
             setShowSuggestions(false);
-
-            // Можно также добавить сообщение для пользователя
-            console.log(`Показаны все товары в категории: ${suggestion.title}`);
         }
     };
+    
+    
+    
 
     // Очистка ввода
     const handleClear = () => {
