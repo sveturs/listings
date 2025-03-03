@@ -120,6 +120,20 @@ const ListingMapping = `
           }
         }
       },
+      "title_suggest": {
+        "type": "completion",
+        "analyzer": "autocomplete"
+      },
+      "title_variations": {
+        "type": "text",
+        "analyzer": "default_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
       "description": {
         "type": "text",
         "analyzer": "default_analyzer",

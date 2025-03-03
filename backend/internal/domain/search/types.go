@@ -22,6 +22,8 @@ type SearchParams struct {
     Size          int               // Размер страницы
     Aggregations  []string          // Запрашиваемые агрегации
     Language      string            // Язык для поиска
+	MinimumShouldMatch string        // Минимальное количество совпадений (70%, 50% и т.д.)
+    Fuzziness          string        // Уровень нечеткости (AUTO, 1, 2, ...)
 }
 
 // GeoLocation координаты для геопоиска

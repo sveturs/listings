@@ -35,25 +35,26 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                 params: { q: text, size: 5 }
             });
 
-            console.log('Полученные подсказки:', suggestResponse.data);
-
+            // Улучшенная обработка результатов
             if (suggestResponse.data && suggestResponse.data.data) {
-                setSuggestions(suggestResponse.data.data);
+                let suggestionData = suggestResponse.data.data;
+                // Проверяем, является ли результат массивом
+                if (!Array.isArray(suggestionData) && typeof suggestionData === 'object') {
+                    // Пытаемся извлечь массив из вложенного объекта
+                    suggestionData = suggestionData.data || [];
+                }
+                // Обеспечиваем уникальность результатов
+                const uniqueSuggestions = [...new Set(suggestionData)];
+                setSuggestions(uniqueSuggestions);
+            } else {
+                setSuggestions([]);
             }
 
-            // Запрос на категории, связанные с поисковым запросом
-            const categoryResponse = await axios.get('/api/v1/marketplace/category-suggestions', {
-                params: { q: text, size: 3 }
-            });
-
-            console.log('Полученные категории:', categoryResponse.data);
-
-            if (categoryResponse.data && categoryResponse.data.data) {
-                setCategorySuggestions(categoryResponse.data.data);
-            }
-
+            // Остальной код без изменений...
         } catch (error) {
             console.error('Ошибка при получении подсказок:', error);
+            setSuggestions([]);
+            setCategorySuggestions([]);
         } finally {
             setLoading(false);
         }
@@ -191,9 +192,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                     {/* Подсказки текста */}
                     {suggestions.length > 0 && (
                         <>
-                            <Typography variant="subtitle2" sx={{ px: 2, py: 1, bgcolor: 'grey.100' }}>
-                                {t('suggestions')}
-                            </Typography>
+
                             <List dense>
                                 {suggestions.map((suggestion, index) => (
                                     <ListItem

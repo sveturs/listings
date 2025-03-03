@@ -91,7 +91,7 @@ const MarketplacePage = () => {
             setLoading(true);
             setError(null);
             setSpellingSuggestion(null); // Сбрасываем предыдущее предложение
-            
+
             const params = {};
             Object.entries(currentFilters).forEach(([key, value]) => {
                 if (value !== '') {
@@ -102,11 +102,11 @@ const MarketplacePage = () => {
                     }
                 }
             });
-            
+
             console.log('Отправляем запрос с параметрами:', params);
             const response = await axios.get('/api/v1/marketplace/search', { params });
             console.log('Получен ответ API:', response.data);
-        
+
             // Улучшенная обработка данных с дополнительными проверками
             if (response.data && response.data.data) {
                 if (Array.isArray(response.data.data)) {
@@ -235,9 +235,9 @@ const MarketplacePage = () => {
             if (categoryId !== null) {
                 newFilters.category_id = categoryId;
             }
-            
+
             const updated = { ...prev, ...newFilters };
-    
+
             const nextParams = new URLSearchParams(searchParams);
             Object.entries(updated).forEach(([key, value]) => {
                 if (value) {
@@ -246,7 +246,7 @@ const MarketplacePage = () => {
                     nextParams.delete(key);
                 }
             });
-    
+
             if (!window.location.pathname.includes('/marketplace')) {
                 navigate({
                     pathname: '/marketplace',
@@ -255,7 +255,7 @@ const MarketplacePage = () => {
             } else {
                 setSearchParams(nextParams);
             }
-    
+
             const cleanFilters = {};
             Object.entries(updated).forEach(([key, value]) => {
                 if (value !== '') {
@@ -266,7 +266,7 @@ const MarketplacePage = () => {
             return updated;
         });
     }, [searchParams, setSearchParams, navigate, fetchListings]);
-    
+
 
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
@@ -285,7 +285,7 @@ const MarketplacePage = () => {
                 </Box>
             );
         }
-    
+
         if (error) {
             return (
                 <Alert severity="error" sx={{ m: 2 }}>
@@ -293,9 +293,9 @@ const MarketplacePage = () => {
                 </Alert>
             );
         }
-    
+
         console.log("Listings before rendering:", listings);
-    
+
         // Проверка, что listings - это массив
         if (!listings || !Array.isArray(listings) || listings.length === 0) {
             return (
@@ -307,12 +307,12 @@ const MarketplacePage = () => {
         if (spellingSuggestion && listings.length === 0) {
             return (
                 <>
-                    <Alert 
-                        severity="info" 
+                    <Alert
+                        severity="info"
                         sx={{ m: 2 }}
                         action={
-                            <Button 
-                                color="inherit" 
+                            <Button
+                                color="inherit"
                                 size="small"
                                 onClick={() => handleFilterChange({ query: spellingSuggestion })}
                             >
