@@ -19,7 +19,6 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
         setInputValue(value || '');
     }, [value]);
 
-
     // Функция для получения подсказок при вводе
     const fetchSuggestions = async (text) => {
         if (!text || text.length < 2) {
@@ -27,115 +26,165 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             setCategorySuggestions([]);
             return;
         }
-    
+
         try {
             setLoading(true);
-            
-            // Запрос на подсказки автодополнения
-            const suggestResponse = await axios.get('/api/v1/marketplace/suggestions', {
-                params: { q: text, size: 5 }
+
+            // 1. Запрос на товары (через обычный поиск)
+            const searchResponse = await axios.get('/api/v1/marketplace/search', {
+                params: { q: text, size: 3 } // Ограничиваем количество товаров
             });
-    
-            console.log('Received suggestions response:', suggestResponse.data);
-    
-            // Отладочный вывод структуры данных
-            console.log('Response data structure:', JSON.stringify(suggestResponse.data, null, 2));
-    
-            let suggestionsList = [];
-    
-            // Проверяем структуру ответа и извлекаем подсказки
-            if (suggestResponse.data) {
-                // Попытка 1: Извлечение из data.suggestions (предполагаемая структура API)
-                if (suggestResponse.data.data && Array.isArray(suggestResponse.data.data.suggestions)) {
-                    suggestionsList = suggestResponse.data.data.suggestions;
-                } 
-                // Попытка 2: Извлечение напрямую из data, если это массив
-                else if (suggestResponse.data.data && Array.isArray(suggestResponse.data.data)) {
-                    suggestionsList = suggestResponse.data.data;
+
+            console.log('Using search API for product suggestions, query:', text);
+
+            let productSuggestions = [];
+
+            // Извлекаем товары из результатов поиска
+            if (searchResponse.data && searchResponse.data.data) {
+                let listings = [];
+
+                if (Array.isArray(searchResponse.data.data)) {
+                    listings = searchResponse.data.data;
+                } else if (searchResponse.data.data.data && Array.isArray(searchResponse.data.data.data)) {
+                    listings = searchResponse.data.data.data;
                 }
-                // Попытка 3: Если data.data содержит объект с hits/options
-                else if (suggestResponse.data.data && typeof suggestResponse.data.data === 'object') {
-                    // Поиск в различных стандартных местах ответа OpenSearch
-                    if (suggestResponse.data.data.hits && 
-                        suggestResponse.data.data.hits.hits && 
-                        Array.isArray(suggestResponse.data.data.hits.hits)) {
-                        // Получение из hits.hits._source.title (обычный поисковый результат)
-                        suggestionsList = suggestResponse.data.data.hits.hits
-                            .filter(hit => hit._source && hit._source.title)
-                            .map(hit => hit._source.title);
-                    } 
-                    // Поиск в структуре suggest API
-                    else if (suggestResponse.data.data.suggest) {
-                        // Обработка различных полей suggest API
-                        Object.keys(suggestResponse.data.data.suggest).forEach(key => {
-                            const suggestField = suggestResponse.data.data.suggest[key];
-                            if (Array.isArray(suggestField) && suggestField.length > 0) {
-                                // Извлекаем options из каждого элемента suggest
-                                suggestField.forEach(item => {
-                                    if (item.options && Array.isArray(item.options)) {
-                                        const texts = item.options
-                                            .filter(opt => opt.text)
-                                            .map(opt => opt.text);
-                                        suggestionsList = [...suggestionsList, ...texts];
-                                    }
-                                });
-                            }
+
+                // Фильтруем товары по релевантности
+                const lowerQuery = text.toLowerCase();
+                productSuggestions = listings
+                    .filter(listing => listing && listing.title &&
+                        listing.title.toLowerCase().includes(lowerQuery))
+                    .map(listing => ({
+                        id: listing.id,
+                        type: 'product',
+                        title: listing.title,
+                        category_id: listing.category_id,
+                        category_path_ids: listing.category_path_ids || []
+                    }));
+            }
+
+            // 2. Запрос на категории 
+            // Получаем все категории (или используем уже загруженные)
+            let allCategories = [];
+            try {
+                const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
+                if (categoriesResponse.data?.data) {
+                    allCategories = categoriesResponse.data.data;
+                }
+            } catch (err) {
+                console.error('Ошибка при получении категорий:', err);
+            }
+
+            // Функция для плоского представления категорий (включая все подкатегории)
+            const flattenCategories = (categories, parentPath = []) => {
+                let result = [];
+
+                for (const category of categories) {
+                    const currentPath = [...parentPath, category];
+                    result.push({
+                        id: category.id,
+                        name: category.name,
+                        type: 'category',
+                        depth: parentPath.length,
+                        path: currentPath,
+                        parent_id: category.parent_id
+                    });
+
+                    if (category.children && Array.isArray(category.children) && category.children.length > 0) {
+                        result = [...result, ...flattenCategories(category.children, currentPath)];
+                    }
+                }
+
+                return result;
+            };
+
+            // Получаем плоский список всех категорий
+            const flatCategories = flattenCategories(allCategories);
+
+            // Ищем категории, соответствующие запросу
+            const lowerQuery = text.toLowerCase();
+            const matchingCategories = flatCategories
+                .filter(cat => cat.name.toLowerCase().includes(lowerQuery))
+                .sort((a, b) => {
+                    // Сначала сортируем по точности совпадения
+                    const aStartsWith = a.name.toLowerCase().startsWith(lowerQuery) ? 0 : 1;
+                    const bStartsWith = b.name.toLowerCase().startsWith(lowerQuery) ? 0 : 1;
+                    if (aStartsWith !== bStartsWith) return aStartsWith - bStartsWith;
+
+                    // Затем по глубине (более специфичные категории сначала)
+                    return b.depth - a.depth;
+                })
+                .slice(0, 3); // Ограничиваем количество категорий
+
+            // 3. Формируем массив подсказок в нужном порядке
+
+            // Сначала добавляем конкретные товары
+            let finalSuggestions = productSuggestions.map(product => ({
+                ...product,
+                display: product.title,
+                priority: 1
+            }));
+
+            // Затем добавляем категории товаров из результатов поиска
+            const productCategoryIds = new Set();
+
+            for (const product of productSuggestions) {
+                if (product.category_id) {
+                    productCategoryIds.add(product.category_id);
+
+                    // Находим категорию товара
+                    const category = flatCategories.find(cat => cat.id === product.category_id);
+                    if (category && !finalSuggestions.some(s => s.type === 'category' && s.id === category.id)) {
+                        finalSuggestions.push({
+                            id: category.id,
+                            type: 'category',
+                            title: category.name,
+                            display: `Категория: ${category.name}`,
+                            priority: 2,
+                            path: category.path
                         });
                     }
-                }
-                
-                // Последняя попытка: прямой поиск в корне ответа
-                else if (typeof suggestResponse.data === 'object') {
-                    // Поиск полей, которые могут содержать массивы строк
-                    Object.keys(suggestResponse.data).forEach(key => {
-                        const value = suggestResponse.data[key];
-                        if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
-                            suggestionsList = [...suggestionsList, ...value];
-                        }
-                    });
-                }
-            }
-    
-            // Обеспечиваем уникальность и удаляем пустые значения
-            const uniqueSuggestions = [...new Set(suggestionsList.filter(item => item && typeof item === 'string'))]
-                .map(text => text.trim());
-                
-            setSuggestions(uniqueSuggestions);
-            console.log('Processed suggestions:', uniqueSuggestions);
-            
-            // Если мы всё ещё не нашли подсказок, но поисковый запрос возвращает результаты,
-            // используем заголовки объявлений как подсказки
-            if (uniqueSuggestions.length === 0) {
-                try {
-                    const searchResponse = await axios.get('/api/v1/marketplace/search', {
-                        params: { q: text, size: 3 }
-                    });
-                    
-                    console.log('Fallback to search API for suggestions');
-                    
-                    if (searchResponse.data && searchResponse.data.data) {
-                        let listings = [];
-                        
-                        if (Array.isArray(searchResponse.data.data)) {
-                            listings = searchResponse.data.data;
-                        } else if (searchResponse.data.data.data && Array.isArray(searchResponse.data.data.data)) {
-                            listings = searchResponse.data.data.data;
-                        }
-                        
-                        if (listings.length > 0) {
-                            const titles = listings
-                                .filter(listing => listing.title && listing.title.toLowerCase().includes(text.toLowerCase()))
-                                .map(listing => listing.title);
-                                
-                            setSuggestions([...new Set(titles)]);
-                            console.log('Fallback suggestions from search results:', titles);
+
+                    // Если есть родительская категория, добавляем её
+                    if (category && category.parent_id) {
+                        const parentCategory = flatCategories.find(cat => cat.id === category.parent_id);
+                        if (parentCategory && !finalSuggestions.some(s => s.type === 'category' && s.id === parentCategory.id)) {
+                            finalSuggestions.push({
+                                id: parentCategory.id,
+                                type: 'category',
+                                title: parentCategory.name,
+                                display: `Раздел: ${parentCategory.name}`,
+                                priority: 3,
+                                path: parentCategory.path
+                            });
                         }
                     }
-                } catch (error) {
-                    console.error('Ошибка запроса к fallback API:', error);
                 }
             }
-            
+
+            // Добавляем категории из прямого поиска по категориям
+            for (const category of matchingCategories) {
+                if (!finalSuggestions.some(s => s.type === 'category' && s.id === category.id)) {
+                    finalSuggestions.push({
+                        id: category.id,
+                        type: 'category',
+                        title: category.name,
+                        display: `Категория: ${category.name}`,
+                        priority: category.depth === 0 ? 4 : 3,
+                        path: category.path
+                    });
+                }
+            }
+
+            // Сортируем по приоритету
+            finalSuggestions.sort((a, b) => a.priority - b.priority);
+
+            // Ограничиваем общее количество подсказок
+            finalSuggestions = finalSuggestions.slice(0, 8);
+
+            setSuggestions(finalSuggestions);
+            console.log('Generated enhanced suggestions:', finalSuggestions);
+
         } catch (error) {
             console.error('Ошибка при получении подсказок:', error);
             setSuggestions([]);
@@ -144,8 +193,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             setLoading(false);
         }
     };
-    
-    
+
     // Обработка изменения ввода с дебаунсом
     const handleInputChange = (e) => {
         const newValue = e.target.value;
@@ -190,11 +238,35 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
 
     // Обработчик клика по подсказке
     const handleSuggestionClick = (suggestion) => {
-        setInputValue(suggestion);
-        if (onChange) onChange(suggestion);
-        if (onSearch) onSearch(suggestion);
-        setShowSuggestions(false);
+        if (suggestion.type === 'product') {
+            // Для товара - переходим на страницу товара
+            setInputValue(suggestion.title);
+            if (onChange) onChange(suggestion.title);
+            if (onSearch) onSearch(suggestion.title);
+            setShowSuggestions(false);
+    
+            // Если доступен ID товара, перенаправляем на его страницу
+            if (suggestion.id) {
+                window.location.href = `/marketplace/listings/${suggestion.id}`;
+            }
+        } else if (suggestion.type === 'category') {
+            // Для категории - фильтруем по категории
+            
+            // Очищаем текст поиска при выборе категории, чтобы показать все товары категории
+            setInputValue("");
+            if (onChange) onChange("");
+            
+            // Вызываем поиск с указанием только категории
+            // Передаем пустую строку как первый параметр, чтобы очистить поисковый запрос
+            if (onSearch) onSearch("", suggestion.id);
+            
+            setShowSuggestions(false);
+            
+            // Можно также добавить сообщение для пользователя
+            console.log(`Показаны все товары в категории: ${suggestion.title}`);
+        }
     };
+    
 
     // Обработчик клика по категории
     const handleCategoryClick = (category) => {
@@ -263,7 +335,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             </form>
 
             {/* Выпадающие подсказки */}
-            {showSuggestions && (suggestions.length > 0 || categorySuggestions.length > 0) && (
+            {showSuggestions && suggestions.length > 0 && (
                 <Paper
                     elevation={3}
                     sx={{
@@ -275,49 +347,113 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                         overflow: 'auto'
                     }}
                 >
-                    {/* Подсказки текста */}
-                    {suggestions.length > 0 && (
-                        <>
-
-                            <List dense>
-                                {suggestions.map((suggestion, index) => (
-                                    <ListItem
-                                        key={`suggestion-${index}`}
-                                        button
-                                        onClick={() => handleSuggestionClick(suggestion)}
-                                    >
-                                        <ListItemText primary={suggestion} />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </>
-                    )}
-
-                    {/* Подсказки категорий */}
-                    {categorySuggestions.length > 0 && (
-                        <>
-                            <Typography variant="subtitle2" sx={{ px: 2, py: 1, bgcolor: 'grey.100' }}>
-                                {t('categories')}
-                            </Typography>
-                            <List dense>
-                                {categorySuggestions.map((category) => (
-                                    <ListItem
-                                        key={`category-${category.id}`}
-                                        button
-                                        onClick={() => handleCategoryClick(category)}
-                                    >
-                                        <ListItemText
-                                            primary={category.name}
-                                            secondary={`${category.listing_count} ${t('listings')}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </>
-                    )}
+                    <List dense>
+                        {suggestions.map((suggestion, index) => (
+                            <ListItem
+                                key={`suggestion-${index}`}
+                                button
+                                onClick={() => handleSuggestionClick(suggestion)}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    borderLeft: suggestion.type === 'product'
+                                        ? '3px solid #4682B4' // Синий для товаров
+                                        : suggestion.priority === 2
+                                            ? '3px solid #6B8E23' // Оливковый для непосредственных категорий
+                                            : suggestion.priority === 3
+                                                ? '3px solid #CD853F' // Коричневый для родительских категорий
+                                                : '3px solid #708090', // Серый для остальных категорий
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                    }
+                                }}
+                            >
+                                {/* Иконка вместо ListItemIcon */}
+                                <Box sx={{ 
+                                    minWidth: 32, 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center' 
+                                }}>
+                                    {suggestion.type === 'product' ? (
+                                        <Box sx={{
+                                            width: 24,
+                                            height: 24,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#4682B4'
+                                        }}>
+                                            <span className="material-icons" style={{ fontSize: 20 }}>
+                                                shopping_cart
+                                            </span>
+                                        </Box>
+                                    ) : (
+                                        <Box sx={{
+                                            width: 24,
+                                            height: 24,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: suggestion.priority === 2
+                                                ? '#6B8E23'
+                                                : suggestion.priority === 3
+                                                    ? '#CD853F'
+                                                    : '#708090'
+                                        }}>
+                                            <span className="material-icons" style={{ fontSize: 20 }}>
+                                                folder
+                                            </span>
+                                        </Box>
+                                    )}
+                                </Box>
+                                
+                                <ListItemText
+                                    primary={
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                fontWeight: suggestion.type === 'product' ? 500 : 400,
+                                                color: suggestion.type === 'product' ? 'text.primary' : 'text.secondary',
+                                            }}
+                                        >
+                                            {suggestion.display || suggestion.title}
+                                        </Typography>
+                                    }
+                                    secondary={
+                                        suggestion.type === 'category' && suggestion.path && suggestion.path.length > 1 ? (
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    color: 'text.secondary',
+                                                    fontSize: '0.7rem',
+                                                    display: 'block',
+                                                    maxWidth: '100%',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap'
+                                                }}
+                                            >
+                                                {suggestion.path.slice(0, -1).map(cat => cat.name).join(' > ')}
+                                            </Typography>
+                                        ) : null
+                                    }
+                                />
+                                
+                                {suggestion.type === 'product' ? (
+                                    <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', ml: 1 }}>
+                                        товар
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', ml: 1 }}>
+                                        категория
+                                    </Box>
+                                )}
+                            </ListItem>
+                        ))}
+                    </List>
                 </Paper>
             )}
-
         </Box>
     );
 };

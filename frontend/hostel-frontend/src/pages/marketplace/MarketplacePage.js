@@ -231,13 +231,20 @@ const MarketplacePage = () => {
 
     const handleFilterChange = useCallback((newFilters, categoryId = null) => {
         setFilters(prev => {
+            // Создаем копию текущих фильтров
+            const updated = { ...prev, ...newFilters };
+            
             // Если передана категория, добавляем её в фильтры
             if (categoryId !== null) {
-                newFilters.category_id = categoryId;
+                updated.category_id = categoryId;
+                
+                // Если выбирается категория через автодополнение, очищаем текстовый запрос
+                if (updated.query && updated.category_id) {
+                    updated.query = '';
+                }
             }
-
-            const updated = { ...prev, ...newFilters };
-
+    
+            // Обновляем URL
             const nextParams = new URLSearchParams(searchParams);
             Object.entries(updated).forEach(([key, value]) => {
                 if (value) {
@@ -246,7 +253,7 @@ const MarketplacePage = () => {
                     nextParams.delete(key);
                 }
             });
-
+    
             if (!window.location.pathname.includes('/marketplace')) {
                 navigate({
                     pathname: '/marketplace',
@@ -255,17 +262,25 @@ const MarketplacePage = () => {
             } else {
                 setSearchParams(nextParams);
             }
-
+    
+            // Подготавливаем чистые фильтры без пустых значений для запроса
             const cleanFilters = {};
             Object.entries(updated).forEach(([key, value]) => {
                 if (value !== '') {
                     cleanFilters[key] = value;
                 }
             });
+            
+            // Выводим для отладки информацию о запросе
+            console.log('Отправка фильтров на поиск:', cleanFilters);
+            
+            // Выполняем запрос с новыми фильтрами
             fetchListings(cleanFilters);
+            
             return updated;
         });
     }, [searchParams, setSearchParams, navigate, fetchListings]);
+    
 
 
     const getActiveFiltersCount = () => {

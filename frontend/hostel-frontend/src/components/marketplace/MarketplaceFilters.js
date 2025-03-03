@@ -19,8 +19,14 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
     const { t } = useTranslation('marketplace', 'common');
 
     const handleCategorySelect = useCallback((id) => {
-        onFilterChange({ ...filters, category_id: id });
+        // Вызываем onFilterChange, но с пустым запросом, чтобы показать все товары категории
+        onFilterChange({ 
+            ...filters, 
+            category_id: id,
+            query: '' // Очищаем поисковый запрос при выборе категории
+        });
     }, [filters, onFilterChange]);
+    
 
     // Проверяем правильность передачи поискового запроса
     const handleSearchChange = useCallback((value) => {

@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"math"
+	"sort" 
 	"strconv"
 	"strings"
 	"sync"
@@ -193,6 +194,213 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 		"images":  uploadedImages,
 	})
 }
+
+func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
+    prefix := c.Query("q", "")
+    size := c.QueryInt("size", 8)
+    
+    log.Printf("Запрос расширенных подсказок, запрос: '%s', размер: %d", prefix, size)
+    
+    if prefix == "" {
+        return utils.SuccessResponse(c, fiber.Map{
+            "data": []interface{}{},
+        })
+    }
+    
+    // Структура для объединенных результатов
+    type SuggestionItem struct {
+        Type        string      `json:"type"`
+        ID          interface{} `json:"id"`
+        Title       string      `json:"title"`
+        Display     string      `json:"display,omitempty"`
+        Priority    int         `json:"priority"`
+        CategoryID  int         `json:"category_id,omitempty"`
+        Path        interface{} `json:"path,omitempty"`
+    }
+    
+    var suggestions []SuggestionItem
+    
+    // 1. Получаем подсказки товаров
+    // Сначала пытаемся через OpenSearch или стандартный поиск
+    productTitles, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, 3)
+    if err != nil || len(productTitles) == 0 {
+        // Если OpenSearch не дал результатов, используем прямой поиск в базе данных
+        filters := map[string]string{
+            "query": prefix,
+        }
+        
+        products, _, err := h.marketplaceService.GetListings(c.Context(), filters, 3, 0)
+        if err == nil && len(products) > 0 {
+            for _, product := range products {
+                if strings.Contains(strings.ToLower(product.Title), strings.ToLower(prefix)) {
+                    suggestions = append(suggestions, SuggestionItem{
+                        Type:       "product",
+                        ID:         product.ID,
+                        Title:      product.Title,
+                        Display:    product.Title,
+                        Priority:   1,
+                        CategoryID: product.CategoryID,
+                    })
+                }
+            }
+        }
+    } else {
+        // Используем результаты из OpenSearch
+        // Но нужно получить ID и категории этих товаров из базы данных
+        filters := map[string]string{
+            "title_exact": strings.Join(productTitles, "|"), // Специальный параметр для точного поиска по заголовкам
+        }
+        
+        products, _, err := h.marketplaceService.GetListings(c.Context(), filters, len(productTitles), 0)
+        if err == nil {
+            // Создаем мапу найденных товаров для быстрого поиска
+            productsMap := make(map[string]*models.MarketplaceListing)
+            for i := range products {
+                productsMap[products[i].Title] = &products[i]
+            }
+            
+            // Добавляем товары в том же порядке, что и в подсказках
+            for _, title := range productTitles {
+                if product, ok := productsMap[title]; ok {
+                    suggestions = append(suggestions, SuggestionItem{
+                        Type:       "product",
+                        ID:         product.ID,
+                        Title:      product.Title,
+                        Display:    product.Title,
+                        Priority:   1,
+                        CategoryID: product.CategoryID,
+                    })
+                } else {
+                    // Если товар не найден в базе, добавляем только заголовок
+                    suggestions = append(suggestions, SuggestionItem{
+                        Type:     "product",
+                        Title:    title,
+                        Display:  title,
+                        Priority: 1,
+                    })
+                }
+            }
+        } else {
+            // Если поиск в базе не удался, используем только заголовки
+            for _, title := range productTitles {
+                suggestions = append(suggestions, SuggestionItem{
+                    Type:     "product",
+                    Title:    title,
+                    Display:  title,
+                    Priority: 1,
+                })
+            }
+        }
+    }
+    
+    // 2. Получаем подсказки категорий
+    categorySuggestions, err := h.marketplaceService.GetCategorySuggestions(c.Context(), prefix, 3)
+    if err == nil && len(categorySuggestions) > 0 {
+        for _, category := range categorySuggestions {
+            suggestions = append(suggestions, SuggestionItem{
+                Type:     "category",
+                ID:       category.ID,
+                Title:    category.Name,
+                Display:  fmt.Sprintf("Категория: %s (%d)", category.Name, category.ListingCount),
+                Priority: 2,
+            })
+        }
+    }
+    
+    // 3. Дополнительно извлекаем категории для найденных товаров
+    productCategoryIDs := make(map[int]bool)
+    
+    for _, suggestion := range suggestions {
+        if suggestion.Type == "product" && suggestion.CategoryID > 0 {
+            productCategoryIDs[suggestion.CategoryID] = true
+        }
+    }
+    
+    if len(productCategoryIDs) > 0 {
+        // Получаем дерево категорий
+        categoryTree, err := h.marketplaceService.GetCategoryTree(c.Context())
+        if err == nil {
+            // Функция для рекурсивного поиска категории
+            var findCategory func(categories []models.CategoryTreeNode, id int, path []map[string]interface{}) (models.CategoryTreeNode, []map[string]interface{}, bool)
+            findCategory = func(categories []models.CategoryTreeNode, id int, path []map[string]interface{}) (models.CategoryTreeNode, []map[string]interface{}, bool) {
+                for _, category := range categories {
+                    currentPath := append(path, map[string]interface{}{
+                        "id":   category.ID,
+                        "name": category.Name,
+                        "slug": category.Slug,
+                    })
+                    
+                    if category.ID == id {
+                        return category, currentPath, true
+                    }
+                    
+                    if len(category.Children) > 0 {
+                        if foundCategory, foundPath, found := findCategory(category.Children, id, currentPath); found {
+                            return foundCategory, foundPath, true
+                        }
+                    }
+                }
+                
+                return models.CategoryTreeNode{}, nil, false
+            }
+            
+            // Добавляем категории из найденных товаров
+            addedCategories := make(map[int]bool)
+            
+            for catID := range productCategoryIDs {
+                if _, exists := addedCategories[catID]; exists {
+                    continue
+                }
+                
+                category, path, found := findCategory(categoryTree, catID, []map[string]interface{}{})
+                if found {
+                    suggestions = append(suggestions, SuggestionItem{
+                        Type:     "category",
+                        ID:       category.ID,
+                        Title:    category.Name,
+                        Display:  "Категория: " + category.Name,
+                        Priority: 2,
+                        Path:     path,
+                    })
+                    addedCategories[catID] = true
+                    
+                    // Добавляем родительскую категорию, если она есть
+                    if category.ParentID != nil && *category.ParentID > 0 {
+                        parentCategory, parentPath, found := findCategory(categoryTree, *category.ParentID, []map[string]interface{}{})
+                        if found && !addedCategories[*category.ParentID] {
+                            suggestions = append(suggestions, SuggestionItem{
+                                Type:     "category",
+                                ID:       parentCategory.ID,
+                                Title:    parentCategory.Name,
+                                Display:  "Раздел: " + parentCategory.Name,
+                                Priority: 3,
+                                Path:     parentPath,
+                            })
+                            addedCategories[*category.ParentID] = true
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // 4. Сортируем результаты по приоритету
+    sort.Slice(suggestions, func(i, j int) bool {
+        return suggestions[i].Priority < suggestions[j].Priority
+    })
+    
+    // 5. Ограничиваем количество результатов
+    if len(suggestions) > size {
+        suggestions = suggestions[:size]
+    }
+    
+    log.Printf("Найдено %d расширенных подсказок для запроса '%s'", len(suggestions), prefix)
+    
+    return utils.SuccessResponse(c, fiber.Map{
+        "data": suggestions,
+    })
+}
+
 func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
 	filters := map[string]string{
 		"category_id":   c.Query("category_id"),
