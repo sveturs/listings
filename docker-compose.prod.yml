@@ -34,8 +34,6 @@ services:
         hard: -1
     volumes:
       - opensearch-data:/usr/share/opensearch/data
-    ports:
-      - "9200:9200"
     networks:
       - hostel_network
     restart: unless-stopped

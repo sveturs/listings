@@ -8,7 +8,6 @@ import (
     "log"
     "os"
     "time"
-	"fmt"
 
     "github.com/joho/godotenv"
 )
@@ -27,26 +26,21 @@ func main() {
     
     // Проверяем и устанавливаем URL для OpenSearch
     if cfg.OpenSearch.URL == "" {
-        cfg.OpenSearch.URL = "http://localhost:9200" // или http://opensearch:9200 в Docker
-        log.Printf("Using default OpenSearch URL: %s", cfg.OpenSearch.URL)
+        cfg.OpenSearch.URL = os.Getenv("OPENSEARCH_URL") // Читаем из переменной окружения
+        if cfg.OpenSearch.URL == "" {
+            cfg.OpenSearch.URL = "http://opensearch:9200" // или используем значение по умолчанию
+        }
+        log.Printf("Using OpenSearch URL: %s", cfg.OpenSearch.URL)
     }
     
     if cfg.OpenSearch.MarketplaceIndex == "" {
-        cfg.OpenSearch.MarketplaceIndex = "marketplace"
-        log.Printf("Using default OpenSearch index: %s", cfg.OpenSearch.MarketplaceIndex)
+        cfg.OpenSearch.MarketplaceIndex = os.Getenv("OPENSEARCH_MARKETPLACE_INDEX")
+        if cfg.OpenSearch.MarketplaceIndex == "" {
+            cfg.OpenSearch.MarketplaceIndex = "marketplace"
+        }
+        log.Printf("Using OpenSearch index: %s", cfg.OpenSearch.MarketplaceIndex)
     }
     
-    // Проверка DATABASE_URL - важно для работы вне Docker
-    if cfg.DatabaseURL == "" {
-        host := os.Getenv("DB_HOST")
-        if host == "" {
-            host = "localhost" // Установка локального хоста по умолчанию
-        }
-        
-        cfg.DatabaseURL = fmt.Sprintf("postgres://postgres:password@%s:5432/hostel_db?sslmode=disable", host)
-        log.Printf("Using default database URL: %s", cfg.DatabaseURL)
-    }
-
     // Инициализируем клиент OpenSearch
     osClient, err := opensearch.NewOpenSearchClient(opensearch.Config{
         URL:      cfg.OpenSearch.URL,
@@ -57,10 +51,16 @@ func main() {
         log.Fatalf("Failed to create OpenSearch client: %v", err)
     }
 
-    // Инициализируем базу данных
-    db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex)
+    // Используем ваш DatabaseURL из конфигурации или переменной окружения
+    dbUrl := cfg.DatabaseURL
+    if dbUrl == "" {
+        dbUrl = os.Getenv("DATABASE_URL")
+    }
+
+    // Инициализируем базу данных с OpenSearch
+    db, err := postgres.NewDatabase(dbUrl, osClient, cfg.OpenSearch.MarketplaceIndex)
     if err != nil {
-        log.Fatalf("Failed to create database: %v", err)
+        log.Fatalf("Failed to initialize database: %v", err)
     }
     defer db.Close()
 
