@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TextField, InputAdornment, IconButton, Box, Paper, List, ListItem, ListItemText, Typography, CircularProgress } from '@mui/material';
-import { Search, X } from 'lucide-react';
+import { TextField, InputAdornment, IconButton, Box, Paper, List, ListItem, ListItemText, Typography, CircularProgress, ListItemIcon } from '@mui/material';
+import { Search, X, ShoppingCart, Folder } from 'lucide-react';
 import axios from '../../api/axios';
 import { useTranslation } from 'react-i18next';
 
@@ -18,6 +18,20 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
     useEffect(() => {
         setInputValue(value || '');
     }, [value]);
+
+    // Функция для форматирования отображаемого текста категории
+    const formatCategoryDisplay = (category, priority) => {
+        if (!category || !category.name) return "";
+        
+        // В зависимости от приоритета используем разные префиксы
+        if (priority === 2) {
+            return `В категории: ${category.name}`; // Для непосредственных категорий
+        } else if (priority === 3) {
+            return `Раздел: ${category.name}`; // Для родительских категорий
+        } else {
+            return `Категория: ${category.name}`; // Для других категорий
+        }
+    };
 
     // Функция для получения подсказок при вводе
     const fetchSuggestions = async (text) => {
@@ -139,7 +153,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                             id: category.id,
                             type: 'category',
                             title: category.name,
-                            display: `Категория: ${category.name}`,
+                            display: formatCategoryDisplay(category, 2),
                             priority: 2,
                             path: category.path
                         });
@@ -153,7 +167,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                                 id: parentCategory.id,
                                 type: 'category',
                                 title: parentCategory.name,
-                                display: `Раздел: ${parentCategory.name}`,
+                                display: formatCategoryDisplay(parentCategory, 3),
                                 priority: 3,
                                 path: parentCategory.path
                             });
@@ -169,7 +183,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                         id: category.id,
                         type: 'category',
                         title: category.name,
-                        display: `Категория: ${category.name}`,
+                        display: formatCategoryDisplay(category, category.depth === 0 ? 4 : 3),
                         priority: category.depth === 0 ? 4 : 3,
                         path: category.path
                     });
@@ -244,39 +258,27 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             if (onChange) onChange(suggestion.title);
             if (onSearch) onSearch(suggestion.title);
             setShowSuggestions(false);
-    
+
             // Если доступен ID товара, перенаправляем на его страницу
             if (suggestion.id) {
                 window.location.href = `/marketplace/listings/${suggestion.id}`;
             }
         } else if (suggestion.type === 'category') {
             // Для категории - фильтруем по категории
-            
+
             // Очищаем текст поиска при выборе категории, чтобы показать все товары категории
             setInputValue("");
             if (onChange) onChange("");
-            
+
             // Вызываем поиск с указанием только категории
             // Передаем пустую строку как первый параметр, чтобы очистить поисковый запрос
             if (onSearch) onSearch("", suggestion.id);
-            
+
             setShowSuggestions(false);
-            
+
             // Можно также добавить сообщение для пользователя
             console.log(`Показаны все товары в категории: ${suggestion.title}`);
         }
-    };
-    
-
-    // Обработчик клика по категории
-    const handleCategoryClick = (category) => {
-        // Тут нужно реализовать логику фильтрации по категории
-        // Например, передать событие наверх с указанием категории
-        if (onSearch) {
-            // Предположим, что у нас есть обработчик, который принимает текст и категорию
-            onSearch(inputValue, category.id);
-        }
-        setShowSuggestions(false);
     };
 
     // Очистка ввода
@@ -336,124 +338,102 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
 
             {/* Выпадающие подсказки */}
             {showSuggestions && suggestions.length > 0 && (
-                <Paper
-                    elevation={3}
-                    sx={{
-                        position: 'absolute',
-                        width: '100%',
-                        zIndex: 1300,
-                        mt: 0.5,
-                        maxHeight: 350,
-                        overflow: 'auto'
-                    }}
-                >
-                    <List dense>
-                        {suggestions.map((suggestion, index) => (
-                            <ListItem
-                                key={`suggestion-${index}`}
-                                button
-                                onClick={() => handleSuggestionClick(suggestion)}
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    borderLeft: suggestion.type === 'product'
-                                        ? '3px solid #4682B4' // Синий для товаров
-                                        : suggestion.priority === 2
-                                            ? '3px solid #6B8E23' // Оливковый для непосредственных категорий
-                                            : suggestion.priority === 3
-                                                ? '3px solid #CD853F' // Коричневый для родительских категорий
-                                                : '3px solid #708090', // Серый для остальных категорий
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                    }
-                                }}
-                            >
-                                {/* Иконка вместо ListItemIcon */}
-                                <Box sx={{ 
-                                    minWidth: 32, 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center' 
-                                }}>
-                                    {suggestion.type === 'product' ? (
-                                        <Box sx={{
-                                            width: 24,
-                                            height: 24,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: '#4682B4'
-                                        }}>
-                                            <span className="material-icons" style={{ fontSize: 20 }}>
-                                                shopping_cart
-                                            </span>
-                                        </Box>
-                                    ) : (
-                                        <Box sx={{
-                                            width: 24,
-                                            height: 24,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: suggestion.priority === 2
-                                                ? '#6B8E23'
-                                                : suggestion.priority === 3
-                                                    ? '#CD853F'
-                                                    : '#708090'
-                                        }}>
-                                            <span className="material-icons" style={{ fontSize: 20 }}>
-                                                folder
-                                            </span>
-                                        </Box>
-                                    )}
-                                </Box>
-                                
-                                <ListItemText
-                                    primary={
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                fontWeight: suggestion.type === 'product' ? 500 : 400,
-                                                color: suggestion.type === 'product' ? 'text.primary' : 'text.secondary',
-                                            }}
-                                        >
-                                            {suggestion.display || suggestion.title}
-                                        </Typography>
-                                    }
-                                    secondary={
-                                        suggestion.type === 'category' && suggestion.path && suggestion.path.length > 1 ? (
-                                            <Typography
-                                                variant="caption"
-                                                sx={{
-                                                    color: 'text.secondary',
-                                                    fontSize: '0.7rem',
-                                                    display: 'block',
-                                                    maxWidth: '100%',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                    whiteSpace: 'nowrap'
-                                                }}
-                                            >
-                                                {suggestion.path.slice(0, -1).map(cat => cat.name).join(' > ')}
-                                            </Typography>
-                                        ) : null
-                                    }
-                                />
-                                
-                                {suggestion.type === 'product' ? (
-                                    <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', ml: 1 }}>
-                                        товар
-                                    </Box>
-                                ) : (
-                                    <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', ml: 1 }}>
-                                        категория
-                                    </Box>
-                                )}
-                            </ListItem>
-                        ))}
-                    </List>
-                </Paper>
-            )}
+    <Paper
+        elevation={4}
+        sx={{
+            position: 'absolute',
+            width: '100%',
+            zIndex: 1300,
+            mt: 0.5,
+            maxHeight: 400,
+            overflow: 'auto',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+        }}
+    >
+        <List dense sx={{ p: 0 }}>
+            {suggestions.map((suggestion, index) => {
+                // Определяем тип и приоритет для стилизации
+                const isProduct = suggestion.type === 'product';
+                const priority = suggestion.priority || 1;
+
+                // Выбираем цвет полосы слева
+                let borderColor = '#4682B4'; // Синий для товаров
+                if (!isProduct) {
+                    borderColor = '#6BAB33'; // Зеленый для категорий
+                }
+
+                return (
+                    <ListItem
+                        key={`suggestion-${index}`}
+                        button
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        sx={{
+                            padding: '10px 16px',
+                            borderBottom: index < suggestions.length - 1 ? '1px solid #f0f0f0' : 'none',
+                            position: 'relative',
+                            '&::before': {
+                                content: '""',
+                                position: 'absolute',
+                                left: 0,
+                                top: '20%',
+                                height: '60%',
+                                width: '4px',
+                                backgroundColor: borderColor,
+                                borderRadius: '0 4px 4px 0'
+                            },
+                            '&:hover': {
+                                backgroundColor: 'rgba(0, 0, 0, 0.03)'
+                            },
+                            transition: 'background-color 0.2s ease'
+                        }}
+                    >
+                        <ListItemText
+                            primary={
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        fontWeight: isProduct ? 500 : 400,
+                                        color: 'text.primary',
+                                        fontSize: '0.95rem',
+                                        lineHeight: '1.25',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    {/* Показываем только название без префикса "Категория/Раздел" */}
+                                    {isProduct 
+                                        ? suggestion.title 
+                                        : suggestion.title}
+                                </Typography>
+                            }
+                            secondary={
+                                suggestion.type === 'category' && suggestion.path && suggestion.path.length > 1 ? (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color: 'text.secondary',
+                                            fontSize: '0.8rem',
+                                            display: 'block',
+                                            maxWidth: '100%',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        {suggestion.path.slice(0, -1).map(cat => cat.name).join(' > ')}
+                                    </Typography>
+                                ) : null
+                            }
+                        />
+                    </ListItem>
+                );
+            })}
+        </List>
+    </Paper>
+)}
+
         </Box>
     );
 };
