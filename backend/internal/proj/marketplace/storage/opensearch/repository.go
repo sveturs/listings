@@ -169,47 +169,50 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 
 // SuggestListings предлагает автодополнение для поиска
 func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-	if prefix == "" {
-		return []string{}, nil
-	}
-	// Создаем запрос для поиска с префиксом
-	query := map[string]interface{}{
-		"size": size,
-		"query": map[string]interface{}{
-			"match_phrase_prefix": map[string]interface{}{
-				"title": prefix,
-			},
-		},
-		"_source": []string{"title"}, // Получаем только заголовок
-	}
-	// Выполняем поиск
-	responseBytes, err := r.client.Search(r.indexName, query)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
-	}
+    if prefix == "" {
+        return []string{}, nil
+    }
 
-	// Парсим JSON ответ
-	var searchResponse map[string]interface{}
-	if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
-		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
-	}
+    // Создаем запрос для поиска с префиксом
+    query := map[string]interface{}{
+        "size": size,
+        "query": map[string]interface{}{
+            "match_phrase_prefix": map[string]interface{}{
+                "title": prefix,
+            },
+        },
+        "_source": []string{"title"}, // Получаем только заголовок
+    }
 
-	// Извлекаем результаты
-	suggestions := make([]string, 0, size)
-	if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
-		if hitsArray, ok := hits["hits"].([]interface{}); ok {
-			for _, hit := range hitsArray {
-				if hitObj, ok := hit.(map[string]interface{}); ok {
-					if source, ok := hitObj["_source"].(map[string]interface{}); ok {
-						if title, ok := source["title"].(string); ok {
-							suggestions = append(suggestions, title)
-						}
-					}
-				}
-			}
-		}
-	}
-	return suggestions, nil
+    // Выполняем поиск
+    responseBytes, err := r.client.Search(r.indexName, query)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
+    }
+
+    // Парсим JSON ответ
+    var searchResponse map[string]interface{}
+    if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
+        return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
+    }
+
+    // Извлекаем результаты
+    suggestions := make([]string, 0, size)
+    if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
+        if hitsArray, ok := hits["hits"].([]interface{}); ok {
+            for _, hit := range hitsArray {
+                if hitObj, ok := hit.(map[string]interface{}); ok {
+                    if source, ok := hitObj["_source"].(map[string]interface{}); ok {
+                        if title, ok := source["title"].(string); ok {
+                            suggestions = append(suggestions, title)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return suggestions, nil
 }
 
 // ReindexAll переиндексирует все объявления
@@ -379,25 +382,25 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 
 	return doc
 }
-
 // buildSearchQuery создает поисковый запрос OpenSearch
 func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]interface{} {
     log.Printf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s", 
                params.CategoryID, params.Language, params.Query)
-	query := map[string]interface{}{
-		"from": (params.Page - 1) * params.Size,
-		"size": params.Size,
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"must":   []interface{}{},
-				"filter": []interface{}{},
-			},
-		},
-	}
+    query := map[string]interface{}{
+        "from": (params.Page - 1) * params.Size,
+        "size": params.Size,
+        "query": map[string]interface{}{
+            "bool": map[string]interface{}{
+                "must":   []interface{}{},
+                "filter": []interface{}{},
+            },
+        },
+    }
 
-	mustClauses := []interface{}{}
-	filterClauses := []interface{}{}
-	// Добавляем текстовый поиск, если указан
+    mustClauses := []interface{}{}
+    filterClauses := []interface{}{}
+    
+    // Добавляем текстовый поиск, если указан
     if params.Query != "" {
         log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
         
@@ -432,92 +435,93 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
         log.Printf("Добавлен поисковый запрос для полей: %v", searchFields)
     }
 
-	// Добавляем фильтры по категории
-	if params.CategoryID != nil {
-		categoryID := *params.CategoryID
-		log.Printf("Фильтрация по CategoryID: %d", categoryID)
+    // Добавляем фильтры по категории
+    if params.CategoryID != nil {
+        categoryID := *params.CategoryID
+        log.Printf("Фильтрация по CategoryID: %d", categoryID)
 
-		// Используем фильтр по category_path_ids
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"category_path_ids": categoryID,
-			},
-		})
-	}
-	// Добавляем фильтры по цене
-	if params.PriceMin != nil || params.PriceMax != nil {
-		priceRange := map[string]interface{}{}
-		if params.PriceMin != nil {
-			priceRange["gte"] = *params.PriceMin
-		}
-		if params.PriceMax != nil {
-			priceRange["lte"] = *params.PriceMax
-		}
+        // Используем фильтр по category_path_ids
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "term": map[string]interface{}{
+                "category_path_ids": categoryID,
+            },
+        })
+    }
+    
+    // Добавляем фильтры по цене
+    if params.PriceMin != nil || params.PriceMax != nil {
+        priceRange := map[string]interface{}{}
+        if params.PriceMin != nil {
+            priceRange["gte"] = *params.PriceMin
+        }
+        if params.PriceMax != nil {
+            priceRange["lte"] = *params.PriceMax
+        }
 
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"range": map[string]interface{}{
-				"price": priceRange,
-			},
-		})
-	}
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "range": map[string]interface{}{
+                "price": priceRange,
+            },
+        })
+    }
 
-	// Добавляем фильтр по состоянию
-	if params.Condition != "" {
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"condition.keyword": params.Condition,
-			},
-		})
-	}
+    // Добавляем фильтр по состоянию
+    if params.Condition != "" {
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "term": map[string]interface{}{
+                "condition.keyword": params.Condition,
+            },
+        })
+    }
 
-	// Добавляем фильтры по городу
-	if params.City != "" {
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"city.keyword": params.City,
-			},
-		})
-	}
+    // Добавляем фильтры по городу
+    if params.City != "" {
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "term": map[string]interface{}{
+                "city.keyword": params.City,
+            },
+        })
+    }
 
-	// Добавляем фильтры по стране
-	if params.Country != "" {
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"country.keyword": params.Country,
-			},
-		})
-	}
+    // Добавляем фильтры по стране
+    if params.Country != "" {
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "term": map[string]interface{}{
+                "country.keyword": params.Country,
+            },
+        })
+    }
 
-	// Добавляем фильтр по ID витрины
-	if params.StorefrontID != nil {
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"storefront_id": *params.StorefrontID,
-			},
-		})
-	}
+    // Добавляем фильтр по ID витрины
+    if params.StorefrontID != nil {
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "term": map[string]interface{}{
+                "storefront_id": *params.StorefrontID,
+            },
+        })
+    }
 
-	// Добавляем фильтр по статусу (только активные объявления)
-	filterClauses = append(filterClauses, map[string]interface{}{
-		"term": map[string]interface{}{
-			"status": "active",
-		},
-	})
+    // Добавляем фильтр по статусу (только активные объявления)
+    filterClauses = append(filterClauses, map[string]interface{}{
+        "term": map[string]interface{}{
+            "status": "active",
+        },
+    })
 
-	// Добавляем геопоиск, если указаны координаты
-	if params.Location != nil && params.Distance != "" {
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"geo_distance": map[string]interface{}{
-				"distance": params.Distance,
-				"coordinates": map[string]interface{}{
-					"lat": params.Location.Lat,
-					"lon": params.Location.Lon,
-				},
-			},
-		})
-	}
+    // Добавляем геопоиск, если указаны координаты
+    if params.Location != nil && params.Distance != "" {
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "geo_distance": map[string]interface{}{
+                "distance": params.Distance,
+                "coordinates": map[string]interface{}{
+                    "lat": params.Location.Lat,
+                    "lon": params.Location.Lon,
+                },
+            },
+        })
+    }
 
-	// Добавляем clauses в запрос
+    // Добавляем clauses в запрос
     if len(mustClauses) > 0 {
         log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
         query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
@@ -527,157 +531,161 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
         log.Printf("Must-клаузы: %s", string(mustClausesJSON))
     }
 
-	if len(filterClauses) > 0 {
-		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
-	}
-	// Добавляем настройки сортировки
-	sortOpt := []interface{}{}
-
-	if params.Sort != "" {
-		direction := "desc"
-		if params.SortDirection == "asc" {
-			direction = "asc"
-		}
-
-		// Проверяем специальные случаи сортировки
-		sortField := params.Sort
-		if sortField == "date_desc" {
-			sortField = "created_at"
-			direction = "desc" // Явно указываем desc
-		} else if sortField == "date_asc" {
-			sortField = "created_at"
-			direction = "asc" // Явно указываем asc
-		} else if sortField == "price_desc" {
-			sortField = "price"
-			direction = "desc" // Явно указываем desc
-		} else if sortField == "price_asc" {
-			sortField = "price"
-			direction = "asc" // Явно указываем asc
-		}
-
-		log.Printf("Сортировка по полю %s в порядке %s", sortField, direction)
-
-		// Особая обработка для геосортировки
-		if sortField == "distance" && params.Location != nil {
-			sortOpt = append(sortOpt, map[string]interface{}{
-				"_geo_distance": map[string]interface{}{
-					"coordinates": map[string]interface{}{
-						"lat": params.Location.Lat,
-						"lon": params.Location.Lon,
-					},
-					"order": direction,
-					"unit":  "km",
-				},
-			})
-		} else {
-			// Стандартная сортировка
-			sortOpt = append(sortOpt, map[string]interface{}{
-				sortField: map[string]interface{}{
-					"order": direction,
-				},
-			})
-		}
-	} else {
-		// По умолчанию сортируем по дате создания по убыванию
-		sortOpt = append(sortOpt, map[string]interface{}{
-			"created_at": map[string]interface{}{
-				"order": "desc", // Изменено с asc на desc
-			},
-		})
-	}
-
-	query["sort"] = sortOpt
-
-	// Добавляем агрегации для фасетной фильтрации
-	aggregations := map[string]interface{}{}
-
-	// Стандартные агрегации по категориям, ценам и т.д.
-	aggregations["categories"] = map[string]interface{}{
-		"terms": map[string]interface{}{
-			"field": "category_id",
-			"size":  100,
-		},
-	}
-
-	aggregations["conditions"] = map[string]interface{}{
-		"terms": map[string]interface{}{
-			"field": "condition.keyword",
-			"size":  10,
-		},
-	}
-
-	aggregations["cities"] = map[string]interface{}{
-		"terms": map[string]interface{}{
-			"field": "city.keyword",
-			"size":  50,
-		},
-	}
-
-	aggregations["countries"] = map[string]interface{}{
-		"terms": map[string]interface{}{
-			"field": "country.keyword",
-			"size":  50,
-		},
-	}
-
-	aggregations["price_ranges"] = map[string]interface{}{
-		"range": map[string]interface{}{
-			"field": "price",
-			"ranges": []interface{}{
-				map[string]interface{}{"to": 1000},
-				map[string]interface{}{"from": 1000, "to": 5000},
-				map[string]interface{}{"from": 5000, "to": 10000},
-				map[string]interface{}{"from": 10000, "to": 50000},
-				map[string]interface{}{"from": 50000},
-			},
-		},
-	}
-	queryJSON, _ := json.MarshalIndent(query, "", "  ")
-	log.Printf("Сформированный запрос: %s", queryJSON)
-	// Запрашиваем только нужные агрегации
-	requestedAggs := map[string]interface{}{}
-	if len(params.Aggregations) > 0 {
-		for _, agg := range params.Aggregations {
-			if aggDef, ok := aggregations[agg]; ok {
-				requestedAggs[agg] = aggDef
-			}
-		}
-	} else {
-		// Если не указаны, добавляем все
-		requestedAggs = aggregations
-	}
-
-	if len(requestedAggs) > 0 {
-		query["aggs"] = requestedAggs
-	}
-
-	// Добавляем запрос на подсказки (исправление опечаток)
-	if params.Query != "" {
-		query["suggest"] = map[string]interface{}{
-			"text": params.Query,
-			"simple_phrase": map[string]interface{}{
-				"phrase": map[string]interface{}{
-					"field":      "title",
-					"size":       5,
-					"gram_size":  3,
-					"confidence": 2.0,
-					"max_errors": 2,
-					"direct_generator": []interface{}{
-						map[string]interface{}{
-							"field":           "title",
-							"suggest_mode":    "always",
-							"min_word_length": 3,
-						},
-					},
-				},
-			},
-		}
-	}
-
-    log.Printf("Сформированный запрос: %s", queryJSON)
+    if len(filterClauses) > 0 {
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
+    }
     
+    // Добавляем настройки сортировки
+    sortOpt := []interface{}{}
+
+    if params.Sort != "" {
+        direction := "desc"
+        if params.SortDirection == "asc" {
+            direction = "asc"
+        }
+
+        // Проверяем специальные случаи сортировки
+        sortField := params.Sort
+        if sortField == "date_desc" {
+            sortField = "created_at"
+            direction = "desc" // Явно указываем desc
+        } else if sortField == "date_asc" {
+            sortField = "created_at"
+            direction = "asc" // Явно указываем asc
+        } else if sortField == "price_desc" {
+            sortField = "price"
+            direction = "desc" // Явно указываем desc
+        } else if sortField == "price_asc" {
+            sortField = "price"
+            direction = "asc" // Явно указываем asc
+        }
+
+        log.Printf("Сортировка по полю %s в порядке %s", sortField, direction)
+
+        // Особая обработка для геосортировки
+        if sortField == "distance" && params.Location != nil {
+            sortOpt = append(sortOpt, map[string]interface{}{
+                "_geo_distance": map[string]interface{}{
+                    "coordinates": map[string]interface{}{
+                        "lat": params.Location.Lat,
+                        "lon": params.Location.Lon,
+                    },
+                    "order": direction,
+                    "unit":  "km",
+                },
+            })
+        } else {
+            // Стандартная сортировка
+            sortOpt = append(sortOpt, map[string]interface{}{
+                sortField: map[string]interface{}{
+                    "order": direction,
+                },
+            })
+        }
+    } else {
+        // По умолчанию сортируем по дате создания по убыванию
+        sortOpt = append(sortOpt, map[string]interface{}{
+            "created_at": map[string]interface{}{
+                "order": "desc", // Изменено с asc на desc
+            },
+        })
+    }
+
+    query["sort"] = sortOpt
+
+    // Добавляем агрегации для фасетной фильтрации
+    aggregations := map[string]interface{}{}
+
+    // Стандартные агрегации по категориям, ценам и т.д.
+    aggregations["categories"] = map[string]interface{}{
+        "terms": map[string]interface{}{
+            "field": "category_id",
+            "size":  100,
+        },
+    }
+
+    aggregations["conditions"] = map[string]interface{}{
+        "terms": map[string]interface{}{
+            "field": "condition.keyword",
+            "size":  10,
+        },
+    }
+
+    aggregations["cities"] = map[string]interface{}{
+        "terms": map[string]interface{}{
+            "field": "city.keyword",
+            "size":  50,
+        },
+    }
+
+    aggregations["countries"] = map[string]interface{}{
+        "terms": map[string]interface{}{
+            "field": "country.keyword",
+            "size":  50,
+        },
+    }
+
+    aggregations["price_ranges"] = map[string]interface{}{
+        "range": map[string]interface{}{
+            "field": "price",
+            "ranges": []interface{}{
+                map[string]interface{}{"to": 1000},
+                map[string]interface{}{"from": 1000, "to": 5000},
+                map[string]interface{}{"from": 5000, "to": 10000},
+                map[string]interface{}{"from": 10000, "to": 50000},
+                map[string]interface{}{"from": 50000},
+            },
+        },
+    }
+
+    // Добавляем запрос на подсказки (исправление опечаток)
+    if params.Query != "" {
+        query["suggest"] = map[string]interface{}{
+            "text": params.Query,
+            "simple_phrase": map[string]interface{}{
+                "phrase": map[string]interface{}{
+                    "field":      "title",
+                    "size":       5,
+                    "gram_size":  3,
+                    "confidence": 2.0,
+                    "max_errors": 2,
+                    "direct_generator": []interface{}{
+                        map[string]interface{}{
+                            "field":           "title",
+                            "suggest_mode":    "always",
+                            "min_word_length": 3,
+                        },
+                    },
+                },
+            },
+        }
+    }
+
+    // Запрашиваем только нужные агрегации
+    requestedAggs := map[string]interface{}{}
+    if len(params.Aggregations) > 0 {
+        for _, agg := range params.Aggregations {
+            if aggDef, ok := aggregations[agg]; ok {
+                requestedAggs[agg] = aggDef
+            }
+        }
+    } else {
+        // Если не указаны, добавляем все
+        requestedAggs = aggregations
+    }
+
+    if len(requestedAggs) > 0 {
+        query["aggs"] = requestedAggs
+    }
+
+    // Для отладки выводим запрос в лог
+    queryJSON, _ := json.MarshalIndent(query, "", "  ")
+    log.Printf("Сформированный запрос: %s", queryJSON)
+
     return query
 }
+
+
 
 // parseSearchResponse обрабатывает ответ от OpenSearch
 func (r *Repository) parseSearchResponse(response map[string]interface{}, language string) (*search.SearchResult, error) {

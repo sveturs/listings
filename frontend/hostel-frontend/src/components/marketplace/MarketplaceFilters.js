@@ -23,10 +23,10 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
     }, [filters, onFilterChange]);
 
     // Проверяем правильность передачи поискового запроса
-    const handleSearchChange = (value) => {
+    const handleSearchChange = useCallback((value) => {
         console.log("Поисковый запрос изменен на:", value);
         onFilterChange({ ...filters, query: value });
-    };
+    }, [filters, onFilterChange]);
 
     return (
         <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -34,7 +34,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
             <Box sx={{ p: 2, backgroundColor: 'background.default', boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)', zIndex: 1 }}>
                 <AutocompleteInput
                     value={filters.query || ''}
-                    onChange={(value) => handleSearchChange(value)} // Здесь меняем на handleSearchChange
+                    onChange={handleSearchChange} // Используем функцию, определенную в этом компоненте
                     onSearch={(value, categoryId) => {
                         // Если предоставлен categoryId, обновляем и категорию
                         if (categoryId) {

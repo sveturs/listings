@@ -5,6 +5,7 @@ import (
     "backend/internal/domain/search"
     "context"
     "mime/multipart"
+    "backend/internal/storage"  
 )
 
 type MarketplaceServiceInterface interface {
@@ -30,5 +31,6 @@ type MarketplaceServiceInterface interface {
     GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error)
     ReindexAllListings(ctx context.Context) error
     GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error)
+    Storage() storage.Storage
 
 }

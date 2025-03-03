@@ -462,23 +462,86 @@ func (h *MarketplaceHandler) GetCategorySuggestions(c *fiber.Ctx) error {
     query := c.Query("q", "")
     size := c.QueryInt("size", 3)
     
+    log.Printf("Запрос на получение предложений категорий, запрос: '%s', размер: %d", query, size)
+    
     if query == "" {
         return utils.SuccessResponse(c, fiber.Map{
             "data": []interface{}{},
         })
     }
     
-    // Получаем предложения категорий из сервиса
-    categories, err := h.marketplaceService.GetCategorySuggestions(c.Context(), query, size)
+    // Выполняем SQL-запрос для поиска категорий, связанных с запросом
+    sqlQuery := `
+        WITH RECURSIVE category_tree AS (
+            SELECT c.id, c.name, c.parent_id
+            FROM marketplace_categories c
+            WHERE 1=1
+            
+            UNION
+            
+            SELECT c.id, c.name, c.parent_id
+            FROM marketplace_categories c
+            JOIN category_tree t ON c.parent_id = t.id
+        ),
+        matching_categories AS (
+            SELECT 
+                c.id,
+                c.name,
+                (SELECT COUNT(*) FROM marketplace_listings ml 
+                 WHERE ml.category_id = c.id 
+                 AND ml.status = 'active') as listing_count,
+                CASE WHEN LOWER(c.name) LIKE LOWER($1) THEN 100 ELSE 0 END +
+                (SELECT COUNT(*) FROM marketplace_listings ml 
+                 WHERE ml.category_id = c.id 
+                 AND (LOWER(ml.title) LIKE LOWER($1) OR LOWER(ml.description) LIKE LOWER($1)) 
+                 AND ml.status = 'active') as relevance
+            FROM marketplace_categories c
+            WHERE LOWER(c.name) LIKE LOWER($1)
+            OR EXISTS (
+                SELECT 1 FROM marketplace_listings ml 
+                WHERE ml.category_id = c.id 
+                AND (LOWER(ml.title) LIKE LOWER($1) OR LOWER(ml.description) LIKE LOWER($1))
+                AND ml.status = 'active'
+            )
+        )
+        SELECT id, name, listing_count
+        FROM matching_categories
+        WHERE listing_count > 0
+        ORDER BY relevance DESC, listing_count DESC
+        LIMIT $2
+    `
+    
+    rows, err := h.marketplaceService.Storage().Query(c.Context(), sqlQuery, "%"+query+"%", size)
     if err != nil {
-        log.Printf("Ошибка получения предложений категорий: %v", err)
+        log.Printf("Ошибка при выполнении запроса категорий: %v", err)
         return utils.SuccessResponse(c, fiber.Map{
             "data": []interface{}{},
         })
     }
+    defer rows.Close()
+    
+    var results []map[string]interface{}
+    for rows.Next() {
+        var id int
+        var name string
+        var listingCount int
+        
+        if err := rows.Scan(&id, &name, &listingCount); err != nil {
+            log.Printf("Ошибка сканирования категории: %v", err)
+            continue
+        }
+        
+        results = append(results, map[string]interface{}{
+            "id": id,
+            "name": name,
+            "listing_count": listingCount,
+        })
+    }
+    
+    log.Printf("Найдено %d релевантных категорий для запроса '%s'", len(results), query)
     
     return utils.SuccessResponse(c, fiber.Map{
-        "data": categories,
+        "data": results,
     })
 }
 func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
@@ -605,6 +668,8 @@ func (h *MarketplaceHandler) GetSuggestions(c *fiber.Ctx) error {
     prefix := c.Query("q", "")
     size := c.QueryInt("size", 5)
     
+    log.Printf("Запрос на получение подсказок, запрос: '%s', размер: %d", prefix, size)
+    
     if prefix == "" {
         return utils.SuccessResponse(c, fiber.Map{
             "data": []string{},
@@ -637,15 +702,20 @@ func (h *MarketplaceHandler) GetSuggestions(c *fiber.Ctx) error {
             titles = append(titles, listing.Title)
         }
         
+        log.Printf("Получены подсказки из базы данных: %v", titles)
+        
         return utils.SuccessResponse(c, fiber.Map{
             "data": titles,
         })
     }
     
+    log.Printf("Получены подсказки из OpenSearch: %v", suggestions)
+    
     return utils.SuccessResponse(c, fiber.Map{
         "data": suggestions,
     })
 }
+
 
 // ReindexAll переиндексирует все объявления
 func (h *MarketplaceHandler) ReindexAll(c *fiber.Ctx) error {

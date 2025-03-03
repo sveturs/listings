@@ -19,6 +19,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
         setInputValue(value || '');
     }, [value]);
 
+
     // Функция для получения подсказок при вводе
     const fetchSuggestions = async (text) => {
         if (!text || text.length < 2) {
@@ -33,20 +34,24 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             const suggestResponse = await axios.get('/api/v1/marketplace/suggestions', {
                 params: { q: text, size: 5 }
             });
-            
+
+            console.log('Полученные подсказки:', suggestResponse.data);
+
             if (suggestResponse.data && suggestResponse.data.data) {
                 setSuggestions(suggestResponse.data.data);
             }
-            
+
             // Запрос на категории, связанные с поисковым запросом
             const categoryResponse = await axios.get('/api/v1/marketplace/category-suggestions', {
                 params: { q: text, size: 3 }
             });
-            
+
+            console.log('Полученные категории:', categoryResponse.data);
+
             if (categoryResponse.data && categoryResponse.data.data) {
                 setCategorySuggestions(categoryResponse.data.data);
             }
-            
+
         } catch (error) {
             console.error('Ошибка при получении подсказок:', error);
         } finally {
@@ -58,28 +63,28 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
     const handleInputChange = (e) => {
         const newValue = e.target.value;
         setInputValue(newValue);
-        
+
         // Вызываем внешний обработчик (для обновления state родителя)
         if (onChange) onChange(newValue);
-        
+
         // Если строка пустая, очищаем подсказки
         if (!newValue) {
             setSuggestions([]);
             setCategorySuggestions([]);
             return;
         }
-        
+
         // Включаем отображение подсказок
         setShowSuggestions(true);
-        
+
         // Дебаунс для сокращения количества запросов
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
         }
-        
+
         debounceRef.current = setTimeout(() => {
             fetchSuggestions(newValue);
-            
+
             // Автоматически выполняем поиск по мере ввода
             if (onSearch && newValue.length >= 2) {
                 onSearch(newValue);
@@ -172,15 +177,15 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
 
             {/* Выпадающие подсказки */}
             {showSuggestions && (suggestions.length > 0 || categorySuggestions.length > 0) && (
-                <Paper 
-                    elevation={3} 
-                    sx={{ 
-                        position: 'absolute', 
-                        width: '100%', 
-                        zIndex: 1300, 
-                        mt: 0.5, 
-                        maxHeight: 350, 
-                        overflow: 'auto' 
+                <Paper
+                    elevation={3}
+                    sx={{
+                        position: 'absolute',
+                        width: '100%',
+                        zIndex: 1300,
+                        mt: 0.5,
+                        maxHeight: 350,
+                        overflow: 'auto'
                     }}
                 >
                     {/* Подсказки текста */}
@@ -191,9 +196,9 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                             </Typography>
                             <List dense>
                                 {suggestions.map((suggestion, index) => (
-                                    <ListItem 
-                                        key={`suggestion-${index}`} 
-                                        button 
+                                    <ListItem
+                                        key={`suggestion-${index}`}
+                                        button
                                         onClick={() => handleSuggestionClick(suggestion)}
                                     >
                                         <ListItemText primary={suggestion} />
@@ -202,7 +207,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                             </List>
                         </>
                     )}
-                    
+
                     {/* Подсказки категорий */}
                     {categorySuggestions.length > 0 && (
                         <>
@@ -211,14 +216,14 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                             </Typography>
                             <List dense>
                                 {categorySuggestions.map((category) => (
-                                    <ListItem 
-                                        key={`category-${category.id}`} 
-                                        button 
+                                    <ListItem
+                                        key={`category-${category.id}`}
+                                        button
                                         onClick={() => handleCategoryClick(category)}
                                     >
-                                        <ListItemText 
-                                            primary={category.name} 
-                                            secondary={`${category.listing_count} ${t('listings')}`} 
+                                        <ListItemText
+                                            primary={category.name}
+                                            secondary={`${category.listing_count} ${t('listings')}`}
                                         />
                                     </ListItem>
                                 ))}
@@ -227,6 +232,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                     )}
                 </Paper>
             )}
+
         </Box>
     );
 };

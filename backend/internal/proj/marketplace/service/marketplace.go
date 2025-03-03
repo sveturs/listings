@@ -78,73 +78,78 @@ func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*model
     return s.storage.GetListingByID(ctx, id)
 }
 // GetCategorySuggestions возвращает предложения категорий на основе поискового запроса
+// GetCategorySuggestions возвращает предложения категорий на основе поискового запроса
 func (s *MarketplaceService) GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error) {
-    // Для простой реализации можем использовать поиск в базе данных
-    // В продвинутой версии можно использовать OpenSearch
+    log.Printf("Запрос предложений категорий: '%s'", query)
     
+    // Проверка входных параметров
+    if query == "" {
+        return []models.CategorySuggestion{}, nil
+    }
+    
+    // Выполняем SQL-запрос для поиска категорий, связанных с запросом
     sqlQuery := `
         WITH RECURSIVE category_tree AS (
-            SELECT 
-                c.id, c.name, c.parent_id
+            SELECT c.id, c.name, c.parent_id
             FROM marketplace_categories c
+            WHERE 1=1
             
-            UNION ALL
+            UNION
             
-            SELECT 
-                c.id, c.name, c.parent_id
+            SELECT c.id, c.name, c.parent_id
             FROM marketplace_categories c
-            JOIN category_tree ct ON c.parent_id = ct.id
-        ),
-        matching_listings AS (
-            SELECT 
-                category_id,
-                COUNT(*) as count
-            FROM marketplace_listings
-            WHERE (LOWER(title) LIKE LOWER($1) OR LOWER(description) LIKE LOWER($1))
-            AND status = 'active'
-            GROUP BY category_id
+            JOIN category_tree t ON c.parent_id = t.id
         ),
         matching_categories AS (
             SELECT 
                 c.id,
                 c.name,
-                COALESCE(ml.count, 0) as listing_count,
-                -- Приоритет: прямое совпадение названия категории + количество объявлений
-                (CASE 
-                    WHEN LOWER(c.name) LIKE LOWER($1) THEN 10000
-                    ELSE 0
-                END) + COALESCE(ml.count, 0) as relevance
+                (SELECT COUNT(*) FROM marketplace_listings ml 
+                 WHERE ml.category_id = c.id 
+                 AND ml.status = 'active') as listing_count,
+                CASE WHEN LOWER(c.name) LIKE LOWER($1) THEN 100 ELSE 0 END +
+                (SELECT COUNT(*) FROM marketplace_listings ml 
+                 WHERE ml.category_id = c.id 
+                 AND (LOWER(ml.title) LIKE LOWER($1) OR LOWER(ml.description) LIKE LOWER($1)) 
+                 AND ml.status = 'active') as relevance
             FROM marketplace_categories c
-            LEFT JOIN matching_listings ml ON c.id = ml.category_id
-            WHERE 
-                LOWER(c.name) LIKE LOWER($1) OR 
-                c.id IN (SELECT category_id FROM matching_listings)
+            WHERE LOWER(c.name) LIKE LOWER($1)
+            OR EXISTS (
+                SELECT 1 FROM marketplace_listings ml 
+                WHERE ml.category_id = c.id 
+                AND (LOWER(ml.title) LIKE LOWER($1) OR LOWER(ml.description) LIKE LOWER($1))
+                AND ml.status = 'active'
+            )
         )
-        SELECT 
-            id, name, listing_count
+        SELECT id, name, listing_count
         FROM matching_categories
         WHERE listing_count > 0
-        ORDER BY relevance DESC
+        ORDER BY relevance DESC, listing_count DESC
         LIMIT $2
     `
     
     rows, err := s.storage.Query(ctx, sqlQuery, "%"+query+"%", size)
     if err != nil {
-        return nil, fmt.Errorf("ошибка запроса категорий: %w", err)
+        log.Printf("Ошибка при выполнении запроса категорий: %v", err)
+        return []models.CategorySuggestion{}, nil
     }
     defer rows.Close()
     
-    var suggestions []models.CategorySuggestion
+    var results []models.CategorySuggestion
     for rows.Next() {
         var suggestion models.CategorySuggestion
+        
         if err := rows.Scan(&suggestion.ID, &suggestion.Name, &suggestion.ListingCount); err != nil {
-            log.Printf("Ошибка сканирования предложения категории: %v", err)
+            log.Printf("Ошибка сканирования категории: %v", err)
             continue
         }
-        suggestions = append(suggestions, suggestion)
+        
+        results = append(results, suggestion)
     }
     
-    return suggestions, nil
+    log.Printf("Найдено %d релевантных категорий для запроса '%s'", len(results), query)
+    
+    return results, nil
 }
 func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
     // Вызываем существующий метод для обновления объявления в БД
@@ -346,24 +351,93 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
     if len(osResult.Suggestions) > 0 {
         result.Suggestions = osResult.Suggestions
     }
-    
-    if len(result.Items) == 0 && params.Query != "" {
-        // Получаем предложения исправлений
-        suggestions, err := s.storage.SuggestListings(ctx, params.Query, 1)
-        if err == nil && len(suggestions) > 0 {
-            // Добавляем предложение исправления
-            result.SpellingSuggestion = suggestions[0]
+    if len(result.Items) < 2 && params.Query != "" {
+        // Получаем предложения исправлений напрямую из базы данных
+        query := `
+            SELECT DISTINCT title 
+            FROM marketplace_listings 
+            WHERE LOWER(title) LIKE $1 
+            AND status = 'active'
+            LIMIT 5
+        `
+        rows, err := s.storage.Query(ctx, query, "%"+params.Query+"%")
+        if err == nil {
+            var suggestions []string
+            for rows.Next() {
+                var title string
+                if err := rows.Scan(&title); err == nil {
+                    suggestions = append(suggestions, title)
+                }
+            }
+            rows.Close()
+            
+            // Если найдены предложения, добавляем их в результат
+            if len(suggestions) > 0 {
+                result.Suggestions = suggestions
+            }
         }
     }
     
     return result, nil
 }
 
-
+// GetSuggestions возвращает предложения автодополнения
 func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error) {
-    return s.storage.SuggestListings(ctx, prefix, size)
+    log.Printf("Запрос подсказок в сервисе: '%s'", prefix)
+    
+    // Проверка входных параметров
+    if prefix == "" {
+        return []string{}, nil
+    }
+    
+    // Сначала пытаемся получить подсказки из OpenSearch
+    suggestions, err := s.storage.SuggestListings(ctx, prefix, size)
+    if err != nil || len(suggestions) == 0 {
+        if err != nil {
+            log.Printf("Ошибка при получении подсказок из OpenSearch: %v", err)
+        }
+        
+        // При ошибке используем запасной вариант из базы данных
+        query := `
+            SELECT DISTINCT title 
+            FROM marketplace_listings 
+            WHERE LOWER(title) LIKE LOWER($1) 
+            AND status = 'active'
+            ORDER BY 
+                CASE WHEN LOWER(title) = LOWER($2) THEN 0
+                     WHEN LOWER(title) LIKE LOWER($2 || '%') THEN 1
+                     ELSE 2
+                END,
+                length(title)
+            LIMIT $3
+        `
+        rows, err := s.storage.Query(ctx, query, "%"+prefix+"%", prefix, size)
+        if err != nil {
+            log.Printf("Ошибка запасного SQL-запроса: %v", err)
+            return []string{}, nil
+        }
+        defer rows.Close()
+        
+        var results []string
+        for rows.Next() {
+            var title string
+            if err := rows.Scan(&title); err != nil {
+                log.Printf("Ошибка сканирования строки: %v", err)
+                continue
+            }
+            results = append(results, title)
+        }
+        
+        log.Printf("Получено %d подсказок из базы данных", len(results))
+        return results, nil
+    }
+    
+    log.Printf("Получено %d подсказок из OpenSearch", len(suggestions))
+    return suggestions, nil
 }
-
 func (s *MarketplaceService) ReindexAllListings(ctx context.Context) error {
     return s.storage.ReindexAllListings(ctx)
+}
+func (s *MarketplaceService) Storage() storage.Storage {
+    return s.storage
 }
