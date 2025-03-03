@@ -34,114 +34,129 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
 
   // Генерирует промежуточные точки для плавной анимации
   const createIntermediatePositions = (startPos, endPos, numPoints = 5) => {
-    if (!startPos || !endPos) return [];
+  if (!startPos || !endPos) return [];
+  
+  const points = [];
+  
+  const selectedStartTile = startPos.find(tile => tile.id === randomTile);
+  const selectedEndTile = endPos.find(tile => tile.id === randomTile);
+  
+  if (selectedStartTile && selectedEndTile) {
+    const dx = selectedEndTile.x - selectedStartTile.x;
+    const dy = selectedEndTile.y - selectedStartTile.y;
     
-    // Создаем список промежуточных точек для выбранной плитки
-    const points = [];
+    const perpX = -dy;
+    const perpY = dx;
     
-    // Только для выбранной плитки создаем сложный путь
-    const selectedStartTile = startPos.find(tile => tile.id === randomTile);
-    const selectedEndTile = endPos.find(tile => tile.id === randomTile);
+    const length = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
+    const normalizedPerpX = perpX / length;
+    const normalizedPerpY = perpY / length;
     
-    if (selectedStartTile && selectedEndTile) {
-      // Средняя точка с большим отклонением для выбранной плитки
-      const midX = (selectedStartTile.x + selectedEndTile.x) / 2;
-      const midY = (selectedStartTile.y + selectedEndTile.y) / 2;
+    for (let i = 1; i < numPoints; i++) {
+      const t = i / numPoints;
+      // Using a more natural easing function for position
+      const smoothT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
       
-      // Вычисляем вектор пути
-      const dx = selectedEndTile.x - selectedStartTile.x;
-      const dy = selectedEndTile.y - selectedStartTile.y;
+      const baseX = selectedStartTile.x + dx * smoothT;
+      const baseY = selectedStartTile.y + dy * smoothT;
       
-      // Создаем перпендикулярный вектор для отклонения
-      const perpX = -dy;
-      const perpY = dx;
+      // Modified deviation curve for more natural arc
+      const deviationFactor = 60 * Math.sin(t * Math.PI); 
       
-      // Нормализуем перпендикулярный вектор
-      const length = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
-      const normalizedPerpX = perpX / length;
-      const normalizedPerpY = perpY / length;
+      // Start scaling earlier and use a custom easing for scale
+      // This creates a more pleasant "anticipation" and "follow-through" effect
+      const scaleEasing = (progress) => {
+        // Bell curve-like function for scaling - rises gradually, peaks, then falls gradually
+        if (progress < 0.5) {
+          // Rise phase: slow start, accelerate
+          return selectedStartTile.scale + (progress * 2) * (progress * 2) * (selectedEndTile.scale - selectedStartTile.scale);
+        } else {
+          // Peak and fall phase: decelerate to final scale
+          const fallProgress = (progress - 0.5) * 2;
+          return selectedEndTile.scale - (1 - fallProgress) * (1 - fallProgress) * (selectedEndTile.scale - selectedStartTile.scale) * 0.2;
+        }
+      };
       
-      // Создаем промежуточные точки с отклонением
-      for (let i = 1; i < numPoints; i++) {
-        const t = i / numPoints;
-        const smoothT = t * t * (3 - 2 * t); // Плавная функция
-        
-        // Базовая позиция на прямой
-        const baseX = selectedStartTile.x + dx * smoothT;
-        const baseY = selectedStartTile.y + dy * smoothT;
-        
-        // Отклонение, максимальное в середине пути
-        const deviationFactor = 50 * Math.sin(t * Math.PI); // Максимальное отклонение в середине
-        
-        // Добавляем к базовой позиции отклонение в перпендикулярном направлении
-        points.push({
-          id: selectedStartTile.id,
-          t: t,
-          x: baseX + normalizedPerpX * deviationFactor,
-          y: baseY + normalizedPerpY * deviationFactor,
-          scale: 1 + (t > 0.6 ? (t - 0.6) / 0.4 * (selectedEndTile.scale - 1) : 0) // Увеличение во второй половине пути
-        });
-      }
+      points.push({
+        id: selectedStartTile.id,
+        t: t,
+        x: baseX + normalizedPerpX * deviationFactor,
+        y: baseY + normalizedPerpY * deviationFactor,
+        // Use the custom easing function for scale
+        scale: scaleEasing(t)
+      });
     }
-    
-    return points;
-  };
+  }
+  
+  return points;
+};
 
-  // Функция для расчета текущих позиций на основе прогресса анимации
-  const calculateCurrentPositions = (startPos, endPos, progress) => {
-    // Кубическая функция плавности для естественного движения
-    const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    const easedProgress = easeInOut(progress);
+// 2. Improved calculateCurrentPositions function for smoother interpolation
+const calculateCurrentPositions = (startPos, endPos, progress) => {
+  // Using cubic bezier easing function for more natural movement
+  const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const easedProgress = easeInOutCubic(progress);
+  
+  const intermediatePos = intermediatePositionsRef.current || [];
+  
+  // Better calculation of closest intermediate points
+  let prevPointIndex = 0;
+  let nextPointIndex = intermediatePos.length - 1;
+  
+  for (let i = 0; i < intermediatePos.length; i++) {
+    if (intermediatePos[i].t > progress) {
+      nextPointIndex = i;
+      prevPointIndex = Math.max(0, i - 1);
+      break;
+    }
+  }
+  
+  const prevPoint = intermediatePos[prevPointIndex];
+  const nextPoint = intermediatePos[nextPointIndex];
+  
+  return startPos.map((start, idx) => {
+    const end = endPos[idx];
     
-    // Находим индекс ближайшей промежуточной точки для выбранной плитки
-    const intermediatePos = intermediatePositionsRef.current || [];
-    const closestIndex = intermediatePos.findIndex(pos => pos.t >= progress) - 1;
-    const prevPoint = intermediatePos[Math.max(0, closestIndex)];
-    const nextPoint = intermediatePos[Math.min(intermediatePos.length - 1, closestIndex + 1)];
-    
-    // Расчет позиций для всех плиток
-    return startPos.map((start, idx) => {
-      const end = endPos[idx];
-      
-      // Для невыбранных плиток используем обычную интерполяцию
-      if (start.id !== randomTile) {
-        return {
-          ...start,
-          x: start.x + (end.x - start.x) * easedProgress,
-          y: start.y + (end.y - start.y) * easedProgress,
-          scale: start.scale
-        };
-      }
-      
-      // Для выбранной плитки используем промежуточные точки, если они есть
-      if (prevPoint && nextPoint && intermediatePos.length > 0) {
-        // Интерполируем между точками пути
-        const pointProgress = prevPoint.t === nextPoint.t ? 0 : (progress - prevPoint.t) / (nextPoint.t - prevPoint.t);
-        const interpolatedX = prevPoint.x + (nextPoint.x - prevPoint.x) * pointProgress;
-        const interpolatedY = prevPoint.y + (nextPoint.y - prevPoint.y) * pointProgress;
-        
-        // Функция для плавного масштабирования во второй половине пути
-        const scaleProgress = progress > 0.6 ? (progress - 0.6) / 0.4 : 0;
-        const superSmoothScale = scaleProgress * scaleProgress * (3 - 2 * scaleProgress);
-        const targetScale = 1 + (end.scale - 1) * superSmoothScale;
-        
-        return {
-          ...start,
-          x: interpolatedX,
-          y: interpolatedY,
-          scale: targetScale
-        };
-      }
-      
-      // Fallback на обычную интерполяцию, если нет промежуточных точек
+    // For non-selected tiles, use improved easing
+    if (start.id !== randomTile) {
       return {
         ...start,
         x: start.x + (end.x - start.x) * easedProgress,
         y: start.y + (end.y - start.y) * easedProgress,
-        scale: progress > 0.6 ? start.scale + (end.scale - start.scale) * ((progress - 0.6) / 0.4) : start.scale
+        scale: start.scale + (end.scale - start.scale) * easedProgress
       };
-    });
-  };
+    }
+    
+    // For selected tile, use intermediate points for complex path and scaling
+    if (prevPoint && nextPoint && intermediatePos.length > 0) {
+      // Improved point interpolation
+      const pointProgress = prevPoint.t === nextPoint.t ? 
+        0 : 
+        easeInOutCubic((progress - prevPoint.t) / (nextPoint.t - prevPoint.t));
+      
+      const interpolatedX = prevPoint.x + (nextPoint.x - prevPoint.x) * pointProgress;
+      const interpolatedY = prevPoint.y + (nextPoint.y - prevPoint.y) * pointProgress;
+      
+      // Interpolate scale directly between points with smoothing
+      const interpolatedScale = prevPoint.scale + (nextPoint.scale - prevPoint.scale) * pointProgress;
+      
+      return {
+        ...start,
+        x: interpolatedX,
+        y: interpolatedY,
+        scale: interpolatedScale
+      };
+    }
+    
+    // Fallback with improved easing
+    return {
+      ...start,
+      x: start.x + (end.x - start.x) * easedProgress,
+      y: start.y + (end.y - start.y) * easedProgress,
+      scale: start.scale + (end.scale - start.scale) * easedProgress
+    };
+  });
+};
 
   // Очистка анимации при размонтировании компонента
   useEffect(() => {
@@ -156,48 +171,43 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
   }, []);
 
   // Функция для запуска анимации
-  const runAnimation = (startPositions, endPositions, duration = 1500, afterComplete = null) => {
-    // Очистим предыдущую анимацию
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
+const runAnimation = (startPositions, endPositions, duration = 1500, afterComplete = null) => {
+  // Clean up previous animation
+  if (animationFrameRef.current) {
+    cancelAnimationFrame(animationFrameRef.current);
+  }
+  
+  // Generate more intermediate points for smoother animation
+  intermediatePositionsRef.current = createIntermediatePositions(startPositions, endPositions, 15);
+  
+  const startTime = performance.now();
+  setAnimationCompleted(false);
+  
+  const animate = (timestamp) => {
+    const elapsedTime = timestamp - startTime;
+    const progress = Math.min(elapsedTime / duration, 1);
     
-    // Генерируем промежуточные точки
-    intermediatePositionsRef.current = createIntermediatePositions(startPositions, endPositions);
+    const currentPositions = calculateCurrentPositions(startPositions, endPositions, progress);
+    setAnimatingPositions(currentPositions);
+    setAnimationProgress(progress);
     
-    // Сохраняем время начала анимации
-    const startTime = performance.now();
-    setAnimationCompleted(false);
-    
-    const animate = (timestamp) => {
-      const elapsedTime = timestamp - startTime;
-      const progress = Math.min(elapsedTime / duration, 1);
+    if (progress < 1) {
+      animationFrameRef.current = requestAnimationFrame(animate);
+    } else {
+      setPositions(endPositions);
+      setAnimatingPositions(endPositions);
+      setAnimationCompleted(true);
       
-      // Вычисляем текущие позиции на основе прогресса
-      const currentPositions = calculateCurrentPositions(startPositions, endPositions, progress);
-      setAnimatingPositions(currentPositions);
-      setAnimationProgress(progress);
-      
-      // Проверяем, завершена ли анимация
-      if (progress < 1) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      } else {
-        // Анимация завершена
-        setPositions(endPositions);
-        setAnimatingPositions(endPositions);
-        setAnimationCompleted(true);
-        
-        if (afterComplete) {
-          afterComplete();
-        }
+      if (afterComplete) {
+        afterComplete();
       }
-    };
-    
-    // Запускаем анимацию
-    animationFrameRef.current = requestAnimationFrame(animate);
+    }
   };
+  
+  animationFrameRef.current = requestAnimationFrame(animate);
+};
 
-  // Общая функция для анимации, используемая для hover и touch
+// Общая функция для анимации, используемая для hover и touch
   const animateShuffle = () => {
     setHovering(true);
     

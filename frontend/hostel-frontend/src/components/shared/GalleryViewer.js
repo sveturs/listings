@@ -1,5 +1,5 @@
 // frontend/hostel-frontend/src/components/shared/GalleryViewer.js
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Dialog,
     IconButton,
@@ -33,6 +33,31 @@ const GalleryViewer = ({
     const [isZoomed, setIsZoomed] = useState(false);
     const isOpen = externalOpen !== undefined ? externalOpen : selectedIndex !== null;
 
+    // Ссылки для обработки свайпов
+    const containerRef = useRef(null);
+    const touchStartX = useRef(null);
+    const touchStartY = useRef(null);
+    
+    // Добавляем эффект для обработки клавиш клавиатуры
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (!isOpen) return;
+            
+            if (e.key === 'ArrowLeft') {
+                handlePrev(e);
+            } else if (e.key === 'ArrowRight') {
+                handleNext(e);
+            } else if (e.key === 'Escape') {
+                handleClose(e);
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, selectedIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+    
     if (!images || images.length === 0) return null;
 
     const getImageUrl = (image) => {
@@ -72,6 +97,58 @@ const GalleryViewer = ({
         e.stopPropagation();
         setIsZoomed(!isZoomed);
     };
+
+    // Обработчик прокрутки колесика мыши
+    const handleWheel = (e) => {
+        if (isZoomed) return; // Не обрабатываем в режиме зума
+        
+        if (e.deltaY < 0) {
+            // Прокрутка вверх - следующая фотография
+            handleNext(e);
+        } else if (e.deltaY > 0) {
+            // Прокрутка вниз - предыдущая фотография
+            handlePrev(e);
+        }
+        e.preventDefault(); // Предотвращаем стандартную прокрутку страницы
+    };
+
+    // Обработчик начала касания (для свайпов)
+    const handleTouchStart = (e) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+    };
+
+    // Обработчик окончания касания (для свайпов)
+    const handleTouchEnd = (e) => {
+        if (isZoomed) return; // Не обрабатываем в режиме зума
+        
+        if (!touchStartX.current || !touchStartY.current) return;
+
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        
+        const deltaX = touchEndX - touchStartX.current;
+        const deltaY = touchEndY - touchStartY.current;
+        
+        // Определяем, был ли это горизонтальный свайп
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+            if (deltaX > 0) {
+                // Свайп вправо - предыдущая фотография
+                handlePrev(e);
+            } else {
+                // Свайп влево - следующая фотография
+                handleNext(e);
+            }
+            e.preventDefault();
+        }
+        
+        // Сбрасываем начальные координаты
+        touchStartX.current = null;
+        touchStartY.current = null;
+    };
+
+    // Этот код был перемещен выше return null, чтобы исправить ошибку
+    // см. обновленный код выше
 
     return (
         <>
@@ -122,6 +199,10 @@ const GalleryViewer = ({
                 }}
             >
                 <DialogContent
+                    ref={containerRef}
+                    onWheel={handleWheel}
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
                     sx={{
                         position: 'relative',
                         p: 0,
@@ -227,7 +308,7 @@ const GalleryViewer = ({
                     </Box>
 
                     {/* Полоса превью */}
-                  11  {images.length > 1 && !isZoomed && (
+                    {images.length > 1 && !isZoomed && (
                         <Stack
                             direction="row"
                             spacing={1}
