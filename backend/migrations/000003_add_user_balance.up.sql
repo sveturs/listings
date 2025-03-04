@@ -49,3 +49,12 @@ INSERT INTO payment_methods (
     ('Bank transfer', 'bank_transfer', 'bank', true, 1000, 10000000, 0, 100),
     ('Post office', 'post_office', 'cash', true, 500, 500000, 1.5, 50),
     ('IPS QR code', 'ips_qr', 'digital', true, 100, 1000000, 0.8, 0);
+
+
+-- Добавляем начальный баланс для пользователя Dmitry Voroshilov (id=2)
+INSERT INTO user_balances (user_id, balance, frozen_balance, currency, updated_at) VALUES
+(2, 15000000.00, 0.00, 'RSD', CURRENT_TIMESTAMP);
+INSERT INTO user_balances (user_id, balance, frozen_balance, currency, updated_at) VALUES
+(3, 1500000.00, 0.00, 'RSD', CURRENT_TIMESTAMP);
+INSERT INTO user_balances (user_id, balance, frozen_balance, currency, updated_at) VALUES
+(4, 150000.00, 0.00, 'RSD', CURRENT_TIMESTAMP);
