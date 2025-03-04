@@ -542,17 +542,8 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 			continue
 		}
 
-		// Получаем созданное объявление для индексации
-		createdListing, err := s.storage.GetListingByID(ctx, listingID)
-		if err != nil {
-			errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))
-		} else {
-			// Индексируем объявление в поисковом движке
-			err = s.storage.IndexListing(ctx, createdListing)
-			if err != nil {
-				errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to index: %v\n", err))
-			}
-		}
+		// Переменная для отслеживания, добавлены ли изображения
+		imagesAdded := false
 
 		// Если есть колонка с изображениями, обрабатываем их
 		if imagesIdx, ok := columnMap["images"]; ok && imagesIdx < len(row) && row[imagesIdx] != "" {
@@ -571,7 +562,26 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 				if err != nil {
 					errorLog.WriteString(fmt.Sprintf("Error adding image %s to listing %d: %v\n", imagePath, listingID, err))
 					// Не увеличиваем itemsFailed, так как само объявление создалось успешно
+				} else {
+					imagesAdded = true
 				}
+			}
+		}
+
+		// Получаем созданное объявление для индексации ПОСЛЕ добавления изображений
+		if imagesAdded {
+			// Небольшая задержка для гарантии, что изображения сохранились в БД
+			time.Sleep(200 * time.Millisecond)
+		}
+
+		createdListing, err := s.storage.GetListingByID(ctx, listingID)
+		if err != nil {
+			errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))
+		} else {
+			// Индексируем объявление в поисковом движке
+			err = s.storage.IndexListing(ctx, createdListing)
+			if err != nil {
+				errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to index: %v\n", err))
 			}
 		}
 

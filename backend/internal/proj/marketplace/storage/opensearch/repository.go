@@ -445,8 +445,10 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 
 	// Добавляем изображения, если есть
 	if listing.Images != nil && len(listing.Images) > 0 {
+		log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
 		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
 		for _, img := range listing.Images {
+			log.Printf("  Изображение: ID=%d, Путь=%s, IsMain=%v", img.ID, img.FilePath, img.IsMain)
 			imagesDoc = append(imagesDoc, map[string]interface{}{
 				"id":        img.ID,
 				"file_path": img.FilePath,
@@ -454,6 +456,8 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 			})
 		}
 		doc["images"] = imagesDoc
+	} else {
+		log.Printf("Объявление %d не имеет изображений", listing.ID)
 	}
 
 	return doc

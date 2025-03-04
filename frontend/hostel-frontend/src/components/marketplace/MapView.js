@@ -5,20 +5,20 @@ import { Navigation, X, List, Maximize2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { 
-  Box, 
-  Paper, 
-  Typography, 
-  Chip, 
-  Button, 
-  Card, 
-  CardContent, 
-  CardMedia, 
-  FormControl, 
-  InputLabel, 
-  Select, 
-  MenuItem, 
-  useTheme, 
+import {
+  Box,
+  Paper,
+  Typography,
+  Chip,
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  useTheme,
   useMediaQuery,
   Collapse,
   IconButton,
@@ -33,9 +33,9 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
   const { t } = useTranslation('marketplace');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
   if (!listing) return null;
-  
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',
@@ -43,17 +43,17 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
       maximumFractionDigits: 0
     }).format(price);
   };
-  
+
   const imageUrl = listing.images && listing.images.length > 0
     ? `${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}`
     : null;
-    
+
   return (
-    <Card 
-      sx={{ 
-        position: 'absolute', 
-        bottom: isMobile ? 0 : 16, 
-        left: isMobile ? 0 : 16, 
+    <Card
+      sx={{
+        position: 'absolute',
+        bottom: isMobile ? 0 : 16,
+        left: isMobile ? 0 : 16,
         maxWidth: isMobile ? '100%' : 400,
         width: isMobile ? '100%' : 'auto',
         zIndex: 1000,
@@ -61,12 +61,12 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
       }}
     >
       <Box sx={{ position: 'relative' }}>
-        <IconButton 
+        <IconButton
           onClick={onClose}
-          sx={{ 
-            position: 'absolute', 
-            top: 8, 
-            right: 8, 
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
             bgcolor: 'background.paper',
             opacity: 0.8,
             '&:hover': { bgcolor: 'background.paper', opacity: 1 }
@@ -74,7 +74,7 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
         >
           <X size={16} />
         </IconButton>
-        
+
         {imageUrl && (
           <CardMedia
             component="img"
@@ -83,26 +83,26 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
             alt={listing.title}
           />
         )}
-        
+
         <CardContent>
           <Typography variant="subtitle1" noWrap gutterBottom>
             {listing.title}
           </Typography>
-          
+
           <Typography variant="h6" color="primary" gutterBottom>
             {formatPrice(listing.price)}
           </Typography>
-          
+
           <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
-            <Chip 
+            <Chip
               label={listing.condition === 'new' ? t('listings.conditions.new') : t('listings.conditions.used')}
               size="small"
               color={listing.condition === 'new' ? 'success' : 'default'}
             />
-            
-            <Button 
-              variant="contained" 
-              size="small" 
+
+            <Button
+              variant="contained"
+              size="small"
               onClick={() => onNavigate(listing.id)}
             >
               {t('listings.details.viewDetails')}
@@ -124,14 +124,14 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
   const mapContainerRef = useRef(null);
   const [selectedListing, setSelectedListing] = useState(null);
   const [mapReady, setMapReady] = useState(false);
-  
+
   // Состояние для модального окна с полноэкранной картой
   const [expandedMapOpen, setExpandedMapOpen] = useState(false);
   // Центр для полноэкранной карты
   const [expandedMapCenter, setExpandedMapCenter] = useState(null);
   // Маркеры для полноэкранной карты
   const [expandedMapMarkers, setExpandedMapMarkers] = useState([]);
-  
+
   // Варианты радиуса поиска
   const radiusOptions = [
     { value: "1km", label: "1 км" },
@@ -141,37 +141,40 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
     { value: "15km", label: "15 км" },
     { value: "30km", label: "30 км" }
   ];
-  
+
   // Инициализация карты
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
-    
-    // Устанавливаем центр карты
-    const initialPosition = userLocation 
-      ? [userLocation.latitude, userLocation.longitude] 
-      : [45.2671, 19.8335]; // Координаты Нови-Сада по умолчанию
-      
-    // Создаем карту
-    mapRef.current = L.map(mapContainerRef.current).setView(initialPosition, 13);
-    
-    // Добавляем слой тайлов
-    L.tileLayer(TILE_LAYER_URL, {
-      attribution: TILE_LAYER_ATTRIBUTION,
-      maxZoom: 19
-    }).addTo(mapRef.current);
-    
-    // Если есть местоположение пользователя, добавляем маркер
-    if (userLocation) {
-      L.circle(initialPosition, {
-        color: theme.palette.primary.main,
-        fillColor: theme.palette.primary.light,
-        fillOpacity: 0.2,
-        radius: getRadiusInMeters(filters.distance || '5km')
-      }).addTo(mapRef.current);
-      
-      L.marker(initialPosition, {
-        icon: L.divIcon({
-          html: `<div style="
+
+    // Добавим задержку, чтобы убедиться, что DOM готов
+    const timer = setTimeout(() => {
+      try {
+        // Устанавливаем центр карты
+        const initialPosition = userLocation
+          ? [userLocation.latitude, userLocation.longitude]
+          : [45.2671, 19.8335]; // Координаты Нови-Сада по умолчанию
+
+        // Создаем карту
+        mapRef.current = L.map(mapContainerRef.current).setView(initialPosition, 13);
+
+        // Добавляем слой тайлов
+        L.tileLayer(TILE_LAYER_URL, {
+          attribution: TILE_LAYER_ATTRIBUTION,
+          maxZoom: 19
+        }).addTo(mapRef.current);
+
+        // Если есть местоположение пользователя, добавляем маркер
+        if (userLocation) {
+          L.circle(initialPosition, {
+            color: theme.palette.primary.main,
+            fillColor: theme.palette.primary.light,
+            fillOpacity: 0.2,
+            radius: getRadiusInMeters(filters.distance || '5km')
+          }).addTo(mapRef.current);
+
+          L.marker(initialPosition, {
+            icon: L.divIcon({
+              html: `<div style="
             background-color: ${theme.palette.primary.main};
             width: 16px;
             height: 16px;
@@ -179,46 +182,51 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
             border: 2px solid white;
             box-shadow: 0 0 4px rgba(0,0,0,0.3);
           "></div>`,
-          className: 'my-location-marker',
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        })
-      }).addTo(mapRef.current)
-        .bindTooltip(t('listings.map.yourLocation'), { permanent: false });
-    }
-    
-    setMapReady(true);
-    
+              className: 'my-location-marker',
+              iconSize: [20, 20],
+              iconAnchor: [10, 10]
+            })
+          }).addTo(mapRef.current)
+            .bindTooltip(t('listings.map.yourLocation'), { permanent: false });
+        }
+
+        setMapReady(true);
+      } catch (error) {
+        console.error("Error initializing map:", error);
+      }
+    }, 100); // Небольшая задержка
+
     return () => {
+      clearTimeout(timer);
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
     };
   }, [userLocation, theme, t, filters.distance]);
-  
+
   // Функция для преобразования расстояния (например, "5km") в метры
   const getRadiusInMeters = (distanceString) => {
     if (!distanceString) return 5000; // По умолчанию 5 км
-    
+
     const match = distanceString.match(/^(\d+)km$/);
     if (match) {
       return parseInt(match[1]) * 1000;
     }
     return 5000;
   };
-  
+
   // Обновляем круг радиуса при изменении фильтра расстояния
   useEffect(() => {
     if (!mapRef.current || !userLocation || !filters.distance) return;
-    
+
     // Удаляем старые круги
     mapRef.current.eachLayer(layer => {
       if (layer instanceof L.Circle) {
         mapRef.current.removeLayer(layer);
       }
     });
-    
+
     // Добавляем новый круг с актуальным радиусом
     const radiusInMeters = getRadiusInMeters(filters.distance);
     L.circle([userLocation.latitude, userLocation.longitude], {
@@ -227,30 +235,30 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
       fillOpacity: 0.2,
       radius: radiusInMeters
     }).addTo(mapRef.current);
-    
+
   }, [filters.distance, userLocation, theme]);
-  
+
   // Обновляем маркеры объявлений
   useEffect(() => {
     if (!mapRef.current || !mapReady) return;
-    
+
     // Удаляем старые маркеры
     markersRef.current.forEach(marker => {
       mapRef.current.removeLayer(marker);
     });
     markersRef.current = [];
-    
+
     // Проверяем наличие объявлений с координатами
-    const validListings = listings.filter(listing => 
-      listing.latitude && listing.longitude && 
+    const validListings = listings.filter(listing =>
+      listing.latitude && listing.longitude &&
       listing.show_on_map !== false
     );
-    
+
     if (validListings.length === 0) return;
-    
+
     // Создаем группу маркеров для автомасштабирования
     const markerGroup = L.featureGroup();
-    
+
     // Добавляем новые маркеры
     validListings.forEach(listing => {
       const marker = L.marker([listing.latitude, listing.longitude])
@@ -258,12 +266,12 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
         .on('click', () => {
           setSelectedListing(listing);
         });
-      
+
       marker.addTo(mapRef.current);
       markerGroup.addLayer(marker);
       markersRef.current.push(marker);
     });
-    
+
     // Устанавливаем границы карты, чтобы были видны все маркеры
     // если нет пользовательского местоположения
     if (!userLocation) {
@@ -272,14 +280,14 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
         maxZoom: 15
       });
     }
-    
+
   }, [listings, mapReady, userLocation]);
-  
+
   // Обработчик изменения радиуса поиска
   const handleRadiusChange = (event) => {
     onFilterChange({ ...filters, distance: event.target.value });
   };
-  
+
   // Навигация к подробностям объявления
   const handleNavigateToListing = (listingId) => {
     navigate(`/marketplace/listings/${listingId}`);
@@ -296,10 +304,10 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
         title: listing.title,
         tooltip: `${listing.price.toLocaleString()} RSD`
       }));
-    
+
     // Определяем центр для полноэкранной карты
     let center = null;
-    
+
     if (selectedListing && selectedListing.latitude && selectedListing.longitude) {
       // Если выбрано объявление, используем его координаты как центр
       center = {
@@ -323,21 +331,21 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
         title: t('listings.map.mapCenter')
       };
     }
-    
+
     setExpandedMapCenter(center);
     setExpandedMapMarkers(markersForFullscreen);
     setExpandedMapOpen(true);
   };
-  
+
   // Обработчик для закрытия полноэкранной карты
   const handleCloseExpandedMap = () => {
     setExpandedMapOpen(false);
   };
-  
+
   return (
-    <Box 
-      sx={{ 
-        position: 'relative', 
+    <Box
+      sx={{
+        position: 'relative',
         height: isMobile ? 'calc(100vh - 120px)' : '90vh',
         width: '100%',
         display: 'flex',
@@ -345,10 +353,10 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
       }}
     >
       {/* Панель инструментов карты */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 2, 
+      <Paper
+        elevation={3}
+        sx={{
+          p: 2,
           mb: 2,
           zIndex: 1000,
           display: 'flex',
@@ -362,14 +370,14 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
           <Typography variant="subtitle1">
             {t('listings.map.showOnMap')}
           </Typography>
-          
-          <Chip 
+
+          <Chip
             label={`${listings.filter(l => l.latitude && l.longitude && l.show_on_map !== false).length} ${t('listings.map.itemsOnMap')}`}
             color="primary"
             variant="outlined"
           />
         </Box>
-        
+
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {userLocation && (
             <FormControl size="small" sx={{ minWidth: 120 }}>
@@ -388,7 +396,7 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
               </Select>
             </FormControl>
           )}
-          
+
           <Button
             variant="outlined"
             startIcon={<List />}
@@ -398,15 +406,15 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
           </Button>
         </Box>
       </Paper>
-      
+
       {/* Контейнер карты */}
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           flex: 1,
           borderRadius: 1,
           overflow: 'hidden',
           position: 'relative'
-        }} 
+        }}
       >
         {/* Добавляем кнопку "Развернуть" в стиле MiniMap */}
         <IconButton
@@ -426,22 +434,22 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
         >
           <Maximize2 size={20} />
         </IconButton>
-        
-        <div 
+
+        <div
           ref={mapContainerRef}
           style={{ width: '100%', height: '100%' }}
         />
       </Box>
-      
+
       {/* Информация о выбранном объявлении */}
       {selectedListing && (
-        <ListingPreview 
+        <ListingPreview
           listing={selectedListing}
           onClose={() => setSelectedListing(null)}
           onNavigate={handleNavigateToListing}
         />
       )}
-      
+
       {/* Кнопка определения местоположения */}
       {!userLocation && (
         <Button
@@ -459,7 +467,7 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
               navigator.geolocation.getCurrentPosition(
                 (position) => {
                   const { latitude, longitude } = position.coords;
-                  
+
                   // Обновляем фильтры с новыми координатами
                   onFilterChange({
                     ...filters,
@@ -467,7 +475,7 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
                     longitude,
                     distance: filters.distance || '5km'
                   });
-                  
+
                   // Центрируем карту на новых координатах
                   if (mapRef.current) {
                     mapRef.current.setView([latitude, longitude], 13);
@@ -486,7 +494,7 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
           {t('listings.map.useMyLocation')}
         </Button>
       )}
-      
+
       {/* Модальное окно с полноэкранной картой */}
       <Modal
         open={expandedMapOpen}
@@ -526,9 +534,9 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
               <X size={20} />
             </IconButton>
           </Box>
-          
+
           {expandedMapCenter && (
-            <FullscreenMap 
+            <FullscreenMap
               latitude={expandedMapCenter.latitude}
               longitude={expandedMapCenter.longitude}
               title={expandedMapCenter.title}
