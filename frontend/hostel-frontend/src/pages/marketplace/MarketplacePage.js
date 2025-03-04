@@ -19,7 +19,7 @@ import {
     Tooltip,
 }
     from '@mui/material';
-    import { Plus, Search, X, List } from 'lucide-react';
+import { Plus, Search, X, List } from 'lucide-react';
 import ListingCard from '../../components/marketplace/ListingCard';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import {
@@ -215,10 +215,10 @@ const MarketplacePage = () => {
         if (!categoryId || !categoriesTree || categoriesTree.length === 0) {
             return [];
         }
-    
+
         // Создаем плоскую карту всех категорий для быстрого поиска
         const categoryMap = new Map(); // Используем нативный Map, а не компонент из lucide-react
-    
+
         const flattenCategories = (categories) => {
             for (const category of categories) {
                 categoryMap.set(String(category.id), category);
@@ -227,18 +227,18 @@ const MarketplacePage = () => {
                 }
             }
         };
-    
+
         // Заполняем карту всеми категориями
         flattenCategories(categoriesTree);
-    
+
         // Строим путь от выбранной категории до корня
         const path = [];
         let currentId = String(categoryId);
-    
+
         while (currentId) {
             const category = categoryMap.get(currentId);
             if (!category) break;
-    
+
             // Добавляем категорию в начало пути
             path.unshift({
                 id: category.id,
@@ -246,11 +246,11 @@ const MarketplacePage = () => {
                 slug: category.slug,
                 translations: category.translations
             });
-    
+
             // Переходим к родителю
             currentId = category.parent_id ? String(category.parent_id) : null;
         }
-    
+
         return path;
     };
 
@@ -263,70 +263,65 @@ const MarketplacePage = () => {
         }
     }, [filters.category_id, categories]);
 
- 
-const handleFilterChange = useCallback((newFilters, categoryId = null) => {
-    console.log(`MarketplacePage: handleFilterChange вызван с фильтрами:`, newFilters);
-    if (categoryId !== null) {
-        console.log(`MarketplacePage: передан отдельный categoryId: ${categoryId}`);
-    }
-    
-    setFilters(prev => {
-        // Создаем копию текущих фильтров
-        const updated = { ...prev, ...newFilters };
+
+    const handleFilterChange = useCallback((newFilters, categoryId = null) => {
+        console.log(`MarketplacePage: handleFilterChange вызван с фильтрами:`, newFilters);
         
-        // Если передана категория, добавляем её в фильтры
-        if (categoryId !== null) {
-            console.log(`MarketplacePage: устанавливаем category_id = ${categoryId}`);
-            updated.category_id = categoryId;
+        setFilters(prev => {
+            const updated = { ...prev, ...newFilters };
             
-            // Если выбирается категория через автодополнение, очищаем текстовый запрос
-            if (updated.query && updated.category_id) {
-                console.log('MarketplacePage: очищаем query при установке category_id');
-                updated.query = '';
+            if (categoryId !== null) {
+                updated.category_id = categoryId;
+                
+                if (updated.query && updated.category_id) {
+                    updated.query = '';
+                }
             }
-        }
-
-        // Обновляем URL
-        const nextParams = new URLSearchParams(searchParams);
-        Object.entries(updated).forEach(([key, value]) => {
-            if (value) {
-                nextParams.set(key, value);
-            } else {
-                nextParams.delete(key);
+    
+            // Проверка наличия параметра distance без координат
+            if (updated.distance && (!updated.latitude || !updated.longitude)) {
+                console.log('MarketplacePage: сброс параметра distance из-за отсутствия координат');
+                updated.distance = '';
             }
-        });
-
-        if (!window.location.pathname.includes('/marketplace')) {
-            navigate({
-                pathname: '/marketplace',
-                search: nextParams.toString()
+    
+            // Обновляем URL
+            const nextParams = new URLSearchParams(searchParams);
+            Object.entries(updated).forEach(([key, value]) => {
+                if (value) {
+                    nextParams.set(key, value);
+                } else {
+                    nextParams.delete(key);
+                }
             });
-        } else {
-            setSearchParams(nextParams);
-        }
-
-        // Подготавливаем чистые фильтры без пустых значений для запроса
-        const cleanFilters = {};
-        Object.entries(updated).forEach(([key, value]) => {
-            if (value !== '') {
-                cleanFilters[key] = value;
+    
+            if (!window.location.pathname.includes('/marketplace')) {
+                navigate({
+                    pathname: '/marketplace',
+                    search: nextParams.toString()
+                });
+            } else {
+                setSearchParams(nextParams);
             }
+    
+            // Подготавливаем чистые фильтры без пустых значений для запроса
+            const cleanFilters = {};
+            Object.entries(updated).forEach(([key, value]) => {
+                if (value !== '') {
+                    cleanFilters[key] = value;
+                }
+            });
+            
+            console.log('MarketplacePage: отправка фильтров на поиск:', cleanFilters);
+            fetchListings(cleanFilters);
+            
+            return updated;
         });
-        
-        // Выводим для отладки информацию о запросе
-        console.log('MarketplacePage: отправка фильтров на поиск:', cleanFilters);
-        
-        // Выполняем запрос с новыми фильтрами
-        fetchListings(cleanFilters);
-        
-        return updated;
-    });
-}, [searchParams, setSearchParams, navigate, fetchListings]);
+    }, [searchParams, setSearchParams, navigate, fetchListings]);
 
     // Обработчик переключения режима просмотра (список/карта)
     const handleToggleMapView = useCallback(() => {
         const nextParams = new URLSearchParams(searchParams);
-        
+
         if (mapViewActive) {
             // Переключаемся на список
             nextParams.set('viewMode', 'list');
@@ -335,14 +330,14 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
             // Переключаемся на карту без автоопределения местоположения
             nextParams.set('viewMode', 'map');
             setMapViewActive(true);
-            
+
             // Используем уже имеющиеся координаты, если они есть
             if (filters.latitude && filters.longitude) {
                 nextParams.set('latitude', filters.latitude);
                 nextParams.set('longitude', filters.longitude);
                 nextParams.set('distance', filters.distance || '5km');
             }
-            
+
             setSearchParams(nextParams);
         }
     }, [mapViewActive, searchParams, setSearchParams, filters]);
@@ -355,7 +350,31 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
             return count;
         }, 0);
     };
+    // Добавьте эту функцию в MarketplacePage.js
+    const resetAllFilters = () => {
+        const nextParams = new URLSearchParams();
+        if (searchParams.get('viewMode')) {
+            nextParams.set('viewMode', searchParams.get('viewMode'));
+        }
+        setSearchParams(nextParams);
 
+        const defaultFilters = {
+            query: "",
+            category_id: "",
+            min_price: "",
+            max_price: "",
+            city: "",
+            country: "",
+            condition: "",
+            sort_by: "date_desc",
+            distance: "",
+            latitude: null,
+            longitude: null
+        };
+
+        setFilters(defaultFilters);
+        fetchListings({});
+    };
     const renderContent = () => {
         if (loading) {
             return (
@@ -376,7 +395,7 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
         // Если активен режим карты
         if (mapViewActive) {
             return (
-                <MapView 
+                <MapView
                     listings={listings}
                     userLocation={userLocation}
                     filters={filters}
@@ -468,7 +487,7 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
                 }}>
                     {/* Активные фильтры */}
                     {Object.entries(filters).some(([key, value]) => value && key !== 'sort_by') && (
-                        <Box sx={{ px: 2, py: 1, display: 'flex', gap: 1, overflowX: 'auto' }}>
+                        <Box sx={{ px: 2, py: 1, display: 'flex', gap: 1, overflowX: 'auto', alignItems: 'center' }}>
                             {Object.entries(filters).map(([key, value]) => {
                                 if (!value || key === 'sort_by' || key === 'latitude' || key === 'longitude') return null;
                                 let label = value;
@@ -487,6 +506,15 @@ const handleFilterChange = useCallback((newFilters, categoryId = null) => {
                                     />
                                 );
                             })}
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                size="small"
+                                onClick={resetAllFilters}
+                                sx={{ ml: 'auto', whiteSpace: 'nowrap' }}
+                            >
+                                {t('listings.filters.resetAll', { defaultValue: 'Сбросить всё' })}
+                            </Button>
                         </Box>
                     )}
                 </Box>

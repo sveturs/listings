@@ -29,15 +29,15 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
 
     const handleCategorySelect = useCallback((id) => {
         console.log(`MarketplaceFilters: Выбрана категория с ID: ${id}`);
-        
+
         // Вызываем onFilterChange, но с пустым запросом, чтобы показать все товары категории
-        onFilterChange({ 
-            ...filters, 
+        onFilterChange({
+            ...filters,
             category_id: id,
             query: '' // Очищаем поисковый запрос при выборе категории
         });
     }, [filters, onFilterChange]);
-    
+
 
     // Проверяем правильность передачи поискового запроса
     const handleSearchChange = useCallback((value) => {
@@ -49,7 +49,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
     const isMapAvailable = useMemo(() => {
         return !filters.distance || (filters.latitude && filters.longitude);
     }, [filters.distance, filters.latitude, filters.longitude]);
-
+    const isDistanceWithoutCoordinates = filters.distance && (!filters.latitude || !filters.longitude);
     return (
         <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Поиск с автодополнением */}
@@ -90,7 +90,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                     </Typography>
                 </Box>
             )}
-            
+
             <Divider sx={{ my: 1 }} />
 
             {/* Основные фильтры */}
@@ -135,11 +135,16 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                                 <MenuItem value="30km">30 км</MenuItem>
                             </Select>
                         </FormControl>
-                        <Typography variant="caption" color="text.secondary">
-                            {filters.latitude && filters.longitude 
+                        <Typography variant="caption" color={isDistanceWithoutCoordinates ? "error.main" : "text.secondary"}>
+                            {filters.latitude && filters.longitude
                                 ? t('listings.filters.distance.fromYourLocation')
                                 : t('listings.filters.distance.needLocation')}
                         </Typography>
+                        {isDistanceWithoutCoordinates && (
+                            <Typography variant="caption" color="error.main" sx={{ display: 'block', mt: 0.5 }}>
+                                {t('listings.filters.distance.warningNoLocation', { defaultValue: 'Укажите местоположение, чтобы использовать фильтр по расстоянию' })}
+                            </Typography>
+                        )}
                     </Box>
 
                     {/* Фильтр по состоянию */}
@@ -149,20 +154,20 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                             value={filters.condition || ''}
                             onChange={(e) => onFilterChange({ ...filters, condition: e.target.value })}
                         >
-                            <FormControlLabel 
-                                value="" 
-                                control={<Radio size="small" />} 
-                                label={t('listings.filters.condition.any')} 
+                            <FormControlLabel
+                                value=""
+                                control={<Radio size="small" />}
+                                label={t('listings.filters.condition.any')}
                             />
-                            <FormControlLabel 
-                                value="new" 
-                                control={<Radio size="small" />} 
-                                label={t('listings.conditions.new')} 
+                            <FormControlLabel
+                                value="new"
+                                control={<Radio size="small" />}
+                                label={t('listings.conditions.new')}
                             />
-                            <FormControlLabel 
-                                value="used" 
-                                control={<Radio size="small" />} 
-                                label={t('listings.conditions.used')} 
+                            <FormControlLabel
+                                value="used"
+                                control={<Radio size="small" />}
+                                label={t('listings.conditions.used')}
                             />
                         </RadioGroup>
                     </Box>

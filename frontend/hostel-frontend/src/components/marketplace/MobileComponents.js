@@ -313,7 +313,10 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
             min_price: "",
             max_price: "",
             condition: "",
-            sort_by: "date_desc"
+            sort_by: "date_desc",
+            distance: "",  // Важно: сбрасываем distance
+            latitude: null, // Сбрасываем координаты
+            longitude: null
         });
     };
 
