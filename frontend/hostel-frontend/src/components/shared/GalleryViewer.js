@@ -31,6 +31,8 @@ const GalleryViewer = ({
 }) => {
     const [selectedIndex, setSelectedIndex] = useState(galleryMode === 'fullscreen' ? initialIndex : null);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    const [transitionDirection, setTransitionDirection] = useState(null);
     const isOpen = externalOpen !== undefined ? externalOpen : selectedIndex !== null;
 
     // Ссылки для обработки свайпов
@@ -84,13 +86,31 @@ const GalleryViewer = ({
     const handlePrev = (e) => {
         e?.stopPropagation();
         setIsZoomed(false);
-        setSelectedIndex(prev => (prev > 0 ? prev - 1 : images.length - 1));
+        
+        // Добавляем анимацию
+        setTransitionDirection('right');
+        setIsTransitioning(true);
+        
+        // Обновляем индекс после небольшой задержки
+        setTimeout(() => {
+            setSelectedIndex(prev => (prev > 0 ? prev - 1 : images.length - 1));
+            setIsTransitioning(false);
+        }, 300); // Длительность анимации в миллисекундах
     };
 
     const handleNext = (e) => {
         e?.stopPropagation();
         setIsZoomed(false);
-        setSelectedIndex(prev => (prev < images.length - 1 ? prev + 1 : 0));
+        
+        // Добавляем анимацию
+        setTransitionDirection('left');
+        setIsTransitioning(true);
+        
+        // Обновляем индекс после небольшой задержки
+        setTimeout(() => {
+            setSelectedIndex(prev => (prev < images.length - 1 ? prev + 1 : 0));
+            setIsTransitioning(false);
+        }, 300); // Длительность анимации в миллисекундах
     };
 
     const toggleZoom = (e) => {
@@ -146,9 +166,6 @@ const GalleryViewer = ({
         touchStartX.current = null;
         touchStartY.current = null;
     };
-
-    // Этот код был перемещен выше return null, чтобы исправить ошибку
-    // см. обновленный код выше
 
     return (
         <>
@@ -298,7 +315,11 @@ const GalleryViewer = ({
                                 height: isZoomed ? 'auto' : 'auto',
                                 objectFit: 'contain',
                                 cursor: isZoomed ? 'zoom-out' : 'zoom-in',
-                                transition: 'transform 0.3s ease'
+                                transition: 'all 0.3s ease',
+                                transform: isTransitioning 
+                                    ? `translateX(${transitionDirection === 'left' ? '-100px' : '100px'}) scale(0.9)` 
+                                    : 'translateX(0) scale(1)',
+                                opacity: isTransitioning ? 0.5 : 1
                             }}
                             onClick={(e) => {
                                 e.stopPropagation();
