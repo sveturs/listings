@@ -1,84 +1,98 @@
-// frontend/hostel-frontend/src/components/maps/SimpleMiniMap.js
+
+// Путь: src/components/maps/MiniMap.js
+
 import React, { useEffect, useRef } from 'react';
-import { Box, IconButton } from '@mui/material';
-import { Maximize2 } from 'lucide-react';
+import { Box, Paper } from '@mui/material';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Исправляем проблему с маркерами Leaflet в React
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
-
-const SimpleMiniMap = ({ latitude, longitude, title = 'Местоположение', onExpand }) => {
-  const mapDivRef = useRef(null);
+const MiniMap = ({ latitude, longitude, address }) => {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
   useEffect(() => {
-    // Проверяем, что координаты есть и DOM-элемент готов
-    if (!latitude || !longitude || !mapDivRef.current) return;
-    if (!latitude || !longitude || (latitude === 0 && longitude === 0)) {
-      console.log("Некорректные координаты для карты: ", latitude, longitude);
-      return; // Не инициализируем карту с нулевыми координатами
+    // Проверяем валидность координат перед инициализацией карты
+    if (!latitude || !longitude || isNaN(Number(latitude)) || isNaN(Number(longitude))) {
+      console.log('Invalid map coordinates:', { latitude, longitude });
+      return; // Пропускаем инициализацию карты, если координаты невалидны
     }
-    // Очищаем содержимое div, чтобы избежать дублирования карты
-    mapDivRef.current.innerHTML = '';
 
-    console.log('Initializing simple mini map...');
+    // Конвертируем строковые координаты в числа для точности
+    const lat = Number(latitude);
+    const lng = Number(longitude);
 
-    // Создаем новую карту
-    const map = L.map(mapDivRef.current).setView([latitude, longitude], 14);
+    // Если карта уже инициализирована, удаляем её перед созданием новой
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
 
-    // Добавляем слой тайлов
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    // Проверяем, существует ли DOM-элемент
+    if (!mapRef.current) {
+      console.log('Map container element not found');
+      return;
+    }
 
-    // Добавляем маркер
-    L.marker([latitude, longitude])
-      .addTo(map)
-      .bindPopup(title);
+    try {
+      // Создаем карту с защитой от ошибок
+      const map = L.map(mapRef.current, {
+        center: [lat, lng],
+        zoom: 13,
+        scrollWheelZoom: false,
+        dragging: false,
+        touchZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        tap: false,
+        keyboard: false,
+        zoomControl: false,
+        attributionControl: false
+      });
 
-    // Сохраняем ссылку на карту для будущей очистки
-    const mapInstance = map;
+      mapInstanceRef.current = map;
 
-    // Функция очистки при размонтировании компонента
-    return () => {
-      if (mapInstance) {
-        console.log('Cleaning up simple mini map...');
-        mapInstance.remove();
-      }
-    };
-  }, [latitude, longitude, title]);
+      // Добавляем OpenStreetMap тайлы
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Добавляем маркер
+      L.marker([lat, lng]).addTo(map);
+
+      // Правильно обрабатываем очистку при размонтировании
+      return () => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
+        }
+      };
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+  }, [latitude, longitude]); // Пересоздаем карту только при изменении координат
+
+  // Если нет координат, не рендерим карту
+  if (!latitude || !longitude || isNaN(Number(latitude)) || isNaN(Number(longitude))) {
+    return null;
+  }
 
   return (
-    <Box sx={{ width: '100%', height: 200, borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
-      <div
-        ref={mapDivRef}
-        style={{ width: '100%', height: '100%' }}
+    <Paper elevation={1} sx={{ overflow: 'hidden', borderRadius: 1 }}>
+      <Box
+        ref={mapRef}
+        sx={{
+          height: 200,
+          width: '100%'
+        }}
       />
-
-      {onExpand && (
-        <IconButton
-          onClick={onExpand}
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            bgcolor: 'background.paper',
-            '&:hover': {
-              bgcolor: 'background.paper',
-            },
-            zIndex: 1000 // Убедимся, что кнопка отображается поверх карты
-          }}
-        >
-          <Maximize2 size={20} />
-        </IconButton>
+      {address && (
+        <Box sx={{ p: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
+          {address}
+        </Box>
       )}
-    </Box>
+    </Paper>
   );
 };
 
-export default SimpleMiniMap;
+export default MiniMap;
