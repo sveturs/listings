@@ -113,41 +113,17 @@ func (s *Storage) GetSubcategories(ctx context.Context, parentID *int, limit int
 func (s *Storage) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
 	var listingID int
 
-	// Всегда определяем язык текста, даже если указан язык интерфейса
-	fullText := listing.Title + "\n" + listing.Description
-	detectedLanguage, confidence, err := s.translationService.DetectLanguage(ctx, fullText)
-
-	if err != nil || confidence < 0.8 {
-		// Если не удалось определить язык или уверенность низкая
-		if listing.OriginalLanguage != "" {
-			// Используем явно указанный язык
-			detectedLanguage = listing.OriginalLanguage
-		} else if userLang, ok := ctx.Value("user_language").(string); ok && userLang != "" {
-			// Используем язык интерфейса
-			detectedLanguage = userLang
+	// Если не указан язык, берем значение из контекста или используем по умолчанию
+	if listing.OriginalLanguage == "" {
+		if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
+			listing.OriginalLanguage = userLang
 		} else {
-			detectedLanguage = "en"
+			listing.OriginalLanguage = "ru" // Значение по умолчанию
 		}
 	}
 
-	// Устанавливаем определенный язык
-	listing.OriginalLanguage = detectedLanguage
-
-	// Проверяем текст на модерацию перед сохранением
-	moderatedTitle, err := s.translationService.ModerateText(ctx, listing.Title, listing.OriginalLanguage)
-	if err != nil {
-		return 0, fmt.Errorf("failed to moderate title: %w", err)
-	}
-	listing.Title = moderatedTitle
-
-	moderatedDesc, err := s.translationService.ModerateText(ctx, listing.Description, listing.OriginalLanguage)
-	if err != nil {
-		return 0, fmt.Errorf("failed to moderate description: %w", err)
-	}
-	listing.Description = moderatedDesc
-
 	// Вставляем основные данные объявления
-	err = s.pool.QueryRow(ctx, `
+	err := s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
@@ -193,48 +169,12 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		log.Printf("Error saving original description translation: %v", err)
 	}
 
-	// Переводим на другие языки
-	targetLanguages := []string{"en", "ru", "sr"}
-	for _, targetLang := range targetLanguages {
-		if targetLang == listing.OriginalLanguage {
-			continue
-		}
-
-		// Переводим заголовок
-		translatedTitle, err := s.translationService.Translate(ctx, listing.Title, listing.OriginalLanguage, targetLang)
-		if err == nil {
-			_, err = s.pool.Exec(ctx, `
-                INSERT INTO translations (
-                    entity_type, entity_id, language, field_name, 
-                    translated_text, is_machine_translated, is_verified
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-            `,
-				"listing", listingID, targetLang, "title",
-				translatedTitle, true, false)
-			if err != nil {
-				log.Printf("Error saving %s title translation: %v", targetLang, err)
-			}
-		}
-
-		// Переводим описание
-		translatedDesc, err := s.translationService.Translate(ctx, listing.Description, listing.OriginalLanguage, targetLang)
-		if err == nil {
-			_, err = s.pool.Exec(ctx, `
-                INSERT INTO translations (
-                    entity_type, entity_id, language, field_name, 
-                    translated_text, is_machine_translated, is_verified
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-            `,
-				"listing", listingID, targetLang, "description",
-				translatedDesc, true, false)
-			if err != nil {
-				log.Printf("Error saving %s description translation: %v", targetLang, err)
-			}
-		}
-	}
+	// Удаляем автоматический перевод на другие языки
+	// Этот код был здесь ранее, но мы его убираем
 
 	return listingID, nil
 }
+
 
 func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
 	var imageID int

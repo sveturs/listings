@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/pages/store/StorefrontReviewsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

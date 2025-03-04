@@ -26,12 +26,36 @@ import {
     TableCell,
     TableContainer,
     TableHead,
-    TableRow
+    TableRow,
+    ButtonGroup,
+    Tooltip,
+    ToggleButtonGroup,
+    ToggleButton,
+    Checkbox
 } from '@mui/material';
-import { Edit, Trash2, Plus, Database, Upload, Settings, BarChart, RefreshCw, FileType, AlertTriangle } from 'lucide-react';
+import {
+    Edit,
+    Trash2,
+    Plus,
+    Database,
+    Upload,
+    Settings,
+    BarChart,
+    RefreshCw,
+    FileType,
+    AlertTriangle,
+    Grid as GridIcon,
+    List,
+    LanguagesIcon, // Используем LanguagesIcon вместо Translate
+    Check,
+    Info
+} from 'lucide-react';
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import ListingCard from '../../components/marketplace/ListingCard';
+import StorefrontListingsList from '../../components/store/StorefrontListingsList';
+import BatchActionsBar from '../../components/store/BatchActionsBar';
+import ListingsPagination from '../../components/store/ListingsPagination';
 
 const TabPanel = (props) => {
     const { children, value, index, ...other } = props;
@@ -77,31 +101,54 @@ const StorefrontDetailPage = () => {
     const [importLoading, setImportLoading] = useState(false);
     const [runningImport, setRunningImport] = useState(null);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [storefrontResponse, sourcesResponse, listingsResponse] = await Promise.all([
-                    axios.get(`/api/v1/storefronts/${id}`),
-                    axios.get(`/api/v1/storefronts/${id}/import-sources`),
-                    axios.get('/api/v1/marketplace/listings', { 
-                        params: { storefront_id: id } 
-                    })
-                ]);
-                
-                setStorefront(storefrontResponse.data.data);
-                setImportSources(sourcesResponse.data.data || []);
-                setStoreListings(listingsResponse.data.data?.data || []);
-            } catch (err) {
-                console.error('Error fetching storefront data:', err);
-                setError(t('marketplace:store.errors.loadFailed'));
-            } finally {
-                setLoading(false);
-            }
-        };
+    // Новые состояния для списочного режима и выбора элементов
+    const [viewMode, setViewMode] = useState('grid');
+    const [selectedListings, setSelectedListings] = useState([]);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [translationLoading, setTranslationLoading] = useState(false);
+    const [batchActionSuccess, setBatchActionSuccess] = useState(null);
+    
+    // Состояния для пагинации
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(20);
+    const [totalItems, setTotalItems] = useState(0);
 
+    // Функция для загрузки данных с учетом пагинации
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [storefrontResponse, sourcesResponse, listingsResponse] = await Promise.all([
+                axios.get(`/api/v1/storefronts/${id}`),
+                axios.get(`/api/v1/storefronts/${id}/import-sources`),
+                axios.get('/api/v1/marketplace/listings', { 
+                    params: { 
+                        storefront_id: id,
+                        page: page,
+                        limit: limit
+                    } 
+                })
+            ]);
+            
+            setStorefront(storefrontResponse.data.data);
+            setImportSources(sourcesResponse.data.data || []);
+            
+            // Используем data и meta из ответа
+            const listings = listingsResponse.data.data?.data || [];
+            const meta = listingsResponse.data.data?.meta || {};
+            
+            setStoreListings(listings);
+            setTotalItems(meta.total || listings.length);
+        } catch (err) {
+            console.error('Error fetching storefront data:', err);
+            setError(t('marketplace:store.errors.loadFailed'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
-    }, [id, t]);
+    }, [id, page, limit, t]);
 
     const fetchImportHistory = async (sourceId) => {
         try {
@@ -216,6 +263,9 @@ const StorefrontDetailPage = () => {
             // Обновляем историю для этого источника
             await fetchImportHistory(sourceId);
 
+            // Обновляем список объявлений
+            fetchData();
+
             // Сбрасываем файл после успешного импорта
             setImportFile(null);
 
@@ -246,6 +296,106 @@ const StorefrontDetailPage = () => {
 
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
+    };
+
+    // Обработчик изменения режима отображения (плитка/список)
+    const handleViewModeChange = (event, newMode) => {
+        if (newMode !== null) {
+            setViewMode(newMode);
+        }
+    };
+
+    // Обработчик выбора одного объявления
+    const handleSelectListing = (listingId) => {
+        setSelectedListings(prev => {
+            if (prev.includes(listingId)) {
+                return prev.filter(id => id !== listingId);
+            } else {
+                return [...prev, listingId];
+            }
+        });
+    };
+
+    // Обработчик выбора всех объявлений
+    const handleSelectAllListings = (checked) => {
+        if (checked) {
+            setSelectedListings(storeListings.map(listing => listing.id));
+        } else {
+            setSelectedListings([]);
+        }
+    };
+
+    // Обработчики пагинации
+    const handlePageChange = (newPage) => {
+        setPage(newPage);
+        // При смене страницы сбрасываем выбранные элементы
+        setSelectedListings([]);
+    };
+
+    const handleLimitChange = (newLimit) => {
+        setLimit(newLimit);
+        // При изменении лимита возвращаемся на первую страницу и сбрасываем выбор
+        setPage(1);
+        setSelectedListings([]);
+    };
+
+    // Обработчик для группового удаления объявлений
+    const handleDeleteSelectedListings = async () => {
+        if (selectedListings.length === 0) return;
+
+        try {
+            // Последовательно удаляем каждое объявление
+            for (const listingId of selectedListings) {
+                await axios.delete(`/api/v1/marketplace/listings/${listingId}`);
+            }
+
+            // Обновляем список объявлений через нашу новую функцию
+            fetchData();
+
+            // Очищаем выбранные элементы
+            setSelectedListings([]);
+
+            // Показываем сообщение об успехе
+            setBatchActionSuccess(t('marketplace:store.listings.deleteSuccess', { count: selectedListings.length }));
+
+            // Скрываем сообщение через 3 секунды
+            setTimeout(() => setBatchActionSuccess(null), 3000);
+
+            // Закрываем модальное окно подтверждения
+            setDeleteConfirmOpen(false);
+        } catch (err) {
+            console.error('Error deleting listings:', err);
+            alert(t('marketplace:store.listings.deleteError'));
+            setDeleteConfirmOpen(false);
+        }
+    };
+
+    // Обработчик для группового перевода объявлений
+    const handleTranslateSelectedListings = async () => {
+        if (selectedListings.length === 0) return;
+
+        try {
+            setTranslationLoading(true);
+
+            // Используем новый API-метод для группового перевода
+            const response = await axios.post('/api/v1/marketplace/translations/batch', {
+                listing_ids: selectedListings,
+                target_languages: ['sr', 'en', 'ru']
+            });
+
+            console.log('Translation response:', response.data);
+
+            // Показываем сообщение об успехе
+            setBatchActionSuccess(t('marketplace:store.listings.translateSuccess', { count: selectedListings.length }));
+
+            // Скрываем сообщение через 3 секунды
+            setTimeout(() => setBatchActionSuccess(null), 3000);
+        } catch (err) {
+            console.error('Error translating listings:', err);
+            alert(t('marketplace:store.listings.translateError'));
+        } finally {
+            setTranslationLoading(false);
+        }
     };
 
     if (loading) {
@@ -303,38 +453,143 @@ const StorefrontDetailPage = () => {
 
                 <TabPanel value={activeTab} index={0}>
                     <Box mt={3}>
-                        <Typography variant="h6" gutterBottom>
-                            {t('marketplace:store.storeProducts')}
-                        </Typography>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                            <Typography variant="h6">
+                                {t('marketplace:store.storeProducts')}
+                            </Typography>
+                            
+                            <Box display="flex" alignItems="center" gap={2}>
+                                {/* Групповые действия */}
+                                {selectedListings.length > 0 && (
+                                    <ButtonGroup size="small" variant="outlined">
+                                        <Tooltip title={t('marketplace:store.listings.translateSelected')}>
+                                            <Button 
+                                                startIcon={<LanguagesIcon />} 
+                                                onClick={handleTranslateSelectedListings}
+                                                disabled={translationLoading}
+                                            >
+                                                {translationLoading ? (
+                                                    <CircularProgress size={20} />
+                                                ) : (
+                                                    t('marketplace:store.listings.translate')
+                                                )}
+                                            </Button>
+                                        </Tooltip>
+                                        <Tooltip title={t('marketplace:store.listings.deleteSelected')}>
+                                            <Button 
+                                                startIcon={<Trash2 />} 
+                                                color="error"
+                                                onClick={() => setDeleteConfirmOpen(true)}
+                                            >
+                                                {t('marketplace:store.listings.delete')}
+                                            </Button>
+                                        </Tooltip>
+                                    </ButtonGroup>
+                                )}
+                                
+                                {/* Переключатель режима отображения */}
+                                <ToggleButtonGroup
+                                    value={viewMode}
+                                    exclusive
+                                    onChange={handleViewModeChange}
+                                    aria-label="view mode"
+                                    size="small"
+                                >
+                                    <ToggleButton value="grid" aria-label="grid view">
+                                        <GridIcon size={18} />
+                                    </ToggleButton>
+                                    <ToggleButton value="list" aria-label="list view">
+                                        <List size={18} />
+                                    </ToggleButton>
+                                </ToggleButtonGroup>
+                            </Box>
+                        </Box>
+                        
+                        {/* Отображение сообщения об успехе */}
+                        {batchActionSuccess && (
+                            <Alert 
+                                icon={<Check />} 
+                                severity="success" 
+                                sx={{ mb: 2 }}
+                                action={
+                                    <IconButton
+                                        aria-label="close" color="inherit"
+                                        size="small"
+                                        onClick={() => setBatchActionSuccess(null)}
+                                    >
+                                        <Trash2 fontSize="inherit" />
+                                    </IconButton>
+                                }
+                            >
+                                {batchActionSuccess}
+                            </Alert>
+                        )}
 
-                        <Grid container spacing={3} mt={1}>
-                            {loading ? (
-                                <Box display="flex" justifyContent="center" width="100%" p={4}>
-                                    <CircularProgress />
-                                </Box>
-                            ) : (
-                                <>
-                                    {storeListings && storeListings.length > 0 ? (
-                                        storeListings.map((listing) => (
-                                            <Grid item xs={12} sm={6} md={4} key={listing.id}>
+                        {storeListings.length === 0 ? (
+                            <Alert severity="info" icon={<Info />}>
+                                {t('marketplace:store.noProducts')}
+                            </Alert>
+                        ) : viewMode === 'grid' ? (
+                            <>
+                                <Grid container spacing={3}>
+                                    {storeListings.map((listing) => (
+                                        <Grid item xs={12} sm={6} md={4} key={listing.id}>
+                                            <Box position="relative">
+                                                <Checkbox
+                                                    checked={selectedListings.includes(listing.id)}
+                                                    onChange={() => handleSelectListing(listing.id)}
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: 8,
+                                                        left: 8,
+                                                        zIndex: 1,
+                                                        bgcolor: 'rgba(255,255,255,0.8)',
+                                                        borderRadius: '50%',
+                                                        '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }
+                                                    }}
+                                                />
                                                 <Link
                                                     to={`/marketplace/listings/${listing.id}`}
                                                     style={{ textDecoration: 'none' }}
                                                 >
                                                     <ListingCard listing={listing} />
                                                 </Link>
-                                            </Grid>
-                                        ))
-                                    ) : (
-                                        <Box width="100%" p={4} textAlign="center">
-                                            <Typography>{t('marketplace:store.noProducts')}</Typography>
-                                        </Box>
-                                    )}
-                                </>
-                            )}
-                        </Grid>
+                                            </Box>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                                
+                                {/* Добавляем пагинацию после грида */}
+                                <ListingsPagination
+                                    totalItems={totalItems}
+                                    page={page}
+                                    limit={limit}
+                                    onPageChange={handlePageChange}
+                                    onLimitChange={handleLimitChange}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <StorefrontListingsList
+                                    listings={storeListings}
+                                    selectedItems={selectedListings}
+                                    onSelectItem={handleSelectListing}
+                                    onSelectAll={handleSelectAllListings}
+                                />
+                                
+                                {/* Добавляем пагинацию после списка */}
+                                <ListingsPagination
+                                    totalItems={totalItems}
+                                    page={page}
+                                    limit={limit}
+                                    onPageChange={handlePageChange}
+                                    onLimitChange={handleLimitChange}
+                                />
+                            </>
+                        )}
                     </Box>
-                    <Box mb={3}>
+                    
+                    <Box mb={3} mt={5}>
                         <Typography variant="h6" gutterBottom>
                             {t('marketplace:store.import.sources')}
                         </Typography>
@@ -656,6 +911,58 @@ const StorefrontDetailPage = () => {
                     </Box>
                 </Paper>
             </Modal>
+
+            {/* Модальное окно подтверждения удаления выбранных объявлений */}
+            <Modal
+                open={deleteConfirmOpen}
+                onClose={() => setDeleteConfirmOpen(false)}
+                aria-labelledby="delete-confirm-modal"
+            >
+                <Paper
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: { xs: '90%', sm: 400 },
+                        p: 3,
+                    }}
+                >
+                    <Typography variant="h6" gutterBottom>
+                        {t('marketplace:store.listings.deleteConfirmTitle')}
+                    </Typography>
+                    
+                    <Typography variant="body1" paragraph>
+                        {t('marketplace:store.listings.deleteConfirmText', { count: selectedListings.length })}
+                    </Typography>
+                    
+                    <Alert severity="warning" sx={{ mb: 3 }}>
+                        {t('marketplace:store.listings.deleteWarning')}
+                    </Alert>
+                    
+                    <Box display="flex" justifyContent="flex-end" gap={2}>
+                        <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
+                            {t('common:buttons.cancel')}
+                        </Button>
+                        <Button 
+                            variant="contained" 
+                            color="error"
+                            onClick={handleDeleteSelectedListings}
+                        >
+                            {t('common:buttons.delete')}
+                        </Button>
+                    </Box>
+                </Paper>
+            </Modal>
+            
+            {/* Добавляем плавающую панель для групповых действий */}
+            <BatchActionsBar 
+                selectedItems={selectedListings}
+                onClearSelection={() => setSelectedListings([])}
+                onDelete={() => setDeleteConfirmOpen(true)}
+                onTranslate={handleTranslateSelectedListings}
+                isTranslating={translationLoading}
+            />
         </Container>
     );
 };

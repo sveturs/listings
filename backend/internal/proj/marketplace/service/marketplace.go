@@ -31,6 +31,17 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 	listing.Status = "active"
 	listing.ViewsCount = 0
 
+	// Если язык не указан, определяем его
+	if listing.OriginalLanguage == "" {
+		// Получаем язык из контекста, если есть
+		if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
+			listing.OriginalLanguage = userLang
+		} else {
+			// По умолчанию используем русский
+			listing.OriginalLanguage = "ru"
+		}
+	}
+
 	// Вызываем существующий метод для создания объявления в БД
 	listingID, err := s.storage.CreateListing(ctx, listing)
 	if err != nil {
@@ -53,6 +64,7 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 
 	return listingID, nil
 }
+
 
 func (s *MarketplaceService) GetSubcategories(ctx context.Context, parentID string, limit, offset int) ([]models.CategoryTreeNode, error) {
 	var parentIDInt *int

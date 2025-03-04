@@ -75,15 +75,15 @@ func (r *Repository) PrepareIndex(ctx context.Context) error {
 }
 
 func (r *Repository) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	// Преобразуем объект модели в документ для индексации
-	doc := r.listingToDoc(listing)
+    // Преобразуем объект модели в документ для индексации
+    doc := r.listingToDoc(listing)
 
-	// Логирование для отладки
-	docJSON, _ := json.MarshalIndent(doc, "", "  ")
-	log.Printf("Индексация объявления %d с данными: %s", listing.ID, string(docJSON))
+    // Логирование для отладки
+    docJSON, _ := json.MarshalIndent(doc, "", "  ")
+    log.Printf("Индексация объявления %d с данными: %s", listing.ID, string(docJSON))
 
-	// Индексируем документ
-	return r.client.IndexDocument(r.indexName, fmt.Sprintf("%d", listing.ID), doc)
+    // Индексируем документ
+    return r.client.IndexDocument(r.indexName, fmt.Sprintf("%d", listing.ID), doc)
 }
 
 // BulkIndexListings индексирует несколько объявлений
@@ -143,8 +143,13 @@ func (r *Repository) extractDocumentID(hit map[string]interface{}) (int, error) 
 
 // SearchListings выполняет поиск объявлений
 func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	// Строим запрос к OpenSearch
-	query := r.buildSearchQuery(params)
+    // Строим запрос к OpenSearch
+    query := r.buildSearchQuery(params)
+    
+    // Дополнительное логирование
+    queryJSON, _ := json.MarshalIndent(query, "", "  ")
+    log.Printf("Поисковый запрос: %s", string(queryJSON))
+
 
 	// Выполняем поиск
 	responseBytes, err := r.client.Search(r.indexName, query)

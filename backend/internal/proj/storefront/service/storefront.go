@@ -468,7 +468,6 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 			listingData.Status = "active" // По умолчанию активный товар
 		}
 
-		// ДОБАВЛЯЕМ ОБРАБОТКУ МЕСТОПОЛОЖЕНИЯ
 		// Получаем location
 		if locIdx, ok := columnMap["location"]; ok && locIdx < len(row) {
 			listingData.Location = strings.TrimSpace(row[locIdx])
@@ -532,7 +531,6 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 		// Устанавливаем связь с витриной
 		listingData.UserID = userID
 		listingData.StorefrontID = &storefront.ID
-		//	listingData.ShowOnMap = false // Товары из витрины не показываем на карте
 
 		// Создание объявления
 		listingID, err := s.storage.CreateListing(ctx, &listingData)
@@ -619,6 +617,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 
 	return history, nil
 }
+
 
 // GetImportHistory возвращает историю импорта
 func (s *StorefrontService) GetImportHistory(ctx context.Context, sourceID int, userID int, limit, offset int) ([]models.ImportHistory, error) {
