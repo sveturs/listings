@@ -311,6 +311,17 @@
       "loadFailed": "Не удалось загрузить данные витрины",
       "updateFailed": "Не удалось обновить данные витрины"
     },
+    "listings": {
+      "translateConfirmTitle": "Подтверждение перевода",
+      "translateConfirmText": "Вы собираетесь перевести {{count}} объявлений на все доступные языки.",
+      "translationCost": "Стоимость перевода",
+      "costPerListing": "{{cost}} за объявление",
+      "insufficientFunds": "Недостаточно средств для перевода. Требуется: {{required}}, Доступно: {{available}}",
+      "translationInfo": "Перевод будет выполнен с помощью машинного перевода. Качество может различаться в зависимости от языка и сложности текста.",
+      "translating": "Переводим...",
+      "confirmTranslation": "Подтвердить перевод",
+      "translateSuccessWithCost": "Успешно переведено объявлений: {{count}} за {{cost}} RSD"
+    },
     "tabs": {
       "import": "Импорт товаров",
       "settings": "Настройки",

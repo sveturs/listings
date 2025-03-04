@@ -2,17 +2,17 @@
   "favorites": {
     "title": "Favorite Listings",
     "empty": "You don't have any favorite listings yet",
-    "authRequired": "You need to be logged in to view your favorite listings",
+    "authRequired": "You need to be logged in to view favorite listings",
     "errors": {
       "loadFailed": "Failed to load favorite listings"
     }
   },
   "listings": {
     "myListings": "My Listings",
-    "Youdonthave": "You don't have any listings yet. Create your first listing now!",
+    "Youdonthave": "You don't have any listings yet. Create your first listing right now!",
     "edit": {
       "title": "Edit Listing",
-      "translationNote": "You are editing a translation. Original is in another language.",
+      "translationNote": "You are editing a translation. The original is in another language.",
       "saveChanges": "Save Changes",
       "location": {
         "title": "Location",
@@ -54,7 +54,7 @@
         "mapInstructions": "Click on the map or enter an address"
       },
       "photos": {
-        "upload": "Upload photos",
+        "upload": "Upload Photo",
         "processing": "Processing ({{progress}}%)",
         "addWatermark": "Adding watermark...",
         "maxCount": "Maximum number of photos: {{count}}",
@@ -112,7 +112,7 @@
       },
       "favorite": {
         "add": "Add to favorites",
-        "remove": "Remove from favorites"
+        "remove": "Added to favorites"
       },
       "location": {
         "show": "Show on map",
@@ -120,6 +120,7 @@
         "expand": "Expand map",
         "collapse": "Collapse map"
       },
+      "viewDetails": "View details",
       "errors": {
         "loadFailed": "Failed to load listing",
         "deleteFailed": "Error deleting listing",
@@ -133,15 +134,42 @@
         "min": "From",
         "max": "To"
       },
+      "distance": {
+        "label": "Distance",
+        "any": "Any distance",
+        "fromYourLocation": "From your location",
+        "needLocation": "To use distance filter, determine your location"
+      },
+      "condition": {
+        "label": "Condition",
+        "any": "Any"
+      },
       "sort": {
-        "label": "Sort by",
+        "label": "Sort",
         "newest": "Newest first",
-        "cheapest": "Price: low to high",
-        "expensive": "Price: high to low"
+        "cheapest": "Cheapest first",
+        "expensive": "Most expensive first"
       },
       "apply": "Show results",
       "reset": "Reset",
-      "noResults": "No results found for your search"
+      "noResults": "No results found for your query"
+    },
+    "map": {
+      "showOnMap": "Show on map",
+      "useMyLocation": "Use my location",
+      "backToList": "Back to list",
+      "list": "List",
+      "radius": "Radius",
+      "yourLocation": "Your location",
+      "itemsOnMap": "listings on map",
+      "mapCenter": "Map center",
+      "locationError": "Failed to get location",
+      "geolocationNotSupported": "Geolocation is not supported by your browser",
+      "needLocation": "To use distance filter, you need to determine your location"
+    },
+    "conditions": {
+      "new": "New",
+      "used": "Used"
     }
   },
   "reviews": {
@@ -161,10 +189,24 @@
     "notHelpful": "Not helpful",
     "reply": "Reply",
     "report": "Report",
-    "verifiedPurchase": "Verified Purchase",
+    "verifiedPurchase": "Verified purchase",
     "responses": "Responses",
     "submit": "Submit",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "sellerRating": "Seller rating",
+    "storeRating": "Store rating",
+    "basedOn": "Based on {{count}} reviews",
+    "noRatingsYet": "No ratings yet",
+    "seeAllReviews": "See all reviews",
+    "hideReviews": "Hide reviews",
+    "allUserReviews": "All user reviews",
+    "allStoreReviews": "All store reviews",
+    "memberSince": "Member since {{date}}",
+    "forListing": "For listing",
+    "viewListing": "View listing",
+    "userNotFound": "User not found",
+    "storefrontNotFound": "Store not found",
+    "noReviewsYet": "No reviews yet"
   },
   "chat": {
     "newMessage": "New message",
@@ -185,7 +227,7 @@
   },
   "notifications": {
     "title": "Notification Settings",
-    "channels": "Notification Channels",
+    "channels": "Notification channels",
     "telegram": {
       "description": "Connect Telegram to receive notifications",
       "clickToOpen": "Click to open in Telegram",
@@ -201,7 +243,7 @@
       "reviewVote": "Review votes",
       "reviewResponse": "Review responses",
       "listingStatus": "Listing status",
-      "favoritePrice": "Favorites price updates",
+      "favoritePrice": "Favorite prices",
       "notificationschatmessage": "Chat message notifications",
       "newMessageDescription": "Notifications about new chat messages",
       "newReviewDescription": "Notifications about new reviews on your listings",
@@ -214,13 +256,13 @@
     "inDevelopment": "In development"
   },
   "balance": {
-    "title": "Balance and Transactions",
-    "available": "Available Balance",
+    "title": "Balance & Transactions",
+    "available": "Available balance",
     "deposit": "Deposit",
-    "confirmDeposit": "Confirm Deposit",
+    "confirmDeposit": "Confirm deposit",
     "processing": "Processing...",
     "amount": "Amount",
-    "paymentMethod": "Payment Method",
+    "paymentMethod": "Payment method",
     "date": "Date",
     "type": "Type",
     "description": "Description",
@@ -243,18 +285,21 @@
     },
     "errors": {
       "loadFailed": "Failed to load balance data",
-      "depositFailed": "Error making deposit",
+      "depositFailed": "Error depositing balance",
       "loadPaymentMethods": "Failed to load payment methods"
     }
   },
   "store": {
+    "seeAllReviews": "See all store reviews",
+    "backToStore": "Back to store",
+    "createdAt": "Created {{date}}",
     "myStorefronts": "My Storefronts",
     "noStorefronts": "You don't have any storefronts yet",
-    "createFirstStorefront": "Create a storefront to start selling products in your own shop",
+    "createFirstStorefront": "Create a storefront to start selling products in your store",
     "openSince": "Store open since {{date}}",
-    "storeProducts": "Products in store",
-    "noProductsMessage": "There are currently no products in this store",
-    "noProducts": "This storefront doesn't have any products yet",
+    "storeProducts": "Store products",
+    "noProductsMessage": "There are currently no products in the store",
+    "noProducts": "There are no products in this storefront yet",
     "notFound": "Storefront not found",
     "backToList": "Back to storefront list",
     "manage": "Manage",
@@ -266,8 +311,19 @@
       "loadFailed": "Failed to load storefront data",
       "updateFailed": "Failed to update storefront data"
     },
+    "listings": {
+      "translateConfirmTitle": "Translation Confirmation",
+      "translateConfirmText": "You are about to translate {{count}} listings to all available languages.",
+      "translationCost": "Translation Cost",
+      "costPerListing": "{{cost}} per listing",
+      "insufficientFunds": "Insufficient funds for translation. Required: {{required}}, Available: {{available}}",
+      "translationInfo": "Translation will be performed using machine translation. Quality may vary depending on language and text complexity.",
+      "translating": "Translating...",
+      "confirmTranslation": "Confirm Translation",
+      "translateSuccessWithCost": "Successfully translated listings: {{count}} for {{cost}} RSD"
+    },
     "tabs": {
-      "import": "Import Products",
+      "import": "Import products",
       "settings": "Settings",
       "stats": "Statistics"
     },
@@ -275,25 +331,25 @@
       "title": "Create Storefront",
       "button": "Create Storefront",
       "creating": "Creating...",
-      "nameRequired": "Please enter a store name",
-      "insufficientFunds": "Insufficient funds to create a storefront. 15000 RSD required.",
+      "nameRequired": "Store name is required",
+      "insufficientFunds": "Insufficient funds to create storefront. 15000 RSD required.",
       "error": "Failed to create storefront",
-      "costNote": "Creating a storefront costs 15000 RSD. This amount will be charged from your balance.",
+      "costNote": "The cost of creating a storefront is 15000 RSD. This amount will be deducted from your balance.",
       "yourBalance": "Your balance",
-      "balanceWarning": "To create a storefront, you need at least 15000 RSD in your account. Your current balance: {{balance}} RSD."
+      "balanceWarning": "To create a storefront, you need to have at least 15000 RSD in your balance. Your current balance: {{balance}} RSD."
     },
     "edit": {
       "title": "Edit Storefront",
       "saving": "Saving...",
       "saveChanges": "Save Changes",
       "success": "Storefront updated successfully",
-      "slugHelp": "Unique identifier for your storefront URL"
+      "slugHelp": "Unique identifier for the storefront URL"
     },
     "settings": {
       "title": "Storefront Settings",
       "basic": "Basic Settings",
       "additional": "Additional Settings",
-      "name": "Store Name",
+      "name": "Store name",
       "slug": "URL (slug)",
       "statusActive": "Active",
       "statusInactive": "Inactive",
@@ -302,25 +358,25 @@
     },
     "stats": {
       "title": "Storefront Statistics",
-      "description": "Here you will see statistics about your storefront sales and visits.",
+      "description": "Sales and traffic statistics for your storefront will be displayed here.",
       "notAvailable": "Statistics will be available after adding products to your storefront."
     },
     "import": {
       "button": "Import",
       "sources": "Import Sources",
-      "createSourceDescription": "Create a data source to import products into your storefront. CSV, XML and JSON formats are supported.",
+      "createSourceDescription": "Create a data source to import products into your storefront. CSV, XML, and JSON formats are supported.",
       "addSource": "Add Source",
       "noSources": "No import sources created",
-      "createFirstSource": "Create an import source to start uploading products to your storefront",
+      "createFirstSource": "Create an import source to upload products to your storefront",
       "sourceType": "Source: {{type}}",
       "created": "Created: {{date}}",
       "urlSource": "URL: {{url}}",
       "manualUpload": "Manual file upload",
       "lastImport": "Last import",
       "never": "Never",
-      "notRun": "Not run yet",
+      "notRun": "Not run",
       "history": "History",
-      "selectFile": "Select File",
+      "selectFile": "Select file",
       "importing": "Importing...",
       "uploadAndImport": "Upload & Import",
       "runImport": "Run Import",
@@ -340,14 +396,22 @@
       "urlHelp": "Specify a URL if you want to import data from an external source",
       "creating": "Creating...",
       "createSource": "Create Source",
-      "selectTypeError": "Please select an import type",
+      "selectTypeError": "Select import type",
       "createError": "Failed to create import source",
       "sourceCreated": "Import source created successfully! You can now upload a file using the \"Run Import\" button.",
       "deleteConfirm": "Are you sure you want to delete this import source?",
       "deleteError": "Failed to delete import source",
-      "needFileOrUrl": "You need to either upload a file or configure a source URL for import",
-      "completed": "Import completed. Status: {{status}}. Processed: {{imported}} out of {{total}}",
+      "needFileOrUrl": "For import, you need to either upload a file or configure a source URL",
+      "completed": "Import completed. Status: {{status}}. Processed: {{imported}} of {{total}}",
       "error": "Import error: {{message}}"
     }
+  },
+  "search": {
+    "didyoumean": "Did you mean",
+    "usesuggestion": "Use suggestion",
+    "noresults": "No listings found for your search"
+  },
+  "buttons": {
+    "search": "Search"
   }
 }

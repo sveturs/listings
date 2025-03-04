@@ -33,12 +33,15 @@ const GalleryViewer = ({
     const [isZoomed, setIsZoomed] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [transitionDirection, setTransitionDirection] = useState(null);
+    const [dragPosition, setDragPosition] = useState(0); // Новое состояние для перетаскивания
+    const [isDragging, setIsDragging] = useState(false); // Флаг, что идет перетаскивание
     const isOpen = externalOpen !== undefined ? externalOpen : selectedIndex !== null;
 
     // Ссылки для обработки свайпов
     const containerRef = useRef(null);
     const touchStartX = useRef(null);
     const touchStartY = useRef(null);
+    const currentTouchX = useRef(null); // Текущая позиция касания
     
     // Добавляем эффект для обработки клавиш клавиатуры
     useEffect(() => {
@@ -85,32 +88,20 @@ const GalleryViewer = ({
 
     const handlePrev = (e) => {
         e?.stopPropagation();
+        if (isDragging) return; // Не меняем при активном перетаскивании
         setIsZoomed(false);
         
-        // Добавляем анимацию
-        setTransitionDirection('right');
-        setIsTransitioning(true);
-        
-        // Обновляем индекс после небольшой задержки
-        setTimeout(() => {
-            setSelectedIndex(prev => (prev > 0 ? prev - 1 : images.length - 1));
-            setIsTransitioning(false);
-        }, 300); // Длительность анимации в миллисекундах
+        // Моментально меняем изображение без анимации
+        setSelectedIndex(prev => (prev > 0 ? prev - 1 : images.length - 1));
     };
 
     const handleNext = (e) => {
         e?.stopPropagation();
+        if (isDragging) return; // Не меняем при активном перетаскивании
         setIsZoomed(false);
         
-        // Добавляем анимацию
-        setTransitionDirection('left');
-        setIsTransitioning(true);
-        
-        // Обновляем индекс после небольшой задержки
-        setTimeout(() => {
-            setSelectedIndex(prev => (prev < images.length - 1 ? prev + 1 : 0));
-            setIsTransitioning(false);
-        }, 300); // Длительность анимации в миллисекундах
+        // Моментально меняем изображение без анимации
+        setSelectedIndex(prev => (prev < images.length - 1 ? prev + 1 : 0));
     };
 
     const toggleZoom = (e) => {
@@ -132,39 +123,96 @@ const GalleryViewer = ({
         e.preventDefault(); // Предотвращаем стандартную прокрутку страницы
     };
 
+    // Проверка, является ли устройство мобильным
+    const isMobile = () => {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    };
+
     // Обработчик начала касания (для свайпов)
     const handleTouchStart = (e) => {
+        if (isZoomed) return; // Не обрабатываем в режиме зума
+        if (!isMobile()) return; // Работаем только на мобильных устройствах
+        
         touchStartX.current = e.touches[0].clientX;
         touchStartY.current = e.touches[0].clientY;
+        currentTouchX.current = e.touches[0].clientX;
+        setIsDragging(true);
+        setDragPosition(0);
+    };
+
+    // Обработчик перемещения пальца
+    const handleTouchMove = (e) => {
+        if (isZoomed || !isDragging || !touchStartX.current || !isMobile()) return;
+        
+        const touchX = e.touches[0].clientX;
+        const deltaX = touchX - touchStartX.current;
+        
+        // Проверяем, что свайп в основном горизонтальный
+        const touchY = e.touches[0].clientY;
+        const deltaY = Math.abs(touchY - touchStartY.current);
+        
+        // Если движение больше вертикальное, то прекращаем обработку
+        if (deltaY > Math.abs(deltaX) * 0.8) {
+            return;
+        }
+        
+        // Обновляем позицию для эффекта перетаскивания
+        currentTouchX.current = touchX;
+        setDragPosition(deltaX);
+        
+        // Предотвращаем прокрутку страницы при свайпе
+        e.preventDefault();
     };
 
     // Обработчик окончания касания (для свайпов)
     const handleTouchEnd = (e) => {
-        if (isZoomed) return; // Не обрабатываем в режиме зума
-        
-        if (!touchStartX.current || !touchStartY.current) return;
-
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        
-        const deltaX = touchEndX - touchStartX.current;
-        const deltaY = touchEndY - touchStartY.current;
-        
-        // Определяем, был ли это горизонтальный свайп
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-            if (deltaX > 0) {
-                // Свайп вправо - предыдущая фотография
-                handlePrev(e);
-            } else {
-                // Свайп влево - следующая фотография
-                handleNext(e);
-            }
-            e.preventDefault();
+        if (isZoomed || !isDragging || !touchStartX.current || !isMobile()) {
+            setIsDragging(false);
+            setDragPosition(0);
+            return;
         }
         
-        // Сбрасываем начальные координаты
+        const touchEndX = e.changedTouches[0].clientX;
+        const deltaX = touchEndX - touchStartX.current;
+        
+        // Определяем направление и порог перелистывания
+        const threshold = window.innerWidth * 0.15; // 15% ширины экрана
+        
+        if (Math.abs(deltaX) > threshold) {
+            if (deltaX > 0) {
+                // Свайп вправо - предыдущая фотография
+                setSelectedIndex(prev => (prev > 0 ? prev - 1 : images.length - 1));
+            } else {
+                // Свайп влево - следующая фотография
+                setSelectedIndex(prev => (prev < images.length - 1 ? prev + 1 : 0));
+            }
+        } else {
+            // Если свайп не достиг порога, возвращаем изображение в исходное положение с анимацией
+            setDragPosition(0);
+            // Добавляем небольшую задержку перед сбросом isDragging для плавного возврата
+            setTimeout(() => {
+                setIsDragging(false);
+            }, 150);
+            return;
+        }
+        
+        // Сбрасываем все значения перетаскивания
         touchStartX.current = null;
         touchStartY.current = null;
+        currentTouchX.current = null;
+        setIsDragging(false);
+        setDragPosition(0);
+    };
+
+    // Обработчик отмены касания
+    const handleTouchCancel = () => {
+        if (!isMobile()) return;
+        
+        touchStartX.current = null;
+        touchStartY.current = null;
+        currentTouchX.current = null;
+        setIsDragging(false);
+        setDragPosition(0);
     };
 
     return (
@@ -219,7 +267,9 @@ const GalleryViewer = ({
                     ref={containerRef}
                     onWheel={handleWheel}
                     onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
+                    onTouchCancel={handleTouchCancel}
                     sx={{
                         position: 'relative',
                         p: 0,
@@ -315,15 +365,18 @@ const GalleryViewer = ({
                                 height: isZoomed ? 'auto' : 'auto',
                                 objectFit: 'contain',
                                 cursor: isZoomed ? 'zoom-out' : 'zoom-in',
-                                transition: 'all 0.3s ease',
-                                transform: isTransitioning 
-                                    ? `translateX(${transitionDirection === 'left' ? '-100px' : '100px'}) scale(0.9)` 
-                                    : 'translateX(0) scale(1)',
-                                opacity: isTransitioning ? 0.5 : 1
+                                transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+                                transform: isDragging 
+                                    ? `translateX(${dragPosition}px)` 
+                                    : 'translateX(0)',
+                                opacity: 1,
+                                willChange: 'transform' // Оптимизация производительности анимации
                             }}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                toggleZoom(e);
+                                if (!isDragging) { // Только если не перетаскиваем
+                                    toggleZoom(e);
+                                }
                             }}
                         />
                     </Box>
