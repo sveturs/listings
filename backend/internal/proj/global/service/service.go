@@ -26,32 +26,38 @@ type Service struct {
 	balance      *balance.BalanceService
 	payment      payment.PaymentServiceInterface
 	storefront   storefrontService.StorefrontServiceInterface
+	storage      storage.Storage 
 }
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
-	notificationSvc := notificationService.NewService(storage)
-	balanceSvc := balance.NewBalanceService(storage)
+    notificationSvc := notificationService.NewService(storage)
+    balanceSvc := balance.NewBalanceService(storage)
 
-	// Создаем сервис платежей с передачей сервиса баланса
-	stripeService := payment.NewStripeService(
-		cfg.StripeAPIKey,
-		cfg.StripeWebhookSecret,
-		cfg.FrontendURL,
-		balanceSvc,
-	)
+    // Создаем сервис платежей с передачей сервиса баланса
+    stripeService := payment.NewStripeService(
+        cfg.StripeAPIKey,
+        cfg.StripeWebhookSecret,
+        cfg.FrontendURL,
+        balanceSvc,
+    )
 
-	return &Service{
-		users:        userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
-		marketplace:  marketplaceService.NewService(storage, notificationSvc.Notification),
-		review:       reviewService.NewService(storage),
-		chat:         marketplaceService.NewService(storage, notificationSvc.Notification),
-		config:       cfg,
-		notification: notificationSvc,
-		translation:  translationSvc,
-		balance:      balanceSvc,
-		payment:      stripeService,
-		storefront:   storefrontService.NewStorefrontService(storage),
-	}
+    return &Service{
+        users:        userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
+        marketplace:  marketplaceService.NewService(storage, notificationSvc.Notification),
+        review:       reviewService.NewService(storage),
+        chat:         marketplaceService.NewService(storage, notificationSvc.Notification),
+        config:       cfg,
+        notification: notificationSvc,
+        translation:  translationSvc,
+        balance:      balanceSvc,
+        payment:      stripeService,
+        storefront:   storefrontService.NewStorefrontService(storage),
+        storage:      storage,  
+    }
+}
+
+func (s *Service) Storage() storage.Storage {
+    return s.storage
 }
 func (s *Service) Storefront() storefrontService.StorefrontServiceInterface {
     return s.storefront

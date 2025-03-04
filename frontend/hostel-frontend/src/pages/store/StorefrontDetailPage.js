@@ -56,9 +56,10 @@ import ListingCard from '../../components/marketplace/ListingCard';
 import StorefrontListingsList from '../../components/store/StorefrontListingsList';
 import BatchActionsBar from '../../components/store/BatchActionsBar';
 import ListingsPagination from '../../components/store/ListingsPagination';
-
+import TranslationPaymentDialog from '../../components/store/TranslationPaymentDialog';
 const TabPanel = (props) => {
     const { children, value, index, ...other } = props;
+
 
     return (
         <div
@@ -107,12 +108,13 @@ const StorefrontDetailPage = () => {
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [translationLoading, setTranslationLoading] = useState(false);
     const [batchActionSuccess, setBatchActionSuccess] = useState(null);
-    
+
     // Состояния для пагинации
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(20);
     const [totalItems, setTotalItems] = useState(0);
-
+    const [openTranslationDialog, setOpenTranslationDialog] = useState(false);
+    const [userBalance, setUserBalance] = useState(0);
     // Функция для загрузки данных с учетом пагинации
     const fetchData = async () => {
         try {
@@ -120,22 +122,22 @@ const StorefrontDetailPage = () => {
             const [storefrontResponse, sourcesResponse, listingsResponse] = await Promise.all([
                 axios.get(`/api/v1/storefronts/${id}`),
                 axios.get(`/api/v1/storefronts/${id}/import-sources`),
-                axios.get('/api/v1/marketplace/listings', { 
-                    params: { 
+                axios.get('/api/v1/marketplace/listings', {
+                    params: {
                         storefront_id: id,
                         page: page,
                         limit: limit
-                    } 
+                    }
                 })
             ]);
-            
+
             setStorefront(storefrontResponse.data.data);
             setImportSources(sourcesResponse.data.data || []);
-            
+
             // Используем data и meta из ответа
             const listings = listingsResponse.data.data?.data || [];
             const meta = listingsResponse.data.data?.meta || {};
-            
+
             setStoreListings(listings);
             setTotalItems(meta.total || listings.length);
         } catch (err) {
@@ -149,6 +151,21 @@ const StorefrontDetailPage = () => {
     useEffect(() => {
         fetchData();
     }, [id, page, limit, t]);
+    // Добавить useEffect для получения баланса пользователя
+    useEffect(() => {
+        const fetchUserBalance = async () => {
+            try {
+                const response = await axios.get('/api/v1/balance');
+                if (response.data?.data?.balance) {
+                    setUserBalance(response.data.data.balance);
+                }
+            } catch (err) {
+                console.error('Error fetching user balance:', err);
+            }
+        };
+
+        fetchUserBalance();
+    }, []);
 
     const fetchImportHistory = async (sourceId) => {
         try {
@@ -374,10 +391,20 @@ const StorefrontDetailPage = () => {
     const handleTranslateSelectedListings = async () => {
         if (selectedListings.length === 0) return;
 
+        // Открываем диалог подтверждения оплаты
+        setOpenTranslationDialog(true);
+    };
+
+
+    //  метод для подтверждения и выполнения перевода
+    const confirmAndExecuteTranslation = async () => {
+        if (selectedListings.length === 0) return;
+
         try {
             setTranslationLoading(true);
+            setOpenTranslationDialog(false);
 
-            // Используем новый API-метод для группового перевода
+            // Используем API-метод для группового перевода
             const response = await axios.post('/api/v1/marketplace/translations/batch', {
                 listing_ids: selectedListings,
                 target_languages: ['sr', 'en', 'ru']
@@ -385,14 +412,38 @@ const StorefrontDetailPage = () => {
 
             console.log('Translation response:', response.data);
 
+            // Обновляем баланс пользователя
+            const balanceResponse = await axios.get('/api/v1/balance');
+            if (balanceResponse.data?.data?.balance) {
+                setUserBalance(balanceResponse.data.data.balance);
+            }
+
             // Показываем сообщение об успехе
-            setBatchActionSuccess(t('marketplace:store.listings.translateSuccess', { count: selectedListings.length }));
+            setBatchActionSuccess(
+                t('marketplace:store.listings.translateSuccessWithCost', {
+                    count: selectedListings.length,
+                    cost: response.data.data?.cost || (selectedListings.length * 25),
+                    defaultValue: 'Successfully translated {{count}} listings for {{cost}} RSD'
+                })
+            );
 
             // Скрываем сообщение через 3 секунды
             setTimeout(() => setBatchActionSuccess(null), 3000);
         } catch (err) {
             console.error('Error translating listings:', err);
-            alert(t('marketplace:store.listings.translateError'));
+
+            let errorMessage = t('marketplace:store.listings.translateError');
+
+            // Проверяем на ошибку недостаточно средств
+            if (err.response?.status === 402) {
+                errorMessage = t('marketplace:store.listings.insufficientFunds', {
+                    required: err.response.data?.error || '',
+                    available: userBalance,
+                    defaultValue: 'Insufficient funds for translation.'
+                });
+            }
+
+            alert(errorMessage);
         } finally {
             setTranslationLoading(false);
         }
@@ -457,14 +508,14 @@ const StorefrontDetailPage = () => {
                             <Typography variant="h6">
                                 {t('marketplace:store.storeProducts')}
                             </Typography>
-                            
+
                             <Box display="flex" alignItems="center" gap={2}>
                                 {/* Групповые действия */}
                                 {selectedListings.length > 0 && (
                                     <ButtonGroup size="small" variant="outlined">
                                         <Tooltip title={t('marketplace:store.listings.translateSelected')}>
-                                            <Button 
-                                                startIcon={<LanguagesIcon />} 
+                                            <Button
+                                                startIcon={<LanguagesIcon />}
                                                 onClick={handleTranslateSelectedListings}
                                                 disabled={translationLoading}
                                             >
@@ -476,8 +527,8 @@ const StorefrontDetailPage = () => {
                                             </Button>
                                         </Tooltip>
                                         <Tooltip title={t('marketplace:store.listings.deleteSelected')}>
-                                            <Button 
-                                                startIcon={<Trash2 />} 
+                                            <Button
+                                                startIcon={<Trash2 />}
                                                 color="error"
                                                 onClick={() => setDeleteConfirmOpen(true)}
                                             >
@@ -486,7 +537,7 @@ const StorefrontDetailPage = () => {
                                         </Tooltip>
                                     </ButtonGroup>
                                 )}
-                                
+
                                 {/* Переключатель режима отображения */}
                                 <ToggleButtonGroup
                                     value={viewMode}
@@ -504,12 +555,12 @@ const StorefrontDetailPage = () => {
                                 </ToggleButtonGroup>
                             </Box>
                         </Box>
-                        
+
                         {/* Отображение сообщения об успехе */}
                         {batchActionSuccess && (
-                            <Alert 
-                                icon={<Check />} 
-                                severity="success" 
+                            <Alert
+                                icon={<Check />}
+                                severity="success"
                                 sx={{ mb: 2 }}
                                 action={
                                     <IconButton
@@ -558,7 +609,7 @@ const StorefrontDetailPage = () => {
                                         </Grid>
                                     ))}
                                 </Grid>
-                                
+
                                 {/* Добавляем пагинацию после грида */}
                                 <ListingsPagination
                                     totalItems={totalItems}
@@ -576,7 +627,7 @@ const StorefrontDetailPage = () => {
                                     onSelectItem={handleSelectListing}
                                     onSelectAll={handleSelectAllListings}
                                 />
-                                
+
                                 {/* Добавляем пагинацию после списка */}
                                 <ListingsPagination
                                     totalItems={totalItems}
@@ -588,7 +639,7 @@ const StorefrontDetailPage = () => {
                             </>
                         )}
                     </Box>
-                    
+
                     <Box mb={3} mt={5}>
                         <Typography variant="h6" gutterBottom>
                             {t('marketplace:store.import.sources')}
@@ -642,8 +693,8 @@ const StorefrontDetailPage = () => {
                                         <Divider />
                                         <CardContent>
                                             <Typography variant="subtitle1" gutterBottom>
-                                                {source.url 
-                                                    ? t('marketplace:store.import.urlSource', { url: source.url }) 
+                                                {source.url
+                                                    ? t('marketplace:store.import.urlSource', { url: source.url })
                                                     : t('marketplace:store.import.manualUpload')
                                                 }
                                             </Typography>
@@ -692,10 +743,10 @@ const StorefrontDetailPage = () => {
                                                             onClick={() => handleRunImport(source.id)}
                                                             disabled={runningImport === source.id}
                                                         >
-                                                            {runningImport === source.id 
-                                                                ? t('marketplace:store.import.importing') 
-                                                                : importFile 
-                                                                    ? t('marketplace:store.import.uploadAndImport') 
+                                                            {runningImport === source.id
+                                                                ? t('marketplace:store.import.importing')
+                                                                : importFile
+                                                                    ? t('marketplace:store.import.uploadAndImport')
                                                                     : t('marketplace:store.import.runImport')}
                                                         </Button>
                                                     </Box>
@@ -733,10 +784,10 @@ const StorefrontDetailPage = () => {
                                                                             {new Date(history.started_at).toLocaleDateString()}
                                                                         </TableCell>
                                                                         <TableCell>
-                                                                            {history.status === 'success' 
+                                                                            {history.status === 'success'
                                                                                 ? t('marketplace:store.import.statusSuccess')
-                                                                                : history.status === 'partial' 
-                                                                                    ? t('marketplace:store.import.statusPartial') 
+                                                                                : history.status === 'partial'
+                                                                                    ? t('marketplace:store.import.statusPartial')
                                                                                     : t('marketplace:store.import.statusError')}
                                                                         </TableCell>
                                                                         <TableCell align="right">
@@ -802,8 +853,8 @@ const StorefrontDetailPage = () => {
                                 <Divider />
                                 <CardContent>
                                     <Typography variant="body1" paragraph>
-                                        {t('common:balance.status')}: {storefront.status === 'active' 
-                                            ? t('marketplace:store.settings.statusActive') 
+                                        {t('common:balance.status')}: {storefront.status === 'active'
+                                            ? t('marketplace:store.settings.statusActive')
                                             : t('marketplace:store.settings.statusInactive')}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
@@ -931,21 +982,21 @@ const StorefrontDetailPage = () => {
                     <Typography variant="h6" gutterBottom>
                         {t('marketplace:store.listings.deleteConfirmTitle')}
                     </Typography>
-                    
+
                     <Typography variant="body1" paragraph>
                         {t('marketplace:store.listings.deleteConfirmText', { count: selectedListings.length })}
                     </Typography>
-                    
+
                     <Alert severity="warning" sx={{ mb: 3 }}>
                         {t('marketplace:store.listings.deleteWarning')}
                     </Alert>
-                    
+
                     <Box display="flex" justifyContent="flex-end" gap={2}>
                         <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
                             {t('common:buttons.cancel')}
                         </Button>
-                        <Button 
-                            variant="contained" 
+                        <Button
+                            variant="contained"
                             color="error"
                             onClick={handleDeleteSelectedListings}
                         >
@@ -954,14 +1005,23 @@ const StorefrontDetailPage = () => {
                     </Box>
                 </Paper>
             </Modal>
-            
+
             {/* Добавляем плавающую панель для групповых действий */}
-            <BatchActionsBar 
+            <BatchActionsBar
                 selectedItems={selectedListings}
                 onClearSelection={() => setSelectedListings([])}
                 onDelete={() => setDeleteConfirmOpen(true)}
                 onTranslate={handleTranslateSelectedListings}
                 isTranslating={translationLoading}
+            />
+            <TranslationPaymentDialog
+                open={openTranslationDialog}
+                onClose={() => setOpenTranslationDialog(false)}
+                selectedListings={selectedListings}
+                balance={userBalance}
+                onConfirm={confirmAndExecuteTranslation}
+                loading={translationLoading}
+                costPerListing={25}
             />
         </Container>
     );

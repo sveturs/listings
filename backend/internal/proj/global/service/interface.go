@@ -12,6 +12,7 @@ import (
 	reviewService "backend/internal/proj/reviews/service"
 	storefrontService "backend/internal/proj/storefront/service"
 	userService "backend/internal/proj/users/service"
+	"backend/internal/storage" 
 )
 
 type ServicesInterface interface {
@@ -26,4 +27,5 @@ type ServicesInterface interface {
 	Balance() balanceService.BalanceServiceInterface
 	Payment() paymentService.PaymentServiceInterface
 	Storefront() storefrontService.StorefrontServiceInterface
+	Storage() storage.Storage 
 }

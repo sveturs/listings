@@ -262,6 +262,7 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Delete("/listings/:id/favorite", s.marketplace.Marketplace.RemoveFromFavorites)
 	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
 	marketplaceProtected.Put("/translations/:id", s.marketplace.Marketplace.UpdateTranslations)
+	marketplaceProtected.Post("/translations/batch", s.marketplace.Marketplace.BatchTranslateListings)
 
 	// Административный маршрут для переиндексации
 
