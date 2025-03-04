@@ -19,28 +19,31 @@ const SimpleMiniMap = ({ latitude, longitude, title = 'Местоположен�
   useEffect(() => {
     // Проверяем, что координаты есть и DOM-элемент готов
     if (!latitude || !longitude || !mapDivRef.current) return;
-
+    if (!latitude || !longitude || (latitude === 0 && longitude === 0)) {
+      console.log("Некорректные координаты для карты: ", latitude, longitude);
+      return; // Не инициализируем карту с нулевыми координатами
+    }
     // Очищаем содержимое div, чтобы избежать дублирования карты
     mapDivRef.current.innerHTML = '';
 
     console.log('Initializing simple mini map...');
-    
+
     // Создаем новую карту
     const map = L.map(mapDivRef.current).setView([latitude, longitude], 14);
-    
+
     // Добавляем слой тайлов
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-    
+
     // Добавляем маркер
     L.marker([latitude, longitude])
       .addTo(map)
       .bindPopup(title);
-    
+
     // Сохраняем ссылку на карту для будущей очистки
     const mapInstance = map;
-    
+
     // Функция очистки при размонтировании компонента
     return () => {
       if (mapInstance) {
@@ -52,11 +55,11 @@ const SimpleMiniMap = ({ latitude, longitude, title = 'Местоположен�
 
   return (
     <Box sx={{ width: '100%', height: 200, borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
-      <div 
+      <div
         ref={mapDivRef}
         style={{ width: '100%', height: '100%' }}
       />
-      
+
       {onExpand && (
         <IconButton
           onClick={onExpand}

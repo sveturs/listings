@@ -595,18 +595,23 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		},
 	})
 
-	// Добавляем геопоиск, если указаны координаты
-	if params.Location != nil && params.Distance != "" {
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"geo_distance": map[string]interface{}{
-				"distance": params.Distance,
-				"coordinates": map[string]interface{}{
-					"lat": params.Location.Lat,
-					"lon": params.Location.Lon,
-				},
-			},
-		})
-	}
+// Добавляем геопоиск, если указаны координаты
+if params.Location != nil && params.Distance != "" {
+    // Проверяем, что координаты имеют ненулевые значения
+    if params.Location.Lat == 0 && params.Location.Lon == 0 {
+        log.Printf("Игнорируем параметр distance (%s) из-за нулевых координат", params.Distance)
+    } else {
+        filterClauses = append(filterClauses, map[string]interface{}{
+            "geo_distance": map[string]interface{}{
+                "distance": params.Distance,
+                "coordinates": map[string]interface{}{
+                    "lat": params.Location.Lat,
+                    "lon": params.Location.Lon,
+                },
+            },
+        })
+    }
+}
 
 	// Добавляем clauses в запрос
 	if len(mustClauses) > 0 {

@@ -170,6 +170,18 @@ const MarketplacePage = () => {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
+                // ДОБАВЬТЕ ЭТО: Проверяем наличие distance без координат
+                const distanceParam = searchParams.get('distance');
+                const latParam = searchParams.get('latitude');
+                const lonParam = searchParams.get('longitude');
+                
+                if (distanceParam && (!latParam || !lonParam)) {
+                    console.log("Обнаружен параметр distance без координат. Сбрасываем...");
+                    const cleanParams = new URLSearchParams(searchParams);
+                    cleanParams.delete('distance');
+                    setSearchParams(cleanParams);
+                    return; // Возвращаемся, useEffect запустится снова с обновленными параметрами
+                }
                 const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
                 console.log('Fetched categories:', categoriesResponse.data?.data); // Добавьте этот лог
 

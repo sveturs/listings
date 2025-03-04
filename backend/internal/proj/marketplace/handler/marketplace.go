@@ -764,10 +764,18 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		StorefrontID:  c.Query("storefront_id", ""),
 		Sort:          c.Query("sort_by", ""),
 		SortDirection: c.Query("sort_direction", "desc"),
-		Distance:      c.Query("distance", "10km"),
+		Distance:      c.Query("distance", ""),
 		Page:          c.QueryInt("page", 1),
 		Size:          c.QueryInt("size", 20),
 		Language:      c.Query("language", ""),
+	}
+	if params.Distance != "" {
+		log.Printf("ВНИМАНИЕ: обнаружен параметр distance=%s", params.Distance)
+		// Если параметр distance есть, но координаты нулевые - обнуляем его
+		if params.Latitude == 0 && params.Longitude == 0 {
+			log.Printf("Сброс параметра distance (%s) из-за отсутствия координат", params.Distance)
+			params.Distance = ""
+		}
 	}
 	log.Printf("Полученный поисковый запрос: %s", params.Query)
 	// Обрабатываем числовые параметры - добавим защиту от ошибок
