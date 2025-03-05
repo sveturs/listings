@@ -31,17 +31,29 @@ const CategorySelect = ({ categories, value, onChange, error }) => {
         }
     }, [categories, i18n.language]);
 
-    const getTranslatedName = (category) => {
-        // Добавим отладочный вывод
-        console.log('Getting translation for category:', category);
-        console.log('Current language:', i18n.language);
-        console.log('Available translations:', category.translations);
-        
-        if (category.translations && category.translations[i18n.language]) {
+    // Исправленная функция getTranslatedName в CategoryItem
+const getTranslatedName = (category) => {
+    if (!category) return '';
+    
+    // Проверяем наличие переводов
+    if (category.translations && typeof category.translations === 'object') {
+        // Если есть прямой перевод на текущий язык
+        if (category.translations[i18n.language]) {
             return category.translations[i18n.language];
         }
-        return category.name;
-    };
+        
+        // Если прямого перевода нет, пробуем найти по приоритету
+        const langPriority = [i18n.language, 'ru', 'sr', 'en'];
+        for (const lang of langPriority) {
+            if (category.translations[lang]) {
+                return category.translations[lang];
+            }
+        }
+    }
+    
+    // Если переводов нет или они не подходят, возвращаем исходное имя
+    return category.name;
+};
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);

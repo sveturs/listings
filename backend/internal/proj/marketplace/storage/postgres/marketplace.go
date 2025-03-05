@@ -290,13 +290,29 @@ func (s *Storage) processTranslations(rawTranslations interface{}) models.Transl
 
 	return translations
 }
+// Функция GetListings с проверкой наличия поля storefront_id
 func (s *Storage) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-	userID, _ := ctx.Value("user_id").(int)
-	if userID == 0 {
-		userID = -1
-	}
+    userID, _ := ctx.Value("user_id").(int)
+    if userID == 0 {
+        userID = -1
+    }
 
-	baseQuery := `WITH RECURSIVE category_tree AS (
+    // Проверяем существование столбца storefront_id
+    var hasStorefrontID bool
+    err := s.pool.QueryRow(ctx, `
+        SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.columns 
+            WHERE table_name = 'marketplace_listings' AND column_name = 'storefront_id'
+        )
+    `).Scan(&hasStorefrontID)
+    
+    if err != nil {
+        return nil, 0, fmt.Errorf("error checking storefront_id column: %w", err)
+    }
+
+    // Формируем базовый запрос в зависимости от наличия столбца storefront_id
+    baseQuery := `WITH RECURSIVE category_tree AS (
         -- Базовый случай: корневые категории или конкретная категория
         SELECT c.id, c.parent_id, c.name
         FROM marketplace_categories c
@@ -347,11 +363,21 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         l.created_at,
         l.updated_at,
         l.show_on_map,
-        l.original_language,
-		l.storefront_id,
+        l.original_language,`
+
+    // Добавляем поле storefront_id, если оно существует
+    if hasStorefrontID {
+        baseQuery += `
+        l.storefront_id,`
+    } else {
+        baseQuery += `
+        NULL as storefront_id,`
+    }
+
+    baseQuery += `
         u.name as user_name, 
         u.email as user_email,
-		u.created_at as user_created_at,
+        u.created_at as user_created_at,
         u.picture_url as user_picture_url,
         c.name as category_name, 
         c.slug as category_slug,
@@ -373,18 +399,18 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
             ELSE l.category_id IN (SELECT id FROM category_tree)
         END`
 
-	args := []interface{}{
-		filters["category_id"], // $1
-		userID,                 // $2
-	}
+    args := []interface{}{
+        filters["category_id"], // $1
+        userID,                 // $2
+    }
 
-	conditions := []string{}
-	argCount := 2
+    conditions := []string{}
+    argCount := 2
 
-	// Добавляем остальные фильтры
-	if v, ok := filters["query"]; ok && v != "" {
-		argCount++
-		conditions = append(conditions, fmt.Sprintf(`
+    // Добавляем остальные фильтры
+    if v, ok := filters["query"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf(`
         AND (
             LOWER(l.title) LIKE LOWER($%d) 
             OR LOWER(l.description) LIKE LOWER($%d)
@@ -397,171 +423,175 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
                 AND LOWER(t.translated_text) LIKE LOWER($%d)
             )
         )`,
-			argCount, argCount, argCount))
-		args = append(args, "%"+v+"%")
-	}
+            argCount, argCount, argCount))
+        args = append(args, "%"+v+"%")
+    }
 
-	if v, ok := filters["min_price"]; ok && v != "" {
-		argCount++
-		conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
-		args = append(args, v)
-	}
+    if v, ok := filters["min_price"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
+        args = append(args, v)
+    }
 
-	if v, ok := filters["max_price"]; ok && v != "" {
-		argCount++
-		conditions = append(conditions, fmt.Sprintf("AND l.price <= $%d", argCount))
-		args = append(args, v)
-	}
+    if v, ok := filters["max_price"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf("AND l.price <= $%d", argCount))
+        args = append(args, v)
+    }
 
-	if v, ok := filters["condition"]; ok && v != "" {
-		argCount++
-		conditions = append(conditions, fmt.Sprintf("AND l.condition = $%d", argCount))
-		args = append(args, v)
-	}
-	if v, ok := filters["storefront_id"]; ok && v != "" {
-		argCount++
-		conditions = append(conditions, fmt.Sprintf("AND l.storefront_id = $%d", argCount))
-		args = append(args, v)
-	}
-	if len(conditions) > 0 {
-		baseQuery += " " + strings.Join(conditions, " ")
-	}
+    if v, ok := filters["condition"]; ok && v != "" {
+        argCount++
+        conditions = append(conditions, fmt.Sprintf("AND l.condition = $%d", argCount))
+        args = append(args, v)
+    }
+    
+    // Добавляем фильтр по storefront_id только если колонка существует
+    if hasStorefrontID {
+        if v, ok := filters["storefront_id"]; ok && v != "" {
+            argCount++
+            conditions = append(conditions, fmt.Sprintf("AND l.storefront_id = $%d", argCount))
+            args = append(args, v)
+        }
+    }
+    
+    if len(conditions) > 0 {
+        baseQuery += " " + strings.Join(conditions, " ")
+    }
 
-	// Сортировка
-	switch filters["sort_by"] {
-	case "price_asc":
-		baseQuery += " ORDER BY l.price ASC"
-	case "price_desc":
-		baseQuery += " ORDER BY l.price DESC"
-	default:
-		baseQuery += " ORDER BY l.created_at DESC"
-	}
+    // Сортировка
+    switch filters["sort_by"] {
+    case "price_asc":
+        baseQuery += " ORDER BY l.price ASC"
+    case "price_desc":
+        baseQuery += " ORDER BY l.price DESC"
+    default:
+        baseQuery += " ORDER BY l.created_at DESC"
+    }
 
-	// Пагинация
-	baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount+1, argCount+2)
-	args = append(args, limit, offset)
+    // Пагинация
+    baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount+1, argCount+2)
+    args = append(args, limit, offset)
 
-	// Выполнение запроса
-	rows, err := s.pool.Query(ctx, baseQuery, args...)
-	if err != nil {
-		return nil, 0, fmt.Errorf("error querying listings: %w", err)
-	}
-	defer rows.Close()
+    // Выполнение запроса
+    rows, err := s.pool.Query(ctx, baseQuery, args...)
+    if err != nil {
+        return nil, 0, fmt.Errorf("error querying listings: %w", err)
+    }
+    defer rows.Close()
 
-	var listings []models.MarketplaceListing
-	var totalCount int64
+    var listings []models.MarketplaceListing
+    var totalCount int64
 
-	for rows.Next() {
-		var listing models.MarketplaceListing
-		var translationsJSON []byte
+    for rows.Next() {
+        var listing models.MarketplaceListing
+        var translationsJSON []byte
 
-		listing.User = &models.User{}
-		listing.Category = &models.MarketplaceCategory{}
+        listing.User = &models.User{}
+        listing.Category = &models.MarketplaceCategory{}
 
-		var (
-			tempEmail        sql.NullString
-			tempPictureURL   sql.NullString
-			tempLocation     sql.NullString
-			tempLatitude     sql.NullFloat64
-			tempLongitude    sql.NullFloat64
-			tempCity         sql.NullString
-			tempCountry      sql.NullString
-			tempCategoryName sql.NullString
-			tempCategorySlug sql.NullString
-			tempStorefrontID sql.NullInt32
-		)
+        var (
+            tempEmail        sql.NullString
+            tempPictureURL   sql.NullString
+            tempLocation     sql.NullString
+            tempLatitude     sql.NullFloat64
+            tempLongitude    sql.NullFloat64
+            tempCity         sql.NullString
+            tempCountry      sql.NullString
+            tempCategoryName sql.NullString
+            tempCategorySlug sql.NullString
+            tempStorefrontID sql.NullInt32
+        )
 
-		err := rows.Scan(
-			&listing.ID,
-			&listing.UserID,
-			&listing.CategoryID,
-			&listing.Title,
-			&listing.Description,
-			&listing.Price,
-			&listing.Condition,
-			&listing.Status,
-			&tempLocation,
-			&tempLatitude,
-			&tempLongitude,
-			&tempCity,
-			&tempCountry,
-			&listing.ViewsCount,
-			&listing.CreatedAt,
-			&listing.UpdatedAt,
-			&listing.ShowOnMap,
-			&listing.OriginalLanguage,
-			&tempStorefrontID,
-			&listing.User.Name,
-			&tempEmail,
-			&listing.User.CreatedAt,
-			&tempPictureURL,
-			&tempCategoryName,
-			&tempCategorySlug,
-			&translationsJSON,
-			&listing.IsFavorite,
-			&totalCount,
-		)
+        err := rows.Scan(
+            &listing.ID,
+            &listing.UserID,
+            &listing.CategoryID,
+            &listing.Title,
+            &listing.Description,
+            &listing.Price,
+            &listing.Condition,
+            &listing.Status,
+            &tempLocation,
+            &tempLatitude,
+            &tempLongitude,
+            &tempCity,
+            &tempCountry,
+            &listing.ViewsCount,
+            &listing.CreatedAt,
+            &listing.UpdatedAt,
+            &listing.ShowOnMap,
+            &listing.OriginalLanguage,
+            &tempStorefrontID,
+            &listing.User.Name,
+            &tempEmail,
+            &listing.User.CreatedAt,
+            &tempPictureURL,
+            &tempCategoryName,
+            &tempCategorySlug,
+            &translationsJSON,
+            &listing.IsFavorite,
+            &totalCount,
+        )
 
-		if err != nil {
-			return nil, 0, fmt.Errorf("error scanning listing: %w", err)
-		}
+        if err != nil {
+            return nil, 0, fmt.Errorf("error scanning listing: %w", err)
+        }
 
-		// Получаем изображения
-		images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
-		if err != nil {
-			log.Printf("Error getting images for listing %d: %v", listing.ID, err)
-			listing.Images = []models.MarketplaceImage{}
-		} else {
-			listing.Images = images
-		}
+        // Получаем изображения
+        images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
+        if err != nil {
+            log.Printf("Error getting images for listing %d: %v", listing.ID, err)
+            listing.Images = []models.MarketplaceImage{}
+        } else {
+            listing.Images = images
+        }
 
-		// Обработка NULL значений
-		if tempLocation.Valid {
-			listing.Location = tempLocation.String
-		}
-		if tempStorefrontID.Valid {
-			sfID := int(tempStorefrontID.Int32)
-			listing.StorefrontID = &sfID
-		}
-		if tempLatitude.Valid {
-			listing.Latitude = &tempLatitude.Float64
-		}
-		if tempLongitude.Valid {
-			listing.Longitude = &tempLongitude.Float64
-		}
-		if tempCity.Valid {
-			listing.City = tempCity.String
-		}
-		if tempCountry.Valid {
-			listing.Country = tempCountry.String
-		}
-		if tempEmail.Valid {
-			listing.User.Email = tempEmail.String
-		}
-		if tempPictureURL.Valid {
-			listing.User.PictureURL = tempPictureURL.String
-		}
-		if tempCategoryName.Valid {
-			listing.Category.Name = tempCategoryName.String
-		}
-		if v, ok := filters["storefront_id"]; ok && v != "" {
-			argCount++
-			conditions = append(conditions, fmt.Sprintf("AND l.storefront_id = $%d", argCount))
-			args = append(args, v)
-		}
-		// Обработка переводов
-		if err := json.Unmarshal(translationsJSON, &listing.RawTranslations); err != nil {
-			listing.RawTranslations = make(map[string]interface{})
-		}
+        // Обработка NULL значений
+        if tempLocation.Valid {
+            listing.Location = tempLocation.String
+        }
+        if tempStorefrontID.Valid {
+            sfID := int(tempStorefrontID.Int32)
+            listing.StorefrontID = &sfID
+        }
+        if tempLatitude.Valid {
+            listing.Latitude = &tempLatitude.Float64
+        }
+        if tempLongitude.Valid {
+            listing.Longitude = &tempLongitude.Float64
+        }
+        if tempCity.Valid {
+            listing.City = tempCity.String
+        }
+        if tempCountry.Valid {
+            listing.Country = tempCountry.String
+        }
+        if tempEmail.Valid {
+            listing.User.Email = tempEmail.String
+        }
+        if tempPictureURL.Valid {
+            listing.User.PictureURL = tempPictureURL.String
+        }
+        if tempCategoryName.Valid {
+            listing.Category.Name = tempCategoryName.String
+        }
+        if tempCategorySlug.Valid {
+            listing.Category.Slug = tempCategorySlug.String
+        }
 
-		if listing.RawTranslations != nil {
-			listing.Translations = s.processTranslations(listing.RawTranslations)
-		}
+        // Обработка переводов
+        if err := json.Unmarshal(translationsJSON, &listing.RawTranslations); err != nil {
+            listing.RawTranslations = make(map[string]interface{})
+        }
 
-		listings = append(listings, listing)
-	}
+        if listing.RawTranslations != nil {
+            listing.Translations = s.processTranslations(listing.RawTranslations)
+        }
 
-	return listings, totalCount, nil
+        listings = append(listings, listing)
+    }
+
+    return listings, totalCount, nil
 }
 
 func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {

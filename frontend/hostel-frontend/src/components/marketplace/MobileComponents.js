@@ -241,17 +241,29 @@ export const MobileListingCard = ({ listing }) => {
 export const MobileFilters = ({ open, onClose, filters, onFilterChange, categories }) => {
     const { t, i18n } = useTranslation('marketplace'); // Добавляем i18n
 
-    const getTranslatedName = (category) => {
-        if (!category) return '';
-
-        // Если у категории есть переводы для текущего языка
-        if (category.translations && category.translations[i18n.language]) {
-            return category.translations[i18n.language].name || category.name;
+    // Исправленная функция getTranslatedName в CategoryItem
+const getTranslatedName = (category) => {
+    if (!category) return '';
+    
+    // Проверяем наличие переводов
+    if (category.translations && typeof category.translations === 'object') {
+        // Если есть прямой перевод на текущий язык
+        if (category.translations[i18n.language]) {
+            return category.translations[i18n.language];
         }
-
-        // Если переводов нет или они не подходят, возвращаем исходное имя
-        return category.name;
-    };
+        
+        // Если прямого перевода нет, пробуем найти по приоритету
+        const langPriority = [i18n.language, 'ru', 'sr', 'en'];
+        for (const lang of langPriority) {
+            if (category.translations[lang]) {
+                return category.translations[lang];
+            }
+        }
+    }
+    
+    // Если переводов нет или они не подходят, возвращаем исходное имя
+    return category.name;
+};
 
     const [tempFilters, setTempFilters] = useState(filters);
     const [currentCategory, setCurrentCategory] = useState(null);

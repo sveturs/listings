@@ -1,10 +1,8 @@
-//frontend/hostel-frontend/src/components/marketplace/VirtualizedCategoryTree.js
-import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery } from 'react-query';
 import axios from '../../api/axios';
-
 
 import {
     Box,
@@ -18,6 +16,7 @@ import { ChevronRight, ChevronDown } from 'lucide-react';
 
 const ITEM_SIZE = 40;
 const PAGE_SIZE = 20;
+
 const buildTree = (flatList) => {
     // Создаем Map для быстрого доступа к категориям по ID
     const categoryMap = new Map();
@@ -77,15 +76,43 @@ const CategoryItem = React.memo(({ data, index, style }) => {
         selectedId,
         onToggle,
         onSelect,
+        currentLanguage
     } = data;
 
     const item = items[index];
     if (!item) return null;
 
     const isExpanded = expandedItems.has(item.id);
-    const isSelected = selectedId === item.id;
+    const isSelected = selectedId === String(item.id) || selectedId === item.id;
     const hasChildren = item.children?.length > 0;
     const paddingLeft = item.level * 24;
+    
+    // Функция для получения переведенного имени категории
+    // Исправленная функция getTranslatedName в CategoryItem
+const getTranslatedName = (category) => {
+    if (!category) return '';
+    
+    // Проверяем наличие переводов
+    if (category.translations && typeof category.translations === 'object') {
+        // Если есть прямой перевод на текущий язык
+        if (category.translations[i18n.language]) {
+            return category.translations[i18n.language];
+        }
+        
+        // Если прямого перевода нет, пробуем найти по приоритету
+        const langPriority = [i18n.language, 'ru', 'sr', 'en'];
+        for (const lang of langPriority) {
+            if (category.translations[lang]) {
+                return category.translations[lang];
+            }
+        }
+    }
+    
+    // Если переводов нет или они не подходят, возвращаем исходное имя
+    return category.name;
+};
+
+    const categoryName = getTranslatedName(item);
 
     return (
         <ListItemButton
@@ -114,7 +141,7 @@ const CategoryItem = React.memo(({ data, index, style }) => {
             <ListItemText
                 primary={
                     <Typography variant="body2" noWrap>
-                        {item.name}
+                        {categoryName}
                         {item.listing_count > 0 && (
                             <Typography
                                 component="span"
@@ -130,11 +157,21 @@ const CategoryItem = React.memo(({ data, index, style }) => {
         </ListItemButton>
     );
 });
+
 const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
     const { i18n } = useTranslation();
     const [expandedItems, setExpandedItems] = useState(new Set());
     const [flattenedItems, setFlattenedItems] = useState([]);
     const [treeData, setTreeData] = useState(null);
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+    
+    // Отслеживаем изменение языка
+    useEffect(() => {
+        if (currentLanguage !== i18n.language) {
+            console.log(`Язык изменился: ${currentLanguage} -> ${i18n.language}`);
+            setCurrentLanguage(i18n.language);
+        }
+    }, [i18n.language, currentLanguage]);
 
     const buildFlattenedList = useCallback((items, level = 0, result = []) => {
         if (!items || !Array.isArray(items)) return result;
@@ -158,11 +195,11 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
     }, [expandedItems]);
 
     // Изменяем запрос данных:
-    const { data: queryResult, isLoading } = useInfiniteQuery(
+    const { data: queryResult, isLoading, refetch } = useInfiniteQuery(
         ['categories', i18n.language],
         async () => {
+            console.log(`Загрузка категорий для языка: ${i18n.language}`);
             const response = await axios.get('/api/v1/marketplace/category-tree');
-        //    console.log('Full category tree:', JSON.stringify(response.data.data, null, 2));
             return response.data;
         },
         {
@@ -171,41 +208,46 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
         }
     );
 
-    // Сохраняем данные в ref при первой загрузке
+    // Повторно загружаем данные при смене языка
+    useEffect(() => {
+        refetch();
+    }, [i18n.language, refetch]);
+
+    // Сохраняем данные в ref при первой загрузке или обновлении
     useEffect(() => {
         if (queryResult?.pages?.[0]?.data) {
             const flatData = queryResult.pages[0].data;
-        //    console.log('Received flat data:', flatData);
+            
+            // Добавляем логирование структуры переводов для отладки
+            if (process.env.NODE_ENV === 'development') {
+                if (flatData.length > 0) {
+                    console.log(`Пример переводов категории:`, 
+                        flatData[0].translations ? flatData[0].translations : 'Нет переводов');
+                }
+            }
             
             const treeStructure = buildTree(flatData);
-        //    console.log('Built tree structure:', treeStructure);
             
             setTreeData(treeStructure);
             const initialFlatList = buildFlattenedList(treeStructure);
-//            console.log('Initial flattened list:', initialFlatList);
             setFlattenedItems(initialFlatList);
         }
     }, [queryResult, buildFlattenedList]);
 
-    // Обновляем при изменении expanded items
+    // Обновляем при изменении expanded items или языка
     useEffect(() => {
         if (treeData) {
-//            console.log('Building flattened list from:', treeData);
             const flatList = buildFlattenedList(treeData);
-//            console.log('Resulting flattened list:', flatList);
             setFlattenedItems(flatList);
         }
-    }, [expandedItems, buildFlattenedList, treeData]);
+    }, [expandedItems, buildFlattenedList, treeData, i18n.language]);
 
     const handleToggle = useCallback((id) => {
-        console.log('Toggling category:', id);
         setExpandedItems(prev => {
             const next = new Set(prev);
             if (next.has(id)) {
-                console.log('Collapsing category:', id);
                 next.delete(id);
             } else {
-                console.log('Expanding category:', id);
                 next.add(id);
             }
             return next;
@@ -232,7 +274,8 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
                     expandedItems,
                     selectedId,
                     onToggle: handleToggle,
-                    onSelect: onSelectCategory
+                    onSelect: onSelectCategory,
+                    currentLanguage // Передаем текущий язык
                 }}
             >
                 {CategoryItem}

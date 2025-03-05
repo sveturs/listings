@@ -1,3 +1,16 @@
+-- Проверяем существование столбца storefront_id и добавляем его, если он отсутствует
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'marketplace_listings' AND column_name = 'storefront_id'
+    ) THEN
+        ALTER TABLE marketplace_listings ADD COLUMN storefront_id INT REFERENCES user_storefronts(id) ON DELETE SET NULL;
+        CREATE INDEX IF NOT EXISTS idx_marketplace_listings_storefront ON marketplace_listings(storefront_id);
+    END IF;
+END$$;
+
 -- Оптимизированное материализованное представление
 CREATE MATERIALIZED VIEW category_listing_counts AS
 WITH RECURSIVE category_tree AS (
