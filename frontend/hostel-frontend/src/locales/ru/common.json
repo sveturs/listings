@@ -1,89 +1,99 @@
 {
-    "buttons": {
-      "create": "Создать",
-      "edit": "Редактировать",
-      "delete": "Удалить",
-      "save": "Сохранить",
-      "cancel": "Отмена",
-      "close": "Закрыть",
-      "back": "Назад",
-      "search": "Поиск",
-      "share": "Поделиться",
-      "favorite": "В избранное",
-      "unfavorite": "Убрать из избранного"
-    },
-    "navigation": {
-      "home": "Главная",
-      "marketplace": "Маркетплейс",
-      "myListings": "Мои объявления",
-      "favorites": "Избранное",
-      "messages": "Сообщения",
-      "profile": "Профиль",
-      "notifications": "Уведомления",
-      "settings": "Настройки",
-      "balance": "Баланс",
-        "storefronts": "Мои витрины"
-    },
-    "balance": {
-      "title": "Баланс и транзакции",
-      "available": "Доступный баланс",
-      "deposit": "Пополнить",
-      "confirmDeposit": "Подтвердить пополнение",
-      "processing": "Обработка...",
-      "amount": "Сумма",
-      "paymentMethod": "Способ оплаты",
-      "date": "Дата",
-      "type": "Тип",
-      "description": "Описание",
-      "status": "Статус",
-      "fee": "Комиссия: {{fixed}} RSD + {{percent}}%",
-      "types": {
-        "deposit": "Пополнение",
-        "withdrawal": "Вывод",
-        "payment": "Оплата",
-        "transfer": "Перевод"
-      },
-      "statuses": {
-        "pending": "В обработке",
-        "completed": "Выполнено",
-        "failed": "Ошибка"
-      },
-      "errors": {
-        "loadFailed": "Не удалось загрузить данные баланса",
-        "depositFailed": "Ошибка пополнения баланса",
-        "loadPaymentMethods": "Не удалось загрузить методы оплаты"
-      }
-    },
-    "auth": {
-      "signIn": "Войти",
-      "signOut": "Выйти",
-      "profile": "Профиль",
-      "needAuth": "Необходима авторизация",
-      "pleaseLogin": "Пожалуйста, войдите в систему"
-    },
-    "common": {
-      "loading": "Загрузка...",
-      "error": "Ошибка",
-      "success": "Успешно",
-      "notFound": "Не найдено",
-      "price": "Цена",
-      "condition": "Состояние",
-      "category": "Категория",
-      "location": "Местоположение",
-      "description": "Описание",
-      "photos": "Фотографии",
-      "new": "Новое",
-      "used": "Б/у"
-    },
-    "time": {
-      "today": "Сегодня",
-      "yesterday": "Вчера",
-      "ago": "назад",
-      "minute": "минуту",
-      "minutes": "минут",
-      "hour": "час",
-      "hours": "часов",
-      "day": "день",
-      "days": "дней"
-    }
+  "buttons": {
+     "create": "Создать",
+     "edit": "Редактировать",
+     "delete": "Удалить",
+     "save": "Сохранить",
+     "cancel": "Отмена",
+     "close": "Закрыть",
+     "back": "Назад",
+     "search": "Поиск",
+     "share": "Поделиться",
+     "favorite": "В избранное",
+     "unfavorite": "Убрать из избранного"
+  },
+  "navigation": {
+     "home": "Главная",
+     "marketplace": "Маркетплейс",
+     "myListings": "Мои объявления",
+     "favorites": "Избранное",
+     "messages": "Сообщения",
+     "profile": "Профиль",
+     "notifications": "Уведомления",
+     "settings": "Настройки",
+     "balance": "Баланс",
+     "storefronts": "Мои витрины"
+  },
+  "balance": {
+     "title": "Баланс и транзакции",
+     "available": "Доступный баланс",
+     "deposit": "Пополнить",
+     "confirmDeposit": "Подтвердить пополнение",
+     "processing": "Обработка...",
+     "amount": "Сумма",
+     "paymentMethod": "Способ оплаты",
+     "date": "Дата",
+     "type": "Тип",
+     "description": "Описание",
+     "status": "Статус",
+     "fee": "Комиссия: {{fixed}} RSD + {{percent}}%",
+     "minAmount": "Минимальная сумма",
+     "maxAmount": "Максимальная сумма",
+     "paymentSuccess": "Оплата успешно проведена",
+     "paymentCanceled": "Оплата отменена",
+     "types": {
+         "deposit": "Пополнение",
+         "withdrawal": "Вывод",
+         "payment": "Оплата",
+         "transfer": "Перевод",
+         "service_payment": "Оплата услуги"
+     },
+     "statuses": {
+         "pending": "В обработке",
+         "completed": "Выполнено",
+         "failed": "Ошибка"
+     },
+     "errors": {
+         "loadFailed": "Не удалось загрузить данные баланса",
+         "depositFailed": "Ошибка пополнения баланса",
+         "loadPaymentMethods": "Не удалось загрузить методы оплаты"
+     },
+     "descriptions": {
+         "storeCreation": "Создание витрины магазина",
+         "listingTranslation": "Перевод {{count}} объявлений"
+     }
+  },
+  "auth": {
+     "signIn": "Войти",
+     "signOut": "Выйти",
+     "profile": "Профиль",
+     "needAuth": "Необходима авторизация",
+     "pleaseLogin": "Пожалуйста, войдите в систему"
+  },
+  "common": {
+     "loading": "Загрузка...",
+     "error": "Ошибка",
+     "success": "Успешно",
+     "notFound": "Не найдено",
+     "price": "Цена",
+     "condition": "Состояние",
+     "category": "Категория",
+     "location": "Местоположение",
+     "description": "Описание",
+     "photos": "Фотографии",
+     "new": "Новое",
+     "used": "Б/у",
+     "backToHome": "Вернуться на главную"
+  },
+  "time": {
+     "today": "Сегодня",
+     "yesterday": "Вчера",
+     "ago": "назад",
+     "minute": "минуту",
+     "minutes": "минут",
+     "hour": "час",
+     "hours": "часов",
+     "day": "день",
+     "days": "дней"
   }
+ }

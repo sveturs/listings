@@ -25,7 +25,7 @@ import BalanceWidget from '../../components/balance/BalanceWidget';
 import DepositDialog from '../../components/balance/DepositDialog';
 
 const TransactionsPage = () => {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
   const { checkAuth } = useAuth(); 
   const [transactions, setTransactions] = useState([]);
   const [balance, setBalance] = useState(0);
@@ -126,6 +126,23 @@ const TransactionsPage = () => {
     }).format(amount);
   };
 
+  // Функция для перевода описаний транзакций
+  const translateDescription = (description) => {
+    // Проверка на создание витрины
+    if (description === "Создание витрины магазина") {
+      return t('balance.descriptions.storeCreation');
+    }
+    
+    // Проверка на перевод объявлений
+    const translationMatch = description.match(/Перевод (\d+) объявлений/);
+    if (translationMatch) {
+      return t('balance.descriptions.listingTranslation', { count: translationMatch[1] });
+    }
+    
+    // Если нет соответствия, возвращаем оригинал
+    return description;
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
@@ -186,10 +203,14 @@ const TransactionsPage = () => {
               {transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>
-                    {new Date(transaction.created_at).toLocaleDateString()}
+                    {new Date(transaction.created_at).toLocaleDateString(i18n.language)}
                   </TableCell>
-                  <TableCell>{t(`balance.types.${transaction.type}`)}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell>
+                    {t(`balance.types.${transaction.type}`)}
+                  </TableCell>
+                  <TableCell>
+                    {translateDescription(transaction.description)}
+                  </TableCell>
                   <TableCell align="right">
                     {formatAmount(transaction.amount)}
                   </TableCell>

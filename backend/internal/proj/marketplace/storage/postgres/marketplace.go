@@ -695,8 +695,8 @@ ORDER BY c1.name ASC;
 		}
 
 		// Добавляем логирование переводов и детей
-		log.Printf("Raw translations JSON for category %d: %s", node.ID, string(translationsJson))
-		log.Printf("Raw children JSON for category %d: %s", node.ID, string(childrenJson))
+//		log.Printf("Raw translations JSON for category %d: %s", node.ID, string(translationsJson))
+//		log.Printf("Raw children JSON for category %d: %s", node.ID, string(childrenJson))
 
 		if err := json.Unmarshal(translationsJson, &node.Translations); err != nil {
 			log.Printf("Error unmarshaling translations for category %d: %v", node.ID, err)
@@ -709,17 +709,17 @@ ORDER BY c1.name ASC;
 			node.Children = make([]models.CategoryTreeNode, 0)
 		} else {
 			node.Children = children
-			log.Printf("Category %d has %d children", node.ID, len(children))
+//			log.Printf("Category %d has %d children", node.ID, len(children))
 		}
 
 		rootCategories = append(rootCategories, node)
 	}
 
 	// Добавляем логирование результата
-	for _, cat := range rootCategories {
-		log.Printf("Root category %d (%s) has %d children and children_count=%d",
-			cat.ID, cat.Name, len(cat.Children), cat.ChildrenCount)
-	}
+//	for _, cat := range rootCategories {
+//		log.Printf("Root category %d (%s) has %d children and children_count=%d",
+//			cat.ID, cat.Name, len(cat.Children), cat.ChildrenCount)
+//	}
 
 	log.Printf("Returning %d root categories with tree", len(rootCategories))
 	return rootCategories, nil

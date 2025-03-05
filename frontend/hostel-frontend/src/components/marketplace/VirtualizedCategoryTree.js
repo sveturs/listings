@@ -162,7 +162,7 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
         ['categories', i18n.language],
         async () => {
             const response = await axios.get('/api/v1/marketplace/category-tree');
-            console.log('Full category tree:', JSON.stringify(response.data.data, null, 2));
+        //    console.log('Full category tree:', JSON.stringify(response.data.data, null, 2));
             return response.data;
         },
         {
@@ -175,14 +175,14 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
     useEffect(() => {
         if (queryResult?.pages?.[0]?.data) {
             const flatData = queryResult.pages[0].data;
-            console.log('Received flat data:', flatData);
+        //    console.log('Received flat data:', flatData);
             
             const treeStructure = buildTree(flatData);
-            console.log('Built tree structure:', treeStructure);
+        //    console.log('Built tree structure:', treeStructure);
             
             setTreeData(treeStructure);
             const initialFlatList = buildFlattenedList(treeStructure);
-            console.log('Initial flattened list:', initialFlatList);
+//            console.log('Initial flattened list:', initialFlatList);
             setFlattenedItems(initialFlatList);
         }
     }, [queryResult, buildFlattenedList]);
@@ -190,9 +190,9 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
     // Обновляем при изменении expanded items
     useEffect(() => {
         if (treeData) {
-            console.log('Building flattened list from:', treeData);
+//            console.log('Building flattened list from:', treeData);
             const flatList = buildFlattenedList(treeData);
-            console.log('Resulting flattened list:', flatList);
+//            console.log('Resulting flattened list:', flatList);
             setFlattenedItems(flatList);
         }
     }, [expandedItems, buildFlattenedList, treeData]);

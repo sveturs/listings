@@ -1,57 +1,99 @@
 {
-    "buttons": {
-      "create": "Направи",
-      "edit": "Уреди",
-      "delete": "Обриши",
-      "save": "Сачувај",
-      "cancel": "Откажи",
-      "close": "Затвори",
-      "back": "Назад",
-      "search": "Претрага",
-      "share": "Подели",
-      "favorite": "Додај у омиљено",
-      "unfavorite": "Уклони из омиљеног"
-    },
-    "navigation": {
-      "home": "Почетна",
-      "marketplace": "Пијаца",
-      "myListings": "Моји огласи",
-      "favorites": "Омиљено",
-      "messages": "Поруке",
-      "profile": "Профил",
-      "notifications": "Обавештења",
-      "settings": "Подешавања"
-    },
-    "auth": {
-      "signIn": "Пријави се",
-      "signOut": "Одјави се",
-      "profile": "Профил",
-      "needAuth": "Потребна је аутентификација",
-      "pleaseLogin": "Молимо вас да се пријавите"
-    },
-    "common": {
-      "loading": "Учитавање...",
-      "error": "Грешка",
-      "success": "Успешно",
-      "notFound": "Није пронађено",
-      "price": "Цена",
-      "condition": "Стање",
-      "category": "Категорија",
-      "location": "Локација",
-      "description": "Опис",
-      "photos": "Фотографије",
-      "new": "Ново",
-      "used": "Коришћено"
-    },
-    "time": {
-      "today": "Данас",
-      "yesterday": "Јуче",
-      "ago": "пре",
-      "minute": "минут",
-      "minutes": "минута",
-      "hour": "сат",
-      "hours": "сати",
-      "day": "дан",
-      "days": "дана"
-    }
+  "buttons": {
+     "create": "Креирај",
+     "edit": "Уреди",
+     "delete": "Обриши",
+     "save": "Сачувај",
+     "cancel": "Откажи",
+     "close": "Затвори",
+     "back": "Назад",
+     "search": "Претрага",
+     "share": "Подели",
+     "favorite": "Додај у омиљене",
+     "unfavorite": "Уклони из омиљених"
+  },
+  "navigation": {
+     "home": "Почетна",
+     "marketplace": "Продавница",
+     "myListings": "Моји огласи",
+     "favorites": "Омиљено",
+     "messages": "Поруке",
+     "profile": "Профил",
+     "notifications": "Обавештења",
+     "settings": "Подешавања",
+     "balance": "Стање",
+     "storefronts": "Моје продавнице"
+  },
+  "balance": {
+     "title": "Стање и трансакције",
+     "available": "Доступно стање",
+     "deposit": "Допуни",
+     "confirmDeposit": "Потврди допуну",
+     "processing": "Обрада...",
+     "amount": "Износ",
+     "paymentMethod": "Начин плаћања",
+     "date": "Датум",
+     "type": "Тип",
+     "description": "Опис",
+     "status": "Статус",
+     "fee": "Провизија: {{fixed}} RSD + {{percent}}%",
+     "minAmount": "Минимални износ",
+     "maxAmount": "Максимални износ",
+     "paymentSuccess": "Плаћање је успешно обављено",
+     "paymentCanceled": "Плаћање је отказано",
+     "types": {
+         "deposit": "Допуна",
+         "withdrawal": "Исплата",
+         "payment": "Плаћање",
+         "transfer": "Трансфер",
+         "service_payment": "Плаћање услуге"
+     },
+     "statuses": {
+         "pending": "У обради",
+         "completed": "Завршено",
+         "failed": "Грешка"
+     },
+     "errors": {
+         "loadFailed": "Није могуће учитати податке о стању",
+         "depositFailed": "Грешка при допуни стања",
+         "loadPaymentMethods": "Није могуће учитати методе плаћања"
+     },
+     "descriptions": {
+         "storeCreation": "Креирање продавнице",
+         "listingTranslation": "Превод {{count}} огласа"
+     }
+  },
+  "auth": {
+     "signIn": "Пријава",
+     "signOut": "Одјава",
+     "profile": "Профил",
+     "needAuth": "Потребна је пријава",
+     "pleaseLogin": "Молимо вас да се пријавите"
+  },
+  "common": {
+     "loading": "Учитавање...",
+     "error": "Грешка",
+     "success": "Успешно",
+     "notFound": "Није пронађено",
+     "price": "Цена",
+     "condition": "Стање",
+     "category": "Категорија",
+     "location": "Локација",
+     "description": "Опис",
+     "photos": "Фотографије",
+     "new": "Ново",
+     "used": "Коришћено",
+     "backToHome": "Повратак на почетну"
+  },
+  "time": {
+     "today": "Данас",
+     "yesterday": "Јуче",
+     "ago": "пре",
+     "minute": "минут",
+     "minutes": "минута",
+     "hour": "сат",
+     "hours": "сати",
+     "day": "дан",
+     "days": "дана"
   }
+ }

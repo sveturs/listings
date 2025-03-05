@@ -28,14 +28,14 @@ export const useNotifications = () => {
             const response = await axios.get('/api/v1/notifications');
             setNotifications(response.data.data || []);
         } catch (err) {
-            console.error('Error:', err);
+     //       console.error('Error:', err);
         }
     };
     const fetchSettings = async () => {
         try {
-            console.log('Fetching settings...');
+           // console.log('Fetching settings...');
             const response = await axios.get('/api/v1/notifications/settings');
-            console.log('Raw settings response:', response.data);
+           // console.log('Raw settings response:', response.data);
     
             // Правильный путь к массиву настроек
             const settingsArray = response.data?.data?.data;
@@ -52,16 +52,16 @@ export const useNotifications = () => {
                     }
                 });
     
-                console.log('Formatted settings:', formattedSettings);
+          //      console.log('Formatted settings:', formattedSettings);
                 setSettings(formattedSettings);
             } else {
-                console.warn('Settings data is not an array:', response.data);
+         //       console.warn('Settings data is not an array:', response.data);
                 setSettings({});
             }
     
             // Отдельно проверяем статус подключения Telegram
             const telegramStatus = await axios.get('/api/v1/notifications/telegram');
-            console.log('Telegram status raw:', telegramStatus.data);
+            // console.log('Telegram status raw:', telegramStatus.data);
             
             // Проверяем правильный путь к статусу подключения
             if (telegramStatus.data?.data?.connected === true) {
@@ -71,7 +71,7 @@ export const useNotifications = () => {
             }
     
         } catch (err) {
-            console.error('Error fetching settings:', err);
+          //   console.error('Error fetching settings:', err);
             setSettings({});
         }
     };

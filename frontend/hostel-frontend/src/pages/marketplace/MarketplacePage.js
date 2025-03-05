@@ -183,7 +183,7 @@ const MarketplacePage = () => {
                     return; // Возвращаемся, useEffect запустится снова с обновленными параметрами
                 }
                 const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
-                console.log('Fetched categories:', categoriesResponse.data?.data); // Добавьте этот лог
+//                console.log('Fetched categories:', categoriesResponse.data?.data); // Добавьте этот лог
 
                 if (categoriesResponse.data?.data) {
                     setCategories(categoriesResponse.data.data);
@@ -417,7 +417,7 @@ const MarketplacePage = () => {
             );
         }
 
-        console.log("Listings before rendering:", listings);
+//        console.log("Listings before rendering:", listings);
 
         // Проверка, что listings - это массив
         if (!listings || !Array.isArray(listings) || listings.length === 0) {

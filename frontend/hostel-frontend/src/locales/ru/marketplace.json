@@ -95,7 +95,8 @@
       "seller": {
         "title": "Продавец",
         "memberSince": "На сайте с {{date}}",
-        "unknownDate": "неизвестной даты"
+        "unknownDate": "неизвестной даты",
+        "seeAllReviews": "Смотреть все отзывы"
       },
       "contact": {
         "call": "Позвонить",
@@ -125,7 +126,9 @@
         "loadFailed": "Не удалось загрузить объявление",
         "deleteFailed": "Ошибка при удалении объявления",
         "updateFailed": "Ошибка при обновлении объявления"
-      }
+      },
+      "storeProduct": "Товар из магазина",
+      "goToStore": "Перейти в магазин"
     },
     "filters": {
       "title": "Фильтры",
@@ -170,7 +173,16 @@
     "conditions": {
       "new": "Новое",
       "used": "Б/у"
-    }
+    },
+    "condition": {
+      "new": "Новое",
+      "used": "Б/у"
+    },
+    "status": {
+      "active": "Активно",
+      "inactive": "Неактивно"
+    },
+    "views": "{{count}} просмотров"
   },
   "reviews": {
     "title": "Отзывы",
@@ -198,6 +210,7 @@
     "basedOn": "На основе {{count}} отзывов",
     "noRatingsYet": "Пока нет отзывов",
     "seeAllReviews": "Смотреть все отзывы",
+    "seeAllUserReviews": "Смотреть все отзывы о пользователе",
     "hideReviews": "Скрыть отзывы",
     "allUserReviews": "Все отзывы пользователя",
     "allStoreReviews": "Все отзывы магазина",
@@ -206,7 +219,11 @@
     "viewListing": "Просмотр объявления",
     "userNotFound": "Пользователь не найден",
     "storefrontNotFound": "Магазин не найден",
-    "noReviewsYet": "Пока нет отзывов"
+    "noReviewsYet": "Пока нет отзывов",
+    "allReviews": "Все отзывы",
+    "errors": {
+      "loadFailed": "Не удалось загрузить отзывы"
+    }
   },
   "chat": {
     "newMessage": "Новое сообщение",
@@ -276,7 +293,9 @@
       "deposit": "Пополнение",
       "withdrawal": "Вывод",
       "payment": "Оплата",
-      "transfer": "Перевод"
+      "transfer": "Перевод",
+      "service_payment": "Оплата услуги",
+      "service_fee": "Комиссия за услугу"
     },
     "statuses": {
       "pending": "В обработке",
@@ -320,7 +339,12 @@
       "translationInfo": "Перевод будет выполнен с помощью машинного перевода. Качество может различаться в зависимости от языка и сложности текста.",
       "translating": "Переводим...",
       "confirmTranslation": "Подтвердить перевод",
-      "translateSuccessWithCost": "Успешно переведено объявлений: {{count}} за {{cost}} RSD"
+      "translateSuccessWithCost": "Успешно переведено объявлений: {{count}} за {{cost}} RSD",
+      "title": "Наименование",
+      "price": "Цена",
+      "status": "Статус",
+      "date": "Дата",
+      "noListings": "Нет объявлений"
     },
     "tabs": {
       "import": "Импорт товаров",
@@ -413,5 +437,18 @@
   },
   "buttons": {
     "search": "Поиск"
+  },
+  "common": {
+    "backToHome": "Вернуться на главную"
+  },
+  "gallery": {
+    "fullscreen": "Полноэкранный режим",
+    "close": "Закрыть",
+    "prev": "Предыдущее изображение",
+    "next": "Следующее изображение",
+    "zoomIn": "Увеличить",
+    "zoomOut": "Уменьшить",
+    "reset": "Сбросить масштаб",
+    "imageCount": "Изображение {{current}} из {{total}}"
   }
 }
