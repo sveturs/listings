@@ -1,37 +1,39 @@
 // backend/internal/proj/global/service/service.go
-
 package service
 
 import (
-	"backend/internal/config"
-	balance "backend/internal/proj/balance/service"
-	marketplaceService "backend/internal/proj/marketplace/service"
-	translationService "backend/internal/proj/marketplace/service"
-	notificationService "backend/internal/proj/notifications/service"
-	payment "backend/internal/proj/payments/service"
-	reviewService "backend/internal/proj/reviews/service"
-	storefrontService "backend/internal/proj/storefront/service"
-	userService "backend/internal/proj/users/service"
-	"backend/internal/storage"
+    "backend/internal/config"
+    balance "backend/internal/proj/balance/service"
+    marketplaceService "backend/internal/proj/marketplace/service"
+    translationService "backend/internal/proj/marketplace/service"
+    geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
+    notificationService "backend/internal/proj/notifications/service"
+    payment "backend/internal/proj/payments/service"
+    reviewService "backend/internal/proj/reviews/service"
+    storefrontService "backend/internal/proj/storefront/service"
+    userService "backend/internal/proj/users/service"
+    "backend/internal/storage"
 )
 
 type Service struct {
-	users        *userService.Service
-	marketplace  *marketplaceService.Service
-	review       *reviewService.Service
-	chat         *marketplaceService.Service
-	config       *config.Config
-	notification *notificationService.Service
-	translation  translationService.TranslationServiceInterface
-	balance      *balance.BalanceService
-	payment      payment.PaymentServiceInterface
-	storefront   storefrontService.StorefrontServiceInterface
-	storage      storage.Storage 
+    users        *userService.Service
+    marketplace  *marketplaceService.Service
+    review       *reviewService.Service
+    chat         *marketplaceService.Service
+    config       *config.Config
+    notification *notificationService.Service
+    translation  translationService.TranslationServiceInterface
+    balance      *balance.BalanceService
+    payment      payment.PaymentServiceInterface
+    storefront   storefrontService.StorefrontServiceInterface
+    storage      storage.Storage
+    geocode      geocodeService.GeocodeServiceInterface
 }
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
     notificationSvc := notificationService.NewService(storage)
     balanceSvc := balance.NewBalanceService(storage)
+    geocodeSvc := geocodeService.NewGeocodeService(storage)
 
     // Создаем сервис платежей с передачей сервиса баланса
     stripeService := payment.NewStripeService(
@@ -52,15 +54,22 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
         balance:      balanceSvc,
         payment:      stripeService,
         storefront:   storefrontService.NewStorefrontService(storage),
-        storage:      storage,  
+        storage:      storage,
+        geocode:      geocodeSvc,
     }
 }
 
+func (s *Service) Geocode() geocodeService.GeocodeServiceInterface {
+    return s.geocode
+
+}
+
+
 func (s *Service) Storage() storage.Storage {
-    return s.storage
+	return s.storage
 }
 func (s *Service) Storefront() storefrontService.StorefrontServiceInterface {
-    return s.storefront
+	return s.storefront
 }
 func (s *Service) Payment() payment.PaymentServiceInterface {
 	return s.payment

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Map as MapIcon } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation } from '../../contexts/LocationContext';
+
 import {
     Container,
     Grid,
@@ -64,6 +66,7 @@ const MobileListingGrid = ({ listings }) => {
 
 const MarketplacePage = () => {
     const { t } = useTranslation('marketplace');
+    const { userLocation } = useLocation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
@@ -76,56 +79,32 @@ const MarketplacePage = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [categoryPath, setCategoryPath] = useState([]);
     const [mapViewActive, setMapViewActive] = useState(false);
-    const [userLocation, setUserLocation] = useState(null);
+    const [userLocationState, setUserLocationState] = useState(null);
+    const [spellingSuggestion, setSpellingSuggestion] = useState(null);
+
     const [filters, setFilters] = useState({
         query: searchParams.get('query') || '',
         category_id: searchParams.get('category_id') || '',
         min_price: searchParams.get('min_price') || '',
         max_price: searchParams.get('max_price') || '',
-        city: searchParams.get('city') || '',
-        country: searchParams.get('country') || '',
+        city: searchParams.get('city') || userLocation?.city || '',
+        country: searchParams.get('country') || userLocation?.country || '',
         condition: searchParams.get('condition') || '',
         sort_by: searchParams.get('sort_by') || 'date_desc',
         distance: searchParams.get('distance') || '',
-        latitude: searchParams.get('latitude') ? parseFloat(searchParams.get('latitude')) : null,
-        longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')) : null,
+        latitude: searchParams.get('latitude') ? parseFloat(searchParams.get('latitude')) : userLocation?.lat || null,
+        longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')) : userLocation?.lon || null,
     });
-    const [spellingSuggestion, setSpellingSuggestion] = useState(null);
-
-    // Получаем текущее местоположение пользователя
-    useEffect(() => {
-        if (filters.latitude && filters.longitude) {
-            setUserLocation({
-                latitude: filters.latitude,
-                longitude: filters.longitude
-            });
-        }
-        // Удаляем автоматический запрос местоположения при viewMode=map
-        // Просто устанавливаем режим карты без определения местоположения
-        if (searchParams.get('viewMode') === 'map') {
-            setMapViewActive(true);
-        }
-    }, [searchParams, filters.latitude, filters.longitude]);
-
-    // Проверяем, запрошен ли режим карты в URL
-    useEffect(() => {
-        const viewMode = searchParams.get('viewMode');
-        if (viewMode === 'map') {
-            setMapViewActive(true);
-        } else if (viewMode === 'list') {
-            setMapViewActive(false);
-        }
-    }, [searchParams]);
-
     const fetchListings = useCallback(async (currentFilters = {}) => {
         try {
             setLoading(true);
             setError(null);
-            setSpellingSuggestion(null); // Сбрасываем предыдущее предложение
+            setSpellingSuggestion(null);
 
             const params = {};
             Object.entries(currentFilters).forEach(([key, value]) => {
-                if (value !== '') {
+                // Исключаем city и country из параметров запроса
+                if (value !== '' && key !== 'city' && key !== 'country') {
                     if (key === 'query') {
                         params['q'] = value;
                     } else {
@@ -134,7 +113,8 @@ const MarketplacePage = () => {
                 }
             });
 
-            console.log('Отправляем запрос с параметрами:', params);
+            // Добавляем отладочную информацию
+            console.log('Отправляем запрос ТОЛЬКО с координатами и радиусом:', params);
             const response = await axios.get('/api/v1/marketplace/search', { params });
             console.log('Получен ответ API:', response.data);
 
@@ -144,7 +124,6 @@ const MarketplacePage = () => {
                     console.log('Найдено объявлений:', response.data.data.length);
                     setListings(response.data.data);
                 } else if (response.data.data.data && Array.isArray(response.data.data.data)) {
-                    // Если структура вложенная
                     console.log('Найдено объявлений (вложенная структура):', response.data.data.data.length);
                     setListings(response.data.data.data);
                 } else {
@@ -155,6 +134,7 @@ const MarketplacePage = () => {
                 console.error('Ответ API не содержит ожидаемую структуру данных:', response.data);
                 setListings([]);
             }
+
             if (response.data.meta && response.data.meta.spelling_suggestion) {
                 setSpellingSuggestion(response.data.meta.spelling_suggestion);
             }
@@ -166,6 +146,97 @@ const MarketplacePage = () => {
             setLoading(false);
         }
     }, []);
+
+    useEffect(() => {
+        // Если нет заданных координат в URL, но есть userLocation
+        if ((!searchParams.get('latitude') || !searchParams.get('longitude')) &&
+            userLocation?.lat && userLocation?.lon) {
+            const updatedFilters = {
+                ...filters,
+                latitude: userLocation.lat,
+                longitude: userLocation.lon,
+                city: userLocation.city || '',
+                country: userLocation.country || '',
+            };
+
+            // Обновляем состояние фильтров
+            setFilters(updatedFilters);
+
+            // Обновляем URL с новыми координатами
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('latitude', userLocation.lat);
+            nextParams.set('longitude', userLocation.lon);
+            if (userLocation.city) nextParams.set('city', userLocation.city);
+            if (userLocation.country) nextParams.set('country', userLocation.country);
+            setSearchParams(nextParams);
+
+            // Выполняем поиск с обновленными параметрами
+            fetchListings(updatedFilters);
+        }
+    }, [userLocation, searchParams, filters, fetchListings, setSearchParams]);
+
+    // Проверяем, запрошен ли режим карты в URL
+    useEffect(() => {
+        const viewMode = searchParams.get('viewMode');
+        if (viewMode === 'map') {
+            setMapViewActive(true);
+        } else if (viewMode === 'list') {
+            setMapViewActive(false);
+        }
+    }, [searchParams]);
+    useEffect(() => {
+        const handleCityChange = (event) => {
+            const { lat, lon, city, country } = event.detail;
+
+            // Обновляем фильтры с новыми координатами
+            setFilters(prev => ({
+                ...prev,
+                latitude: lat,
+                longitude: lon,
+                city: city || '',
+                country: country || '',
+                distance: prev.distance || '30km' // Устанавливаем больший радиус по умолчанию
+            }));
+
+            // Обновляем параметры URL
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('latitude', lat);
+            nextParams.set('longitude', lon);
+            if (city) nextParams.set('city', city);
+            if (country) nextParams.set('country', country);
+            if (!nextParams.has('distance')) nextParams.set('distance', '30km');
+            setSearchParams(nextParams);
+
+            // Обновляем состояние для карты
+            setUserLocationState({
+                latitude: lat,
+                longitude: lon
+            });
+
+            // Обновляем данные на основе новых фильтров, НО без city и country
+            const updatedFilters = {
+                ...filters,
+                latitude: lat,
+                longitude: lon,
+                // Комментируем city и country, чтобы они не отправлялись
+                // city: city || '',
+                // country: country || '',
+                distance: filters.distance || '30km'
+            };
+
+            console.log("Обновленные фильтры после смены города:", updatedFilters);
+            fetchListings(updatedFilters);
+        };
+
+        // Добавляем слушатель события
+        window.addEventListener('cityChanged', handleCityChange);
+
+        // Очистка при размонтировании
+        return () => {
+            window.removeEventListener('cityChanged', handleCityChange);
+        };
+    }, [filters, fetchListings, searchParams, setSearchParams]);
+
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -203,7 +274,7 @@ const MarketplacePage = () => {
                                     }));
 
                                     // Сразу же обновим местоположение пользователя
-                                    setUserLocation({
+                                    setUserLocationState({
                                         latitude: latitude,
                                         longitude: longitude
                                     });
@@ -248,7 +319,7 @@ const MarketplacePage = () => {
         };
 
         fetchInitialData();
-    }, [searchParams, fetchListings]);
+    }, [searchParams, fetchListings, setSearchParams]);
 
     useEffect(() => {
         if (!window.location.pathname.includes('/marketplace')) {
@@ -258,6 +329,12 @@ const MarketplacePage = () => {
             }, { replace: true });
         }
     }, [navigate]);
+// Добавьте временную кнопку для тестирования
+
+
+
+
+
 
     const findCategoryPath = (categoryId, categoriesTree) => {
         if (!categoryId || !categoriesTree || categoriesTree.length === 0) {
@@ -332,13 +409,11 @@ const MarketplacePage = () => {
                 updated.distance = '';
             }
 
-            // Обновляем URL
-            const nextParams = new URLSearchParams(searchParams);
+            // Обновляем URL - здесь параметры будут автоматически кодироваться
+            const nextParams = new URLSearchParams();
             Object.entries(updated).forEach(([key, value]) => {
-                if (value) {
+                if (value !== null && value !== undefined && value !== '') {
                     nextParams.set(key, value);
-                } else {
-                    nextParams.delete(key);
                 }
             });
 
@@ -346,16 +421,31 @@ const MarketplacePage = () => {
                 navigate({
                     pathname: '/marketplace',
                     search: nextParams.toString()
-                });
+                }, { replace: true });
             } else {
                 setSearchParams(nextParams);
             }
 
-            // Подготавливаем чистые фильтры без пустых значений для запроса
+            // ВАЖНО: Декодируем значения перед отправкой в API
             const cleanFilters = {};
             Object.entries(updated).forEach(([key, value]) => {
-                if (value !== '') {
-                    cleanFilters[key] = value;
+                if (value !== '' && value !== null && value !== undefined) {
+                    // Декодируем URL-закодированные строки для city и country
+                    if (key === 'city' || key === 'country') {
+                        // Пробуем декодировать, если это закодированная строка
+                        try {
+                            if (value.includes('%')) {
+                                cleanFilters[key] = decodeURIComponent(value);
+                            } else {
+                                cleanFilters[key] = value;
+                            }
+                        } catch (e) {
+                            // Если ошибка декодирования, используем как есть
+                            cleanFilters[key] = value;
+                        }
+                    } else {
+                        cleanFilters[key] = value;
+                    }
                 }
             });
 
@@ -398,6 +488,7 @@ const MarketplacePage = () => {
             return count;
         }, 0);
     };
+
     // Добавьте эту функцию в MarketplacePage.js
     const resetAllFilters = () => {
         const nextParams = new URLSearchParams();
@@ -423,6 +514,7 @@ const MarketplacePage = () => {
         setFilters(defaultFilters);
         fetchListings({});
     };
+
     const renderContent = () => {
         if (loading) {
             return (
@@ -445,15 +537,13 @@ const MarketplacePage = () => {
             return (
                 <MapView
                     listings={listings}
-                    userLocation={userLocation}
+                    userLocation={userLocationState}
                     filters={filters}
                     onFilterChange={handleFilterChange}
                     onMapClose={handleToggleMapView}
                 />
             );
         }
-
-        //        console.log("Listings before rendering:", listings);
 
         // Проверка, что listings - это массив
         if (!listings || !Array.isArray(listings) || listings.length === 0) {
@@ -463,6 +553,7 @@ const MarketplacePage = () => {
                 </Alert>
             );
         }
+
         if (spellingSuggestion && listings.length === 0) {
             return (
                 <>
@@ -487,10 +578,11 @@ const MarketplacePage = () => {
                 </>
             );
         }
+
         return isMobile ? (
             <MobileListingGrid listings={listings} />
         ) : (
-            <Grid container spacing={3}>
+            <Grid container spacing={3}>7777777777777777777777777
                 {listings.map((listing, index) => {
                     // Создаем уникальный идентификатор из других полей, если ID = 0
                     const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
@@ -635,4 +727,5 @@ const MarketplacePage = () => {
         </Container>
     );
 };
+
 export default MarketplacePage;

@@ -6,6 +6,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/middleware"
 	balanceHandler "backend/internal/proj/balance/handler"
+	geocodeHandler "backend/internal/proj/geocode/handler"
 	globalService "backend/internal/proj/global/service"
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	marketplaceService "backend/internal/proj/marketplace/service"
@@ -36,7 +37,7 @@ type Server struct {
 	balance       *balanceHandler.Handler
 	payments      paymentService.PaymentServiceInterface
 	storefront    *storefrontHandler.Handler
-}
+    geocode       *geocodeHandler.GeocodeHandler }
 
 // Обновить функцию NewServer:
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -76,8 +77,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	marketplaceHandler := marketplaceHandler.NewHandler(services)
 	notificationsHandler := notificationHandler.NewHandler(services)
 	balanceHandler := balanceHandler.NewHandler(services)
-	storefrontHandler := storefrontHandler.NewHandler(services) // Вот эта строка вызывает ошибку
+	storefrontHandler := storefrontHandler.NewHandler(services)
 	middleware := middleware.NewMiddleware(cfg, services)
+    geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
@@ -99,6 +101,8 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		balance:       balanceHandler,
 		storefront:    storefrontHandler,
 		payments:      services.Payment(),
+		geocode: geocodeHandler,
+
 	}
 
 	// Инициализируем webhooks для телеграма
@@ -187,8 +191,7 @@ func (s *Server) setupRoutes() {
 
 	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced) // маршрут поиска
 	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)    // маршрут автодополнения
- 	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
- 
+	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
 
 	// Public review routes
 	review := s.app.Group("/api/v1/reviews")
@@ -242,6 +245,12 @@ func (s *Server) setupRoutes() {
 	api.Get("/users/:id/rating", s.review.Review.GetUserRatingSummary)
 	api.Get("/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
 	api.Get("/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
+	// API геолокации
+	geocodeApi := s.app.Group("/api/v1/geocode")
+	geocodeApi.Get("/reverse", s.geocode.ReverseGeocode)
+
+	citiesApi := s.app.Group("/api/v1/cities")
+	citiesApi.Get("/suggest", s.geocode.GetCitySuggestions)
 
 	// Protected user routes
 	users := api.Group("/users")

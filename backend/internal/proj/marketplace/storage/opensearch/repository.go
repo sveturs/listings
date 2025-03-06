@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"net/url"
 )
 
 // Repository реализует интерфейс MarketplaceSearchRepository
@@ -572,6 +573,13 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	// Добавляем фильтры по городу
 	if params.City != "" {
+		// Проверяем, не является ли city URL-закодированным значением
+		if strings.Contains(params.City, "%") {
+			decodedCity, err := url.QueryUnescape(params.City)
+			if err == nil {
+				params.City = decodedCity
+			}
+		}
 		filterClauses = append(filterClauses, map[string]interface{}{
 			"term": map[string]interface{}{
 				"city.keyword": params.City,
@@ -581,6 +589,13 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	// Добавляем фильтры по стране
 	if params.Country != "" {
+		// Проверяем, не является ли country URL-закодированным значением
+		if strings.Contains(params.Country, "%") {
+			decodedCountry, err := url.QueryUnescape(params.Country)
+			if err == nil {
+				params.Country = decodedCountry
+			}
+		}
 		filterClauses = append(filterClauses, map[string]interface{}{
 			"term": map[string]interface{}{
 				"country.keyword": params.Country,

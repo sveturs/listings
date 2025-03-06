@@ -13,6 +13,7 @@ import (
 	storefrontService "backend/internal/proj/storefront/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage" 
+	geocodeService "backend/internal/proj/geocode/service" 
 )
 
 type ServicesInterface interface {
@@ -28,4 +29,7 @@ type ServicesInterface interface {
 	Payment() paymentService.PaymentServiceInterface
 	Storefront() storefrontService.StorefrontServiceInterface
 	Storage() storage.Storage 
+	Geocode() geocodeService.GeocodeServiceInterface
+
+
 }

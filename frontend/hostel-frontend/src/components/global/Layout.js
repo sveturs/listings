@@ -1,5 +1,7 @@
+// frontend/hostel-frontend/src/components/global/Layout.js
 import React, { useState, useEffect } from "react";
 import { Storefront } from '@mui/icons-material';
+
 import NewMessageIndicator from './NewMessageIndicator';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,8 +14,10 @@ import LanguageSwitcher from '../shared/LanguageSwitcher';
 import NotificationDrawer from '../notifications/NotificationDrawer';
 import { Settings } from '@mui/icons-material';
 import { AccountBalanceWallet } from '@mui/icons-material';
-import SveTuLogo from '../icons/SveTuLogo'; 
+import SveTuLogo from '../icons/SveTuLogo';
 import { ShoppingBag, Store } from '@mui/icons-material';
+import { useLocation as useGeoLocation } from '../../contexts/LocationContext'; // Добавляем импорт
+import CitySelector from './CitySelector';
 
 import {
   AppBar,
@@ -30,6 +34,9 @@ import {
   useMediaQuery,
   useTheme,
   Modal,
+  Alert,
+  Slide,
+  Button,
 } from "@mui/material";
 import {
   HomeWork,
@@ -43,6 +50,8 @@ import {
 } from "@mui/icons-material";
 
 const Layout = ({ children }) => {
+  const { userLocation, setCity, locationDismissed, dismissLocationSuggestion } = useGeoLocation();
+  const [showLocationAlert, setShowLocationAlert] = useState(false);
   const { t, i18n } = useTranslation('common');
   const theme = useTheme();
   const navigate = useNavigate();
@@ -57,6 +66,7 @@ const Layout = ({ children }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+
   const handleOpenProfile = () => {
     setIsProfileOpen(true);
     handleCloseMenu();
@@ -70,15 +80,12 @@ const Layout = ({ children }) => {
     {
       path: "/",
       label: "Sve Tu",
-      icon: <SveTuLogo width={60} height={60} />, 
+      icon: <SveTuLogo width={60} height={60} />,
     }
   ];
-  
-  useEffect(() => {
-  //  console.log('Current language:', i18n.language);
-  //  console.log('Available languages:', i18n.languages);
-   // console.log('Translations loaded:', i18n.store.data);
-  }, [i18n.language]);
+
+
+
   useEffect(() => {
     let unsubscribe;
 
@@ -138,7 +145,16 @@ const Layout = ({ children }) => {
       </Box>
     </MenuItem>
   );
+  useEffect(() => {
+    if (userLocation && !locationDismissed) {
+      setShowLocationAlert(true);
+    }
+  }, [userLocation, locationDismissed]);
 
+  const handleCloseLocationAlert = () => {
+    setShowLocationAlert(false);
+    dismissLocationSuggestion();
+  };
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
@@ -203,6 +219,11 @@ const Layout = ({ children }) => {
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <CitySelector
+                currentCity={userLocation}
+                onCityChange={setCity}
+              />
+
               <LanguageSwitcher />
               {!user ? (
                 <Tooltip title={t('auth.signIn')}>
@@ -278,18 +299,18 @@ const Layout = ({ children }) => {
                       {t('navigation.myListings')}
                     </MenuItem>
 
-<MenuItem component={Link} to="/storefronts" onClick={handleCloseMenu}>
-  <Store fontSize="small" sx={{ mr: 1 }} />
-  {t('navigation.storefronts', { defaultValue: 'Мои витрины' })}
-</MenuItem>
+                    <MenuItem component={Link} to="/storefronts" onClick={handleCloseMenu}>
+                      <Store fontSize="small" sx={{ mr: 1 }} />
+                      {t('navigation.storefronts', { defaultValue: 'Мои витрины' })}
+                    </MenuItem>
                     <MenuItem component={Link} to="/favorites">
                       <Bookmark fontSize="small" sx={{ mr: 1 }} />
                       {t('navigation.favorites')}
                     </MenuItem>
                     <MenuItem component={Link} to="/balance" onClick={handleCloseMenu}>
-  <AccountBalanceWallet fontSize="small" sx={{ mr: 1 }} />
-  {t('navigation.balance')}
-</MenuItem>
+                      <AccountBalanceWallet fontSize="small" sx={{ mr: 1 }} />
+                      {t('navigation.balance')}
+                    </MenuItem>
                     <Divider />
                     <MenuItem onClick={logout}>
                       <Logout fontSize="small" sx={{ mr: 1 }} />
@@ -302,6 +323,34 @@ const Layout = ({ children }) => {
           </Toolbar>
         </Container>
       </AppBar>
+
+      <Slide direction="down" in={showLocationAlert} mountOnEnter unmountOnExit>
+        <Alert
+          severity="info"
+          sx={{
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+          onClose={handleCloseLocationAlert}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={handleCloseLocationAlert}
+              sx={{ ml: 2 }}
+            >
+              {t('location.useThisCity', { defaultValue: 'Использовать этот город' })}
+            </Button>
+          }
+        >
+          {t('location.detectedCity', {
+            defaultValue: 'Мы определили, что вы находитесь в городе {{city}}',
+            city: userLocation?.city
+          })}
+        </Alert>
+      </Slide>
 
       <Modal
         open={isProfileOpen}

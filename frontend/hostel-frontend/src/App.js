@@ -32,6 +32,7 @@ import PublicStorefrontPage from "./pages/store/PublicStorefrontPage";
 import UserReviewsPage from './pages/user/UserReviewsPage';
 import StorefrontReviewsPage from './pages/store/StorefrontReviewsPage';
 import EditStorefrontPage from "./pages/store/EditStorefrontPage";
+import { LocationProvider } from './contexts/LocationContext';
 
 
 const queryClient = new QueryClient({
@@ -59,59 +60,61 @@ function App() {
           <LanguageProvider>
             <AuthProvider>
               <ChatProvider>
-                <NotificationProvider>
-                  <Layout>
-                    <Routes>
-                      <Route path="/" element={<MarketplacePage />} />
-                      <Route path="/add-user" element={<AddUserPage />} />
-                      <Route path="/admin" element={<AdminPanelPage />} />
-                      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                      <Route path="/marketplace" element={<MarketplacePage />} />
-                      {/*  <Route path="/marketplace/create" element={<CreateListingPage />} />*/}
-                      <Route path="/storefronts" element={
-                        <PrivateRoute>
-                          <StorefrontPage />
-                        </PrivateRoute>
-                      } />
-                      <Route
-                        path="/storefronts/:id/edit"
-                        element={
+                <LocationProvider>
+                  <NotificationProvider>
+                    <Layout>
+                      <Routes>
+                        <Route path="/" element={<MarketplacePage />} />
+                        <Route path="/add-user" element={<AddUserPage />} />
+                        <Route path="/admin" element={<AdminPanelPage />} />
+                        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/marketplace" element={<MarketplacePage />} />
+                        {/*  <Route path="/marketplace/create" element={<CreateListingPage />} />*/}
+                        <Route path="/storefronts" element={
                           <PrivateRoute>
-                            <EditStorefrontPage />
+                            <StorefrontPage />
                           </PrivateRoute>
-                        }
-                      />
-                      {/*<Route path="/storefronts/:id" element={<StorefrontDetailPage />} />*/}
-                      <Route path="/storefronts/:id" element={<PrivateRoute><StorefrontDetailPage /></PrivateRoute>} />
-                      <Route path="/shop/:id" element={<PublicStorefrontPage />} />
-                      <Route path="/user/:id/reviews" element={<UserReviewsPage />} />
-                      <Route path="/shop/:id/reviews" element={<StorefrontReviewsPage />} />
-                      <Route
-                        path="/marketplace/create"
-                        element={
-                          <PrivateRoute>
-                            <CreateListingPage />
-                          </PrivateRoute>
-                        }
-                      />
-                      <Route
-                        path="/notifications/settings"
-                        element={
-                          <PrivateRoute>
-                            <NotificationSettings />
-                          </PrivateRoute>
-                        }
-                      />
-                      <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
-                      <Route path="/profile" element={<UserProfile />} />
-                      <Route path="/marketplace/chat" element={<ChatPage />} />
-                      <Route path="/my-listings" element={<MyListingsPage />} />
-                      <Route path="/favorites" element={<FavoriteListingsPage />} />
-                      <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
-                      <Route path="/balance" element={<PrivateRoute>      <TransactionsPage />    </PrivateRoute>} />
-                    </Routes>
-                  </Layout>
-                </NotificationProvider>
+                        } />
+                        <Route
+                          path="/storefronts/:id/edit"
+                          element={
+                            <PrivateRoute>
+                              <EditStorefrontPage />
+                            </PrivateRoute>
+                          }
+                        />
+                        {/*<Route path="/storefronts/:id" element={<StorefrontDetailPage />} />*/}
+                        <Route path="/storefronts/:id" element={<PrivateRoute><StorefrontDetailPage /></PrivateRoute>} />
+                        <Route path="/shop/:id" element={<PublicStorefrontPage />} />
+                        <Route path="/user/:id/reviews" element={<UserReviewsPage />} />
+                        <Route path="/shop/:id/reviews" element={<StorefrontReviewsPage />} />
+                        <Route
+                          path="/marketplace/create"
+                          element={
+                            <PrivateRoute>
+                              <CreateListingPage />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/notifications/settings"
+                          element={
+                            <PrivateRoute>
+                              <NotificationSettings />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route path="/marketplace/listings/:id" element={<ListingDetailsPage />} />
+                        <Route path="/profile" element={<UserProfile />} />
+                        <Route path="/marketplace/chat" element={<ChatPage />} />
+                        <Route path="/my-listings" element={<MyListingsPage />} />
+                        <Route path="/favorites" element={<FavoriteListingsPage />} />
+                        <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
+                        <Route path="/balance" element={<PrivateRoute>      <TransactionsPage />    </PrivateRoute>} />
+                      </Routes>
+                    </Layout>
+                  </NotificationProvider>
+                </LocationProvider>
               </ChatProvider>
             </AuthProvider>
 
