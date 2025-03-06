@@ -346,24 +346,8 @@ INSERT INTO notification_settings (user_id, notification_type, telegram_enabled,
 (4, 'listing_status', true, '2025-02-08 11:38:09.279014', '2025-02-07 07:48:09.279014'),
 (4, 'favorite_price', true, '2025-02-08 11:38:09.279632', '2025-02-07 07:48:09.279632');
 
--- Insert marketplace categories - только две указанные группы
-INSERT INTO marketplace_categories (id, name, slug, parent_id, icon, created_at) VALUES
-(1, 'Недвижимость', 'real-estate', NULL, 'home', '2025-02-07 07:13:52.823283'),
 
--- Real Estate subcategories
 
-(13, 'Квартира', 'apartment', 1, 'apartment', '2025-02-07 07:13:52.823283'), 
-(14, 'Комната', 'room-rent', 1, 'door', '2025-02-07 07:13:52.823283'), 
-(15, 'Дом, дача, коттедж', 'house-cottage', 1, 'home', '2025-02-07 07:13:52.823283'), 
-(16, 'Земельный участок', 'land-plot', 1, 'tree', '2025-02-07 07:13:52.823283'), 
-(17, 'Гараж и машиноместо', 'garage-parking', 1, 'garage', '2025-02-07 07:13:52.823283'), 
-(18, 'Коммерческая недвижимость', 'commercial-property', 1, 'building', '2025-02-07 07:13:52.823283'), 
-(19, 'Недвижимость за рубежом', 'foreign-property', 1, 'globe', '2025-02-07 07:13:52.823283'), 
-(20, 'Отель', 'hotel-property', 1, 'hotel', '2025-02-07 07:13:52.823283'), 
-(21, 'Апартаменты', 'apartment-property', 1, 'building', '2025-02-07 07:13:52.823283');
-
--- Set initial sequence values for categories
-SELECT setval('marketplace_categories_id_seq', 21, true);
 
 -- Set initial schema version
 INSERT INTO schema_migrations (version, dirty) VALUES (1, false);
