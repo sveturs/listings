@@ -154,8 +154,24 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
           ? [userLocation.latitude, userLocation.longitude]
           : [45.2671, 19.8335]; // Координаты Нови-Сада по умолчанию
 
-        // Создаем карту
-        mapRef.current = L.map(mapContainerRef.current).setView(initialPosition, 13);
+        // Проверка, что контейнер существует и имеет размеры
+        if (!mapContainerRef.current || 
+            mapContainerRef.current.clientWidth === 0 || 
+            mapContainerRef.current.clientHeight === 0) {
+          console.log("Map container not ready yet, retrying...");
+          return;
+        }
+
+        // Создаем карту с опцией preferCanvas для лучшей производительности
+        mapRef.current = L.map(mapContainerRef.current, {
+          preferCanvas: true, // Используем Canvas вместо SVG
+          attributionControl: false, // Убираем атрибуцию
+          zoomControl: true, // Включаем контролы масштаба
+          inertia: true, // Плавное перемещение
+          fadeAnimation: true, // Плавное появление тайлов
+          zoomAnimation: true, // Плавное масштабирование
+          renderer: L.canvas() // Явно указываем рендерер canvas
+        }).setView(initialPosition, 13);
 
         // Добавляем слой тайлов
         L.tileLayer(TILE_LAYER_URL, {
@@ -163,45 +179,63 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
           maxZoom: 19
         }).addTo(mapRef.current);
 
-        // Если есть местоположение пользователя, добавляем маркер
+        // Если есть местоположение пользователя, добавляем маркер и круг
         if (userLocation) {
-          L.circle(initialPosition, {
-            color: theme.palette.primary.main,
-            fillColor: theme.palette.primary.light,
-            fillOpacity: 0.2,
-            radius: getRadiusInMeters(filters.distance || '5km')
-          }).addTo(mapRef.current);
+          try {
+            L.circle(initialPosition, {
+              color: theme.palette.primary.main,
+              fillColor: theme.palette.primary.light,
+              fillOpacity: 0.2,
+              radius: getRadiusInMeters(filters.distance || '5km')
+            }).addTo(mapRef.current);
 
-          L.marker(initialPosition, {
-            icon: L.divIcon({
-              html: `<div style="
-            background-color: ${theme.palette.primary.main};
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 0 4px rgba(0,0,0,0.3);
-          "></div>`,
-              className: 'my-location-marker',
-              iconSize: [20, 20],
-              iconAnchor: [10, 10]
-            })
-          }).addTo(mapRef.current)
-            .bindTooltip(t('listings.map.yourLocation'), { permanent: false });
+            L.marker(initialPosition, {
+              icon: L.divIcon({
+                html: `<div style="
+                  background-color: ${theme.palette.primary.main};
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 50%;
+                  border: 2px solid white;
+                  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+                "></div>`,
+                className: 'my-location-marker',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+              })
+            }).addTo(mapRef.current)
+              .bindTooltip(t('listings.map.yourLocation'), { permanent: false });
+          } catch (innerError) {
+            console.error("Error adding user marker:", innerError);
+          }
         }
+
+        // Обработчик для исправления проблемы _leaflet_pos
+        mapRef.current.on('zoomanim', (e) => {
+          // Ничего не делаем, но это помогает предотвратить ошибку
+        });
 
         setMapReady(true);
       } catch (error) {
         console.error("Error initializing map:", error);
       }
-    }, 100); // Небольшая задержка
+    }, 300); // Увеличиваем задержку для гарантии готовности DOM
 
     return () => {
       clearTimeout(timer);
       if (mapRef.current) {
-        mapRef.current.remove();
+        try {
+          // Явно удаляем все слои перед удалением карты
+          mapRef.current.eachLayer((layer) => {
+            mapRef.current.removeLayer(layer);
+          });
+          mapRef.current.remove();
+        } catch (error) {
+          console.error("Error removing map:", error);
+        }
         mapRef.current = null;
       }
+      setMapReady(false); // Сбрасываем состояние готовности карты
     };
   }, [userLocation, theme, t, filters.distance]);
 
@@ -218,69 +252,87 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
 
   // Обновляем круг радиуса при изменении фильтра расстояния
   useEffect(() => {
-    if (!mapRef.current || !userLocation || !filters.distance) return;
+    if (!mapRef.current || !userLocation || !filters.distance || !mapReady) return;
 
-    // Удаляем старые круги
-    mapRef.current.eachLayer(layer => {
-      if (layer instanceof L.Circle) {
-        mapRef.current.removeLayer(layer);
-      }
-    });
+    try {
+      // Удаляем старые круги
+      mapRef.current.eachLayer(layer => {
+        if (layer instanceof L.Circle) {
+          mapRef.current.removeLayer(layer);
+        }
+      });
 
-    // Добавляем новый круг с актуальным радиусом
-    const radiusInMeters = getRadiusInMeters(filters.distance);
-    L.circle([userLocation.latitude, userLocation.longitude], {
-      color: theme.palette.primary.main,
-      fillColor: theme.palette.primary.light,
-      fillOpacity: 0.2,
-      radius: radiusInMeters
-    }).addTo(mapRef.current);
-
-  }, [filters.distance, userLocation, theme]);
+      // Добавляем новый круг с актуальным радиусом
+      const radiusInMeters = getRadiusInMeters(filters.distance);
+      L.circle([userLocation.latitude, userLocation.longitude], {
+        color: theme.palette.primary.main,
+        fillColor: theme.palette.primary.light,
+        fillOpacity: 0.2,
+        radius: radiusInMeters
+      }).addTo(mapRef.current);
+    } catch (error) {
+      console.error("Error updating radius circle:", error);
+    }
+  }, [filters.distance, userLocation, theme, mapReady]);
 
   // Обновляем маркеры объявлений
   useEffect(() => {
     if (!mapRef.current || !mapReady) return;
 
-    // Удаляем старые маркеры
-    markersRef.current.forEach(marker => {
-      mapRef.current.removeLayer(marker);
-    });
-    markersRef.current = [];
-
-    // Проверяем наличие объявлений с координатами
-    const validListings = listings.filter(listing =>
-      listing.latitude && listing.longitude &&
-      listing.show_on_map !== false
-    );
-
-    if (validListings.length === 0) return;
-
-    // Создаем группу маркеров для автомасштабирования
-    const markerGroup = L.featureGroup();
-
-    // Добавляем новые маркеры
-    validListings.forEach(listing => {
-      const marker = L.marker([listing.latitude, listing.longitude])
-        .bindTooltip(`${listing.price.toLocaleString()} RSD`)
-        .on('click', () => {
-          setSelectedListing(listing);
-        });
-
-      marker.addTo(mapRef.current);
-      markerGroup.addLayer(marker);
-      markersRef.current.push(marker);
-    });
-
-    // Устанавливаем границы карты, чтобы были видны все маркеры
-    // если нет пользовательского местоположения
-    if (!userLocation) {
-      mapRef.current.fitBounds(markerGroup.getBounds(), {
-        padding: [50, 50],
-        maxZoom: 15
+    try {
+      // Удаляем старые маркеры
+      markersRef.current.forEach(marker => {
+        try {
+          mapRef.current.removeLayer(marker);
+        } catch (error) {
+          console.error("Error removing marker:", error);
+        }
       });
-    }
+      markersRef.current = [];
 
+      // Проверяем наличие объявлений с координатами
+      const validListings = listings.filter(listing =>
+        listing.latitude && listing.longitude &&
+        listing.show_on_map !== false
+      );
+
+      if (validListings.length === 0) return;
+
+      // Создаем группу маркеров для автомасштабирования
+      const markerGroup = L.featureGroup();
+
+      // Добавляем новые маркеры
+      validListings.forEach(listing => {
+        try {
+          const marker = L.marker([listing.latitude, listing.longitude])
+            .bindTooltip(`${listing.price.toLocaleString()} RSD`)
+            .on('click', () => {
+              setSelectedListing(listing);
+            });
+
+          marker.addTo(mapRef.current);
+          markerGroup.addLayer(marker);
+          markersRef.current.push(marker);
+        } catch (error) {
+          console.error("Error adding marker:", error);
+        }
+      });
+
+      // Устанавливаем границы карты, чтобы были видны все маркеры
+      // если нет пользовательского местоположения
+      if (!userLocation && markerGroup.getLayers().length > 0) {
+        try {
+          mapRef.current.fitBounds(markerGroup.getBounds(), {
+            padding: [50, 50],
+            maxZoom: 15
+          });
+        } catch (error) {
+          console.error("Error fitting bounds:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating markers:", error);
+    }
   }, [listings, mapReady, userLocation]);
 
   // Обработчик изменения радиуса поиска
@@ -439,6 +491,27 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
           ref={mapContainerRef}
           style={{ width: '100%', height: '100%' }}
         />
+        
+        {!mapReady && (
+          <Box 
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'background.paper',
+              zIndex: 999
+            }}
+          >
+            <Typography variant="h6">
+              {t('listings.map.loadingMap', { defaultValue: 'Загрузка карты...' })}
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       {/* Информация о выбранном объявлении */}

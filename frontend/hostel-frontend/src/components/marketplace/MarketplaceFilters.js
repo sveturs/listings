@@ -44,7 +44,38 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
         console.log("Поисковый запрос изменен на:", value);
         onFilterChange({ ...filters, query: value });
     }, [filters, onFilterChange]);
-
+    const handleDistanceChange = (value) => {
+        // Если выбрано расстояние, но нет координат, запрашиваем геолокацию
+        if (value && (!filters.latitude || !filters.longitude)) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        // Получены координаты, обновляем фильтры
+                        onFilterChange({
+                            ...filters,
+                            distance: value,
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        });
+                    },
+                    (error) => {
+                        console.error("Ошибка получения геолокации:", error);
+                        // Показываем уведомление пользователю
+                        alert(t('listings.filters.distance.locationError', {
+                            defaultValue: 'Для использования фильтра по расстоянию необходимо разрешить доступ к вашему местоположению'
+                        }));
+                    }
+                );
+            } else {
+                alert(t('listings.filters.distance.browserNotSupported', {
+                    defaultValue: 'Ваш браузер не поддерживает геолокацию'
+                }));
+            }
+        } else {
+            // Если координаты уже есть или distance пустое, просто обновляем фильтр
+            onFilterChange({ ...filters, distance: value });
+        }
+    };
     // Определяем, доступна ли карта (не используется в запросе distance без координат)
     const isMapAvailable = useMemo(() => {
         return !filters.distance || (filters.latitude && filters.longitude);
@@ -123,7 +154,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                         <FormControl fullWidth size="small">
                             <Select
                                 value={filters.distance || ''}
-                                onChange={(e) => onFilterChange({ ...filters, distance: e.target.value })}
+                                onChange={(e) => handleDistanceChange(e.target.value)}
                                 displayEmpty
                             >
                                 <MenuItem value="">{t('listings.filters.distance.any')}</MenuItem>

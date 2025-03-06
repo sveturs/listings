@@ -16,3 +16,91 @@
 Эти тестовые карты работают только в тестовом режиме (с ключами, начинающимися на `sk_test_` и `pk_test_`). 
 
 лечат
+
+
+dim@dimPC /data/hostel-booking-system$ docker exec -it hostel_db psql -U postgres -d hostel_db
+psql (15.12 (Debian 15.12-1.pgdg120+1))
+Type "help" for help.
+
+hostel_db=# SELECT id, title, latitude, longitude FROM marketplace_listings;
+ id |             title              |  latitude   |  longitude  
+----+--------------------------------+-------------+-------------
+  8 | Toyota Corolla 2018            | 45.26710000 | 19.83350000
+  9 | mobile Samsung Galaxy S21      | 45.25510000 | 19.84520000
+ 10 | Игровой компьютер RTX 4080     | 45.25410000 | 19.84010000
+ 12 | автомобиль Toyota Corolla 2018 | 45.24755670 | 19.76878366
+(4 rows)
+
+hostel_db=# 
+docker-compose down  # Stop container on current dir if there is a docker-compose.yml
+docker rm -fv $(docker ps -aq)  # Remove all containers
+sudo lsof -i -P -n | grep <port number>  # List who's using the port
+
+docker logs -f hostel_backend
+
+
+
+docker-compose -f docker-compose.prod.yml exec backend curl http://localhost:3000/api/v1/cars/available
+
+
+docker-compose -f docker-compose.prod.yml exec db psql -U postgres -d hostel_db -c "SELECT * FROM cars WHERE availability = true;"
+
+
+
+docker-compose down -v
+docker-compose rm -f
+docker system prune -a  # Осторожно, удалит все неиспользуемые образы
+
+Запустите проект заново:
+
+bash
+
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build
+
+
+перегрузить только фронт:
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build frontend
+
+
+dima@pc4home:~$ source ~/.bashrc
+dima@pc4home:~$ python3 -m venv venv
+source venv/bin/activate
+Desktop client 1
+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
+917315728307-7uhl5bcfp5gbru4paljlek6vn0a2fk6s.apps.googleusercontent.com
+Client ID
+    917315728307-7uhl5bcfp5gbru4paljlek6vn0a2fk6s.apps.googleusercontent.com
+
+Client secret
+    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 
+    
+grep -r "\"backend/internal/services\"" .
+
+find . -type f \( -name "*.go" -o -name "*.js" -o -name "*.jsx" \)
+find . -type f \( -name "*.conf" -o -name "*.json" -o -name "*.yml" -o -name "*.env" -o -name "*.css" -o -name "*.go" -o -name "*.js" -o -name "*.jsx" \) ! -path "*/node_modules/*" ! -path "*/.git/*" > dir.txt
+
+отступы в VSC workbench.tree.indent
+
+
+docker exec -it hostel_db psql -U postgres
+postgres=# \c hostel_db;
+You are now connected to database "hostel_db" as user "postgres".
+hostel_db=# UPDATE marketplace_listings 
+hostel_db-# SET 
+    latitude = 45.2671,
+    longitude = 19.8335,
+    address_city = 'Нови Сад',
+    address_country = 'Србија'
+WHERE id = 4;
+UPDATE 1
+hostel_db=# UPDATE marketplace_listings 
+
+
+
+ docker-compose logs backend | grep -A 20 "Creating listing"
+    
+
+go mod vendor
+
+go build -mod=vendor
+это даст возможность использовать локальные копии библиотеки

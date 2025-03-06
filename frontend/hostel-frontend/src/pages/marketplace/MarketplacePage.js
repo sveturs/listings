@@ -170,20 +170,56 @@ const MarketplacePage = () => {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                // ДОБАВЬТЕ ЭТО: Проверяем наличие distance без координат
+                // Проверяем наличие distance без координат
                 const distanceParam = searchParams.get('distance');
                 const latParam = searchParams.get('latitude');
                 const lonParam = searchParams.get('longitude');
-                
+
+                // Удаляем этот код, так как он сбрасывает параметр distance, и вместо этого просто логируем
                 if (distanceParam && (!latParam || !lonParam)) {
-                    console.log("Обнаружен параметр distance без координат. Сбрасываем...");
-                    const cleanParams = new URLSearchParams(searchParams);
-                    cleanParams.delete('distance');
-                    setSearchParams(cleanParams);
-                    return; // Возвращаемся, useEffect запустится снова с обновленными параметрами
+                    console.log("Параметр distance присутствует без координат, будет запрошена текущая геолокация");
+
+                    // Проверим, поддерживается ли геолокация в браузере
+                    if (navigator.geolocation) {
+                        try {
+                            // Запросим текущее местоположение пользователя
+                            navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                    const latitude = position.coords.latitude;
+                                    const longitude = position.coords.longitude;
+                                    console.log(`Получены координаты: lat=${latitude}, lon=${longitude}`);
+
+                                    // Обновим параметры с полученными координатами
+                                    const updatedParams = new URLSearchParams(searchParams);
+                                    updatedParams.set('latitude', latitude);
+                                    updatedParams.set('longitude', longitude);
+                                    setSearchParams(updatedParams);
+
+                                    // Обновим состояние фильтров и выполним поиск с координатами
+                                    setFilters(prev => ({
+                                        ...prev,
+                                        latitude: latitude,
+                                        longitude: longitude
+                                    }));
+
+                                    // Сразу же обновим местоположение пользователя
+                                    setUserLocation({
+                                        latitude: latitude,
+                                        longitude: longitude
+                                    });
+                                },
+                                (error) => {
+                                    console.error("Ошибка получения геолокации:", error);
+                                }
+                            );
+                        } catch (geoError) {
+                            console.error("Ошибка при запросе геолокации:", geoError);
+                        }
+                    }
                 }
+
+                // Остальной код функции без изменений
                 const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
-//                console.log('Fetched categories:', categoriesResponse.data?.data); // Добавьте этот лог
 
                 if (categoriesResponse.data?.data) {
                     setCategories(categoriesResponse.data.data);
@@ -278,24 +314,24 @@ const MarketplacePage = () => {
 
     const handleFilterChange = useCallback((newFilters, categoryId = null) => {
         console.log(`MarketplacePage: handleFilterChange вызван с фильтрами:`, newFilters);
-        
+
         setFilters(prev => {
             const updated = { ...prev, ...newFilters };
-            
+
             if (categoryId !== null) {
                 updated.category_id = categoryId;
-                
+
                 if (updated.query && updated.category_id) {
                     updated.query = '';
                 }
             }
-    
+
             // Проверка наличия параметра distance без координат
             if (updated.distance && (!updated.latitude || !updated.longitude)) {
                 console.log('MarketplacePage: сброс параметра distance из-за отсутствия координат');
                 updated.distance = '';
             }
-    
+
             // Обновляем URL
             const nextParams = new URLSearchParams(searchParams);
             Object.entries(updated).forEach(([key, value]) => {
@@ -305,7 +341,7 @@ const MarketplacePage = () => {
                     nextParams.delete(key);
                 }
             });
-    
+
             if (!window.location.pathname.includes('/marketplace')) {
                 navigate({
                     pathname: '/marketplace',
@@ -314,7 +350,7 @@ const MarketplacePage = () => {
             } else {
                 setSearchParams(nextParams);
             }
-    
+
             // Подготавливаем чистые фильтры без пустых значений для запроса
             const cleanFilters = {};
             Object.entries(updated).forEach(([key, value]) => {
@@ -322,10 +358,10 @@ const MarketplacePage = () => {
                     cleanFilters[key] = value;
                 }
             });
-            
+
             console.log('MarketplacePage: отправка фильтров на поиск:', cleanFilters);
             fetchListings(cleanFilters);
-            
+
             return updated;
         });
     }, [searchParams, setSearchParams, navigate, fetchListings]);
@@ -417,7 +453,7 @@ const MarketplacePage = () => {
             );
         }
 
-//        console.log("Listings before rendering:", listings);
+        //        console.log("Listings before rendering:", listings);
 
         // Проверка, что listings - это массив
         if (!listings || !Array.isArray(listings) || listings.length === 0) {

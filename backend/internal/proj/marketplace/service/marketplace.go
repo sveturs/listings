@@ -272,6 +272,7 @@ func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation 
 	return err
 }
 
+
 func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
     log.Printf("Запрос поиска с параметрами: %+v", params)
     // Преобразуем параметры для OpenSearch
@@ -324,13 +325,21 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
         osParams.SortDirection = params.SortDirection
     }
 
-    // Добавляем геолокацию
-    if params.Latitude != 0 && params.Longitude != 0 {
+    // Добавляем геолокацию - ИСПРАВЛЯЕМ ЭТУ ЧАСТЬ
+    // Проверяем, что координаты не нулевые и параметр distance указан
+    if params.Distance != "" && params.Latitude != 0 && params.Longitude != 0 {
+        log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)", 
+               params.Distance, params.Latitude, params.Longitude)
+        
         osParams.Location = &search.GeoLocation{
             Lat: params.Latitude,
             Lon: params.Longitude,
         }
         osParams.Distance = params.Distance
+    } else if params.Distance != "" {
+        log.Printf("Параметр distance указан (%s), но координаты отсутствуют или равны нулю (%.6f, %.6f). "+
+              "Параметр distance будет проигнорирован.", 
+              params.Distance, params.Latitude, params.Longitude)
     }
 
     // Выполняем поиск
@@ -424,6 +433,9 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 
     return result, nil
 }
+
+
+
 // GetSuggestions возвращает предложения автодополнения
 func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error) {
 	log.Printf("Запрос подсказок в сервисе: '%s'", prefix)

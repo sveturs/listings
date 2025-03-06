@@ -957,137 +957,138 @@ func (h *MarketplaceHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 	})
 }
 func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
-	// Получаем параметры поиска
-	params := &search.ServiceParams{
-		Query:         c.Query("q", ""),
-		CategoryID:    c.Query("category_id", ""),
-		Condition:     c.Query("condition", ""),
-		City:          c.Query("city", ""),
-		Country:       c.Query("country", ""),
-		StorefrontID:  c.Query("storefront_id", ""),
-		Sort:          c.Query("sort_by", ""),
-		SortDirection: c.Query("sort_direction", "desc"),
-		Distance:      c.Query("distance", ""),
-		Page:          c.QueryInt("page", 1),
-		Size:          c.QueryInt("size", 20),
-		Language:      c.Query("language", ""),
-	}
-	if params.Distance != "" {
-		log.Printf("ВНИМАНИЕ: обнаружен параметр distance=%s", params.Distance)
-		// Если параметр distance есть, но координаты нулевые - обнуляем его
-		if params.Latitude == 0 && params.Longitude == 0 {
-			log.Printf("Сброс параметра distance (%s) из-за отсутствия координат", params.Distance)
-			params.Distance = ""
-		}
-	}
-	log.Printf("Полученный поисковый запрос: %s", params.Query)
-	// Обрабатываем числовые параметры - добавим защиту от ошибок
-	if priceMin := c.Query("min_price", ""); priceMin != "" {
-		if val, err := strconv.ParseFloat(priceMin, 64); err == nil && val >= 0 {
-			params.PriceMin = val
-		}
-	}
+    // Получаем параметры поиска
+    params := &search.ServiceParams{
+        Query:         c.Query("q", ""),
+        CategoryID:    c.Query("category_id", ""),
+        Condition:     c.Query("condition", ""),
+        City:          c.Query("city", ""),
+        Country:       c.Query("country", ""),
+        StorefrontID:  c.Query("storefront_id", ""),
+        Sort:          c.Query("sort_by", ""),
+        SortDirection: c.Query("sort_direction", "desc"),
+        Distance:      c.Query("distance", ""),
+        Page:          c.QueryInt("page", 1),
+        Size:          c.QueryInt("size", 20),
+        Language:      c.Query("language", ""),
+    }
+    
+    // ИСПРАВЛЕНИЕ: сначала проверяем наличие координат, потом устанавливаем distance
+    latParam := c.Query("latitude", "")
+    lonParam := c.Query("longitude", "")
+    
+    if latParam != "" && lonParam != "" {
+        lat, errLat := strconv.ParseFloat(latParam, 64)
+        lon, errLon := strconv.ParseFloat(lonParam, 64)
+        
+        if errLat == nil && errLon == nil && (lat != 0 || lon != 0) {
+            params.Latitude = lat
+            params.Longitude = lon
+            log.Printf("Установлены координаты: lat=%.6f, lon=%.6f", lat, lon)
+        }
+    }
+    
+    // Теперь, когда у нас есть координаты, проверяем параметр distance
+    if params.Distance != "" {
+        if params.Latitude == 0 && params.Longitude == 0 {
+            log.Printf("Сброс параметра distance (%s) из-за отсутствия координат", params.Distance)
+            params.Distance = ""
+        } else {
+            log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)", 
+                   params.Distance, params.Latitude, params.Longitude)
+        }
+    }
+    
+    log.Printf("Полученный поисковый запрос: %s", params.Query)
+    // Обрабатываем числовые параметры
+    if priceMin := c.Query("min_price", ""); priceMin != "" {
+        if val, err := strconv.ParseFloat(priceMin, 64); err == nil && val >= 0 {
+            params.PriceMin = val
+        }
+    }
 
-	if priceMax := c.Query("max_price", ""); priceMax != "" {
-		if val, err := strconv.ParseFloat(priceMax, 64); err == nil && val >= 0 {
-			params.PriceMax = val
-		}
-	}
+    if priceMax := c.Query("max_price", ""); priceMax != "" {
+        if val, err := strconv.ParseFloat(priceMax, 64); err == nil && val >= 0 {
+            params.PriceMax = val
+        }
+    }
 
-	// Обрабатываем координаты - добавим защиту от ошибок
-	if lat := c.Query("lat", ""); lat != "" {
-		if val, err := strconv.ParseFloat(lat, 64); err == nil {
-			params.Latitude = val
-		}
-	}
+    // Запрашиваемые агрегации
+    if aggs := c.Query("aggs", ""); aggs != "" {
+        params.Aggregations = strings.Split(aggs, ",")
+    }
 
-	if lon := c.Query("lon", ""); lon != "" {
-		if val, err := strconv.ParseFloat(lon, 64); err == nil {
-			params.Longitude = val
-		}
-	}
+    // Если не указан язык, берем из context
+    if params.Language == "" {
+        if lang, ok := c.Locals("language").(string); ok && lang != "" {
+            params.Language = lang
+        } else {
+            params.Language = "sr"
+        }
+    }
 
-	// Запрашиваемые агрегации
-	if aggs := c.Query("aggs", ""); aggs != "" {
-		params.Aggregations = strings.Split(aggs, ",")
-	}
-	// Обработка distance только если указаны координаты
-	if params.Distance != "" && (params.Latitude == 0 || params.Longitude == 0) {
-		log.Printf("Сброс параметра distance (%s) из-за отсутствия координат (lat=%f, lon=%f)",
-			params.Distance, params.Latitude, params.Longitude)
-		params.Distance = ""
-	}
+    // Выполняем поиск
+    result, err := h.marketplaceService.SearchListingsAdvanced(c.Context(), params)
+    if err != nil {
+        log.Printf("Ошибка поиска: %v", err)
 
-	// Если не указан язык, берем из context
-	if params.Language == "" {
-		if lang, ok := c.Locals("language").(string); ok && lang != "" {
-			params.Language = lang
-		} else {
-			params.Language = "sr"
-		}
-	}
+        // Используем стандартный поиск
+        filters := map[string]string{
+            "category_id":   params.CategoryID,
+            "condition":     params.Condition,
+            "city":          params.City,
+            "country":       params.Country,
+            "storefront_id": params.StorefrontID,
+            "sort_by":       params.Sort,
+        }
 
-	// В случае ошибки с OpenSearch, используем обычный поиск
-	result, err := h.marketplaceService.SearchListingsAdvanced(c.Context(), params)
-	if err != nil {
-		log.Printf("Ошибка поиска: %v", err)
+        // Добавляем числовые фильтры, если они указаны
+        if params.PriceMin > 0 {
+            filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
+        }
+        if params.PriceMax > 0 {
+            filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
+        }
 
-		// Используем стандартный поиск
-		filters := map[string]string{
-			"category_id":   params.CategoryID,
-			"condition":     params.Condition,
-			"city":          params.City,
-			"country":       params.Country,
-			"storefront_id": params.StorefrontID,
-			"sort_by":       params.Sort,
-		}
+        // Добавляем текстовый поиск
+        if params.Query != "" {
+            filters["query"] = params.Query
+        }
 
-		// Добавляем числовые фильтры, если они указаны
-		if params.PriceMin > 0 {
-			filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
-		}
-		if params.PriceMax > 0 {
-			filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
-		}
+        // Пробуем получить обычным методом
+        listings, total, err := h.marketplaceService.GetListings(c.Context(), filters, params.Size, (params.Page-1)*params.Size)
+        if err != nil {
+            log.Printf("Ошибка стандартного поиска: %v", err)
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка выполнения поиска")
+        }
+        
+        // Формируем такой же ответ, как от OpenSearch
+        return utils.SuccessResponse(c, fiber.Map{
+            "data": listings,
+            "meta": fiber.Map{
+                "total":       total,
+                "page":        params.Page,
+                "size":        params.Size,
+                "total_pages": (total + int64(params.Size) - 1) / int64(params.Size),
+            },
+        })
+    }
 
-		// Добавляем текстовый поиск
-		if params.Query != "" {
-			filters["query"] = params.Query
-		}
-
-		// Пробуем получить обычным методом
-		listings, total, err := h.marketplaceService.GetListings(c.Context(), filters, params.Size, (params.Page-1)*params.Size)
-		if err != nil {
-			log.Printf("Ошибка стандартного поиска: %v", err)
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка выполнения поиска")
-		}
-
-		// Формируем такой же ответ, как от OpenSearch
-		return utils.SuccessResponse(c, fiber.Map{
-			"data": listings,
-			"meta": fiber.Map{
-				"total":       total,
-				"page":        params.Page,
-				"size":        params.Size,
-				"total_pages": (total + int64(params.Size) - 1) / int64(params.Size),
-			},
-		})
-	}
-
-	// Если OpenSearch ответил успешно
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": result.Items,
-		"meta": fiber.Map{
-			"total":       result.Total,
-			"page":        result.Page,
-			"size":        result.Size,
-			"total_pages": result.TotalPages,
-			"facets":      result.Facets,
-			"suggestions": result.Suggestions,
-			"took_ms":     result.Took,
-		},
-	})
+    // Если OpenSearch ответил успешно
+    return utils.SuccessResponse(c, fiber.Map{
+        "data": result.Items,
+        "meta": fiber.Map{
+            "total":       result.Total,
+            "page":        result.Page,
+            "size":        result.Size,
+            "total_pages": result.TotalPages,
+            "facets":      result.Facets,
+            "suggestions": result.Suggestions,
+            "took_ms":     result.Took,
+        },
+    })
 }
+
 
 // GetSuggestions возвращает предложения автодополнения
 func (h *MarketplaceHandler) GetSuggestions(c *fiber.Ctx) error {
