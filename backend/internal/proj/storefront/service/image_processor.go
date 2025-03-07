@@ -8,10 +8,10 @@ import (
 	"context"
  	"fmt"
 	"image"
-	"image/color"
+//	"image/color"
 	"image/jpeg"
 	"image/png"
-	"image/draw"
+//	"image/draw"
 
  	"io/ioutil"
 	"log"
@@ -22,7 +22,10 @@ import (
 	"strings"
 	"time"
 	
-	"github.com/disintegration/imaging"
+ 	//"github.com/disintegration/imaging"
+ 	//"github.com/golang/freetype/truetype"
+	"github.com/fogleman/gg"
+    "github.com/disintegration/imaging"
 
 
 )
@@ -255,335 +258,136 @@ func (s *StorefrontService) resizeImage(img image.Image, maxWidth, maxHeight int
 	
 	return resized
 }
-// addWatermark добавляет водяной знак "SveTu.rs" к изображению
 func (s *StorefrontService) addWatermark(img image.Image) (image.Image, error) {
-	bounds := img.Bounds()
-	width := bounds.Dx()
-	height := bounds.Dy()
-	
-	// Создаем новое RGBA изображение на основе исходного
-	dst := imaging.Clone(img)
-	
-	// Настройки водяного знака
-	watermarkText := "SveTu.rs"
-	
-	// Уменьшаем размер точки в два раза для более аккуратного вида
-	dotSize := int(math.Max(1, float64(height)*0.004))
-	
-	// Более детальный массив с представлением символов (1 = белая точка, 0 = прозрачность)
-	// Использую матрицу 3x5 для более тонких и аккуратных букв
-	letters := map[rune][][]int{
-		'S': {
-			{1, 1, 1},
-			{1, 0, 0},
-			{1, 1, 1},
-			{0, 0, 1},
-			{1, 1, 1},
-		},
-		'v': {
-			{1, 0, 1},
-			{1, 0, 1},
-			{1, 0, 1},
-			{0, 1, 0},
-			{0, 1, 0},
-		},
-		'e': {
-			{1, 1, 1},
-			{1, 0, 0},
-			{1, 1, 1},
-			{1, 0, 0},
-			{1, 1, 1},
-		},
-		'T': {
-			{1, 1, 1},
-			{0, 1, 0},
-			{0, 1, 0},
-			{0, 1, 0},
-			{0, 1, 0},
-		},
-		'u': {
-			{1, 0, 1},
-			{1, 0, 1},
-			{1, 0, 1},
-			{1, 0, 1},
-			{1, 1, 1},
-		},
-		'.': {
-			{0, 0, 0},
-			{0, 0, 0},
-			{0, 0, 0},
-			{0, 0, 0},
-			{0, 1, 0},
-		},
-		'r': {
-			{1, 1, 0},
-			{1, 0, 1},
-			{1, 1, 0},
-			{1, 0, 1},
-			{1, 0, 1},
-		},
-		's': {
-			{0, 1, 1},
-			{1, 0, 0},
-			{0, 1, 0},
-			{0, 0, 1},
-			{1, 1, 0},
-		},
-	}
-	
-	// Рассчитываем общую ширину водяного знака
-	letterWidth := 3 * dotSize
-	letterSpacing := dotSize
-	totalWidth := (letterWidth + letterSpacing) * len(watermarkText) - letterSpacing
-	totalHeight := 5 * dotSize
-	
-	// Добавляем отступы
-	padding := dotSize * 2
-	bgWidth := totalWidth + padding*2
-	bgHeight := totalHeight + padding*2
-	
-	// Положение водяного знака (правый нижний угол с отступом)
-	bgX := width - bgWidth - 10
-	bgY := height - bgHeight - 10
-	
-	// Защита от выхода за границы
-	if bgX < 0 {
-		bgX = 5
-	}
-	if bgY < 0 {
-		bgY = 5
-	}
-	
-	// Создаем черный фон с полупрозрачностью для водяного знака (немного увеличиваем прозрачность)
-	bgRect := image.Rect(bgX, bgY, bgX+bgWidth, bgY+bgHeight)
-	draw.Draw(dst, bgRect, image.NewUniform(color.RGBA{0, 0, 0, 160}), image.Point{}, draw.Over)
-	
-	// Рисуем каждую букву
-	xOffset := bgX + padding
-	yOffset := bgY + padding
-	
-	for _, char := range watermarkText {
-		charPattern, exists := letters[char]
-		if !exists {
-			// Если символа нет в нашей коллекции, пропускаем
-			xOffset += dotSize * 2
-			continue
-		}
-		
-		// Рисуем символ
-		for y := 0; y < len(charPattern); y++ {
-			for x := 0; x < len(charPattern[y]); x++ {
-				if charPattern[y][x] == 1 {
-					// Рисуем белую точку
-					pixelX := xOffset + x*dotSize
-					pixelY := yOffset + y*dotSize
-					
-					// Рисуем квадратную точку размером dotSize
-					for dx := 0; dx < dotSize; dx++ {
-						for dy := 0; dy < dotSize; dy++ {
-							if pixelX+dx < width && pixelY+dy < height {
-								dst.Set(pixelX+dx, pixelY+dy, color.RGBA{255, 255, 255, 255})
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		// Переходим к следующему символу
-		xOffset += letterWidth + letterSpacing
-	}
-	
-	// Выводим лог для подтверждения
-	log.Printf("Добавлен аккуратный водяной знак '%s', размер: %dx%d", watermarkText, bgWidth, bgHeight)
-	
-	return dst, nil
+    bounds := img.Bounds()
+    width := bounds.Dx()
+    height := bounds.Dy()
+    
+    // Создаем новый графический контекст с размерами изображения
+    dc := gg.NewContextForImage(img)
+    
+    // Настройки водяного знака
+    watermarkText := "SveTu.rs"
+    
+    // Определяем размер шрифта (пропорционально размеру изображения)
+    fontSize := float64(height) * 0.03
+    if fontSize < 12 {
+        fontSize = 12 // минимальный размер шрифта
+    }
+    
+    // Компактная оценка ширины текста
+    textWidth := fontSize * float64(len(watermarkText)) * 0.55  // Уменьшено с 0.6 до 0.55
+    textHeight := fontSize
+    
+    // Меньшие отступы для более компактного вида
+    padding := fontSize * 0.2  // Уменьшено с 0.3 до 0.2
+    bgWidth := textWidth + padding*2
+    bgHeight := textHeight + padding*2
+    
+    // Положение водяного знака (правый нижний угол с отступом)
+    bgX := float64(width) - bgWidth - fontSize*0.5
+    bgY := float64(height) - bgHeight - fontSize*0.5
+    
+    // Защита от выхода за границы
+    if bgX < 0 {
+        bgX = 5
+    }
+    if bgY < 0 {
+        bgY = 5
+    }
+    
+    // Создаем черный фон с полупрозрачностью
+    dc.SetRGBA(0, 0, 0, 0.6) // черный с 60% непрозрачностью
+    dc.DrawRoundedRectangle(bgX, bgY, bgWidth, bgHeight, padding*0.5)
+    dc.Fill()
+    
+    // Рисуем текст белым цветом
+    dc.SetRGB(1, 1, 1) // белый цвет
+    textX := bgX + padding
+    textY := bgY + padding + textHeight*0.9 // коррекция для вертикального центрирования
+    
+    dc.DrawString(watermarkText, textX, textY)
+    
+    // Преобразуем контекст обратно в изображение
+    result := dc.Image()
+    
+    log.Printf("Добавлен компактный векторный водяной знак '%s'", watermarkText)
+    
+    return result, nil
 }
 
-// Обновленная функция processImage остается прежней
+// Обновленная функция processImage
 func (s *StorefrontService) processImage(imgData []byte, contentType string) ([]byte, error) {
-	// Декодируем изображение
-	reader := bytes.NewReader(imgData)
-	var img image.Image
-	var err error
-	
-	if strings.Contains(contentType, "jpeg") || strings.Contains(contentType, "jpg") {
-		img, err = jpeg.Decode(reader)
-	} else if strings.Contains(contentType, "png") {
-		img, err = png.Decode(reader)
-	} else {
-		img, _, err = image.Decode(reader)
-	}
-	
-	if err != nil {
-		return nil, fmt.Errorf("ошибка декодирования изображения: %w", err)
-	}
-	
-	// Изменяем размер, если изображение слишком большое
-	if img.Bounds().Dx() > 1920 || img.Bounds().Dy() > 1080 {
-		img = imaging.Resize(img, 1920, 1080, imaging.Lanczos)
-	}
-	
-	// Добавляем водяной знак
-	imgWithWatermark, err := s.addWatermark(img)
-	if err != nil {
-		log.Printf("Ошибка при добавлении водяного знака: %v, пропускаем", err)
-		// В случае ошибки используем изображение без водяного знака
-		imgWithWatermark = img
-	}
-	
-	// Кодируем изображение обратно в байты
-	var buf bytes.Buffer
-	
-	if strings.Contains(contentType, "jpeg") || strings.Contains(contentType, "jpg") {
-		err = jpeg.Encode(&buf, imgWithWatermark, &jpeg.Options{Quality: 85})
-	} else if strings.Contains(contentType, "png") {
-		err = png.Encode(&buf, imgWithWatermark)
-	} else {
-		err = jpeg.Encode(&buf, imgWithWatermark, &jpeg.Options{Quality: 85})
-	}
-	
-	if err != nil {
-		return nil, fmt.Errorf("ошибка кодирования изображения: %w", err)
-	}
-	
-	// Выводим лог для подтверждения
-	log.Printf("Водяной знак успешно добавлен")
-	
-	return buf.Bytes(), nil
-}
-
-
-// drawBoldText рисует жирный текст на изображении с использованием простых линий
-func drawBoldText(img *image.NRGBA, text string, x, y, thickness int, col color.RGBA) {
-	// Расстояние между буквами
-	letterSpacing := thickness * 4
-	
-	// Координаты для рисования
-	currentX := x
-	
-	// Рисуем каждую букву
-	for _, char := range text {
-		// Увеличиваем X после каждой буквы
-		currentX = drawBoldLetter(img, char, currentX, y, thickness, col)
-		currentX += letterSpacing
-	}
-}
-
-// drawBoldLetter рисует одну букву как набор жирных линий
-func drawBoldLetter(img *image.NRGBA, char rune, x, y, thickness int, col color.RGBA) int {
-	// Базовая ширина символа
-	charWidth := thickness * 5
-	
-	// Рисуем линии с заданной толщиной
-	drawLine := func(x1, y1, x2, y2 int) {
-		// Рисуем жирную линию
-		dx := x2 - x1
-		dy := y2 - y1
-		length := int(math.Sqrt(float64(dx*dx + dy*dy)))
-		if length == 0 {
-			return
-		}
-		
-		// Нормализуем вектор направления
-		nx := float64(dx) / float64(length)
-		ny := float64(dy) / float64(length)
-		
-		// Рисуем основную линию
-		for i := 0; i <= length; i++ {
-			px := int(float64(x1) + float64(i)*nx)
-			py := int(float64(y1) + float64(i)*ny)
-			
-			// Рисуем точку с заданной толщиной
-			for tx := -thickness; tx <= thickness; tx++ {
-				for ty := -thickness; ty <= thickness; ty++ {
-					if tx*tx+ty*ty <= thickness*thickness {
-						img.Set(px+tx, py+ty, col)
-					}
-				}
-			}
-		}
-	}
-	
-	// Высота символа
-	height := thickness * 10
-	
-	// Рисуем символы
-	switch char {
-	case 'S':
-		// Горизонтальные линии
-		drawLine(x, y-height/3, x+charWidth, y-height/3)
-		drawLine(x, y, x+charWidth, y)
-		drawLine(x, y+height/3, x+charWidth, y+height/3)
-		// Вертикальные линии
-		drawLine(x, y-height/3, x, y)
-		drawLine(x+charWidth, y, x+charWidth, y+height/3)
-		return x + charWidth
-		
-	case 'v':
-		// Диагональные линии
-		drawLine(x, y-height/3, x+charWidth/2, y+height/3)
-		drawLine(x+charWidth/2, y+height/3, x+charWidth, y-height/3)
-		return x + charWidth
-		
-	case 'e':
-		// Вертикальная линия
-		drawLine(x, y-height/3, x, y+height/3)
-		// Горизонтальные линии
-		drawLine(x, y-height/3, x+charWidth, y-height/3)
-		drawLine(x, y, x+charWidth, y)
-		drawLine(x, y+height/3, x+charWidth, y+height/3)
-		return x + charWidth
-		
-	case 'T':
-		// Горизонтальная линия
-		drawLine(x, y-height/3, x+charWidth, y-height/3)
-		// Вертикальная линия
-		drawLine(x+charWidth/2, y-height/3, x+charWidth/2, y+height/3)
-		return x + charWidth
-		
-	case 'u':
-		// Вертикальные линии
-		drawLine(x, y-height/3, x, y+height/3)
-		drawLine(x+charWidth, y-height/3, x+charWidth, y+height/3)
-		// Горизонтальная линия внизу
-		drawLine(x, y+height/3, x+charWidth, y+height/3)
-		return x + charWidth
-		
-	case '.':
-		// Точка
-		for tx := -thickness; tx <= thickness; tx++ {
-			for ty := -thickness; ty <= thickness; ty++ {
-				if tx*tx+ty*ty <= thickness*thickness {
-					img.Set(x+tx, y+height/3+ty, col)
-				}
-			}
-		}
-		return x + thickness*2
-		
-	case 'r':
-		// Вертикальная линия
-		drawLine(x, y-height/3, x, y+height/3)
-		// Верхняя горизонтальная линия
-		drawLine(x, y-height/3, x+charWidth, y-height/3)
-		// Диагональная линия
-		drawLine(x, y, x+charWidth, y+height/3)
-		return x + charWidth
-		
-	case 's':
-		// Меньшая версия S
-		drawLine(x, y-height/4, x+charWidth*3/4, y-height/4)
-		drawLine(x, y, x+charWidth*3/4, y)
-		drawLine(x, y+height/4, x+charWidth*3/4, y+height/4)
-		drawLine(x, y-height/4, x, y)
-		drawLine(x+charWidth*3/4, y, x+charWidth*3/4, y+height/4)
-		return x + charWidth*3/4
-		
-	default:
-		// Любой другой символ - просто вертикальная линия
-		drawLine(x, y-height/3, x, y+height/3)
-		return x + thickness*2
-	}
+    // Логирование начала процесса
+    log.Printf("Начало обработки изображения. Размер входных данных: %d байт", len(imgData))
+    
+    // Декодируем изображение
+    reader := bytes.NewReader(imgData)
+    var img image.Image
+    var err error
+    
+    if strings.Contains(contentType, "jpeg") || strings.Contains(contentType, "jpg") {
+        img, err = jpeg.Decode(reader)
+        log.Printf("Декодирование JPEG изображения")
+    } else if strings.Contains(contentType, "png") {
+        img, err = png.Decode(reader)
+        log.Printf("Декодирование PNG изображения")
+    } else {
+        img, _, err = image.Decode(reader)
+        log.Printf("Декодирование изображения неизвестного формата")
+    }
+    
+    if err != nil {
+        log.Printf("Ошибка декодирования изображения: %v", err)
+        return nil, fmt.Errorf("ошибка декодирования изображения: %w", err)
+    }
+    
+    // Логирование размеров изображения
+    width := img.Bounds().Dx()
+    height := img.Bounds().Dy()
+    log.Printf("Изображение успешно декодировано. Размеры: %dx%d", width, height)
+    
+    // Изменяем размер, если изображение слишком большое
+    var resizedImg image.Image
+    if width > 1920 || height > 1080 {
+        log.Printf("Изменяем размер изображения до максимум 1920x1080")
+        resizedImg = s.resizeImage(img, 1920, 1080)
+    } else {
+        log.Printf("Размер изображения не требует изменения")
+        resizedImg = img
+    }
+    
+    // Добавляем водяной знак
+    log.Printf("Добавляем водяной знак")
+    imgWithWatermark, err := s.addWatermark(resizedImg)
+    if err != nil {
+        log.Printf("Ошибка при добавлении водяного знака: %v. Продолжаем без него.", err)
+        imgWithWatermark = resizedImg
+    }
+    
+    // Кодируем изображение обратно в байты
+    log.Printf("Кодируем изображение обратно в байты")
+    var buf bytes.Buffer
+    
+    if strings.Contains(contentType, "jpeg") || strings.Contains(contentType, "jpg") {
+        err = jpeg.Encode(&buf, imgWithWatermark, &jpeg.Options{Quality: 85})
+        log.Printf("Кодирование в JPEG")
+    } else if strings.Contains(contentType, "png") {
+        err = png.Encode(&buf, imgWithWatermark)
+        log.Printf("Кодирование в PNG")
+    } else {
+        err = jpeg.Encode(&buf, imgWithWatermark, &jpeg.Options{Quality: 85})
+        log.Printf("Кодирование в JPEG (по умолчанию)")
+    }
+    
+    if err != nil {
+        log.Printf("Ошибка кодирования изображения: %v", err)
+        return nil, fmt.Errorf("ошибка кодирования изображения: %w", err)
+    }
+    
+    // Завершение
+    log.Printf("Обработка изображения завершена успешно. Размер данных после обработки: %d байт", buf.Len())
+    return buf.Bytes(), nil
 }
 
 
