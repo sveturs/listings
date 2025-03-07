@@ -1,4 +1,4 @@
-export const addWatermark = async (image, text = 'Sve Tu') => {
+export const addWatermark = async (image, text = 'SveTu.rs') => {
     return new Promise((resolve) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -18,7 +18,7 @@ export const addWatermark = async (image, text = 'Sve Tu') => {
             
             // Задаем текст и позицию
             const padding = fontSize; // Отступ от края
-            const text = 'Sve Tu';
+            const text = 'SveTu.rs';
             const metrics = ctx.measureText(text);
             const textWidth = metrics.width;
 

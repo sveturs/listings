@@ -1,6 +1,8 @@
+// backend/internal/proj/storefront/service/interface.go
 package service
 
 import (
+	"archive/zip"
 	"backend/internal/domain/models"
 	"context"
 	"io"
@@ -24,6 +26,9 @@ type StorefrontServiceInterface interface {
 
 	// Импорт данных
 	RunImport(ctx context.Context, sourceID int, userID int) (*models.ImportHistory, error)
-	ImportCSV(ctx context.Context, sourceID int, reader io.Reader, userID int) (*models.ImportHistory, error)
+	ImportCSV(ctx context.Context, sourceID int, reader io.Reader, zipFile io.Reader, userID int) (*models.ImportHistory, error)
 	GetImportHistory(ctx context.Context, sourceID int, userID int, limit, offset int) ([]models.ImportHistory, error)
+	
+	// Обработка изображений для импорта
+	ProcessImportImages(ctx context.Context, listingID int, imagesStr string, zipReader *zip.Reader) error
 }

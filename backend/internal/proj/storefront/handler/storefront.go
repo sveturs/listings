@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"strconv"
 	"log"
+	"mime/multipart" 
 )
 
 type StorefrontHandler struct {
@@ -195,7 +196,6 @@ func (h *StorefrontHandler) DeleteImportSource(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, fiber.Map{"message": "Import source deleted successfully"})
 }
-
 // RunImport запускает импорт данных
 func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
@@ -217,44 +217,65 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
     // Отладочный лог
     log.Printf("Found import source: %+v", source)
 
-    // Получение файла из формы, если он есть
-    file, err := c.FormFile("file")
+    // Получение файлов из формы
+    form, err := c.MultipartForm()
     if err != nil && err != fiber.ErrUnprocessableEntity {
         log.Printf("Error processing form file: %v", err)
         return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Error processing file: %v", err))
     }
 
     var history *models.ImportHistory
+    var csvFile, zipFile multipart.File
 
-    if file != nil {
-        // Отладочный лог
-        log.Printf("Processing uploaded file: %s, size: %d", file.Filename, file.Size)
-        
-        // Обработка загруженного файла
-        fileHandle, err := file.Open()
-        if err != nil {
-            log.Printf("Error opening file: %v", err)
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening file: %v", err))
+    // Ищем CSV и ZIP файлы в форме
+    if form != nil {
+        // Проверяем файл CSV
+        csvFiles := form.File["file"]
+        if len(csvFiles) > 0 {
+            csvFileHeader := csvFiles[0]
+            log.Printf("Processing uploaded CSV file: %s, size: %d", csvFileHeader.Filename, csvFileHeader.Size)
+            
+            var err error
+            csvFile, err = csvFileHeader.Open()
+            if err != nil {
+                log.Printf("Error opening CSV file: %v", err)
+                return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening CSV file: %v", err))
+            }
+            defer csvFile.Close()
         }
-        defer fileHandle.Close()
 
-        history, err = h.services.Storefront().ImportCSV(c.Context(), sourceID, fileHandle, userID)
+        // Проверяем ZIP файл с изображениями
+        zipFiles := form.File["images_zip"]
+        if len(zipFiles) > 0 {
+            zipFileHeader := zipFiles[0]
+            log.Printf("Processing uploaded ZIP file: %s, size: %d", zipFileHeader.Filename, zipFileHeader.Size)
+            
+            var err error
+            zipFile, err = zipFileHeader.Open()
+            if err != nil {
+                log.Printf("Error opening ZIP file: %v", err)
+                return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening ZIP file: %v", err))
+            }
+            defer zipFile.Close()
+        }
+    }
+
+    if csvFile != nil {
+        // Если у нас есть CSV, импортируем с ним
+        history, err = h.services.Storefront().ImportCSV(c.Context(), sourceID, csvFile, zipFile, userID)
         if err != nil {
             log.Printf("Error importing CSV: %v", err)
             return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to import CSV: %v", err))
         }
-    } else {
-        // Проверяем, есть ли URL для импорта
-        if source.URL == "" {
-            return utils.ErrorResponse(c, fiber.StatusBadRequest, "No file uploaded and no URL configured for import")
-        }
-        
-        // Запуск импорта по URL
+    } else if source.URL != "" {
+        // Если CSV файл не загружен, но есть URL в источнике
         history, err = h.services.Storefront().RunImport(c.Context(), sourceID, userID)
         if err != nil {
-            log.Printf("Error running import: %v", err)
+            log.Printf("Error running import from URL: %v", err)
             return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to run import: %v", err))
         }
+    } else {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "No CSV file uploaded and no URL configured for import")
     }
 
     // Отладочный лог

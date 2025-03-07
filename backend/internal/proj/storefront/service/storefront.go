@@ -12,6 +12,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"archive/zip"
+	"bytes"
+        "net/http"
+    "io/ioutil"
 )
 
 const (
@@ -256,26 +260,28 @@ func (s *StorefrontService) GetImportSources(ctx context.Context, storefrontID i
 	return s.storage.GetImportSources(ctx, storefrontID)
 }
 
-// RunImport запускает импорт данных
+// RunImport запускает импорт данных по URL
 func (s *StorefrontService) RunImport(ctx context.Context, sourceID int, userID int) (*models.ImportHistory, error) {
 	// Получаем информацию об источнике
 	source, err := s.storage.GetImportSourceByID(ctx, sourceID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting import source: %w", err)
 	}
 
 	// Проверяем права доступа
 	storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting storefront: %w", err)
 	}
 
 	if storefront.UserID != userID {
 		return nil, fmt.Errorf("access denied")
 	}
 
-	// В зависимости от типа источника, запускаем соответствующий импорт
-	// TODO: Реализовать полноценный импорт
+	// Проверяем наличие URL
+	if source.URL == "" {
+		return nil, fmt.Errorf("no URL configured for import source")
+	}
 
 	// Создаем запись в истории импорта
 	history := &models.ImportHistory{
@@ -286,15 +292,72 @@ func (s *StorefrontService) RunImport(ctx context.Context, sourceID int, userID 
 
 	historyID, err := s.storage.CreateImportHistory(ctx, history)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating import history: %w", err)
+	}
+	history.ID = historyID
+
+	// Загружаем данные с удаленного URL
+	client := &http.Client{
+		Timeout: 60 * time.Second, // Увеличенный таймаут для больших файлов
 	}
 
-	history.ID = historyID
-	return history, nil
+	// Запрашиваем файл с сервера
+	resp, err := client.Get(source.URL)
+	if err != nil {
+		history.Status = "failed"
+		history.Log = fmt.Sprintf("Error downloading file from URL %s: %v", source.URL, err)
+		finishTime := time.Now()
+		history.FinishedAt = &finishTime
+		s.storage.UpdateImportHistory(ctx, history)
+		return history, fmt.Errorf("error downloading file: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		history.Status = "failed"
+		history.Log = fmt.Sprintf("Error response from URL %s: %s", source.URL, resp.Status)
+		finishTime := time.Now()
+		history.FinishedAt = &finishTime
+		s.storage.UpdateImportHistory(ctx, history)
+		return history, fmt.Errorf("error response from URL: %s", resp.Status)
+	}
+
+	// Проверяем тип контента
+	contentType := resp.Header.Get("Content-Type")
+	if !strings.Contains(contentType, "text/csv") && 
+	   !strings.Contains(contentType, "application/csv") &&
+	   !strings.Contains(contentType, "text/plain") {
+		history.Status = "failed"
+		history.Log = fmt.Sprintf("Invalid content type: %s. Expected CSV file.", contentType)
+		finishTime := time.Now()
+		history.FinishedAt = &finishTime
+		s.storage.UpdateImportHistory(ctx, history)
+		return history, fmt.Errorf("invalid content type: %s", contentType)
+	}
+
+	// Обновляем статус
+	history.Status = "in_progress"
+	s.storage.UpdateImportHistory(ctx, history)
+
+	// Запускаем импорт из CSV
+	updatedHistory, err := s.ImportCSV(ctx, sourceID, resp.Body, nil, userID)
+	if err != nil {
+		if updatedHistory == nil {
+			history.Status = "failed"
+			history.Log = fmt.Sprintf("Error importing CSV: %v", err)
+			finishTime := time.Now()
+			history.FinishedAt = &finishTime
+			s.storage.UpdateImportHistory(ctx, history)
+			return history, fmt.Errorf("error importing CSV: %w", err)
+		}
+		return updatedHistory, err
+	}
+
+	return updatedHistory, nil
 }
 
-// ImportCSV импортирует данные из CSV
-func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader io.Reader, userID int) (*models.ImportHistory, error) {
+// ImportCSV импортирует данные из CSV с опциональной поддержкой ZIP-архива для изображений
+func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader io.Reader, zipFile io.Reader, userID int) (*models.ImportHistory, error) {
 	// Получаем информацию об источнике
 	source, err := s.storage.GetImportSourceByID(ctx, sourceID)
 	if err != nil {
@@ -323,6 +386,34 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 		return nil, fmt.Errorf("error creating import history: %w", err)
 	}
 	history.ID = historyID
+
+	// Инициализируем ZIP-архив, если он был предоставлен
+	var zipReader *zip.Reader
+	if zipFile != nil {
+		// Читаем все содержимое в буфер, так как zip.NewReader требует io.ReaderAt
+		zipData, err := ioutil.ReadAll(zipFile)
+		if err != nil {
+			history.Status = "failed"
+			history.Log = fmt.Sprintf("Failed to read ZIP archive: %v", err)
+			finishTime := time.Now()
+			history.FinishedAt = &finishTime
+			s.storage.UpdateImportHistory(ctx, history)
+			return history, fmt.Errorf("failed to read ZIP archive: %w", err)
+		}
+
+		// Создаем zip.Reader из буфера
+		zipReader, err = zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+		if err != nil {
+			history.Status = "failed"
+			history.Log = fmt.Sprintf("Failed to parse ZIP archive: %v", err)
+			finishTime := time.Now()
+			history.FinishedAt = &finishTime
+			s.storage.UpdateImportHistory(ctx, history)
+			return history, fmt.Errorf("failed to parse ZIP archive: %w", err)
+		}
+
+		log.Printf("ZIP archive loaded successfully with %d files", len(zipReader.File))
+	}
 
 	// Читаем CSV файл
 	csvReader := csv.NewReader(reader)
@@ -451,7 +542,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 		categoryID, err := strconv.Atoi(strings.TrimSpace(row[catIdx]))
 		if err != nil {
 			// Если категория не является числом, используем категорию "прочее"
-			errorLog.WriteString(fmt.Sprintf("Warning: Invalid category_id value '%s': %v. Using default category (ID: %d)\n", 
+			errorLog.WriteString(fmt.Sprintf("Warning: Invalid category_id value '%s': %v. Using default category (ID: %d)\n",
 				row[catIdx], err, DefaultCategoryID))
 			categoryID = DefaultCategoryID
 		} else {
@@ -459,7 +550,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 			_, err = s.storage.GetCategoryByID(ctx, categoryID)
 			if err != nil {
 				// Если категория не найдена, используем категорию "прочее"
-				errorLog.WriteString(fmt.Sprintf("Warning: Category with ID '%d' not found. Using default category (ID: %d)\n", 
+				errorLog.WriteString(fmt.Sprintf("Warning: Category with ID '%d' not found. Using default category (ID: %d)\n",
 					categoryID, DefaultCategoryID))
 				categoryID = DefaultCategoryID
 			}
@@ -565,26 +656,17 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 		// Переменная для отслеживания, добавлены ли изображения
 		imagesAdded := false
 
-		// Если есть колонка с изображениями, обрабатываем их
+		// Если есть колонка с изображениями, обрабатываем их с новым подходом
 		if imagesIdx, ok := columnMap["images"]; ok && imagesIdx < len(row) && row[imagesIdx] != "" {
-			imagesList := strings.Split(row[imagesIdx], ",")
-			for i, imagePath := range imagesList {
-				image := &models.MarketplaceImage{
-					ListingID:   listingID,
-					FilePath:    strings.TrimSpace(imagePath),
-					FileName:    strings.TrimSpace(imagePath),
-					FileSize:    0,            // Неизвестно
-					ContentType: "image/jpeg", // Предполагаем jpeg
-					IsMain:      i == 0,       // Первое изображение - основное
-				}
+			imagesStr := row[imagesIdx]
 
-				_, err := s.storage.AddListingImage(ctx, image)
-				if err != nil {
-					errorLog.WriteString(fmt.Sprintf("Warning: Error adding image %s to listing %d: %v\n", imagePath, listingID, err))
-					// Не увеличиваем itemsFailed, так как само объявление создалось успешно
-				} else {
-					imagesAdded = true
-				}
+			// Используем новую функцию для обработки изображений
+			err := s.ProcessImportImages(ctx, listingID, imagesStr, zipReader)
+			if err != nil {
+				errorLog.WriteString(fmt.Sprintf("Warning: Error processing images for listing %d: %v\n", listingID, err))
+			} else {
+				imagesAdded = true
+				log.Printf("Successfully processed images for listing %d", listingID)
 			}
 		}
 

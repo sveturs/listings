@@ -57,6 +57,8 @@ import StorefrontListingsList from '../../components/store/StorefrontListingsLis
 import BatchActionsBar from '../../components/store/BatchActionsBar';
 import ListingsPagination from '../../components/store/ListingsPagination';
 import TranslationPaymentDialog from '../../components/store/TranslationPaymentDialog';
+import ImportModal from '../../components/store/ImportModal';
+
 const TabPanel = (props) => {
     const { children, value, index, ...other } = props;
 
@@ -115,6 +117,14 @@ const StorefrontDetailPage = () => {
     const [totalItems, setTotalItems] = useState(0);
     const [openTranslationDialog, setOpenTranslationDialog] = useState(false);
     const [userBalance, setUserBalance] = useState(0);
+    const [importZipFile, setImportZipFile] = useState(null);
+    const [selectedSourceId, setSelectedSourceId] = useState(null);
+    const handleZipFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImportZipFile(file);
+        }
+    };
     // Функция для загрузки данных с учетом пагинации
     const fetchData = async () => {
         try {
@@ -234,9 +244,9 @@ const StorefrontDetailPage = () => {
     const handleRunImport = async (sourceId) => {
         try {
             setRunningImport(sourceId);
-
+    
             console.log(`Starting import for source ID: ${sourceId}, file: ${importFile ? importFile.name : 'none'}`);
-
+    
             // Если нет ни файла, ни URL, показываем ошибку
             const source = importSources.find(s => s.id === sourceId);
             if (!importFile && (!source || !source.url)) {
@@ -244,17 +254,23 @@ const StorefrontDetailPage = () => {
                 setRunningImport(null);
                 return;
             }
-
+    
             let response;
-
+    
             if (importFile) {
                 // Если есть файл для загрузки
                 console.log(`Uploading file: ${importFile.name}`);
-
+    
                 // Подготовка формы для загрузки файла
                 const formData = new FormData();
                 formData.append('file', importFile);
-
+    
+                // Добавляем ZIP-архив, если он выбран
+                if (importZipFile) {
+                    formData.append('images_zip', importZipFile);
+                }
+    
+    
                 // Отправляем запрос
                 response = await axios.post(
                     `/api/v1/storefronts/import-sources/${sourceId}/run`,
@@ -270,22 +286,22 @@ const StorefrontDetailPage = () => {
                 console.log(`Running import from URL for source ID: ${sourceId}`);
                 response = await axios.post(`/api/v1/storefronts/import-sources/${sourceId}/run`);
             }
-
+    
             console.log("Import response:", response.data);
-
+    
             // Обновляем источники после импорта
             const sourcesResponse = await axios.get(`/api/v1/storefronts/${id}/import-sources`);
             setImportSources(sourcesResponse.data.data || []);
-
+    
             // Обновляем историю для этого источника
             await fetchImportHistory(sourceId);
-
+    
             // Обновляем список объявлений
             fetchData();
-
+    
             // Сбрасываем файл после успешного импорта
             setImportFile(null);
-
+    
             // Показываем результат импорта
             const importResult = response.data.data;
             alert(t('marketplace:store.import.completed', {
@@ -293,7 +309,7 @@ const StorefrontDetailPage = () => {
                 imported: importResult.items_imported,
                 total: importResult.items_total
             }));
-
+    
         } catch (err) {
             console.error(`Error running import for source ${sourceId}:`, err);
             alert(t('marketplace:store.import.error', {
@@ -725,31 +741,18 @@ const StorefrontDetailPage = () => {
                                                         {t('marketplace:store.import.history')}
                                                     </Button>
 
-                                                    <Box sx={{ display: 'flex', gap: 1 }}>
-                                                        <Button
-                                                            variant="outlined"
-                                                            size="small"
-                                                            component="label"
-                                                            htmlFor={`file-upload-${source.id}`}
-                                                            startIcon={<Upload />}
-                                                        >
-                                                            {t('marketplace:store.import.selectFile')}
-                                                        </Button>
-
-                                                        <Button
-                                                            variant="contained"
-                                                            size="small"
-                                                            startIcon={runningImport === source.id ? <CircularProgress size={18} /> : <RefreshCw />}
-                                                            onClick={() => handleRunImport(source.id)}
-                                                            disabled={runningImport === source.id}
-                                                        >
-                                                            {runningImport === source.id
-                                                                ? t('marketplace:store.import.importing')
-                                                                : importFile
-                                                                    ? t('marketplace:store.import.uploadAndImport')
-                                                                    : t('marketplace:store.import.runImport')}
-                                                        </Button>
-                                                    </Box>
+                                                    <Button
+                                                        variant="contained"
+                                                        size="small"
+                                                        startIcon={<Upload />}
+                                                        onClick={() => {
+                                                            setOpenImportModal(true);
+                                                            // Сохраняем ID выбранного источника для модального окна
+                                                            setSelectedSourceId(source.id);
+                                                        }}
+                                                    >
+                                                        {t('marketplace:store.import.importData')}
+                                                    </Button>
                                                 </Box>
 
                                                 {/* Показываем выбранный файл */}
@@ -1023,8 +1026,23 @@ const StorefrontDetailPage = () => {
                 loading={translationLoading}
                 costPerListing={25}
             />
-        </Container>
-    );
+        <ImportModal
+            open={openImportModal && selectedSourceId !== null}
+            onClose={() => {
+                setOpenImportModal(false);
+                setSelectedSourceId(null);
+            }}
+            sourceId={selectedSourceId}
+            onSuccess={(result) => {
+                // Обновляем источники и список объявлений после успешного импорта
+                fetchData();
+                if (selectedSourceId) {
+                    fetchImportHistory(selectedSourceId);
+                }
+            }}
+        />
+    </Container>
+ );
 };
 
 export default StorefrontDetailPage;

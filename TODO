@@ -1,0 +1,119 @@
+улучшения и доделки маркетплейса
+1. аукционная покупка
+2. дополнительные фильтры в зависимости от категорий
+3. адаптивный поиск по карте
+4. число просмотров у товара в списке в витрине
+5. сортировка по наименованию, цене, дате
+
+
+
+
+не может удалять объявления, добавленные к кому либо в избранное 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- предложения от ИИ
+6. добавить в админку возможность управления товарами
+7. добавить в админку возможность управления пользователями
+8. добавить в админку возможность управления заказами
+9. добавить в админку возможность управления категориями
+10. добавить в админку возможность управления фильтрами
+11. добавить в админку возможность управления аукционами
+12. добавить в админку возможность управления ставками
+13. добавить в админку возможность управления комментариями
+14. добавить в админку возможность управления отзывами
+15. добавить в админку возможность управления рейтингами
+16. добавить в админку возможность управления промокодами
+17. добавить в админку возможность управления скидками
+18. добавить в админку возможность управления бонусами
+19. добавить в админку возможность управления рекламой
+20. добавить в админку возможность управления статистикой
+21. добавить в админку возможность управления логами
+22. добавить в админку возможность управления настройками
+23. добавить в админку возможность управления тегами
+24. добавить в админку возможность управления метками
+25. добавить в админку возможность управления категориями
+
+
+
+
+
+
+
+
+
+
+
+
+Uncaught runtime errors:
+ERROR
+el is undefined
+getPosition@http://localhost:3001/static/js/bundle.js:88052:5
+_getMapPanePos@http://localhost:3001/static/js/bundle.js:89858:14
+_getNewPixelOrigin@http://localhost:3001/static/js/bundle.js:89870:71
+_move@http://localhost:3001/static/js/bundle.js:89613:32
+_onZoomTransitionEnd@http://localhost:3001/static/js/bundle.js:90049:12
+setTimeout handler*_animateZoom@http://localhost:3001/static/js/bundle.js:90039:17
+./node_modules/leaflet/dist/leaflet-src.js/</_tryAnimatedZoom/<@http://localhost:3001/static/js/bundle.js:90008:61
+FrameRequestCallback*requestAnimFrame@http://localhost:3001/static/js/bundle.js:85969:24
+_tryAnimatedZoom@http://localhost:3001/static/js/bundle.js:90007:23
+setView@http://localhost:3001/static/js/bundle.js:88737:73
+./src/components/marketplace/MapView.js/MapView/onClick/<@http://localhost:3001/static/js/bundle.js:172759:30
+PositionCallback*onClick@http://localhost:3001/static/js/bundle.js:172743:33
+callCallback@http://localhost:3001/static/js/bundle.js:123057:18
+invokeGuardedCallbackDev@http://localhost:3001/static/js/bundle.js:123101:20
+invokeGuardedCallback@http://localhost:3001/static/js/bundle.js:123158:35
+invokeGuardedCallbackAndCatchFirstError@http://localhost:3001/static/js/bundle.js:123172:29
+executeDispatch@http://localhost:3001/static/js/bundle.js:127315:46
+processDispatchQueueItemsInOrder@http://localhost:3001/static/js/bundle.js:127341:26
+processDispatchQueue@http://localhost:3001/static/js/bundle.js:127352:41
+dispatchEventsForPlugins@http://localhost:3001/static/js/bundle.js:127361:27
+./node_modules/react-dom/cjs/react-dom.development.js/dispatchEventForPluginEventSystem/<@http://localhost:3001/static/js/bundle.js:127521:16
+batchedUpdates$1@http://localhost:3001/static/js/bundle.js:141939:16
+batchedUpdates@http://localhost:3001/static/js/bundle.js:122905:16
+dispatchEventForPluginEventSystem@http://localhost:3001/static/js/bundle.js:127520:21
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay@http://localhost:3001/static/js/bundle.js:125027:42
+dispatchEvent@http://localhost:3001/static/js/bundle.js:125021:88
+dispatchDiscreteEvent@http://localhost:3001/static/js/bundle.js:124998:22
+EventListener.handleEvent*addEventBubbleListener@http://localhost:3001/static/js/bundle.js:125220:14
+addTrappedEventListener@http://localhost:3001/static/js/bundle.js:127443:33
+listenToNativeEvent@http://localhost:3001/static/js/bundle.js:127387:30
+./node_modules/react-dom/cjs/react-dom.development.js/listenToAllSupportedEvents/<@http://localhost:3001/static/js/bundle.js:127398:34
+listenToAllSupportedEvents@http://localhost:3001/static/js/bundle.js:127393:25
+createRoot@http://localhost:3001/static/js/bundle.js:144700:33
+createRoot$1@http://localhost:3001/static/js/bundle.js:145058:14
+./node_modules/react-dom/client.js/exports.createRoot@http://localhost:3001/static/js/bundle.js:145134:16
+./src/index.js@http://localhost:3001/static/js/bundle.js:184167:60
+options.factory@http://localhost:3001/static/js/bundle.js:195012:31
+__webpack_require__@http://localhost:3001/static/js/bundle.js:194412:32
+@http://localhost:3001/static/js/bundle.js:195655:56
+@http://localhost:3001/static/js/bundle.js:195657:12

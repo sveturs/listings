@@ -662,6 +662,18 @@ const MarketplacePage = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    mb: 0
+                }}
+            >
+                
+                    <Breadcrumbs paths={categoryPath} categories={categories} />
+                 
+
+            </Box>
             
 
             <Grid container spacing={3}>
