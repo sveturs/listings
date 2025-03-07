@@ -225,8 +225,182 @@ func (s *StorefrontService) readLocalImage(path string) ([]byte, string, error) 
 }
 
 
-// Обновленная функция processImage
-// Обновленная функция processImage
+
+
+// resizeImage изменяет размер изображения с помощью библиотеки imaging
+func (s *StorefrontService) resizeImage(img image.Image, maxWidth, maxHeight int) image.Image {
+	// Получаем текущие размеры
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+	
+	// Если изображение уже меньше максимального размера, возвращаем как есть
+	if width <= maxWidth && height <= maxHeight {
+		return img
+	}
+	
+	// Вычисляем новые размеры с сохранением пропорций
+	var newWidth, newHeight int
+	widthRatio := float64(maxWidth) / float64(width)
+	heightRatio := float64(maxHeight) / float64(height)
+	
+	// Используем меньшее соотношение, чтобы уместиться в ограничения
+	ratio := math.Min(widthRatio, heightRatio)
+	newWidth = int(float64(width) * ratio)
+	newHeight = int(float64(height) * ratio)
+	
+	// Используем библиотеку imaging для изменения размера изображения
+	// с применением высококачественной интерполяции Lanczos
+	resized := imaging.Resize(img, newWidth, newHeight, imaging.Lanczos)
+	
+	return resized
+}
+// addWatermark добавляет водяной знак "SveTu.rs" к изображению
+func (s *StorefrontService) addWatermark(img image.Image) (image.Image, error) {
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+	
+	// Создаем новое RGBA изображение на основе исходного
+	dst := imaging.Clone(img)
+	
+	// Настройки водяного знака
+	watermarkText := "SveTu.rs"
+	
+	// Уменьшаем размер точки в два раза для более аккуратного вида
+	dotSize := int(math.Max(1, float64(height)*0.004))
+	
+	// Более детальный массив с представлением символов (1 = белая точка, 0 = прозрачность)
+	// Использую матрицу 3x5 для более тонких и аккуратных букв
+	letters := map[rune][][]int{
+		'S': {
+			{1, 1, 1},
+			{1, 0, 0},
+			{1, 1, 1},
+			{0, 0, 1},
+			{1, 1, 1},
+		},
+		'v': {
+			{1, 0, 1},
+			{1, 0, 1},
+			{1, 0, 1},
+			{0, 1, 0},
+			{0, 1, 0},
+		},
+		'e': {
+			{1, 1, 1},
+			{1, 0, 0},
+			{1, 1, 1},
+			{1, 0, 0},
+			{1, 1, 1},
+		},
+		'T': {
+			{1, 1, 1},
+			{0, 1, 0},
+			{0, 1, 0},
+			{0, 1, 0},
+			{0, 1, 0},
+		},
+		'u': {
+			{1, 0, 1},
+			{1, 0, 1},
+			{1, 0, 1},
+			{1, 0, 1},
+			{1, 1, 1},
+		},
+		'.': {
+			{0, 0, 0},
+			{0, 0, 0},
+			{0, 0, 0},
+			{0, 0, 0},
+			{0, 1, 0},
+		},
+		'r': {
+			{1, 1, 0},
+			{1, 0, 1},
+			{1, 1, 0},
+			{1, 0, 1},
+			{1, 0, 1},
+		},
+		's': {
+			{0, 1, 1},
+			{1, 0, 0},
+			{0, 1, 0},
+			{0, 0, 1},
+			{1, 1, 0},
+		},
+	}
+	
+	// Рассчитываем общую ширину водяного знака
+	letterWidth := 3 * dotSize
+	letterSpacing := dotSize
+	totalWidth := (letterWidth + letterSpacing) * len(watermarkText) - letterSpacing
+	totalHeight := 5 * dotSize
+	
+	// Добавляем отступы
+	padding := dotSize * 2
+	bgWidth := totalWidth + padding*2
+	bgHeight := totalHeight + padding*2
+	
+	// Положение водяного знака (правый нижний угол с отступом)
+	bgX := width - bgWidth - 10
+	bgY := height - bgHeight - 10
+	
+	// Защита от выхода за границы
+	if bgX < 0 {
+		bgX = 5
+	}
+	if bgY < 0 {
+		bgY = 5
+	}
+	
+	// Создаем черный фон с полупрозрачностью для водяного знака (немного увеличиваем прозрачность)
+	bgRect := image.Rect(bgX, bgY, bgX+bgWidth, bgY+bgHeight)
+	draw.Draw(dst, bgRect, image.NewUniform(color.RGBA{0, 0, 0, 160}), image.Point{}, draw.Over)
+	
+	// Рисуем каждую букву
+	xOffset := bgX + padding
+	yOffset := bgY + padding
+	
+	for _, char := range watermarkText {
+		charPattern, exists := letters[char]
+		if !exists {
+			// Если символа нет в нашей коллекции, пропускаем
+			xOffset += dotSize * 2
+			continue
+		}
+		
+		// Рисуем символ
+		for y := 0; y < len(charPattern); y++ {
+			for x := 0; x < len(charPattern[y]); x++ {
+				if charPattern[y][x] == 1 {
+					// Рисуем белую точку
+					pixelX := xOffset + x*dotSize
+					pixelY := yOffset + y*dotSize
+					
+					// Рисуем квадратную точку размером dotSize
+					for dx := 0; dx < dotSize; dx++ {
+						for dy := 0; dy < dotSize; dy++ {
+							if pixelX+dx < width && pixelY+dy < height {
+								dst.Set(pixelX+dx, pixelY+dy, color.RGBA{255, 255, 255, 255})
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		// Переходим к следующему символу
+		xOffset += letterWidth + letterSpacing
+	}
+	
+	// Выводим лог для подтверждения
+	log.Printf("Добавлен аккуратный водяной знак '%s', размер: %dx%d", watermarkText, bgWidth, bgHeight)
+	
+	return dst, nil
+}
+
+// Обновленная функция processImage остается прежней
 func (s *StorefrontService) processImage(imgData []byte, contentType string) ([]byte, error) {
 	// Декодируем изображение
 	reader := bytes.NewReader(imgData)
@@ -277,180 +451,6 @@ func (s *StorefrontService) processImage(imgData []byte, contentType string) ([]
 	log.Printf("Водяной знак успешно добавлен")
 	
 	return buf.Bytes(), nil
-}
-
-
-// resizeImage изменяет размер изображения с помощью библиотеки imaging
-func (s *StorefrontService) resizeImage(img image.Image, maxWidth, maxHeight int) image.Image {
-	// Получаем текущие размеры
-	bounds := img.Bounds()
-	width := bounds.Dx()
-	height := bounds.Dy()
-	
-	// Если изображение уже меньше максимального размера, возвращаем как есть
-	if width <= maxWidth && height <= maxHeight {
-		return img
-	}
-	
-	// Вычисляем новые размеры с сохранением пропорций
-	var newWidth, newHeight int
-	widthRatio := float64(maxWidth) / float64(width)
-	heightRatio := float64(maxHeight) / float64(height)
-	
-	// Используем меньшее соотношение, чтобы уместиться в ограничения
-	ratio := math.Min(widthRatio, heightRatio)
-	newWidth = int(float64(width) * ratio)
-	newHeight = int(float64(height) * ratio)
-	
-	// Используем библиотеку imaging для изменения размера изображения
-	// с применением высококачественной интерполяции Lanczos
-	resized := imaging.Resize(img, newWidth, newHeight, imaging.Lanczos)
-	
-	return resized
-}
-// addWatermark добавляет водяной знак "SveTu.rs" к изображению
-func (s *StorefrontService) addWatermark(img image.Image) (image.Image, error) {
-	bounds := img.Bounds()
-	width := bounds.Dx()
-	height := bounds.Dy()
-	
-	// Создаем новое RGBA изображение на основе исходного
-	dst := imaging.Clone(img)
-	
-	// Настройки водяного знака
-	watermarkText := "SveTu.rs"
-	
-	// Уменьшаем размер точки для более компактного размещения
-	dotSize := int(math.Max(2, float64(height)*0.008))
-	
-	// Массив с представлением символов (1 = белая точка, 0 = прозрачность)
-	// Каждый символ имеет размер 5x5 точек для компактности
-	letters := map[rune][][]int{
-		'S': {
-			{1, 1, 1, 1, 1},
-			{1, 0, 0, 0, 0},
-			{1, 1, 1, 1, 1},
-			{0, 0, 0, 0, 1},
-			{1, 1, 1, 1, 1},
-		},
-		'v': {
-			{1, 0, 0, 0, 1},
-			{1, 0, 0, 0, 1},
-			{0, 1, 0, 1, 0},
-			{0, 1, 0, 1, 0},
-			{0, 0, 1, 0, 0},
-		},
-		'e': {
-			{1, 1, 1, 1, 1},
-			{1, 0, 0, 0, 0},
-			{1, 1, 1, 1, 1},
-			{1, 0, 0, 0, 0},
-			{1, 1, 1, 1, 1},
-		},
-		'T': {
-			{1, 1, 1, 1, 1},
-			{0, 0, 1, 0, 0},
-			{0, 0, 1, 0, 0},
-			{0, 0, 1, 0, 0},
-			{0, 0, 1, 0, 0},
-		},
-		'u': {
-			{1, 0, 0, 0, 1},
-			{1, 0, 0, 0, 1},
-			{1, 0, 0, 0, 1},
-			{1, 0, 0, 0, 1},
-			{1, 1, 1, 1, 1},
-		},
-		'.': {
-			{0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0},
-			{0, 0, 1, 0, 0},
-		},
-		'r': {
-			{1, 1, 1, 1, 0},
-			{1, 0, 0, 0, 1},
-			{1, 1, 1, 1, 0},
-			{1, 0, 1, 0, 0},
-			{1, 0, 0, 1, 0},
-		},
-		's': {
-			{0, 1, 1, 1, 0},
-			{1, 0, 0, 0, 0},
-			{0, 1, 1, 1, 0},
-			{0, 0, 0, 0, 1},
-			{0, 1, 1, 1, 0},
-		},
-	}
-	
-	// Рассчитываем общую ширину водяного знака
-	letterWidth := 5 * dotSize
-	letterSpacing := dotSize
-	totalWidth := (letterWidth + letterSpacing) * len(watermarkText) - letterSpacing
-	totalHeight := 5 * dotSize
-	
-	// Добавляем отступы
-	padding := dotSize * 2
-	bgWidth := totalWidth + padding*2
-	bgHeight := totalHeight + padding*2
-	
-	// Положение водяного знака (правый нижний угол с отступом)
-	bgX := width - bgWidth - 10
-	bgY := height - bgHeight - 10
-	
-	// Защита от выхода за границы
-	if bgX < 0 {
-		bgX = 5
-	}
-	if bgY < 0 {
-		bgY = 5
-	}
-	
-	// Создаем черный фон с полупрозрачностью для водяного знака
-	bgRect := image.Rect(bgX, bgY, bgX+bgWidth, bgY+bgHeight)
-	draw.Draw(dst, bgRect, image.NewUniform(color.RGBA{0, 0, 0, 180}), image.Point{}, draw.Over)
-	
-	// Рисуем каждую букву
-	xOffset := bgX + padding
-	yOffset := bgY + padding
-	
-	for _, char := range watermarkText {
-		charPattern, exists := letters[char]
-		if !exists {
-			// Если символа нет в нашей коллекции, пропускаем
-			xOffset += dotSize * 3
-			continue
-		}
-		
-		// Рисуем символ
-		for y := 0; y < len(charPattern); y++ {
-			for x := 0; x < len(charPattern[y]); x++ {
-				if charPattern[y][x] == 1 {
-					// Рисуем белую точку
-					pixelX := xOffset + x*dotSize
-					pixelY := yOffset + y*dotSize
-					
-					// Рисуем квадратную точку размером dotSize
-					for dx := 0; dx < dotSize; dx++ {
-						for dy := 0; dy < dotSize; dy++ {
-							if pixelX+dx < width && pixelY+dy < height {
-								dst.Set(pixelX+dx, pixelY+dy, color.RGBA{255, 255, 255, 255})
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		// Переходим к следующему символу
-		xOffset += letterWidth + letterSpacing
-	}
-	
-	// Выводим лог для подтверждения
-	log.Printf("Добавлен полный водяной знак '%s', размер: %dx%d", watermarkText, bgWidth, bgHeight)
-	
-	return dst, nil
 }
 
 
