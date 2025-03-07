@@ -662,28 +662,7 @@ const MarketplacePage = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    mb: 4
-                }}
-            >
-                {categoryPath.length > 0 ? (
-                    <Breadcrumbs paths={categoryPath} categories={categories} />
-                ) : (
-                    <Box sx={{ flex: 1 }} />
-                )}
-                <Button
-                    id="createAnnouncementButton"
-                    variant="contained"
-                    onClick={() => navigate('/marketplace/create')}
-                    startIcon={<Plus />}
-                >
-                    {t('listings.create.title')}
-                </Button>
-            </Box>
+            
 
             <Grid container spacing={3}>
                 <Grid item xs={12} md={3}>

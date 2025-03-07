@@ -18,7 +18,8 @@ import SveTuLogo from '../icons/SveTuLogo';
 import { ShoppingBag, Store } from '@mui/icons-material';
 import { useLocation as useGeoLocation } from '../../contexts/LocationContext'; // Добавляем импорт
 import CitySelector from './CitySelector';
-
+import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
+import { Plus } from 'lucide-react';
 import {
   AppBar,
   Toolbar,
@@ -52,7 +53,7 @@ import {
 const Layout = ({ children }) => {
   const { userLocation, setCity, locationDismissed, dismissLocationSuggestion } = useGeoLocation();
   const [showLocationAlert, setShowLocationAlert] = useState(false);
-  const { t, i18n } = useTranslation('common');
+  const { t, i18n } = useTranslation(['common', 'marketplace']);
   const theme = useTheme();
   const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -65,8 +66,9 @@ const Layout = ({ children }) => {
   const { getChatService } = useChat();
   const [anchorEl, setAnchorEl] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [categoryPath] = useState([]);
 
-
+  
   const handleOpenProfile = () => {
     setIsProfileOpen(true);
     handleCloseMenu();
@@ -151,6 +153,8 @@ const Layout = ({ children }) => {
     }
   }, [userLocation, locationDismissed]);
 
+
+
   const handleCloseLocationAlert = () => {
     setShowLocationAlert(false);
     dismissLocationSuggestion();
@@ -181,7 +185,7 @@ const Layout = ({ children }) => {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: isMobile ? 1.5 : 3,
+                gap: isMobile ? 0.5 : 3,
               }}
             >
               {menuItems.map((item) => (
@@ -205,23 +209,36 @@ const Layout = ({ children }) => {
                   }}
                 >
                   {item.icon}
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontSize: isMobile ? "0.85rem" : "1.1rem",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {item.label}
-                  </Typography>
+                  {!isMobile && (
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {item.label}
+                    </Typography>
+                  )}
                 </Box>
               ))}
             </Box>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: isMobile ? 0.5 : 2 }}>
+              <Button
+                id="createAnnouncementButton"
+                variant="contained"
+                onClick={() => navigate('/marketplace/create')}
+                startIcon={isMobile ? null : <Plus />}
+                sx={{ mr: isMobile ? 0.5 : 2, minWidth: isMobile ? '40px' : 'auto', px: isMobile ? 1 : 2 }}
+              >
+                {isMobile ? <Plus /> : t('listings.create.title', { ns: 'marketplace' })}
+              </Button>
+              
               <CitySelector
                 currentCity={userLocation}
                 onCityChange={setCity}
+                isMobile={isMobile}
               />
 
               <LanguageSwitcher />
@@ -352,6 +369,23 @@ const Layout = ({ children }) => {
         </Alert>
       </Slide>
 
+      <Container maxWidth="lg" sx={{ py: 0 }}>
+        {currentPath !== '/' && (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2,
+              mt: 2
+            }}
+          >
+            <Breadcrumbs categoryPath={categoryPath} />
+          </Box>
+        )}
+        {children}
+      </Container>
+
       <Modal
         open={isProfileOpen}
         onClose={handleCloseProfile}
@@ -373,10 +407,6 @@ const Layout = ({ children }) => {
           <UserProfile onClose={handleCloseProfile} />
         </Box>
       </Modal>
-
-      <Container maxWidth="lg" sx={{ py: 0 }}>
-        {children}
-      </Container>
 
       <NotificationDrawer
         open={notificationDrawerOpen}

@@ -370,6 +370,16 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 		return history, fmt.Errorf(errMsg)
 	}
 
+	// Константа для ID категории "прочее"
+	const DefaultCategoryID = 9999
+
+	// Проверяем существование категории "прочее", создаем если нет
+	_, err = s.storage.GetCategoryByID(ctx, DefaultCategoryID)
+	// Если категория не найдена, логируем это, но продолжаем импорт
+	if err != nil {
+		log.Printf("Default category (ID: %d) not found. Import will use this ID anyway.", DefaultCategoryID)
+	}
+
 	// Обработка строк
 	var itemsTotal, itemsImported, itemsFailed int
 	var errorLog strings.Builder
@@ -440,9 +450,19 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 		}
 		categoryID, err := strconv.Atoi(strings.TrimSpace(row[catIdx]))
 		if err != nil {
-			itemsFailed++
-			errorLog.WriteString(fmt.Sprintf("Invalid category_id value '%s': %v\n", row[catIdx], err))
-			continue
+			// Если категория не является числом, используем категорию "прочее"
+			errorLog.WriteString(fmt.Sprintf("Warning: Invalid category_id value '%s': %v. Using default category (ID: %d)\n", 
+				row[catIdx], err, DefaultCategoryID))
+			categoryID = DefaultCategoryID
+		} else {
+			// Проверяем существование категории
+			_, err = s.storage.GetCategoryByID(ctx, categoryID)
+			if err != nil {
+				// Если категория не найдена, используем категорию "прочее"
+				errorLog.WriteString(fmt.Sprintf("Warning: Category with ID '%d' not found. Using default category (ID: %d)\n", 
+					categoryID, DefaultCategoryID))
+				categoryID = DefaultCategoryID
+			}
 		}
 		listingData.CategoryID = categoryID
 
@@ -451,6 +471,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 			condition := strings.TrimSpace(row[condIdx])
 			if condition != "new" && condition != "used" {
 				condition = "new" // По умолчанию новый товар
+				errorLog.WriteString(fmt.Sprintf("Warning: Invalid condition value '%s', using 'new' as default\n", row[condIdx]))
 			}
 			listingData.Condition = condition
 		} else {
@@ -462,6 +483,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 			status := strings.TrimSpace(row[statusIdx])
 			if status != "active" && status != "inactive" {
 				status = "active" // По умолчанию активный товар
+				errorLog.WriteString(fmt.Sprintf("Warning: Invalid status value '%s', using 'active' as default\n", row[statusIdx]))
 			}
 			listingData.Status = status
 		} else {
@@ -481,7 +503,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 				if err == nil {
 					listingData.Latitude = &lat
 				} else {
-					errorLog.WriteString(fmt.Sprintf("Invalid latitude value '%s': %v\n", latStr, err))
+					errorLog.WriteString(fmt.Sprintf("Warning: Invalid latitude value '%s': %v, ignoring\n", latStr, err))
 				}
 			}
 		}
@@ -494,7 +516,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 				if err == nil {
 					listingData.Longitude = &lng
 				} else {
-					errorLog.WriteString(fmt.Sprintf("Invalid longitude value '%s': %v\n", lngStr, err))
+					errorLog.WriteString(fmt.Sprintf("Warning: Invalid longitude value '%s': %v, ignoring\n", lngStr, err))
 				}
 			}
 		}
@@ -525,7 +547,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 		if langIdx, ok := columnMap["original_language"]; ok && langIdx < len(row) {
 			listingData.OriginalLanguage = strings.TrimSpace(row[langIdx])
 		} else {
-			listingData.OriginalLanguage = "ru" // По умолчанию русский язык
+			listingData.OriginalLanguage = "sr" // По умолчанию сербский язык
 		}
 
 		// Устанавливаем связь с витриной
@@ -558,7 +580,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 
 				_, err := s.storage.AddListingImage(ctx, image)
 				if err != nil {
-					errorLog.WriteString(fmt.Sprintf("Error adding image %s to listing %d: %v\n", imagePath, listingID, err))
+					errorLog.WriteString(fmt.Sprintf("Warning: Error adding image %s to listing %d: %v\n", imagePath, listingID, err))
 					// Не увеличиваем itemsFailed, так как само объявление создалось успешно
 				} else {
 					imagesAdded = true
@@ -617,7 +639,6 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 
 	return history, nil
 }
-
 
 // GetImportHistory возвращает историю импорта
 func (s *StorefrontService) GetImportHistory(ctx context.Context, sourceID int, userID int, limit, offset int) ([]models.ImportHistory, error) {
