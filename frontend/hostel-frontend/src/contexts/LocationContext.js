@@ -1,131 +1,138 @@
 // frontend/hostel-frontend/src/contexts/LocationContext.js
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from '../api/axios';
-
-// Значения по умолчанию для Белграда
-const defaultLocation = {
-  city: 'Белград',
-  country: 'Сербия',
-  lat: 44.8178,
-  lon: 20.4570,
-};
 
 const LocationContext = createContext();
 
-export const useLocation = () => useContext(LocationContext);
+export function useLocation() {
+  const context = useContext(LocationContext);
+  if (!context) {
+    throw new Error('useLocation must be used within a LocationProvider');
+  }
+  return context;
+}
 
-export const LocationProvider = ({ children }) => {
-  const [userLocation, setUserLocation] = useState(() => {
-    // Пытаемся загрузить из localStorage
-    const saved = localStorage.getItem('userLocation');
-    if (saved) {
+export function LocationProvider({ children }) {
+  const [userLocation, setUserLocation] = useState(null);
+  const [isGeolocating, setIsGeolocating] = useState(false);
+  const [locationDismissed, setLocationDismissed] = useState(
+    localStorage.getItem('locationDismissed') === 'true'
+  );
+
+  // Загружаем данные из localStorage при инициализации
+  useEffect(() => {
+    const savedLocation = localStorage.getItem('userLocation');
+    if (savedLocation) {
       try {
-        return JSON.parse(saved);
+        setUserLocation(JSON.parse(savedLocation));
       } catch (e) {
-        console.error('Failed to parse saved location', e);
+        console.error('Ошибка при загрузке данных местоположения:', e);
+        localStorage.removeItem('userLocation');
       }
     }
-    return null;
-  });
-  
-  const [locationAsked, setLocationAsked] = useState(() => {
-    return localStorage.getItem('locationAsked') === 'true';
-  });
+  }, []);
 
-  const [locationDismissed, setLocationDismissed] = useState(() => {
-    return localStorage.getItem('locationDismissed') === 'true';
-  });
-
-  // Сохраняем в localStorage при изменении
-  useEffect(() => {
-    if (userLocation) {
-      localStorage.setItem('userLocation', JSON.stringify(userLocation));
-    }
-  }, [userLocation]);
-
-  // Отмечаем, что уже запрашивали местоположение
-  useEffect(() => {
-    localStorage.setItem('locationAsked', String(locationAsked));
-  }, [locationAsked]);
-
-  useEffect(() => {
-    localStorage.setItem('locationDismissed', String(locationDismissed));
-  }, [locationDismissed]);
-
-  // Функция для определения местоположения
-  const detectLocation = async () => {
-    setLocationAsked(true);
-    
+  // Функция для получения геолокации пользователя
+  const detectUserLocation = () => {
     if (!navigator.geolocation) {
-      console.log('Geolocation is not supported by this browser');
-      setUserLocation(defaultLocation);
+      console.log('Геолокация не поддерживается вашим браузером');
+      return Promise.reject('Геолокация не поддерживается');
+    }
+
+    setIsGeolocating(true);
+    
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          try {
+            // Получаем информацию о городе на основе координат
+            const response = await axios.get('/api/v1/geocode/reverse', {
+              params: { lat: latitude, lon: longitude }
+            });
+            
+            if (response.data?.data) {
+              const locationData = {
+                city: response.data.data.city,
+                country: response.data.data.country,
+                lat: latitude,
+                lon: longitude
+              };
+              
+              // Сохраняем в localStorage
+              localStorage.setItem('userLocation', JSON.stringify(locationData));
+              setUserLocation(locationData);
+              resolve(locationData);
+            } else {
+              reject('Не удалось определить город по координатам');
+            }
+          } catch (error) {
+            console.error('Ошибка получения данных о городе:', error);
+            reject(error);
+          } finally {
+            setIsGeolocating(false);
+          }
+        },
+        (error) => {
+          console.error('Ошибка геолокации:', error);
+          setIsGeolocating(false);
+          reject(error);
+        },
+        { 
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    });
+  };
+
+  // Функция для установки города
+  const setCity = (cityData) => {
+    // Проверяем наличие необходимых данных
+    if (!cityData || !cityData.lat || !cityData.lon) {
+      console.error('Недостаточно данных для установки города:', cityData);
       return;
     }
     
-    try {
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        });
-      });
-      
-      const { latitude, longitude } = position.coords;
-      
-      // Получаем город по координатам
-      const response = await axios.get('/api/v1/geocode/reverse', {
-        params: { lat: latitude, lon: longitude }
-      });
-      
-      if (response.data?.data) {
-        setUserLocation(response.data.data);
-      } else {
-        setUserLocation(defaultLocation);
-      }
-    } catch (error) {
-      console.error('Error getting location:', error);
-      setUserLocation(defaultLocation);
-    }
-  };
-
-  // Функция для изменения города вручную
-  const setCity = (location) => {
-    setUserLocation(location);
-    setLocationDismissed(true);
+    const locationData = {
+      city: cityData.city,
+      country: cityData.country,
+      lat: cityData.lat,
+      lon: cityData.lon
+    };
     
-    // Генерируем событие смены города, чтобы все компоненты могли отреагировать
-    const cityChangeEvent = new CustomEvent('cityChanged', { 
-      detail: { 
-        lat: location.lat, 
-        lon: location.lon,
-        city: location.city,
-        country: location.country 
-      } 
+    // Сохраняем в localStorage
+    localStorage.setItem('userLocation', JSON.stringify(locationData));
+    
+    // Обновляем состояние
+    setUserLocation(locationData);
+    
+    // Генерируем событие для уведомления других компонентов
+    const cityChangeEvent = new CustomEvent('cityChanged', {
+      detail: {
+        lat: locationData.lat,
+        lon: locationData.lon,
+        city: locationData.city,
+        country: locationData.country
+      }
     });
     window.dispatchEvent(cityChangeEvent);
+    
+    console.log(`Выбран город: ${locationData.city}, координаты: ${locationData.lat}, ${locationData.lon}`);
   };
 
-  // Функция для отклонения предложения изменить город
   const dismissLocationSuggestion = () => {
+    localStorage.setItem('locationDismissed', 'true');
     setLocationDismissed(true);
   };
 
-  // Проверяем, нужно ли запросить местоположение при первой загрузке
-  useEffect(() => {
-    if (!userLocation && !locationAsked) {
-      detectLocation();
-    } else if (!userLocation && locationAsked) {
-      // Если пользователь отказался ранее, используем местоположение по умолчанию
-      setUserLocation(defaultLocation);
-    }
-  }, [userLocation, locationAsked]);
-
   const value = {
-    userLocation: userLocation || defaultLocation,
+    userLocation,
     setCity,
-    detectLocation,
-    locationAsked,
+    isGeolocating,
+    detectUserLocation,
     locationDismissed,
     dismissLocationSuggestion
   };
@@ -135,6 +142,4 @@ export const LocationProvider = ({ children }) => {
       {children}
     </LocationContext.Provider>
   );
-};
-
-export default LocationContext;
+}

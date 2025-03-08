@@ -1,5 +1,5 @@
 // frontend/hostel-frontend/src/components/marketplace/MapView.js
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigation, X, List, Maximize2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +27,7 @@ import {
 import { TILE_LAYER_URL, TILE_LAYER_ATTRIBUTION } from '../maps/map-constants';
 import '../maps/leaflet-icons'; // Для исправления иконок Leaflet
 import FullscreenMap from '../maps/FullscreenMap';
+import { useLocation } from '../../contexts/LocationContext';
 
 // Компонент для предпросмотра объявления при клике по маркеру
 const ListingPreview = ({ listing, onClose, onNavigate }) => {
@@ -114,11 +115,23 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
   );
 };
 
-const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }) => {
+const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
   const { t } = useTranslation('marketplace');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+  const { userLocation, detectUserLocation } = useLocation();
+  
+  // Создаем правильный объект с координатами из userLocation
+  const locationCoordinates = userLocation ? {
+    latitude: userLocation.lat,
+    longitude: userLocation.lon
+  } : null;
+  
+  // Логируем для отладки
+  console.log("MapView userLocation:", userLocation);
+  console.log("MapView locationCoordinates:", locationCoordinates);
+  
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const mapContainerRef = useRef(null);
@@ -131,6 +144,23 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
   const [expandedMapCenter, setExpandedMapCenter] = useState(null);
   // Маркеры для полноэкранной карты
   const [expandedMapMarkers, setExpandedMapMarkers] = useState([]);
+
+  // Убедимся, что у нас всегда есть userLocationState
+  const [userLocationState, setUserLocationState] = useState(locationCoordinates);
+  
+  // Обновляем userLocationState при изменении userLocation
+  useEffect(() => {
+    if (userLocation) {
+      setUserLocationState({
+        latitude: userLocation.lat,
+        longitude: userLocation.lon
+      });
+      console.log("Обновлен userLocationState из userLocation:", {
+        latitude: userLocation.lat,
+        longitude: userLocation.lon
+      });
+    }
+  }, [userLocation]);
 
   // Варианты радиуса поиска
   const radiusOptions = [
@@ -149,9 +179,9 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
     // Добавим задержку, чтобы убедиться, что DOM готов
     const timer = setTimeout(() => {
       try {
-        // Устанавливаем центр карты
+        // Устанавливаем центр карты на основе данных из контекста
         const initialPosition = userLocation
-          ? [userLocation.latitude, userLocation.longitude]
+          ? [userLocation.lat, userLocation.lon]  // Используем данные из контекста
           : [45.2671, 19.8335]; // Координаты Нови-Сада по умолчанию
 
         // Проверка, что контейнер существует и имеет размеры
@@ -164,13 +194,13 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
 
         // Создаем карту с опцией preferCanvas для лучшей производительности
         mapRef.current = L.map(mapContainerRef.current, {
-          preferCanvas: true, // Используем Canvas вместо SVG
-          attributionControl: false, // Убираем атрибуцию
-          zoomControl: true, // Включаем контролы масштаба
-          inertia: true, // Плавное перемещение
-          fadeAnimation: true, // Плавное появление тайлов
-          zoomAnimation: true, // Плавное масштабирование
-          renderer: L.canvas() // Явно указываем рендерер canvas
+          preferCanvas: true,
+          attributionControl: false,
+          zoomControl: true,
+          inertia: true,
+          fadeAnimation: true,
+          zoomAnimation: true,
+          renderer: L.canvas()
         }).setView(initialPosition, 13);
 
         // Добавляем слой тайлов
@@ -264,7 +294,7 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
 
       // Добавляем новый круг с актуальным радиусом
       const radiusInMeters = getRadiusInMeters(filters.distance);
-      L.circle([userLocation.latitude, userLocation.longitude], {
+      L.circle([userLocation.lat, userLocation.lon], {
         color: theme.palette.primary.main,
         fillColor: theme.palette.primary.light,
         fillOpacity: 0.2,
@@ -348,52 +378,129 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
   // Обработчик для открытия полноэкранной карты
   const handleExpandMap = () => {
     // Получаем список всех объявлений с координатами
-    const markersForFullscreen = listings
-      .filter(listing => listing.latitude && listing.longitude && listing.show_on_map !== false)
-      .map(listing => ({
-        latitude: listing.latitude,
-        longitude: listing.longitude,
-        title: listing.title,
-        tooltip: `${listing.price.toLocaleString()} RSD`
-      }));
+    const validListings = listings.filter(listing => 
+      listing.latitude && listing.longitude && listing.show_on_map !== false
+    );
 
-    // Определяем центр для полноэкранной карты
+    // Формируем маркеры для полноэкранной карты
+    const markersForFullscreen = validListings.map(listing => ({
+      latitude: listing.latitude,
+      longitude: listing.longitude,
+      title: listing.title,
+      tooltip: `${listing.price.toLocaleString()} RSD`,
+      id: listing.id,
+      listing: listing // Передаем полные данные о листинге
+    }));
+
+    // Определяем центр для полноэкранной карты с гарантированными координатами
     let center = null;
 
+    // Первый случай: выбранное объявление
     if (selectedListing && selectedListing.latitude && selectedListing.longitude) {
-      // Если выбрано объявление, используем его координаты как центр
       center = {
         latitude: selectedListing.latitude,
         longitude: selectedListing.longitude,
         title: selectedListing.title
       };
-    } else if (userLocation) {
-      // Если есть местоположение пользователя, используем его как центр
+      console.log("Используем координаты выбранного объявления:", center);
+    } 
+    // Второй случай: местоположение пользователя
+    else if (userLocation && userLocation.lat && userLocation.lon) {
       center = {
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
+        latitude: userLocation.lat,
+        longitude: userLocation.lon,
         title: t('listings.map.yourLocation')
       };
-    } else if (mapRef.current) {
-      // Иначе используем текущий центр карты
-      const mapCenter = mapRef.current.getCenter();
+      console.log("Используем координаты пользователя:", center);
+    }
+    // Третий случай: текущий центр карты
+    else if (mapRef.current) {
+      try {
+        const mapCenter = mapRef.current.getCenter();
+        center = {
+          latitude: mapCenter.lat,
+          longitude: mapCenter.lng,
+          title: t('listings.map.mapCenter')
+        };
+        console.log("Используем текущий центр карты:", center);
+      } catch (error) {
+        console.error("Ошибка при получении центра карты:", error);
+      }
+    }
+    // Четвертый случай: первое объявление из списка
+    else if (validListings.length > 0) {
+      const firstListing = validListings[0];
       center = {
-        latitude: mapCenter.lat,
-        longitude: mapCenter.lng,
-        title: t('listings.map.mapCenter')
+        latitude: firstListing.latitude,
+        longitude: firstListing.longitude,
+        title: firstListing.title
+      };
+      console.log("Используем координаты первого объявления:", center);
+    }
+    // Пятый случай: фиксированные координаты по умолчанию (Нови-Сад)
+    else {
+      center = {
+        latitude: 45.2671,
+        longitude: 19.8335,
+        title: "Нови-Сад"
+      };
+      console.log("Используем координаты по умолчанию:", center);
+    }
+
+    // Дополнительная проверка перед установкой состояния
+    if (!center || !center.latitude || !center.longitude) {
+      console.error("Не удалось определить координаты для карты:", center);
+      // Устанавливаем координаты по умолчанию
+      center = {
+        latitude: 45.2671,
+        longitude: 19.8335,
+        title: "Нови-Сад"
       };
     }
 
+    // Проверяем, что у нас есть числовые значения для координат
+    center.latitude = Number(center.latitude);
+    center.longitude = Number(center.longitude);
+
+    console.log("Итоговые координаты для полноэкранной карты:", center);
+    
+    // Устанавливаем состояние и открываем модальное окно
     setExpandedMapCenter(center);
     setExpandedMapMarkers(markersForFullscreen);
     setExpandedMapOpen(true);
   };
 
-  // Обработчик для закрытия полноэкранной карты
-  const handleCloseExpandedMap = () => {
-    setExpandedMapOpen(false);
+  // Функция для определения местоположения пользователя
+  const handleDetectLocation = async () => {
+    try {
+      // Используем функцию из контекста местоположения
+      const locationData = await detectUserLocation();
+      
+      // Если успешно получили местоположение, обновляем фильтры
+      onFilterChange({
+        ...filters,
+        latitude: locationData.lat,
+        longitude: locationData.lon,
+        distance: filters.distance || '5km'
+      });
+      
+      // Центрируем карту на новых координатах
+      if (mapRef.current) {
+        mapRef.current.setView([locationData.lat, locationData.lon], 13);
+      }
+    } catch (error) {
+      console.error("Error getting location:", error);
+      alert(t('listings.map.locationError'));
+    }
   };
 
+  // Определяем, доступна ли карта (не используется в запросе distance без координат)
+  const isMapAvailable = useMemo(() => {
+    return !filters.distance || (filters.latitude && filters.longitude);
+  }, [filters.distance, filters.latitude, filters.longitude]);
+
+  const isDistanceWithoutCoordinates = filters.distance && (!filters.latitude || !filters.longitude);
+  
   return (
     <Box
       sx={{
@@ -479,7 +586,7 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
             '&:hover': {
               bgcolor: 'background.paper',
             },
-            zIndex: 1000, // Убедимся, что кнопка отображается поверх карты
+            zIndex: 1000,
             boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
           }}
           size="small"
@@ -535,34 +642,7 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
             right: 16,
             zIndex: 1000
           }}
-          onClick={() => {
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(
-                (position) => {
-                  const { latitude, longitude } = position.coords;
-
-                  // Обновляем фильтры с новыми координатами
-                  onFilterChange({
-                    ...filters,
-                    latitude,
-                    longitude,
-                    distance: filters.distance || '5km'
-                  });
-
-                  // Центрируем карту на новых координатах
-                  if (mapRef.current) {
-                    mapRef.current.setView([latitude, longitude], 13);
-                  }
-                },
-                (error) => {
-                  console.error("Error getting location:", error);
-                  alert(t('listings.map.locationError'));
-                }
-              );
-            } else {
-              alert(t('listings.map.geolocationNotSupported'));
-            }
-          }}
+          onClick={handleDetectLocation}
         >
           {t('listings.map.useMyLocation')}
         </Button>
@@ -571,7 +651,7 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
       {/* Модальное окно с полноэкранной картой */}
       <Modal
         open={expandedMapOpen}
-        onClose={handleCloseExpandedMap}
+        onClose={() => setExpandedMapOpen(false)}
         aria-labelledby="expanded-map-modal"
         aria-describedby="expanded-map-view"
         sx={{
@@ -595,7 +675,7 @@ const MapView = ({ listings, userLocation, filters, onFilterChange, onMapClose }
         >
           <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1050 }}>
             <IconButton
-              onClick={handleCloseExpandedMap}
+              onClick={() => setExpandedMapOpen(false)}
               sx={{
                 bgcolor: 'background.paper',
                 '&:hover': {

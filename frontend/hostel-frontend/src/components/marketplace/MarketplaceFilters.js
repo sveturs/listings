@@ -21,11 +21,12 @@ import {
     RadioGroup,
     Radio
 } from '@mui/material';
-
+import { useLocation } from '../../contexts/LocationContext';
 import VirtualizedCategoryTree from './VirtualizedCategoryTree';
 
 const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId, onToggleMapView }) => {
     const { t } = useTranslation('marketplace', 'common');
+    const { userLocation, detectUserLocation } = useLocation();
 
     const handleCategorySelect = useCallback((id) => {
         console.log(`MarketplaceFilters: Выбрана категория с ID: ${id}`);
@@ -44,43 +45,36 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
         console.log("Поисковый запрос изменен на:", value);
         onFilterChange({ ...filters, query: value });
     }, [filters, onFilterChange]);
-    const handleDistanceChange = (value) => {
-        // Если выбрано расстояние, но нет координат, запрашиваем геолокацию
+    const handleDistanceChange = async (value) => {
+        // Если выбрано расстояние, но нет координат, используем геолокацию
         if (value && (!filters.latitude || !filters.longitude)) {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        // Получены координаты, обновляем фильтры
-                        onFilterChange({
-                            ...filters,
-                            distance: value,
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
-                        });
-                    },
-                    (error) => {
-                        console.error("Ошибка получения геолокации:", error);
-                        // Показываем уведомление пользователю
-                        alert(t('listings.filters.distance.locationError', {
-                            defaultValue: 'Для использования фильтра по расстоянию необходимо разрешить доступ к вашему местоположению'
-                        }));
-                    }
-                );
-            } else {
-                alert(t('listings.filters.distance.browserNotSupported', {
-                    defaultValue: 'Ваш браузер не поддерживает геолокацию'
+            try {
+                // Используем функцию из контекста местоположения
+                await detectUserLocation();
+
+                // userLocation должен обновиться автоматически через контекст
+                // Затем будет вызвано событие cityChanged, которое обновит фильтры
+
+                // Здесь просто обновляем distance, так как координаты обновятся через событие
+                onFilterChange({ ...filters, distance: value });
+            } catch (error) {
+                console.error("Ошибка получения геолокации:", error);
+                // Показываем уведомление пользователю
+                alert(t('listings.filters.distance.locationError', {
+                    defaultValue: 'Для использования фильтра по расстоянию необходимо разрешить доступ к вашему местоположению'
                 }));
             }
         } else {
-            // Если координаты уже есть или distance пустое, просто обновляем фильтр
+            // Если координаты уже есть, просто обновляем фильтр расстояния
             onFilterChange({ ...filters, distance: value });
         }
     };
-    // Определяем, доступна ли карта (не используется в запросе distance без координат)
     const isMapAvailable = useMemo(() => {
-        return !filters.distance || (filters.latitude && filters.longitude);
-    }, [filters.distance, filters.latitude, filters.longitude]);
-    const isDistanceWithoutCoordinates = filters.distance && (!filters.latitude || !filters.longitude);
+        // Карта доступна, если либо нет фильтра по расстоянию, либо есть координаты
+        return !filters.distance || (userLocation?.lat && userLocation?.lon);
+    }, [filters.distance, userLocation]);
+
+    const isDistanceWithoutCoordinates = filters.distance && (!userLocation?.lat || !userLocation?.lon);
     return (
         <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Поиск с автодополнением */}
@@ -167,8 +161,8 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                             </Select>
                         </FormControl>
                         <Typography variant="caption" color={isDistanceWithoutCoordinates ? "error.main" : "text.secondary"}>
-                            {filters.latitude && filters.longitude
-                                ? t('listings.filters.distance.fromYourLocation')
+                            {userLocation?.city
+                                ? t('listings.filters.distance.fromCity', { city: userLocation.city })
                                 : t('listings.filters.distance.needLocation')}
                         </Typography>
                         {isDistanceWithoutCoordinates && (

@@ -1,7 +1,6 @@
 // frontend/hostel-frontend/src/components/global/Layout.js
 import React, { useState, useEffect } from "react";
 import { Storefront } from '@mui/icons-material';
-
 import NewMessageIndicator from './NewMessageIndicator';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from '../../contexts/AuthContext';
@@ -68,7 +67,6 @@ const Layout = ({ children }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [categoryPath] = useState([]);
 
-  
   const handleOpenProfile = () => {
     setIsProfileOpen(true);
     handleCloseMenu();
@@ -153,12 +151,11 @@ const Layout = ({ children }) => {
     }
   }, [userLocation, locationDismissed]);
 
-
-
   const handleCloseLocationAlert = () => {
     setShowLocationAlert(false);
     dismissLocationSuggestion();
   };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
@@ -234,12 +231,9 @@ const Layout = ({ children }) => {
               >
                 {isMobile ? <Plus /> : t('listings.create.title', { ns: 'marketplace' })}
               </Button>
-              
-              <CitySelector
-                currentCity={userLocation}
-                onCityChange={setCity}
-                isMobile={isMobile}
-              />
+
+              {/* Используем обновленный CitySelector без передачи onCityChange */}
+              <CitySelector isMobile={isMobile} />
 
               <LanguageSwitcher />
               {!user ? (

@@ -17,9 +17,11 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
+import { useLocation } from '../../contexts/LocationContext';
 
-const CitySelector = ({ currentCity, onCityChange, isMobile = false }) => {
+const CitySelector = ({ isMobile = false }) => {
     const { t } = useTranslation('common');
+    const { userLocation, setCity, detectUserLocation, isGeolocating } = useLocation();
     const [open, setOpen] = useState(false);
     const [searchValue, setSearchValue] = useState('');
     const [suggestions, setSuggestions] = useState([]);
@@ -83,72 +85,26 @@ const CitySelector = ({ currentCity, onCityChange, isMobile = false }) => {
     };
 
     const handleSelectCity = (city) => {
-        console.log(`Выбран город: ${city.city}, координаты: ${city.lat}, ${city.lon}`);
-        onCityChange(city);
+        // Явно устанавливаем город через контекст
+        setCity({
+            city: city.city,
+            country: city.country,
+            lat: city.lat, 
+            lon: city.lon
+        });
+        
         handleClose();
     };
 
-    const handleUseLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const { latitude, longitude } = position.coords;
-                    try {
-                        const response = await axios.get('/api/v1/geocode/reverse', {
-                            params: { lat: latitude, lon: longitude }
-                        });
-
-                        if (response.data?.data) {
-                            onCityChange({
-                                ...response.data.data,
-                                lat: latitude,
-                                lon: longitude
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Error fetching city from coordinates:', error);
-                    }
-                    handleClose();
-                },
-                (error) => {
-                    console.error('Error getting location:', error);
-                }
-            );
+    const handleUseLocation = async () => {
+        try {
+            await detectUserLocation();
+            handleClose();
+        } catch (error) {
+            console.error('Error getting location:', error);
         }
     };
 
-    useEffect(() => {
-        if (currentCity) {
-            // При изменении currentCity убедимся, что фильтры актуальны
-            const checkFiltersSync = () => {
-                // Получаем текущие параметры URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const urlLat = urlParams.get('latitude');
-                const urlLon = urlParams.get('longitude');
-
-                // Если координаты в URL отличаются от currentCity, генерируем событие cityChanged
-                if (urlLat !== String(currentCity.lat) || urlLon !== String(currentCity.lon)) {
-                    const cityChangeEvent = new CustomEvent('cityChanged', {
-                        detail: {
-                            lat: currentCity.lat,
-                            lon: currentCity.lon,
-                            city: currentCity.city,
-                            country: currentCity.country
-                        }
-                    });
-                    window.dispatchEvent(cityChangeEvent);
-                }
-            };
-
-            // Вызываем сразу и при изменении URL
-            checkFiltersSync();
-            window.addEventListener('popstate', checkFiltersSync);
-
-            return () => {
-                window.removeEventListener('popstate', checkFiltersSync);
-            };
-        }
-    }, [currentCity]);
     return (
         <>
             <Tooltip title={t('location.changeCity', { defaultValue: 'Изменить город' })}>
@@ -170,7 +126,7 @@ const CitySelector = ({ currentCity, onCityChange, isMobile = false }) => {
                     <MapPin size={18} />
                     {!isMobile && (
                         <Typography variant="body2" sx={{ mx: 0.5, maxWidth: 120, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            {currentCity?.city || t('location.selectCity', { defaultValue: 'Выбрать город' })}
+                            {userLocation?.city || t('location.selectCity', { defaultValue: 'Выбрать город' })}
                         </Typography>
                     )}
                 </Box>
@@ -224,8 +180,11 @@ const CitySelector = ({ currentCity, onCityChange, isMobile = false }) => {
                         sx={{ mt: 1 }}
                         onClick={handleUseLocation}
                         startIcon={<Navigation size={16} />}
+                        disabled={isGeolocating}
                     >
-                        {t('location.useCurrentLocation', { defaultValue: 'Использовать моё местоположение' })}
+                        {isGeolocating
+                            ? t('location.detectingLocation', { defaultValue: 'Определение местоположения...' })
+                            : t('location.useCurrentLocation', { defaultValue: 'Использовать моё местоположение' })}
                     </Button>
                 </Box>
 

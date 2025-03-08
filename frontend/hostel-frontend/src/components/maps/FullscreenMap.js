@@ -1,16 +1,107 @@
- // frontend/hostel-frontend/src/components/maps/FullscreenMap.js
-import React, { useEffect, useRef } from 'react';
-import { Paper } from '@mui/material';
+// frontend/hostel-frontend/src/components/maps/FullscreenMap.js
+import React, { useEffect, useRef, useState } from 'react';
+import { Paper, Box, Typography, IconButton, Card, CardContent, CardMedia, Button, Chip } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import '../maps/leaflet-icons'; // Импортируем файл с фиксом иконок
+import { X } from 'lucide-react';
+
+// Компонент для предпросмотра объявления при клике по маркеру
+const ListingPreview = ({ listing, onClose, onNavigate }) => {
+  const { t } = useTranslation('marketplace');
+
+  if (!listing) return null;
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RSD',
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
+  const imageUrl = listing.images && listing.images.length > 0
+    ? `${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}`
+    : null;
+
+  return (
+    <Card
+      sx={{
+        position: 'absolute',
+        bottom: 16,
+        left: 16,
+        maxWidth: 400,
+        width: 'auto',
+        zIndex: 1000,
+        borderRadius: 1,
+        boxShadow: 3
+      }}
+    >
+      <Box sx={{ position: 'relative' }}>
+        <IconButton
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            bgcolor: 'background.paper',
+            opacity: 0.8,
+            '&:hover': { bgcolor: 'background.paper', opacity: 1 }
+          }}
+        >
+          <X size={16} />
+        </IconButton>
+
+        {imageUrl && (
+          <CardMedia
+            component="img"
+            height="140"
+            image={imageUrl}
+            alt={listing.title}
+          />
+        )}
+
+        <CardContent>
+          <Typography variant="subtitle1" noWrap gutterBottom>
+            {listing.title}
+          </Typography>
+
+          <Typography variant="h6" color="primary" gutterBottom>
+            {formatPrice(listing.price)}
+          </Typography>
+
+          <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+            <Chip
+              label={listing.condition === 'new' ? t('listings.conditions.new') : t('listings.conditions.used')}
+              size="small"
+              color={listing.condition === 'new' ? 'success' : 'default'}
+            />
+
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => onNavigate(listing.id)}
+            >
+              {t('listings.details.viewDetails')}
+            </Button>
+          </Box>
+        </CardContent>
+      </Box>
+    </Card>
+  );
+};
 
 const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
-  // Перемещаем объявление хуков до условной проверки
+  const { t } = useTranslation('marketplace');
+  const navigate = useNavigate();
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [error, setError] = useState(null);
   
-  // Если координат нет, компонент всё равно отрендерится но карта не будет инициализирована
+  // Если координат нет, компонент всё равно отрендерится, но карта не будет инициализирована
   const hasCoordinates = latitude && longitude;
   
   useEffect(() => {
@@ -34,14 +125,27 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
         markers.forEach(marker => {
           const leafletMarker = L.marker([marker.latitude, marker.longitude]);
           
-          // Если у маркера есть всплывающая подсказка или заголовок
+          // Если у маркера есть всплывающая подсказка
           if (marker.tooltip) {
             leafletMarker.bindTooltip(marker.tooltip);
           }
           
-          if (marker.title) {
-            leafletMarker.bindPopup(marker.title);
-          }
+          // Обработчик клика по маркеру для показа карточки
+          leafletMarker.on('click', () => {
+            // Если у маркера есть полные данные объявления
+            if (marker.listing) {
+              setSelectedListing(marker.listing);
+            }
+            // Если есть только ID, то можно запросить данные с сервера
+            else if (marker.id) {
+              // Перенаправляем на страницу объявления
+              navigate(`/marketplace/listings/${marker.id}`);
+            }
+            // Если нет полных данных, но есть заголовок, показываем его в попапе
+            else if (marker.title) {
+              leafletMarker.bindPopup(marker.title).openPopup();
+            }
+          });
           
           leafletMarker.addTo(mapRef.current);
           markerGroup.addLayer(leafletMarker);
@@ -60,7 +164,11 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
         marker.bindPopup(title);
       }
     } else {
-      // Если карта уже существует, обновляем маркеры
+      // Если карта уже существует, обновляем вид и маркеры
+      console.log("Обновление карты с координатами:", [latitude, longitude]);
+      // Обновляем центр и масштаб карты
+      mapRef.current.setView([latitude, longitude], 15);
+      
       // Сначала очищаем все существующие маркеры
       mapRef.current.eachLayer(layer => {
         if (layer instanceof L.Marker) {
@@ -79,9 +187,22 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
             leafletMarker.bindTooltip(marker.tooltip);
           }
           
-          if (marker.title) {
-            leafletMarker.bindPopup(marker.title);
-          }
+          // Обработчик клика по маркеру для показа карточки
+          leafletMarker.on('click', () => {
+            // Если у маркера есть полные данные объявления
+            if (marker.listing) {
+              setSelectedListing(marker.listing);
+            }
+            // Если есть только ID, то можно запросить данные с сервера
+            else if (marker.id) {
+              // Перенаправляем на страницу объявления
+              navigate(`/marketplace/listings/${marker.id}`);
+            }
+            // Если нет полных данных, но есть заголовок, показываем его в попапе
+            else if (marker.title) {
+              leafletMarker.bindPopup(marker.title).openPopup();
+            }
+          });
           
           leafletMarker.addTo(mapRef.current);
           markerGroup.addLayer(leafletMarker);
@@ -93,30 +214,31 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
             padding: [50, 50],
             maxZoom: 15
           });
-        } else {
-          // Просто центрируем на указанной точке
-          mapRef.current.setView([latitude, longitude], 15);
         }
-      } else {
-        // Просто центрируем карту на указанной точке
-        mapRef.current.setView([latitude, longitude], 15);
-        
-        // Если есть заголовок, добавляем маркер с ним
-        if (title) {
-          const marker = L.marker([latitude, longitude]).addTo(mapRef.current);
-          marker.bindPopup(title);
-        }
+      } else if (title) {
+        // Если маркеров нет, но есть центральная точка с заголовком
+        const marker = L.marker([latitude, longitude]).addTo(mapRef.current);
+        marker.bindPopup(title);
       }
     }
     
     // Очистка при размонтировании компонента
     return () => {
       if (mapRef.current) {
-        mapRef.current.remove();
+        try {
+          mapRef.current.remove();
+        } catch (err) {
+          console.error("Ошибка при удалении карты:", err);
+        }
         mapRef.current = null;
       }
     };
-  }, [latitude, longitude, title, markers]);
+  }, [latitude, longitude, title, markers, hasCoordinates, navigate]);
+
+  // Навигация к подробностям объявления
+  const handleNavigateToListing = (listingId) => {
+    navigate(`/marketplace/listings/${listingId}`);
+  };
   
   return (
     <Paper
@@ -134,11 +256,36 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
           style={{ width: '100%', height: '80vh' }}
         />
       ) : (
-        <div style={{ width: '100%', height: '80vh', display: 'flex', 
-                     alignItems: 'center', justifyContent: 'center', 
-                     backgroundColor: '#f5f5f5' }}>
-          Координаты отсутствуют
+        <div style={{ 
+          width: '100%', 
+          height: '80vh', 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          backgroundColor: '#f5f5f5' 
+        }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            Координаты отсутствуют
+          </Typography>
+          {error && (
+            <Typography variant="body2" color="text.secondary">
+              {error}
+            </Typography>
+          )}
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Координаты: {latitude}, {longitude}
+          </Typography>
         </div>
+      )}
+
+      {/* Карточка объявления при клике на маркер */}
+      {selectedListing && (
+        <ListingPreview
+          listing={selectedListing}
+          onClose={() => setSelectedListing(null)}
+          onNavigate={handleNavigateToListing}
+        />
       )}
     </Paper>
   );
