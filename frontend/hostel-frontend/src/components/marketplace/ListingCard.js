@@ -80,16 +80,36 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
     };
 
     const getMainImageUrl = () => {
-        if (!listing.images || listing.images.length === 0) {
+        if (!listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
             return '/placeholder.jpg';
         }
     
-        const mainImage = listing.images.find(img => img.is_main) || listing.images[0];
-        if (!mainImage || !mainImage.file_path) {
-            return '/placeholder.jpg';
+        // Ищем главное изображение
+        let mainImage = null;
+        
+        // Проверяем все возможные форматы хранения изображений
+        if (Array.isArray(listing.images)) {
+            // Ищем изображение с флагом is_main
+            mainImage = listing.images.find(img => img && img.is_main === true);
+            
+            // Если главное изображение не найдено, берем первое
+            if (!mainImage) {
+                mainImage = listing.images[0];
+            }
         }
-    
-        return `${BACKEND_URL}/uploads/${mainImage.file_path}`;
+        
+        // Проверяем, что у нас есть объект с file_path
+        if (mainImage && typeof mainImage === 'object' && mainImage.file_path) {
+            return `${BACKEND_URL}/uploads/${mainImage.file_path}`;
+        }
+        
+        // Если изображение передано как строка
+        if (mainImage && typeof mainImage === 'string') {
+            return `${BACKEND_URL}/uploads/${mainImage}`;
+        }
+        
+        // Если ничего не подошло, возвращаем placeholder
+        return '/placeholder.jpg';
     };
     
 

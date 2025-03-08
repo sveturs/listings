@@ -54,20 +54,23 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 	}
 
 	// Создаем объявление
-	listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
-	}
+    listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
+    }
+    
+    // Переиндексация будет проведена ПОСЛЕ загрузки изображений, а не здесь
+    // См. метод UploadImages ниже
 
-	// Обновляем материализованное представление
-	if err := h.marketplaceService.RefreshCategoryListingCounts(c.Context()); err != nil {
-		log.Printf("Error refreshing category counts: %v", err)
-	}
+    // Обновляем материализованное представление
+    if err := h.marketplaceService.RefreshCategoryListingCounts(c.Context()); err != nil {
+        log.Printf("Error refreshing category counts: %v", err)
+    }
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"id":      listingID,
-		"message": "Объявление успешно создано",
-	})
+    return utils.SuccessResponse(c, fiber.Map{
+        "id":      listingID,
+        "message": "Объявление успешно создано",
+    })
 }
 
 var (
@@ -189,10 +192,22 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 		uploadedImages = append(uploadedImages, image)
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Изображения успешно загружены",
-		"images":  uploadedImages,
-	})
+    fullListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+    if err != nil {
+        log.Printf("Failed to get full listing for reindexing: %v", err)
+    } else {
+        // Переиндексируем объявление с загруженными изображениями
+        if err := h.marketplaceService.Storage().IndexListing(c.Context(), fullListing); err != nil {
+            log.Printf("Failed to reindex listing after image upload: %v", err)
+        } else {
+            log.Printf("Successfully reindexed listing %d with %d images", listingID, len(fullListing.Images))
+        }
+    }
+    
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Изображения успешно загружены",
+        "images":  uploadedImages,
+    })
 }
 
 func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {

@@ -45,9 +45,36 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
     }).format(price);
   };
 
-  const imageUrl = listing.images && listing.images.length > 0
-    ? `${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}`
-    : null;
+  // Нормализация пути к изображению
+  const getImageUrl = (images) => {
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return null;
+    }
+    
+    // Сначала пытаемся найти главное изображение
+    let mainImage = images.find(img => img && img.is_main === true);
+    
+    // Если главное не найдено, берем первое изображение
+    if (!mainImage) {
+      mainImage = images[0];
+    }
+    
+    // Если изображение - это строка с путем
+    if (typeof mainImage === 'string') {
+      const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+      return `${baseUrl}/uploads/${mainImage}`;
+    }
+    
+    // Если изображение - это объект с file_path
+    if (mainImage && typeof mainImage === 'object' && mainImage.file_path) {
+      const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+      return `${baseUrl}/uploads/${mainImage.file_path}`;
+    }
+    
+    return null;
+  };
+
+  const imageUrl = getImageUrl(listing.images);
 
   return (
     <Card
