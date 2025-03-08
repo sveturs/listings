@@ -86,49 +86,67 @@ const reverseGeocode = async (lat, lng) => {
 // Компонент для поиска адреса с автодополнением
 const searchAddress = async (query) => {
     try {
-        // Сначала используем наш API для поиска городов
-        try {
-            const response = await axios.get('/api/v1/cities/suggest', {
-                params: { q: query, limit: 5 }
-            });
-            
-            if (response.data && response.data.data && response.data.data.length > 0) {
-                const results = response.data.data.map(item => ({
-                    latitude: item.lat,
-                    longitude: item.lon,
-                    formatted_address: `${item.city}, ${item.country}`,
-                    address_components: {
-                        city: item.city || '',
-                        country: item.country || '',
-                    }
-                }));
-                
-                return results;
-            }
-        } catch (error) {
-            console.log('Ошибка API поиска городов, используем OSM:', error);
+        // Добавляем "Сербия" к запросу, если её нет, чтобы улучшить геолокацию
+        if (!query.toLowerCase().includes('serbia') && !query.toLowerCase().includes('srbija')) {
+            query = query + ', Serbia';
         }
         
-        // В случае ошибки используем Nominatim OSM
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`, {
-            headers: {
-                'User-Agent': 'HostelBookingApp/1.0'
+        // Используем OSM Nominatim с явным указанием страны и полными деталями
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=rs&addressdetails=1&limit=5`, 
+            {
+                headers: {
+                    'User-Agent': 'HostelBookingApp/1.0'
+                }
             }
-        });
+        );
+        
         const data = await response.json();
         
         if (data && data.length > 0) {
-            return data.map(place => ({
-                latitude: parseFloat(place.lat),
-                longitude: parseFloat(place.lon),
-                formatted_address: place.display_name,
-                address_components: {
-                    city: place.address?.city || place.address?.town || place.address?.village || '',
-                    state: place.address?.state || '',
-                    country: place.address?.country || '',
-                    postal_code: place.address?.postcode || ''
+            return data.map(place => {
+                // Извлекаем максимально детальную информацию
+                const district = place.address?.suburb || 
+                                place.address?.neighbourhood || 
+                                place.address?.district || 
+                                place.address?.municipality || 
+                                '';
+                                
+                const city = place.address?.city || 
+                            place.address?.town || 
+                            place.address?.village || 
+                            place.address?.municipality || 
+                            place.address?.county || 
+                            '';
+                
+                // Формируем локацию для отображения
+                let displayLocation = '';
+                if (district && city && district !== city) {
+                    displayLocation = `${district}, ${city}`;
+                } else if (city) {
+                    displayLocation = city;
+                } else if (district) {
+                    displayLocation = district;
+                } else {
+                    displayLocation = place.display_name;
                 }
-            }));
+                
+                return {
+                    latitude: parseFloat(place.lat),
+                    longitude: parseFloat(place.lon),
+                    formatted_address: place.display_name,
+                    address_components: {
+                        city: displayLocation,
+                        street: place.address?.road || '',
+                        district: district,
+                        municipality: place.address?.municipality || '',
+                        county: place.address?.county || '',
+                        state: place.address?.state || '',
+                        country: place.address?.country || 'Serbia',
+                        postal_code: place.address?.postcode || ''
+                    }
+                };
+            });
         }
         return [];
     } catch (error) {
@@ -314,30 +332,140 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
         });
     };
 
-    // Обработчик ручного поиска адреса (по нажатию на кнопку или Enter)
-    const handleSearch = async () => {
-        if (!address) return;
-        
-        setSearching(true);
+// Обработчик ручного поиска адреса (по нажатию на кнопку или Enter)
+const handleSearch = async () => {
+    if (!address) return;
+    
+    setSearching(true);
+    try {
+        // Пробуем найти точное совпадение
         const suggestions = await searchAddress(address);
-        setSearching(false);
         
-        // Если найдены результаты, используем первый
+        // Если есть результаты, используем их
         if (suggestions && suggestions.length > 0) {
             const suggestion = suggestions[0];
-            handleSelectSuggestion(suggestion);
-        } else {
-            // Если нет результатов, сохраняем адрес без координат
-            onLocationSelect({
-                formatted_address: address,
-                address_components: {
-                    // Пытаемся разбить адрес на город и страну
-                    city: address.split(',')[0]?.trim() || '',
-                    country: address.split(',')[1]?.trim() || ''
+            
+            // Формируем отображаемое местоположение из результатов геокодирования
+            // Приоритет: district + city > city > municipality > district
+            let displayLocation = suggestion.address_components.city;
+            
+            // Обновляем карту, если есть координаты
+            if (suggestion.latitude && suggestion.longitude) {
+                setMarker({
+                    lat: suggestion.latitude,
+                    lng: suggestion.longitude
+                });
+                
+                setCenter({
+                    lat: suggestion.latitude,
+                    lng: suggestion.longitude
+                });
+                
+                if (leafletMapRef.current) {
+                    leafletMapRef.current.setView([suggestion.latitude, suggestion.longitude], 13);
+                    
+                    if (markerRef.current) {
+                        leafletMapRef.current.removeLayer(markerRef.current);
+                    }
+                    
+                    markerRef.current = L.marker([suggestion.latitude, suggestion.longitude], { draggable: true })
+                        .addTo(leafletMapRef.current)
+                        .on('dragend', function(event) {
+                            const marker = event.target;
+                            handleMarkerDragEnd({ target: marker });
+                        });
                 }
+            }
+            
+            // Передаем данные родительскому компоненту
+            onLocationSelect({
+                latitude: suggestion.latitude,
+                longitude: suggestion.longitude,
+                formatted_address: address,
+                address_components: suggestion.address_components
             });
+            
+            setSearching(false);
+            return;
         }
-    };
+        
+        // Если не нашли по точному запросу, пробуем разбить адрес и искать по частям
+        const addressParts = address.split(',').map(part => part.trim()).filter(Boolean);
+        
+        // Пробуем найти по последним частям (они обычно содержат район/город)
+        if (addressParts.length > 2) {
+            const lastParts = addressParts.slice(-2).join(', ') + ', Serbia';
+            const partialResults = await searchAddress(lastParts);
+            
+            if (partialResults && partialResults.length > 0) {
+                const result = partialResults[0];
+                
+                // Передаем данные родительскому компоненту
+                onLocationSelect({
+                    latitude: result.latitude,
+                    longitude: result.longitude,
+                    formatted_address: address,
+                    address_components: result.address_components
+                });
+                
+                // Обновляем карту
+                if (result.latitude && result.longitude) {
+                    setMarker({
+                        lat: result.latitude,
+                        lng: result.longitude
+                    });
+                    
+                    setCenter({
+                        lat: result.latitude,
+                        lng: result.longitude
+                    });
+                    
+                    if (leafletMapRef.current) {
+                        leafletMapRef.current.setView([result.latitude, result.longitude], 13);
+                        
+                        if (markerRef.current) {
+                            leafletMapRef.current.removeLayer(markerRef.current);
+                        }
+                        
+                        markerRef.current = L.marker([result.latitude, result.longitude], { draggable: true })
+                            .addTo(leafletMapRef.current)
+                            .on('dragend', function(event) {
+                                const marker = event.target;
+                                handleMarkerDragEnd({ target: marker });
+                            });
+                    }
+                }
+                
+                setSearching(false);
+                return;
+            }
+        }
+        
+        // Если не нашли ничего, сохраняем адрес без координат
+        onLocationSelect({
+            formatted_address: address,
+            address_components: {
+                city: addressParts[0] || address,
+                country: 'Serbia'
+            }
+        });
+        
+    } catch (error) {
+        console.error("Error in geocoding address:", error);
+        
+        // При ошибке сохраняем адрес без координат
+        const addressParts = address.split(',').map(part => part.trim()).filter(Boolean);
+        onLocationSelect({
+            formatted_address: address,
+            address_components: {
+                city: addressParts[0] || address,
+                country: 'Serbia'
+            }
+        });
+    } finally {
+        setSearching(false);
+    }
+};
 
     // Обработчик получения текущего местоположения
     const handleCurrentLocation = () => {

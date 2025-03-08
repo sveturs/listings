@@ -138,7 +138,26 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
         e.stopPropagation();
         navigate(`/marketplace/listings/${listing.id}`);
     };
-
+    const getDisplayLocation = () => {
+        // Если есть город, используем его
+        if (listing.city) {
+            return listing.city;
+        }
+        
+        // Если есть полный адрес, извлекаем из него город или первую часть
+        if (listing.location) {
+            // Пытаемся извлечь город из адреса (обычно он в начале)
+            const locationParts = listing.location.split(',');
+            if (locationParts.length > 0) {
+                return locationParts[0].trim();
+            }
+            return listing.location;
+        }
+        
+        // Если нет ни города, ни адреса
+        return 'Местоположение не указано';
+    };
+    
     return (
         <Card 
             sx={{
@@ -277,12 +296,12 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
 
                 {!isMobile && (
                     <>
-                        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                            <LocationIcon size={18} style={{ marginRight: 4 }} />
-                            <Typography variant="body2" noWrap>
-                                {listing.city || 'Местоположение не указано'}
-                            </Typography>
-                        </Box>
+<Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+    <LocationIcon size={18} style={{ marginRight: 4 }} />
+    <Typography variant="body2" noWrap>
+    {getDisplayLocation()}
+    </Typography>
+</Box>
 
                         <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
                             <AccessTime size={18} style={{ marginRight: 4 }} />

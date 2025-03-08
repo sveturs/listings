@@ -61,7 +61,7 @@ const CreateListing = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [showExpandedMap, setShowExpandedMap] = useState(false);
- 
+    const [locationWarning, setLocationWarning] = useState(false);
     const getTranslatedText = (field) => {
         if (!listing) return '';
 
@@ -133,6 +133,9 @@ const CreateListing = () => {
             city: location.address_components?.city || '',
             country: location.address_components?.country || ''
         }));
+        
+        // Проверяем наличие координат и показываем предупреждение, если их нет
+        setLocationWarning(!location.latitude || !location.longitude);
     };
 
     const handleSubmit = async (e) => {
