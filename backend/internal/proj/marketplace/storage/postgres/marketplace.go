@@ -896,21 +896,31 @@ func (s *Storage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, 
 	return userIDs, nil
 }
 func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
-	result, err := s.pool.Exec(ctx, `
+    // Сначала удаляем записи из избранного
+    _, err := s.pool.Exec(ctx, `
+        DELETE FROM marketplace_favorites
+        WHERE listing_id = $1
+    `, id)
+    if err != nil {
+        return fmt.Errorf("error removing listing from favorites: %w", err)
+    }
+    
+    // Удаляем объявление
+    result, err := s.pool.Exec(ctx, `
         DELETE FROM marketplace_listings
         WHERE id = $1 AND user_id = $2
     `, id, userID)
 
-	if err != nil {
-		return err
-	}
+    if err != nil {
+        return fmt.Errorf("error deleting listing: %w", err)
+    }
 
-	rowsAffected := result.RowsAffected()
-	if rowsAffected == 0 {
-		return fmt.Errorf("listing not found or you don't have permission to delete it")
-	}
-
-	return nil
+    rowsAffected := result.RowsAffected()
+    if rowsAffected == 0 {
+        return fmt.Errorf("listing not found or you don't have permission to delete it")
+    }
+    
+    return nil
 }
 
 func (s *Storage) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {

@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"math"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -54,23 +55,23 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 	}
 
 	// Создаем объявление
-    listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
-    }
-    
-    // Переиндексация будет проведена ПОСЛЕ загрузки изображений, а не здесь
-    // См. метод UploadImages ниже
+	listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
+	}
 
-    // Обновляем материализованное представление
-    if err := h.marketplaceService.RefreshCategoryListingCounts(c.Context()); err != nil {
-        log.Printf("Error refreshing category counts: %v", err)
-    }
+	// Переиндексация будет проведена ПОСЛЕ загрузки изображений, а не здесь
+	// См. метод UploadImages ниже
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "id":      listingID,
-        "message": "Объявление успешно создано",
-    })
+	// Обновляем материализованное представление
+	if err := h.marketplaceService.RefreshCategoryListingCounts(c.Context()); err != nil {
+		log.Printf("Error refreshing category counts: %v", err)
+	}
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"id":      listingID,
+		"message": "Объявление успешно создано",
+	})
 }
 
 var (
@@ -192,22 +193,22 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 		uploadedImages = append(uploadedImages, image)
 	}
 
-    fullListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
-    if err != nil {
-        log.Printf("Failed to get full listing for reindexing: %v", err)
-    } else {
-        // Переиндексируем объявление с загруженными изображениями
-        if err := h.marketplaceService.Storage().IndexListing(c.Context(), fullListing); err != nil {
-            log.Printf("Failed to reindex listing after image upload: %v", err)
-        } else {
-            log.Printf("Successfully reindexed listing %d with %d images", listingID, len(fullListing.Images))
-        }
-    }
-    
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Изображения успешно загружены",
-        "images":  uploadedImages,
-    })
+	fullListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+	if err != nil {
+		log.Printf("Failed to get full listing for reindexing: %v", err)
+	} else {
+		// Переиндексируем объявление с загруженными изображениями
+		if err := h.marketplaceService.Storage().IndexListing(c.Context(), fullListing); err != nil {
+			log.Printf("Failed to reindex listing after image upload: %v", err)
+		} else {
+			log.Printf("Successfully reindexed listing %d with %d images", listingID, len(fullListing.Images))
+		}
+	}
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Изображения успешно загружены",
+		"images":  uploadedImages,
+	})
 }
 
 func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
@@ -632,209 +633,210 @@ func (h *MarketplaceHandler) UpdateTranslations(c *fiber.Ctx) error {
 		"message": "Translations updated successfully",
 	})
 }
+
 // BatchTranslateListings выполняет групповой перевод объявлений с оплатой
 func (h *MarketplaceHandler) BatchTranslateListings(c *fiber.Ctx) error {
-    // Проверяем авторизацию
-    userID, ok := c.Locals("user_id").(int)
-    if !ok {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Unauthorized")
-    }
+	// Проверяем авторизацию
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Unauthorized")
+	}
 
-    // Парсим запрос
-    var request struct {
-        ListingIDs     []int    `json:"listing_ids"`
-        TargetLanguages []string `json:"target_languages"`
-    }
+	// Парсим запрос
+	var request struct {
+		ListingIDs      []int    `json:"listing_ids"`
+		TargetLanguages []string `json:"target_languages"`
+	}
 
-    if err := c.BodyParser(&request); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request format")
-    }
+	if err := c.BodyParser(&request); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request format")
+	}
 
-    if len(request.ListingIDs) == 0 {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "No listing IDs provided")
-    }
+	if len(request.ListingIDs) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "No listing IDs provided")
+	}
 
-    if len(request.TargetLanguages) == 0 {
-        // Если не указаны языки, используем стандартный набор
-        request.TargetLanguages = []string{"en", "ru", "sr"}
-    }
-    
-    // Стоимость перевода одного объявления
-    const translationCostPerListing = 25.0
-    
-    // Общая стоимость
-    totalCost := float64(len(request.ListingIDs)) * translationCostPerListing
-    
-    // Проверяем баланс пользователя
-    balance, err := h.services.Balance().GetBalance(c.Context(), userID)
-    if err != nil {
-        log.Printf("Error getting user balance: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to check user balance")
-    }
-    
-    if balance.Balance < totalCost {
-        return utils.ErrorResponse(c, fiber.StatusPaymentRequired, fmt.Sprintf(
-            "Insufficient funds for translation. Required: %.2f RSD, Available: %.2f RSD", 
-            totalCost, 
-            balance.Balance,
-        ))
-    }
-    
-    // Создаем транзакцию списания
-    now := time.Now()
-    transaction := &models.BalanceTransaction{
-        UserID:        userID,
-        Type:          "service_payment",
-        Amount:        totalCost,
-        Currency:      "RSD",
-        Status:        "completed",
-        PaymentMethod: "balance",
-        Description:   fmt.Sprintf("Перевод %d объявлений", len(request.ListingIDs)),
-        CreatedAt:     now,
-        CompletedAt:   &now,
-    }
+	if len(request.TargetLanguages) == 0 {
+		// Если не указаны языки, используем стандартный набор
+		request.TargetLanguages = []string{"en", "ru", "sr"}
+	}
 
-    // Начинаем транзакцию в БД
-    tx, err := h.services.Storage().BeginTx(c.Context(), nil)
-    if err != nil {
-        log.Printf("Error starting DB transaction: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to start transaction")
-    }
-    defer tx.Rollback()
-    
-    // Создаем транзакцию в БД
-    transactionID, err := h.services.Storage().CreateTransaction(c.Context(), transaction)
-    if err != nil {
-        log.Printf("Error creating transaction: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create transaction")
-    }
-    
-    // Обновляем баланс пользователя
-    err = h.services.Storage().UpdateBalance(c.Context(), userID, -totalCost)
-    if err != nil {
-        log.Printf("Error updating balance: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update balance")
-    }
+	// Стоимость перевода одного объявления
+	const translationCostPerListing = 25.0
 
-    // Для отслеживания результатов
-    results := make(map[int]map[string]string)
-    successCount := 0
-    failedCount := 0
+	// Общая стоимость
+	totalCost := float64(len(request.ListingIDs)) * translationCostPerListing
 
-    // Обрабатываем каждое объявление
-    for _, listingID := range request.ListingIDs {
-        // Проверяем, принадлежит ли объявление пользователю
-        listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
-        if err != nil {
-            // Пропускаем объявления, которые не найдены или недоступны
-            log.Printf("Error getting listing %d: %v", listingID, err)
-            results[listingID] = map[string]string{"error": err.Error()}
-            failedCount++
-            continue
-        }
+	// Проверяем баланс пользователя
+	balance, err := h.services.Balance().GetBalance(c.Context(), userID)
+	if err != nil {
+		log.Printf("Error getting user balance: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to check user balance")
+	}
 
-        // Проверяем права доступа
-        if listing.UserID != userID && listing.StorefrontID == nil {
-            // Пропускаем объявления, которые не принадлежат пользователю
-            results[listingID] = map[string]string{"error": "Access denied"}
-            failedCount++
-            continue
-        }
+	if balance.Balance < totalCost {
+		return utils.ErrorResponse(c, fiber.StatusPaymentRequired, fmt.Sprintf(
+			"Insufficient funds for translation. Required: %.2f RSD, Available: %.2f RSD",
+			totalCost,
+			balance.Balance,
+		))
+	}
 
-        // Если объявление принадлежит витрине, проверяем права доступа к витрине
-        if listing.StorefrontID != nil {
-            storefront, err := h.services.Storefront().GetStorefrontByID(c.Context(), *listing.StorefrontID, userID)
-            if err != nil || storefront.UserID != userID {
-                results[listingID] = map[string]string{"error": "Access denied to storefront"}
-                failedCount++
-                continue
-            }
-        }
+	// Создаем транзакцию списания
+	now := time.Now()
+	transaction := &models.BalanceTransaction{
+		UserID:        userID,
+		Type:          "service_payment",
+		Amount:        totalCost,
+		Currency:      "RSD",
+		Status:        "completed",
+		PaymentMethod: "balance",
+		Description:   fmt.Sprintf("Перевод %d объявлений", len(request.ListingIDs)),
+		CreatedAt:     now,
+		CompletedAt:   &now,
+	}
 
-        // Источниковый язык
-        sourceLanguage := listing.OriginalLanguage
-        if sourceLanguage == "" {
-            sourceLanguage = "ru" // По умолчанию
-        }
+	// Начинаем транзакцию в БД
+	tx, err := h.services.Storage().BeginTx(c.Context(), nil)
+	if err != nil {
+		log.Printf("Error starting DB transaction: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to start transaction")
+	}
+	defer tx.Rollback()
 
-        // Переводим на каждый целевой язык
-        var listingSuccess bool = false
-        for _, targetLang := range request.TargetLanguages {
-            // Пропускаем язык оригинала
-            if targetLang == sourceLanguage {
-                continue
-            }
+	// Создаем транзакцию в БД
+	transactionID, err := h.services.Storage().CreateTransaction(c.Context(), transaction)
+	if err != nil {
+		log.Printf("Error creating transaction: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create transaction")
+	}
 
-            // Переводим заголовок
-            translatedTitle, err := h.services.Translation().Translate(c.Context(), listing.Title, sourceLanguage, targetLang)
-            if err != nil {
-                log.Printf("Error translating title for listing %d: %v", listingID, err)
-                continue
-            }
+	// Обновляем баланс пользователя
+	err = h.services.Storage().UpdateBalance(c.Context(), userID, -totalCost)
+	if err != nil {
+		log.Printf("Error updating balance: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update balance")
+	}
 
-            // Переводим описание
-            translatedDesc, err := h.services.Translation().Translate(c.Context(), listing.Description, sourceLanguage, targetLang)
-            if err != nil {
-                log.Printf("Error translating description for listing %d: %v", listingID, err)
-                continue
-            }
+	// Для отслеживания результатов
+	results := make(map[int]map[string]string)
+	successCount := 0
+	failedCount := 0
 
-            // Сохраняем переводы
-            translationData := &models.Translation{
-                EntityType:          "listing",
-                EntityID:            listingID,
-                Language:            targetLang,
-                FieldName:           "title",
-                TranslatedText:      translatedTitle,
-                IsMachineTranslated: true,
-                IsVerified:          false,
-            }
-            err = h.marketplaceService.UpdateTranslation(c.Context(), translationData)
-            if err != nil {
-                log.Printf("Error saving title translation for listing %d: %v", listingID, err)
-            }
+	// Обрабатываем каждое объявление
+	for _, listingID := range request.ListingIDs {
+		// Проверяем, принадлежит ли объявление пользователю
+		listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+		if err != nil {
+			// Пропускаем объявления, которые не найдены или недоступны
+			log.Printf("Error getting listing %d: %v", listingID, err)
+			results[listingID] = map[string]string{"error": err.Error()}
+			failedCount++
+			continue
+		}
 
-            descTranslation := &models.Translation{
-                EntityType:          "listing",
-                EntityID:            listingID,
-                Language:            targetLang,
-                FieldName:           "description",
-                TranslatedText:      translatedDesc,
-                IsMachineTranslated: true,
-                IsVerified:          false,
-            }
-            err = h.marketplaceService.UpdateTranslation(c.Context(), descTranslation)
-            if err != nil {
-                log.Printf("Error saving description translation for listing %d: %v", listingID, err)
-            }
+		// Проверяем права доступа
+		if listing.UserID != userID && listing.StorefrontID == nil {
+			// Пропускаем объявления, которые не принадлежат пользователю
+			results[listingID] = map[string]string{"error": "Access denied"}
+			failedCount++
+			continue
+		}
 
-            // Записываем результаты для ответа
-            if results[listingID] == nil {
-                results[listingID] = make(map[string]string)
-            }
-            results[listingID][targetLang] = "translated"
-            listingSuccess = true
-        }
-        
-        if listingSuccess {
-            successCount++
-        } else {
-            failedCount++
-        }
-    }
-    
-    // Фиксируем транзакцию в БД
-    if err = tx.Commit(); err != nil {
-        log.Printf("Error committing transaction: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to commit transaction")
-    }
+		// Если объявление принадлежит витрине, проверяем права доступа к витрине
+		if listing.StorefrontID != nil {
+			storefront, err := h.services.Storefront().GetStorefrontByID(c.Context(), *listing.StorefrontID, userID)
+			if err != nil || storefront.UserID != userID {
+				results[listingID] = map[string]string{"error": "Access denied to storefront"}
+				failedCount++
+				continue
+			}
+		}
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": fmt.Sprintf("Successfully translated %d listings. Failed: %d", successCount, failedCount),
-        "cost": totalCost,
-        "transaction_id": transactionID,
-        "results": results,
-    })
+		// Источниковый язык
+		sourceLanguage := listing.OriginalLanguage
+		if sourceLanguage == "" {
+			sourceLanguage = "ru" // По умолчанию
+		}
+
+		// Переводим на каждый целевой язык
+		var listingSuccess bool = false
+		for _, targetLang := range request.TargetLanguages {
+			// Пропускаем язык оригинала
+			if targetLang == sourceLanguage {
+				continue
+			}
+
+			// Переводим заголовок
+			translatedTitle, err := h.services.Translation().Translate(c.Context(), listing.Title, sourceLanguage, targetLang)
+			if err != nil {
+				log.Printf("Error translating title for listing %d: %v", listingID, err)
+				continue
+			}
+
+			// Переводим описание
+			translatedDesc, err := h.services.Translation().Translate(c.Context(), listing.Description, sourceLanguage, targetLang)
+			if err != nil {
+				log.Printf("Error translating description for listing %d: %v", listingID, err)
+				continue
+			}
+
+			// Сохраняем переводы
+			translationData := &models.Translation{
+				EntityType:          "listing",
+				EntityID:            listingID,
+				Language:            targetLang,
+				FieldName:           "title",
+				TranslatedText:      translatedTitle,
+				IsMachineTranslated: true,
+				IsVerified:          false,
+			}
+			err = h.marketplaceService.UpdateTranslation(c.Context(), translationData)
+			if err != nil {
+				log.Printf("Error saving title translation for listing %d: %v", listingID, err)
+			}
+
+			descTranslation := &models.Translation{
+				EntityType:          "listing",
+				EntityID:            listingID,
+				Language:            targetLang,
+				FieldName:           "description",
+				TranslatedText:      translatedDesc,
+				IsMachineTranslated: true,
+				IsVerified:          false,
+			}
+			err = h.marketplaceService.UpdateTranslation(c.Context(), descTranslation)
+			if err != nil {
+				log.Printf("Error saving description translation for listing %d: %v", listingID, err)
+			}
+
+			// Записываем результаты для ответа
+			if results[listingID] == nil {
+				results[listingID] = make(map[string]string)
+			}
+			results[listingID][targetLang] = "translated"
+			listingSuccess = true
+		}
+
+		if listingSuccess {
+			successCount++
+		} else {
+			failedCount++
+		}
+	}
+
+	// Фиксируем транзакцию в БД
+	if err = tx.Commit(); err != nil {
+		log.Printf("Error committing transaction: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to commit transaction")
+	}
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"message":        fmt.Sprintf("Successfully translated %d listings. Failed: %d", successCount, failedCount),
+		"cost":           totalCost,
+		"transaction_id": transactionID,
+		"results":        results,
+	})
 }
 
 func (h *MarketplaceHandler) DeleteListing(c *fiber.Ctx) error {
@@ -844,9 +846,49 @@ func (h *MarketplaceHandler) DeleteListing(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
 	}
 
+	// Получаем объявление с изображениями до удаления
+	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+	if err != nil {
+		if err.Error() == "listing not found" {
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching listing")
+	}
+
+	// Проверяем права доступа
+	if listing.UserID != userID {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "You don't have permission to delete this listing")
+	}
+
+	// Сохраняем пути к изображениям
+	var imagePaths []string
+	if listing.Images != nil {
+		for _, img := range listing.Images {
+			if img.FilePath != "" {
+				imagePaths = append(imagePaths, img.FilePath)
+			}
+		}
+	}
+
+	// Удаляем объявление
 	err = h.marketplaceService.DeleteListing(c.Context(), listingID, userID)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error deleting listing")
+	}
+
+	// Удаляем файлы изображений с диска
+	for _, path := range imagePaths {
+		filePath := fmt.Sprintf("./uploads/%s", path)
+		if err := os.Remove(filePath); err != nil {
+			log.Printf("Error removing image file %s: %v", filePath, err)
+		} else {
+			log.Printf("Successfully removed image file: %s", filePath)
+		}
+	}
+
+	// Удаляем из индекса OpenSearch
+	if err := h.marketplaceService.Storage().DeleteListingIndex(c.Context(), fmt.Sprintf("%d", listingID)); err != nil {
+		log.Printf("Error removing listing from search index: %v", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
@@ -1004,14 +1046,20 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
     }
     
     // Теперь, когда у нас есть координаты, проверяем параметр distance
-    if params.Distance != "" {
-        if params.Latitude == 0 && params.Longitude == 0 {
-            log.Printf("Сброс параметра distance (%s) из-за отсутствия координат", params.Distance)
+    if params.Distance != "" && params.Latitude != 0 && params.Longitude != 0 {
+        log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)", 
+               params.Distance, params.Latitude, params.Longitude)
+        
+        // Проверить наличие индекса перед установкой координат
+        if err := h.marketplaceService.Storage().PrepareIndex(c.Context()); err != nil {
+            log.Printf("Ошибка проверки индекса: %v", err)
+            // Но продолжаем выполнение, просто не используем гео-поиск
             params.Distance = ""
-        } else {
-            log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)", 
-                   params.Distance, params.Latitude, params.Longitude)
         }
+    } else if params.Distance != "" {
+        log.Printf("Параметр distance указан (%s), но координаты отсутствуют или равны нулю (%.6f, %.6f). "+
+              "Параметр distance будет проигнорирован.", 
+              params.Distance, params.Latitude, params.Longitude)
     }
     
     log.Printf("Полученный поисковый запрос: %s", params.Query)
@@ -1103,7 +1151,6 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
         },
     })
 }
-
 
 // GetSuggestions возвращает предложения автодополнения
 func (h *MarketplaceHandler) GetSuggestions(c *fiber.Ctx) error {

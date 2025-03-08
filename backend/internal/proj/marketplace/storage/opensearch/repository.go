@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -389,10 +390,33 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	}
 
 	// Добавляем координаты, если они есть
-	if listing.Latitude != nil && listing.Longitude != nil {
+	if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
+		// Создаем объект с полями lat и lon для geo_point
 		doc["coordinates"] = map[string]interface{}{
 			"lat": *listing.Latitude,
 			"lon": *listing.Longitude,
+		}
+
+		log.Printf("Добавлены координаты для листинга %d: lat=%f, lon=%f",
+			listing.ID, *listing.Latitude, *listing.Longitude)
+	} else {
+		// Если координаты отсутствуют, но есть город, попробуем геокодировать
+		if listing.City != "" {
+			geocoded, err := r.geocodeCity(listing.City, listing.Country)
+			if err == nil && geocoded != nil {
+				// Добавляем найденные координаты
+				doc["coordinates"] = map[string]interface{}{
+					"lat": geocoded.Lat,
+					"lon": geocoded.Lon,
+				}
+				log.Printf("Добавлены геокодированные координаты для листинга %d (город %s): lat=%f, lon=%f",
+					listing.ID, listing.City, geocoded.Lat, geocoded.Lon)
+			} else {
+				log.Printf("Не удалось геокодировать город %s для листинга %d: %v",
+					listing.City, listing.ID, err)
+			}
+		} else {
+			log.Printf("У листинга %d нет координат и не указан город", listing.ID)
 		}
 	}
 
@@ -401,7 +425,6 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		doc["storefront_id"] = *listing.StorefrontID
 	}
 
-	// Добавляем путь категорий, если есть
 	// Добавляем путь категорий, если есть
 	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
 		doc["category_path_ids"] = listing.CategoryPathIds
@@ -447,66 +470,128 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		}
 	}
 
-// Добавляем изображения, если есть
-if listing.Images != nil && len(listing.Images) > 0 {
-    log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
-    imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
-    
-    for i, img := range listing.Images {
-        // Логирование деталей каждого изображения для отладки
-        log.Printf("  Изображение %d: ID=%d, Путь=%s, IsMain=%v", 
-            i+1, img.ID, img.FilePath, img.IsMain)
-        
-        imagesDoc = append(imagesDoc, map[string]interface{}{
-            "id":        img.ID,
-            "file_path": img.FilePath,
-            "is_main":   img.IsMain,
-        })
-    }
-    
-    // Проверяем, что у нас есть хотя бы одно изображение с указанным путем
-    hasValidImage := false
-    for _, img := range imagesDoc {
-        if path, ok := img["file_path"].(string); ok && path != "" {
-            hasValidImage = true
-            break
-        }
-    }
-    
-    if hasValidImage {
-        doc["images"] = imagesDoc
-        log.Printf("  Добавлено %d изображений в индекс", len(imagesDoc))
-    } else {
-        log.Printf("  ВНИМАНИЕ: У объявления %d нет изображений с корректным путем", listing.ID)
-    }
-} else {
-    // Пытаемся загрузить изображения из базы данных, если их нет в объекте
-    images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
-    if err != nil {
-        log.Printf("  Ошибка при загрузке изображений для объявления %d: %v", listing.ID, err)
-    } else if len(images) > 0 {
-        log.Printf("  Загружено %d изображений из базы данных для объявления %d", len(images), listing.ID)
-        
-        imagesDoc := make([]map[string]interface{}, 0, len(images))
-        for i, img := range images {
-            log.Printf("    Изображение %d: ID=%d, Путь=%s, IsMain=%v", 
-                i+1, img.ID, img.FilePath, img.IsMain)
-            
-            imagesDoc = append(imagesDoc, map[string]interface{}{
-                "id":        img.ID,
-                "file_path": img.FilePath,
-                "is_main":   img.IsMain,
-            })
-        }
-        
-        doc["images"] = imagesDoc
-        log.Printf("  Добавлено %d изображений из базы данных в индекс", len(imagesDoc))
-    } else {
-        log.Printf("  Объявление %d не имеет изображений", listing.ID)
-    }
-}
+	// Добавляем изображения, если есть
+	if listing.Images != nil && len(listing.Images) > 0 {
+		log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
+		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
+
+		for i, img := range listing.Images {
+			// Логирование деталей каждого изображения для отладки
+			log.Printf("  Изображение %d: ID=%d, Путь=%s, IsMain=%v",
+				i+1, img.ID, img.FilePath, img.IsMain)
+
+			imagesDoc = append(imagesDoc, map[string]interface{}{
+				"id":        img.ID,
+				"file_path": img.FilePath,
+				"is_main":   img.IsMain,
+			})
+		}
+
+		// Проверяем, что у нас есть хотя бы одно изображение с указанным путем
+		hasValidImage := false
+		for _, img := range imagesDoc {
+			if path, ok := img["file_path"].(string); ok && path != "" {
+				hasValidImage = true
+				break
+			}
+		}
+
+		if hasValidImage {
+			doc["images"] = imagesDoc
+			log.Printf("  Добавлено %d изображений в индекс", len(imagesDoc))
+		} else {
+			log.Printf("  ВНИМАНИЕ: У объявления %d нет изображений с корректным путем", listing.ID)
+		}
+	} else {
+		// Пытаемся загрузить изображения из базы данных, если их нет в объекте
+		images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
+		if err != nil {
+			log.Printf("  Ошибка при загрузке изображений для объявления %d: %v", listing.ID, err)
+		} else if len(images) > 0 {
+			log.Printf("  Загружено %d изображений из базы данных для объявления %d", len(images), listing.ID)
+
+			imagesDoc := make([]map[string]interface{}, 0, len(images))
+			for i, img := range images {
+				log.Printf("    Изображение %d: ID=%d, Путь=%s, IsMain=%v",
+					i+1, img.ID, img.FilePath, img.IsMain)
+
+				imagesDoc = append(imagesDoc, map[string]interface{}{
+					"id":        img.ID,
+					"file_path": img.FilePath,
+					"is_main":   img.IsMain,
+				})
+			}
+
+			doc["images"] = imagesDoc
+			log.Printf("  Добавлено %d изображений из базы данных в индекс", len(imagesDoc))
+		} else {
+			log.Printf("  Объявление %d не имеет изображений", listing.ID)
+		}
+	}
 
 	return doc
+}
+
+// geocodeCity получает координаты города
+func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float64 }, error) {
+	// Формируем запрос для геокодирования
+	query := city
+	if country != "" {
+		query += ", " + country
+	}
+
+	// Используем OSM Nominatim API для получения координат
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	url := fmt.Sprintf(
+		"https://nominatim.openstreetmap.org/search?format=json&q=%s&limit=1",
+		url.QueryEscape(query),
+	)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// OSM требует User-Agent
+	req.Header.Set("User-Agent", "HostelBookingSystem/1.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("неверный статус ответа: %d", resp.StatusCode)
+	}
+
+	var results []struct {
+		Lat string `json:"lat"`
+		Lon string `json:"lon"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return nil, fmt.Errorf("город не найден")
+	}
+
+	lat, err := strconv.ParseFloat(results[0].Lat, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	lon, err := strconv.ParseFloat(results[0].Lon, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	return &struct{ Lat, Lon float64 }{lat, lon}, nil
 }
 
 // buildSearchQuery создает поисковый запрос OpenSearch

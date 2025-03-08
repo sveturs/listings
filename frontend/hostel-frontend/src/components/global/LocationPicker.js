@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+// frontend/hostel-frontend/src/components/global/LocationPicker.js
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import {
     Box,
@@ -8,9 +9,15 @@ import {
     InputAdornment,
     IconButton,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    List,
+    ListItem,
+    ListItemText,
+    Collapse,
+    CircularProgress
 } from '@mui/material';
-import { Search as SearchIcon, MyLocation as MyLocationIcon } from '@mui/icons-material';
+import { Search as SearchIcon, MyLocation as MyLocationIcon, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
+import axios from '../../api/axios';
 import 'leaflet/dist/leaflet.css';
 import '../maps/leaflet-icons'; // Импортируем файл с фиксом иконок
 
@@ -22,13 +29,37 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-// Эта функция больше не нужна при использовании прямого API Leaflet
-// удаляем MapEventHandler, так как он был для react-leaflet
-
 // Компонент для геокодирования (поиск адреса по координатам)
 const reverseGeocode = async (lat, lng) => {
     try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
+        // Сначала пробуем использовать наш собственный API
+        try {
+            const response = await axios.get(`/api/v1/geocode/reverse`, {
+                params: { lat, lon: lng }
+            });
+            
+            if (response.data && response.data.data) {
+                const data = response.data.data;
+                return {
+                    formatted_address: `${data.city}, ${data.country}`,
+                    address_components: {
+                        city: data.city || '',
+                        country: data.country || '',
+                    },
+                    latitude: lat,
+                    longitude: lng
+                };
+            }
+        } catch (err) {
+            console.log('Ошибка нашего API геокодирования, используем OSM:', err);
+        }
+        
+        // В случае ошибки используем Nominatim OSM
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`, {
+            headers: {
+                'User-Agent': 'HostelBookingApp/1.0'
+            }
+        });
         const data = await response.json();
         
         if (data && data.display_name) {
@@ -40,7 +71,9 @@ const reverseGeocode = async (lat, lng) => {
                     state: data.address.state || '',
                     country: data.address.country || '',
                     postal_code: data.address.postcode || ''
-                }
+                },
+                latitude: lat,
+                longitude: lng
             };
         }
         return null;
@@ -50,31 +83,57 @@ const reverseGeocode = async (lat, lng) => {
     }
 };
 
-// Компонент для поиска адреса
+// Компонент для поиска адреса с автодополнением
 const searchAddress = async (query) => {
     try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+        // Сначала используем наш API для поиска городов
+        try {
+            const response = await axios.get('/api/v1/cities/suggest', {
+                params: { q: query, limit: 5 }
+            });
+            
+            if (response.data && response.data.data && response.data.data.length > 0) {
+                const results = response.data.data.map(item => ({
+                    latitude: item.lat,
+                    longitude: item.lon,
+                    formatted_address: `${item.city}, ${item.country}`,
+                    address_components: {
+                        city: item.city || '',
+                        country: item.country || '',
+                    }
+                }));
+                
+                return results;
+            }
+        } catch (error) {
+            console.log('Ошибка API поиска городов, используем OSM:', error);
+        }
+        
+        // В случае ошибки используем Nominatim OSM
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`, {
+            headers: {
+                'User-Agent': 'HostelBookingApp/1.0'
+            }
+        });
         const data = await response.json();
         
         if (data && data.length > 0) {
-            const place = data[0];
-            return {
+            return data.map(place => ({
                 latitude: parseFloat(place.lat),
                 longitude: parseFloat(place.lon),
                 formatted_address: place.display_name,
                 address_components: {
-                    street: '',
-                    city: '',
-                    state: '',
-                    country: '',
-                    postal_code: ''
+                    city: place.address?.city || place.address?.town || place.address?.village || '',
+                    state: place.address?.state || '',
+                    country: place.address?.country || '',
+                    postal_code: place.address?.postcode || ''
                 }
-            };
+            }));
         }
-        return null;
+        return [];
     } catch (error) {
         console.error("Error searching address:", error);
-        return null;
+        return [];
     }
 };
 
@@ -84,6 +143,9 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
 
     const [marker, setMarker] = useState(null);
     const [address, setAddress] = useState('');
+    const [addressSuggestions, setAddressSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [searching, setSearching] = useState(false);
     const [center, setCenter] = useState({
         lat: initialLocation?.latitude || 45.2671,
         lng: initialLocation?.longitude || 19.8335
@@ -95,6 +157,8 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
     const leafletMapRef = useRef(null);
     // Реф для хранения маркера
     const markerRef = useRef(null);
+    // Таймер для задержки поиска
+    const searchTimer = useRef(null);
 
     // Устанавливаем начальный маркер, если есть initialLocation
     useEffect(() => {
@@ -180,47 +244,97 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
         }
     };
 
-    // Обработчик поиска адреса
+    // Обработчик изменения адреса с автодополнением
+    const handleAddressChange = (e) => {
+        const value = e.target.value;
+        setAddress(value);
+        
+        // Очищаем предыдущий таймер
+        if (searchTimer.current) {
+            clearTimeout(searchTimer.current);
+        }
+        
+        // Если строка поиска пустая, очищаем подсказки
+        if (!value.trim()) {
+            setAddressSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+        
+        // Устанавливаем таймер для поиска
+        searchTimer.current = setTimeout(async () => {
+            setSearching(true);
+            const suggestions = await searchAddress(value);
+            setAddressSuggestions(suggestions);
+            setShowSuggestions(suggestions.length > 0);
+            setSearching(false);
+        }, 500); // задержка 500мс
+    };
+
+    // Обработчик выбора адреса из подсказок
+    const handleSelectSuggestion = (suggestion) => {
+        setAddress(suggestion.formatted_address);
+        setShowSuggestions(false);
+        
+        const { latitude, longitude } = suggestion;
+        
+        setMarker({
+            lat: latitude,
+            lng: longitude
+        });
+        
+        setCenter({
+            lat: latitude,
+            lng: longitude
+        });
+        
+        if (leafletMapRef.current) {
+            leafletMapRef.current.setView([latitude, longitude], 15);
+            
+            // Удаляем предыдущий маркер, если он существует
+            if (markerRef.current) {
+                leafletMapRef.current.removeLayer(markerRef.current);
+            }
+            
+            // Создаем новый маркер
+            markerRef.current = L.marker([latitude, longitude], { draggable: true })
+                .addTo(leafletMapRef.current)
+                .on('dragend', function(event) {
+                    const marker = event.target;
+                    handleMarkerDragEnd({ target: marker });
+                });
+        }
+        
+        // Передаем информацию о местоположении родительскому компоненту
+        onLocationSelect({
+            latitude,
+            longitude,
+            formatted_address: suggestion.formatted_address,
+            address_components: suggestion.address_components
+        });
+    };
+
+    // Обработчик ручного поиска адреса (по нажатию на кнопку или Enter)
     const handleSearch = async () => {
         if (!address) return;
         
-        const result = await searchAddress(address);
-        if (result) {
-            setMarker({
-                lat: result.latitude,
-                lng: result.longitude
-            });
-            
-            setCenter({
-                lat: result.latitude,
-                lng: result.longitude
-            });
-            
-            if (leafletMapRef.current) {
-                leafletMapRef.current.setView([result.latitude, result.longitude], 17);
-                
-                // Удаляем предыдущий маркер, если он существует
-                if (markerRef.current) {
-                    leafletMapRef.current.removeLayer(markerRef.current);
-                }
-                
-                // Создаем новый маркер
-                markerRef.current = L.marker([result.latitude, result.longitude], { draggable: true })
-                    .addTo(leafletMapRef.current)
-                    .on('dragend', function(event) {
-                        const marker = event.target;
-                        handleMarkerDragEnd({ target: marker });
-                    });
-            }
-            
-            setAddress(result.formatted_address);
-            
-            // Передаем информацию о местоположении родительскому компоненту
+        setSearching(true);
+        const suggestions = await searchAddress(address);
+        setSearching(false);
+        
+        // Если найдены результаты, используем первый
+        if (suggestions && suggestions.length > 0) {
+            const suggestion = suggestions[0];
+            handleSelectSuggestion(suggestion);
+        } else {
+            // Если нет результатов, сохраняем адрес без координат
             onLocationSelect({
-                latitude: result.latitude,
-                longitude: result.longitude,
-                formatted_address: result.formatted_address,
-                address_components: result.address_components
+                formatted_address: address,
+                address_components: {
+                    // Пытаемся разбить адрес на город и страну
+                    city: address.split(',')[0]?.trim() || '',
+                    country: address.split(',')[1]?.trim() || ''
+                }
             });
         }
     };
@@ -243,7 +357,7 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
                     });
                     
                     if (leafletMapRef.current) {
-                        leafletMapRef.current.setView([latitude, longitude], 17);
+                        leafletMapRef.current.setView([latitude, longitude], 15);
                         
                         // Удаляем предыдущий маркер, если он существует
                         if (markerRef.current) {
@@ -314,24 +428,33 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
             <Typography variant={isMobile ? "subtitle1" : "h6"} gutterBottom>
                 Местоположение объекта
             </Typography>
-            <Box sx={{ mb: isMobile ? 1 : 2 }}>
+            <Box sx={{ mb: isMobile ? 1 : 2, position: 'relative' }}>
                 <TextField
                     id="location-search"
                     fullWidth
                     placeholder="Поиск по адресу..."
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={handleAddressChange}
                     onKeyPress={(e) => {
                         if (e.key === 'Enter') {
                             handleSearch();
                         }
                     }}
+                    onFocus={() => setShowSuggestions(addressSuggestions.length > 0)}
+                    onBlur={() => {
+                        // Задержка перед скрытием, чтобы успеть выбрать элемент при клике
+                        setTimeout(() => setShowSuggestions(false), 200);
+                    }}
                     size={isMobile ? "small" : "medium"}
+                    autoComplete="off"
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
                                 <IconButton onClick={handleSearch}>
-                                    <SearchIcon fontSize={isMobile ? "small" : "medium"} />
+                                    {searching ? 
+                                        <CircularProgress size={18} /> : 
+                                        <SearchIcon fontSize={isMobile ? "small" : "medium"} />
+                                    }
                                 </IconButton>
                             </InputAdornment>
                         ),
@@ -348,6 +471,37 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
                         )
                     }}
                 />
+                
+                {/* Выпадающий список подсказок */}
+                <Collapse in={showSuggestions}>
+                    <Paper 
+                        sx={{ 
+                            position: 'absolute', 
+                            top: '100%', 
+                            left: 0, 
+                            right: 0, 
+                            zIndex: 1000,
+                            maxHeight: 200,
+                            overflowY: 'auto',
+                            mt: 0.5
+                        }}
+                        elevation={3}
+                    >
+                        <List dense>
+                            {addressSuggestions.map((suggestion, index) => (
+                                <ListItem 
+                                    button 
+                                    key={index} 
+                                    onClick={() => handleSelectSuggestion(suggestion)}
+                                >
+                                    <ListItemText 
+                                        primary={suggestion.formatted_address} 
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Paper>
+                </Collapse>
             </Box>
             
             <Box sx={{ height: '400px', width: '100%' }}>

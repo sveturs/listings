@@ -178,10 +178,20 @@ const ListingMapping = `
         "type": "geo_point"
       },
       "city": {
-        "type": "keyword"
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
       },
       "country": {
-        "type": "keyword"
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
       },
       "views_count": {
         "type": "integer"

@@ -12,6 +12,11 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"encoding/json"
+	"net/http"
+	"net/url"
+	"strings"
+
 )
 
 type MarketplaceService struct {
@@ -90,7 +95,6 @@ func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*model
 	return s.storage.GetListingByID(ctx, id)
 }
 
-// GetCategorySuggestions возвращает предложения категорий на основе поискового запроса
 // GetCategorySuggestions возвращает предложения категорий на основе поискового запроса
 func (s *MarketplaceService) GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error) {
 	log.Printf("Запрос предложений категорий: '%s'", query)
@@ -272,7 +276,7 @@ func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation 
 	return err
 }
 
-
+// Исправленная версия функции SearchListingsAdvanced
 func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
     log.Printf("Запрос поиска с параметрами: %+v", params)
     // Преобразуем параметры для OpenSearch
@@ -283,7 +287,16 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
         Aggregations: params.Aggregations,
         Language:     params.Language,
     }
-    log.Printf("Преобразованные параметры поиска: %+v", osParams)
+    
+    // Устанавливаем необязательные параметры нечеткого поиска, если они указаны
+    if params.MinimumShouldMatch != "" {
+        osParams.MinimumShouldMatch = params.MinimumShouldMatch
+    }
+    
+    if params.Fuzziness != "" {
+        osParams.Fuzziness = params.Fuzziness
+    }
+    
     // Добавляем фильтры
     if params.CategoryID != "" {
         categoryID, err := strconv.Atoi(params.CategoryID)
@@ -325,33 +338,128 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
         osParams.SortDirection = params.SortDirection
     }
 
-    // Добавляем геолокацию - ИСПРАВЛЯЕМ ЭТУ ЧАСТЬ
-    // Проверяем, что координаты не нулевые и параметр distance указан
-    if params.Distance != "" && params.Latitude != 0 && params.Longitude != 0 {
+    // Добавляем геолокацию
+    var geoSearchEnabled bool
+    
+    // Проверяем наличие координат для геопоиска
+    if params.Latitude != 0 && params.Longitude != 0 && params.Distance != "" {
         log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)", 
-               params.Distance, params.Latitude, params.Longitude)
+                params.Distance, params.Latitude, params.Longitude)
         
         osParams.Location = &search.GeoLocation{
             Lat: params.Latitude,
             Lon: params.Longitude,
         }
         osParams.Distance = params.Distance
-    } else if params.Distance != "" {
-        log.Printf("Параметр distance указан (%s), но координаты отсутствуют или равны нулю (%.6f, %.6f). "+
-              "Параметр distance будет проигнорирован.", 
-              params.Distance, params.Latitude, params.Longitude)
+        geoSearchEnabled = true
+    } else if (params.City != "" || params.Country != "") && params.Distance != "" {
+        // Если координаты не указаны, но указан город/страна и расстояние,
+        // попробуем получить координаты города
+        log.Printf("Попытка определить координаты для города: %s, страна: %s", 
+                params.City, params.Country)
+        
+        // Формируем запрос для геокодирования
+        query := params.City
+        if params.Country != "" {
+            query += ", " + params.Country
+        }
+        
+        // Используем OSM для получения координат города
+        // В реальном коде лучше реализовать отдельный сервис и кэширование результатов
+        geoResult, err := s.geocodeAddress(ctx, query)
+        if err == nil && geoResult != nil {
+            log.Printf("Получены координаты для города: %s (%.6f, %.6f)", 
+                    query, geoResult.Lat, geoResult.Lon)
+            
+            osParams.Location = &search.GeoLocation{
+                Lat: geoResult.Lat,
+                Lon: geoResult.Lon,
+            }
+            osParams.Distance = params.Distance
+            geoSearchEnabled = true
+        } else {
+            log.Printf("Не удалось получить координаты для города: %s, ошибка: %v", 
+                    query, err)
+        }
     }
 
     // Выполняем поиск
     log.Printf("Отправляем запрос в OpenSearch: %+v", osParams)
-    osResult, err := s.storage.SearchListingsOpenSearch(ctx, osParams)
+    var osResult *search.SearchResult
+    var err error
+    
+    if geoSearchEnabled {
+        // Если геопоиск возможен, пробуем его
+        osResult, err = s.storage.SearchListingsOpenSearch(ctx, osParams)
+        
+        if err != nil {
+            log.Printf("Ошибка геопоиска в OpenSearch: %v", err)
+            
+            // Если ошибка связана с geo_distance, выполняем обычный поиск без геопараметров
+            if strings.Contains(err.Error(), "geo") {
+                log.Printf("Проблема с geo-поиском, выполняем запрос без геопараметров")
+                osParams.Location = nil
+                osParams.Distance = ""
+                
+                osResult, err = s.storage.SearchListingsOpenSearch(ctx, osParams)
+            }
+        }
+    } else {
+        // Обычный поиск без геопараметров
+        osResult, err = s.storage.SearchListingsOpenSearch(ctx, osParams)
+    }
+    
     if err != nil {
         log.Printf("Ошибка поиска в OpenSearch: %v", err)
-        return nil, fmt.Errorf("ошибка поиска: %w", err)
+        
+        // Если поиск в OpenSearch не удался, используем стандартный поиск через БД
+        filters := map[string]string{
+            "category_id":   params.CategoryID,
+            "condition":     params.Condition,
+            "city":          params.City,
+            "country":       params.Country,
+            "storefront_id": params.StorefrontID,
+            "sort_by":       params.Sort,
+        }
+
+        // Добавляем числовые фильтры, если они указаны
+        if params.PriceMin > 0 {
+            filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
+        }
+        if params.PriceMax > 0 {
+            filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
+        }
+
+        // Добавляем текстовый поиск
+        if params.Query != "" {
+            filters["query"] = params.Query
+        }
+
+        // Пробуем получить обычным методом
+        listings, total, err := s.GetListings(ctx, filters, params.Size, (params.Page-1)*params.Size)
+        if err != nil {
+            log.Printf("Ошибка стандартного поиска: %v", err)
+            return nil, fmt.Errorf("ошибка поиска: %w", err)
+        }
+        
+        // Преобразуем результаты
+        listingPtrs := make([]*models.MarketplaceListing, len(listings))
+        for i := range listings {
+            listingPtrs[i] = &listings[i]
+        }
+        
+        // Формируем такой же результат, как от OpenSearch
+        result := &search.ServiceResult{
+            Items:      listingPtrs,
+            Total:      int(total),
+            Page:       params.Page,
+            Size:       params.Size,
+            TotalPages: (int(total) + params.Size - 1) / params.Size,
+        }
+        
+        return result, nil
     }
 
-    log.Printf("Получен ответ из OpenSearch: найдено %d результатов", osResult.Total)
-    
     // Преобразуем результат
     result := &search.ServiceResult{
         Items:      osResult.Listings,
@@ -368,10 +476,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
         fuzzyParams := *osParams
 
         // Изменяем параметры для более нечеткого поиска
-        // Используем существующие поля структуры SearchParams
-        // minimum_should_match параметр в запросе
         fuzzyParams.MinimumShouldMatch = "50%" 
-        // Увеличиваем fuzziness
         fuzzyParams.Fuzziness = "2"
 
         // Повторяем поиск с новыми параметрами
@@ -427,6 +532,11 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
             // Если найдены предложения, добавляем их в результат
             if len(suggestions) > 0 {
                 result.Suggestions = suggestions
+                
+                // Возможно, добавить наилучшее предложение как исправление опечатки
+                if len(result.Items) == 0 {
+                    result.SpellingSuggestion = suggestions[0]
+                }
             }
         }
     }
@@ -434,7 +544,68 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
     return result, nil
 }
 
+// geocodeAddress получает координаты по адресу/городу
+func (s *MarketplaceService) geocodeAddress(ctx context.Context, address string) (*search.GeoLocation, error) {
+    // Проверка кэша для ускорения работы
+    // TODO: Реализовать кэширование
 
+    // Используем OSM Nominatim для геокодирования
+    // В реальном приложении лучше использовать платное API или создать свою БД городов
+    client := &http.Client{
+        Timeout: 5 * time.Second,
+    }
+    
+    url := fmt.Sprintf(
+        "https://nominatim.openstreetmap.org/search?format=json&q=%s&limit=1",
+        url.QueryEscape(address),
+    )
+    
+    req, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+        return nil, err
+    }
+    
+    // OSM требует User-Agent
+    req.Header.Set("User-Agent", "HostelBookingSystem/1.0")
+    
+    resp, err := client.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    
+    if resp.StatusCode != http.StatusOK {
+        return nil, fmt.Errorf("неверный статус ответа: %d", resp.StatusCode)
+    }
+    
+    var results []struct {
+        Lat string `json:"lat"`
+        Lon string `json:"lon"`
+    }
+    
+    if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+        return nil, err
+    }
+    
+    if len(results) == 0 {
+        return nil, fmt.Errorf("адрес не найден")
+    }
+    
+    lat, err := strconv.ParseFloat(results[0].Lat, 64)
+    if err != nil {
+        return nil, err
+    }
+    
+    lon, err := strconv.ParseFloat(results[0].Lon, 64)
+    if err != nil {
+        return nil, err
+    }
+    
+    return &search.GeoLocation{
+        Lat: lat,
+        Lon: lon,
+    }, nil
+}
 
 // GetSuggestions возвращает предложения автодополнения
 func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error) {

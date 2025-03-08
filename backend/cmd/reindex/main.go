@@ -1,3 +1,4 @@
+// backend/cmd/reindex/main.go
 package main
 
 import (

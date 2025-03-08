@@ -109,7 +109,8 @@ type Storage interface {
 	ReindexAllListings(ctx context.Context) error
 	IndexListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListingIndex(ctx context.Context, id string) error
-
+	PrepareIndex(ctx context.Context) error
+	
 	// Import History methods
 	CreateImportHistory(ctx context.Context, history *models.ImportHistory) (int, error)
 	GetImportHistory(ctx context.Context, sourceID int, limit, offset int) ([]models.ImportHistory, error)

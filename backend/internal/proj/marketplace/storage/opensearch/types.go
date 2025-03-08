@@ -4,28 +4,6 @@ import (
     "backend/internal/domain/models"
 )
 
-// SearchParams параметры поиска
-type SearchParams struct {
-    Query         string            // Текст поиска
-    CategoryID    *int              // ID категории
-    PriceMin      *float64          // Минимальная цена
-    PriceMax      *float64          // Максимальная цена
-    Condition     string            // Состояние (новое, б/у)
-    City          string            // Город
-    Country       string            // Страна
-    StorefrontID  *int              // ID витрины
-    Sort          string            // Поле сортировки
-    SortDirection string            // Направление сортировки (asc, desc)
-    Location      *GeoLocation      // Координаты для геопоиска
-    Distance      string            // Радиус поиска (5km, 10km, ...)
-    Page          int               // Номер страницы
-    Size          int               // Размер страницы
-    Aggregations  []string          // Запрашиваемые агрегации
-    Language      string            // Язык для поиска
-	    FuzzyMinMatch string		// Минимальное количество совпадений для исправления опечаток
-		FuzzyLevel    string		// Уровень исправления опечаток
-		
-}
 
 // GeoLocation координаты для геопоиска
 type GeoLocation struct {

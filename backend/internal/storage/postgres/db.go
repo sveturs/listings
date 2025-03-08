@@ -3,15 +3,15 @@ package postgres
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/domain/search"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	"backend/internal/storage"
 	"backend/internal/types"
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
-    "backend/internal/domain/search"
 	"log"
+	"os"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -21,19 +21,21 @@ import (
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
 	reviewStorage "backend/internal/proj/reviews/storage/postgres"
 	userStorage "backend/internal/proj/users/storage/postgres"
-	
- 
+
+	"backend/internal/proj/marketplace/storage/opensearch"
 	osClient "backend/internal/storage/opensearch"
- 	"backend/internal/proj/marketplace/storage/opensearch"
 )
 
 type Database struct {
-	pool              *pgxpool.Pool
-	marketplaceDB     *marketplaceStorage.Storage
+	pool          *pgxpool.Pool
+	marketplaceDB *marketplaceStorage.Storage
+
 	reviewDB          *reviewStorage.Storage
 	usersDB           *userStorage.Storage
 	notificationsDB   *notificationStorage.Storage
 	osMarketplaceRepo opensearch.MarketplaceSearchRepository
+	db                *sql.DB
+	marketplaceIndex  string
 }
 
 func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string) (*Database, error) {
@@ -55,7 +57,7 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 		usersDB:         userStorage.NewStorage(pool),
 		notificationsDB: notificationStorage.NewNotificationStorage(pool),
 	}
-	
+
 	// Инициализируем репозиторий OpenSearch, если клиент передан
 	if osClient != nil {
 		db.osMarketplaceRepo = opensearch.NewRepository(osClient, indexName, db)
@@ -76,42 +78,51 @@ func (db *Database) Close() {
 	}
 }
 func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-    if db.osMarketplaceRepo == nil {
-        return nil, fmt.Errorf("OpenSearch не настроен")
-    }
-    
-    return db.osMarketplaceRepo.SearchListings(ctx, params)
+	if db.osMarketplaceRepo == nil {
+		return nil, fmt.Errorf("OpenSearch не настроен")
+	}
+
+	return db.osMarketplaceRepo.SearchListings(ctx, params)
 }
 func (db *Database) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
-    if db.osMarketplaceRepo == nil {
-        return fmt.Errorf("OpenSearch не настроен")
-    }
-    
-    return db.osMarketplaceRepo.IndexListing(ctx, listing)
-}
+	if db.osMarketplaceRepo == nil {
+		return fmt.Errorf("OpenSearch не настроен")
+	}
 
-func (db *Database) DeleteListingIndex(ctx context.Context, id string) error {
+	return db.osMarketplaceRepo.IndexListing(ctx, listing)
+}
+func (db *Database) PrepareIndex(ctx context.Context) error {
     if db.osMarketplaceRepo == nil {
-        return fmt.Errorf("OpenSearch не настроен")
+        // Если репозиторий OpenSearch не инициализирован, просто возвращаем nil
+        // Поиск будет работать без OpenSearch
+        return nil
     }
-    
-    return db.osMarketplaceRepo.DeleteListing(ctx, id)
+
+    // Используем уже инициализированный репозиторий для проверки индекса
+    return db.osMarketplaceRepo.PrepareIndex(ctx)
+}
+func (db *Database) DeleteListingIndex(ctx context.Context, id string) error {
+	if db.osMarketplaceRepo == nil {
+		return fmt.Errorf("OpenSearch не настроен")
+	}
+
+	return db.osMarketplaceRepo.DeleteListing(ctx, id)
 }
 
 func (db *Database) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-    if db.osMarketplaceRepo == nil {
-        return nil, fmt.Errorf("OpenSearch не настроен")
-    }
-    
-    return db.osMarketplaceRepo.SuggestListings(ctx, prefix, size)
+	if db.osMarketplaceRepo == nil {
+		return nil, fmt.Errorf("OpenSearch не настроен")
+	}
+
+	return db.osMarketplaceRepo.SuggestListings(ctx, prefix, size)
 }
 
 func (db *Database) ReindexAllListings(ctx context.Context) error {
-    if db.osMarketplaceRepo == nil {
-        return fmt.Errorf("OpenSearch не настроен")
-    }
-    
-    return db.osMarketplaceRepo.ReindexAll(ctx)
+	if db.osMarketplaceRepo == nil {
+		return fmt.Errorf("OpenSearch не настроен")
+	}
+
+	return db.osMarketplaceRepo.ReindexAll(ctx)
 }
 
 func (db *Database) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
