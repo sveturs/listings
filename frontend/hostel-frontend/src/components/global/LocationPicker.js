@@ -186,8 +186,31 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
                 lng: initialLocation.longitude
             });
             
+            setCenter({
+                lat: initialLocation.latitude,
+                lng: initialLocation.longitude
+            });
+            
             if (initialLocation.formatted_address) {
                 setAddress(initialLocation.formatted_address);
+            }
+            
+            // Если карта уже инициализирована, обновляем её вид
+            if (leafletMapRef.current) {
+                leafletMapRef.current.setView([initialLocation.latitude, initialLocation.longitude], 13);
+                
+                // Удаляем предыдущий маркер, если он существует
+                if (markerRef.current) {
+                    leafletMapRef.current.removeLayer(markerRef.current);
+                }
+                
+                // Создаем новый маркер
+                markerRef.current = L.marker([initialLocation.latitude, initialLocation.longitude], { draggable: true })
+                    .addTo(leafletMapRef.current)
+                    .on('dragend', function(event) {
+                        const marker = event.target;
+                        handleMarkerDragEnd({ target: marker });
+                    });
             }
         }
     }, [initialLocation]);

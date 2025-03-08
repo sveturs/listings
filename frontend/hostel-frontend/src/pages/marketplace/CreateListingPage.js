@@ -31,12 +31,13 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import ImageUploader from '../../components/marketplace/ImageUploader';
 import CategorySelect from '../../components/marketplace/CategorySelect';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { useLocation } from '../../contexts/LocationContext';
 
 const CreateListing = () => {
-    const { t, i18n } = useTranslation('marketplace'); 
+    const { t, i18n } = useTranslation('marketplace');
     const theme = useTheme();
-     const { language } = useLanguage();
-
+    const { language } = useLanguage();
+    const { userLocation } = useLocation();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const navigate = useNavigate();
 
@@ -80,6 +81,37 @@ const CreateListing = () => {
         // Если перевода нет, возвращаем оригинал
         return listing[field];
     };
+
+    useEffect(() => {
+        // Если у нас есть данные о местоположении пользователя, используем их
+        if (userLocation && userLocation.lat && userLocation.lon) {
+            // Создаем объект местоположения для LocationPicker
+            const initialLocation = {
+                latitude: userLocation.lat,
+                longitude: userLocation.lon,
+                formatted_address: userLocation.city ?
+                    `${userLocation.city}, ${userLocation.country || 'Serbia'}` :
+                    'Your location',
+                address_components: {
+                    city: userLocation.city || '',
+                    country: userLocation.country || 'Serbia'
+                }
+            };
+
+            // Устанавливаем местоположение в состояние компонента
+            setListing(prev => ({
+                ...prev,
+                latitude: userLocation.lat,
+                longitude: userLocation.lon,
+                location: initialLocation.formatted_address,
+                city: userLocation.city || '',
+                country: userLocation.country || 'Serbia'
+            }));
+
+            console.log("Установлено начальное местоположение из контекста:", initialLocation);
+        }
+    }, [userLocation]);
+
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -133,7 +165,7 @@ const CreateListing = () => {
             city: location.address_components?.city || '',
             country: location.address_components?.country || ''
         }));
-        
+
         // Проверяем наличие координат и показываем предупреждение, если их нет
         setLocationWarning(!location.latitude || !location.longitude);
     };
@@ -354,7 +386,18 @@ const CreateListing = () => {
 
                             <Grid item xs={12}>
                                 <Box sx={{ mb: 1 }}>
-                                    <LocationPicker onLocationSelect={handleLocationSelect} />
+                                    <LocationPicker
+                                        onLocationSelect={handleLocationSelect}
+                                        initialLocation={{
+                                            latitude: listing.latitude,
+                                            longitude: listing.longitude,
+                                            formatted_address: listing.location,
+                                            address_components: {
+                                                city: listing.city,
+                                                country: listing.country
+                                            }
+                                        }}
+                                    />
                                 </Box>
 
                                 <FormControlLabel
