@@ -1,4 +1,4 @@
--- Добавление оставшихся категорий на русском языке
+-- Добавление категорий на русском языке
 INSERT INTO marketplace_categories (id, name, slug, parent_id, icon, created_at) VALUES
 (1000, 'Недвижимость', 'real-estate', NULL, 'home', '2025-02-07 07:13:52.823283'),
     -- Недвижимость подкатегории 1000
