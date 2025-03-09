@@ -37,7 +37,8 @@ type Server struct {
 	balance       *balanceHandler.Handler
 	payments      paymentService.PaymentServiceInterface
 	storefront    *storefrontHandler.Handler
-    geocode       *geocodeHandler.GeocodeHandler }
+	geocode       *geocodeHandler.GeocodeHandler
+}
 
 // Обновить функцию NewServer:
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -79,7 +80,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	balanceHandler := balanceHandler.NewHandler(services)
 	storefrontHandler := storefrontHandler.NewHandler(services)
 	middleware := middleware.NewMiddleware(cfg, services)
-    geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
+	geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
@@ -101,8 +102,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		balance:       balanceHandler,
 		storefront:    storefrontHandler,
 		payments:      services.Payment(),
-		geocode: geocodeHandler,
-
+		geocode:       geocodeHandler,
 	}
 
 	// Инициализируем webhooks для телеграма
@@ -273,6 +273,19 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Put("/translations/:id", s.marketplace.Marketplace.UpdateTranslations)
 	marketplaceProtected.Post("/translations/batch", s.marketplace.Marketplace.BatchTranslateListings)
 
+	// Автомобильные маршруты
+	auto := s.app.Group("/api/v1/auto")
+	auto.Get("/constants", s.marketplace.Auto.GetAutoConstants)
+	auto.Get("/brands", s.marketplace.Auto.GetAvailableBrands)
+	auto.Get("/models", s.marketplace.Auto.GetModelsByBrand)
+	auto.Get("/category", s.marketplace.Auto.IsAutoCategory)
+	auto.Get("/listings", s.marketplace.Auto.GetAutoListings)
+	auto.Get("/listings/:id", s.marketplace.Auto.GetAutoListingByID)
+
+	// Защищенные автомобильные маршруты
+	autoProtected := api.Group("/auto")
+	autoProtected.Post("/listings", s.marketplace.Auto.CreateAutoListing)
+	autoProtected.Put("/listings/:id", s.marketplace.Auto.UpdateAutoListing)
 	// Административный маршрут для переиндексации
 
 	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)

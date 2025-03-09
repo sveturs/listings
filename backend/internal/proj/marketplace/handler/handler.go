@@ -7,11 +7,13 @@ import (
 type Handler struct {
     Marketplace *MarketplaceHandler
     Chat       *ChatHandler
+    Auto       *AutoHandler
 }
 
 func NewHandler(services globalService.ServicesInterface) *Handler {
     return &Handler{
         Marketplace: NewMarketplaceHandler(services),
         Chat:       NewChatHandler(services),
+        Auto:       NewAutoHandler(services),
     }
 }

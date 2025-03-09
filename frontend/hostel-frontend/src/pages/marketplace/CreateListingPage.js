@@ -32,6 +32,7 @@ import ImageUploader from '../../components/marketplace/ImageUploader';
 import CategorySelect from '../../components/marketplace/CategorySelect';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useLocation } from '../../contexts/LocationContext';
+import AutoPropertiesForm from '../../components/marketplace/AutoPropertiesForm';
 
 const CreateListing = () => {
     const { t, i18n } = useTranslation('marketplace');
@@ -55,7 +56,23 @@ const CreateListing = () => {
         original_language: 'sr',
         longitude: null
     });
-
+    const [autoProperties, setAutoProperties] = useState({
+        brand: "",
+        model: "",
+        year: "",
+        mileage: "",
+        fuel_type: "",
+        transmission: "",
+        engine_capacity: "",
+        power: "",
+        color: "",
+        body_type: "",
+        drive_type: "",
+        number_of_doors: "",
+        number_of_seats: "",
+        additional_features: ""
+    });
+    const [isAutoCategory, setIsAutoCategory] = useState(false);
     const [images, setImages] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -63,6 +80,54 @@ const CreateListing = () => {
     const [success, setSuccess] = useState(false);
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const [locationWarning, setLocationWarning] = useState(false);
+    const checkAutoCategory = async (categoryId) => {
+        console.log(`Проверка категории ${categoryId} на принадлежность к авто`);
+    
+        if (!categoryId) {
+            setIsAutoCategory(false);
+            return;
+        }
+    
+        // Жесткая проверка на известные автомобильные категории
+        const autoRootCategory = 2000;
+        const autoCategoriesIds = [2000, 2100, 2200, 2210, 2220, 2230, 2240, 2300, 2310, 2315, 2320, 2325, 2330, 2335, 2340, 2345, 2350, 2355, 2360, 2365];
+        
+        if (autoCategoriesIds.includes(Number(categoryId))) {
+            console.log(`Категория ${categoryId} является автомобильной (локальная проверка)`);
+            setIsAutoCategory(true);
+            return;
+        }
+        
+        // Проверяем, является ли категория потомком автомобильной категории
+        // Для этого нужно узнать родительскую категорию текущей категории
+        const categoryPath = categories.find(cat => cat.id === Number(categoryId))?.path;
+        if (categoryPath && categoryPath.includes(`/${autoRootCategory}/`)) {
+            console.log(`Категория ${categoryId} является потомком автомобильной категории`);
+            setIsAutoCategory(true);
+            return;
+        }
+        
+        // Если не можем определить локально, делаем запрос
+        try {
+            console.log(`Отправка запроса на сервер для проверки категории ${categoryId}`);
+            const response = await axios.get(`/api/v1/auto/category?category_id=${categoryId}`);
+            console.log(`Ответ сервера:`, response.data);
+    
+            // Дополнительная проверка ответа
+            if (response.data && response.data.data && 
+                typeof response.data.data.is_auto === 'boolean') {
+                setIsAutoCategory(response.data.data.is_auto);
+                console.log(`Категория ${categoryId} ${response.data.data.is_auto ? 'является' : 'не является'} автомобильной (серверная проверка)`);
+            } else {
+                console.log(`Получен неожиданный формат ответа, устанавливаем isAutoCategory = false`);
+                setIsAutoCategory(false);
+            }
+        } catch (err) {
+            console.error('Ошибка проверки категории:', err);
+            setIsAutoCategory(false);
+        }
+    };
+
     const getTranslatedText = (field) => {
         if (!listing) return '';
 
@@ -80,6 +145,15 @@ const CreateListing = () => {
 
         // Если перевода нет, возвращаем оригинал
         return listing[field];
+    };
+    const handleCategoryChange = (categoryId) => {
+        setListing(prev => ({
+            ...prev,
+            category_id: categoryId
+        }));
+
+        // Проверяем, является ли категория автомобильной
+        checkAutoCategory(categoryId);
     };
 
     useEffect(() => {
@@ -103,12 +177,13 @@ const CreateListing = () => {
                 ...prev,
                 latitude: userLocation.lat,
                 longitude: userLocation.lon,
-                location: initialLocation.formatted_address,
+                location: userLocation.city ?
+                    `${userLocation.city}, ${userLocation.country || 'Serbia'}` :
+                    'Your location',
                 city: userLocation.city || '',
                 country: userLocation.country || 'Serbia'
             }));
 
-            console.log("Установлено начальное местоположение из контекста:", initialLocation);
         }
     }, [userLocation]);
 
@@ -181,9 +256,23 @@ const CreateListing = () => {
                 price: parseFloat(listing.price),
                 original_language: i18n.language // Устанавливаем текущий язык интерфейса как язык оригинала
             };
-            const response = await axios.post("/api/v1/marketplace/listings", listingData);
-            const listingId = response.data.data.id;
 
+            let listingId;
+
+            // Если это автомобильная категория, используем специальный API
+            if (isAutoCategory) {
+                const response = await axios.post("/api/v1/auto/listings", {
+                    listing: listingData,
+                    auto_properties: autoProperties
+                });
+                listingId = response.data.data.id;
+            } else {
+                // Используем обычный API для обычных объявлений
+                const response = await axios.post("/api/v1/marketplace/listings", listingData);
+                listingId = response.data.data.id;
+            }
+
+            // Загрузка изображений
             if (images.length > 0) {
                 const formData = new FormData();
                 images.forEach((image, index) => {
@@ -201,6 +290,8 @@ const CreateListing = () => {
             }
 
             setSuccess(true);
+
+            // Сброс состояний
             setListing({
                 title: "",
                 description: "",
@@ -213,8 +304,26 @@ const CreateListing = () => {
                 latitude: null,
                 longitude: null,
                 show_on_map: true,
-                original_language: 'sr'
+                original_language: i18n.language
             });
+
+            setAutoProperties({
+                brand: "",
+                model: "",
+                year: "",
+                mileage: "",
+                fuel_type: "",
+                transmission: "",
+                engine_capacity: "",
+                power: "",
+                color: "",
+                body_type: "",
+                drive_type: "",
+                number_of_doors: "",
+                number_of_seats: "",
+                additional_features: ""
+            });
+
             setImages([]);
             setPreviewUrls([]);
 
@@ -268,7 +377,7 @@ const CreateListing = () => {
                                     <CategorySelect
                                         categories={categories}
                                         value={listing.category_id}
-                                        onChange={(value) => setListing({ ...listing, category_id: value })}
+                                        onChange={handleCategoryChange}
                                         error={!listing.category_id}
                                     />
                                 </FormControl>
@@ -384,10 +493,29 @@ const CreateListing = () => {
                                 </FormControl>
                             </Grid>
 
+                            {/* Добавляем форму автомобильных свойств, если выбрана автомобильная категория */}
+                            {isAutoCategory && (
+                                <Grid item xs={12}>
+                                    <AutoPropertiesForm
+                                        values={autoProperties}
+                                        onChange={setAutoProperties}
+                                    />
+                                </Grid>
+                            )}
+
                             <Grid item xs={12}>
                                 <Box sx={{ mb: 1 }}>
                                     <LocationPicker
-                                        onLocationSelect={handleLocationSelect}
+                                        onLocationSelect={(location) => {
+                                            setListing(prev => ({
+                                                ...prev,
+                                                latitude: location.latitude,
+                                                longitude: location.longitude,
+                                                location: location.formatted_address,
+                                                city: location.address_components?.city || '',
+                                                country: location.address_components?.country || ''
+                                            }));
+                                        }}
                                         initialLocation={{
                                             latitude: listing.latitude,
                                             longitude: listing.longitude,
@@ -423,7 +551,14 @@ const CreateListing = () => {
                                     color="primary"
                                     fullWidth
                                     size={isMobile ? "large" : "large"}
-                                    disabled={!listing.title || !listing.description || !listing.category_id || listing.price <= 0}
+                                    disabled={
+                                        !listing.title ||
+                                        !listing.description ||
+                                        !listing.category_id ||
+                                        listing.price <= 0 ||
+                                        // Добавляем проверку обязательных полей для автомобилей
+                                        (isAutoCategory && (!autoProperties.brand || !autoProperties.model || !autoProperties.year))
+                                    }
                                 >
                                     {t('listings.create.submit')}
                                 </Button>

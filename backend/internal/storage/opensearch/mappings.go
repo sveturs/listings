@@ -193,6 +193,57 @@ const ListingMapping = `
           }
         }
       },
+      "auto_brand": {
+        "type": "keyword",
+        "fields": {
+          "text": {
+            "type": "text",
+            "analyzer": "default_analyzer"
+          }
+        }
+      },
+      "auto_model": {
+        "type": "keyword",
+        "fields": {
+          "text": {
+            "type": "text",
+            "analyzer": "default_analyzer"
+          }
+        }
+      },
+      "auto_year": {
+        "type": "integer"
+      },
+      "auto_mileage": {
+        "type": "integer"
+      },
+      "auto_fuel_type": {
+        "type": "keyword"
+      },
+      "auto_transmission": {
+        "type": "keyword"
+      },
+      "auto_body_type": {
+        "type": "keyword"
+      },
+      "auto_drive_type": {
+        "type": "keyword"
+      },
+      "auto_engine_capacity": {
+        "type": "float"
+      },
+      "auto_power": {
+        "type": "integer"
+      },
+      "auto_color": {
+        "type": "keyword"
+      },
+      "auto_number_of_doors": {
+        "type": "integer"
+      },
+      "auto_number_of_seats": {
+        "type": "integer"
+      },
       "views_count": {
         "type": "integer"
       },

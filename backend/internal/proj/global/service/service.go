@@ -78,7 +78,6 @@ func (s *Service) Balance() balance.BalanceServiceInterface {
 	return s.balance
 }
 
-// Остальные методы интерфейса ServicesInterface
 func (s *Service) Auth() userService.AuthServiceInterface {
 	return s.users.Auth
 }
@@ -109,4 +108,7 @@ func (s *Service) Notification() notificationService.NotificationServiceInterfac
 
 func (s *Service) Translation() translationService.TranslationServiceInterface {
 	return s.translation
+}
+func (s *Service) Auto() marketplaceService.AutoServiceInterface {
+    return s.marketplace.Auto
 }

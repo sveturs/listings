@@ -6,16 +6,17 @@ import (
 	"backend/internal/domain/search"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	"backend/internal/storage"
+	osClient "backend/internal/storage/opensearch"
 	"backend/internal/types"
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
-	"os"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"log"
+	"os"
+	"time"
 
 	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
@@ -23,7 +24,6 @@ import (
 	userStorage "backend/internal/proj/users/storage/postgres"
 
 	"backend/internal/proj/marketplace/storage/opensearch"
-	osClient "backend/internal/storage/opensearch"
 )
 
 type Database struct {
@@ -85,21 +85,114 @@ func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search
 	return db.osMarketplaceRepo.SearchListings(ctx, params)
 }
 func (db *Database) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	if db.osMarketplaceRepo == nil {
-		return fmt.Errorf("OpenSearch не настроен")
-	}
-
-	return db.osMarketplaceRepo.IndexListing(ctx, listing)
-}
-func (db *Database) PrepareIndex(ctx context.Context) error {
     if db.osMarketplaceRepo == nil {
-        // Если репозиторий OpenSearch не инициализирован, просто возвращаем nil
-        // Поиск будет работать без OpenSearch
-        return nil
+        return fmt.Errorf("OpenSearch не настроен")
     }
 
-    // Используем уже инициализированный репозиторий для проверки индекса
-    return db.osMarketplaceRepo.PrepareIndex(ctx)
+    // Проверяем, является ли это автомобильным объявлением
+    isAuto := false
+    
+    // Список ID автомобильных категорий
+    autoCategories := []int{2000, 2100, 2200, 2210, 2220, 2230, 2240, 2300, 2310, 2315, 2320, 2325, 2330, 2335, 2340, 2345, 2350, 2355, 2360, 2365}
+    
+    // Проверяем напрямую по списку
+    for _, id := range autoCategories {
+        if id == listing.CategoryID {
+            isAuto = true
+            break
+        }
+    }
+    
+    // Если не нашли в прямом списке, проверяем по дереву категорий
+    if !isAuto {
+        row := db.pool.QueryRow(ctx, `
+            WITH RECURSIVE category_tree AS (
+                -- Базовый случай: категория 2000 (Автомобили)
+                SELECT id, parent_id FROM marketplace_categories WHERE id = 2000
+                UNION ALL
+                -- Рекурсивный случай: все дочерние категории
+                SELECT c.id, c.parent_id
+                FROM marketplace_categories c
+                JOIN category_tree ct ON c.parent_id = ct.id
+            )
+            SELECT EXISTS(SELECT 1 FROM category_tree WHERE id = $1)
+        `, listing.CategoryID)
+
+        err := row.Scan(&isAuto)
+        if err != nil {
+            log.Printf("Ошибка при проверке автомобильной категории: %v", err)
+            // Продолжаем стандартную индексацию
+        }
+    }
+
+    // Если это автомобильное объявление, добавляем автомобильные свойства
+    if isAuto {
+        autoProps, err := db.GetAutoPropertiesByListingID(ctx, listing.ID)
+        if err == nil && autoProps != nil {
+            // Создаем расширенный документ с автосвойствами
+            doc := map[string]interface{}{
+                "id":                listing.ID,
+                "title":             listing.Title,
+                "description":       listing.Description,
+                "price":             listing.Price,
+                "condition":         listing.Condition,
+                "status":            listing.Status,
+                "category_id":       listing.CategoryID,
+                "user_id":           listing.UserID,
+                "original_language": listing.OriginalLanguage,
+                "created_at":        listing.CreatedAt.Format(time.RFC3339),
+                "updated_at":        listing.UpdatedAt.Format(time.RFC3339),
+
+                // Автомобильные свойства
+                "auto_brand":           autoProps.Brand,
+                "auto_model":           autoProps.Model,
+                "auto_year":            autoProps.Year,
+                "auto_mileage":         autoProps.Mileage,
+                "auto_fuel_type":       autoProps.FuelType,
+                "auto_transmission":    autoProps.Transmission,
+                "auto_body_type":       autoProps.BodyType,
+                "auto_drive_type":      autoProps.DriveType,
+                "auto_engine_capacity": autoProps.EngineCapacity,
+                "auto_power":           autoProps.Power,
+                "auto_color":           autoProps.Color,
+                "auto_number_of_doors": autoProps.NumberOfDoors,
+                "auto_number_of_seats": autoProps.NumberOfSeats,
+            }
+
+            // Индексируем обогащенный документ напрямую через клиент OpenSearch
+            if db.osMarketplaceRepo != nil {
+                if client, err := db.getOpenSearchClient(); err == nil && client != nil {
+                    // Если можем получить клиент напрямую
+                    err = client.IndexDocument(db.marketplaceIndex, fmt.Sprintf("%d", listing.ID), doc)
+                    if err != nil {
+                        log.Printf("Ошибка при индексации автомобильного объявления напрямую: %v", err)
+                    } else {
+                        // Успешно индексировали напрямую
+                        return nil
+                    }
+                }
+            }
+        }
+    }
+
+    // Стандартная индексация через репозиторий
+    return db.osMarketplaceRepo.IndexListing(ctx, listing)
+}
+
+// Вспомогательный метод для получения клиента OpenSearch
+func (db *Database) getOpenSearchClient() (*osClient.OpenSearchClient, error) {
+	// В данном случае у нас нет прямого доступа к клиенту
+	return nil, fmt.Errorf("not implemented")
+}
+func (db *Database) PrepareIndex(ctx context.Context) error {
+	if db.osMarketplaceRepo == nil {
+		// Если репозиторий OpenSearch не инициализирован, просто возвращаем nil
+		// Поиск будет работать без OpenSearch
+		return nil
+	}
+
+	// Используем уже инициализированный репозиторий для проверки индекса
+	return db.osMarketplaceRepo.PrepareIndex(ctx)
 }
 func (db *Database) DeleteListingIndex(ctx context.Context, id string) error {
 	if db.osMarketplaceRepo == nil {
@@ -115,14 +208,6 @@ func (db *Database) SuggestListings(ctx context.Context, prefix string, size int
 	}
 
 	return db.osMarketplaceRepo.SuggestListings(ctx, prefix, size)
-}
-
-func (db *Database) ReindexAllListings(ctx context.Context) error {
-	if db.osMarketplaceRepo == nil {
-		return fmt.Errorf("OpenSearch не настроен")
-	}
-
-	return db.osMarketplaceRepo.ReindexAll(ctx)
 }
 
 func (db *Database) GetSession(ctx context.Context, token string) (*types.SessionData, error) {

@@ -1,7 +1,8 @@
 // frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
-import React, { useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import AutocompleteInput from '../shared/AutocompleteInput';
+import AutoFilters from './AutoFilters';
 import { Search, X, Map } from 'lucide-react';
 import {
     Paper,
@@ -23,11 +24,12 @@ import {
 } from '@mui/material';
 import { useLocation } from '../../contexts/LocationContext';
 import VirtualizedCategoryTree from './VirtualizedCategoryTree';
+import axios from '../../api/axios';
 
 const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId, onToggleMapView }) => {
     const { t } = useTranslation('marketplace', 'common');
     const { userLocation, detectUserLocation } = useLocation();
-
+    const [isAutoCategory, setIsAutoCategory] = useState(false);
     const handleCategorySelect = useCallback((id) => {
         console.log(`MarketplaceFilters: Выбрана категория с ID: ${id}`);
 
@@ -75,6 +77,42 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
     }, [filters.distance, userLocation]);
 
     const isDistanceWithoutCoordinates = filters.distance && (!userLocation?.lat || !userLocation?.lon);
+
+    useEffect(() => {
+        const checkAutoCategory = async () => {
+            if (!selectedCategoryId) {
+                setIsAutoCategory(false);
+                return;
+            }
+
+            // Жесткая проверка на известные автомобильные категории
+            const autoRootCategory = 2000;
+            const autoCategoriesIds = [2000, 2100, 2200, 2210, 2220, 2230, 2240, 2300, 2310, 2315, 2320, 2325, 2330, 2335, 2340, 2345, 2350, 2355, 2360, 2365];
+
+            if (autoCategoriesIds.includes(Number(selectedCategoryId))) {
+                console.log(`Категория ${selectedCategoryId} является автомобильной (локальная проверка в фильтрах)`);
+                setIsAutoCategory(true);
+                return;
+            }
+
+            // Если категория не в известном списке, выполняем серверную проверку
+            try {
+                const response = await axios.get(`/api/v1/auto/category?category_id=${selectedCategoryId}`);
+                if (response.data && response.data.data) {
+                    setIsAutoCategory(response.data.data.is_auto);
+                    console.log(`Категория ${selectedCategoryId} ${response.data.data.is_auto ? 'является' : 'не является'} автомобильной (серверная проверка в фильтрах)`);
+                } else {
+                    console.log(`Получен неожиданный формат ответа, устанавливаем isAutoCategory = false`);
+                    setIsAutoCategory(false);
+                }
+            } catch (err) {
+                console.error('Ошибка проверки категории в фильтрах:', err);
+                setIsAutoCategory(false);
+            }
+        };
+
+        checkAutoCategory();
+    }, [selectedCategoryId]);
     return (
         <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Поиск с автодополнением */}
@@ -117,7 +155,12 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
             )}
 
             <Divider sx={{ my: 1 }} />
-
+            {isAutoCategory && (
+                <AutoFilters
+                    filters={filters}
+                    onFilterChange={onFilterChange}
+                />
+            )}
             {/* Основные фильтры */}
             <Box sx={{ p: 2, overflowY: 'auto' }}>
                 <Typography variant="subtitle1" gutterBottom>{t('listings.filters.title')}</Typography>
@@ -198,7 +241,12 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                     </Box>
                 </Stack>
             </Box>
-
+            {isAutoCategory && (
+                <AutoFilters
+                    filters={filters}
+                    onFilterChange={onFilterChange}
+                />
+            )}
             {/* Категории */}
             <Box sx={{
                 flex: 1,

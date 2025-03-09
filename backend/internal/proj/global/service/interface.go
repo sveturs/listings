@@ -14,6 +14,7 @@ import (
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage" 
 	geocodeService "backend/internal/proj/geocode/service" 
+	autoService "backend/internal/proj/marketplace/service" 
 )
 
 type ServicesInterface interface {
@@ -30,6 +31,7 @@ type ServicesInterface interface {
 	Storefront() storefrontService.StorefrontServiceInterface
 	Storage() storage.Storage 
 	Geocode() geocodeService.GeocodeServiceInterface
+	Auto() autoService.AutoServiceInterface 
 
 
 }

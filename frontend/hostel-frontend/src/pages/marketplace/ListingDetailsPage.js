@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { Store } from 'lucide-react';
 import GalleryViewer from '../../components/shared/GalleryViewer';
 import UserRating from '../../components/user/UserRating';
+import AutoDetails from '../../components/marketplace/AutoDetails';
 
 import {
     MapPin,
@@ -53,7 +54,11 @@ const ListingDetailsPage = () => {
     const [isMapExpanded, setIsMapExpanded] = useState(false);
     const [categories, setCategories] = useState([]);
     const [galleryOpen, setGalleryOpen] = useState(false);
+    const [isAutoCategory, setIsAutoCategory] = useState(false);
+    const [autoProperties, setAutoProperties] = useState(null);
+    const [seller, setSeller] = useState(null);
 
+    
     const findCategoryPath = useCallback((categoryId, categoriesTree) => {
         const path = [];
 
@@ -85,7 +90,39 @@ const ListingDetailsPage = () => {
         findPath(categoryId, categoriesTree);
         return path;
     }, []);
-
+    const checkAutoCategory = async (categoryId) => {
+        console.log(`Проверка категории ${categoryId} на принадлежность к авто`);
+        
+        if (!categoryId) {
+            setIsAutoCategory(false);
+            return;
+        }
+    
+        // Проверка жестко заданных категорий автомобилей
+        const autoCategories = [2000, 2100]; // Список ID автомобильных категорий
+        if (autoCategories.includes(Number(categoryId))) {
+            console.log(`Категория ${categoryId} является автомобильной (локальная проверка)`);
+            setIsAutoCategory(true);
+            return;
+        }
+    
+        try {
+            console.log(`Отправка запроса на сервер для проверки категории ${categoryId}`);
+            const response = await axios.get(`/api/v1/auto/category?category_id=${categoryId}`);
+            console.log(`Ответ сервера:`, response.data);
+            
+            if (response.data && response.data.data) {
+                setIsAutoCategory(response.data.data.is_auto);
+                console.log(`Категория ${categoryId} ${response.data.data.is_auto ? 'является' : 'не является'} автомобильной (серверная проверка)`);
+            } else {
+                console.log(`Получен неожиданный формат ответа, устанавливаем isAutoCategory = false`);
+                setIsAutoCategory(false);
+            }
+        } catch (err) {
+            console.error('Ошибка проверки категории:', err);
+            setIsAutoCategory(false);
+        }
+    };
     const getTranslatedText = (field) => {
         if (!listing || !field) return '';
 
@@ -131,7 +168,83 @@ const ListingDetailsPage = () => {
             setLoading(false);
         }
     }, [id, t]);
-
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+    
+            try {
+                // Получаем ID из URL
+                const listingId = id;
+    
+                // Предварительный запрос для проверки на тип категории
+                const previewResponse = await axios.get(`/api/v1/marketplace/listings/${listingId}`);
+                const categoryId = previewResponse.data.data?.category_id;
+                
+                // Проверяем, является ли категория автомобильной
+                await checkAutoCategory(categoryId);
+                
+                // В зависимости от типа категории, используем разный API
+                let listingResponse;
+                if (isAutoCategory) {
+                    listingResponse = await axios.get(`/api/v1/auto/listings/${listingId}`);
+                    if (listingResponse.data && listingResponse.data.data && listingResponse.data.data.auto_properties) {
+                        setAutoProperties(listingResponse.data.data.auto_properties);
+                    }
+                } else {
+                    listingResponse = await axios.get(`/api/v1/marketplace/listings/${listingId}`);
+                }
+    
+                const listingData = listingResponse.data.data;
+    
+                // Получаем информацию о продавце
+                let sellerData = null;
+                if (listingData.user) {
+                    sellerData = {
+                        id: listingData.user.id,
+                        name: listingData.user.name,
+                        email: listingData.user.email,
+                        pictureUrl: listingData.user.picture_url
+                    };
+                }
+    
+                // Применяем перевод, если есть
+                let title = listingData.title;
+                let description = listingData.description;
+    
+                if (i18n.language !== listingData.original_language && 
+                    listingData.translations && 
+                    listingData.translations[i18n.language]) {
+                    if (listingData.translations[i18n.language].title) {
+                        title = listingData.translations[i18n.language].title;
+                    }
+                    if (listingData.translations[i18n.language].description) {
+                        description = listingData.translations[i18n.language].description;
+                    }
+                }
+    
+                // Устанавливаем данные
+                setListing({
+                    ...listingData,
+                    title,
+                    description
+                });
+                setSeller(sellerData);
+                setLoading(false);
+    
+                // Увеличиваем счетчик просмотров
+                axios.post(`/api/v1/marketplace/listings/${listingId}/view`).catch(err => {
+                    console.error("Failed to increment view count:", err);
+                });
+                
+            } catch (err) {
+                console.error("Error fetching listing:", err);
+                setError("Failed to load listing details");
+                setLoading(false);
+            }
+        };
+    
+        fetchData();
+    }, [id, isAutoCategory, i18n.language]);
     // All useEffects grouped together
     useEffect(() => {
         const fetchCategories = async () => {
@@ -430,6 +543,9 @@ const ListingDetailsPage = () => {
                     <Box sx={{ mt: 4 }}>
                         <Typography variant="h4" gutterBottom>
                             {getTranslatedText('title')}
+                            {isAutoCategory && autoProperties && (
+    <AutoDetails autoProperties={autoProperties} />
+)}
                         </Typography>
 
                         <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
