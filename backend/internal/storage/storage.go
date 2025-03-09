@@ -3,7 +3,7 @@ package storage
 
 import (
 	"backend/internal/domain/models"
-	"backend/internal/domain/search"
+    "backend/internal/domain/search"
 	"backend/internal/types"
 	"context"
 	"database/sql"
@@ -110,7 +110,7 @@ type Storage interface {
 	IndexListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListingIndex(ctx context.Context, id string) error
 	PrepareIndex(ctx context.Context) error
-
+	
 	// Import History methods
 	CreateImportHistory(ctx context.Context, history *models.ImportHistory) (int, error)
 	GetImportHistory(ctx context.Context, sourceID int, limit, offset int) ([]models.ImportHistory, error)
@@ -119,29 +119,6 @@ type Storage interface {
 	// Database connection
 	Close()
 	Ping(ctx context.Context) error
-
-	
-	// Создание автомобильных свойств
-
-	CreateAutoProperties(ctx context.Context, props *models.AutoProperties) error
-
-	// Получение автомобильных свойств по ID объявления
-	GetAutoPropertiesByListingID(ctx context.Context, listingID int) (*models.AutoProperties, error)
-
-	// Обновление автомобильных свойств
-	UpdateAutoProperties(ctx context.Context, props *models.AutoProperties) error
-
-	// Удаление автомобильных свойств
-	DeleteAutoProperties(ctx context.Context, listingID int) error
-
-	// Получение списка автомобильных объявлений с фильтрацией
-	GetAutoListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.AutoListing, int64, error)
-
-	// Получение автомобильного объявления по ID
-	GetAutoListingByID(ctx context.Context, id int) (*models.AutoListing, error)
-
-	// Поиск автомобильных объявлений по расширенным фильтрам
-	SearchAutoListings(ctx context.Context, filters *models.AutoFilter, baseFilters map[string]string, limit int, offset int) ([]models.AutoListing, int64, error)
 }
 type Transaction interface {
 	Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error)

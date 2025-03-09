@@ -86,39 +86,8 @@ func (s *MarketplaceService) GetSubcategories(ctx context.Context, parentID stri
 	return s.storage.GetSubcategories(ctx, parentIDInt, limit, offset)
 }
 func (s *MarketplaceService) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-    // Проверяем, если категория связана с автомобилями
-    isAutoCategory := false
-    if categoryID, ok := filters["category_id"]; ok && categoryID != "" {
-        // Проверяем, является ли категория автомобильной
-        id, err := strconv.Atoi(categoryID)
-        if err == nil {
-            isAuto, _ := s.IsAutoCategory(ctx, id)
-            isAutoCategory = isAuto
-        }
-    }
-
-    // Получаем обычные объявления
-    listings, total, err := s.storage.GetListings(ctx, filters, limit, offset)
-    if err != nil {
-        return nil, 0, err
-    }
-
-    // Если фильтр не установлен по автомобильной категории, или нет фильтров категорий вообще, 
-    // добавляем автомобильные объявления к результатам
-    if !isAutoCategory && filters["category_id"] == "" {
-        autoListings, autoTotal, err := s.storage.GetAutoListings(ctx, filters, limit, offset)
-        if err == nil && len(autoListings) > 0 {
-            // Преобразуем автомобильные объявления в обычные
-            for _, autoListing := range autoListings {
-                listings = append(listings, autoListing.MarketplaceListing)
-            }
-            total += autoTotal
-        }
-    }
-
-    return listings, total, nil
+	return s.storage.GetListings(ctx, filters, limit, offset)
 }
-
 func (s *MarketplaceService) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	return s.storage.GetFavoritedUsers(ctx, listingID)
 }

@@ -104,8 +104,3 @@ go mod vendor
 
 go build -mod=vendor
 это даст возможность использовать локальные копии библиотеки
-
-
-
-backend/internal/storage/postgres/auto_properties.go
-в конце

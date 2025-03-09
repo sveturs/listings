@@ -93,16 +93,6 @@ const MarketplacePage = () => {
         condition: searchParams.get('condition') || '',
         sort_by: searchParams.get('sort_by') || 'date_desc',
         distance: searchParams.get('distance') || '',
-        brand: searchParams.get('brand') || '',
-        model: searchParams.get('model') || '',
-        year_from: searchParams.get('year_from') || '',
-        year_to: searchParams.get('year_to') || '',
-        fuel_type: searchParams.get('fuel_type') || '',
-        transmission: searchParams.get('transmission') || '',
-        body_type: searchParams.get('body_type') || '',
-        drive_type: searchParams.get('drive_type') || '',
-        mileage_from: searchParams.get('mileage_from') || '',
-        mileage_to: searchParams.get('mileage_to') || '',
     });
     const fetchListings = useCallback(async (currentFilters = {}) => {
         try {
@@ -118,8 +108,6 @@ const MarketplacePage = () => {
             setSpellingSuggestion(null);
 
             const params = {};
-
-            // Добавляем базовые фильтры
             Object.entries(currentFilters).forEach(([key, value]) => {
                 if (value !== '' && key !== 'city' && key !== 'country') {
                     if (key === 'query') {
@@ -130,29 +118,8 @@ const MarketplacePage = () => {
                 }
             });
 
-            // Проверяем, если установлена автомобильная категория
-            let isAuto = false;
-            if (currentFilters.category_id) {
-                try {
-                    const categoryResponse = await axios.get(`/api/v1/auto/category?category_id=${currentFilters.category_id}`);
-                    if (categoryResponse.data && categoryResponse.data.data) {
-                        isAuto = categoryResponse.data.data.is_auto;
-                    }
-                } catch (err) {
-                    console.error('Ошибка проверки категории:', err);
-                }
-            }
-
             console.log('Отправляем запрос:', params);
-
-            // Используем разные API в зависимости от типа категории
-            let response;
-            if (isAuto) {
-                response = await axios.get('/api/v1/auto/listings', { params });
-            } else {
-                response = await axios.get('/api/v1/marketplace/search', { params });
-            }
-
+            const response = await axios.get('/api/v1/marketplace/search', { params });
             console.log('Получен ответ API:', response.data);
 
             // Улучшенная обработка данных с дополнительными проверками
@@ -182,7 +149,7 @@ const MarketplacePage = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, []); // Пустой массив зависимостей, так как функция не зависит от внешних переменных
 
     // Добавляем ref для отслеживания последнего запроса
     const lastQueryRef = useRef('');
@@ -462,62 +429,48 @@ const MarketplacePage = () => {
     // Обработчик переключения режима просмотра (список/карта)
     const handleToggleMapView = useCallback(() => {
         const nextParams = new URLSearchParams(searchParams);
-
+      
         if (mapViewActive) {
-            // Переключаемся на список
-            nextParams.set('viewMode', 'list');
-            setMapViewActive(false);
+          // Переключаемся на список
+          nextParams.set('viewMode', 'list');
+          setMapViewActive(false);
         } else {
-            // Переключаемся на карту
-            nextParams.set('viewMode', 'map');
-            setMapViewActive(true);
-
-            // Используем координаты из userLocation, если они есть
-            if (userLocation) {
-                nextParams.set('latitude', userLocation.lat);
-                nextParams.set('longitude', userLocation.lon);
-                nextParams.set('distance', filters.distance || '5km');
-
-                // Обновляем состояние для MapView
-                setUserLocationState({
-                    latitude: userLocation.lat,
-                    longitude: userLocation.lon
-                });
-            }
-            // Если нет данных в userLocation, но есть в фильтрах
-            else if (filters.latitude && filters.longitude) {
-                nextParams.set('latitude', filters.latitude);
-                nextParams.set('longitude', filters.longitude);
-                nextParams.set('distance', filters.distance || '5km');
-            }
+          // Переключаемся на карту
+          nextParams.set('viewMode', 'map');
+          setMapViewActive(true);
+      
+          // Используем координаты из userLocation, если они есть
+          if (userLocation) {
+            nextParams.set('latitude', userLocation.lat);
+            nextParams.set('longitude', userLocation.lon);
+            nextParams.set('distance', filters.distance || '5km');
+            
+            // Обновляем состояние для MapView
+            setUserLocationState({
+              latitude: userLocation.lat,
+              longitude: userLocation.lon
+            });
+          }
+          // Если нет данных в userLocation, но есть в фильтрах
+          else if (filters.latitude && filters.longitude) {
+            nextParams.set('latitude', filters.latitude);
+            nextParams.set('longitude', filters.longitude);
+            nextParams.set('distance', filters.distance || '5km');
+          }
         }
-
+      
         setSearchParams(nextParams);
-    }, [mapViewActive, searchParams, setSearchParams, filters, userLocation]);
+      }, [mapViewActive, searchParams, setSearchParams, filters, userLocation]);
 
     const getActiveFiltersCount = () => {
-        const autoFilterKeys = [
-            'brand', 'model', 'year_from', 'year_to',
-            'fuel_type', 'transmission', 'body_type',
-            'drive_type', 'mileage_from', 'mileage_to'
-        ];
-        
         return Object.entries(filters).reduce((count, [key, value]) => {
-            if (key !== 'sort_by' && value !== '' && (
-                key === 'query' ||
-                key === 'category_id' ||
-                key === 'min_price' ||
-                key === 'max_price' ||
-                key === 'city' ||
-                key === 'country' ||
-                key === 'condition' ||
-                autoFilterKeys.includes(key)
-            )) {
+            if (key !== 'sort_by' && value !== '') {
                 return count + 1;
             }
             return count;
         }, 0);
     };
+
     // Добавьте эту функцию в MarketplacePage.js
     const resetAllFilters = () => {
         const nextParams = new URLSearchParams();
@@ -537,23 +490,13 @@ const MarketplacePage = () => {
             sort_by: "date_desc",
             distance: "",
             latitude: null,
-            longitude: null,
-            // Сбрасываем автомобильные фильтры
-            brand: "",
-            model: "",
-            year_from: "",
-            year_to: "",
-            fuel_type: "",
-            transmission: "",
-            body_type: "",
-            drive_type: "",
-            mileage_from: "",
-            mileage_to: ""
+            longitude: null
         };
 
         setFilters(defaultFilters);
         fetchListings({});
     };
+
     const renderContent = () => {
         if (loading) {
             return (

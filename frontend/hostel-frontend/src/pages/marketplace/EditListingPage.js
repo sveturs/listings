@@ -9,7 +9,6 @@ import MiniMap from '../../components/maps/MiniMap';
 import ImageUploader from '../../components/marketplace/ImageUploader';
 import FullscreenMap from '../../components/maps/FullscreenMap';
 import { Delete as DeleteIcon } from '@mui/icons-material';
-import AutoPropertiesForm from '../../components/marketplace/AutoPropertiesForm';
 import {
     Container,
     TextField,
@@ -51,23 +50,7 @@ const EditListingPage = () => {
         latitude: null,
         longitude: null
     });
-    const [autoProperties, setAutoProperties] = useState({
-        brand: "",
-        model: "",
-        year: "",
-        mileage: "",
-        fuel_type: "",
-        transmission: "",
-        engine_capacity: "",
-        power: "",
-        color: "",
-        body_type: "",
-        drive_type: "",
-        number_of_doors: "",
-        number_of_seats: "",
-        additional_features: ""
-    });
-    const [isAutoCategory, setIsAutoCategory] = useState(false);
+
     const [images, setImages] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -75,37 +58,6 @@ const EditListingPage = () => {
     const [success, setSuccess] = useState(false);
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const [loading, setLoading] = useState(true);
-    const checkAutoCategory = async (categoryId) => {
-        if (!categoryId) {
-            setIsAutoCategory(false);
-            return;
-        }
-
-        try {
-            const response = await axios.get(`/api/v1/auto/category?category_id=${categoryId}`);
-            if (response.data && response.data.data) {
-                setIsAutoCategory(response.data.data.is_auto);
-
-                // Если категория автомобильная, загружаем автомобильные свойства
-                if (response.data.data.is_auto) {
-                    try {
-                        const autoResponse = await axios.get(`/api/v1/auto/listings/${id}`);
-                        if (autoResponse.data && autoResponse.data.data && autoResponse.data.data.auto_properties) {
-                            setAutoProperties(autoResponse.data.data.auto_properties);
-                        }
-                    } catch (autoErr) {
-                        console.error('Ошибка загрузки автомобильных свойств:', autoErr);
-                    }
-                }
-            } else {
-                setIsAutoCategory(false);
-            }
-        } catch (err) {
-            console.error('Ошибка проверки категории:', err);
-            setIsAutoCategory(false);
-        }
-    };
-
 
     useEffect(() => {
         const fetchData = async () => {
@@ -121,9 +73,6 @@ const EditListingPage = () => {
                     navigate('/marketplace');
                     return;
                 }
-
-                // Проверяем, является ли категория автомобильной
-                await checkAutoCategory(listingData.category_id);
 
                 // Получаем текст на нужном языке
                 const title = i18n.language === listingData.original_language
@@ -149,11 +98,6 @@ const EditListingPage = () => {
                     longitude: listingData.longitude
                 });
 
-                // Загружаем автомобильные свойства, если они есть
-                if (listingData.auto_properties) {
-                    setAutoProperties(listingData.auto_properties);
-                }
-
                 if (listingData.images) {
                     setPreviewUrls(listingData.images.map(img =>
                         `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
@@ -171,7 +115,7 @@ const EditListingPage = () => {
         if (user?.id) {
             fetchData();
         }
-    }, [id, user, navigate, t, i18n.language]);
+    }, [id, user, navigate, t, i18n.language]); // Добавляем i18n.language в зависимости
 
     // Добавляем эффект для отслеживания изменения языка
     useEffect(() => {
@@ -245,25 +189,11 @@ const EditListingPage = () => {
 
         try {
             if (i18n.language === listing.original_language) {
-                // Если категория автомобильная, используем специальный API
-                if (isAutoCategory) {
-                    await axios.put(`/api/v1/auto/listings/${id}`, {
-                        listing: {
-                            ...listing,
-                            price: parseFloat(listing.price)
-                        },
-                        auto_properties: {
-                            ...autoProperties,
-                            listing_id: parseInt(id)
-                        }
-                    });
-                } else {
-                    // Для обычных объявлений используем стандартный API
-                    await axios.put(`/api/v1/marketplace/listings/${id}`, {
-                        ...listing,
-                        price: parseFloat(listing.price)
-                    });
-                }
+                // Сначала обновляем основные данные
+                await axios.put(`/api/v1/marketplace/listings/${id}`, {
+                    ...listing,
+                    price: parseFloat(listing.price)
+                });
 
                 // Отправляем новые изображения, если они есть
                 if (images.length > 0) {
@@ -399,14 +329,7 @@ const EditListingPage = () => {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            {isAutoCategory && (
-                                <Grid item xs={12}>
-                                    <AutoPropertiesForm
-                                        values={autoProperties}
-                                        onChange={setAutoProperties}
-                                    />
-                                </Grid>
-                            )}
+
                             <Grid item xs={12}>
                                 <Typography variant="h6" gutterBottom>
                                     {t('listings.edit.location.title')}
@@ -504,13 +427,7 @@ const EditListingPage = () => {
                                         color="primary"
                                         fullWidth
                                         size="large"
-                                        disabled={
-                                            !listing.title ||
-                                            !listing.description ||
-                                            !listing.category_id ||
-                                            listing.price <= 0 ||
-                                            (isAutoCategory && (!autoProperties.brand || !autoProperties.model || !autoProperties.year))
-                                        }
+                                        disabled={!listing.title || !listing.description || !listing.category_id || listing.price <= 0}
                                     >
                                         {t('listings.edit.saveChanges')}
                                     </Button>
