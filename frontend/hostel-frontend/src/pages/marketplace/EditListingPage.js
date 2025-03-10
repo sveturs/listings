@@ -191,7 +191,21 @@ const EditListingPage = () => {
             // Обеспечиваем правильный формат числовых значений
             if (attr.attribute_type === 'number' && attr.value !== undefined) {
                 // Преобразуем в число и убеждаемся, что оно сохранено в правильном поле
-                const numValue = parseFloat(attr.value);
+                let numValue;
+
+                // Обрабатываем дробные значения для объема двигателя
+                if (attr.attribute_name === 'engine_capacity') {
+                    // Для объема двигателя используем parseFloat для сохранения дробной части
+                    numValue = parseFloat(attr.value);
+                    // Округляем до одного знака после запятой
+                    if (!isNaN(numValue)) {
+                        numValue = Math.round(numValue * 10) / 10;
+                    }
+                } else {
+                    // Для других числовых полей по-прежнему используем parseFloat
+                    numValue = parseFloat(attr.value);
+                }
+
                 if (!isNaN(numValue)) {
                     newAttr.numeric_value = numValue;
                     // Если value строка, но представляет число, обновляем ее
@@ -204,6 +218,7 @@ const EditListingPage = () => {
             return newAttr;
         });
     };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -211,16 +226,16 @@ const EditListingPage = () => {
 
         try {
             const processedAttributes = prepareAttributesForSubmission(attributeValues);
-        
+
             const listingData = {
                 ...listing,
                 price: parseFloat(listing.price),
                 original_language: i18n.language,
                 attributes: processedAttributes
             };
-            
+
             console.log("Отправляемые атрибуты:", processedAttributes);
-            
+
             const response = await axios.post("/api/v1/marketplace/listings", listingData);
             const listingId = response.data.data.id;
             if (i18n.language === listing.original_language) {

@@ -214,7 +214,12 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
 
                 const min = options.min !== undefined ? options.min : 0;
                 const max = options.max !== undefined ? options.max : Number.MAX_SAFE_INTEGER;
-                const step = options.step || 1;
+
+                // Специальная обработка шага для объема двигателя
+                let step = options.step || 1;
+                if (attr.name === 'engine_capacity') {
+                    step = 0.1; // Обязательно меняем шаг на 0.1 для объема двигателя
+                }
 
                 // Определяем, нужен ли слайдер
                 // Для некоторых атрибутов слайдер не удобен
@@ -267,7 +272,13 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                             required={isRequired}
                             value={attrValue || ''}
                             onChange={(e) => handleAttributeChange(attr.id, parseFloat(e.target.value) || 0)}
-                            inputProps={{ min, max, step }}
+                            inputProps={{
+                                min,
+                                max,
+                                step,
+                                // Для объема двигателя позволяем дробные значения
+                                inputMode: attr.name === 'engine_capacity' ? 'decimal' : 'numeric'
+                            }}
                             InputProps={inputAdornment ? {
                                 endAdornment: (
                                     <InputAdornment position="end">
