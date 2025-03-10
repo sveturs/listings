@@ -192,7 +192,7 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced) // маршрут поиска
 	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)    // маршрут автодополнения
 	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
-
+    marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
 	// Public review routes
 	review := s.app.Group("/api/v1/reviews")
 	review.Get("/", s.review.Review.GetReviews)

@@ -1,5 +1,5 @@
 // frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
-import React, { useMemo, useEffect, useCallback } from 'react';
+import React, { useMemo, useEffect, useCallback, useState  } from 'react';
 import { useTranslation } from 'react-i18next';
 import AutocompleteInput from '../shared/AutocompleteInput';
 import { Search, X, Map } from 'lucide-react';
@@ -23,11 +23,12 @@ import {
 } from '@mui/material';
 import { useLocation } from '../../contexts/LocationContext';
 import VirtualizedCategoryTree from './VirtualizedCategoryTree';
-
+import AttributeFilters from './AttributeFilters';
+ 
 const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId, onToggleMapView }) => {
     const { t } = useTranslation('marketplace', 'common');
     const { userLocation, detectUserLocation } = useLocation();
-
+    const [attributeFilters, setAttributeFilters] = useState({});
     const handleCategorySelect = useCallback((id) => {
         console.log(`MarketplaceFilters: Выбрана категория с ID: ${id}`);
 
@@ -45,6 +46,27 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
         console.log("Поисковый запрос изменен на:", value);
         onFilterChange({ ...filters, query: value });
     }, [filters, onFilterChange]);
+    const handleFilterChange = useCallback((newFilters) => {
+        console.log(`MarketplaceFilters: Выбраны фильтры:`, newFilters);
+
+        // Вызываем onFilterChange, но с обновленными фильтрами
+        onFilterChange({
+            ...filters,
+            ...newFilters,
+            attributeFilters: attributeFilters // Добавляем фильтры атрибутов
+        });
+    }, [filters, onFilterChange, attributeFilters]);
+    const handleAttributeFilterChange = (newAttrFilters) => {
+        console.log("Новые значения фильтров атрибутов:", newAttrFilters);
+        
+        setAttributeFilters(newAttrFilters);
+        
+        // Вызываем основной обработчик фильтров с обновленными атрибутами
+        onFilterChange({
+            ...filters,
+            attributeFilters: newAttrFilters
+        });
+    };
     const handleDistanceChange = async (value) => {
         // Если выбрано расстояние, но нет координат, используем геолокацию
         if (value && (!filters.latitude || !filters.longitude)) {
@@ -198,7 +220,13 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                     </Box>
                 </Stack>
             </Box>
-
+            {selectedCategoryId && (
+                <AttributeFilters
+                    categoryId={selectedCategoryId}
+                    onFilterChange={handleAttributeFilterChange}
+                    filters={attributeFilters}
+                />
+            )}
             {/* Категории */}
             <Box sx={{
                 flex: 1,

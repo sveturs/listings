@@ -25,37 +25,38 @@ type User struct {
 }
 type TranslationMap map[string]map[string]string
 type MarketplaceListing struct {
-	ID                int                  `json:"id"`
-	UserID            int                  `json:"user_id"`
-	CategoryID        int                  `json:"category_id"`
-	Title             string               `json:"title"`
-	Description       string               `json:"description"`
-	Price             float64              `json:"price"`
-	Condition         string               `json:"condition"`
-	Status            string               `json:"status"`
-	Location          string               `json:"location"`
-	Latitude          *float64             `json:"latitude,omitempty"`
-	Longitude         *float64             `json:"longitude,omitempty"`
-	City              string               `json:"city"`
-	Country           string               `json:"country"`
-	ViewsCount        int                  `json:"views_count"`
-	CreatedAt         time.Time            `json:"created_at"`
-	UpdatedAt         time.Time            `json:"updated_at"`
-	Images            []MarketplaceImage   `json:"images,omitempty"`
-	User              *User                `json:"user,omitempty"`
-	Category          *MarketplaceCategory `json:"category,omitempty"`
-	HelpfulVotes      int                  `json:"helpful_votes"`
-	NotHelpfulVotes   int                  `json:"not_helpful_votes"`
-	IsFavorite        bool                 `json:"is_favorite"`
-	ShowOnMap         bool                 `json:"show_on_map"`
-	OriginalLanguage  string               `json:"original_language,omitempty"`
-	RawTranslations   interface{}          `json:"-"` // Для хранения "сырых" данных
-	Translations      TranslationMap       `json:"translations,omitempty"`
-	CategoryPathNames []string             `json:"category_path_names,omitempty"`
-	CategoryPathIds   []int                `json:"category_path_ids,omitempty"`
-	CategoryPathSlugs []string             `json:"category_path_slugs,omitempty"`
-	CategoryPath      []string             `json:"category_path,omitempty"`
-    StorefrontID      *int                 `json:"storefront_id,omitempty"` // связь с витриной
+	ID                int                     `json:"id"`
+	UserID            int                     `json:"user_id"`
+	CategoryID        int                     `json:"category_id"`
+	Title             string                  `json:"title"`
+	Description       string                  `json:"description"`
+	Price             float64                 `json:"price"`
+	Condition         string                  `json:"condition"`
+	Status            string                  `json:"status"`
+	Location          string                  `json:"location"`
+	Latitude          *float64                `json:"latitude,omitempty"`
+	Longitude         *float64                `json:"longitude,omitempty"`
+	City              string                  `json:"city"`
+	Country           string                  `json:"country"`
+	ViewsCount        int                     `json:"views_count"`
+	CreatedAt         time.Time               `json:"created_at"`
+	UpdatedAt         time.Time               `json:"updated_at"`
+	Images            []MarketplaceImage      `json:"images,omitempty"`
+	User              *User                   `json:"user,omitempty"`
+	Category          *MarketplaceCategory    `json:"category,omitempty"`
+	HelpfulVotes      int                     `json:"helpful_votes"`
+	NotHelpfulVotes   int                     `json:"not_helpful_votes"`
+	IsFavorite        bool                    `json:"is_favorite"`
+	ShowOnMap         bool                    `json:"show_on_map"`
+	OriginalLanguage  string                  `json:"original_language,omitempty"`
+	RawTranslations   interface{}             `json:"-"` // Для хранения "сырых" данных
+	Translations      TranslationMap          `json:"translations,omitempty"`
+	CategoryPathNames []string                `json:"category_path_names,omitempty"`
+	CategoryPathIds   []int                   `json:"category_path_ids,omitempty"`
+	CategoryPathSlugs []string                `json:"category_path_slugs,omitempty"`
+	CategoryPath      []string                `json:"category_path,omitempty"`
+	StorefrontID      *int                    `json:"storefront_id,omitempty"` // связь с витриной
+	Attributes        []ListingAttributeValue `json:"attributes,omitempty"`
 }
 
 type MarketplaceCategory struct {
@@ -66,7 +67,7 @@ type MarketplaceCategory struct {
 	Icon         string            `json:"icon,omitempty"`
 	CreatedAt    time.Time         `json:"created_at"`
 	Translations map[string]string `json:"translations,omitempty"`
-    ListingCount int              `json:"listing_count"` 
+	ListingCount int               `json:"listing_count"`
 }
 
 type MarketplaceImage struct {

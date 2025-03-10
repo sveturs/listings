@@ -9,6 +9,7 @@ import MiniMap from '../../components/maps/MiniMap';
 import ImageUploader from '../../components/marketplace/ImageUploader';
 import FullscreenMap from '../../components/maps/FullscreenMap';
 import { Delete as DeleteIcon } from '@mui/icons-material';
+import AttributeFields from '../../components/marketplace/AttributeFields';
 import {
     Container,
     TextField,
@@ -58,7 +59,7 @@ const EditListingPage = () => {
     const [success, setSuccess] = useState(false);
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const [loading, setLoading] = useState(true);
-
+    const [attributeValues, setAttributeValues] = useState([]);
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -192,7 +193,8 @@ const EditListingPage = () => {
                 // Сначала обновляем основные данные
                 await axios.put(`/api/v1/marketplace/listings/${id}`, {
                     ...listing,
-                    price: parseFloat(listing.price)
+                    price: parseFloat(listing.price),
+                    attributes: attributeValues
                 });
 
                 // Отправляем новые изображения, если они есть
@@ -418,7 +420,13 @@ const EditListingPage = () => {
                                     ))}
                                 </Box>
                             </Grid>
-
+                            <Grid item xs={12}>
+                                <AttributeFields
+                                    categoryId={listing.category_id}
+                                    value={attributeValues}
+                                    onChange={setAttributeValues}
+                                />
+                            </Grid>
                             <Grid item xs={12}>
                                 <Box sx={{ display: 'flex', gap: 2 }}>
                                     <Button

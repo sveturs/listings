@@ -32,5 +32,9 @@ type MarketplaceServiceInterface interface {
     ReindexAllListings(ctx context.Context) error
     GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error)
     Storage() storage.Storage
+    //атрибуты
+    GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
+    SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
+
 
 }

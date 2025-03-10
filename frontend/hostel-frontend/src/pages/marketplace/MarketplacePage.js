@@ -102,14 +102,16 @@ const MarketplacePage = () => {
                 return;
             }
             lastQueryRef.current = queryString;
-
+    
             setLoading(true);
             setError(null);
             setSpellingSuggestion(null);
-
+    
             const params = {};
+            
+            // Обрабатываем основные фильтры
             Object.entries(currentFilters).forEach(([key, value]) => {
-                if (value !== '' && key !== 'city' && key !== 'country') {
+                if (value !== '' && key !== 'city' && key !== 'country' && key !== 'attributeFilters') {
                     if (key === 'query') {
                         params['q'] = value;
                     } else {
@@ -117,7 +119,16 @@ const MarketplacePage = () => {
                     }
                 }
             });
-
+            
+            // Добавляем атрибуты, если они есть
+            if (currentFilters.attributeFilters && typeof currentFilters.attributeFilters === 'object') {
+                Object.entries(currentFilters.attributeFilters).forEach(([attrKey, attrValue]) => {
+                    if (attrValue) {
+                        params[`attr_${attrKey}`] = attrValue;
+                    }
+                });
+            }
+    
             console.log('Отправляем запрос:', params);
             const response = await axios.get('/api/v1/marketplace/search', { params });
             console.log('Получен ответ API:', response.data);
@@ -405,23 +416,35 @@ const MarketplacePage = () => {
 
 
     const handleFilterChange = useCallback((newFilters) => {
+        console.log(`MarketplaceFilters: Выбраны фильтры:`, newFilters);
+    
         setFilters(prev => {
             // Создаем обновленные фильтры
             const updated = { ...prev, ...newFilters };
-
+    
             // Обновляем URL
             const nextParams = new URLSearchParams();
             Object.entries(updated).forEach(([key, value]) => {
                 if (value !== null && value !== undefined && value !== '') {
-                    nextParams.set(key, value);
+                    // Обрабатываем атрибуты особым образом
+                    if (key === 'attributeFilters' && typeof value === 'object') {
+                        // Для объекта attributeFilters добавляем каждый ключ в URL с префиксом 'attr_'
+                        Object.entries(value).forEach(([attrKey, attrValue]) => {
+                            if (attrValue) {
+                                nextParams.set(`attr_${attrKey}`, attrValue);
+                            }
+                        });
+                    } else {
+                        nextParams.set(key, value);
+                    }
                 }
             });
-
+    
             setSearchParams(nextParams);
-
+    
             // Выполняем поиск с обновленными фильтрами
             fetchListings(updated);
-
+    
             return updated;
         });
     }, [setSearchParams, fetchListings]);

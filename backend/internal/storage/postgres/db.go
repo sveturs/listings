@@ -124,7 +124,19 @@ func (db *Database) ReindexAllListings(ctx context.Context) error {
 
 	return db.osMarketplaceRepo.ReindexAll(ctx)
 }
+// GetCategoryAttributes получает атрибуты для указанной категории
+func (db *Database) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
+    return db.marketplaceDB.GetCategoryAttributes(ctx, categoryID)
+}
+// SaveListingAttributes сохраняет значения атрибутов для объявления
+func (db *Database) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
+    return db.marketplaceDB.SaveListingAttributes(ctx, listingID, attributes)
+}
 
+// GetListingAttributes получает значения атрибутов для объявления
+func (db *Database) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
+    return db.marketplaceDB.GetListingAttributes(ctx, listingID)
+}
 func (db *Database) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
 	var session types.SessionData
 	err := db.pool.QueryRow(ctx, `

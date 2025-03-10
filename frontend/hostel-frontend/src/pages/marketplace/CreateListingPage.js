@@ -32,6 +32,7 @@ import ImageUploader from '../../components/marketplace/ImageUploader';
 import CategorySelect from '../../components/marketplace/CategorySelect';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useLocation } from '../../contexts/LocationContext';
+import AttributeFields from '../../components/marketplace/AttributeFields';
 
 const CreateListing = () => {
     const { t, i18n } = useTranslation('marketplace');
@@ -63,6 +64,7 @@ const CreateListing = () => {
     const [success, setSuccess] = useState(false);
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const [locationWarning, setLocationWarning] = useState(false);
+    const [attributeValues, setAttributeValues] = useState([]);
     const getTranslatedText = (field) => {
         if (!listing) return '';
 
@@ -179,7 +181,8 @@ const CreateListing = () => {
             const listingData = {
                 ...listing,
                 price: parseFloat(listing.price),
-                original_language: i18n.language // Устанавливаем текущий язык интерфейса как язык оригинала
+                original_language: i18n.language, // Устанавливаем текущий язык интерфейса как язык оригинала
+                attributes: attributeValues
             };
             const response = await axios.post("/api/v1/marketplace/listings", listingData);
             const listingId = response.data.data.id;
@@ -414,7 +417,13 @@ const CreateListing = () => {
                                     sx={{ mt: 1 }}
                                 />
                             </Grid>
-
+                            <Grid item xs={12}>
+                                <AttributeFields
+                                    categoryId={listing.category_id}
+                                    value={attributeValues}
+                                    onChange={setAttributeValues}
+                                />
+                            </Grid>
                             <Grid item xs={12}>
                                 <Button
                                     id="createAnnouncementButton"

@@ -329,6 +329,58 @@ const ListingMapping = `
             "type": "keyword"
           }
         }
+      },
+      "attributes": {
+        "type": "nested",
+        "properties": {
+          "attribute_id": {
+            "type": "integer"
+          },
+          "attribute_name": {
+            "type": "keyword"
+          },
+          "display_name": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword"
+              }
+            }
+          },
+          "attribute_type": {
+            "type": "keyword"
+          },
+          "text_value": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword"
+              }
+            }
+          },
+          "numeric_value": {
+            "type": "double"
+          },
+          "boolean_value": {
+            "type": "boolean"
+          },
+          "json_value": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword"
+              }
+            }
+          },
+          "display_value": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword"
+              }
+            }
+          }
+        }
       }
     }
   }

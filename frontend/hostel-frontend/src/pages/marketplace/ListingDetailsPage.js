@@ -16,13 +16,20 @@ import { Link } from 'react-router-dom';
 import { Store } from 'lucide-react';
 import GalleryViewer from '../../components/shared/GalleryViewer';
 import UserRating from '../../components/user/UserRating';
-
 import {
     MapPin,
     Calendar,
     Heart,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Info,
+    Tag,
+    Settings,
+    BarChart,
+    Check,
+    DollarSign,
+    Filter,
+    Zap
 } from 'lucide-react';
 import axios from '../../api/axios';
 import {
@@ -53,6 +60,92 @@ const ListingDetailsPage = () => {
     const [isMapExpanded, setIsMapExpanded] = useState(false);
     const [categories, setCategories] = useState([]);
     const [galleryOpen, setGalleryOpen] = useState(false);
+
+    const getAttributeIcon = (attributeName) => {
+        // Определяем иконку в зависимости от типа атрибута
+        switch (attributeName) {
+            // Авто
+            case 'make': return <Tag size={20} />;
+            case 'model': return <Tag size={20} />;
+            case 'year': return <Calendar size={20} />;
+            case 'mileage': return <BarChart size={20} />;
+            case 'engine_capacity': return <Zap size={20} />;
+            case 'fuel_type': return <Filter size={20} />;
+            case 'transmission': return <Settings size={20} />;
+            case 'body_type': return <Settings size={20} />;
+            case 'color': return <Info size={20} />;
+
+            // Недвижимость
+            case 'property_type': return <Tag size={20} />;
+            case 'rooms': return <Tag size={20} />;
+            case 'floor': return <BarChart size={20} />;
+            case 'total_floors': return <BarChart size={20} />;
+            case 'area': return <BarChart size={20} />;
+            case 'land_area': return <BarChart size={20} />;
+            case 'building_type': return <Tag size={20} />;
+            case 'has_balcony': return <Check size={20} />;
+            case 'has_elevator': return <Check size={20} />;
+            case 'has_parking': return <Check size={20} />;
+
+            // Телефоны
+            case 'brand': return <Tag size={20} />;
+            case 'model_phone': return <Tag size={20} />;
+            case 'memory': return <BarChart size={20} />;
+            case 'ram': return <BarChart size={20} />;
+            case 'os': return <Settings size={20} />;
+            case 'screen_size': return <BarChart size={20} />;
+            case 'camera': return <BarChart size={20} />;
+            case 'has_5g': return <Check size={20} />;
+
+            // Компьютеры
+            case 'pc_brand': return <Tag size={20} />;
+            case 'pc_type': return <Tag size={20} />;
+            case 'cpu': return <Settings size={20} />;
+            case 'gpu': return <Settings size={20} />;
+            case 'ram_pc': return <BarChart size={20} />;
+            case 'storage_type': return <Tag size={20} />;
+            case 'storage_capacity': return <BarChart size={20} />;
+            case 'os_pc': return <Settings size={20} />;
+
+            // По умолчанию
+            default: return <Info size={20} />;
+        }
+    };
+    // Основные атрибуты, которые мы показываем в верхнем блоке
+    const topAttributes = ['mileage', 'body_type', 'fuel_type'];
+
+    // Получаем только основные атрибуты для верхнего блока
+    const getTopAttributes = (attributes) => {
+        if (!attributes || !Array.isArray(attributes)) return [];
+
+        return attributes.filter(attr =>
+            topAttributes.includes(attr.attribute_name)
+        );
+    };
+
+    // Получаем все атрибуты, кроме тех, что уже показаны в верхнем блоке
+    const getDetailsAttributes = (attributes) => {
+        if (!attributes || !Array.isArray(attributes)) return [];
+
+        return attributes.filter(attr =>
+            !topAttributes.includes(attr.attribute_name)
+        );
+    };
+    // Функция форматирования значения атрибута
+    const formatAttributeValue = (attr) => {
+        if (!attr) return '';
+
+        if (attr.attribute_type === 'boolean') {
+            return attr.display_value === 'true' || attr.display_value === true ?
+                t('common.yes', { defaultValue: 'Да' }) : t('common.no', { defaultValue: 'Нет' });
+        }
+
+        if (attr.attribute_name === 'price') {
+            return formatPrice(attr.display_value);
+        }
+
+        return attr.display_value;
+    };
 
     const findCategoryPath = useCallback((categoryId, categoriesTree) => {
         const path = [];
@@ -170,7 +263,12 @@ const ListingDetailsPage = () => {
             }
         }
     }, [listing, categories, findCategoryPath]);
-
+    useEffect(() => {
+        if (listing) {
+            console.log('Данные объявления:', listing);
+            console.log('Атрибуты:', listing.attributes);
+        }
+    }, [listing]);
     const scrollToReviews = () => {
         const reviewsSection = document.getElementById('reviews-section');
         if (reviewsSection) {
@@ -464,10 +562,103 @@ const ListingDetailsPage = () => {
                             </Box>
                         </Stack>
 
+                        {listing.attributes && listing.attributes.length > 0 && (
+                            <Box sx={{ mb: 3 }}>
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        p: 2,
+                                        borderRadius: 2,
+                                        bgcolor: 'background.paper',
+                                        border: '1px solid',
+                                        borderColor: 'divider'
+                                    }}
+                                >
+                                    <Grid container spacing={2}>
+                                        {/* Используем только топовые атрибуты здесь */}
+                                        {getTopAttributes(listing.attributes).map((attr) => (
+                                            <Grid item xs={4} key={`top-${attr.attribute_id}`}>
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    textAlign: 'center'
+                                                }}>                                                    <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: 36,
+                                                    height: 36,
+                                                    borderRadius: '50%',
+                                                    bgcolor: 'primary.main',
+                                                    color: 'white',
+                                                    mb: 1
+                                                }}>
+                                                        {getAttributeIcon(attr.attribute_name)}
+                                                    </Box>
+                                                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                        {attr.display_name}
+                                                    </Typography>
+                                                    <Typography variant="body1" fontWeight="bold">
+                                                        {formatAttributeValue(attr)}
+                                                    </Typography>
+                                                </Box>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Paper>
+                            </Box>
+                        )}
+
                         <Typography variant="body1" sx={{ mb: 4 }}>
                             {getTranslatedText('description')}
                         </Typography>
 
+                        {/* Отображаем все атрибуты */}
+                        {listing.attributes && listing.attributes.length > 0 && (
+                            <Box sx={{ mt: 3, mb: 4 }}>
+                                <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
+                                    {t('listings.details.attributes.title', { defaultValue: 'Характеристики' })}
+                                </Typography>
+                                <Paper sx={{ p: 2, borderRadius: 2 }}>
+                                    <Grid container spacing={3}>
+                                        {/* Показываем только те атрибуты, которые не показаны в верхнем блоке */}
+                                        {getDetailsAttributes(listing.attributes).map((attr) => (
+                                            <Grid item xs={12} sm={6} key={attr.attribute_id}>                                                <Box sx={{
+                                                display: 'flex',
+                                                gap: 2,
+                                                alignItems: 'center',
+                                                p: 1,
+                                                borderRadius: 1,
+                                                '&:hover': { bgcolor: 'action.hover' }
+                                            }}>
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: 40,
+                                                    height: 40,
+                                                    borderRadius: '50%',
+                                                    bgcolor: 'primary.light',
+                                                    color: 'primary.contrastText'
+                                                }}>
+                                                    {getAttributeIcon(attr.attribute_name)}
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {attr.display_name}
+                                                    </Typography>
+                                                    <Typography variant="subtitle1" fontWeight="medium">
+                                                        {formatAttributeValue(attr)}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Paper>
+                            </Box>
+                        )}
                         {/* Reviews section */}
                         <Box id="reviews-section" ref={reviewsRef} sx={{ mt: 4 }}>
                             <ReviewsSection

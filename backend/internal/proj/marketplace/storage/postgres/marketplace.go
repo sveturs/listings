@@ -169,8 +169,17 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		log.Printf("Error saving original description translation: %v", err)
 	}
 
-	// Удаляем автоматический перевод на другие языки
-	// Этот код был здесь ранее, но мы его убираем
+	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+		// Устанавливаем ID объявления для каждого атрибута
+		for i := range listing.Attributes {
+			listing.Attributes[i].ListingID = listingID
+		}
+		
+		if err := s.SaveListingAttributes(ctx, listingID, listing.Attributes); err != nil {
+			log.Printf("Error saving attributes for listing %d: %v", listingID, err)
+			// Не прерываем создание объявления из-за ошибки с атрибутами
+		}
+	}
 
 	return listingID, nil
 }
@@ -969,9 +978,291 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 		return fmt.Errorf("listing not found or you don't have permission to update it")
 	}
 
+	if listing.Attributes != nil {
+		if err := s.SaveListingAttributes(ctx, listing.ID, listing.Attributes); err != nil {
+			log.Printf("Error updating attributes for listing %d: %v", listing.ID, err)
+			// Не прерываем обновление объявления из-за ошибки с атрибутами
+		}
+	}
+
 	return nil
 }
+// SaveListingAttributes сохраняет значения атрибутов для объявления
+func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
+    log.Printf("Storage: Saving %d attributes for listing %d", len(attributes), listingID)
+    
+    // Начинаем транзакцию
+    tx, err := s.pool.Begin(ctx)
+    if err != nil {
+        return fmt.Errorf("error starting transaction: %w", err)
+    }
+    defer tx.Rollback(ctx)
 
+    // Удаляем старые атрибуты
+    _, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)
+    if err != nil {
+        return fmt.Errorf("error deleting old attributes: %w", err)
+    }
+
+    // Вставляем новые атрибуты
+    for i, attr := range attributes {
+        var textValue sql.NullString
+        var numericValue sql.NullFloat64
+        var boolValue sql.NullBool
+        var jsonValue sql.NullString
+
+        // Логируем каждый атрибут
+        log.Printf("Storage: Processing attribute %d: ID=%d, Type=%s", 
+            i, attr.AttributeID, attr.AttributeType)
+
+        // Установка значения в зависимости от типа
+        switch attr.AttributeType {
+        case "text", "select":
+            if attr.TextValue != nil {
+                textValue = sql.NullString{String: *attr.TextValue, Valid: true}
+                log.Printf("Storage: Text value: %s", *attr.TextValue)
+            }
+        case "number":
+            if attr.NumericValue != nil {
+                numericValue = sql.NullFloat64{Float64: *attr.NumericValue, Valid: true}
+                log.Printf("Storage: Numeric value: %f", *attr.NumericValue)
+            }
+        case "boolean":
+            if attr.BooleanValue != nil {
+                boolValue = sql.NullBool{Bool: *attr.BooleanValue, Valid: true}
+                log.Printf("Storage: Boolean value: %t", *attr.BooleanValue)
+            }
+        case "json", "multiselect":
+            if attr.JSONValue != nil {
+                jsonValue = sql.NullString{String: string(attr.JSONValue), Valid: true}
+                log.Printf("Storage: JSON value: %s", string(attr.JSONValue))
+            }
+        }
+
+        // Важное изменение: не указываем id в списке полей, так как он генерируется автоматически
+        _, err = tx.Exec(ctx, `
+            INSERT INTO listing_attribute_values (
+                listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value
+            ) VALUES ($1, $2, $3, $4, $5, $6)
+        `, listingID, attr.AttributeID, textValue, numericValue, boolValue, jsonValue)
+
+        if err != nil {
+            log.Printf("Storage: Error inserting attribute: %v", err)
+            return fmt.Errorf("error inserting attribute value: %w", err)
+        }
+    }
+
+    // Фиксируем транзакцию
+    if err = tx.Commit(ctx); err != nil {
+        return fmt.Errorf("error committing transaction: %w", err)
+    }
+
+    log.Printf("Storage: Successfully saved all attributes for listing %d", listingID)
+    return nil
+}
+
+// GetListingAttributes получает значения атрибутов для объявления без дублирования
+func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
+    query := `
+        SELECT 
+            v.listing_id,
+            v.attribute_id,
+            a.name AS attribute_name,
+            a.display_name,
+            a.attribute_type,
+            v.text_value,
+            v.numeric_value,
+            v.boolean_value,
+            v.json_value
+        FROM listing_attribute_values v
+        JOIN category_attributes a ON v.attribute_id = a.id
+        WHERE v.listing_id = $1
+        ORDER BY a.sort_order, a.display_name
+    `
+
+    rows, err := s.pool.Query(ctx, query, listingID)
+    if err != nil {
+        return nil, fmt.Errorf("error querying listing attributes: %w", err)
+    }
+    defer rows.Close()
+
+    // Используем map для отслеживания уже добавленных атрибутов
+    uniqueAttributes := make(map[int]models.ListingAttributeValue)
+    
+    for rows.Next() {
+        var attr models.ListingAttributeValue
+        var textValue sql.NullString
+        var numericValue sql.NullFloat64
+        var boolValue sql.NullBool
+        var jsonValue sql.NullString
+
+        if err := rows.Scan(
+            &attr.ListingID,
+            &attr.AttributeID,
+            &attr.AttributeName,
+            &attr.DisplayName,
+            &attr.AttributeType,
+            &textValue,
+            &numericValue,
+            &boolValue,
+            &jsonValue,
+        ); err != nil {
+            return nil, fmt.Errorf("error scanning listing attribute: %w", err)
+        }
+
+        // Заполняем значения в зависимости от типа
+        if textValue.Valid {
+            attr.TextValue = &textValue.String
+            attr.DisplayValue = textValue.String
+        }
+        if numericValue.Valid {
+            attr.NumericValue = &numericValue.Float64
+            attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
+        }
+        if boolValue.Valid {
+            attr.BooleanValue = &boolValue.Bool
+            if boolValue.Bool {
+                attr.DisplayValue = "Да"
+            } else {
+                attr.DisplayValue = "Нет"
+            }
+        }
+        if jsonValue.Valid {
+            attr.JSONValue = json.RawMessage(jsonValue.String)
+            // Для multiselect можно форматировать массив значений
+            if attr.AttributeType == "multiselect" {
+                var values []string
+                if err := json.Unmarshal(attr.JSONValue, &values); err == nil {
+                    attr.DisplayValue = strings.Join(values, ", ")
+                }
+            } else {
+                attr.DisplayValue = jsonValue.String
+            }
+        }
+
+        // Добавляем только если атрибут с таким ID еще не был добавлен
+        if _, exists := uniqueAttributes[attr.AttributeID]; !exists {
+            uniqueAttributes[attr.AttributeID] = attr
+        }
+    }
+
+    if err := rows.Err(); err != nil {
+        return nil, fmt.Errorf("error iterating listing attributes: %w", err)
+    }
+
+    // Преобразуем map в slice
+    attributes := make([]models.ListingAttributeValue, 0, len(uniqueAttributes))
+    for _, attr := range uniqueAttributes {
+        attributes = append(attributes, attr)
+    }
+
+    return attributes, nil
+}
+
+// GetCategoryAttributes получает атрибуты для указанной категории
+func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
+	query := `
+        WITH category_hierarchy AS (
+            -- Находим все родительские категории (включая текущую)
+            WITH RECURSIVE parents AS (
+                SELECT id, parent_id
+                FROM marketplace_categories
+                WHERE id = $1
+                
+                UNION
+                
+                SELECT c.id, c.parent_id
+                FROM marketplace_categories c
+                INNER JOIN parents p ON c.id = p.parent_id
+            )
+            SELECT id FROM parents
+        ),
+        attribute_translations AS (
+            SELECT 
+                t.entity_id,
+                t.language,
+                t.translated_text
+            FROM translations t
+            WHERE t.entity_type = 'attribute' 
+            AND t.field_name = 'display_name'
+        )
+        SELECT 
+            a.id, 
+            a.name, 
+            a.display_name, 
+            a.attribute_type, 
+            a.options, 
+            a.validation_rules,
+            a.is_searchable, 
+            a.is_filterable, 
+            COALESCE(m.is_required, a.is_required) as is_required,
+            a.sort_order,
+            a.created_at,
+            jsonb_object_agg(COALESCE(t.language, ''), COALESCE(t.translated_text, '')) FILTER (WHERE t.language IS NOT NULL) as translations
+        FROM category_attribute_mapping m
+        JOIN category_attributes a ON m.attribute_id = a.id
+        JOIN category_hierarchy h ON m.category_id = h.id
+        LEFT JOIN attribute_translations t ON a.id = t.entity_id
+        WHERE m.is_enabled = true
+        GROUP BY a.id, a.name, a.display_name, a.attribute_type, a.options, 
+                a.validation_rules, a.is_searchable, a.is_filterable, m.is_required, 
+                a.is_required, a.sort_order, a.created_at
+        ORDER BY a.sort_order, a.display_name
+    `
+
+	rows, err := s.pool.Query(ctx, query, categoryID)
+	if err != nil {
+		return nil, fmt.Errorf("error querying category attributes: %w", err)
+	}
+	defer rows.Close()
+
+	var attributes []models.CategoryAttribute
+	for rows.Next() {
+		var attr models.CategoryAttribute
+		var options, validRules sql.NullString
+		var translationsJSON []byte
+
+		if err := rows.Scan(
+			&attr.ID,
+			&attr.Name,
+			&attr.DisplayName,
+			&attr.AttributeType,
+			&options,
+			&validRules,
+			&attr.IsSearchable,
+			&attr.IsFilterable,
+			&attr.IsRequired,
+			&attr.SortOrder,
+			&attr.CreatedAt,
+			&translationsJSON,
+		); err != nil {
+			return nil, fmt.Errorf("error scanning category attribute: %w", err)
+		}
+
+		// Обработка опциональных JSON полей
+		if options.Valid {
+			attr.Options = json.RawMessage(options.String)
+		}
+		if validRules.Valid {
+			attr.ValidRules = json.RawMessage(validRules.String)
+		}
+
+		// Обработка переводов
+		attr.Translations = make(map[string]string)
+		if err := json.Unmarshal(translationsJSON, &attr.Translations); err != nil {
+			// Просто логируем ошибку, но продолжаем работу
+			fmt.Printf("Error parsing translations for attribute %d: %v\n", attr.ID, err)
+		}
+
+		attributes = append(attributes, attr)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating category attributes: %w", err)
+	}
+
+	return attributes, nil
+}
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
 	log.Printf("GetCategories: starting to fetch categories")
 	query := `
@@ -1172,5 +1463,13 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 			listing.CategoryPathSlugs = categorySlugs
 		}
 	}
+	attributes, err := s.GetListingAttributes(ctx, listing.ID)
+if err != nil {
+    log.Printf("Error loading attributes for listing %d: %v", id, err)
+} else {
+    log.Printf("INFO: Loaded %d attributes for listing %d", len(attributes), id)
+    listing.Attributes = attributes
+}
+
 	return listing, nil
 }

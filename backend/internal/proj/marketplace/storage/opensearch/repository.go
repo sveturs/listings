@@ -529,6 +529,39 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		}
 	}
 
+	// Добавляем атрибуты, если они есть
+	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+		attributes := make([]map[string]interface{}, 0, len(listing.Attributes))
+
+		for _, attr := range listing.Attributes {
+			attrDoc := map[string]interface{}{
+				"attribute_id":   attr.AttributeID,
+				"attribute_name": attr.AttributeName,
+				"display_name":   attr.DisplayName,
+				"attribute_type": attr.AttributeType,
+				"display_value":  attr.DisplayValue,
+			}
+
+			// Добавляем типизированные значения в зависимости от типа атрибута
+			if attr.TextValue != nil {
+				attrDoc["text_value"] = *attr.TextValue
+			}
+			if attr.NumericValue != nil {
+				attrDoc["numeric_value"] = *attr.NumericValue
+			}
+			if attr.BooleanValue != nil {
+				attrDoc["boolean_value"] = *attr.BooleanValue
+			}
+			if attr.JSONValue != nil {
+				attrDoc["json_value"] = string(attr.JSONValue)
+			}
+
+			attributes = append(attributes, attrDoc)
+		}
+
+		doc["attributes"] = attributes
+	}
+
 	return doc
 }
 
@@ -922,7 +955,112 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 	// Для отладки выводим запрос в лог
 	queryJSON, _ := json.MarshalIndent(query, "", "  ")
 	log.Printf("Сформированный запрос: %s", queryJSON)
-
+	// Добавляем фильтры по атрибутам, если они указаны
+	if len(params.AttributeFilters) > 0 {
+		for attrName, attrValue := range params.AttributeFilters {
+			// Для каждого типа атрибута используем разное условие
+			if strings.Contains(attrName, "make") || strings.Contains(attrName, "model") ||
+				strings.Contains(attrName, "color") || strings.Contains(attrName, "type") ||
+				strings.Contains(attrName, "brand") {
+				// Для текстовых полей используем точное соответствие
+				filterClauses = append(filterClauses, map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "attributes",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"attributes.attribute_name": attrName,
+										},
+									},
+									{
+										"term": map[string]interface{}{
+											"attributes.text_value.keyword": attrValue,
+										},
+									},
+								},
+							},
+						},
+					},
+				})
+			} else if strings.Contains(attrName, "year") ||
+				strings.Contains(attrName, "mileage") ||
+				strings.Contains(attrName, "engine") {
+				// Для числовых полей преобразуем значение
+				if numVal, err := strconv.ParseFloat(attrValue, 64); err == nil {
+					filterClauses = append(filterClauses, map[string]interface{}{
+						"nested": map[string]interface{}{
+							"path": "attributes",
+							"query": map[string]interface{}{
+								"bool": map[string]interface{}{
+									"must": []map[string]interface{}{
+										{
+											"term": map[string]interface{}{
+												"attributes.attribute_name": attrName,
+											},
+										},
+										{
+											"term": map[string]interface{}{
+												"attributes.numeric_value": numVal,
+											},
+										},
+									},
+								},
+							},
+						},
+					})
+				}
+			} else if strings.HasPrefix(attrValue, "true") || strings.HasPrefix(attrValue, "false") {
+				// Для булевых значений
+				boolVal := strings.HasPrefix(attrValue, "true")
+				filterClauses = append(filterClauses, map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "attributes",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"attributes.attribute_name": attrName,
+										},
+									},
+									{
+										"term": map[string]interface{}{
+											"attributes.boolean_value": boolVal,
+										},
+									},
+								},
+							},
+						},
+					},
+				})
+			} else {
+				// Для остальных случаев используем текстовый поиск
+				filterClauses = append(filterClauses, map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "attributes",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"attributes.attribute_name": attrName,
+										},
+									},
+									{
+										"match": map[string]interface{}{
+											"attributes.display_value": attrValue,
+										},
+									},
+								},
+							},
+						},
+					},
+				})
+			}
+		}
+	}
 	return query
 }
 
@@ -1299,6 +1437,47 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 				if description, ok := langTranslations["description"]; ok && description != "" {
 					listing.Description = description
 				}
+			}
+		}
+	}
+
+	if attributes, ok := doc["attributes"].([]interface{}); ok {
+		for _, attrI := range attributes {
+			if attr, ok := attrI.(map[string]interface{}); ok {
+				var attrValue models.ListingAttributeValue
+
+				// Извлекаем общие поля
+				if id, ok := attr["attribute_id"].(float64); ok {
+					attrValue.AttributeID = int(id)
+				}
+				if name, ok := attr["attribute_name"].(string); ok {
+					attrValue.AttributeName = name
+				}
+				if displayName, ok := attr["display_name"].(string); ok {
+					attrValue.DisplayName = displayName
+				}
+				if attrType, ok := attr["attribute_type"].(string); ok {
+					attrValue.AttributeType = attrType
+				}
+				if displayValue, ok := attr["display_value"].(string); ok {
+					attrValue.DisplayValue = displayValue
+				}
+
+				// Извлекаем типизированные значения
+				if textValue, ok := attr["text_value"].(string); ok {
+					attrValue.TextValue = &textValue
+				}
+				if numValue, ok := attr["numeric_value"].(float64); ok {
+					attrValue.NumericValue = &numValue
+				}
+				if boolValue, ok := attr["boolean_value"].(bool); ok {
+					attrValue.BooleanValue = &boolValue
+				}
+				if jsonValue, ok := attr["json_value"].(string); ok {
+					attrValue.JSONValue = json.RawMessage(jsonValue)
+				}
+
+				listing.Attributes = append(listing.Attributes, attrValue)
 			}
 		}
 	}

@@ -64,12 +64,19 @@ type Storage interface {
 	GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error)
 	DeleteListingImage(ctx context.Context, imageID string) (string, error)
 
+	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
 	GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error)
 	GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error)
 
 	AddToFavorites(ctx context.Context, userID int, listingID int) error
 	RemoveFromFavorites(ctx context.Context, userID int, listingID int) error
 	GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error)
+
+
+    
+    SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
+    GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error)
+
 
 	// Balance methods
 	GetUserBalance(ctx context.Context, userID int) (*models.UserBalance, error)
