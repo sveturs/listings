@@ -216,17 +216,27 @@ const CreateListing = () => {
             // Преобразуем атрибуты перед отправкой
             const processedAttributes = prepareAttributesForSubmission(attributeValues);
 
-            const listingData = {
+            // Логируем данные для отладки
+            console.log("Отправляемое объявление:", {
                 ...listing,
                 price: parseFloat(listing.price),
                 original_language: i18n.language,
                 attributes: processedAttributes
-            };
+            });
 
-            console.log("Отправляемые атрибуты:", processedAttributes);
+            const response = await axios.post("/api/v1/marketplace/listings", {
+                ...listing,
+                price: parseFloat(listing.price),
+                original_language: i18n.language,
+                attributes: processedAttributes
+            });
 
-            const response = await axios.post("/api/v1/marketplace/listings", listingData);
             const listingId = response.data.data.id;
+
+            // Проверка сохранения атрибутов
+            console.log("Объявление создано с ID:", listingId);
+            console.log("Проверка отправки атрибутов:", processedAttributes);
+
 
             if (images.length > 0) {
                 const formData = new FormData();

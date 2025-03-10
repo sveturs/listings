@@ -113,7 +113,7 @@ const ListingDetailsPage = () => {
             default: return <Info size={20} />;
         }
     };
-
+    const CAR_CATEGORY_ID = 2100; 
     // Функция форматирования значения атрибута
     const formatAttributeValue = (attr) => {
         // Если атрибут не имеет значения - возвращаем "Не указано"
@@ -132,16 +132,32 @@ const ListingDetailsPage = () => {
 
         // Особая обработка для некоторых числовых атрибутов
         if (attr.attribute_type === 'number') {
-            const numValue = parseFloat(attr.display_value);
+            let numValue;
 
-            if (attr.attribute_name === 'year') {
-                return Math.round(numValue).toString(); // Убираем десятичные части для года
+            // Проверяем и преобразуем любое числовое значение
+            if (typeof attr.display_value === 'string') {
+                numValue = parseFloat(attr.display_value);
+            } else if (typeof attr.display_value === 'number') {
+                numValue = attr.display_value;
+            } else if (attr.numeric_value !== undefined && attr.numeric_value !== null) {
+                numValue = attr.numeric_value;
+            } else {
+                return t('common.not_specified', { defaultValue: 'Не указано' });
             }
-            if (attr.attribute_name === 'mileage') {
-                return `${numValue.toLocaleString()} км`; // Форматируем пробег с разделителями тысяч
-            }
-            if (attr.attribute_name === 'engine_capacity') {
-                return `${numValue.toFixed(1)} л`; // Форматируем объем с одним знаком после запятой
+
+            if (!isNaN(numValue)) {
+                if (attr.attribute_name === 'year') {
+                    return Math.round(numValue).toString(); // Убираем десятичные части для года
+                }
+                if (attr.attribute_name === 'mileage') {
+                    return `${Math.round(numValue).toLocaleString()} км`; // Форматируем пробег с разделителями тысяч
+                }
+                if (attr.attribute_name === 'engine_capacity') {
+                    return `${numValue.toFixed(1)} л`; // Форматируем объем с одним знаком после запятой
+                }
+                if (attr.attribute_name === 'power') {
+                    return `${Math.round(numValue)} л.с.`; // Форматируем мощность двигателя
+                }
             }
         }
 
@@ -151,56 +167,84 @@ const ListingDetailsPage = () => {
     // Преобразование атрибутов в формат для AutoDetails компонента
     const convertAttributesToAutoProps = (attributes) => {
         const props = {};
-        
+
+        console.log("Преобразуемые атрибуты:", attributes);
+
         attributes.forEach(attr => {
-            switch(attr.attribute_name) {
+            if (!attr) return; // Пропускаем undefined и null
+
+            let value;
+            // Определяем, какое значение использовать в зависимости от типа атрибута
+            if (attr.attribute_type === 'number' && attr.numeric_value !== undefined) {
+                // Для числовых атрибутов берем numeric_value
+                value = attr.numeric_value;
+
+                // Для некоторых атрибутов преобразуем значение
+                if (attr.attribute_name === 'mileage' && typeof value === 'number') {
+                    // Округляем пробег до целого числа
+                    value = Math.round(value);
+                }
+            } else if (attr.attribute_type === 'select' || attr.attribute_type === 'text') {
+                // Для текстовых атрибутов берем text_value
+                value = attr.text_value;
+            } else if (attr.attribute_type === 'boolean') {
+                // Для логических атрибутов берем boolean_value
+                value = attr.boolean_value;
+            } else {
+                // В остальных случаях берем display_value
+                value = attr.display_value;
+            }
+
+            switch (attr.attribute_name) {
                 case 'make':
-                    props.brand = attr.display_value;
+                    props.brand = value;
                     break;
                 case 'model':
-                    props.model = attr.display_value;
+                    props.model = value;
                     break;
                 case 'year':
-                    props.year = parseInt(attr.display_value) || null;
+                    props.year = parseInt(value) || null;
                     break;
                 case 'mileage':
-                    props.mileage = parseInt(attr.display_value) || 0;
+                    props.mileage = typeof value === 'number' ? value : parseInt(value) || 0;
                     break;
                 case 'engine_capacity':
-                    props.engine_capacity = parseFloat(attr.display_value) || null;
-                    break;
-                case 'fuel_type':
-                    props.fuel_type = attr.display_value;
-                    break;
-                case 'transmission':
-                    props.transmission = attr.display_value;
-                    break;
-                case 'body_type':
-                    props.body_type = attr.display_value;
-                    break;
-                case 'color':
-                    props.color = attr.display_value;
+                    props.engine_capacity = typeof value === 'number' ? value : parseFloat(value) || null;
                     break;
                 case 'power':
-                    props.power = parseInt(attr.display_value) || null;
+                    props.power = typeof value === 'number' ? value : parseInt(value) || null;
+                    break;
+                case 'fuel_type':
+                    props.fuel_type = value;
+                    break;
+                case 'transmission':
+                    props.transmission = value;
+                    break;
+                case 'body_type':
+                    props.body_type = value;
+                    break;
+                case 'color':
+                    props.color = value;
                     break;
                 case 'drive_type':
-                    props.drive_type = attr.display_value;
+                    props.drive_type = value;
                     break;
                 case 'number_of_doors':
-                    props.number_of_doors = attr.display_value;
+                    props.number_of_doors = value;
                     break;
                 case 'number_of_seats':
-                    props.number_of_seats = attr.display_value;
+                    props.number_of_seats = value;
                     break;
                 default:
                     break;
             }
         });
-        
+
+        console.log("Результат преобразования атрибутов:", props);
+
         return props;
     };
-    
+
 
     const findCategoryPath = useCallback((categoryId, categoriesTree) => {
         const path = [];
@@ -673,7 +717,8 @@ const ListingDetailsPage = () => {
                                 </Typography>
 
                                 {/* Специальное отображение для автомобилей */}
-                                {listing.category_id === 2100 && (
+                                
+                                {listing.category_id === CAR_CATEGORY_ID && (
                                     <AutoDetails autoProperties={convertAttributesToAutoProps(listing.attributes)} />
                                 )}
 

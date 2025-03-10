@@ -88,18 +88,37 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 								attr.TextValue = &value
 								log.Printf("DEBUG: Attribute %d (%s) text value: %s", attr.AttributeID, attr.AttributeName, value)
 							}
+							// Изменяем обработку числовых значений для атрибутов
+							// Изменяем обработку числовых значений для атрибутов
 						case "number":
-							// Обрабатываем числовые значения более тщательно
+							// Безопасно обрабатываем числовые значения любого размера
 							var numValue float64
+
 							if value, ok := attrMap["value"].(float64); ok {
 								numValue = value
 							} else if value, ok := attrMap["numeric_value"].(float64); ok {
 								numValue = value
 							} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
-								if parsedValue, err := strconv.ParseFloat(strValue, 64); err == nil {
+								// Используем ParseFloat с 64-битной точностью
+								parsedValue, parseErr := strconv.ParseFloat(strValue, 64)
+								if parseErr == nil {
 									numValue = parsedValue
+								} else {
+									// Логируем ошибку, но продолжаем
+									log.Printf("Error parsing numeric value '%s' for attribute %s: %v", strValue, attr.AttributeName, parseErr)
+									// Используем более гибкий подход - пытаемся удалить запятые/пробелы
+									cleanValue := strings.ReplaceAll(strings.ReplaceAll(strValue, ",", ""), " ", "")
+									if parsedClean, err := strconv.ParseFloat(cleanValue, 64); err == nil {
+										numValue = parsedClean
+									}
 								}
 							}
+
+							// Проверяем допустимые диапазоны для некоторых атрибутов
+							if attr.AttributeName == "mileage" && numValue > 10000000 {
+								log.Printf("Warning: Very high mileage value: %f for listing, but accepting it", numValue)
+							}
+
 							attr.NumericValue = &numValue
 							log.Printf("DEBUG: Attribute %d (%s) numeric value: %f", attr.AttributeID, attr.AttributeName, numValue)
 						case "boolean":
@@ -705,18 +724,36 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 								attr.TextValue = &value
 								log.Printf("DEBUG: Attribute %d (%s) text value: %s", attr.AttributeID, attr.AttributeName, value)
 							}
+							// Изменяем обработку числовых значений для атрибутов
 						case "number":
-							// Обрабатываем числовые значения более тщательно
+							// Безопасно обрабатываем числовые значения любого размера
 							var numValue float64
+
 							if value, ok := attrMap["value"].(float64); ok {
 								numValue = value
 							} else if value, ok := attrMap["numeric_value"].(float64); ok {
 								numValue = value
 							} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
-								if parsedValue, err := strconv.ParseFloat(strValue, 64); err == nil {
+								// Используем ParseFloat с 64-битной точностью
+								parsedValue, parseErr := strconv.ParseFloat(strValue, 64)
+								if parseErr == nil {
 									numValue = parsedValue
+								} else {
+									// Логируем ошибку, но продолжаем
+									log.Printf("Error parsing numeric value '%s' for attribute %s: %v", strValue, attr.AttributeName, parseErr)
+									// Используем более гибкий подход - пытаемся удалить запятые/пробелы
+									cleanValue := strings.ReplaceAll(strings.ReplaceAll(strValue, ",", ""), " ", "")
+									if parsedClean, err := strconv.ParseFloat(cleanValue, 64); err == nil {
+										numValue = parsedClean
+									}
 								}
 							}
+
+							// Проверяем допустимые диапазоны для некоторых атрибутов
+							if attr.AttributeName == "mileage" && numValue > 10000000 {
+								log.Printf("Warning: Very high mileage value: %f for listing, but accepting it", numValue)
+							}
+
 							attr.NumericValue = &numValue
 							log.Printf("DEBUG: Attribute %d (%s) numeric value: %f", attr.AttributeID, attr.AttributeName, numValue)
 						case "boolean":

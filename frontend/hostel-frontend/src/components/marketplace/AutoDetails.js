@@ -151,12 +151,11 @@ const AutoDetails = ({ autoProperties }) => {
                 {renderDetailItem(
                     <Activity size={24} />,
                     t('auto.properties.engine', { defaultValue: 'Двигатель' }),
-                    autoProperties.engine_capacity !== null ?
-                        formatValue(autoProperties.engine_capacity, ' л') +
-                        (autoProperties.power !== null ? ` / ${formatValue(autoProperties.power, ' л.с.')}` : '')
-                        : (autoProperties.power !== null ?
-                            formatValue(autoProperties.power, ' л.с.') :
-                            t('auto.details.not_specified', { defaultValue: 'Не указано' }))
+                    (autoProperties.engine_capacity !== null || autoProperties.power !== null) ?
+                        (autoProperties.engine_capacity !== null ? formatValue(autoProperties.engine_capacity, ' л') : '') +
+                        (autoProperties.engine_capacity !== null && autoProperties.power !== null ? ' / ' : '') +
+                        (autoProperties.power !== null ? formatValue(autoProperties.power, ' л.с.') : '')
+                        : t('auto.details.not_specified', { defaultValue: 'Не указано' })
                 )}
 
                 {renderDetailItem(
