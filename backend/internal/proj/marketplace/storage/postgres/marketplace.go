@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"math"
 
 	"backend/internal/proj/marketplace/service"
 	"log"
@@ -174,7 +175,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		for i := range listing.Attributes {
 			listing.Attributes[i].ListingID = listingID
 		}
-		
+
 		if err := s.SaveListingAttributes(ctx, listingID, listing.Attributes); err != nil {
 			log.Printf("Error saving attributes for listing %d: %v", listingID, err)
 			// Не прерываем создание объявления из-за ошибки с атрибутами
@@ -183,7 +184,6 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 
 	return listingID, nil
 }
-
 
 func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
 	var imageID int
@@ -299,29 +299,30 @@ func (s *Storage) processTranslations(rawTranslations interface{}) models.Transl
 
 	return translations
 }
+
 // Функция GetListings с проверкой наличия поля storefront_id
 func (s *Storage) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-    userID, _ := ctx.Value("user_id").(int)
-    if userID == 0 {
-        userID = -1
-    }
+	userID, _ := ctx.Value("user_id").(int)
+	if userID == 0 {
+		userID = -1
+	}
 
-    // Проверяем существование столбца storefront_id
-    var hasStorefrontID bool
-    err := s.pool.QueryRow(ctx, `
+	// Проверяем существование столбца storefront_id
+	var hasStorefrontID bool
+	err := s.pool.QueryRow(ctx, `
         SELECT EXISTS (
             SELECT 1 
             FROM information_schema.columns 
             WHERE table_name = 'marketplace_listings' AND column_name = 'storefront_id'
         )
     `).Scan(&hasStorefrontID)
-    
-    if err != nil {
-        return nil, 0, fmt.Errorf("error checking storefront_id column: %w", err)
-    }
 
-    // Формируем базовый запрос в зависимости от наличия столбца storefront_id
-    baseQuery := `WITH RECURSIVE category_tree AS (
+	if err != nil {
+		return nil, 0, fmt.Errorf("error checking storefront_id column: %w", err)
+	}
+
+	// Формируем базовый запрос в зависимости от наличия столбца storefront_id
+	baseQuery := `WITH RECURSIVE category_tree AS (
         -- Базовый случай: корневые категории или конкретная категория
         SELECT c.id, c.parent_id, c.name
         FROM marketplace_categories c
@@ -374,16 +375,16 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         l.show_on_map,
         l.original_language,`
 
-    // Добавляем поле storefront_id, если оно существует
-    if hasStorefrontID {
-        baseQuery += `
+	// Добавляем поле storefront_id, если оно существует
+	if hasStorefrontID {
+		baseQuery += `
         l.storefront_id,`
-    } else {
-        baseQuery += `
+	} else {
+		baseQuery += `
         NULL as storefront_id,`
-    }
+	}
 
-    baseQuery += `
+	baseQuery += `
         u.name as user_name, 
         u.email as user_email,
         u.created_at as user_created_at,
@@ -408,18 +409,18 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
             ELSE l.category_id IN (SELECT id FROM category_tree)
         END`
 
-    args := []interface{}{
-        filters["category_id"], // $1
-        userID,                 // $2
-    }
+	args := []interface{}{
+		filters["category_id"], // $1
+		userID,                 // $2
+	}
 
-    conditions := []string{}
-    argCount := 2
+	conditions := []string{}
+	argCount := 2
 
-    // Добавляем остальные фильтры
-    if v, ok := filters["query"]; ok && v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf(`
+	// Добавляем остальные фильтры
+	if v, ok := filters["query"]; ok && v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf(`
         AND (
             LOWER(l.title) LIKE LOWER($%d) 
             OR LOWER(l.description) LIKE LOWER($%d)
@@ -432,175 +433,175 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
                 AND LOWER(t.translated_text) LIKE LOWER($%d)
             )
         )`,
-            argCount, argCount, argCount))
-        args = append(args, "%"+v+"%")
-    }
+			argCount, argCount, argCount))
+		args = append(args, "%"+v+"%")
+	}
 
-    if v, ok := filters["min_price"]; ok && v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
-        args = append(args, v)
-    }
+	if v, ok := filters["min_price"]; ok && v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("AND l.price >= $%d", argCount))
+		args = append(args, v)
+	}
 
-    if v, ok := filters["max_price"]; ok && v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND l.price <= $%d", argCount))
-        args = append(args, v)
-    }
+	if v, ok := filters["max_price"]; ok && v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("AND l.price <= $%d", argCount))
+		args = append(args, v)
+	}
 
-    if v, ok := filters["condition"]; ok && v != "" {
-        argCount++
-        conditions = append(conditions, fmt.Sprintf("AND l.condition = $%d", argCount))
-        args = append(args, v)
-    }
-    
-    // Добавляем фильтр по storefront_id только если колонка существует
-    if hasStorefrontID {
-        if v, ok := filters["storefront_id"]; ok && v != "" {
-            argCount++
-            conditions = append(conditions, fmt.Sprintf("AND l.storefront_id = $%d", argCount))
-            args = append(args, v)
-        }
-    }
-    
-    if len(conditions) > 0 {
-        baseQuery += " " + strings.Join(conditions, " ")
-    }
+	if v, ok := filters["condition"]; ok && v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("AND l.condition = $%d", argCount))
+		args = append(args, v)
+	}
 
-    // Сортировка
-    switch filters["sort_by"] {
-    case "price_asc":
-        baseQuery += " ORDER BY l.price ASC"
-    case "price_desc":
-        baseQuery += " ORDER BY l.price DESC"
-    default:
-        baseQuery += " ORDER BY l.created_at DESC"
-    }
+	// Добавляем фильтр по storefront_id только если колонка существует
+	if hasStorefrontID {
+		if v, ok := filters["storefront_id"]; ok && v != "" {
+			argCount++
+			conditions = append(conditions, fmt.Sprintf("AND l.storefront_id = $%d", argCount))
+			args = append(args, v)
+		}
+	}
 
-    // Пагинация
-    baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount+1, argCount+2)
-    args = append(args, limit, offset)
+	if len(conditions) > 0 {
+		baseQuery += " " + strings.Join(conditions, " ")
+	}
 
-    // Выполнение запроса
-    rows, err := s.pool.Query(ctx, baseQuery, args...)
-    if err != nil {
-        return nil, 0, fmt.Errorf("error querying listings: %w", err)
-    }
-    defer rows.Close()
+	// Сортировка
+	switch filters["sort_by"] {
+	case "price_asc":
+		baseQuery += " ORDER BY l.price ASC"
+	case "price_desc":
+		baseQuery += " ORDER BY l.price DESC"
+	default:
+		baseQuery += " ORDER BY l.created_at DESC"
+	}
 
-    var listings []models.MarketplaceListing
-    var totalCount int64
+	// Пагинация
+	baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount+1, argCount+2)
+	args = append(args, limit, offset)
 
-    for rows.Next() {
-        var listing models.MarketplaceListing
-        var translationsJSON []byte
+	// Выполнение запроса
+	rows, err := s.pool.Query(ctx, baseQuery, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error querying listings: %w", err)
+	}
+	defer rows.Close()
 
-        listing.User = &models.User{}
-        listing.Category = &models.MarketplaceCategory{}
+	var listings []models.MarketplaceListing
+	var totalCount int64
 
-        var (
-            tempEmail        sql.NullString
-            tempPictureURL   sql.NullString
-            tempLocation     sql.NullString
-            tempLatitude     sql.NullFloat64
-            tempLongitude    sql.NullFloat64
-            tempCity         sql.NullString
-            tempCountry      sql.NullString
-            tempCategoryName sql.NullString
-            tempCategorySlug sql.NullString
-            tempStorefrontID sql.NullInt32
-        )
+	for rows.Next() {
+		var listing models.MarketplaceListing
+		var translationsJSON []byte
 
-        err := rows.Scan(
-            &listing.ID,
-            &listing.UserID,
-            &listing.CategoryID,
-            &listing.Title,
-            &listing.Description,
-            &listing.Price,
-            &listing.Condition,
-            &listing.Status,
-            &tempLocation,
-            &tempLatitude,
-            &tempLongitude,
-            &tempCity,
-            &tempCountry,
-            &listing.ViewsCount,
-            &listing.CreatedAt,
-            &listing.UpdatedAt,
-            &listing.ShowOnMap,
-            &listing.OriginalLanguage,
-            &tempStorefrontID,
-            &listing.User.Name,
-            &tempEmail,
-            &listing.User.CreatedAt,
-            &tempPictureURL,
-            &tempCategoryName,
-            &tempCategorySlug,
-            &translationsJSON,
-            &listing.IsFavorite,
-            &totalCount,
-        )
+		listing.User = &models.User{}
+		listing.Category = &models.MarketplaceCategory{}
 
-        if err != nil {
-            return nil, 0, fmt.Errorf("error scanning listing: %w", err)
-        }
+		var (
+			tempEmail        sql.NullString
+			tempPictureURL   sql.NullString
+			tempLocation     sql.NullString
+			tempLatitude     sql.NullFloat64
+			tempLongitude    sql.NullFloat64
+			tempCity         sql.NullString
+			tempCountry      sql.NullString
+			tempCategoryName sql.NullString
+			tempCategorySlug sql.NullString
+			tempStorefrontID sql.NullInt32
+		)
 
-        // Получаем изображения
-        images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
-        if err != nil {
-            log.Printf("Error getting images for listing %d: %v", listing.ID, err)
-            listing.Images = []models.MarketplaceImage{}
-        } else {
-            listing.Images = images
-        }
+		err := rows.Scan(
+			&listing.ID,
+			&listing.UserID,
+			&listing.CategoryID,
+			&listing.Title,
+			&listing.Description,
+			&listing.Price,
+			&listing.Condition,
+			&listing.Status,
+			&tempLocation,
+			&tempLatitude,
+			&tempLongitude,
+			&tempCity,
+			&tempCountry,
+			&listing.ViewsCount,
+			&listing.CreatedAt,
+			&listing.UpdatedAt,
+			&listing.ShowOnMap,
+			&listing.OriginalLanguage,
+			&tempStorefrontID,
+			&listing.User.Name,
+			&tempEmail,
+			&listing.User.CreatedAt,
+			&tempPictureURL,
+			&tempCategoryName,
+			&tempCategorySlug,
+			&translationsJSON,
+			&listing.IsFavorite,
+			&totalCount,
+		)
 
-        // Обработка NULL значений
-        if tempLocation.Valid {
-            listing.Location = tempLocation.String
-        }
-        if tempStorefrontID.Valid {
-            sfID := int(tempStorefrontID.Int32)
-            listing.StorefrontID = &sfID
-        }
-        if tempLatitude.Valid {
-            listing.Latitude = &tempLatitude.Float64
-        }
-        if tempLongitude.Valid {
-            listing.Longitude = &tempLongitude.Float64
-        }
-        if tempCity.Valid {
-            listing.City = tempCity.String
-        }
-        if tempCountry.Valid {
-            listing.Country = tempCountry.String
-        }
-        if tempEmail.Valid {
-            listing.User.Email = tempEmail.String
-        }
-        if tempPictureURL.Valid {
-            listing.User.PictureURL = tempPictureURL.String
-        }
-        if tempCategoryName.Valid {
-            listing.Category.Name = tempCategoryName.String
-        }
-        if tempCategorySlug.Valid {
-            listing.Category.Slug = tempCategorySlug.String
-        }
+		if err != nil {
+			return nil, 0, fmt.Errorf("error scanning listing: %w", err)
+		}
 
-        // Обработка переводов
-        if err := json.Unmarshal(translationsJSON, &listing.RawTranslations); err != nil {
-            listing.RawTranslations = make(map[string]interface{})
-        }
+		// Получаем изображения
+		images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
+		if err != nil {
+			log.Printf("Error getting images for listing %d: %v", listing.ID, err)
+			listing.Images = []models.MarketplaceImage{}
+		} else {
+			listing.Images = images
+		}
 
-        if listing.RawTranslations != nil {
-            listing.Translations = s.processTranslations(listing.RawTranslations)
-        }
+		// Обработка NULL значений
+		if tempLocation.Valid {
+			listing.Location = tempLocation.String
+		}
+		if tempStorefrontID.Valid {
+			sfID := int(tempStorefrontID.Int32)
+			listing.StorefrontID = &sfID
+		}
+		if tempLatitude.Valid {
+			listing.Latitude = &tempLatitude.Float64
+		}
+		if tempLongitude.Valid {
+			listing.Longitude = &tempLongitude.Float64
+		}
+		if tempCity.Valid {
+			listing.City = tempCity.String
+		}
+		if tempCountry.Valid {
+			listing.Country = tempCountry.String
+		}
+		if tempEmail.Valid {
+			listing.User.Email = tempEmail.String
+		}
+		if tempPictureURL.Valid {
+			listing.User.PictureURL = tempPictureURL.String
+		}
+		if tempCategoryName.Valid {
+			listing.Category.Name = tempCategoryName.String
+		}
+		if tempCategorySlug.Valid {
+			listing.Category.Slug = tempCategorySlug.String
+		}
 
-        listings = append(listings, listing)
-    }
+		// Обработка переводов
+		if err := json.Unmarshal(translationsJSON, &listing.RawTranslations); err != nil {
+			listing.RawTranslations = make(map[string]interface{})
+		}
 
-    return listings, totalCount, nil
+		if listing.RawTranslations != nil {
+			listing.Translations = s.processTranslations(listing.RawTranslations)
+		}
+
+		listings = append(listings, listing)
+	}
+
+	return listings, totalCount, nil
 }
 
 func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
@@ -734,8 +735,8 @@ ORDER BY c1.name ASC;
 		}
 
 		// Добавляем логирование переводов и детей
-//		log.Printf("Raw translations JSON for category %d: %s", node.ID, string(translationsJson))
-//		log.Printf("Raw children JSON for category %d: %s", node.ID, string(childrenJson))
+		//		log.Printf("Raw translations JSON for category %d: %s", node.ID, string(translationsJson))
+		//		log.Printf("Raw children JSON for category %d: %s", node.ID, string(childrenJson))
 
 		if err := json.Unmarshal(translationsJson, &node.Translations); err != nil {
 			log.Printf("Error unmarshaling translations for category %d: %v", node.ID, err)
@@ -748,17 +749,17 @@ ORDER BY c1.name ASC;
 			node.Children = make([]models.CategoryTreeNode, 0)
 		} else {
 			node.Children = children
-//			log.Printf("Category %d has %d children", node.ID, len(children))
+			//			log.Printf("Category %d has %d children", node.ID, len(children))
 		}
 
 		rootCategories = append(rootCategories, node)
 	}
 
 	// Добавляем логирование результата
-//	for _, cat := range rootCategories {
-//		log.Printf("Root category %d (%s) has %d children and children_count=%d",
-//			cat.ID, cat.Name, len(cat.Children), cat.ChildrenCount)
-//	}
+	//	for _, cat := range rootCategories {
+	//		log.Printf("Root category %d (%s) has %d children and children_count=%d",
+	//			cat.ID, cat.Name, len(cat.Children), cat.ChildrenCount)
+	//	}
 
 	log.Printf("Returning %d root categories with tree", len(rootCategories))
 	return rootCategories, nil
@@ -905,31 +906,31 @@ func (s *Storage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, 
 	return userIDs, nil
 }
 func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
-    // Сначала удаляем записи из избранного
-    _, err := s.pool.Exec(ctx, `
+	// Сначала удаляем записи из избранного
+	_, err := s.pool.Exec(ctx, `
         DELETE FROM marketplace_favorites
         WHERE listing_id = $1
     `, id)
-    if err != nil {
-        return fmt.Errorf("error removing listing from favorites: %w", err)
-    }
-    
-    // Удаляем объявление
-    result, err := s.pool.Exec(ctx, `
+	if err != nil {
+		return fmt.Errorf("error removing listing from favorites: %w", err)
+	}
+
+	// Удаляем объявление
+	result, err := s.pool.Exec(ctx, `
         DELETE FROM marketplace_listings
         WHERE id = $1 AND user_id = $2
     `, id, userID)
 
-    if err != nil {
-        return fmt.Errorf("error deleting listing: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("error deleting listing: %w", err)
+	}
 
-    rowsAffected := result.RowsAffected()
-    if rowsAffected == 0 {
-        return fmt.Errorf("listing not found or you don't have permission to delete it")
-    }
-    
-    return nil
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("listing not found or you don't have permission to delete it")
+	}
+
+	return nil
 }
 
 func (s *Storage) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
@@ -987,83 +988,121 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 
 	return nil
 }
+
 // SaveListingAttributes сохраняет значения атрибутов для объявления
 func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
-    log.Printf("Storage: Saving %d attributes for listing %d", len(attributes), listingID)
-    
-    // Начинаем транзакцию
-    tx, err := s.pool.Begin(ctx)
-    if err != nil {
-        return fmt.Errorf("error starting transaction: %w", err)
-    }
-    defer tx.Rollback(ctx)
+	log.Printf("Storage: Saving %d attributes for listing %d", len(attributes), listingID)
 
-    // Удаляем старые атрибуты
-    _, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)
-    if err != nil {
-        return fmt.Errorf("error deleting old attributes: %w", err)
-    }
+	// Начинаем транзакцию
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
 
-    // Вставляем новые атрибуты
-    for i, attr := range attributes {
-        var textValue sql.NullString
-        var numericValue sql.NullFloat64
-        var boolValue sql.NullBool
-        var jsonValue sql.NullString
+	// Удаляем старые атрибуты
+	_, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)
+	if err != nil {
+		return fmt.Errorf("error deleting old attributes: %w", err)
+	}
 
-        // Логируем каждый атрибут
-        log.Printf("Storage: Processing attribute %d: ID=%d, Type=%s", 
-            i, attr.AttributeID, attr.AttributeType)
+	// Вставляем новые атрибуты
+	for i, attr := range attributes {
+		var textValue sql.NullString
+		var numericValue sql.NullFloat64
+		var boolValue sql.NullBool
+		var jsonValue sql.NullString
 
-        // Установка значения в зависимости от типа
-        switch attr.AttributeType {
-        case "text", "select":
-            if attr.TextValue != nil {
-                textValue = sql.NullString{String: *attr.TextValue, Valid: true}
-                log.Printf("Storage: Text value: %s", *attr.TextValue)
-            }
-        case "number":
-            if attr.NumericValue != nil {
-                numericValue = sql.NullFloat64{Float64: *attr.NumericValue, Valid: true}
-                log.Printf("Storage: Numeric value: %f", *attr.NumericValue)
-            }
-        case "boolean":
-            if attr.BooleanValue != nil {
-                boolValue = sql.NullBool{Bool: *attr.BooleanValue, Valid: true}
-                log.Printf("Storage: Boolean value: %t", *attr.BooleanValue)
-            }
-        case "json", "multiselect":
-            if attr.JSONValue != nil {
-                jsonValue = sql.NullString{String: string(attr.JSONValue), Valid: true}
-                log.Printf("Storage: JSON value: %s", string(attr.JSONValue))
-            }
-        }
+		// Проверим, что атрибут имеет хотя бы одно значение
+		if attr.TextValue == nil && attr.NumericValue == nil && attr.BooleanValue == nil && attr.JSONValue == nil {
+			log.Printf("Storage: Skipping attribute %d: No value provided", attr.AttributeID)
+			continue
+		}
 
-        // Важное изменение: не указываем id в списке полей, так как он генерируется автоматически
-        _, err = tx.Exec(ctx, `
+		// Логируем каждый атрибут
+		log.Printf("Storage: Processing attribute %d: ID=%d, Type=%s",
+			i, attr.AttributeID, attr.AttributeType)
+
+		// Установка значения в зависимости от типа
+		switch attr.AttributeType {
+		case "text", "select":
+			if attr.TextValue != nil {
+				textValue = sql.NullString{String: *attr.TextValue, Valid: true}
+				log.Printf("Storage: Text value: %s", *attr.TextValue)
+			}
+		case "number":
+			if attr.NumericValue != nil {
+				// Проверяем специальные случаи
+				if attr.AttributeName == "engine_capacity" {
+					// Округляем до одного знака после запятой для объема двигателя
+					roundedValue := math.Round(*attr.NumericValue*10) / 10
+					numericValue = sql.NullFloat64{Float64: roundedValue, Valid: true}
+					log.Printf("Storage: Rounded engine capacity value: %f", roundedValue)
+				} else {
+					numericValue = sql.NullFloat64{Float64: *attr.NumericValue, Valid: true}
+					log.Printf("Storage: Numeric value: %f", *attr.NumericValue)
+				}
+			}
+		case "boolean":
+			if attr.BooleanValue != nil {
+				boolValue = sql.NullBool{Bool: *attr.BooleanValue, Valid: true}
+				log.Printf("Storage: Boolean value: %t", *attr.BooleanValue)
+			}
+		
+		case "json", "multiselect":
+			if attr.JSONValue != nil {
+				jsonValue = sql.NullString{String: string(attr.JSONValue), Valid: true}
+				log.Printf("Storage: JSON value: %s", string(attr.JSONValue))
+			}
+		default:
+			// Для неизвестных типов пытаемся распознать тип по имеющимся значениям
+			if attr.TextValue != nil {
+				textValue = sql.NullString{String: *attr.TextValue, Valid: true}
+				log.Printf("Storage: Fallback text value: %s", *attr.TextValue)
+			} else if attr.NumericValue != nil {
+				numericValue = sql.NullFloat64{Float64: *attr.NumericValue, Valid: true}
+				log.Printf("Storage: Fallback numeric value: %f", *attr.NumericValue)
+			} else if attr.BooleanValue != nil {
+				boolValue = sql.NullBool{Bool: *attr.BooleanValue, Valid: true}
+				log.Printf("Storage: Fallback boolean value: %t", *attr.BooleanValue)
+			} else if attr.JSONValue != nil {
+				jsonValue = sql.NullString{String: string(attr.JSONValue), Valid: true}
+				log.Printf("Storage: Fallback JSON value: %s", string(attr.JSONValue))
+			}
+		}
+
+		// Проверяем, есть ли хотя бы одно значение
+		if !textValue.Valid && !numericValue.Valid && !boolValue.Valid && !jsonValue.Valid {
+			log.Printf("Storage: No values after type processing for attribute %d (%s), skipping",
+				attr.AttributeID, attr.AttributeName)
+			continue
+		}
+
+		// Важное изменение: не указываем id в списке полей, так как он генерируется автоматически
+		_, err = tx.Exec(ctx, `
             INSERT INTO listing_attribute_values (
                 listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value
             ) VALUES ($1, $2, $3, $4, $5, $6)
         `, listingID, attr.AttributeID, textValue, numericValue, boolValue, jsonValue)
 
-        if err != nil {
-            log.Printf("Storage: Error inserting attribute: %v", err)
-            return fmt.Errorf("error inserting attribute value: %w", err)
-        }
-    }
+		if err != nil {
+			log.Printf("Storage: Error inserting attribute: %v", err)
+			return fmt.Errorf("error inserting attribute value: %w", err)
+		}
+	}
 
-    // Фиксируем транзакцию
-    if err = tx.Commit(ctx); err != nil {
-        return fmt.Errorf("error committing transaction: %w", err)
-    }
+	// Фиксируем транзакцию
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("error committing transaction: %w", err)
+	}
 
-    log.Printf("Storage: Successfully saved all attributes for listing %d", listingID)
-    return nil
+	log.Printf("Storage: Successfully saved all attributes for listing %d", listingID)
+	return nil
 }
 
 // GetListingAttributes получает значения атрибутов для объявления без дублирования
 func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
-    query := `
+	query := `
         SELECT 
             v.listing_id,
             v.attribute_id,
@@ -1080,83 +1119,83 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
         ORDER BY a.sort_order, a.display_name
     `
 
-    rows, err := s.pool.Query(ctx, query, listingID)
-    if err != nil {
-        return nil, fmt.Errorf("error querying listing attributes: %w", err)
-    }
-    defer rows.Close()
+	rows, err := s.pool.Query(ctx, query, listingID)
+	if err != nil {
+		return nil, fmt.Errorf("error querying listing attributes: %w", err)
+	}
+	defer rows.Close()
 
-    // Используем map для отслеживания уже добавленных атрибутов
-    uniqueAttributes := make(map[int]models.ListingAttributeValue)
-    
-    for rows.Next() {
-        var attr models.ListingAttributeValue
-        var textValue sql.NullString
-        var numericValue sql.NullFloat64
-        var boolValue sql.NullBool
-        var jsonValue sql.NullString
+	// Используем map для отслеживания уже добавленных атрибутов
+	uniqueAttributes := make(map[int]models.ListingAttributeValue)
 
-        if err := rows.Scan(
-            &attr.ListingID,
-            &attr.AttributeID,
-            &attr.AttributeName,
-            &attr.DisplayName,
-            &attr.AttributeType,
-            &textValue,
-            &numericValue,
-            &boolValue,
-            &jsonValue,
-        ); err != nil {
-            return nil, fmt.Errorf("error scanning listing attribute: %w", err)
-        }
+	for rows.Next() {
+		var attr models.ListingAttributeValue
+		var textValue sql.NullString
+		var numericValue sql.NullFloat64
+		var boolValue sql.NullBool
+		var jsonValue sql.NullString
 
-        // Заполняем значения в зависимости от типа
-        if textValue.Valid {
-            attr.TextValue = &textValue.String
-            attr.DisplayValue = textValue.String
-        }
-        if numericValue.Valid {
-            attr.NumericValue = &numericValue.Float64
-            attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
-        }
-        if boolValue.Valid {
-            attr.BooleanValue = &boolValue.Bool
-            if boolValue.Bool {
-                attr.DisplayValue = "Да"
-            } else {
-                attr.DisplayValue = "Нет"
-            }
-        }
-        if jsonValue.Valid {
-            attr.JSONValue = json.RawMessage(jsonValue.String)
-            // Для multiselect можно форматировать массив значений
-            if attr.AttributeType == "multiselect" {
-                var values []string
-                if err := json.Unmarshal(attr.JSONValue, &values); err == nil {
-                    attr.DisplayValue = strings.Join(values, ", ")
-                }
-            } else {
-                attr.DisplayValue = jsonValue.String
-            }
-        }
+		if err := rows.Scan(
+			&attr.ListingID,
+			&attr.AttributeID,
+			&attr.AttributeName,
+			&attr.DisplayName,
+			&attr.AttributeType,
+			&textValue,
+			&numericValue,
+			&boolValue,
+			&jsonValue,
+		); err != nil {
+			return nil, fmt.Errorf("error scanning listing attribute: %w", err)
+		}
 
-        // Добавляем только если атрибут с таким ID еще не был добавлен
-        if _, exists := uniqueAttributes[attr.AttributeID]; !exists {
-            uniqueAttributes[attr.AttributeID] = attr
-        }
-    }
+		// Заполняем значения в зависимости от типа
+		if textValue.Valid {
+			attr.TextValue = &textValue.String
+			attr.DisplayValue = textValue.String
+		}
+		if numericValue.Valid {
+			attr.NumericValue = &numericValue.Float64
+			attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
+		}
+		if boolValue.Valid {
+			attr.BooleanValue = &boolValue.Bool
+			if boolValue.Bool {
+				attr.DisplayValue = "Да"
+			} else {
+				attr.DisplayValue = "Нет"
+			}
+		}
+		if jsonValue.Valid {
+			attr.JSONValue = json.RawMessage(jsonValue.String)
+			// Для multiselect можно форматировать массив значений
+			if attr.AttributeType == "multiselect" {
+				var values []string
+				if err := json.Unmarshal(attr.JSONValue, &values); err == nil {
+					attr.DisplayValue = strings.Join(values, ", ")
+				}
+			} else {
+				attr.DisplayValue = jsonValue.String
+			}
+		}
 
-    if err := rows.Err(); err != nil {
-        return nil, fmt.Errorf("error iterating listing attributes: %w", err)
-    }
+		// Добавляем только если атрибут с таким ID еще не был добавлен
+		if _, exists := uniqueAttributes[attr.AttributeID]; !exists {
+			uniqueAttributes[attr.AttributeID] = attr
+		}
+	}
 
-    // Преобразуем map в slice
-    attributes := make([]models.ListingAttributeValue, 0, len(uniqueAttributes))
-    for _, attr := range uniqueAttributes {
-        attributes = append(attributes, attr)
-    }
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating listing attributes: %w", err)
+	}
 
-    return attributes, nil
+	// Преобразуем map в slice
+	attributes := make([]models.ListingAttributeValue, 0, len(uniqueAttributes))
+	for _, attr := range uniqueAttributes {
+		attributes = append(attributes, attr)
+	}
+
+	return attributes, nil
 }
 
 // GetCategoryAttributes получает атрибуты для указанной категории
@@ -1464,12 +1503,12 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		}
 	}
 	attributes, err := s.GetListingAttributes(ctx, listing.ID)
-if err != nil {
-    log.Printf("Error loading attributes for listing %d: %v", id, err)
-} else {
-    log.Printf("INFO: Loaded %d attributes for listing %d", len(attributes), id)
-    listing.Attributes = attributes
-}
+	if err != nil {
+		log.Printf("Error loading attributes for listing %d: %v", id, err)
+	} else {
+		log.Printf("INFO: Loaded %d attributes for listing %d", len(attributes), id)
+		listing.Attributes = attributes
+	}
 
 	return listing, nil
 }

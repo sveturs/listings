@@ -56,6 +56,8 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 		if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
 			log.Printf("DEBUG: Found %d attributes in request", len(attributesRaw))
 
+			// Обработка значений атрибутов
+			// Обработка значений атрибутов
 			for _, attrRaw := range attributesRaw {
 				if attrMap, ok := attrRaw.(map[string]interface{}); ok {
 					var attr models.ListingAttributeValue
@@ -70,42 +72,70 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 						attr.AttributeName = attrName
 					}
 
+					// Имя для отображения
+					if displayName, ok := attrMap["display_name"].(string); ok {
+						attr.DisplayName = displayName
+					}
+
 					// Тип атрибута
 					if attrType, ok := attrMap["attribute_type"].(string); ok {
 						attr.AttributeType = attrType
 
-						// Обрабатываем значение в зависимости от типа
+						// Обработка значения в зависимости от типа
 						switch attrType {
 						case "text", "select":
-							if value, ok := attrMap["value"].(string); ok {
+							if value, ok := attrMap["value"].(string); ok && value != "" {
 								attr.TextValue = &value
 								log.Printf("DEBUG: Attribute %d (%s) text value: %s", attr.AttributeID, attr.AttributeName, value)
 							}
 						case "number":
+							// Обрабатываем числовые значения более тщательно
+							var numValue float64
 							if value, ok := attrMap["value"].(float64); ok {
-								attr.NumericValue = &value
-								log.Printf("DEBUG: Attribute %d (%s) numeric value: %f", attr.AttributeID, attr.AttributeName, value)
+								numValue = value
+							} else if value, ok := attrMap["numeric_value"].(float64); ok {
+								numValue = value
+							} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
+								if parsedValue, err := strconv.ParseFloat(strValue, 64); err == nil {
+									numValue = parsedValue
+								}
 							}
+							attr.NumericValue = &numValue
+							log.Printf("DEBUG: Attribute %d (%s) numeric value: %f", attr.AttributeID, attr.AttributeName, numValue)
 						case "boolean":
 							if value, ok := attrMap["value"].(bool); ok {
 								attr.BooleanValue = &value
 								log.Printf("DEBUG: Attribute %d (%s) boolean value: %t", attr.AttributeID, attr.AttributeName, value)
-							}
-						case "multiselect", "json":
-							if value, ok := attrMap["value"]; ok {
-								jsonBytes, _ := json.Marshal(value)
-								attr.JSONValue = jsonBytes
-								log.Printf("DEBUG: Attribute %d (%s) json value: %s", attr.AttributeID, attr.AttributeName, string(jsonBytes))
+							} else if strValue, ok := attrMap["value"].(string); ok {
+								boolValue := strValue == "true" || strValue == "1"
+								attr.BooleanValue = &boolValue
+								log.Printf("DEBUG: Attribute %d (%s) converted string to boolean value: %t", attr.AttributeID, attr.AttributeName, boolValue)
 							}
 						}
 					}
 
-					// Добавляем атрибут в список
-					listing.Attributes = append(listing.Attributes, attr)
+					// Устанавливаем display_value для любого типа атрибута
+					if attr.TextValue != nil {
+						attr.DisplayValue = *attr.TextValue
+					} else if attr.NumericValue != nil {
+						attr.DisplayValue = fmt.Sprintf("%g", *attr.NumericValue)
+					} else if attr.BooleanValue != nil {
+						if *attr.BooleanValue {
+							attr.DisplayValue = "Да"
+						} else {
+							attr.DisplayValue = "Нет"
+						}
+					}
+
+					// Добавляем атрибут в список, если есть хотя бы одно значение
+					if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
+						listing.Attributes = append(listing.Attributes, attr)
+					}
 				}
 			}
 		}
 	}
+
 	// Создаем объявление
 	listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
 	if err != nil {
@@ -643,6 +673,8 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 	var requestBody map[string]interface{}
 	if err := c.BodyParser(&requestBody); err == nil {
 		if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
+			// Обработка значений атрибутов
+			// Обработка значений атрибутов
 			for _, attrRaw := range attributesRaw {
 				if attrMap, ok := attrRaw.(map[string]interface{}); ok {
 					var attr models.ListingAttributeValue
@@ -652,33 +684,70 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 						attr.AttributeID = int(attrID)
 					}
 
+					// Имя атрибута для отладки
+					if attrName, ok := attrMap["attribute_name"].(string); ok {
+						attr.AttributeName = attrName
+					}
+
+					// Имя для отображения
+					if displayName, ok := attrMap["display_name"].(string); ok {
+						attr.DisplayName = displayName
+					}
+
 					// Тип атрибута
 					if attrType, ok := attrMap["attribute_type"].(string); ok {
 						attr.AttributeType = attrType
 
-						// Обрабатываем значение в зависимости от типа
+						// Обработка значения в зависимости от типа
 						switch attrType {
 						case "text", "select":
-							if value, ok := attrMap["value"].(string); ok {
+							if value, ok := attrMap["value"].(string); ok && value != "" {
 								attr.TextValue = &value
+								log.Printf("DEBUG: Attribute %d (%s) text value: %s", attr.AttributeID, attr.AttributeName, value)
 							}
 						case "number":
+							// Обрабатываем числовые значения более тщательно
+							var numValue float64
 							if value, ok := attrMap["value"].(float64); ok {
-								attr.NumericValue = &value
+								numValue = value
+							} else if value, ok := attrMap["numeric_value"].(float64); ok {
+								numValue = value
+							} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
+								if parsedValue, err := strconv.ParseFloat(strValue, 64); err == nil {
+									numValue = parsedValue
+								}
 							}
+							attr.NumericValue = &numValue
+							log.Printf("DEBUG: Attribute %d (%s) numeric value: %f", attr.AttributeID, attr.AttributeName, numValue)
 						case "boolean":
 							if value, ok := attrMap["value"].(bool); ok {
 								attr.BooleanValue = &value
-							}
-						case "multiselect", "json":
-							if value, ok := attrMap["value"]; ok {
-								jsonBytes, _ := json.Marshal(value)
-								attr.JSONValue = jsonBytes
+								log.Printf("DEBUG: Attribute %d (%s) boolean value: %t", attr.AttributeID, attr.AttributeName, value)
+							} else if strValue, ok := attrMap["value"].(string); ok {
+								boolValue := strValue == "true" || strValue == "1"
+								attr.BooleanValue = &boolValue
+								log.Printf("DEBUG: Attribute %d (%s) converted string to boolean value: %t", attr.AttributeID, attr.AttributeName, boolValue)
 							}
 						}
 					}
 
-					listing.Attributes = append(listing.Attributes, attr)
+					// Устанавливаем display_value для любого типа атрибута
+					if attr.TextValue != nil {
+						attr.DisplayValue = *attr.TextValue
+					} else if attr.NumericValue != nil {
+						attr.DisplayValue = fmt.Sprintf("%g", *attr.NumericValue)
+					} else if attr.BooleanValue != nil {
+						if *attr.BooleanValue {
+							attr.DisplayValue = "Да"
+						} else {
+							attr.DisplayValue = "Нет"
+						}
+					}
+
+					// Добавляем атрибут в список, если есть хотя бы одно значение
+					if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
+						listing.Attributes = append(listing.Attributes, attr)
+					}
 				}
 			}
 		}

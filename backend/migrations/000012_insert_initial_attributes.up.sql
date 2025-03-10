@@ -9,7 +9,8 @@ INSERT INTO category_attributes (name, display_name, attribute_type, options, is
 ('fuel_type', 'Тип топлива', 'select', '{"values": ["Бензин", "Дизель", "Гибрид", "Электро", "Газ"]}', true, true, false),
 ('transmission', 'Коробка передач', 'select', '{"values": ["Механика", "Автомат", "Робот", "Вариатор"]}', true, true, false),
 ('body_type', 'Тип кузова', 'select', '{"values": ["Седан", "Хэтчбек", "Универсал", "Внедорожник", "Купе", "Кабриолет", "Минивэн", "Пикап"]}', true, true, false),
-('color', 'Цвет', 'select', '{"values": ["Белый", "Черный", "Серый", "Серебристый", "Красный", "Синий", "Зеленый", "Желтый", "Коричневый", "Другой"]}', true, true, false);
+('color', 'Цвет', 'select', '{"values": ["Белый", "Черный", "Серый", "Серебристый", "Красный", "Синий", "Зеленый", "Желтый", "Коричневый", "Другой"]}', true, true, false),
+('power', 'Мощность (л.с.)', 'number', '{"min": 1, "max": 2000}', true, true, false);
 
 -- Недвижимость
 INSERT INTO category_attributes (name, display_name, attribute_type, options, is_searchable, is_filterable, is_required) VALUES

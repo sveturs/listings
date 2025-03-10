@@ -182,13 +182,47 @@ const EditListingPage = () => {
         }
     }, [i18n.language]);
 
-    // Модифицируем handleSubmit для сохранения переводов
+    // Преобразует массив атрибутов для отправки на сервер
+    const prepareAttributesForSubmission = (attributes) => {
+        return attributes.map(attr => {
+            // Создаем копию атрибута для изменения
+            const newAttr = { ...attr };
+
+            // Обеспечиваем правильный формат числовых значений
+            if (attr.attribute_type === 'number' && attr.value !== undefined) {
+                // Преобразуем в число и убеждаемся, что оно сохранено в правильном поле
+                const numValue = parseFloat(attr.value);
+                if (!isNaN(numValue)) {
+                    newAttr.numeric_value = numValue;
+                    // Если value строка, но представляет число, обновляем ее
+                    if (typeof attr.value === 'string') {
+                        newAttr.value = numValue;
+                    }
+                }
+            }
+
+            return newAttr;
+        });
+    };
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
         setSuccess(false);
 
         try {
+            const processedAttributes = prepareAttributesForSubmission(attributeValues);
+        
+            const listingData = {
+                ...listing,
+                price: parseFloat(listing.price),
+                original_language: i18n.language,
+                attributes: processedAttributes
+            };
+            
+            console.log("Отправляемые атрибуты:", processedAttributes);
+            
+            const response = await axios.post("/api/v1/marketplace/listings", listingData);
+            const listingId = response.data.data.id;
             if (i18n.language === listing.original_language) {
                 // Сначала обновляем основные данные
                 await axios.put(`/api/v1/marketplace/listings/${id}`, {

@@ -14,7 +14,8 @@ import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
-    Divider
+    Divider,
+    Stack
 } from '@mui/material';
 import { ExpandMore } from '@mui/icons-material';
 import axios from '../../api/axios';
@@ -60,7 +61,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
         };
 
         fetchAttributes();
-    }, [categoryId, i18n.language]);
+    }, [categoryId, i18n.language, filters]);
 
     // Обработчик изменения фильтра
     const handleFilterChange = (name, value) => {
@@ -113,16 +114,47 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                 // Извлекаем min, max из options
                 let options = {};
                 try {
-                    options = attribute.options ? JSON.parse(attribute.options) : {};
+                    if (typeof attribute.options === 'string') {
+                        options = JSON.parse(attribute.options);
+                    } else if (attribute.options && typeof attribute.options === 'object') {
+                        options = attribute.options;
+                    }
                 } catch (e) {
+                    console.error(`Ошибка при парсинге options для ${attribute.name}:`, e);
                     options = {};
                 }
                 
-                const min = options.min !== undefined ? options.min : 0;
-                const max = options.max !== undefined ? options.max : 100;
+                const min = options.min !== undefined ? Number(options.min) : 0;
+                const max = options.max !== undefined ? Number(options.max) : 100;
                 
-                // Парсим текущее значение
-                let value = [min, max];
+                // Устанавливаем значения по умолчанию в зависимости от типа атрибута
+                let defaultMin = min;
+                let defaultMax = max;
+
+                switch (attribute.name) {
+                    case 'mileage': // Пробег
+                        defaultMin = min !== undefined ? min : 0;
+                        defaultMax = max !== undefined ? max : 500000; // до 500,000 км
+                        break;
+                    case 'year': // Год выпуска
+                        defaultMin = min !== undefined ? min : 1900;
+                        defaultMax = max !== undefined ? max : new Date().getFullYear();
+                        break;
+                    case 'engine_capacity': // Объем двигателя
+                        defaultMin = min !== undefined ? min : 0.1;
+                        defaultMax = max !== undefined ? max : 8.0; // до 8 литров
+                        break;
+                    case 'price': // Цена
+                        defaultMin = min !== undefined ? min : 0;
+                        defaultMax = max !== undefined ? max : 10000000; // до 10 миллионов
+                        break;
+                    default:
+                        defaultMin = min !== undefined ? min : 0;
+                        defaultMax = max !== undefined ? max : 100;
+                }
+                
+                // Парсим текущее значение из currentValue
+                let value = [defaultMin, defaultMax];
                 if (currentValue) {
                     try {
                         const parts = currentValue.split(',');
@@ -130,7 +162,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                             value = [parseFloat(parts[0]), parseFloat(parts[1])];
                         }
                     } catch (e) {
-                        // Используем значения по умолчанию
+                        console.error("Ошибка при парсинге значения диапазона:", e);
                     }
                 }
                 
@@ -139,6 +171,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                         <Typography id={`filter-${attribute.id}-label`} gutterBottom>
                             {displayName}
                         </Typography>
+                        
                         <Slider
                             value={value}
                             onChange={(e, newValue) => handleFilterChange(
@@ -146,14 +179,37 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                                 `${newValue[0]},${newValue[1]}`
                             )}
                             valueLabelDisplay="auto"
-                            min={min}
-                            max={max}
+                            min={defaultMin}
+                            max={defaultMax}
                             aria-labelledby={`filter-${attribute.id}-label`}
                         />
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2">{min}</Typography>
-                            <Typography variant="body2">{max}</Typography>
-                        </Box>
+                        
+                        <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                            <TextField
+                                label={t('filters.min', { defaultValue: 'От' })}
+                                type="number"
+                                size="small"
+                                value={value[0]}
+                                onChange={(e) => {
+                                    const newValue = [Number(e.target.value), value[1]];
+                                    handleFilterChange(attributeName, `${newValue[0]},${newValue[1]}`);
+                                }}
+                                inputProps={{ min: defaultMin, max: value[1] }}
+                                fullWidth
+                            />
+                            <TextField
+                                label={t('filters.max', { defaultValue: 'До' })}
+                                type="number"
+                                size="small"
+                                value={value[1]}
+                                onChange={(e) => {
+                                    const newValue = [value[0], Number(e.target.value)];
+                                    handleFilterChange(attributeName, `${newValue[0]},${newValue[1]}`);
+                                }}
+                                inputProps={{ min: value[0], max: defaultMax }}
+                                fullWidth
+                            />
+                        </Stack>
                     </Box>
                 );
             }
@@ -162,14 +218,10 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                 // Извлекаем options
                 let options = [];
                 try {
-                    // Добавляем отладочный вывод
-                    console.log(`Обработка опций для атрибута ${attribute.name}, исходные данные:`, attribute.options);
-                    
                     // Проверяем формат options
                     if (typeof attribute.options === 'string') {
                         // Если options - строка JSON
                         const parsedOptions = JSON.parse(attribute.options);
-                        console.log("Распарсенные опции из строки:", parsedOptions);
                         
                         if (Array.isArray(parsedOptions.values)) {
                             options = parsedOptions.values;
@@ -179,8 +231,6 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                         }
                     } else if (attribute.options && typeof attribute.options === 'object') {
                         // Если options уже объект
-                        console.log("Опции уже в формате объекта:", attribute.options);
-                        
                         if (Array.isArray(attribute.options.values)) {
                             options = attribute.options.values;
                         } else if (attribute.options.values) {
@@ -188,10 +238,8 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                             options = [String(attribute.options.values)];
                         }
                     }
-                    
-                    console.log(`Итоговые опции для ${attribute.name}:`, options);
                 } catch (e) {
-                    console.error(`Ошибка при обработке опций для ${attribute.name}:`, e, attribute.options);
+                    console.error(`Ошибка при обработке опций для ${attribute.name}:`, e);
                     options = [];
                 }
                 
@@ -205,7 +253,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                             <FormControlLabel
                                 value=""
                                 control={<Radio size="small" />}
-                                label={t('listings.filters.any')}
+                                label={t('listings.filters.any', { defaultValue: 'Любой' })}
                             />
                             {options.length > 0 ? (
                                 options.map((option) => (
@@ -240,104 +288,97 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                             <FormControlLabel
                                 value=""
                                 control={<Radio size="small" />}
-                                label={t('listings.filters.any')}
+                                label={t('listings.filters.any', { defaultValue: 'Любой' })}
                             />
                             <FormControlLabel
                                 value="true"
                                 control={<Radio size="small" />}
-                                label={t('common.yes')}
+                                label={t('common.yes', { defaultValue: 'Да' })}
                             />
                             <FormControlLabel
                                 value="false"
                                 control={<Radio size="small" />}
-                                label={t('common.no')}
+                                label={t('common.no', { defaultValue: 'Нет' })}
                             />
                         </RadioGroup>
                     </FormControl>
                 );
                 
-                case 'multiselect': {
-                    // Извлекаем options
-                    let options = [];
-                    try {
-                        console.log(`Обработка мульти-опций для атрибута ${attribute.name}, исходные данные:`, attribute.options);
+            case 'multiselect': {
+                // Извлекаем options
+                let options = [];
+                try {
+                    // Проверяем формат options
+                    if (typeof attribute.options === 'string') {
+                        // Если options - строка JSON
+                        const parsedOptions = JSON.parse(attribute.options);
                         
-                        // Проверяем формат options
-                        if (typeof attribute.options === 'string') {
-                            // Если options - строка JSON
-                            const parsedOptions = JSON.parse(attribute.options);
-                            console.log("Распарсенные мульти-опции из строки:", parsedOptions);
-                            
-                            if (Array.isArray(parsedOptions.values)) {
-                                options = parsedOptions.values;
-                            } else if (parsedOptions.values) {
-                                // Если values существует, но не массив
-                                options = [String(parsedOptions.values)];
-                            }
-                        } else if (attribute.options && typeof attribute.options === 'object') {
-                            // Если options уже объект
-                            console.log("Мульти-опции уже в формате объекта:", attribute.options);
-                            
-                            if (Array.isArray(attribute.options.values)) {
-                                options = attribute.options.values;
-                            } else if (attribute.options.values) {
-                                // Если values существует, но не массив
-                                options = [String(attribute.options.values)];
-                            }
+                        if (Array.isArray(parsedOptions.values)) {
+                            options = parsedOptions.values;
+                        } else if (parsedOptions.values) {
+                            // Если values существует, но не массив
+                            options = [String(parsedOptions.values)];
                         }
-                        
-                        console.log(`Итоговые мульти-опции для ${attribute.name}:`, options);
-                    } catch (e) {
-                        console.error(`Ошибка при обработке мульти-опций для ${attribute.name}:`, e, attribute.options);
-                        options = [];
-                    }
-                    
-                    // Парсим текущие выбранные значения
-                    let selectedValues = [];
-                    if (currentValue) {
-                        try {
-                            selectedValues = currentValue.split(',');
-                        } catch (e) {
-                            // Используем пустой массив
+                    } else if (attribute.options && typeof attribute.options === 'object') {
+                        // Если options уже объект
+                        if (Array.isArray(attribute.options.values)) {
+                            options = attribute.options.values;
+                        } else if (attribute.options.values) {
+                            // Если values существует, но не массив
+                            options = [String(attribute.options.values)];
                         }
                     }
-                    
-                    return (
-                        <FormControl component="fieldset">
-                            <Typography>{displayName}</Typography>
-                            <FormGroup>
-                                {options.length > 0 ? (
-                                    options.map((option) => (
-                                        <FormControlLabel
-                                            key={option}
-                                            control={
-                                                <Checkbox
-                                                    size="small"
-                                                    checked={selectedValues.includes(option)}
-                                                    onChange={(e) => {
-                                                        const newSelected = e.target.checked
-                                                            ? [...selectedValues, option]
-                                                            : selectedValues.filter(val => val !== option);
-                                                        
-                                                        handleFilterChange(
-                                                            attributeName,
-                                                            newSelected.length > 0 ? newSelected.join(',') : ''
-                                                        );
-                                                    }}
-                                                />
-                                            }
-                                            label={option}
-                                        />
-                                    ))
-                                ) : (
-                                    <Typography variant="caption" color="text.secondary">
-                                        {t('listings.filters.noOptions', { defaultValue: 'Нет доступных вариантов' })}
-                                    </Typography>
-                                )}
-                            </FormGroup>
-                        </FormControl>
-                    );
+                } catch (e) {
+                    console.error(`Ошибка при обработке мульти-опций для ${attribute.name}:`, e);
+                    options = [];
                 }
+                
+                // Парсим текущие выбранные значения
+                let selectedValues = [];
+                if (currentValue) {
+                    try {
+                        selectedValues = currentValue.split(',');
+                    } catch (e) {
+                        // Используем пустой массив
+                    }
+                }
+                
+                return (
+                    <FormControl component="fieldset">
+                        <Typography>{displayName}</Typography>
+                        <FormGroup>
+                            {options.length > 0 ? (
+                                options.map((option) => (
+                                    <FormControlLabel
+                                        key={option}
+                                        control={
+                                            <Checkbox
+                                                size="small"
+                                                checked={selectedValues.includes(option)}
+                                                onChange={(e) => {
+                                                    const newSelected = e.target.checked
+                                                        ? [...selectedValues, option]
+                                                        : selectedValues.filter(val => val !== option);
+                                                    
+                                                    handleFilterChange(
+                                                        attributeName,
+                                                        newSelected.length > 0 ? newSelected.join(',') : ''
+                                                    );
+                                                }}
+                                            />
+                                        }
+                                        label={option}
+                                    />
+                                ))
+                            ) : (
+                                <Typography variant="caption" color="text.secondary">
+                                    {t('listings.filters.noOptions', { defaultValue: 'Нет доступных вариантов' })}
+                                </Typography>
+                            )}
+                        </FormGroup>
+                    </FormControl>
+                );
+            }
                                 
             default:
                 return null;
@@ -345,7 +386,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
     };
 
     if (loading) {
-        return <Typography>{t('common.loading')}...</Typography>;
+        return <Typography>{t('common.loading', { defaultValue: 'Загрузка' })}...</Typography>;
     }
 
     if (!categoryId || attributes.length === 0) {
@@ -355,7 +396,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
     return (
         <Box>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                {t('listings.filters.specific_attributes')}
+                {t('listings.filters.specific_attributes', { defaultValue: 'Дополнительные фильтры' })}
             </Typography>
             
             {attributes.map((attribute) => (

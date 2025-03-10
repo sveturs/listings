@@ -16,6 +16,8 @@ import { Link } from 'react-router-dom';
 import { Store } from 'lucide-react';
 import GalleryViewer from '../../components/shared/GalleryViewer';
 import UserRating from '../../components/user/UserRating';
+import AutoDetails from '../../components/marketplace/AutoDetails';
+
 import {
     MapPin,
     Calendar,
@@ -111,41 +113,94 @@ const ListingDetailsPage = () => {
             default: return <Info size={20} />;
         }
     };
-    // Основные атрибуты, которые мы показываем в верхнем блоке
-    const topAttributes = ['mileage', 'body_type', 'fuel_type'];
 
-    // Получаем только основные атрибуты для верхнего блока
-    const getTopAttributes = (attributes) => {
-        if (!attributes || !Array.isArray(attributes)) return [];
-
-        return attributes.filter(attr =>
-            topAttributes.includes(attr.attribute_name)
-        );
-    };
-
-    // Получаем все атрибуты, кроме тех, что уже показаны в верхнем блоке
-    const getDetailsAttributes = (attributes) => {
-        if (!attributes || !Array.isArray(attributes)) return [];
-
-        return attributes.filter(attr =>
-            !topAttributes.includes(attr.attribute_name)
-        );
-    };
     // Функция форматирования значения атрибута
     const formatAttributeValue = (attr) => {
-        if (!attr) return '';
+        // Если атрибут не имеет значения - возвращаем "Не указано"
+        if (!attr.display_value && attr.display_value !== 0 && attr.display_value !== false) {
+            return t('common.not_specified', { defaultValue: 'Не указано' });
+        }
 
         if (attr.attribute_type === 'boolean') {
             return attr.display_value === 'true' || attr.display_value === true ?
-                t('common.yes', { defaultValue: 'Да' }) : t('common.no', { defaultValue: 'Нет' });
+                t('common.yes') : t('common.no');
         }
 
         if (attr.attribute_name === 'price') {
             return formatPrice(attr.display_value);
         }
 
+        // Особая обработка для некоторых числовых атрибутов
+        if (attr.attribute_type === 'number') {
+            const numValue = parseFloat(attr.display_value);
+
+            if (attr.attribute_name === 'year') {
+                return Math.round(numValue).toString(); // Убираем десятичные части для года
+            }
+            if (attr.attribute_name === 'mileage') {
+                return `${numValue.toLocaleString()} км`; // Форматируем пробег с разделителями тысяч
+            }
+            if (attr.attribute_name === 'engine_capacity') {
+                return `${numValue.toFixed(1)} л`; // Форматируем объем с одним знаком после запятой
+            }
+        }
+
         return attr.display_value;
     };
+
+    // Преобразование атрибутов в формат для AutoDetails компонента
+    const convertAttributesToAutoProps = (attributes) => {
+        const props = {};
+        
+        attributes.forEach(attr => {
+            switch(attr.attribute_name) {
+                case 'make':
+                    props.brand = attr.display_value;
+                    break;
+                case 'model':
+                    props.model = attr.display_value;
+                    break;
+                case 'year':
+                    props.year = parseInt(attr.display_value) || null;
+                    break;
+                case 'mileage':
+                    props.mileage = parseInt(attr.display_value) || 0;
+                    break;
+                case 'engine_capacity':
+                    props.engine_capacity = parseFloat(attr.display_value) || null;
+                    break;
+                case 'fuel_type':
+                    props.fuel_type = attr.display_value;
+                    break;
+                case 'transmission':
+                    props.transmission = attr.display_value;
+                    break;
+                case 'body_type':
+                    props.body_type = attr.display_value;
+                    break;
+                case 'color':
+                    props.color = attr.display_value;
+                    break;
+                case 'power':
+                    props.power = parseInt(attr.display_value) || null;
+                    break;
+                case 'drive_type':
+                    props.drive_type = attr.display_value;
+                    break;
+                case 'number_of_doors':
+                    props.number_of_doors = attr.display_value;
+                    break;
+                case 'number_of_seats':
+                    props.number_of_seats = attr.display_value;
+                    break;
+                default:
+                    break;
+            }
+        });
+        
+        return props;
+    };
+    
 
     const findCategoryPath = useCallback((categoryId, categoriesTree) => {
         const path = [];
@@ -263,12 +318,7 @@ const ListingDetailsPage = () => {
             }
         }
     }, [listing, categories, findCategoryPath]);
-    useEffect(() => {
-        if (listing) {
-            console.log('Данные объявления:', listing);
-            console.log('Атрибуты:', listing.attributes);
-        }
-    }, [listing]);
+
     const scrollToReviews = () => {
         const reviewsSection = document.getElementById('reviews-section');
         if (reviewsSection) {
@@ -562,6 +612,7 @@ const ListingDetailsPage = () => {
                             </Box>
                         </Stack>
 
+                        {/* Добавляем основные характеристики под основной информацией */}
                         {listing.attributes && listing.attributes.length > 0 && (
                             <Box sx={{ mb: 3 }}>
                                 <Paper
@@ -575,25 +626,25 @@ const ListingDetailsPage = () => {
                                     }}
                                 >
                                     <Grid container spacing={2}>
-                                        {/* Используем только топовые атрибуты здесь */}
-                                        {getTopAttributes(listing.attributes).map((attr) => (
+                                        {listing.attributes.slice(0, 3).map((attr) => (
                                             <Grid item xs={4} key={`top-${attr.attribute_id}`}>
                                                 <Box sx={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
                                                     alignItems: 'center',
                                                     textAlign: 'center'
-                                                }}>                                                    <Box sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    width: 36,
-                                                    height: 36,
-                                                    borderRadius: '50%',
-                                                    bgcolor: 'primary.main',
-                                                    color: 'white',
-                                                    mb: 1
                                                 }}>
+                                                    <Box sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        width: 36,
+                                                        height: 36,
+                                                        borderRadius: '50%',
+                                                        bgcolor: 'primary.main',
+                                                        color: 'white',
+                                                        mb: 1
+                                                    }}>
                                                         {getAttributeIcon(attr.attribute_name)}
                                                     </Box>
                                                     <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -620,45 +671,55 @@ const ListingDetailsPage = () => {
                                 <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
                                     {t('listings.details.attributes.title', { defaultValue: 'Характеристики' })}
                                 </Typography>
-                                <Paper sx={{ p: 2, borderRadius: 2 }}>
-                                    <Grid container spacing={3}>
-                                        {/* Показываем только те атрибуты, которые не показаны в верхнем блоке */}
-                                        {getDetailsAttributes(listing.attributes).map((attr) => (
-                                            <Grid item xs={12} sm={6} key={attr.attribute_id}>                                                <Box sx={{
-                                                display: 'flex',
-                                                gap: 2,
-                                                alignItems: 'center',
-                                                p: 1,
-                                                borderRadius: 1,
-                                                '&:hover': { bgcolor: 'action.hover' }
-                                            }}>
-                                                <Box sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    width: 40,
-                                                    height: 40,
-                                                    borderRadius: '50%',
-                                                    bgcolor: 'primary.light',
-                                                    color: 'primary.contrastText'
-                                                }}>
-                                                    {getAttributeIcon(attr.attribute_name)}
-                                                </Box>
-                                                <Box>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {attr.display_name}
-                                                    </Typography>
-                                                    <Typography variant="subtitle1" fontWeight="medium">
-                                                        {formatAttributeValue(attr)}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-                                </Paper>
+
+                                {/* Специальное отображение для автомобилей */}
+                                {listing.category_id === 2100 && (
+                                    <AutoDetails autoProperties={convertAttributesToAutoProps(listing.attributes)} />
+                                )}
+
+                                {/* Стандартное отображение атрибутов */}
+                                {listing.category_id !== 2100 && (
+                                    <Paper sx={{ p: 2, borderRadius: 2 }}>
+                                        <Grid container spacing={3}>
+                                            {listing.attributes.map((attr) => (
+                                                <Grid item xs={12} sm={6} key={attr.attribute_id}>
+                                                    <Box sx={{
+                                                        display: 'flex',
+                                                        gap: 2,
+                                                        alignItems: 'center',
+                                                        p: 1,
+                                                        borderRadius: 1,
+                                                        '&:hover': { bgcolor: 'action.hover' }
+                                                    }}>
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            width: 40,
+                                                            height: 40,
+                                                            borderRadius: '50%',
+                                                            bgcolor: 'primary.light',
+                                                            color: 'primary.contrastText'
+                                                        }}>
+                                                            {getAttributeIcon(attr.attribute_name)}
+                                                        </Box>
+                                                        <Box>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                {attr.display_name}
+                                                            </Typography>
+                                                            <Typography variant="subtitle1" fontWeight="medium">
+                                                                {formatAttributeValue(attr)}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    </Paper>
+                                )}
                             </Box>
                         )}
+
                         {/* Reviews section */}
                         <Box id="reviews-section" ref={reviewsRef} sx={{ mt: 4 }}>
                             <ReviewsSection

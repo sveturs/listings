@@ -17,6 +17,7 @@ import {
     Slider
 } from '@mui/material';
 import axios from '../../api/axios';
+import { InputAdornment } from '@mui/material';
 
 const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
     const { t, i18n } = useTranslation('marketplace');
@@ -46,13 +47,59 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                             // Логируем атрибуты для отладки
                             console.log(`Атрибут: ${attr.name}, тип: ${attr.attribute_type}, опции:`, attr.options);
 
-                            return {
+                            // Создаем базовое значение атрибута
+                            const attrValue = {
                                 attribute_id: attr.id,
                                 attribute_name: attr.name,
                                 attribute_type: attr.attribute_type,
                                 display_name: attr.display_name,
                                 value: getDefaultValueForType(attr.attribute_type)
                             };
+
+                            // В зависимости от типа атрибута, добавляем соответствующее поле
+                            switch (attr.attribute_type) {
+                                case 'text':
+                                case 'select':
+                                    attrValue.text_value = "";
+                                    break;
+                                case 'number':
+                                    // Используем некоторые разумные значения по умолчанию, но не переопределяем 
+                                    // их, если они уже установлены в существующих атрибутах
+                                    let defaultValue = 0;
+
+                                    if (attr.options) {
+                                        try {
+                                            const options = typeof attr.options === 'string'
+                                                ? JSON.parse(attr.options)
+                                                : attr.options;
+
+                                            if (options.min !== undefined) {
+                                                defaultValue = options.min;
+                                            }
+                                        } catch (e) {
+                                            console.error(`Ошибка при разборе options для ${attr.name}:`, e);
+                                        }
+                                    }
+
+                                    // Особые правила для некоторых атрибутов
+                                    if (attr.name === 'year') {
+                                        // Используем текущий год как значение по умолчанию только для нового атрибута
+                                        defaultValue = 2000; // Используем более старый год как начальное значение
+                                    } else if (attr.name === 'mileage') {
+                                        defaultValue = 0; // Пробег по умолчанию
+                                    } else if (attr.name === 'engine_capacity') {
+                                        defaultValue = 1.6; // Средний объем двигателя
+                                    }
+
+                                    attrValue.value = defaultValue;
+                                    attrValue.numeric_value = defaultValue;
+                                    break;
+                                case 'boolean':
+                                    attrValue.boolean_value = false;
+                                    break;
+                            }
+
+                            return attrValue;
                         });
 
                         setValues(initialValues);
@@ -89,7 +136,30 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
     const handleAttributeChange = (attributeId, newValue) => {
         const updatedValues = values.map(attr => {
             if (attr.attribute_id === attributeId) {
-                return { ...attr, value: newValue };
+                const attribute = attributes.find(a => a.id === attributeId);
+                const updatedAttr = { ...attr, value: newValue };
+
+                // Устанавливаем правильный тип значения в зависимости от типа атрибута
+                if (attribute && attribute.attribute_type === 'number') {
+                    updatedAttr.numeric_value = parseFloat(newValue) || 0;
+                    // Обязательно обновляем и типизированное значение, и общее значение
+                    updatedAttr.value = updatedAttr.numeric_value;
+                } else if (attribute && attribute.attribute_type === 'boolean') {
+                    updatedAttr.boolean_value = Boolean(newValue);
+                    updatedAttr.value = updatedAttr.boolean_value;
+                } else {
+                    updatedAttr.text_value = String(newValue);
+                    updatedAttr.value = updatedAttr.text_value;
+                }
+
+                // Обновляем отображаемое значение
+                if (attribute && attribute.attribute_type === 'boolean') {
+                    updatedAttr.display_value = updatedAttr.boolean_value ? 'true' : 'false';
+                } else {
+                    updatedAttr.display_value = String(newValue);
+                }
+
+                return updatedAttr;
             }
             return attr;
         });
@@ -97,6 +167,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
         setValues(updatedValues);
         if (onChange) onChange(updatedValues);
     };
+
 
     // Получение переведенного имени атрибута
     const getTranslatedName = (attribute) => {
@@ -145,24 +216,51 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 const max = options.max !== undefined ? options.max : Number.MAX_SAFE_INTEGER;
                 const step = options.step || 1;
 
+                // Определяем, нужен ли слайдер
+                // Для некоторых атрибутов слайдер не удобен
+                const useSlider = attr.name === 'year' ||
+                    (max - min <= 100) || // Только для небольших диапазонов
+                    attr.name === 'engine_capacity';
+
+                // Определяем специфические форматы полей
+                let inputAdornment = null;
+                let valueSuffix = '';
+
+                if (attr.name === 'mileage') {
+                    inputAdornment = "км";
+                    valueSuffix = ' км';
+                } else if (attr.name === 'engine_capacity') {
+                    inputAdornment = "л";
+                    valueSuffix = ' л';
+                } else if (attr.name === 'power') {
+                    inputAdornment = "л.с.";
+                    valueSuffix = ' л.с.';
+                }
+
                 return (
                     <Box sx={{ width: '100%' }}>
                         <Typography id={`attribute-${attr.id}-label`} gutterBottom>
                             {displayName}{isRequired ? ' *' : ''}
                         </Typography>
-                        <Slider
-                            value={parseFloat(attrValue) || min}
-                            onChange={(e, newValue) => handleAttributeChange(attr.id, newValue)}
-                            aria-labelledby={`attribute-${attr.id}-label`}
-                            min={min}
-                            max={max}
-                            step={step}
-                            marks={[
-                                { value: min, label: min.toString() },
-                                { value: max, label: max.toString() }
-                            ]}
-                            valueLabelDisplay="auto"
-                        />
+
+                        {useSlider && (
+                            <Slider
+                                value={parseFloat(attrValue) || min}
+                                onChange={(e, newValue) => handleAttributeChange(attr.id, newValue)}
+                                aria-labelledby={`attribute-${attr.id}-label`}
+                                min={min}
+                                max={max}
+                                step={step}
+                                marks={[
+                                    { value: min, label: min.toString() + valueSuffix },
+                                    { value: max, label: max.toString() + valueSuffix }
+                                ]}
+                                valueLabelDisplay="auto"
+                                valueLabelFormat={(value) => value + valueSuffix}
+                                sx={{ mb: 2 }}
+                            />
+                        )}
+
                         <TextField
                             type="number"
                             fullWidth
@@ -170,6 +268,13 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                             value={attrValue || ''}
                             onChange={(e) => handleAttributeChange(attr.id, parseFloat(e.target.value) || 0)}
                             inputProps={{ min, max, step }}
+                            InputProps={inputAdornment ? {
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        {inputAdornment}
+                                    </InputAdornment>
+                                ),
+                            } : undefined}
                         />
                     </Box>
                 );
