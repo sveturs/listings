@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { debounce } from 'lodash';
 import {
     Box,
     Typography,
@@ -11,20 +12,45 @@ import {
     RadioGroup,
     Checkbox,
     FormGroup,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
+    Grid,
+    Paper,
     Divider,
     Stack
 } from '@mui/material';
-import { ExpandMore } from '@mui/icons-material';
 import axios from '../../api/axios';
 
 const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
     const { t, i18n } = useTranslation('marketplace');
     const [attributes, setAttributes] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [attributeFilters, setAttributeFilters] = useState({});
+    const [attributeFilters, setAttributeFilters] = useState(() => ({...filters}));
+    const [attributeCount, setAttributeCount] = useState(0);
+
+    // Создаем отложенную функцию применения фильтров
+    const debouncedFilterChange = useCallback(
+        debounce((name, value) => {
+            console.log(`Применяем отложенный фильтр ${name}: ${value}`);
+            
+            // Обновляем локальное состояние фильтров
+            setAttributeFilters(prevFilters => {
+                const updatedFilters = { ...prevFilters };
+                
+                if (value === undefined || value === null || value === '') {
+                    delete updatedFilters[name];
+                } else {
+                    updatedFilters[name] = value;
+                }
+
+                // Вызываем основной обработчик фильтров
+                if (onFilterChange) {
+                    onFilterChange(updatedFilters);
+                }
+                
+                return updatedFilters;
+            });
+        }, 500), // 500мс задержка перед применением
+        [onFilterChange]
+    );
 
     // Загрузка атрибутов при изменении категории
     useEffect(() => {
@@ -41,17 +67,26 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                     // Фильтруем только те атрибуты, которые можно использовать для фильтрации
                     const filterableAttrs = response.data.data.filter(attr => attr.is_filterable);
                     setAttributes(filterableAttrs);
+                    setAttributeCount(filterableAttrs.length);
+                    console.log(`Получено ${filterableAttrs.length} атрибутов для категории ${categoryId}:`, 
+                        filterableAttrs.map(a => a.name).join(', '));
+
+                    // Сохраняем текущие значения атрибутов
+                    const currentFilters = {...attributeFilters};
                     
-                    // Инициализируем значения фильтров
-                    const initialFilters = {};
+                    // Добавляем значения из переданных фильтров, которые еще не учтены
                     filterableAttrs.forEach(attr => {
-                        // Используем существующее значение фильтра, если есть
-                        if (filters[attr.name]) {
-                            initialFilters[attr.name] = filters[attr.name];
+                        // Если в переданных фильтрах есть значение и оно еще не сохранено
+                        if (filters[attr.name] && currentFilters[attr.name] !== filters[attr.name]) {
+                            currentFilters[attr.name] = filters[attr.name];
                         }
                     });
-                    
-                    setAttributeFilters(initialFilters);
+
+                    // Обновляем состояние только если изменились фильтры
+                    if (JSON.stringify(currentFilters) !== JSON.stringify(attributeFilters)) {
+                        setAttributeFilters(currentFilters);
+                        console.log("Обновлены атрибутные фильтры:", currentFilters);
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching attributes for filters:', error);
@@ -63,32 +98,35 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
         fetchAttributes();
     }, [categoryId, i18n.language, filters]);
 
-    // Обработчик изменения фильтра
-    const handleFilterChange = (name, value) => {
-        const updatedFilters = {
-            ...attributeFilters,
-            [name]: value
-        };
+    // Обработчик изменения фильтров по атрибутам
+    const handleFilterChange = useCallback((attributeName, value) => {
+        console.log(`Изменение атрибута ${attributeName}: ${value}`);
+
+        // Обновляем UI немедленно
+        setAttributeFilters(prevFilters => {
+            const updatedFilters = { ...prevFilters };
+            
+            if (value === undefined || value === null || value === '') {
+                delete updatedFilters[attributeName];
+            } else {
+                updatedFilters[attributeName] = value;
+            }
+            
+            return updatedFilters;
+        });
         
-        // Если значение пустое, удаляем фильтр
-        if (value === '' || value === null || value === undefined) {
-            delete updatedFilters[name];
-        }
-        
-        setAttributeFilters(updatedFilters);
-        if (onFilterChange) {
-            onFilterChange(updatedFilters);
-        }
-    };
+        // Отложенно применяем фильтр
+        debouncedFilterChange(attributeName, value);
+    }, [debouncedFilterChange]);
 
     // Получение переведенного имени атрибута
     const getTranslatedName = (attribute) => {
         if (!attribute) return '';
-        
+
         if (attribute.translations && attribute.translations[i18n.language]) {
             return attribute.translations[i18n.language];
         }
-        
+
         return attribute.display_name;
     };
 
@@ -97,7 +135,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
         const displayName = getTranslatedName(attribute);
         const attributeName = attribute.name;
         const currentValue = attributeFilters[attributeName] || '';
-        
+
         switch (attribute.attribute_type) {
             case 'text':
                 return (
@@ -107,9 +145,10 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                         size="small"
                         value={currentValue}
                         onChange={(e) => handleFilterChange(attributeName, e.target.value)}
+                        onBlur={(e) => debouncedFilterChange(attributeName, e.target.value)}
                     />
                 );
-                
+
             case 'number': {
                 // Извлекаем min, max из options
                 let options = {};
@@ -123,10 +162,10 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                     console.error(`Ошибка при парсинге options для ${attribute.name}:`, e);
                     options = {};
                 }
-                
+
                 const min = options.min !== undefined ? Number(options.min) : 0;
                 const max = options.max !== undefined ? Number(options.max) : 100;
-                
+
                 // Устанавливаем значения по умолчанию в зависимости от типа атрибута
                 let defaultMin = min;
                 let defaultMax = max;
@@ -152,7 +191,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                         defaultMin = min !== undefined ? min : 0;
                         defaultMax = max !== undefined ? max : 100;
                 }
-                
+
                 // Парсим текущее значение из currentValue
                 let value = [defaultMin, defaultMax];
                 if (currentValue) {
@@ -165,25 +204,50 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                         console.error("Ошибка при парсинге значения диапазона:", e);
                     }
                 }
-                
+
+                // Определяем специфические форматы полей
+                let valueSuffix = '';
+                let step = options.step || 1;
+
+                if (attribute.name === 'mileage') {
+                    valueSuffix = ' км';
+                } else if (attribute.name === 'engine_capacity') {
+                    valueSuffix = ' л';
+                    step = 0.1;
+                } else if (attribute.name === 'power') {
+                    valueSuffix = ' л.с.';
+                }
+
                 return (
                     <Box sx={{ width: '100%', px: 1 }}>
                         <Typography id={`filter-${attribute.id}-label`} gutterBottom>
                             {displayName}
                         </Typography>
-                        
+
                         <Slider
                             value={value}
-                            onChange={(e, newValue) => handleFilterChange(
-                                attributeName, 
-                                `${newValue[0]},${newValue[1]}`
-                            )}
+                            onChange={(e, newValue) => {
+                                // Обновляем только локальный UI
+                                setAttributeFilters(prev => ({
+                                    ...prev,
+                                    [attributeName]: `${newValue[0]},${newValue[1]}`
+                                }));
+                            }}
+                            onChangeCommitted={(e, newValue) => {
+                                // Применяем фильтр только после отпускания ползунка
+                                handleFilterChange(
+                                    attributeName,
+                                    `${newValue[0]},${newValue[1]}`
+                                );
+                            }}
                             valueLabelDisplay="auto"
+                            valueLabelFormat={(value) => value + valueSuffix}
                             min={defaultMin}
                             max={defaultMax}
+                            step={step}
                             aria-labelledby={`filter-${attribute.id}-label`}
                         />
-                        
+
                         <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
                             <TextField
                                 label={t('filters.min', { defaultValue: 'От' })}
@@ -192,9 +256,22 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                                 value={value[0]}
                                 onChange={(e) => {
                                     const newValue = [Number(e.target.value), value[1]];
+                                    // Обновляем только локальный UI
+                                    setAttributeFilters(prev => ({
+                                        ...prev,
+                                        [attributeName]: `${newValue[0]},${newValue[1]}`
+                                    }));
+                                }}
+                                onBlur={(e) => {
+                                    // Применяем фильтр при потере фокуса
+                                    const newValue = [Number(e.target.value), value[1]];
                                     handleFilterChange(attributeName, `${newValue[0]},${newValue[1]}`);
                                 }}
-                                inputProps={{ min: defaultMin, max: value[1] }}
+                                inputProps={{ 
+                                    min: defaultMin, 
+                                    max: value[1],
+                                    step: attribute.name === 'engine_capacity' ? 0.1 : 1
+                                }}
                                 fullWidth
                             />
                             <TextField
@@ -204,16 +281,29 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                                 value={value[1]}
                                 onChange={(e) => {
                                     const newValue = [value[0], Number(e.target.value)];
+                                    // Обновляем только локальный UI
+                                    setAttributeFilters(prev => ({
+                                        ...prev,
+                                        [attributeName]: `${newValue[0]},${newValue[1]}`
+                                    }));
+                                }}
+                                onBlur={(e) => {
+                                    // Применяем фильтр при потере фокуса
+                                    const newValue = [value[0], Number(e.target.value)];
                                     handleFilterChange(attributeName, `${newValue[0]},${newValue[1]}`);
                                 }}
-                                inputProps={{ min: value[0], max: defaultMax }}
+                                inputProps={{ 
+                                    min: value[0], 
+                                    max: defaultMax,
+                                    step: attribute.name === 'engine_capacity' ? 0.1 : 1
+                                }}
                                 fullWidth
                             />
                         </Stack>
                     </Box>
                 );
             }
-                
+
             case 'select': {
                 // Извлекаем options
                 let options = [];
@@ -222,7 +312,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                     if (typeof attribute.options === 'string') {
                         // Если options - строка JSON
                         const parsedOptions = JSON.parse(attribute.options);
-                        
+
                         if (Array.isArray(parsedOptions.values)) {
                             options = parsedOptions.values;
                         } else if (parsedOptions.values) {
@@ -242,7 +332,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                     console.error(`Ошибка при обработке опций для ${attribute.name}:`, e);
                     options = [];
                 }
-                
+
                 return (
                     <FormControl component="fieldset">
                         <Typography>{displayName}</Typography>
@@ -276,7 +366,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                     </FormControl>
                 );
             }
-                
+
             case 'boolean':
                 return (
                     <FormControl component="fieldset">
@@ -303,83 +393,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                         </RadioGroup>
                     </FormControl>
                 );
-                
-            case 'multiselect': {
-                // Извлекаем options
-                let options = [];
-                try {
-                    // Проверяем формат options
-                    if (typeof attribute.options === 'string') {
-                        // Если options - строка JSON
-                        const parsedOptions = JSON.parse(attribute.options);
-                        
-                        if (Array.isArray(parsedOptions.values)) {
-                            options = parsedOptions.values;
-                        } else if (parsedOptions.values) {
-                            // Если values существует, но не массив
-                            options = [String(parsedOptions.values)];
-                        }
-                    } else if (attribute.options && typeof attribute.options === 'object') {
-                        // Если options уже объект
-                        if (Array.isArray(attribute.options.values)) {
-                            options = attribute.options.values;
-                        } else if (attribute.options.values) {
-                            // Если values существует, но не массив
-                            options = [String(attribute.options.values)];
-                        }
-                    }
-                } catch (e) {
-                    console.error(`Ошибка при обработке мульти-опций для ${attribute.name}:`, e);
-                    options = [];
-                }
-                
-                // Парсим текущие выбранные значения
-                let selectedValues = [];
-                if (currentValue) {
-                    try {
-                        selectedValues = currentValue.split(',');
-                    } catch (e) {
-                        // Используем пустой массив
-                    }
-                }
-                
-                return (
-                    <FormControl component="fieldset">
-                        <Typography>{displayName}</Typography>
-                        <FormGroup>
-                            {options.length > 0 ? (
-                                options.map((option) => (
-                                    <FormControlLabel
-                                        key={option}
-                                        control={
-                                            <Checkbox
-                                                size="small"
-                                                checked={selectedValues.includes(option)}
-                                                onChange={(e) => {
-                                                    const newSelected = e.target.checked
-                                                        ? [...selectedValues, option]
-                                                        : selectedValues.filter(val => val !== option);
-                                                    
-                                                    handleFilterChange(
-                                                        attributeName,
-                                                        newSelected.length > 0 ? newSelected.join(',') : ''
-                                                    );
-                                                }}
-                                            />
-                                        }
-                                        label={option}
-                                    />
-                                ))
-                            ) : (
-                                <Typography variant="caption" color="text.secondary">
-                                    {t('listings.filters.noOptions', { defaultValue: 'Нет доступных вариантов' })}
-                                </Typography>
-                            )}
-                        </FormGroup>
-                    </FormControl>
-                );
-            }
-                                
+
             default:
                 return null;
         }
@@ -393,23 +407,72 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
         return null;
     }
 
+    // Группировка атрибутов по типам для лучшего представления
+    const numberAttrs = attributes.filter(attr => attr.attribute_type === 'number');
+    const selectAttrs = attributes.filter(attr => attr.attribute_type === 'select');
+    const textAttrs = attributes.filter(attr => 
+        attr.attribute_type === 'text' || 
+        attr.attribute_type === 'boolean' || 
+        !['number', 'select'].includes(attr.attribute_type)
+    );
+
     return (
-        <Box>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                {t('listings.filters.specific_attributes', { defaultValue: 'Дополнительные фильтры' })}
+        <Box sx={{ mt: 1 }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2 }}>
+                {t('listings.filters.specific_attributes', { defaultValue: 'Параметры' })} ({attributeCount})
             </Typography>
-            
-            {attributes.map((attribute) => (
-                <Accordion key={attribute.id} disableGutters>
-                    <AccordionSummary expandIcon={<ExpandMore />}>
-                        <Typography>{getTranslatedName(attribute)}</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                        {renderFilter(attribute)}
-                    </AccordionDetails>
-                    <Divider />
-                </Accordion>
-            ))}
+
+            {/* Отображаем атрибуты в сетке, сгруппированные по типам */}
+            {numberAttrs.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                        {t('listings.filters.numeric_attributes', { defaultValue: 'Числовые параметры' })}
+                    </Typography>
+                    <Grid container spacing={2}>
+                        {numberAttrs.map(attribute => (
+                            <Grid item xs={12} key={attribute.id}>
+                                <Paper sx={{ p: 2 }}>
+                                    {renderFilter(attribute)}
+                                </Paper>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+            )}
+
+            {selectAttrs.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                        {t('listings.filters.select_attributes', { defaultValue: 'Выбор из списка' })}
+                    </Typography>
+                    <Grid container spacing={2}>
+                        {selectAttrs.map(attribute => (
+                            <Grid item xs={12} sm={6} lg={4} key={attribute.id}>
+                                <Paper sx={{ p: 2, height: '100%' }}>
+                                    {renderFilter(attribute)}
+                                </Paper>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+            )}
+
+            {textAttrs.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                        {t('listings.filters.text_attributes', { defaultValue: 'Текстовые параметры' })}
+                    </Typography>
+                    <Grid container spacing={2}>
+                        {textAttrs.map(attribute => (
+                            <Grid item xs={12} sm={6} key={attribute.id}>
+                                <Paper sx={{ p: 2, height: '100%' }}>
+                                    {renderFilter(attribute)}
+                                </Paper>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+            )}
         </Box>
     );
 };

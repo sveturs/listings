@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-//	"math"
 	"strconv"
 
 	"backend/internal/proj/marketplace/service"

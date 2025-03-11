@@ -208,6 +208,7 @@ func (s *Server) setupRoutes() {
 
 	// Protected routes
 	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
+	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
 
 	// Protected reviews routes
 	protectedReviews := api.Group("/reviews")

@@ -190,17 +190,36 @@ const CreateListing = () => {
                     if (!isNaN(numValue)) {
                         numValue = Math.round(numValue * 10) / 10;
                     }
+                } else if (attr.attribute_name === 'year') {
+                    // Для года выпуска обрабатываем отдельно, чтобы избежать сброса
+                    numValue = parseInt(attr.value);
+                    // Логируем для отладки
+                    console.log(`Подготовка года выпуска для отправки: ${attr.value} -> ${numValue}`);
+
+                    // Проверяем на валидный год
+                    if (isNaN(numValue) || numValue < 1900 || numValue > new Date().getFullYear() + 1) {
+                        // Если год невалидный, устанавливаем текущий год
+                        const currentYear = new Date().getFullYear();
+                        console.warn(`Невалидный год ${numValue}, устанавливаем текущий год ${currentYear}`);
+                        numValue = currentYear;
+                    }
                 } else {
                     // Для других числовых полей по-прежнему используем parseFloat
                     numValue = parseFloat(attr.value);
                 }
 
                 if (!isNaN(numValue)) {
+                    // Гарантируем, что numeric_value всегда устанавливается для числовых атрибутов
                     newAttr.numeric_value = numValue;
-                    // Если value строка, но представляет число, обновляем ее
-                    if (typeof attr.value === 'string') {
-                        newAttr.value = numValue;
+                    // Обновляем основное значение для согласованности
+                    newAttr.value = numValue;
+
+                    // Также обновляем отображаемое значение
+                    if (attr.attribute_name === 'year') {
+                        newAttr.display_value = String(numValue);
                     }
+                } else {
+                    console.error(`Не удалось преобразовать "${attr.value}" в число для атрибута ${attr.attribute_name}`);
                 }
             }
 

@@ -89,20 +89,23 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 								log.Printf("DEBUG: Attribute %d (%s) text value: %s", attr.AttributeID, attr.AttributeName, value)
 							}
 							// Изменяем обработку числовых значений для атрибутов
-							// Изменяем обработку числовых значений для атрибутов
+						// Изменяем обработку числовых значений для атрибутов
 						case "number":
 							// Безопасно обрабатываем числовые значения любого размера
 							var numValue float64
 
 							if value, ok := attrMap["value"].(float64); ok {
 								numValue = value
+								log.Printf("DEBUG: Получено числовое значение value: %f для атрибута %s", value, attr.AttributeName)
 							} else if value, ok := attrMap["numeric_value"].(float64); ok {
 								numValue = value
+								log.Printf("DEBUG: Получено числовое значение numeric_value: %f для атрибута %s", value, attr.AttributeName)
 							} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
 								// Используем ParseFloat с 64-битной точностью
 								parsedValue, parseErr := strconv.ParseFloat(strValue, 64)
 								if parseErr == nil {
 									numValue = parsedValue
+									log.Printf("DEBUG: Преобразовано строковое значение '%s' в число %f для атрибута %s", strValue, parsedValue, attr.AttributeName)
 								} else {
 									// Логируем ошибку, но продолжаем
 									log.Printf("Error parsing numeric value '%s' for attribute %s: %v", strValue, attr.AttributeName, parseErr)
@@ -110,17 +113,42 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 									cleanValue := strings.ReplaceAll(strings.ReplaceAll(strValue, ",", ""), " ", "")
 									if parsedClean, err := strconv.ParseFloat(cleanValue, 64); err == nil {
 										numValue = parsedClean
+										log.Printf("DEBUG: Успешно преобразовано очищенное значение '%s' в число %f для атрибута %s", cleanValue, parsedClean, attr.AttributeName)
 									}
 								}
 							}
 
-							// Проверяем допустимые диапазоны для некоторых атрибутов
-							if attr.AttributeName == "mileage" && numValue > 10000000 {
+							// Проверяем и корректируем значения для особых атрибутов
+							if attr.AttributeName == "year" {
+								// Специальная обработка для года выпуска
+								currentYear := time.Now().Year()
+								if numValue < 1900 || numValue > float64(currentYear+1) {
+									// Если год вне разумного диапазона, используем текущий год
+									log.Printf("Warning: Invalid year value: %f for attribute %s, using default", numValue, attr.AttributeName)
+									
+									// Если значение невалидное, но больше 0, сохраняем его
+									if numValue > 0 {
+										log.Printf("Keeping year value %f as is", numValue)
+									} else {
+										// Иначе используем текущий год
+										numValue = float64(currentYear)
+										log.Printf("Setting year to current year: %f", numValue)
+									}
+								} else {
+									// Округляем год до целого числа
+									numValue = math.Floor(numValue)
+									log.Printf("Rounded year value to %f", numValue)
+								}
+							} else if attr.AttributeName == "mileage" && numValue > 10000000 {
 								log.Printf("Warning: Very high mileage value: %f for listing, but accepting it", numValue)
+							} else if attr.AttributeName == "engine_capacity" {
+								// Округляем до 1 знака после запятой
+								numValue = math.Round(numValue*10) / 10
+								log.Printf("Rounded engine capacity to: %f", numValue)
 							}
 
 							attr.NumericValue = &numValue
-							log.Printf("DEBUG: Attribute %d (%s) numeric value: %f", attr.AttributeID, attr.AttributeName, numValue)
+							log.Printf("DEBUG: Attribute %d (%s) final numeric value: %f", attr.AttributeID, attr.AttributeName, numValue)
 						case "boolean":
 							if value, ok := attrMap["value"].(bool); ok {
 								attr.BooleanValue = &value
@@ -197,7 +225,7 @@ func (h *MarketplaceHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 	// Добавляем логирование для отладки
 	for i, attr := range attributes {
 		log.Printf("Attribute %d: name=%s, type=%s, options=%v",
-			i, attr.Name, attr.AttributeType, attr.Options)
+			i, attr.Name, attr.AttributeType, string(attr.Options))
 	}
 
 	return utils.SuccessResponse(c, attributes)
@@ -1249,32 +1277,42 @@ func (h *MarketplaceHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 	})
 }
 func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
-	// Получаем параметры поиска
+    // Получаем параметры поиска
+    log.Printf("Все параметры запроса: %+v", c.Queries())
+    
+    attributeFilters := make(map[string]string)
+    
+    // Более надежный способ извлечения атрибутов - проходим по всем параметрам запроса
+    c.Context().QueryArgs().VisitAll(func(key, value []byte) {
+        keyStr := string(key)
+        if strings.HasPrefix(keyStr, "attr_") {
+            attrName := strings.TrimPrefix(keyStr, "attr_")
+            valueStr := string(value)
+            attributeFilters[attrName] = valueStr
+            log.Printf("Извлечен атрибут из запроса: %s = %s", attrName, valueStr)
+        }
+    })
 
-	attributeFilters := make(map[string]string)
-	for key, values := range c.Queries() {
-		if strings.HasPrefix(key, "attr_") && len(values) > 0 {
-			attrName := strings.TrimPrefix(key, "attr_")
-			// Конвертируем []byte в string
-			attributeFilters[attrName] = string(values[0])
-		}
-	}
+    log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
 
-	params := &search.ServiceParams{
-		Query:            c.Query("q", ""),
-		CategoryID:       c.Query("category_id", ""),
-		Condition:        c.Query("condition", ""),
-		City:             c.Query("city", ""),
-		Country:          c.Query("country", ""),
-		StorefrontID:     c.Query("storefront_id", ""),
-		Sort:             c.Query("sort_by", ""),
-		SortDirection:    c.Query("sort_direction", "desc"),
-		Distance:         c.Query("distance", ""),
-		Page:             c.QueryInt("page", 1),
-		Size:             c.QueryInt("size", 20),
-		Language:         c.Query("language", ""),
-		AttributeFilters: attributeFilters,
-	}
+    params := &search.ServiceParams{
+        Query:            c.Query("q", ""),
+        CategoryID:       c.Query("category_id", ""),
+        Condition:        c.Query("condition", ""),
+        City:             c.Query("city", ""),
+        Country:          c.Query("country", ""),
+        StorefrontID:     c.Query("storefront_id", ""),
+        Sort:             c.Query("sort_by", ""),
+        SortDirection:    c.Query("sort_direction", "desc"),
+        Distance:         c.Query("distance", ""),
+        Page:             c.QueryInt("page", 1),
+        Size:             c.QueryInt("size", 20),
+        Language:         c.Query("language", ""),
+        AttributeFilters: attributeFilters,
+    }
+    // Дополнительное логирование
+    log.Printf("Полные параметры поиска: %+v", params)
+    log.Printf("Атрибуты фильтров: %+v", attributeFilters)
 
 	// ИСПРАВЛЕНИЕ: сначала проверяем наличие координат, потом устанавливаем distance
 	latParam := c.Query("latitude", "")
@@ -1382,7 +1420,7 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 			},
 		})
 	}
-
+	log.Printf("Извлечены атрибуты фильтров: %+v", attributeFilters)
 	// Если OpenSearch ответил успешно
 	return utils.SuccessResponse(c, fiber.Map{
 		"data": result.Items,
@@ -1395,7 +1433,9 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 			"suggestions": result.Suggestions,
 			"took_ms":     result.Took,
 		},
+		
 	})
+	
 }
 
 // GetSuggestions возвращает предложения автодополнения
@@ -1453,23 +1493,23 @@ func (h *MarketplaceHandler) GetSuggestions(c *fiber.Ctx) error {
 
 // ReindexAll переиндексирует все объявления
 func (h *MarketplaceHandler) ReindexAll(c *fiber.Ctx) error {
-	// Проверяем административные права
-	userID, ok := c.Locals("user_id").(int)
-	if !ok || userID == 0 {
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
-	}
+    // Проверяем административные права
+    userID, ok := c.Locals("user_id").(int)
+    if !ok || userID == 0 {
+        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+    }
 
-	// Запускаем процесс переиндексации в фоне
-	go func() {
-		ctx := context.Background()
-		if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
-			log.Printf("Ошибка переиндексации: %v", err)
-		} else {
-			log.Println("Переиндексация успешно завершена")
-		}
-	}()
+    // Запускаем процесс переиндексации в фоне
+    go func() {
+        ctx := context.Background()
+        if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
+            log.Printf("Ошибка переиндексации: %v", err)
+        } else {
+            log.Println("Переиндексация успешно завершена")
+        }
+    }()
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Запущена переиндексация всех объявлений",
-	})
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Запущена переиндексация всех объявлений",
+    })
 }

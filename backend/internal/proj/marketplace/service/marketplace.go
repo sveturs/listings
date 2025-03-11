@@ -325,25 +325,38 @@ func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation 
 
 // Исправленная версия функции SearchListingsAdvanced
 func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
-	log.Printf("Запрос поиска с параметрами: %+v", params)
-	// Преобразуем параметры для OpenSearch
-	osParams := &search.SearchParams{
-		Query:        params.Query,
-		Page:         params.Page,
-		Size:         params.Size,
-		Aggregations: params.Aggregations,
-		Language:     params.Language,
-	}
+    log.Printf("Запрос поиска с параметрами: %+v", params)
+    
+    // Преобразуем параметры для OpenSearch
+    osParams := &search.SearchParams{
+        Query:        params.Query,
+        Page:         params.Page,
+        Size:         params.Size,
+        Aggregations: params.Aggregations,
+        Language:     params.Language,
+    }
 
-	// Инициализируем фильтры атрибутов, если они есть в params
-	if params.AttributeFilters != nil && len(params.AttributeFilters) > 0 {
-		osParams.AttributeFilters = make(map[string]string)
-		for key, value := range params.AttributeFilters {
-			if key != "" && value != "" {
-				osParams.AttributeFilters[key] = value
-			}
-		}
-	}
+    // Корректно инициализируем фильтры атрибутов, если они есть в params
+    if params.AttributeFilters != nil && len(params.AttributeFilters) > 0 {
+        log.Printf("Атрибуты из params: %+v", params.AttributeFilters)
+        
+        osParams.AttributeFilters = make(map[string]string)
+        for key, value := range params.AttributeFilters {
+            osParams.AttributeFilters[key] = value
+            log.Printf("Передаю атрибут в OpenSearch: %s = %s", key, value)
+        }
+    }
+
+                
+        // Копируем атрибуты без изменений
+        osParams.AttributeFilters = make(map[string]string)
+        for key, value := range params.AttributeFilters {
+            // Передаем значение без изменений
+            osParams.AttributeFilters[key] = value
+            log.Printf("Передаю атрибут в OpenSearch: %s = %s", key, value)
+        }
+    
+    
 
 	// Устанавливаем необязательные параметры нечеткого поиска, если они указаны
 	if params.MinimumShouldMatch != "" {

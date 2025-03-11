@@ -102,13 +102,13 @@ const MarketplacePage = () => {
                 return;
             }
             lastQueryRef.current = queryString;
-    
+
             setLoading(true);
             setError(null);
             setSpellingSuggestion(null);
-    
+
             const params = {};
-            
+
             // Обрабатываем основные фильтры
             Object.entries(currentFilters).forEach(([key, value]) => {
                 if (value !== '' && key !== 'city' && key !== 'country' && key !== 'attributeFilters') {
@@ -119,16 +119,17 @@ const MarketplacePage = () => {
                     }
                 }
             });
-            
-            // Добавляем атрибуты, если они есть
+
+            // Добавляем атрибуты, если они есть - исправьте эту часть:
             if (currentFilters.attributeFilters && typeof currentFilters.attributeFilters === 'object') {
                 Object.entries(currentFilters.attributeFilters).forEach(([attrKey, attrValue]) => {
                     if (attrValue) {
                         params[`attr_${attrKey}`] = attrValue;
+                        console.log(`Добавлен атрибут в запрос: attr_${attrKey}=${attrValue}`);
                     }
                 });
             }
-    
+
             console.log('Отправляем запрос:', params);
             const response = await axios.get('/api/v1/marketplace/search', { params });
             console.log('Получен ответ API:', response.data);
@@ -322,6 +323,14 @@ const MarketplacePage = () => {
                     setCategories(categoriesResponse.data.data);
                 }
 
+                const attributeFilters = {};
+                searchParams.forEach((value, key) => {
+                    if (key.startsWith('attr_')) {
+                        const attrName = key.substring(5); // Удаляем префикс 'attr_'
+                        attributeFilters[attrName] = value;
+                    }
+                });
+
                 const initialFilters = {
                     query: searchParams.get('query') || '',
                     category_id: searchParams.get('category_id') || '',
@@ -334,6 +343,7 @@ const MarketplacePage = () => {
                     distance: searchParams.get('distance') || '',
                     latitude: searchParams.get('latitude') ? parseFloat(searchParams.get('latitude')) : null,
                     longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')) : null,
+                    attributeFilters: Object.keys(attributeFilters).length > 0 ? attributeFilters : undefined
                 };
 
                 setFilters(initialFilters);
@@ -417,11 +427,11 @@ const MarketplacePage = () => {
 
     const handleFilterChange = useCallback((newFilters) => {
         console.log(`MarketplaceFilters: Выбраны фильтры:`, newFilters);
-    
+
         setFilters(prev => {
             // Создаем обновленные фильтры
             const updated = { ...prev, ...newFilters };
-    
+
             // Обновляем URL
             const nextParams = new URLSearchParams();
             Object.entries(updated).forEach(([key, value]) => {
@@ -439,12 +449,12 @@ const MarketplacePage = () => {
                     }
                 }
             });
-    
+
             setSearchParams(nextParams);
-    
+
             // Выполняем поиск с обновленными фильтрами
             fetchListings(updated);
-    
+
             return updated;
         });
     }, [setSearchParams, fetchListings]);
@@ -452,38 +462,38 @@ const MarketplacePage = () => {
     // Обработчик переключения режима просмотра (список/карта)
     const handleToggleMapView = useCallback(() => {
         const nextParams = new URLSearchParams(searchParams);
-      
+
         if (mapViewActive) {
-          // Переключаемся на список
-          nextParams.set('viewMode', 'list');
-          setMapViewActive(false);
+            // Переключаемся на список
+            nextParams.set('viewMode', 'list');
+            setMapViewActive(false);
         } else {
-          // Переключаемся на карту
-          nextParams.set('viewMode', 'map');
-          setMapViewActive(true);
-      
-          // Используем координаты из userLocation, если они есть
-          if (userLocation) {
-            nextParams.set('latitude', userLocation.lat);
-            nextParams.set('longitude', userLocation.lon);
-            nextParams.set('distance', filters.distance || '5km');
-            
-            // Обновляем состояние для MapView
-            setUserLocationState({
-              latitude: userLocation.lat,
-              longitude: userLocation.lon
-            });
-          }
-          // Если нет данных в userLocation, но есть в фильтрах
-          else if (filters.latitude && filters.longitude) {
-            nextParams.set('latitude', filters.latitude);
-            nextParams.set('longitude', filters.longitude);
-            nextParams.set('distance', filters.distance || '5km');
-          }
+            // Переключаемся на карту
+            nextParams.set('viewMode', 'map');
+            setMapViewActive(true);
+
+            // Используем координаты из userLocation, если они есть
+            if (userLocation) {
+                nextParams.set('latitude', userLocation.lat);
+                nextParams.set('longitude', userLocation.lon);
+                nextParams.set('distance', filters.distance || '5km');
+
+                // Обновляем состояние для MapView
+                setUserLocationState({
+                    latitude: userLocation.lat,
+                    longitude: userLocation.lon
+                });
+            }
+            // Если нет данных в userLocation, но есть в фильтрах
+            else if (filters.latitude && filters.longitude) {
+                nextParams.set('latitude', filters.latitude);
+                nextParams.set('longitude', filters.longitude);
+                nextParams.set('distance', filters.distance || '5km');
+            }
         }
-      
+
         setSearchParams(nextParams);
-      }, [mapViewActive, searchParams, setSearchParams, filters, userLocation]);
+    }, [mapViewActive, searchParams, setSearchParams, filters, userLocation]);
 
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
@@ -698,22 +708,18 @@ const MarketplacePage = () => {
                     mb: 0
                 }}
             >
-
                 <Breadcrumbs paths={categoryPath} categories={categories} />
-
-
             </Box>
-
 
             <Grid container spacing={3}>
                 <Grid item xs={12} md={3}>
                     <CompactMarketplaceFilters
                         filters={filters}
                         onFilterChange={handleFilterChange}
-                        categories={categories}
                         selectedCategoryId={filters.category_id}
-                        isLoading={loading}
                         onToggleMapView={handleToggleMapView}
+                        setSearchParams={setSearchParams}
+                        fetchListings={fetchListings}
                     />
                 </Grid>
                 <Grid item xs={12} md={9}>
@@ -722,6 +728,7 @@ const MarketplacePage = () => {
             </Grid>
         </Container>
     );
+
 };
 
 export default MarketplacePage;

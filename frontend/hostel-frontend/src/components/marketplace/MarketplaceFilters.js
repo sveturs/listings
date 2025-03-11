@@ -1,5 +1,5 @@
 // frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
-import React, { useMemo, useEffect, useCallback, useState  } from 'react';
+import React, { useMemo, useEffect, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AutocompleteInput from '../shared/AutocompleteInput';
 import { Search, X, Map } from 'lucide-react';
@@ -24,11 +24,14 @@ import {
 import { useLocation } from '../../contexts/LocationContext';
 import VirtualizedCategoryTree from './VirtualizedCategoryTree';
 import AttributeFilters from './AttributeFilters';
- 
-const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId, onToggleMapView }) => {
+
+const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId, onToggleMapView, setSearchParams, fetchListings }) => {
     const { t } = useTranslation('marketplace', 'common');
     const { userLocation, detectUserLocation } = useLocation();
     const [attributeFilters, setAttributeFilters] = useState({});
+    const handleSearchChange = useCallback((value) => {
+        onFilterChange({ ...filters, query: value });
+    }, [filters, onFilterChange]);
     const handleCategorySelect = useCallback((id) => {
         console.log(`MarketplaceFilters: Выбрана категория с ID: ${id}`);
 
@@ -41,30 +44,75 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
     }, [filters, onFilterChange]);
 
 
-    // Проверяем правильность передачи поискового запроса
-    const handleSearchChange = useCallback((value) => {
-        console.log("Поисковый запрос изменен на:", value);
-        onFilterChange({ ...filters, query: value });
-    }, [filters, onFilterChange]);
+    // В функции handleFilterChange добавьте обработку атрибутов
     const handleFilterChange = useCallback((newFilters) => {
         console.log(`MarketplaceFilters: Выбраны фильтры:`, newFilters);
 
-        // Вызываем onFilterChange, но с обновленными фильтрами
-        onFilterChange({
-            ...filters,
-            ...newFilters,
-            attributeFilters: attributeFilters // Добавляем фильтры атрибутов
+        // Заменяем setFilters на onFilterChange
+        // Также делаем деструктуризацию newFilters для управления attributeFilters
+        onFilterChange(prev => {
+            // Создаем обновленные фильтры
+            const updated = { ...prev };
+
+            // Обрабатываем особым образом attributeFilters
+            if (newFilters.attributeFilters) {
+                updated.attributeFilters = {
+                    ...(prev.attributeFilters || {}),
+                    ...newFilters.attributeFilters
+                };
+
+                // Удаляем attributeFilters из newFilters, чтобы избежать дублирования
+                const { attributeFilters, ...restFilters } = newFilters;
+                Object.assign(updated, restFilters);
+            } else {
+                // Если обычное обновление фильтров
+                Object.assign(updated, newFilters);
+            }
+
+            // Обновляем URL, если setSearchParams доступен
+            if (setSearchParams) {
+                const nextParams = new URLSearchParams();
+                Object.entries(updated).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined && value !== '') {
+                        // Обрабатываем атрибуты особым образом
+                        if (key === 'attributeFilters' && typeof value === 'object') {
+                            // Для объекта attributeFilters добавляем каждый ключ в URL с префиксом 'attr_'
+                            Object.entries(value).forEach(([attrKey, attrValue]) => {
+                                if (attrValue) {
+                                    nextParams.set(`attr_${attrKey}`, attrValue);
+                                }
+                            });
+                        } else {
+                            nextParams.set(key, value);
+                        }
+                    }
+                });
+                setSearchParams(nextParams);
+            }
+
+            // Выполняем поиск с обновленными фильтрами, если fetchListings доступен
+            if (fetchListings) {
+                fetchListings(updated);
+            }
+
+            console.log("Обновленные фильтры:", updated);
+            return updated;
         });
-    }, [filters, onFilterChange, attributeFilters]);
+    }, [onFilterChange, setSearchParams, fetchListings]);
+
     const handleAttributeFilterChange = (newAttrFilters) => {
         console.log("Новые значения фильтров атрибутов:", newAttrFilters);
-        
-        setAttributeFilters(newAttrFilters);
-        
+
+        // Создаем копию текущих фильтров атрибутов
+        const updatedAttrFilters = { ...attributeFilters, ...newAttrFilters };
+
+        // Обновляем состояние
+        setAttributeFilters(updatedAttrFilters);
+
         // Вызываем основной обработчик фильтров с обновленными атрибутами
         onFilterChange({
             ...filters,
-            attributeFilters: newAttrFilters
+            attributeFilters: updatedAttrFilters
         });
     };
     const handleDistanceChange = async (value) => {
@@ -103,7 +151,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
             <Box sx={{ p: 2, backgroundColor: 'background.default', boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)', zIndex: 1 }}>
                 <AutocompleteInput
                     value={filters.query || ''}
-                    onChange={handleSearchChange} // Используем функцию, определенную в этом компоненте
+                    onChange={(value) => onFilterChange({ ...filters, query: value })}
                     onSearch={(value, categoryId) => {
                         // Если предоставлен categoryId, обновляем и категорию
                         if (categoryId) {
@@ -220,12 +268,24 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                     </Box>
                 </Stack>
             </Box>
+
+
             {selectedCategoryId && (
-                <AttributeFilters
-                    categoryId={selectedCategoryId}
-                    onFilterChange={handleAttributeFilterChange}
-                    filters={attributeFilters}
-                />
+                <Box sx={{
+                    p: 2,
+                    borderTop: 1,
+                    borderColor: 'divider',
+                    overflowY: 'auto'    // Добавляем прокрутку
+                }}>
+                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                        {t('listings.filters.specific_attributes', { defaultValue: 'Параметры автомобиля' })}
+                    </Typography>
+                    <AttributeFilters
+                        categoryId={selectedCategoryId}
+                        onFilterChange={handleAttributeFilterChange}
+                        filters={attributeFilters}
+                    />
+                </Box>
             )}
             {/* Категории */}
             <Box sx={{

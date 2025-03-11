@@ -561,7 +561,6 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 
 		doc["attributes"] = attributes
 	}
-
 	return doc
 }
 
@@ -795,6 +794,92 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		}
 	}
 
+	// Добавляем фильтры по атрибутам, если они указаны
+	if len(params.AttributeFilters) > 0 {
+		log.Printf("Применяем фильтры по атрибутам: %+v", params.AttributeFilters)
+
+		for attrName, attrValue := range params.AttributeFilters {
+			log.Printf("Обработка атрибута фильтра: %s = %s", attrName, attrValue)
+
+			// Проверяем, содержит ли значение диапазон (для числовых значений)
+			// Проверяем, содержит ли значение диапазон (для числовых значений)
+			if strings.Contains(attrValue, ",") {
+				// Распознаём диапазоны для числовых полей
+				parts := strings.Split(attrValue, ",")
+				if len(parts) == 2 {
+					minVal, minErr := strconv.ParseFloat(parts[0], 64)
+					maxVal, maxErr := strconv.ParseFloat(parts[1], 64)
+
+					if minErr == nil && maxErr == nil {
+						log.Printf("Применяем диапазонный фильтр для %s: от %f до %f", attrName, minVal, maxVal)
+
+						// Использовать диапазонный фильтр в nested запросе
+						filterClauses = append(filterClauses, map[string]interface{}{
+							"nested": map[string]interface{}{
+								"path": "attributes",
+								"query": map[string]interface{}{
+									"bool": map[string]interface{}{
+										"must": []map[string]interface{}{
+											{
+												"term": map[string]interface{}{
+													"attributes.attribute_name": attrName,
+												},
+											},
+											{
+												"range": map[string]interface{}{
+													"attributes.numeric_value": map[string]interface{}{
+														"gte": minVal,
+														"lte": maxVal,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						})
+
+						// Важно! Логируем добавленный фильтр
+						queryJSON, _ := json.MarshalIndent(filterClauses[len(filterClauses)-1], "", "  ")
+						log.Printf("Добавлен фильтр: %s", string(queryJSON))
+
+						continue
+					} else {
+						log.Printf("Ошибка парсинга диапазона для %s: %v, %v", attrName, minErr, maxErr)
+					}
+				}
+			}
+
+			// Для всех остальных атрибутов - общий случай
+			log.Printf("Применяем общий фильтр для %s: %s", attrName, attrValue)
+			filterClauses = append(filterClauses, map[string]interface{}{
+				"nested": map[string]interface{}{
+					"path": "attributes",
+					"query": map[string]interface{}{
+						"bool": map[string]interface{}{
+							"must": []map[string]interface{}{
+								{
+									"term": map[string]interface{}{
+										"attributes.attribute_name": attrName,
+									},
+								},
+								{
+									"match": map[string]interface{}{
+										"attributes.display_value": attrValue,
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+
+			// Логируем добавленный фильтр
+			queryJSON, _ := json.MarshalIndent(filterClauses[len(filterClauses)-1], "", "  ")
+			log.Printf("Добавлен фильтр: %s", string(queryJSON))
+		}
+	}
+
 	// Добавляем clauses в запрос
 	if len(mustClauses) > 0 {
 		log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
@@ -806,7 +891,12 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 	}
 
 	if len(filterClauses) > 0 {
+		log.Printf("Добавляем %d filter клауз в запрос", len(filterClauses))
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
+
+		// Добавим лог содержимого filter-клауз
+		filterClausesJSON, _ := json.Marshal(filterClauses)
+		log.Printf("Filter-клаузы: %s", string(filterClausesJSON))
 	}
 
 	// Добавляем настройки сортировки
@@ -955,112 +1045,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 	// Для отладки выводим запрос в лог
 	queryJSON, _ := json.MarshalIndent(query, "", "  ")
 	log.Printf("Сформированный запрос: %s", queryJSON)
-	// Добавляем фильтры по атрибутам, если они указаны
-	if len(params.AttributeFilters) > 0 {
-		for attrName, attrValue := range params.AttributeFilters {
-			// Для каждого типа атрибута используем разное условие
-			if strings.Contains(attrName, "make") || strings.Contains(attrName, "model") ||
-				strings.Contains(attrName, "color") || strings.Contains(attrName, "type") ||
-				strings.Contains(attrName, "brand") {
-				// Для текстовых полей используем точное соответствие
-				filterClauses = append(filterClauses, map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "attributes",
-						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"attributes.attribute_name": attrName,
-										},
-									},
-									{
-										"term": map[string]interface{}{
-											"attributes.text_value.keyword": attrValue,
-										},
-									},
-								},
-							},
-						},
-					},
-				})
-			} else if strings.Contains(attrName, "year") ||
-				strings.Contains(attrName, "mileage") ||
-				strings.Contains(attrName, "engine") {
-				// Для числовых полей преобразуем значение
-				if numVal, err := strconv.ParseFloat(attrValue, 64); err == nil {
-					filterClauses = append(filterClauses, map[string]interface{}{
-						"nested": map[string]interface{}{
-							"path": "attributes",
-							"query": map[string]interface{}{
-								"bool": map[string]interface{}{
-									"must": []map[string]interface{}{
-										{
-											"term": map[string]interface{}{
-												"attributes.attribute_name": attrName,
-											},
-										},
-										{
-											"term": map[string]interface{}{
-												"attributes.numeric_value": numVal,
-											},
-										},
-									},
-								},
-							},
-						},
-					})
-				}
-			} else if strings.HasPrefix(attrValue, "true") || strings.HasPrefix(attrValue, "false") {
-				// Для булевых значений
-				boolVal := strings.HasPrefix(attrValue, "true")
-				filterClauses = append(filterClauses, map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "attributes",
-						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"attributes.attribute_name": attrName,
-										},
-									},
-									{
-										"term": map[string]interface{}{
-											"attributes.boolean_value": boolVal,
-										},
-									},
-								},
-							},
-						},
-					},
-				})
-			} else {
-				// Для остальных случаев используем текстовый поиск
-				filterClauses = append(filterClauses, map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "attributes",
-						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"attributes.attribute_name": attrName,
-										},
-									},
-									{
-										"match": map[string]interface{}{
-											"attributes.display_value": attrValue,
-										},
-									},
-								},
-							},
-						},
-					},
-				})
-			}
-		}
-	}
+
 	return query
 }
 

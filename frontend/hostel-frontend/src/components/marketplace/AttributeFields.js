@@ -83,8 +83,13 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
 
                                     // Особые правила для некоторых атрибутов
                                     if (attr.name === 'year') {
-                                        // Используем текущий год как значение по умолчанию только для нового атрибута
-                                        defaultValue = 2000; // Используем более старый год как начальное значение
+                                        // Используем 2000 год как значение по умолчанию только для нового атрибута
+                                        // Но не переопределяем существующее значение
+                                        if (!attrValue.value) {
+                                            defaultValue = 2000;
+                                        } else {
+                                            defaultValue = attrValue.value; // Сохраняем существующее значение
+                                        }
                                     } else if (attr.name === 'mileage') {
                                         defaultValue = 0; // Пробег по умолчанию
                                     } else if (attr.name === 'engine_capacity') {
@@ -137,13 +142,26 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
         const updatedValues = values.map(attr => {
             if (attr.attribute_id === attributeId) {
                 const attribute = attributes.find(a => a.id === attributeId);
+                // Сначала создаем копию атрибута и сохраняем новое значение
                 const updatedAttr = { ...attr, value: newValue };
 
                 // Устанавливаем правильный тип значения в зависимости от типа атрибута
                 if (attribute && attribute.attribute_type === 'number') {
-                    updatedAttr.numeric_value = parseFloat(newValue) || 0;
-                    // Обязательно обновляем и типизированное значение, и общее значение
-                    updatedAttr.value = updatedAttr.numeric_value;
+                    // Используем более строгую проверку на число
+                    let parsedValue = parseFloat(newValue);
+                    if (!isNaN(parsedValue)) {
+                        updatedAttr.numeric_value = parsedValue;
+                        // Обязательно обновляем и типизированное значение, и общее значение
+                        updatedAttr.value = parsedValue;
+
+                        // Добавляем специальную логику для года выпуска для предотвращения сброса
+                        if (attribute.name === 'year') {
+                            // Логирование для отладки
+                            console.log(`Меняем год выпуска на: ${parsedValue}`);
+                        }
+                    } else {
+                        console.error(`Ошибка преобразования "${newValue}" в число для атрибута ${attribute.name}`);
+                    }
                 } else if (attribute && attribute.attribute_type === 'boolean') {
                     updatedAttr.boolean_value = Boolean(newValue);
                     updatedAttr.value = updatedAttr.boolean_value;
@@ -164,10 +182,11 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
             return attr;
         });
 
+        // Сохраняем обновленные значения
+        console.log("Обновленные значения атрибутов:", updatedValues);
         setValues(updatedValues);
         if (onChange) onChange(updatedValues);
     };
-
 
     // Получение переведенного имени атрибута
     const getTranslatedName = (attribute) => {
