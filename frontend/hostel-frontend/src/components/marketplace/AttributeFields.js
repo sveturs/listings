@@ -83,10 +83,10 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
 
                                     // Особые правила для некоторых атрибутов
                                     if (attr.name === 'year') {
-                                        // Используем 2000 год как значение по умолчанию только для нового атрибута
+                                        // Используем 2020 год как значение по умолчанию только для нового атрибута
                                         // Но не переопределяем существующее значение
                                         if (!attrValue.value) {
-                                            defaultValue = 2000;
+                                            defaultValue = 2020;
                                         } else {
                                             defaultValue = attrValue.value; // Сохраняем существующее значение
                                         }

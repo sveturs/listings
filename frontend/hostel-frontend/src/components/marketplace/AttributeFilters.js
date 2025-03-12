@@ -55,20 +55,24 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
     // Загрузка атрибутов при изменении категории
     useEffect(() => {
         if (!categoryId) {
+            console.log("No categoryId provided, skipping attribute fetch");
             setAttributes([]);
             return;
         }
-
+        console.log(`Trying to fetch attributes for category ${categoryId}`);
         const fetchAttributes = async () => {
             setLoading(true);
             try {
+                console.log(`Начинаю запрос атрибутов для категории ${categoryId}`); // Добавить эту строку
                 const response = await axios.get(`/api/v1/marketplace/categories/${categoryId}/attributes`);
+                console.log(`Ответ на запрос атрибутов для категории ${categoryId}:`, response); // Добавить эту строку
                 if (response.data?.data) {
                     // Фильтруем только те атрибуты, которые можно использовать для фильтрации
                     const filterableAttrs = response.data.data.filter(attr => attr.is_filterable);
+                    console.log(`Полученный ответ содержит ${response.data.data.length} атрибутов, из них фильтруемых: ${filterableAttrs.length}`); // Добавить эту строку
                     setAttributes(filterableAttrs);
                     setAttributeCount(filterableAttrs.length);
-                    console.log(`Получено ${filterableAttrs.length} атрибутов для категории ${categoryId}:`, 
+                    console.log(`Полученнно ${filterableAttrs.length} атрибутоф для категории ${categoryId}:`, 
                         filterableAttrs.map(a => a.name).join(', '));
 
                     // Сохраняем текущие значения атрибутов
@@ -87,9 +91,11 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                         setAttributeFilters(currentFilters);
                         console.log("Обновлены атрибутные фильтры:", currentFilters);
                     }
+                }  else {
+                    console.log(`Ответ не содержит данных или данные некорректны`, response.data); // Добавить эту строку
                 }
             } catch (error) {
-                console.error('Error fetching attributes for filters:', error);
+                console.error(`Ошибка при запросе атрибутов для категории ${categoryId}:`, error); // Изменить эту строку
             } finally {
                 setLoading(false);
             }

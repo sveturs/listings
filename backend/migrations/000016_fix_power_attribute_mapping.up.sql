@@ -32,3 +32,5 @@ BEGIN
         RAISE NOTICE 'Could not find car category or power attribute: car_category_id=%, power_attr_id=%', car_category_id, power_attr_id;
     END IF;
 END $$;
+
+

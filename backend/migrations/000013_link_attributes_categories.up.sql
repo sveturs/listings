@@ -63,3 +63,28 @@ BEGIN
         ON CONFLICT DO NOTHING;
     END IF;
 END $$;
+
+-- Связываем атрибуты компьютеров с нужными категориями
+INSERT INTO category_attribute_mapping (category_id, attribute_id)
+SELECT 
+  c.id, 
+  a.id
+FROM 
+  marketplace_categories c
+CROSS JOIN 
+  category_attributes a
+WHERE 
+  c.id IN (3310, 3320,
+ 3600)
+  AND a.name IN ('pc_brand', 'pc_type', 'cpu', 'gpu', 'ram_pc', 'storage_type', 'storage_capacity', 'os_pc')
+ON CONFLICT DO NOTHING;
+
+-- Связываем атрибуты телефонов с категорией планшетов (3810)
+INSERT INTO category_attribute_mapping (category_id, attribute_id)
+SELECT 
+  3810, 
+  a.id
+FROM 
+  category_attributes a
+WHERE 
+  a.name IN ('brand', 'model_phone', 'memory', 'ram', 'os', 'screen_size', 'camera', 'has_5g');

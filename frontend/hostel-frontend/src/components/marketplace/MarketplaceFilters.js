@@ -269,8 +269,19 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                 </Stack>
             </Box>
 
-
-            {selectedCategoryId && (
+            {(
+                // Автомобили
+                selectedCategoryId === '1100' || 
+                // Недвижимость
+                selectedCategoryId === '2000' || 
+                // Телефоны
+                selectedCategoryId === '3110' || 
+                selectedCategoryId === '3810' ||
+                // Компьютеры
+                selectedCategoryId === '3310' || 
+                selectedCategoryId === '3320' ||
+                selectedCategoryId === '3600'
+            ) && (
                 <Box sx={{
                     p: 2,
                     borderTop: 1,
@@ -278,9 +289,18 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                     overflowY: 'auto'    // Добавляем прокрутку
                 }}>
                     <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                        {t('listings.filters.specific_attributes', { defaultValue: 'Параметры автомобиля' })}
+                    {selectedCategoryId === '1100' 
+    ? t('listings.filters.specific_attributes', { defaultValue: 'Параметры автомобиля' })
+    : selectedCategoryId === '2000'
+    ? t('listings.filters.specific_attributes', { defaultValue: 'Параметры недвижимости' })
+    : selectedCategoryId === '3110'
+    ? t('listings.filters.specific_attributes', { defaultValue: 'Параметры телефона' })
+    : selectedCategoryId === '3810'
+    ? t('listings.filters.specific_attributes', { defaultValue: 'Параметры планшета' })
+    : t('listings.filters.specific_attributes', { defaultValue: 'Параметры компьютера' })}
                     </Typography>
                     <AttributeFilters
+                        key={selectedCategoryId}
                         categoryId={selectedCategoryId}
                         onFilterChange={handleAttributeFilterChange}
                         filters={attributeFilters}

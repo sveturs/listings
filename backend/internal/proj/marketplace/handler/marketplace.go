@@ -189,9 +189,6 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
 	}
 
-	// Переиндексация будет проведена ПОСЛЕ загрузки изображений, а не здесь
-	// См. метод UploadImages ниже
-
 	// Обновляем материализованное представление
 	if err := h.marketplaceService.RefreshCategoryListingCounts(c.Context()); err != nil {
 		log.Printf("Error refreshing category counts: %v", err)
@@ -211,25 +208,28 @@ var (
 
 // GetCategoryAttributes возвращает атрибуты для указанной категории
 func (h *MarketplaceHandler) GetCategoryAttributes(c *fiber.Ctx) error {
-	categoryID, err := c.ParamsInt("id")
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid category ID")
-	}
+    categoryID, err := c.ParamsInt("id")
+    log.Printf("Requested attributes for category ID: %d", categoryID)
+    if err != nil {
+        log.Printf("Error parsing category ID: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid category ID")
+    }
 
-	attributes, err := h.marketplaceService.GetCategoryAttributes(c.Context(), categoryID)
-	if err != nil {
-		log.Printf("Error fetching category attributes: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch category attributes")
-	}
+    attributes, err := h.marketplaceService.GetCategoryAttributes(c.Context(), categoryID)
+    if err != nil {
+        log.Printf("Error fetching category attributes for category %d: %v", categoryID, err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch category attributes")
+    }
 
-	// Добавляем логирование для отладки
-	for i, attr := range attributes {
-		log.Printf("Attribute %d: name=%s, type=%s, options=%v",
-			i, attr.Name, attr.AttributeType, string(attr.Options))
-	}
+    log.Printf("Found %d attributes for category %d", len(attributes), categoryID)
+    for i, attr := range attributes {
+        log.Printf("Attribute %d: name=%s, type=%s, options=%v",
+            i, attr.Name, attr.AttributeType, string(attr.Options))
+    }
 
-	return utils.SuccessResponse(c, attributes)
+    return utils.SuccessResponse(c, attributes)
 }
+
 func (h *MarketplaceHandler) GetCategoryTree(c *fiber.Ctx) error {
 	categoryTreeMutex.RLock()
 	if time.Since(categoryTreeLastUpdate) < 5*time.Minute && categoryTreeCache != nil && len(categoryTreeCache) > 0 {
