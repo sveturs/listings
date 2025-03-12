@@ -5,8 +5,6 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/global/Layout";
 import HomePage from "./pages/global/HomePage";
-import AddUserPage from "./pages/user/AddUserPage";
-import AdminPanelPage from "./pages/global/AdminPanelPage";
 import PrivacyPolicy from "./pages/accommodation/PrivacyPolicy";
 import MarketplacePage from "./pages/marketplace/MarketplacePage";
 import CreateListingPage from "./pages/marketplace/CreateListingPage";
@@ -65,8 +63,6 @@ function App() {
                     <Layout>
                       <Routes>
                         <Route path="/" element={<MarketplacePage />} />
-                        <Route path="/add-user" element={<AddUserPage />} />
-                        <Route path="/admin" element={<AdminPanelPage />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                         <Route path="/marketplace" element={<MarketplacePage />} />
                         {/*  <Route path="/marketplace/create" element={<CreateListingPage />} />*/}

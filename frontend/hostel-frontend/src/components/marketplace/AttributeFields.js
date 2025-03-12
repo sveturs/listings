@@ -232,7 +232,28 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 }
 
                 const min = options.min !== undefined ? options.min : 0;
-                const max = options.max !== undefined ? options.max : Number.MAX_SAFE_INTEGER;
+                
+                // Устанавливаем разумные максимальные значения в зависимости от типа атрибута
+                let max;
+                if (attr.name === 'engine_capacity') {
+                    max = options.max !== undefined ? options.max : 10; // Максимум 10 литров
+                } else if (attr.name === 'year') {
+                    max = options.max !== undefined ? options.max : new Date().getFullYear() + 1; // Текущий год + 1
+                } else if (attr.name === 'mileage') {
+                    max = options.max !== undefined ? options.max : 1000000; // Максимум 1 млн километров
+                } else if (attr.name === 'power') {
+                    max = options.max !== undefined ? options.max : 2000; // Максимум 2000 л.с.
+                } else if (attr.name === 'screen_size') {
+                    max = options.max !== undefined ? options.max : 30; // Максимум 30 дюймов
+                } else if (attr.name === 'camera') {
+                    max = options.max !== undefined ? options.max : 200; // Максимум 200 МП
+                } else if (attr.name === 'area' || attr.name === 'land_area') {
+                    max = options.max !== undefined ? options.max : 10000; // Максимум 10000 м²/соток
+                } else if (attr.name === 'floor' || attr.name === 'total_floors') {
+                    max = options.max !== undefined ? options.max : 200; // Максимум 200 этажей
+                } else {
+                    max = options.max !== undefined ? options.max : 1000000; // Значение по умолчанию
+                }
 
                 // Специальная обработка шага для объема двигателя
                 let step = options.step || 1;
@@ -310,7 +331,6 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 );
             }
 
-            // В методе renderField для select
             case 'select': {
                 // Извлекаем options, улучшенная версия
                 let options = [];
@@ -375,7 +395,6 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                     </FormControl>
                 );
             }
-
 
             case 'boolean':
                 return (
