@@ -1207,7 +1207,6 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
     query := `
     WITH RECURSIVE category_hierarchy AS (
-        -- Находим все родительские категории (включая текущую)
         WITH RECURSIVE parents AS (
             SELECT id, parent_id
             FROM marketplace_categories
@@ -1229,29 +1228,46 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
         FROM translations t
         WHERE t.entity_type = 'attribute' 
         AND t.field_name = 'display_name'
+    ),
+    attributes_with_translations AS (
+        SELECT 
+            a.id, 
+            a.name, 
+            a.display_name, 
+            a.attribute_type, 
+            a.options, 
+            a.validation_rules,
+            a.is_searchable, 
+            a.is_filterable, 
+            COALESCE(m.is_required, a.is_required) as is_required,
+            a.sort_order,
+            a.created_at,
+            m.category_id,
+            jsonb_object_agg(COALESCE(t.language, ''), COALESCE(t.translated_text, '')) FILTER (WHERE t.language IS NOT NULL) as translations
+        FROM category_attribute_mapping m
+        JOIN category_attributes a ON m.attribute_id = a.id
+        JOIN category_hierarchy h ON m.category_id = h.id
+        LEFT JOIN attribute_translations t ON a.id = t.entity_id
+        WHERE m.is_enabled = true
+        GROUP BY a.id, a.name, a.display_name, a.attribute_type, a.options, 
+                a.validation_rules, a.is_searchable, a.is_filterable, m.is_required, 
+                a.is_required, a.sort_order, a.created_at, m.category_id
     )
-    SELECT DISTINCT ON (a.id)
-        a.id, 
-        a.name, 
-        a.display_name, 
-        a.attribute_type, 
-        a.options, 
-        a.validation_rules,
-        a.is_searchable, 
-        a.is_filterable, 
-        COALESCE(m.is_required, a.is_required) as is_required,
-        a.sort_order,
-        a.created_at,
-        jsonb_object_agg(COALESCE(t.language, ''), COALESCE(t.translated_text, '')) FILTER (WHERE t.language IS NOT NULL) as translations
-    FROM category_attribute_mapping m
-    JOIN category_attributes a ON m.attribute_id = a.id
-    JOIN category_hierarchy h ON m.category_id = h.id
-    LEFT JOIN attribute_translations t ON a.id = t.entity_id
-    WHERE m.is_enabled = true
-    GROUP BY a.id, a.name, a.display_name, a.attribute_type, a.options, 
-            a.validation_rules, a.is_searchable, a.is_filterable, m.is_required, 
-            a.is_required, a.sort_order, a.created_at, m.category_id
-    ORDER BY a.id, m.category_id = $1 DESC, a.sort_order, a.display_name
+    SELECT DISTINCT ON (id)
+        id, 
+        name, 
+        display_name, 
+        attribute_type, 
+        options, 
+        validation_rules,
+        is_searchable, 
+        is_filterable, 
+        is_required,
+        sort_order,
+        created_at,
+        translations
+    FROM attributes_with_translations
+    ORDER BY id, category_id = $1 DESC, sort_order, display_name
     `
 
     rows, err := s.pool.Query(ctx, query, categoryID)

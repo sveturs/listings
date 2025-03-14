@@ -1,3 +1,5 @@
+// frontend/hostel-frontend/src/components/marketplace/AttributeFilters.js
+// Изменения для логирования и отладки
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { debounce } from 'lodash';
@@ -15,18 +17,20 @@ import {
     Grid,
     Paper,
     Divider,
-    Stack
+    Stack,
+    CircularProgress
 } from '@mui/material';
 import axios from '../../api/axios';
 
-const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
+const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttributesLoaded }) => {
     const { t, i18n } = useTranslation('marketplace');
     const [attributes, setAttributes] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [attributeFilters, setAttributeFilters] = useState(() => ({...filters}));
+    const [attributeFilters, setAttributeFilters] = useState(() => ({ ...filters }));
     const [attributeCount, setAttributeCount] = useState(0);
-
-    // Создаем отложенную функцию применения фильтров
+    const [error, setError] = useState(null);
+    console.log(`AttributeFilters: Запрашиваем атрибуты для категории ${categoryId}`);
+    console.log(`AttributeFilters: Текущие фильтры:`, filters);
     const debouncedFilterChange = useCallback(
         debounce((name, value) => {
             console.log(`Применяем отложенный фильтр ${name}: ${value}`);
@@ -48,61 +52,9 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                 
                 return updatedFilters;
             });
-        }, 500), // 500мс задержка перед применением
+        }, 500),
         [onFilterChange]
     );
-
-    // Загрузка атрибутов при изменении категории
-    useEffect(() => {
-        if (!categoryId) {
-            console.log("No categoryId provided, skipping attribute fetch");
-            setAttributes([]);
-            return;
-        }
-        console.log(`Trying to fetch attributes for category ${categoryId}`);
-        const fetchAttributes = async () => {
-            setLoading(true);
-            try {
-                console.log(`Начинаю запрос атрибутов для категории ${categoryId}`); // Добавить эту строку
-                const response = await axios.get(`/api/v1/marketplace/categories/${categoryId}/attributes`);
-                console.log(`Ответ на запрос атрибутов для категории ${categoryId}:`, response); // Добавить эту строку
-                if (response.data?.data) {
-                    // Фильтруем только те атрибуты, которые можно использовать для фильтрации
-                    const filterableAttrs = response.data.data.filter(attr => attr.is_filterable);
-                    console.log(`Полученный ответ содержит ${response.data.data.length} атрибутов, из них фильтруемых: ${filterableAttrs.length}`); // Добавить эту строку
-                    setAttributes(filterableAttrs);
-                    setAttributeCount(filterableAttrs.length);
-                    console.log(`Полученнно ${filterableAttrs.length} атрибутоф для категории ${categoryId}:`, 
-                        filterableAttrs.map(a => a.name).join(', '));
-
-                    // Сохраняем текущие значения атрибутов
-                    const currentFilters = {...attributeFilters};
-                    
-                    // Добавляем значения из переданных фильтров, которые еще не учтены
-                    filterableAttrs.forEach(attr => {
-                        // Если в переданных фильтрах есть значение и оно еще не сохранено
-                        if (filters[attr.name] && currentFilters[attr.name] !== filters[attr.name]) {
-                            currentFilters[attr.name] = filters[attr.name];
-                        }
-                    });
-
-                    // Обновляем состояние только если изменились фильтры
-                    if (JSON.stringify(currentFilters) !== JSON.stringify(attributeFilters)) {
-                        setAttributeFilters(currentFilters);
-                        console.log("Обновлены атрибутные фильтры:", currentFilters);
-                    }
-                }  else {
-                    console.log(`Ответ не содержит данных или данные некорректны`, response.data); // Добавить эту строку
-                }
-            } catch (error) {
-                console.error(`Ошибка при запросе атрибутов для категории ${categoryId}:`, error); // Изменить эту строку
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchAttributes();
-    }, [categoryId, i18n.language, filters]);
 
     // Обработчик изменения фильтров по атрибутам
     const handleFilterChange = useCallback((attributeName, value) => {
@@ -125,6 +77,90 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
         debouncedFilterChange(attributeName, value);
     }, [debouncedFilterChange]);
 
+    // Загрузка атрибутов при изменении категории
+    useEffect(() => {
+        if (!categoryId) {
+            console.log("Нет ID категории, пропускаем запрос атрибутов");
+            setAttributes([]);
+            setAttributeCount(0);
+            // Вызываем колбэк с false, так как атрибутов нет
+            if (onAttributesLoaded) {
+                onAttributesLoaded(false);
+            }
+            return;
+        }
+
+        console.log(`Загружаем атрибуты для категории ${categoryId}`);
+        setLoading(true);
+        setError(null);
+
+        const fetchAttributes = async () => {
+            console.log(`AttributeFilters: Начинаем fetchAttributes для категории ${categoryId}`);
+            try {
+                console.log(`Начинаю запрос атрибутов для категории ${categoryId}`);
+                const response = await axios.get(`/api/v1/marketplace/categories/${categoryId}/attributes`);
+                console.log(`Ответ API для категории ${categoryId}:`, response);
+                console.log(`AttributeFilters: Отправляем запрос к API: /api/v1/marketplace/categories/${categoryId}/attributes`);
+                if (response.status === 200 && response.data?.data) {
+                    // Фильтруем только те атрибуты, которые можно использовать для фильтрации
+                    const filterableAttrs = response.data.data.filter(attr => attr.is_filterable);
+                    console.log(`Получено ${response.data.data.length} атрибутов, из них фильтруемых: ${filterableAttrs.length}`);
+                    
+                    if (filterableAttrs.length > 0) {
+                        setAttributes(filterableAttrs);
+                        setAttributeCount(filterableAttrs.length);
+                        console.log(`Атрибуты для категории ${categoryId}:`, filterableAttrs.map(a => a.name).join(', '));
+                        
+                        // Уведомляем родительский компонент о наличии атрибутов
+                        if (onAttributesLoaded) {
+                            onAttributesLoaded(true);
+                        }
+
+                        // Сохраняем текущие значения атрибутов
+                        const currentFilters = {...attributeFilters};
+                        
+                        // Добавляем значения из переданных фильтров, которые еще не учтены
+                        filterableAttrs.forEach(attr => {
+                            // Если в переданных фильтрах есть значение и оно еще не сохранено
+                            if (filters[attr.name] && currentFilters[attr.name] !== filters[attr.name]) {
+                                currentFilters[attr.name] = filters[attr.name];
+                            }
+                        });
+
+                        // Обновляем состояние только если изменились фильтры
+                        if (JSON.stringify(currentFilters) !== JSON.stringify(attributeFilters)) {
+                            setAttributeFilters(currentFilters);
+                            console.log("Обновлены атрибутные фильтры:", currentFilters);
+                        }
+                    } else {
+                        console.log(`Для категории ${categoryId} нет фильтруемых атрибутов`);
+                        if (onAttributesLoaded) {
+                            onAttributesLoaded(false);
+                        }
+                    }
+                } else {
+                    console.log(`Ответ не содержит данных или данные некорректны`, response.data);
+                    setError("Не удалось загрузить атрибуты");
+                    if (onAttributesLoaded) {
+                        onAttributesLoaded(false);
+                    }
+                }
+                console.log(`AttributeFilters: Получен ответ:`, response);
+            } catch (error) {
+                console.error(`Ошибка при запросе атрибутов для категории ${categoryId}:`, error);
+                setError(`Ошибка: ${error.message}`);
+                if (onAttributesLoaded) {
+                    onAttributesLoaded(false);
+                }
+            } finally {
+                setLoading(false);
+            }
+            console.log(`AttributeFilters: useEffect выполнен для категории ${categoryId}`);
+        };
+
+        fetchAttributes();
+    }, [categoryId, i18n.language, onAttributesLoaded]);
+
     // Получение переведенного имени атрибута
     const getTranslatedName = (attribute) => {
         if (!attribute) return '';
@@ -136,14 +172,50 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
         return attribute.display_name;
     };
 
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                <CircularProgress size={24} />
+                <Typography sx={{ ml: 2 }}>{t('common.loading', { defaultValue: 'Загрузка' })}...</Typography>
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box sx={{ p: 2, color: 'error.main' }}>
+                <Typography>{error}</Typography>
+            </Box>
+        );
+    }
+
+    if (!categoryId || attributes.length === 0) {
+        // Вызываем колбэк с false, так как атрибутов нет
+        if (onAttributesLoaded) {
+            onAttributesLoaded(false);
+        }
+        return null;
+    }
+    console.log(`AttributeFilters: Начало useEffect для категории ${categoryId}`);
+    // Группировка атрибутов по типам для лучшего представления
+    const numberAttrs = attributes.filter(attr => attr.attribute_type === 'number');
+    const selectAttrs = attributes.filter(attr => attr.attribute_type === 'select');
+    const textAttrs = attributes.filter(attr =>
+        attr.attribute_type === 'text' ||
+        attr.attribute_type === 'boolean' ||
+        !['number', 'select'].includes(attr.attribute_type)
+    );
+
     // Рендер фильтра в зависимости от типа атрибута
     const renderFilter = (attribute) => {
         const displayName = getTranslatedName(attribute);
         const attributeName = attribute.name;
         const currentValue = attributeFilters[attributeName] || '';
 
+        // Остается без изменений, так как эта логика работает правильно
         switch (attribute.attribute_type) {
             case 'text':
+                // Код для текстовых атрибутов
                 return (
                     <TextField
                         label={displayName}
@@ -156,7 +228,9 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                 );
 
             case 'number': {
-                // Извлекаем min, max из options
+                // Код для числовых атрибутов
+                // Остается без изменений
+                // ...
                 let options = {};
                 try {
                     if (typeof attribute.options === 'string') {
@@ -273,8 +347,8 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                                     const newValue = [Number(e.target.value), value[1]];
                                     handleFilterChange(attributeName, `${newValue[0]},${newValue[1]}`);
                                 }}
-                                inputProps={{ 
-                                    min: defaultMin, 
+                                inputProps={{
+                                    min: defaultMin,
                                     max: value[1],
                                     step: attribute.name === 'engine_capacity' ? 0.1 : 1
                                 }}
@@ -298,8 +372,8 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                                     const newValue = [value[0], Number(e.target.value)];
                                     handleFilterChange(attributeName, `${newValue[0]},${newValue[1]}`);
                                 }}
-                                inputProps={{ 
-                                    min: value[0], 
+                                inputProps={{
+                                    min: value[0],
                                     max: defaultMax,
                                     step: attribute.name === 'engine_capacity' ? 0.1 : 1
                                 }}
@@ -311,7 +385,8 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
             }
 
             case 'select': {
-                // Извлекаем options
+                // Код для атрибутов с выбором из списка
+                // ...
                 let options = [];
                 try {
                     // Проверяем формат options
@@ -374,6 +449,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
             }
 
             case 'boolean':
+                // Код для булевых атрибутов
                 return (
                     <FormControl component="fieldset">
                         <Typography>{displayName}</Typography>
@@ -404,23 +480,6 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {} }) => {
                 return null;
         }
     };
-
-    if (loading) {
-        return <Typography>{t('common.loading', { defaultValue: 'Загрузка' })}...</Typography>;
-    }
-
-    if (!categoryId || attributes.length === 0) {
-        return null;
-    }
-
-    // Группировка атрибутов по типам для лучшего представления
-    const numberAttrs = attributes.filter(attr => attr.attribute_type === 'number');
-    const selectAttrs = attributes.filter(attr => attr.attribute_type === 'select');
-    const textAttrs = attributes.filter(attr => 
-        attr.attribute_type === 'text' || 
-        attr.attribute_type === 'boolean' || 
-        !['number', 'select'].includes(attr.attribute_type)
-    );
 
     return (
         <Box sx={{ mt: 1 }}>

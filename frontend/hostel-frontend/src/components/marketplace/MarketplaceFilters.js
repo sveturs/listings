@@ -68,53 +68,16 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                 // Если обычное обновление фильтров
                 Object.assign(updated, newFilters);
             }
-
+            onFilterChange(newFilters);
             // Обновляем URL, если setSearchParams доступен
-            if (setSearchParams) {
-                const nextParams = new URLSearchParams();
-                Object.entries(updated).forEach(([key, value]) => {
-                    if (value !== null && value !== undefined && value !== '') {
-                        // Обрабатываем атрибуты особым образом
-                        if (key === 'attributeFilters' && typeof value === 'object') {
-                            // Для объекта attributeFilters добавляем каждый ключ в URL с префиксом 'attr_'
-                            Object.entries(value).forEach(([attrKey, attrValue]) => {
-                                if (attrValue) {
-                                    nextParams.set(`attr_${attrKey}`, attrValue);
-                                }
-                            });
-                        } else {
-                            nextParams.set(key, value);
-                        }
-                    }
-                });
-                setSearchParams(nextParams);
-            }
-
-            // Выполняем поиск с обновленными фильтрами, если fetchListings доступен
-            if (fetchListings) {
-                fetchListings(updated);
-            }
 
             console.log("Обновленные фильтры:", updated);
             return updated;
         });
-    }, [onFilterChange, setSearchParams, fetchListings]);
-
-    const handleAttributeFilterChange = (newAttrFilters) => {
-        console.log("Новые значения фильтров атрибутов:", newAttrFilters);
-
-        // Создаем копию текущих фильтров атрибутов
-        const updatedAttrFilters = { ...attributeFilters, ...newAttrFilters };
-
-        // Обновляем состояние
-        setAttributeFilters(updatedAttrFilters);
-
-        // Вызываем основной обработчик фильтров с обновленными атрибутами
-        onFilterChange({
-            ...filters,
-            attributeFilters: updatedAttrFilters
-        });
-    };
+    }, [onFilterChange]);
+    const resetAttributeFilters = useCallback(() => {
+        handleFilterChange({ attributeFilters: {} });
+    }, [handleFilterChange]);
     const handleDistanceChange = async (value) => {
         // Если выбрано расстояние, но нет координат, используем геолокацию
         if (value && (!filters.latitude || !filters.longitude)) {
@@ -269,44 +232,6 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                 </Stack>
             </Box>
 
-            {(
-                // Автомобили
-                selectedCategoryId === '1100' || 
-                // Недвижимость
-                selectedCategoryId === '2000' || 
-                // Телефоны
-                selectedCategoryId === '3110' || 
-                selectedCategoryId === '3810' ||
-                // Компьютеры
-                selectedCategoryId === '3310' || 
-                selectedCategoryId === '3320' ||
-                selectedCategoryId === '3600'
-            ) && (
-                <Box sx={{
-                    p: 2,
-                    borderTop: 1,
-                    borderColor: 'divider',
-                    overflowY: 'auto'    // Добавляем прокрутку
-                }}>
-                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    {selectedCategoryId === '1100' 
-    ? t('listings.filters.specific_attributes', { defaultValue: 'Параметры автомобиля' })
-    : selectedCategoryId === '2000'
-    ? t('listings.filters.specific_attributes', { defaultValue: 'Параметры недвижимости' })
-    : selectedCategoryId === '3110'
-    ? t('listings.filters.specific_attributes', { defaultValue: 'Параметры телефона' })
-    : selectedCategoryId === '3810'
-    ? t('listings.filters.specific_attributes', { defaultValue: 'Параметры планшета' })
-    : t('listings.filters.specific_attributes', { defaultValue: 'Параметры компьютера' })}
-                    </Typography>
-                    <AttributeFilters
-                        key={selectedCategoryId}
-                        categoryId={selectedCategoryId}
-                        onFilterChange={handleAttributeFilterChange}
-                        filters={attributeFilters}
-                    />
-                </Box>
-            )}
             {/* Категории */}
             <Box sx={{
                 flex: 1,

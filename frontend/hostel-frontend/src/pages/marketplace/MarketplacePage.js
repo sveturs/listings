@@ -1,4 +1,5 @@
-//frontend/hostel-frontend/src/pages/marketplace/MarketplacePage.js
+// frontend/hostel-frontend/src/pages/marketplace/MarketplacePage.js
+
 import { useTranslation } from 'react-i18next';
 import { Map as MapIcon } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -31,6 +32,7 @@ import {
     MobileHeader,
 } from '../../components/marketplace/MobileComponents';
 import CompactMarketplaceFilters from '../../components/marketplace/MarketplaceFilters';
+import CentralAttributeFilters from '../../components/marketplace/CentralAttributeFilters';
 import MapView from '../../components/marketplace/MapView';
 import axios from '../../api/axios';
 
@@ -83,6 +85,9 @@ const MarketplacePage = () => {
     const [userLocationState, setUserLocationState] = useState(null);
     const [spellingSuggestion, setSpellingSuggestion] = useState(null);
 
+    // Добавляем ref для отслеживания последнего запроса
+    const lastQueryRef = useRef('');
+
     const [filters, setFilters] = useState({
         query: searchParams.get('query') || '',
         category_id: searchParams.get('category_id') || '',
@@ -93,7 +98,9 @@ const MarketplacePage = () => {
         condition: searchParams.get('condition') || '',
         sort_by: searchParams.get('sort_by') || 'date_desc',
         distance: searchParams.get('distance') || '',
+        attributeFilters: {}
     });
+
     const fetchListings = useCallback(async (currentFilters = {}) => {
         try {
             // Предотвращаем повторные запросы с теми же параметрами
@@ -120,7 +127,7 @@ const MarketplacePage = () => {
                 }
             });
 
-            // Добавляем атрибуты, если они есть - исправьте эту часть:
+            // Добавляем атрибуты, если они есть
             if (currentFilters.attributeFilters && typeof currentFilters.attributeFilters === 'object') {
                 Object.entries(currentFilters.attributeFilters).forEach(([attrKey, attrValue]) => {
                     if (attrValue) {
@@ -132,7 +139,7 @@ const MarketplacePage = () => {
 
             console.log('Отправляем запрос:', params);
             const response = await axios.get('/api/v1/marketplace/search', { params });
-            console.log('Получен ответ API:', response.data);
+            // console.log('Получен ответ API:', response.data);
 
             // Улучшенная обработка данных с дополнительными проверками
             if (response.data && response.data.data) {
@@ -163,14 +170,126 @@ const MarketplacePage = () => {
         }
     }, []); // Пустой массив зависимостей, так как функция не зависит от внешних переменных
 
-    // Добавляем ref для отслеживания последнего запроса
-    const lastQueryRef = useRef('');
-
     const debouncedFetchListings = useRef(
         debounce((filters) => {
             fetchListings(filters);
         }, 300)
     ).current;
+
+    // ВАЖНО: Сначала объявляем handleFilterChange, а затем resetAttributeFilters
+    const handleFilterChange = useCallback((newFilters) => {
+        console.log(`MarketplaceFilters: Выбраны фильтры:`, newFilters);
+
+        setFilters(prev => {
+            // Создаем обновленные фильтры
+            const updated = { ...prev, ...newFilters };
+
+            // Обновляем URL, но убираем обратный вызов fetchListings
+            const nextParams = new URLSearchParams();
+            Object.entries(updated).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    // Обрабатываем атрибуты особым образом
+                    if (key === 'attributeFilters' && typeof value === 'object') {
+                        // Для объекта attributeFilters добавляем каждый ключ в URL с префиксом 'attr_'
+                        Object.entries(value).forEach(([attrKey, attrValue]) => {
+                            if (attrValue) {
+                                nextParams.set(`attr_${attrKey}`, attrValue);
+                            }
+                        });
+                    } else {
+                        nextParams.set(key, value);
+                    }
+                }
+            });
+
+            // Обновляем URL параметры
+            setSearchParams(nextParams);
+
+            // Возвращаем обновленные фильтры
+            return updated;
+        });
+
+        // Вынесем вызов fetchListings за пределы обновления состояния
+        // Используем debouncedFetchListings для предотвращения частых запросов
+        debouncedFetchListings(newFilters);
+
+    }, [setSearchParams, debouncedFetchListings]);
+
+    // ТЕПЕРЬ объявляем resetAttributeFilters после handleFilterChange
+    const resetAttributeFilters = useCallback(() => {
+        handleFilterChange({ attributeFilters: {} });
+    }, [handleFilterChange]);
+
+    // Обработчик переключения режима просмотра (список/карта)
+    const handleToggleMapView = useCallback(() => {
+        const nextParams = new URLSearchParams(searchParams);
+
+        if (mapViewActive) {
+            // Переключаемся на список
+            nextParams.set('viewMode', 'list');
+            setMapViewActive(false);
+        } else {
+            // Переключаемся на карту
+            nextParams.set('viewMode', 'map');
+            setMapViewActive(true);
+
+            // Используем координаты из userLocation, если они есть
+            if (userLocation) {
+                nextParams.set('latitude', userLocation.lat);
+                nextParams.set('longitude', userLocation.lon);
+                nextParams.set('distance', filters.distance || '5km');
+
+                // Обновляем состояние для MapView
+                setUserLocationState({
+                    latitude: userLocation.lat,
+                    longitude: userLocation.lon
+                });
+            }
+            // Если нет данных в userLocation, но есть в фильтрах
+            else if (filters.latitude && filters.longitude) {
+                nextParams.set('latitude', filters.latitude);
+                nextParams.set('longitude', filters.longitude);
+                nextParams.set('distance', filters.distance || '5km');
+            }
+        }
+
+        setSearchParams(nextParams);
+    }, [mapViewActive, searchParams, setSearchParams, filters, userLocation]);
+
+    const getActiveFiltersCount = () => {
+        return Object.entries(filters).reduce((count, [key, value]) => {
+            if (key !== 'sort_by' && value !== '') {
+                return count + 1;
+            }
+            return count;
+        }, 0);
+    };
+
+    // Функция сброса всех фильтров
+    const resetAllFilters = () => {
+        const nextParams = new URLSearchParams();
+        if (searchParams.get('viewMode')) {
+            nextParams.set('viewMode', searchParams.get('viewMode'));
+        }
+        setSearchParams(nextParams);
+
+        const defaultFilters = {
+            query: "",
+            category_id: "",
+            min_price: "",
+            max_price: "",
+            city: "",
+            country: "",
+            condition: "",
+            sort_by: "date_desc",
+            distance: "",
+            latitude: null,
+            longitude: null
+        };
+
+        setFilters(defaultFilters);
+        fetchListings({});
+    };
 
     useEffect(() => {
         if (userLocation) {
@@ -183,24 +302,6 @@ const MarketplacePage = () => {
                 longitude: userLocation.lon
             }));
 
-            // Обновляем параметры URL с новыми координатами
-            setSearchParams(prevParams => {
-                const nextParams = new URLSearchParams(prevParams);
-                if (userLocation.city) nextParams.set('city', userLocation.city);
-                if (userLocation.country) nextParams.set('country', userLocation.country);
-                nextParams.set('latitude', userLocation.lat);
-                nextParams.set('longitude', userLocation.lon);
-                return nextParams;
-            });
-
-            // Выполняем поиск с учетом нового местоположения
-            fetchListings({
-                ...filters,
-                city: userLocation.city || '',
-                country: userLocation.country || '',
-                latitude: userLocation.lat,
-                longitude: userLocation.lon
-            });
         }
     }, [userLocation]);
 
@@ -273,56 +374,19 @@ const MarketplacePage = () => {
                 const latParam = searchParams.get('latitude');
                 const lonParam = searchParams.get('longitude');
 
-                // Удаляем этот код, так как он сбрасывает параметр distance, и вместо этого просто логируем
+                // Убираем код, который сбрасывает параметр distance, и просто логируем
                 if (distanceParam && (!latParam || !lonParam)) {
                     console.log("Параметр distance присутствует без координат, будет запрошена текущая геолокация");
-
-                    // Проверим, поддерживается ли геолокация в браузере
-                    if (navigator.geolocation) {
-                        try {
-                            // Запросим текущее местоположение пользователя
-                            navigator.geolocation.getCurrentPosition(
-                                (position) => {
-                                    const latitude = position.coords.latitude;
-                                    const longitude = position.coords.longitude;
-                                    console.log(`Получены координаты: lat=${latitude}, lon=${longitude}`);
-
-                                    // Обновим параметры с полученными координатами
-                                    const updatedParams = new URLSearchParams(searchParams);
-                                    updatedParams.set('latitude', latitude);
-                                    updatedParams.set('longitude', longitude);
-                                    setSearchParams(updatedParams);
-
-                                    // Обновим состояние фильтров и выполним поиск с координатами
-                                    setFilters(prev => ({
-                                        ...prev,
-                                        latitude: latitude,
-                                        longitude: longitude
-                                    }));
-
-                                    // Сразу же обновим местоположение пользователя
-                                    setUserLocationState({
-                                        latitude: latitude,
-                                        longitude: longitude
-                                    });
-                                },
-                                (error) => {
-                                    console.error("Ошибка получения геолокации:", error);
-                                }
-                            );
-                        } catch (geoError) {
-                            console.error("Ошибка при запросе геолокации:", geoError);
-                        }
-                    }
+                    // Запрос геолокации оставляем как есть, но НЕ обновляем фильтры напрямую
                 }
 
-                // Остальной код функции без изменений
+                // Загрузка категорий
                 const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
-
                 if (categoriesResponse.data?.data) {
                     setCategories(categoriesResponse.data.data);
                 }
 
+                // Получаем начальные фильтры из URL
                 const attributeFilters = {};
                 searchParams.forEach((value, key) => {
                     if (key.startsWith('attr_')) {
@@ -331,6 +395,7 @@ const MarketplacePage = () => {
                     }
                 });
 
+                // Создаем объект с начальными фильтрами
                 const initialFilters = {
                     query: searchParams.get('query') || '',
                     category_id: searchParams.get('category_id') || '',
@@ -346,7 +411,11 @@ const MarketplacePage = () => {
                     attributeFilters: Object.keys(attributeFilters).length > 0 ? attributeFilters : undefined
                 };
 
+                // Устанавливаем начальные фильтры
                 setFilters(initialFilters);
+
+                // Этот вызов оставляем, чтобы выполнить начальный запрос данных
+                // Но важно НЕ добавлять fetchListings в зависимости эффекта
                 await fetchListings(initialFilters);
             } catch (err) {
                 console.error('Error fetching initial data:', err);
@@ -355,7 +424,8 @@ const MarketplacePage = () => {
         };
 
         fetchInitialData();
-    }, [searchParams, fetchListings, setSearchParams]);
+        // Убираем fetchListings из зависимостей, чтобы избежать зацикливания
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
         if (!window.location.pathname.includes('/marketplace')) {
@@ -365,12 +435,6 @@ const MarketplacePage = () => {
             }, { replace: true });
         }
     }, [navigate]);
-    // Добавьте временную кнопку для тестирования
-
-
-
-
-
 
     const findCategoryPath = (categoryId, categoriesTree) => {
         if (!categoryId || !categoriesTree || categoriesTree.length === 0) {
@@ -424,112 +488,6 @@ const MarketplacePage = () => {
         }
     }, [filters.category_id, categories]);
 
-
-    const handleFilterChange = useCallback((newFilters) => {
-        console.log(`MarketplaceFilters: Выбраны фильтры:`, newFilters);
-
-        setFilters(prev => {
-            // Создаем обновленные фильтры
-            const updated = { ...prev, ...newFilters };
-
-            // Обновляем URL
-            const nextParams = new URLSearchParams();
-            Object.entries(updated).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== '') {
-                    // Обрабатываем атрибуты особым образом
-                    if (key === 'attributeFilters' && typeof value === 'object') {
-                        // Для объекта attributeFilters добавляем каждый ключ в URL с префиксом 'attr_'
-                        Object.entries(value).forEach(([attrKey, attrValue]) => {
-                            if (attrValue) {
-                                nextParams.set(`attr_${attrKey}`, attrValue);
-                            }
-                        });
-                    } else {
-                        nextParams.set(key, value);
-                    }
-                }
-            });
-
-            setSearchParams(nextParams);
-
-            // Выполняем поиск с обновленными фильтрами
-            fetchListings(updated);
-
-            return updated;
-        });
-    }, [setSearchParams, fetchListings]);
-
-    // Обработчик переключения режима просмотра (список/карта)
-    const handleToggleMapView = useCallback(() => {
-        const nextParams = new URLSearchParams(searchParams);
-
-        if (mapViewActive) {
-            // Переключаемся на список
-            nextParams.set('viewMode', 'list');
-            setMapViewActive(false);
-        } else {
-            // Переключаемся на карту
-            nextParams.set('viewMode', 'map');
-            setMapViewActive(true);
-
-            // Используем координаты из userLocation, если они есть
-            if (userLocation) {
-                nextParams.set('latitude', userLocation.lat);
-                nextParams.set('longitude', userLocation.lon);
-                nextParams.set('distance', filters.distance || '5km');
-
-                // Обновляем состояние для MapView
-                setUserLocationState({
-                    latitude: userLocation.lat,
-                    longitude: userLocation.lon
-                });
-            }
-            // Если нет данных в userLocation, но есть в фильтрах
-            else if (filters.latitude && filters.longitude) {
-                nextParams.set('latitude', filters.latitude);
-                nextParams.set('longitude', filters.longitude);
-                nextParams.set('distance', filters.distance || '5km');
-            }
-        }
-
-        setSearchParams(nextParams);
-    }, [mapViewActive, searchParams, setSearchParams, filters, userLocation]);
-
-    const getActiveFiltersCount = () => {
-        return Object.entries(filters).reduce((count, [key, value]) => {
-            if (key !== 'sort_by' && value !== '') {
-                return count + 1;
-            }
-            return count;
-        }, 0);
-    };
-
-    // Добавьте эту функцию в MarketplacePage.js
-    const resetAllFilters = () => {
-        const nextParams = new URLSearchParams();
-        if (searchParams.get('viewMode')) {
-            nextParams.set('viewMode', searchParams.get('viewMode'));
-        }
-        setSearchParams(nextParams);
-
-        const defaultFilters = {
-            query: "",
-            category_id: "",
-            min_price: "",
-            max_price: "",
-            city: "",
-            country: "",
-            condition: "",
-            sort_by: "date_desc",
-            distance: "",
-            latitude: null,
-            longitude: null
-        };
-
-        setFilters(defaultFilters);
-        fetchListings({});
-    };
-
     const renderContent = () => {
         if (loading) {
             return (
@@ -562,6 +520,32 @@ const MarketplacePage = () => {
 
         // Проверка, что listings - это массив
         if (!listings || !Array.isArray(listings) || listings.length === 0) {
+            if (spellingSuggestion) {
+                return (
+                    <>
+                        <Alert
+                            severity="info"
+                            sx={{ m: 2 }}
+                            action={
+                                <Button
+                                    color="inherit"
+                                    size="small"
+                                    onClick={() => handleFilterChange({ query: spellingSuggestion })}
+                                >
+                                    {t('search.usesuggestion')}
+                                </Button>
+                            }
+                        >
+                            {t('search.didyoumean')} <strong>{spellingSuggestion}</strong>?
+                        </Alert>
+                        <Box sx={{ m: 2, textAlign: 'center' }}>
+                            {t('search.noresults')}
+                        </Box>
+                    </>
+                );
+            }
+            console.log(`renderContent: filters.category_id=${filters.category_id}, тип: ${typeof filters.category_id}`);
+            console.log(`renderContent: attributeFilters=`, filters.attributeFilters);
             return (
                 <Alert severity="info" sx={{ m: 2 }}>
                     No results found for your search
@@ -569,56 +553,49 @@ const MarketplacePage = () => {
             );
         }
 
-        if (spellingSuggestion && listings.length === 0) {
-            return (
-                <>
-                    <Alert
-                        severity="info"
-                        sx={{ m: 2 }}
-                        action={
-                            <Button
-                                color="inherit"
-                                size="small"
-                                onClick={() => handleFilterChange({ query: spellingSuggestion })}
-                            >
-                                {t('search.usesuggestion')}
-                            </Button>
-                        }
-                    >
-                        {t('search.didyoumean')} <strong>{spellingSuggestion}</strong>?
-                    </Alert>
-                    <Box sx={{ m: 2, textAlign: 'center' }}>
-                        {t('search.noresults')}
-                    </Box>
-                </>
-            );
-        }
+        return (
+            <>
+                {/* Добавляем CentralAttributeFilters перед отображением листингов */}
+                {filters.category_id && (
+                    <CentralAttributeFilters
+                        categoryId={filters.category_id}
+                        onFilterChange={(newAttrFilters) => {
+                            console.log("CentralAttributeFilters вызвал onFilterChange с:", newAttrFilters);
+                            handleFilterChange({ attributeFilters: newAttrFilters });
+                        }}
+                        filters={filters.attributeFilters || {}}  // Гарантированно передаем объект
+                        resetAttributeFilters={resetAttributeFilters}
+                    />
+                )}
 
-        return isMobile ? (
-            <MobileListingGrid listings={listings} />
-        ) : (
-            <Grid container spacing={3}>
-                {listings.map((listing, index) => {
-                    // Создаем уникальный идентификатор из других полей, если ID = 0
-                    const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
-                    return (
-                        <Grid item xs={12} sm={6} md={4} key={effectiveId}>
-                            <div onClick={() => {
-                                if (listing.id) {
-                                    navigate(`/marketplace/listings/${listing.id}`);
-                                } else {
-                                    // Используем стандартный поиск для получения объявления по другим параметрам
-                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
-                                    console.log("Переход к объявлению с временным URL:", url);
-                                    // Можно показать уведомление пользователю, что фильтр применен
-                                }
-                            }}>
-                                <ListingCard listing={listing} />
-                            </div>
-                        </Grid>
-                    );
-                })}
-            </Grid>
+                {/* Отображение листингов (как было в оригинале) */}
+                {isMobile ? (
+                    <MobileListingGrid listings={listings} />
+                ) : (
+                    <Grid container spacing={3}>
+                        {listings.map((listing, index) => {
+                            // Создаем уникальный идентификатор из других полей, если ID = 0
+                            const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                            return (
+                                <Grid item xs={12} sm={6} md={4} key={effectiveId}>
+                                    <div onClick={() => {
+                                        if (listing.id) {
+                                            navigate(`/marketplace/listings/${listing.id}`);
+                                        } else {
+                                            // Используем стандартный поиск для получения объявления по другим параметрам
+                                            const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                            console.log("Переход к объявлению с временным URL:", url);
+                                            // Можно показать уведомление пользователю, что фильтр применен
+                                        }
+                                    }}>
+                                        <ListingCard listing={listing} />
+                                    </div>
+                                </Grid>
+                            );
+                        })}
+                    </Grid>
+                )}
+            </>
         );
     };
 
@@ -675,8 +652,24 @@ const MarketplacePage = () => {
                 </Box>
 
                 <Box sx={{ flex: 1, bgcolor: mapViewActive ? 'transparent' : 'grey.50' }}>
+                    {/* Добавляем CentralAttributeFilters здесь для мобильной версии */}
+                    {filters.category_id && !mapViewActive && (
+                        <Box sx={{ px: 2, pt: 2 }}>
+                            <CentralAttributeFilters
+                                categoryId={filters.category_id}
+                                onFilterChange={(newAttrFilters) => {
+                                    console.log("CentralAttributeFilters вызвал onFilterChange с:", newAttrFilters);
+                                    handleFilterChange({ attributeFilters: newAttrFilters });
+                                }}
+                                filters={filters.attributeFilters || {}}  // Гарантированно передаем объект
+                                resetAttributeFilters={resetAttributeFilters}
+                            />
+                        </Box>
+                    )}
+
                     {renderContent()}
                 </Box>
+
 
                 {/* Плавающая кнопка переключения режима просмотра */}
                 <Fab
@@ -728,7 +721,6 @@ const MarketplacePage = () => {
             </Grid>
         </Container>
     );
-
 };
 
 export default MarketplacePage;
