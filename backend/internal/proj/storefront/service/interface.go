@@ -23,6 +23,7 @@ type StorefrontServiceInterface interface {
 	DeleteImportSource(ctx context.Context, id int, userID int) error
 	GetImportSources(ctx context.Context, storefrontID int, userID int) ([]models.ImportSource, error)
 	GetImportSourceByID(ctx context.Context, id int, userID int) (*models.ImportSource, error)
+	ImportXMLFromZip(ctx context.Context, sourceID int, reader io.Reader, userID int) (*models.ImportHistory, error)
 
 	// Импорт данных
 	RunImport(ctx context.Context, sourceID int, userID int) (*models.ImportHistory, error)

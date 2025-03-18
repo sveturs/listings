@@ -58,6 +58,7 @@ import BatchActionsBar from '../../components/store/BatchActionsBar';
 import ListingsPagination from '../../components/store/ListingsPagination';
 import TranslationPaymentDialog from '../../components/store/TranslationPaymentDialog';
 import ImportModal from '../../components/store/ImportModal';
+import ImportSourceList from '../../components/store/ImportSourceList';
 
 const TabPanel = (props) => {
     const { children, value, index, ...other } = props;
@@ -244,9 +245,9 @@ const StorefrontDetailPage = () => {
     const handleRunImport = async (sourceId) => {
         try {
             setRunningImport(sourceId);
-    
+
             console.log(`Starting import for source ID: ${sourceId}, file: ${importFile ? importFile.name : 'none'}`);
-    
+
             // Если нет ни файла, ни URL, показываем ошибку
             const source = importSources.find(s => s.id === sourceId);
             if (!importFile && (!source || !source.url)) {
@@ -254,23 +255,23 @@ const StorefrontDetailPage = () => {
                 setRunningImport(null);
                 return;
             }
-    
+
             let response;
-    
+
             if (importFile) {
                 // Если есть файл для загрузки
                 console.log(`Uploading file: ${importFile.name}`);
-    
+
                 // Подготовка формы для загрузки файла
                 const formData = new FormData();
                 formData.append('file', importFile);
-    
+
                 // Добавляем ZIP-архив, если он выбран
                 if (importZipFile) {
                     formData.append('images_zip', importZipFile);
                 }
-    
-    
+
+
                 // Отправляем запрос
                 response = await axios.post(
                     `/api/v1/storefronts/import-sources/${sourceId}/run`,
@@ -286,22 +287,22 @@ const StorefrontDetailPage = () => {
                 console.log(`Running import from URL for source ID: ${sourceId}`);
                 response = await axios.post(`/api/v1/storefronts/import-sources/${sourceId}/run`);
             }
-    
+
             console.log("Import response:", response.data);
-    
+
             // Обновляем источники после импорта
             const sourcesResponse = await axios.get(`/api/v1/storefronts/${id}/import-sources`);
             setImportSources(sourcesResponse.data.data || []);
-    
+
             // Обновляем историю для этого источника
             await fetchImportHistory(sourceId);
-    
+
             // Обновляем список объявлений
             fetchData();
-    
+
             // Сбрасываем файл после успешного импорта
             setImportFile(null);
-    
+
             // Показываем результат импорта
             const importResult = response.data.data;
             alert(t('marketplace:store.import.completed', {
@@ -309,7 +310,7 @@ const StorefrontDetailPage = () => {
                 imported: importResult.items_imported,
                 total: importResult.items_total
             }));
-    
+
         } catch (err) {
             console.error(`Error running import for source ${sourceId}:`, err);
             alert(t('marketplace:store.import.error', {
@@ -674,7 +675,21 @@ const StorefrontDetailPage = () => {
                             {t('marketplace:store.import.addSource')}
                         </Button>
                     </Box>
-
+                    <ImportSourceList
+                        sources={importSources}
+                        storefrontId={Number(id)}
+                        onUpdate={fetchData}
+                        onDelete={async (sourceId) => {
+                            try {
+                                await axios.delete(`/api/v1/storefronts/import-sources/${sourceId}`);
+                                setImportSources(prev => prev.filter(source => source.id !== sourceId));
+                            } catch (err) {
+                                console.error(`Error deleting import source ${sourceId}:`, err);
+                                alert(t('marketplace:store.import.deleteError'));
+                            }
+                        }}
+                        onFetchHistory={fetchImportHistory}
+                    />
                     {importSources.length === 0 ? (
                         <Paper sx={{ p: 4, textAlign: 'center' }}>
                             <Database size={64} stroke={1} style={{ margin: '20px auto', opacity: 0.5 }} />
@@ -1026,23 +1041,23 @@ const StorefrontDetailPage = () => {
                 loading={translationLoading}
                 costPerListing={25}
             />
-        <ImportModal
-            open={openImportModal && selectedSourceId !== null}
-            onClose={() => {
-                setOpenImportModal(false);
-                setSelectedSourceId(null);
-            }}
-            sourceId={selectedSourceId}
-            onSuccess={(result) => {
-                // Обновляем источники и список объявлений после успешного импорта
-                fetchData();
-                if (selectedSourceId) {
-                    fetchImportHistory(selectedSourceId);
-                }
-            }}
-        />
-    </Container>
- );
+            <ImportModal
+                open={openImportModal && selectedSourceId !== null}
+                onClose={() => {
+                    setOpenImportModal(false);
+                    setSelectedSourceId(null);
+                }}
+                sourceId={selectedSourceId}
+                onSuccess={(result) => {
+                    // Обновляем источники и список объявлений после успешного импорта
+                    fetchData();
+                    if (selectedSourceId) {
+                        fetchImportHistory(selectedSourceId);
+                    }
+                }}
+            />
+        </Container>
+    );
 };
 
 export default StorefrontDetailPage;

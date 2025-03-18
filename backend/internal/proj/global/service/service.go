@@ -2,68 +2,78 @@
 package service
 
 import (
-    "backend/internal/config"
-    balance "backend/internal/proj/balance/service"
-    marketplaceService "backend/internal/proj/marketplace/service"
-    translationService "backend/internal/proj/marketplace/service"
-    geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
-    notificationService "backend/internal/proj/notifications/service"
-    payment "backend/internal/proj/payments/service"
-    reviewService "backend/internal/proj/reviews/service"
-    storefrontService "backend/internal/proj/storefront/service"
-    userService "backend/internal/proj/users/service"
-    "backend/internal/storage"
+	"backend/internal/config"
+	balance "backend/internal/proj/balance/service"
+	geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
+	marketplaceService "backend/internal/proj/marketplace/service"
+	translationService "backend/internal/proj/marketplace/service"
+	notificationService "backend/internal/proj/notifications/service"
+	payment "backend/internal/proj/payments/service"
+	reviewService "backend/internal/proj/reviews/service"
+	storefrontService "backend/internal/proj/storefront/service"
+	userService "backend/internal/proj/users/service"
+	"backend/internal/storage"
+    "log"
 )
 
 type Service struct {
-    users        *userService.Service
-    marketplace  *marketplaceService.Service
-    review       *reviewService.Service
-    chat         *marketplaceService.Service
-    config       *config.Config
-    notification *notificationService.Service
-    translation  translationService.TranslationServiceInterface
-    balance      *balance.BalanceService
-    payment      payment.PaymentServiceInterface
-    storefront   storefrontService.StorefrontServiceInterface
-    storage      storage.Storage
-    geocode      geocodeService.GeocodeServiceInterface
+	users        *userService.Service
+	marketplace  *marketplaceService.Service
+	review       *reviewService.Service
+	chat         *marketplaceService.Service
+	config       *config.Config
+	notification *notificationService.Service
+	translation  translationService.TranslationServiceInterface
+	balance      *balance.BalanceService
+	payment      payment.PaymentServiceInterface
+	storefront   storefrontService.StorefrontServiceInterface
+	storage      storage.Storage
+	geocode      geocodeService.GeocodeServiceInterface
+    scheduleImport *storefrontService.ScheduleService
 }
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
-    notificationSvc := notificationService.NewService(storage)
-    balanceSvc := balance.NewBalanceService(storage)
-    geocodeSvc := geocodeService.NewGeocodeService(storage)
-
-    // Создаем сервис платежей с передачей сервиса баланса
-    stripeService := payment.NewStripeService(
-        cfg.StripeAPIKey,
-        cfg.StripeWebhookSecret,
-        cfg.FrontendURL,
-        balanceSvc,
-    )
-
-    return &Service{
-        users:        userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
-        marketplace:  marketplaceService.NewService(storage, notificationSvc.Notification),
-        review:       reviewService.NewService(storage),
-        chat:         marketplaceService.NewService(storage, notificationSvc.Notification),
-        config:       cfg,
-        notification: notificationSvc,
-        translation:  translationSvc,
-        balance:      balanceSvc,
-        payment:      stripeService,
-        storefront:   storefrontService.NewStorefrontService(storage),
-        storage:      storage,
-        geocode:      geocodeSvc,
-    }
+	notificationSvc := notificationService.NewService(storage)
+	balanceSvc := balance.NewBalanceService(storage)
+	geocodeSvc := geocodeService.NewGeocodeService(storage)
+	storefrontSvc := storefrontService.NewStorefrontService(storage)
+scheduleService := storefrontService.NewScheduleService(storage, storefrontSvc)
+	// Создаем сервис платежей с передачей сервиса баланса
+	stripeService := payment.NewStripeService(
+		cfg.StripeAPIKey,
+		cfg.StripeWebhookSecret,
+		cfg.FrontendURL,
+		balanceSvc,
+	)
+    scheduleService.Start()
+	return &Service{
+		users:        userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
+		marketplace:  marketplaceService.NewService(storage, notificationSvc.Notification),
+		review:       reviewService.NewService(storage),
+		chat:         marketplaceService.NewService(storage, notificationSvc.Notification),
+		config:       cfg,
+		notification: notificationSvc,
+		translation:  translationSvc,
+		balance:      balanceSvc,
+		payment:      stripeService,
+		storefront:   storefrontService.NewStorefrontService(storage),
+		storage:      storage,
+		geocode:      geocodeSvc,
+        scheduleImport: scheduleService,
+	}
 }
-
+func (s *Service) Shutdown() {
+	// Останавливаем сервис расписания
+	if s.scheduleImport != nil {
+		s.scheduleImport.Stop()
+	}
+	
+	log.Println("All services stopped")
+}
 func (s *Service) Geocode() geocodeService.GeocodeServiceInterface {
-    return s.geocode
+	return s.geocode
 
 }
-
 
 func (s *Service) Storage() storage.Storage {
 	return s.storage

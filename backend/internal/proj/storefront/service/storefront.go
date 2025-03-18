@@ -1,21 +1,23 @@
+// backend/internal/proj/storefront/service/storefront.go
 package service
 
 import (
+	"archive/zip"
 	"backend/internal/domain/models"
 	"backend/internal/storage"
+	"bytes"
 	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"math/rand"
+	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"archive/zip"
-	"bytes"
-        "net/http"
-    "io/ioutil"
 )
 
 const (
@@ -324,9 +326,9 @@ func (s *StorefrontService) RunImport(ctx context.Context, sourceID int, userID 
 
 	// Проверяем тип контента
 	contentType := resp.Header.Get("Content-Type")
-	if !strings.Contains(contentType, "text/csv") && 
-	   !strings.Contains(contentType, "application/csv") &&
-	   !strings.Contains(contentType, "text/plain") {
+	if !strings.Contains(contentType, "text/csv") &&
+		!strings.Contains(contentType, "application/csv") &&
+		!strings.Contains(contentType, "text/plain") {
 		history.Status = "failed"
 		history.Log = fmt.Sprintf("Invalid content type: %s. Expected CSV file.", contentType)
 		finishTime := time.Now()
@@ -787,4 +789,320 @@ func (s *StorefrontService) GetImportSourceByID(ctx context.Context, id int, use
 	}
 
 	return source, nil
+}
+
+// backend/internal/proj/storefront/service/storefront.go
+
+// ImportXMLFromZip выполняет импорт данных из XML файла внутри ZIP-архива
+func (s *StorefrontService) ImportXMLFromZip(ctx context.Context, sourceID int, reader io.Reader, userID int) (*models.ImportHistory, error) {
+	// Проверяем права доступа
+	source, err := s.storage.GetImportSourceByID(ctx, sourceID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting import source: %w", err)
+	}
+
+	// Получаем информацию о витрине
+	storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting storefront: %w", err)
+	}
+
+	if storefront.UserID != userID {
+		return nil, fmt.Errorf("access denied")
+	}
+
+	// Создаем запись в истории импорта
+	history := &models.ImportHistory{
+		SourceID:  sourceID,
+		Status:    "in_progress",
+		StartedAt: time.Now(),
+	}
+
+	historyID, err := s.storage.CreateImportHistory(ctx, history)
+	if err != nil {
+		return nil, fmt.Errorf("error creating import history: %w", err)
+	}
+	history.ID = historyID
+
+	// Читаем ZIP-архив
+	zipData, err := ioutil.ReadAll(reader)
+	if err != nil {
+		history.Status = "failed"
+		history.Log = fmt.Sprintf("Failed to read ZIP archive: %v", err)
+		finishTime := time.Now()
+		history.FinishedAt = &finishTime
+		s.storage.UpdateImportHistory(ctx, history)
+		return history, fmt.Errorf("failed to read ZIP archive: %w", err)
+	}
+
+	// Создаем zip.Reader из буфера
+	zipReader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+	if err != nil {
+		history.Status = "failed"
+		history.Log = fmt.Sprintf("Failed to parse ZIP archive: %v", err)
+		finishTime := time.Now()
+		history.FinishedAt = &finishTime
+		s.storage.UpdateImportHistory(ctx, history)
+		return history, fmt.Errorf("failed to parse ZIP archive: %w", err)
+	}
+
+	// Поиск XML файла в архиве
+	var xmlFile *zip.File
+	for _, file := range zipReader.File {
+		if strings.HasSuffix(strings.ToLower(file.Name), ".xml") {
+			xmlFile = file
+			break
+		}
+	}
+
+	if xmlFile == nil {
+		history.Status = "failed"
+		history.Log = "No XML file found in the ZIP archive"
+		finishTime := time.Now()
+		history.FinishedAt = &finishTime
+		s.storage.UpdateImportHistory(ctx, history)
+		return history, fmt.Errorf("no XML file found in the ZIP archive")
+	}
+
+	// Открываем XML файл
+	rc, err := xmlFile.Open()
+	if err != nil {
+		history.Status = "failed"
+		history.Log = fmt.Sprintf("Failed to open XML file: %v", err)
+		finishTime := time.Now()
+		history.FinishedAt = &finishTime
+		s.storage.UpdateImportHistory(ctx, history)
+		return history, fmt.Errorf("failed to open XML file: %w", err)
+	}
+	defer rc.Close()
+
+	// Парсим XML
+	xmlContent, err := ioutil.ReadAll(rc)
+	if err != nil {
+		history.Status = "failed"
+		history.Log = fmt.Sprintf("Failed to read XML content: %v", err)
+		finishTime := time.Now()
+		history.FinishedAt = &finishTime
+		s.storage.UpdateImportHistory(ctx, history)
+		return history, fmt.Errorf("failed to read XML content: %w", err)
+	}
+
+	// Парсим содержимое XML
+	var itemsTotal, itemsImported, itemsFailed int
+	var errorLog strings.Builder
+
+	// Используем простой парсер XML для извлечения элементов <artikal>
+	itemsTotal, itemsImported, itemsFailed, err = s.processXMLContent(ctx, string(xmlContent), storefront.ID, userID, &errorLog)
+	if err != nil {
+		history.Status = "failed"
+		history.Log = fmt.Sprintf("Failed to process XML content: %v\n%s", err, errorLog.String())
+		finishTime := time.Now()
+		history.FinishedAt = &finishTime
+		s.storage.UpdateImportHistory(ctx, history)
+		return history, fmt.Errorf("failed to process XML content: %w", err)
+	}
+
+	// Обновляем историю импорта
+	finishTime := time.Now()
+	history.FinishedAt = &finishTime
+	history.ItemsTotal = itemsTotal
+	history.ItemsImported = itemsImported
+	history.ItemsFailed = itemsFailed
+	history.Log = errorLog.String()
+
+	if itemsFailed > 0 {
+		if itemsImported > 0 {
+			history.Status = "partial"
+		} else {
+			history.Status = "failed"
+		}
+	} else {
+		history.Status = "success"
+	}
+
+	err = s.storage.UpdateImportHistory(ctx, history)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update import history: %w", err)
+	}
+
+	// Обновляем информацию об источнике
+	source.LastImportAt = &finishTime
+	source.LastImportStatus = history.Status
+	source.LastImportLog = errorLog.String()
+	s.storage.UpdateImportSource(ctx, source)
+
+	return history, nil
+}
+
+// processXMLContent обрабатывает содержимое XML и создает товары
+func (s *StorefrontService) processXMLContent(ctx context.Context, xmlContent string, storefrontID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
+	var itemsTotal, itemsImported, itemsFailed int
+
+	// Константа для ID категории "прочее"
+	const DefaultCategoryID = 9999
+
+	// Используем regexp для поиска всех <artikal> элементов
+	re := regexp.MustCompile(`<artikal>(.*?)</artikal>`)
+	matches := re.FindAllStringSubmatch(xmlContent, -1)
+
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+
+		itemsTotal++
+		artikal := match[1]
+
+		// Извлекаем необходимые поля из элемента artikal
+		id := extractField(artikal, "id")
+		// sifra := extractField(artikal, "sifra")
+		naziv := cleanXMLContent(extractField(artikal, "naziv"))
+		kategorija1 := cleanXMLContent(extractField(artikal, "kategorija1"))
+		kategorija2 := cleanXMLContent(extractField(artikal, "kategorija2"))
+		kategorija3 := cleanXMLContent(extractField(artikal, "kategorija3"))
+		opis := cleanXMLContent(extractField(artikal, "opis"))
+		mpCena := extractField(artikal, "mpCena")
+		dostupan := extractField(artikal, "dostupan")
+		naAkciji := extractField(artikal, "naAkciji")
+
+		// Извлекаем ссылки на изображения
+		slike := extractImages(artikal)
+
+		// Если нет названия, пропускаем этот товар
+		if naziv == "" {
+			itemsFailed++
+			errorLog.WriteString(fmt.Sprintf("Item with ID %s skipped: no title\n", id))
+			continue
+		}
+
+		// Преобразуем цену в число
+		price, err := parsePrice(mpCena)
+		if err != nil {
+			itemsFailed++
+			errorLog.WriteString(fmt.Sprintf("Item with ID %s skipped: invalid price %s: %v\n", id, mpCena, err))
+			continue
+		}
+
+		// Находим или создаем категорию
+		categoryID := DefaultCategoryID
+		if kategorija1 != "" {
+			catID, err := s.findOrCreateCategory(ctx, kategorija1, kategorija2, kategorija3)
+			if err == nil {
+				categoryID = catID
+			} else {
+				errorLog.WriteString(fmt.Sprintf("Warning for item %s: %v. Using default category.\n", id, err))
+			}
+		}
+
+		// Создаем объявление
+		listing := &models.MarketplaceListing{
+			UserID:       userID,
+			CategoryID:   categoryID,
+			StorefrontID: &storefrontID,
+			Title:        naziv,
+			Description:  opis,
+			Price:        price,
+			Condition:    "new", // По умолчанию новый товар
+			Status: func() string {
+				if dostupan == "1" {
+					return "active"
+				}
+				return "inactive"
+			}(),
+			ShowOnMap:        false,
+			OriginalLanguage: "ru", // Предполагаем русский язык по умолчанию
+		}
+
+		// Если товар на акции, отмечаем это в описании
+		if naAkciji == "1" {
+			listing.Description = "🔥 АКЦИЯ! 🔥\n\n" + listing.Description
+		}
+
+		// Создание объявления
+		listingID, err := s.storage.CreateListing(ctx, listing)
+		if err != nil {
+			itemsFailed++
+			errorLog.WriteString(fmt.Sprintf("Error creating listing for item %s: %v\n", id, err))
+			continue
+		}
+
+		// Если есть изображения, обрабатываем их
+		if len(slike) > 0 {
+			imagesStr := strings.Join(slike, ",")
+			err := s.ProcessImportImages(ctx, listingID, imagesStr, nil)
+			if err != nil {
+				errorLog.WriteString(fmt.Sprintf("Warning: Error processing images for listing %d: %v\n", listingID, err))
+			}
+		}
+
+		// Получаем созданное объявление для индексации
+		createdListing, err := s.storage.GetListingByID(ctx, listingID)
+		if err != nil {
+			errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))
+		} else {
+			// Индексируем объявление в поисковом движке
+			err = s.storage.IndexListing(ctx, createdListing)
+			if err != nil {
+				errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to index: %v\n", err))
+			}
+		}
+
+		itemsImported++
+	}
+
+	return itemsTotal, itemsImported, itemsFailed, nil
+}
+
+// extractField извлекает значение поля из XML-элемента
+func extractField(xml string, field string) string {
+	re := regexp.MustCompile(`<` + field + `>(.*?)</` + field + `>`)
+	match := re.FindStringSubmatch(xml)
+	if len(match) < 2 {
+		return ""
+	}
+	return match[1]
+}
+
+// cleanXMLContent очищает содержимое от CDATA и HTML-тегов
+func cleanXMLContent(content string) string {
+	// Удаляем CDATA
+	content = regexp.MustCompile(`<!\[CDATA\[(.*?)\]\]>`).ReplaceAllString(content, "$1")
+
+	// Удаляем HTML-теги
+	content = regexp.MustCompile(`<[^>]*>`).ReplaceAllString(content, " ")
+
+	// Заменяем множественные пробелы на один
+	content = regexp.MustCompile(`\s+`).ReplaceAllString(content, " ")
+
+	return strings.TrimSpace(content)
+}
+
+// extractImages извлекает ссылки на изображения из элемента artikal
+func extractImages(xml string) []string {
+	var images []string
+	re := regexp.MustCompile(`<slika><!\[CDATA\[(.*?)\]\]></slika>`)
+	matches := re.FindAllStringSubmatch(xml, -1)
+	for _, match := range matches {
+		if len(match) >= 2 && match[1] != "" {
+			images = append(images, match[1])
+		}
+	}
+	return images
+}
+
+// parsePrice преобразует строку с ценой в число
+func parsePrice(priceStr string) (float64, error) {
+	// Удаляем все нечисловые символы, кроме точки
+	priceStr = regexp.MustCompile(`[^0-9.]`).ReplaceAllString(priceStr, "")
+	if priceStr == "" {
+		return 0, nil
+	}
+	return strconv.ParseFloat(priceStr, 64)
+}
+
+// findOrCreateCategory находит или создает категорию по имени
+func (s *StorefrontService) findOrCreateCategory(ctx context.Context, cat1, cat2, cat3 string) (int, error) {
+	// Этот метод должен быть реализован для поиска или создания категорий
+	// Для упрощения примера просто возвращаем категорию "Прочее"
+	return 9999, nil
 }

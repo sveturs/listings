@@ -621,14 +621,21 @@ const MarketplacePage = () => {
                     {Object.entries(filters).some(([key, value]) => value && key !== 'sort_by') && (
                         <Box sx={{ px: 2, py: 1, display: 'flex', gap: 1, overflowX: 'auto', alignItems: 'center' }}>
                             {Object.entries(filters).map(([key, value]) => {
-                                if (!value || key === 'sort_by' || key === 'latitude' || key === 'longitude') return null;
-                                let label = value;
+                                if (!value || key === 'sort_by' || key === 'latitude' || key === 'longitude' || key === 'attributeFilters') return null;
+
+                                let label = '';
+
+                                // Преобразуем значение в строку с учетом специфики каждого поля
                                 if (key === 'category_id') {
                                     const category = categories.find(c => String(c.id) === String(value));
-                                    label = category ? category.name : value;
+                                    label = category ? category.name : String(value);
                                 } else if (key === 'distance') {
                                     label = `Радиус: ${value}`;
+                                } else {
+                                    // Убедимся, что любое другое значение преобразуется в строку
+                                    label = String(value);
                                 }
+
                                 return (
                                     <Chip
                                         key={key}

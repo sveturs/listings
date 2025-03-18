@@ -11,23 +11,42 @@ import {
   Divider,
   Paper,
   Stack,
-  FormHelperText
+  FormHelperText,
+  Tabs,
+  Tab
 } from '@mui/material';
-import { Upload, FileArchive, FileType, Info } from 'lucide-react';
+import { Upload, FileArchive, FileType, Info, FileCode } from 'lucide-react';
 import axios from '../../api/axios';
 import CsvStructureInfo from './CsvStructureInfo';
+import XmlStructureInfo from './XmlStructureInfo';
 
 const ImportModal = ({ open, onClose, sourceId, onSuccess }) => {
   const { t } = useTranslation(['common', 'marketplace']);
   const [csvFile, setCsvFile] = useState(null);
   const [zipFile, setZipFile] = useState(null);
+  const [xmlZipFile, setXmlZipFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [importTab, setImportTab] = useState(0); // 0 - CSV, 1 - XML
+
+  const handleTabChange = (event, newValue) => {
+    setImportTab(newValue);
+    // Сбрасываем файлы при переключении вкладок
+    setCsvFile(null);
+    setZipFile(null);
+    setXmlZipFile(null);
+    setError(null);
+    setSuccess(null);
+  };
 
   const handleImport = async () => {
-    if (!csvFile) {
+    // Проверяем выбранную вкладку и наличие файлов
+    if (importTab === 0 && !csvFile) {
       setError(t('marketplace:store.import.noCsvSelected'));
+      return;
+    } else if (importTab === 1 && !xmlZipFile) {
+      setError(t('marketplace:store.import.noXmlZipSelected'));
       return;
     }
 
@@ -37,11 +56,18 @@ const ImportModal = ({ open, onClose, sourceId, onSuccess }) => {
 
     try {
       const formData = new FormData();
-      formData.append('file', csvFile);
       
-      // Добавляем ZIP файл с изображениями, если он выбран
-      if (zipFile) {
-        formData.append('images_zip', zipFile);
+      if (importTab === 0) {
+        // CSV импорт
+        formData.append('file', csvFile);
+        
+        // Добавляем ZIP файл с изображениями, если он выбран
+        if (zipFile) {
+          formData.append('images_zip', zipFile);
+        }
+      } else {
+        // XML импорт
+        formData.append('xml_zip', xmlZipFile);
       }
 
       const response = await axios.post(
@@ -110,6 +136,19 @@ const ImportModal = ({ open, onClose, sourceId, onSuccess }) => {
     }
   };
 
+  const handleXmlZipFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.type !== 'application/zip' && !file.name.endsWith('.zip')) {
+        setError(t('marketplace:store.import.invalidZipFormat'));
+        setXmlZipFile(null);
+      } else {
+        setError(null);
+        setXmlZipFile(file);
+      }
+    }
+  };
+
   return (
     <Modal
       open={open}
@@ -146,85 +185,156 @@ const ImportModal = ({ open, onClose, sourceId, onSuccess }) => {
           </Alert>
         )}
 
-        <Stack spacing={3} sx={{ mt: 2 }}>
-          <Box>
-            <Typography variant="subtitle2" gutterBottom>
-              {t('marketplace:store.import.selectCsvFile')}
-            </Typography>
-            
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Button
-                variant="outlined"
-                component="label"
-                startIcon={<FileType />}
-                disabled={loading}
-              >
-                {t('marketplace:store.import.browseCsv')}
-                <input
-                  type="file"
-                  hidden
-                  accept=".csv"
-                  onChange={handleCsvFileChange}
-                />
-              </Button>
+        <Tabs 
+          value={importTab} 
+          onChange={handleTabChange} 
+          aria-label="import format tabs"
+          sx={{ mb: 2 }}
+        >
+          <Tab label={t('marketplace:store.import.csvImport', { defaultValue: 'CSV Import' })} />
+          <Tab label={t('marketplace:store.import.xmlImport', { defaultValue: 'XML Import' })} />
+        </Tabs>
+
+        {importTab === 0 ? (
+          // CSV импорт
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                {t('marketplace:store.import.selectCsvFile')}
+              </Typography>
               
-              {csvFile && (
-                <Typography variant="body2" color="text.secondary">
-                  {csvFile.name} ({Math.round(csvFile.size / 1024)} KB)
-                </Typography>
-              )}
-            </Stack>
-            
-            <FormHelperText>
-              {t('marketplace:store.import.csvHelp', { defaultValue: 'CSV-файл должен содержать обязательные поля: id, title, description, price, category_id' })}
-            </FormHelperText>
-          </Box>
-          
-          <Divider />
-          
-          <Box>
-            <Typography variant="subtitle2" gutterBottom>
-              {t('marketplace:store.import.selectZipFile')}
-            </Typography>
-            
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Button
-                variant="outlined"
-                component="label"
-                startIcon={<FileArchive />}
-                disabled={loading}
-              >
-                {t('marketplace:store.import.browseZip')}
-                <input
-                  type="file"
-                  hidden
-                  accept=".zip"
-                  onChange={handleZipFileChange}
-                />
-              </Button>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<FileType />}
+                  disabled={loading}
+                >
+                  {t('marketplace:store.import.browseCsv')}
+                  <input
+                    type="file"
+                    hidden
+                    accept=".csv"
+                    onChange={handleCsvFileChange}
+                  />
+                </Button>
+                
+                {csvFile && (
+                  <Typography variant="body2" color="text.secondary">
+                    {csvFile.name} ({Math.round(csvFile.size / 1024)} KB)
+                  </Typography>
+                )}
+              </Stack>
               
-              {zipFile && (
-                <Typography variant="body2" color="text.secondary">
-                  {zipFile.name} ({Math.round(zipFile.size / 1024)} KB)
-                </Typography>
-              )}
-            </Stack>
+              <FormHelperText>
+                {t('marketplace:store.import.csvHelp', { defaultValue: 'CSV-файл должен содержать обязательные поля: id, title, description, price, category_id' })}
+              </FormHelperText>
+            </Box>
             
-            <FormHelperText>
-              {t('marketplace:store.import.zipHelp', {
-                defaultValue: 'Опционально: добавьте ZIP-архив с изображениями. Имена файлов должны совпадать с именами в колонке "images" CSV файла.'
+            <Divider />
+            
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                {t('marketplace:store.import.selectZipFile')}
+              </Typography>
+              
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<FileArchive />}
+                  disabled={loading}
+                >
+                  {t('marketplace:store.import.browseZip')}
+                  <input
+                    type="file"
+                    hidden
+                    accept=".zip"
+                    onChange={handleZipFileChange}
+                  />
+                </Button>
+                
+                {zipFile && (
+                  <Typography variant="body2" color="text.secondary">
+                    {zipFile.name} ({Math.round(zipFile.size / 1024)} KB)
+                  </Typography>
+                )}
+              </Stack>
+              
+              <FormHelperText>
+                {t('marketplace:store.import.zipHelp', {
+                  defaultValue: 'Опционально: добавьте ZIP-архив с изображениями. Имена файлов должны совпадать с именами в колонке "images" CSV файла.'
+                })}
+              </FormHelperText>
+            </Box>
+            
+            <Alert severity="info" icon={<Info />}>
+              {t('marketplace:store.import.imageNamingInfo', {
+                defaultValue: 'В колонке "images" CSV файла укажите пути к изображениям через запятую. При загрузке ZIP-архива эти пути должны соответствовать файлам внутри архива.'
               })}
-            </FormHelperText>
-          </Box>
-          
-          <Alert severity="info" icon={<Info />}>
-            {t('marketplace:store.import.imageNamingInfo', {
-              defaultValue: 'В колонке "images" CSV файла укажите пути к изображениям через запятую. При загрузке ZIP-архива эти пути должны соответствовать файлам внутри архива.'
-            })}
-          </Alert>
-          
-          <CsvStructureInfo />
-        </Stack>
+            </Alert>
+            
+            <CsvStructureInfo />
+          </Stack>
+        ) : (
+          // XML импорт
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                {t('marketplace:store.import.selectXmlZipFile', { defaultValue: 'Выберите ZIP-архив с XML файлом' })}
+              </Typography>
+              
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<FileCode />}
+                  disabled={loading}
+                >
+                  {t('marketplace:store.import.browseXmlZip', { defaultValue: 'Выбрать ZIP с XML' })}
+                  <input
+                    type="file"
+                    hidden
+                    accept=".zip"
+                    onChange={handleXmlZipFileChange}
+                  />
+                </Button>
+                
+                {xmlZipFile && (
+                  <Typography variant="body2" color="text.secondary">
+                    {xmlZipFile.name} ({Math.round(xmlZipFile.size / 1024)} KB)
+                  </Typography>
+                )}
+              </Stack>
+              
+              <FormHelperText>
+                {t('marketplace:store.import.xmlZipHelp', {
+                  defaultValue: 'ZIP-архив должен содержать XML файл с каталогом товаров. Система автоматически найдет и обработает XML файл внутри архива.'
+                })}
+              </FormHelperText>
+            </Box>
+            
+            <Alert severity="info" icon={<Info />}>
+              {t('marketplace:store.import.xmlFormatInfo', {
+                defaultValue: 'XML файл должен содержать элементы <artikal> с информацией о товарах. Поддерживаются изображения, указанные в тегах <slika>.'
+              })}
+            </Alert>
+            
+            <Divider />
+            
+            <Typography variant="subtitle2" gutterBottom>
+              {t('marketplace:store.import.alternativeUrlImport', { defaultValue: 'Альтернативно: импорт по URL' })}
+            </Typography>
+            
+            <Alert severity="info">
+              {t('marketplace:store.import.xmlUrlInfo', {
+                defaultValue: 'Вы также можете добавить прямую ссылку на ZIP-архив с XML при создании источника импорта. Система автоматически распознает ZIP-архив по расширению .zip в URL и обработает его как XML источник.'
+              })}
+            </Alert>
+            
+            <XmlStructureInfo />
+          </Stack>
+        )}
 
         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
           <Button
@@ -239,7 +349,7 @@ const ImportModal = ({ open, onClose, sourceId, onSuccess }) => {
             variant="contained"
             color="primary"
             onClick={handleImport}
-            disabled={loading || !csvFile}
+            disabled={loading || (importTab === 0 && !csvFile) || (importTab === 1 && !xmlZipFile)}
             startIcon={loading ? <CircularProgress size={24} /> : <Upload />}
           >
             {loading ? t('marketplace:store.import.importing') : t('marketplace:store.import.startImport')}

@@ -302,5 +302,10 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
+	// Останавливаем все сервисы
+	services := globalService.NewService(nil, nil, nil)
+	services.Shutdown()
+	
+	// Завершаем работу сервера
 	return s.app.Shutdown()
 }
