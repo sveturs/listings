@@ -697,27 +697,55 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 			continue
 		}
 
-		// Переменная для отслеживания, добавлены ли изображения
-		imagesAdded := false
-
 		// Если есть колонка с изображениями, обрабатываем их с новым подходом
 		if imagesIdx, ok := columnMap["images"]; ok && imagesIdx < len(row) && row[imagesIdx] != "" {
 			imagesStr := row[imagesIdx]
+			imagesList := strings.Split(imagesStr, ",")
 
-			// Используем асинхронную версию метода
-			s.ProcessImportImagesAsync(ctx, listingID, imagesStr, zipReader)
+			// Добавляем базовую информацию об изображениях в БД с предсказуемыми именами
+			for i, imagePath := range imagesList {
+				imagePath = strings.TrimSpace(imagePath)
+				if imagePath == "" {
+					continue
+				}
 
-			// Удаляем эту проверку, так как мы использовали асинхронную загрузку
-			imagesAdded = true
-			log.Printf("Запущена асинхронная обработка изображений для листинга %d", listingID)
+				// ИЗМЕНЕНИЕ: Используем детерминированное имя файла
+				fileName := fmt.Sprintf("%d_image_%d.jpg", listingID, i)
+
+				// Получаем имя файла из URL
+				parts := strings.Split(imagePath, "/")
+				imageFileName := ""
+				if len(parts) > 0 {
+					imageFileName = parts[len(parts)-1]
+				}
+
+				// Создаем запись об изображении в базе данных
+				image := &models.MarketplaceImage{
+					ListingID:   listingID,
+					FilePath:    fileName,
+					FileName:    imageFileName,
+					FileSize:    0,            // Размер будет обновлен после обработки
+					ContentType: "image/jpeg", // Предположительный тип
+					IsMain:      i == 0,       // Первое изображение - основное
+				}
+
+				_, err = s.storage.AddListingImage(ctx, image)
+				if err != nil {
+					log.Printf("Ошибка при добавлении информации об изображении в БД: %v", err)
+					continue
+				}
+			}
+
+			// Теперь запускаем асинхронную обработку изображений
+			go func(listID int, imgs string, zipR *zip.Reader) {
+				processingCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+				defer cancel()
+				s.ProcessImportImages(processingCtx, listID, imgs, zipR)
+				log.Printf("Завершена обработка изображений для листинга %d", listID)
+			}(listingID, imagesStr, zipReader)
 		}
 
-		// Получаем созданное объявление для индексации ПОСЛЕ добавления изображений
-		if imagesAdded {
-			// Небольшая задержка для гарантии, что изображения сохранились в БД
-			time.Sleep(200 * time.Millisecond)
-		}
-
+		// Получаем созданное объявление для индексации
 		createdListing, err := s.storage.GetListingByID(ctx, listingID)
 		if err != nil {
 			errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))
@@ -728,7 +756,6 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 				errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to index: %v\n", err))
 			}
 		}
-
 		itemsImported++
 	}
 
@@ -1058,7 +1085,6 @@ func isSimilarAttributeName(attrName, importName string) bool {
 		strings.Contains(importName, attrName)
 }
 
-// processXMLContentStream обрабатывает содержимое XML с использованием потокового парсера
 func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader io.Reader, storefrontID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
 	var itemsTotal, itemsImported, itemsFailed int
 
@@ -1216,14 +1242,53 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					continue
 				}
 		
-				// Если есть изображения, обрабатываем их
+				// Если есть изображения, сначала добавляем их ссылки в БД
 				if len(slike) > 0 {
+					// Добавляем базовую информацию об изображениях в БД с детерминированными именами
+					for i, imagePath := range slike {
+						imagePath = strings.TrimSpace(imagePath)
+						if imagePath == "" {
+							continue
+						}
+						
+						// Используем детерминированное имя файла
+						fileName := fmt.Sprintf("%d_image_%d.jpg", listingID, i)
+						
+						// Получаем имя файла из URL
+						parts := strings.Split(imagePath, "/")
+						imageFileName := ""
+						if len(parts) > 0 {
+							imageFileName = parts[len(parts)-1]
+						}
+						
+						// Создаем запись об изображении в базе данных
+						image := &models.MarketplaceImage{
+							ListingID:   listingID,
+							FilePath:    fileName,
+							FileName:    imageFileName,
+							FileSize:    0, // Размер будет обновлен после обработки
+							ContentType: "image/jpeg", // Предположительный тип
+							IsMain:      i == 0, // Первое изображение - основное
+						}
+						
+						_, err = s.storage.AddListingImage(ctx, image)
+						if err != nil {
+							log.Printf("Ошибка при добавлении информации об изображении в БД: %v", err)
+							continue
+						}
+					}
+					
+					// Теперь запускаем асинхронную обработку изображений
 					imagesStr := strings.Join(slike, ",")
-					// Используем асинхронную обработку изображений
-					s.ProcessImportImagesAsync(ctx, listingID, imagesStr, nil)
+					go func(listID int, imgs string) {
+						processingCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+						defer cancel()
+						s.ProcessImportImages(processingCtx, listID, imgs, nil)
+						log.Printf("Завершена обработка изображений для листинга %d", listID)
+					}(listingID, imagesStr)
 				}
-		
-				// Получаем созданное объявление для индексации
+				
+				// Получаем созданное объявление для индексации с уже добавленными ссылками
 				createdListing, err := s.storage.GetListingByID(ctx, listingID)
 				if err != nil {
 					errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))

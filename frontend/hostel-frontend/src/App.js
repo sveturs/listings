@@ -31,7 +31,8 @@ import UserReviewsPage from './pages/user/UserReviewsPage';
 import StorefrontReviewsPage from './pages/store/StorefrontReviewsPage';
 import EditStorefrontPage from "./pages/store/EditStorefrontPage";
 import { LocationProvider } from './contexts/LocationContext';
-
+import AdminRoute from "./components/global/AdminRoute";
+import AdminPage from "./pages/admin/AdminPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -107,6 +108,7 @@ function App() {
                         <Route path="/favorites" element={<FavoriteListingsPage />} />
                         <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
                         <Route path="/balance" element={<PrivateRoute>      <TransactionsPage />    </PrivateRoute>} />
+                        <Route path="/admin" element={<AdminRoute>      <AdminPage />    </AdminRoute>} />
                       </Routes>
                     </Layout>
                   </NotificationProvider>

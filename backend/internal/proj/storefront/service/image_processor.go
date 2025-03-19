@@ -131,25 +131,14 @@ func (s *StorefrontService) ProcessImportImages(
 // Асинхронная обработка изображений
 func (s *StorefrontService) ProcessImportImagesAsync(ctx context.Context, listingID int, imagesStr string, zipReader *zip.Reader) {
     go func() {
-        // Создаем контекст с таймаутом в 30 минут вместо 10
         ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
         defer cancel()
         
         log.Printf("Начата асинхронная обработка изображений для листинга %d", listingID)
-        // Предположим, что изображения разделены запятыми
         imagesList := strings.Split(imagesStr, ",")
         
-        // Директория для сохранения обработанных изображений
-        uploadDir := "./uploads"
-        
-        // Убедимся, что директория существует
-        if err := os.MkdirAll(uploadDir, 0755); err != nil {
-            log.Printf("Error creating upload directory: %v", err)
-            return
-        }
-        
         // Создаем семафор для ограничения количества параллельных горутин
-        sem := make(chan struct{}, 5) // максимум 5 параллельных обработок
+        sem := make(chan struct{}, 5)
         var wg sync.WaitGroup
         
         totalImages := 0
@@ -164,26 +153,28 @@ func (s *StorefrontService) ProcessImportImagesAsync(ctx context.Context, listin
             
             totalImages++
             wg.Add(1)
-            sem <- struct{}{} // Захватываем слот в семафоре
+            sem <- struct{}{}
             
-            go func(idx int, path string) {
+            // ИЗМЕНЕНИЕ: Используем детерминированное имя файла
+            fileName := fmt.Sprintf("%d_image_%d.jpg", listingID, i)
+            
+            go func(idx int, path string, filename string) {
                 defer func() {
-                    <-sem // Освобождаем слот в семафоре
+                    <-sem
                     wg.Done()
                 }()
                 
-                // Логика обработки одного изображения
-                err := s.processOneImage(ctx, listingID, path, idx == 0, zipReader)
+                // Логика обработки одного изображения с использованием предсказуемого имени файла
+                err := s.processOneImageWithName(ctx, listingID, path, idx == 0, zipReader, filename)
                 if err != nil {
                     failedImages++
                     log.Printf("Ошибка обработки изображения для листинга %d, путь %s: %v", listingID, path, err)
                 } else {
                     processedImages++
                 }
-            }(i, imagePath)
+            }(i, imagePath, fileName)
         }
         
-        // Ждем завершения всех горутин
         wg.Wait()
         log.Printf("Завершена асинхронная обработка изображений для листинга %d. Обработано: %d из %d, ошибок: %d", 
             listingID, processedImages, totalImages, failedImages)
@@ -261,6 +252,90 @@ func (s *StorefrontService) processOneImage(ctx context.Context, listingID int, 
     }
     
     log.Printf("Изображение %s успешно обработано и добавлено для объявления %d", fileName, listingID)
+    return nil
+}
+
+func (s *StorefrontService) processOneImageWithName(ctx context.Context, listingID int, imagePath string, isMain bool, zipReader *zip.Reader, fileName string) error {
+    var imgData []byte
+    var err error
+    var contentType string
+    
+    if strings.HasPrefix(strings.ToLower(imagePath), "http://") || 
+       strings.HasPrefix(strings.ToLower(imagePath), "https://") {
+        imgData, contentType, err = s.downloadImage(imagePath)
+        if err != nil {
+            log.Printf("Ошибка при загрузке изображения %s: %v", imagePath, err)
+            return err
+        }
+    } else if zipReader != nil {
+        imgData, contentType, err = s.extractImageFromZip(zipReader, imagePath)
+        if err != nil {
+            log.Printf("Ошибка при извлечении изображения %s из архива: %v", imagePath, err)
+            return err
+        }
+    } else {
+        imgData, contentType, err = s.readLocalImage(imagePath)
+        if err != nil {
+            log.Printf("Ошибка при чтении локального изображения %s: %v", imagePath, err)
+            return err
+        }
+    }
+    
+    if imgData == nil || len(imgData) == 0 {
+        err := fmt.Errorf("не удалось получить данные для изображения %s", imagePath)
+        log.Printf("%v", err)
+        return err
+    }
+    
+    // Обрабатываем изображение (уменьшаем и добавляем водяной знак)
+    processedData, err := s.processImage(imgData, contentType)
+    if err != nil {
+        log.Printf("Ошибка при обработке изображения %s: %v", imagePath, err)
+        return err
+    }
+    
+    filePath := filepath.Join("./uploads", fileName)
+    
+    // Сохраняем файл
+    if err := ioutil.WriteFile(filePath, processedData, 0644); err != nil {
+        log.Printf("Ошибка при сохранении изображения %s: %v", filePath, err)
+        return err
+    }
+    
+    // Обновляем запись об изображении в базе данных (уже должна существовать)
+    // Ищем запись с нужным ListingID и IsMain для обновления
+    var imageID int
+    err = s.storage.QueryRow(ctx, 
+        "SELECT id FROM marketplace_images WHERE listing_id = $1 AND is_main = $2 ORDER BY id LIMIT 1", 
+        listingID, isMain).Scan(&imageID)
+    
+    if err == nil {
+        // Нашли запись, обновляем ее
+        _, err = s.storage.Exec(ctx, 
+            "UPDATE marketplace_images SET file_size = $1, content_type = $2 WHERE id = $3", 
+            len(processedData), contentType, imageID)
+        if err != nil {
+            log.Printf("Ошибка при обновлении информации об изображении в БД: %v", err)
+        }
+    } else {
+        // Запись не найдена, создаем новую
+        image := &models.MarketplaceImage{
+            ListingID:   listingID,
+            FilePath:    fileName,
+            FileName:    strings.Split(imagePath, "/")[len(strings.Split(imagePath, "/"))-1],
+            FileSize:    len(processedData),
+            ContentType: contentType,
+            IsMain:      isMain,
+        }
+        
+        _, err = s.storage.AddListingImage(ctx, image)
+        if err != nil {
+            log.Printf("Ошибка при добавлении информации об изображении в БД: %v", err)
+            return err
+        }
+    }
+    
+    log.Printf("Изображение %s успешно обработано и сохранено для объявления %d", fileName, listingID)
     return nil
 }
 // downloadImage загружает изображение по URL

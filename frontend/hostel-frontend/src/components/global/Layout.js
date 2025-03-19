@@ -322,6 +322,14 @@ const Layout = ({ children }) => {
                       <AccountBalanceWallet fontSize="small" sx={{ mr: 1 }} />
                       {t('navigation.balance')}
                     </MenuItem>
+                    
+                    {user.email === 'voroshilovdo@gmail.com' && (
+                      <MenuItem component={Link} to="/admin" onClick={handleCloseMenu}>
+                        <Settings fontSize="small" sx={{ mr: 1 }} />
+                        Администрирование
+                      </MenuItem>
+                    )}
+                    
                     <Divider />
                     <MenuItem onClick={logout}>
                       <Logout fontSize="small" sx={{ mr: 1 }} />

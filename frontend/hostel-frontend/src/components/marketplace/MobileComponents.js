@@ -135,61 +135,61 @@ export const MobileListingCard = ({ listing }) => {
             >
                 {/*  бейдж магазина */}
                 {listing.storefront_id && (
-    <Box
-        sx={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            zIndex: 100, // Очень высокий z-index
-            bgcolor: 'primary.main', // MUI тема для цвета
-            color: 'white',
-            borderRadius: '4px',
-            px: 1,
-            py: 0.5,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-            fontSize: '0.75rem',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            isolation: 'isolate' // Изоляция событий
-        }}
-        // Используем onMouseDown для более раннего перехвата события, чем onClick
-        onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.nativeEvent) {
-                e.nativeEvent.stopImmediatePropagation();
-            }
-            window.location.href = `/shop/${listing.storefront_id}`;
-            return false;
-        }}
-        // Дублируем на onClick для надежности
-        onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.nativeEvent) {
-                e.nativeEvent.stopImmediatePropagation();
-            }
-            window.location.href = `/shop/${listing.storefront_id}`;
-            return false;
-        }}
-        // Дублируем на onTouchStart для надежности на мобильных
-        onTouchStart={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.nativeEvent) {
-                e.nativeEvent.stopImmediatePropagation();
-            }
-            window.location.href = `/shop/${listing.storefront_id}`;
-            return false;
-        }}
-        data-shop-button="true"
-    >
-        <Store size={14} />
-        в магазин
-    </Box>
-)}
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            zIndex: 100, // Очень высокий z-index
+                            bgcolor: 'primary.main', // MUI тема для цвета
+                            color: 'white',
+                            borderRadius: '4px',
+                            px: 1,
+                            py: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            isolation: 'isolate' // Изоляция событий
+                        }}
+                        // Используем onMouseDown для более раннего перехвата события, чем onClick
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (e.nativeEvent) {
+                                e.nativeEvent.stopImmediatePropagation();
+                            }
+                            window.location.href = `/shop/${listing.storefront_id}`;
+                            return false;
+                        }}
+                        // Дублируем на onClick для надежности
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (e.nativeEvent) {
+                                e.nativeEvent.stopImmediatePropagation();
+                            }
+                            window.location.href = `/shop/${listing.storefront_id}`;
+                            return false;
+                        }}
+                        // Дублируем на onTouchStart для надежности на мобильных
+                        onTouchStart={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (e.nativeEvent) {
+                                e.nativeEvent.stopImmediatePropagation();
+                            }
+                            window.location.href = `/shop/${listing.storefront_id}`;
+                            return false;
+                        }}
+                        data-shop-button="true"
+                    >
+                        <Store size={14} />
+                        в магазин
+                    </Box>
+                )}
 
 
 
@@ -242,28 +242,28 @@ export const MobileFilters = ({ open, onClose, filters, onFilterChange, categori
     const { t, i18n } = useTranslation('marketplace'); // Добавляем i18n
 
     // Исправленная функция getTranslatedName в CategoryItem
-const getTranslatedName = (category) => {
-    if (!category) return '';
-    
-    // Проверяем наличие переводов
-    if (category.translations && typeof category.translations === 'object') {
-        // Если есть прямой перевод на текущий язык
-        if (category.translations[i18n.language]) {
-            return category.translations[i18n.language];
-        }
-        
-        // Если прямого перевода нет, пробуем найти по приоритету
-        const langPriority = [i18n.language, 'ru', 'sr', 'en'];
-        for (const lang of langPriority) {
-            if (category.translations[lang]) {
-                return category.translations[lang];
+    const getTranslatedName = (category) => {
+        if (!category) return '';
+
+        // Проверяем наличие переводов
+        if (category.translations && typeof category.translations === 'object') {
+            // Если есть прямой перевод на текущий язык
+            if (category.translations[i18n.language]) {
+                return category.translations[i18n.language];
+            }
+
+            // Если прямого перевода нет, пробуем найти по приоритету
+            const langPriority = [i18n.language, 'ru', 'sr', 'en'];
+            for (const lang of langPriority) {
+                if (category.translations[lang]) {
+                    return category.translations[lang];
+                }
             }
         }
-    }
-    
-    // Если переводов нет или они не подходят, возвращаем исходное имя
-    return category.name;
-};
+
+        // Если переводов нет или они не подходят, возвращаем исходное имя
+        return category.name;
+    };
 
     const [tempFilters, setTempFilters] = useState(filters);
     const [currentCategory, setCurrentCategory] = useState(null);

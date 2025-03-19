@@ -83,7 +83,7 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
         if (!listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
             return '/placeholder.jpg';
         }
-    
+        
         // Ищем главное изображение
         let mainImage = null;
         
@@ -96,6 +96,12 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
             if (!mainImage) {
                 mainImage = listing.images[0];
             }
+        }
+        
+        // Если путь содержит "pending", отображаем placeholder
+        if (mainImage && typeof mainImage === 'object' && mainImage.file_path && 
+            mainImage.file_path.includes('pending')) {
+            return '/placeholder.jpg';
         }
         
         // Проверяем, что у нас есть объект с file_path
@@ -111,14 +117,14 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
         // Если ничего не подошло, возвращаем placeholder
         return '/placeholder.jpg';
     };
-    
+
 
     const handleCardClick = (e) => {
         // Если клик был внутри элемента с атрибутом data-shop-button или detailsButton, не выполняем навигацию
         if (e.target.closest('[data-shop-button="true"]') || e.target.closest('#detailsButton')) {
             return;
         }
-        
+
         if (onClick) {
             onClick(listing);
         } else {
@@ -143,7 +149,7 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
         if (listing.city) {
             return listing.city;
         }
-        
+
         // Если есть полный адрес, извлекаем из него город или первую часть
         if (listing.location) {
             // Пытаемся извлечь город из адреса (обычно он в начале)
@@ -153,13 +159,13 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
             }
             return listing.location;
         }
-        
+
         // Если нет ни города, ни адреса
         return 'Местоположение не указано';
     };
-    
+
     return (
-        <Card 
+        <Card
             sx={{
                 height: '100%',
                 display: 'flex',
@@ -176,47 +182,40 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
         >
             {/* Кнопка "Магазин тут" с всплывающей подсказкой */}
             {listing.storefront_id && (
-                <Tooltip
-                    title={storeName}
-                    placement="top"
-                    arrow
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        zIndex: 9999, // Очень высокий z-index
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        borderRadius: '4px',
+                        px: 1,
+                        py: 0.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        pointerEvents: 'auto',
+                        opacity: 1, // Убедимся, что кнопка видима
+                        '&::before': {}, // Убираем псевдоэлемент, который может перекрывать
+                    }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log("Shop button clicked, navigating to:", `/shop/${listing.storefront_id}`);
+                        // Используем более прямой способ перехода
+                        window.location.href = `/shop/${listing.storefront_id}`;
+                        return false;
+                    }}
+                    data-shop-button="true"
                 >
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: 10,
-                            right: 10,
-                            // Невидимая увеличенная область клика
-                            '&::before': {
-                                content: '""',
-                                position: 'absolute',
-                                top: -10,
-                                left: -10,
-                                right: -10,
-                                bottom: -10,
-                                zIndex: 5
-                            },
-                            zIndex: 10,
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            borderRadius: '4px',
-                            px: 1,
-                            py: 0.5,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            fontSize: '0.75rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            pointerEvents: 'auto'
-                        }}
-                        onClick={handleShopButtonClick}
-                        data-shop-button="true"
-                    >
-                        <Store size={14} />
-                        в магазин
-                    </Box>
-                </Tooltip>
+                    <Store size={14} />
+                    в магазин
+                </Box>
             )}
 
             <Box sx={{ position: 'relative', pt: isMobile ? '100%' : '75%' }}>
@@ -296,12 +295,12 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
 
                 {!isMobile && (
                     <>
-<Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-    <LocationIcon size={18} style={{ marginRight: 4 }} />
-    <Typography variant="body2" noWrap>
-    {getDisplayLocation()}
-    </Typography>
-</Box>
+                        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                            <LocationIcon size={18} style={{ marginRight: 4 }} />
+                            <Typography variant="body2" noWrap>
+                                {getDisplayLocation()}
+                            </Typography>
+                        </Box>
 
                         <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
                             <AccessTime size={18} style={{ marginRight: 4 }} />

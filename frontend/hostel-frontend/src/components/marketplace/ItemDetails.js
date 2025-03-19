@@ -9,10 +9,11 @@ import {
   Paper,
   Divider,
   CircularProgress,
+  Container,
   Chip,
 } from '@mui/material';
 import { Favorite, Share, ShoppingCart } from '@mui/icons-material';
-import axios from '../api/axios';
+import axios from '../../api/axios';
 
 const ItemDetails = () => {
   const { id } = useParams();
@@ -23,9 +24,14 @@ const ItemDetails = () => {
   useEffect(() => {
     const fetchItemDetails = async () => {
       try {
+        console.log("Fetching details for item ID:", id);
         const response = await axios.get(`/api/v1/marketplace/listings/${id}`);
-setListing(response.data.data);
+        console.log("API response for item details:", response.data);
+        
+        // Используем правильное имя переменной (было ошибочно setListing)
+        setItem(response.data.data);
       } catch (err) {
+        console.error("Error fetching item details:", err);
         setError('Не удалось загрузить данные товара.');
       } finally {
         setLoading(false);
