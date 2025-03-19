@@ -705,9 +705,11 @@ const ListingDetailsPage = () => {
                             </Box>
                         )}
 
-                        <Typography variant="body1" sx={{ mb: 4 }}>
-                            {getTranslatedText('description')}
-                        </Typography>
+<Typography 
+    variant="body1" 
+    sx={{ mb: 4 }} 
+    dangerouslySetInnerHTML={{ __html: getTranslatedText('description') }}
+/>
 
                         {/* Отображаем все атрибуты */}
                         {listing.attributes && listing.attributes.length > 0 && (

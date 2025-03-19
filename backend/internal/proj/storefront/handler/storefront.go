@@ -203,9 +203,6 @@ func (h *StorefrontHandler) DeleteImportSource(c *fiber.Ctx) error {
 }
 
 // RunImport запускает импорт данных
-// backend/internal/proj/storefront/handler/storefront.go
-
-// RunImport запускает импорт данных
 func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 	sourceID, err := strconv.Atoi(c.Params("id"))
@@ -226,70 +223,76 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 	// Отладочный лог
 	log.Printf("Found import source: %+v", source)
 
-	// Получение файлов из формы
-	form, err := c.MultipartForm()
-	if err != nil && err != fiber.ErrUnprocessableEntity {
-		log.Printf("Error processing form file: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Error processing file: %v", err))
-	}
-
 	var history *models.ImportHistory
 	var csvFile, zipFile multipart.File
+	var xmlZipFile multipart.File
 
-	// Ищем CSV и ZIP файлы в форме
-	if form != nil {
-		// Проверяем файл CSV
-		csvFiles := form.File["file"]
-		if len(csvFiles) > 0 {
-			csvFileHeader := csvFiles[0]
-			log.Printf("Processing uploaded CSV file: %s, size: %d", csvFileHeader.Filename, csvFileHeader.Size)
-
-			var err error
-			csvFile, err = csvFileHeader.Open()
-			if err != nil {
-				log.Printf("Error opening CSV file: %v", err)
-				return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening CSV file: %v", err))
-			}
-			defer csvFile.Close()
+	// Проверяем тип контента запроса
+	contentType := c.Get("Content-Type")
+	if strings.Contains(contentType, "multipart/form-data") {
+		// Это запрос с файлами
+		form, err := c.MultipartForm()
+		if err != nil && err != fiber.ErrUnprocessableEntity {
+			log.Printf("Error processing form file: %v", err)
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Error processing file: %v", err))
 		}
 
-		// Проверяем ZIP файл с изображениями
-		zipFiles := form.File["images_zip"]
-		if len(zipFiles) > 0 {
-			zipFileHeader := zipFiles[0]
-			log.Printf("Processing uploaded ZIP file: %s, size: %d", zipFileHeader.Filename, zipFileHeader.Size)
+		// Обработка файлов из формы если они есть
+		if form != nil {
+			// Проверяем файл CSV
+			csvFiles := form.File["file"]
+			if len(csvFiles) > 0 {
+				csvFileHeader := csvFiles[0]
+				log.Printf("Processing uploaded CSV file: %s, size: %d", csvFileHeader.Filename, csvFileHeader.Size)
 
-			var err error
-			zipFile, err = zipFileHeader.Open()
-			if err != nil {
-				log.Printf("Error opening ZIP file: %v", err)
-				return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening ZIP file: %v", err))
-			}
-			defer zipFile.Close()
-		}
-
-		// Проверяем ZIP файл для XML импорта
-		zipXmlFiles := form.File["xml_zip"]
-		if len(zipXmlFiles) > 0 {
-			zipXmlHeader := zipXmlFiles[0]
-			log.Printf("Processing uploaded XML ZIP file: %s, size: %d", zipXmlHeader.Filename, zipXmlHeader.Size)
-
-			zipXmlFile, err := zipXmlHeader.Open()
-			if err != nil {
-				log.Printf("Error opening XML ZIP file: %v", err)
-				return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening XML ZIP file: %v", err))
-			}
-			defer zipXmlFile.Close()
-
-			// Определяем тип содержимого файла
-			extension := strings.ToLower(filepath.Ext(zipXmlHeader.Filename))
-			if extension == ".zip" {
-				history, err = h.services.Storefront().ImportXMLFromZip(c.Context(), sourceID, zipXmlFile, userID)
+				var err error
+				csvFile, err = csvFileHeader.Open()
 				if err != nil {
-					log.Printf("Error importing XML from ZIP: %v", err)
-					return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to import XML from ZIP: %v", err))
+					log.Printf("Error opening CSV file: %v", err)
+					return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening CSV file: %v", err))
 				}
-				return utils.SuccessResponse(c, history)
+				defer csvFile.Close()
+			}
+
+			// Проверяем ZIP файл с изображениями
+			zipFiles := form.File["images_zip"]
+			if len(zipFiles) > 0 {
+				zipFileHeader := zipFiles[0]
+				log.Printf("Processing uploaded ZIP file: %s, size: %d", zipFileHeader.Filename, zipFileHeader.Size)
+
+				var err error
+				zipFile, err = zipFileHeader.Open()
+				if err != nil {
+					log.Printf("Error opening ZIP file: %v", err)
+					return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening ZIP file: %v", err))
+				}
+				defer zipFile.Close()
+			}
+
+			// Проверяем ZIP файл для XML импорта
+			zipXmlFiles := form.File["xml_zip"]
+			if len(zipXmlFiles) > 0 {
+				zipXmlHeader := zipXmlFiles[0]
+				log.Printf("Processing uploaded XML ZIP file: %s, size: %d", zipXmlHeader.Filename, zipXmlHeader.Size)
+
+				var err error
+				xmlZipFile, err = zipXmlHeader.Open()
+				if err != nil {
+					log.Printf("Error opening XML ZIP file: %v", err)
+					return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error opening XML ZIP file: %v", err))
+				}
+				defer xmlZipFile.Close()
+
+				// Определяем тип содержимого файла
+				extension := strings.ToLower(filepath.Ext(zipXmlHeader.Filename))
+				if extension == ".zip" {
+					history, err = h.services.Storefront().ImportXMLFromZip(c.Context(), sourceID, xmlZipFile, userID)
+					if err != nil {
+						log.Printf("Error importing XML from ZIP: %v", err)
+						return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to import XML from ZIP: %v", err))
+					}
+					return utils.SuccessResponse(c, history)
+				}
 			}
 		}
 	}
@@ -305,6 +308,7 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 		// Если CSV файл не загружен, но есть URL в источнике
 		// Проверяем, если URL оканчивается на .zip, предполагаем, что это XML в ZIP
 		if strings.HasSuffix(strings.ToLower(source.URL), ".zip") {
+			log.Printf("Detected ZIP URL for source ID %d: %s", sourceID, source.URL)
 			// Загружаем ZIP-архив
 			resp, err := http.Get(source.URL)
 			if err != nil {
@@ -339,7 +343,6 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, history)
 }
-
 // GetImportHistory возвращает историю импорта
 func (h *StorefrontHandler) GetImportHistory(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)

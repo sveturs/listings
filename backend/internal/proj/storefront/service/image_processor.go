@@ -12,7 +12,8 @@ import (
 	"image/jpeg"
 	"image/png"
 //	"image/draw"
-
+	"sync"
+	"image/gif" 
  	"io/ioutil"
 	"log"
 	"math"
@@ -127,36 +128,215 @@ func (s *StorefrontService) ProcessImportImages(
 	
 	return nil
 }
-
-// downloadImage загружает изображение по URL
-func (s *StorefrontService) downloadImage(url string) ([]byte, string, error) {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-	
-	resp, err := client.Get(url)
-	if err != nil {
-		return nil, "", fmt.Errorf("ошибка HTTP-запроса: %w", err)
-	}
-	defer resp.Body.Close()
-	
-	if resp.StatusCode != http.StatusOK {
-		return nil, "", fmt.Errorf("некорректный статус ответа: %d", resp.StatusCode)
-	}
-	
-	contentType := resp.Header.Get("Content-Type")
-	if !strings.HasPrefix(contentType, "image/") {
-		return nil, "", fmt.Errorf("некорректный тип содержимого: %s", contentType)
-	}
-	
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, "", fmt.Errorf("ошибка чтения содержимого: %w", err)
-	}
-	
-	return data, contentType, nil
+// Асинхронная обработка изображений
+func (s *StorefrontService) ProcessImportImagesAsync(ctx context.Context, listingID int, imagesStr string, zipReader *zip.Reader) {
+    go func() {
+        // Создаем контекст с таймаутом в 30 минут вместо 10
+        ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+        defer cancel()
+        
+        log.Printf("Начата асинхронная обработка изображений для листинга %d", listingID)
+        // Предположим, что изображения разделены запятыми
+        imagesList := strings.Split(imagesStr, ",")
+        
+        // Директория для сохранения обработанных изображений
+        uploadDir := "./uploads"
+        
+        // Убедимся, что директория существует
+        if err := os.MkdirAll(uploadDir, 0755); err != nil {
+            log.Printf("Error creating upload directory: %v", err)
+            return
+        }
+        
+        // Создаем семафор для ограничения количества параллельных горутин
+        sem := make(chan struct{}, 5) // максимум 5 параллельных обработок
+        var wg sync.WaitGroup
+        
+        totalImages := 0
+        processedImages := 0
+        failedImages := 0
+        
+        for i, imagePath := range imagesList {
+            imagePath = strings.TrimSpace(imagePath)
+            if imagePath == "" {
+                continue
+            }
+            
+            totalImages++
+            wg.Add(1)
+            sem <- struct{}{} // Захватываем слот в семафоре
+            
+            go func(idx int, path string) {
+                defer func() {
+                    <-sem // Освобождаем слот в семафоре
+                    wg.Done()
+                }()
+                
+                // Логика обработки одного изображения
+                err := s.processOneImage(ctx, listingID, path, idx == 0, zipReader)
+                if err != nil {
+                    failedImages++
+                    log.Printf("Ошибка обработки изображения для листинга %d, путь %s: %v", listingID, path, err)
+                } else {
+                    processedImages++
+                }
+            }(i, imagePath)
+        }
+        
+        // Ждем завершения всех горутин
+        wg.Wait()
+        log.Printf("Завершена асинхронная обработка изображений для листинга %d. Обработано: %d из %d, ошибок: %d", 
+            listingID, processedImages, totalImages, failedImages)
+    }()
 }
 
+// Обработка одного изображения
+func (s *StorefrontService) processOneImage(ctx context.Context, listingID int, imagePath string, isMain bool, zipReader *zip.Reader) error {
+    var imgData []byte
+    var err error
+    var contentType string
+    
+    // 1. Проверим, если это URL
+    if strings.HasPrefix(strings.ToLower(imagePath), "http://") || 
+       strings.HasPrefix(strings.ToLower(imagePath), "https://") {
+        // Загружаем изображение по URL
+        imgData, contentType, err = s.downloadImage(imagePath)
+        if err != nil {
+            log.Printf("Ошибка при загрузке изображения %s: %v", imagePath, err)
+            return err
+        }
+    } else if zipReader != nil {
+        // 2. Ищем изображение в ZIP-архиве
+        imgData, contentType, err = s.extractImageFromZip(zipReader, imagePath)
+        if err != nil {
+            log.Printf("Ошибка при извлечении изображения %s из архива: %v", imagePath, err)
+            return err
+        }
+    } else {
+        // 3. Пробуем интерпретировать как локальный путь (только для внутреннего использования)
+        imgData, contentType, err = s.readLocalImage(imagePath)
+        if err != nil {
+            log.Printf("Ошибка при чтении локального изображения %s: %v", imagePath, err)
+            return err
+        }
+    }
+    
+    if imgData == nil || len(imgData) == 0 {
+        err := fmt.Errorf("не удалось получить данные для изображения %s", imagePath)
+        log.Printf("%v", err)
+        return err
+    }
+    
+    // Обрабатываем изображение (уменьшаем и добавляем водяной знак)
+    processedData, err := s.processImage(imgData, contentType)
+    if err != nil {
+        log.Printf("Ошибка при обработке изображения %s: %v", imagePath, err)
+        return err
+    }
+    
+    // Генерируем уникальное имя файла
+    fileName := fmt.Sprintf("%d_%d%s", listingID, time.Now().UnixNano(), s.getExtensionFromContentType(contentType))
+    filePath := filepath.Join("./uploads", fileName)
+    
+    // Сохраняем файл
+    if err := ioutil.WriteFile(filePath, processedData, 0644); err != nil {
+        log.Printf("Ошибка при сохранении изображения %s: %v", filePath, err)
+        return err
+    }
+    
+    // Создаем запись об изображении в базе данных
+    image := &models.MarketplaceImage{
+        ListingID:   listingID,
+        FilePath:    fileName,
+        FileName:    filepath.Base(imagePath),
+        FileSize:    len(processedData),
+        ContentType: contentType,
+        IsMain:      isMain,
+    }
+    
+    _, err = s.storage.AddListingImage(ctx, image)
+    if err != nil {
+        log.Printf("Ошибка при добавлении информации об изображении в БД: %v", err)
+        return err
+    }
+    
+    log.Printf("Изображение %s успешно обработано и добавлено для объявления %d", fileName, listingID)
+    return nil
+}
+// downloadImage загружает изображение по URL
+func (s *StorefrontService) downloadImage(url string) ([]byte, string, error) {
+    client := &http.Client{
+        Timeout: 120 * time.Second, // 2 минуты
+    }
+    
+    resp, err := client.Get(url)
+    if err != nil {
+        return nil, "", fmt.Errorf("ошибка HTTP-запроса: %w", err)
+    }
+    defer resp.Body.Close()
+    
+    if resp.StatusCode != http.StatusOK {
+        return nil, "", fmt.Errorf("некорректный статус ответа: %d", resp.StatusCode)
+    }
+    
+    // Чтение данных
+    data, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return nil, "", fmt.Errorf("ошибка чтения содержимого: %w", err)
+    }
+    
+    // Проверяем тип содержимого
+    contentType := resp.Header.Get("Content-Type")
+    
+    // Проверяем, является ли ответ HTML (иногда серверы возвращают HTML-страницы вместо изображений)
+    if strings.Contains(contentType, "text/html") || strings.Contains(string(data[:min(1000, len(data))]), "<html") {
+        return nil, "", fmt.Errorf("сервер вернул HTML вместо изображения для URL: %s", url)
+    }
+    
+    // Если Content-Type не указывает на изображение, попробуем определить тип содержимого
+    if !strings.HasPrefix(contentType, "image/") {
+        detectedType := http.DetectContentType(data)
+        log.Printf("Исходный тип содержимого: %s, определенный тип: %s", contentType, detectedType)
+        
+        if strings.HasPrefix(detectedType, "image/") {
+            contentType = detectedType
+        } else {
+            // Пробуем по расширению файла
+            if strings.HasSuffix(strings.ToLower(url), ".jpg") || strings.HasSuffix(strings.ToLower(url), ".jpeg") {
+                contentType = "image/jpeg"
+            } else if strings.HasSuffix(strings.ToLower(url), ".png") {
+                contentType = "image/png"
+            } else if strings.HasSuffix(strings.ToLower(url), ".gif") {
+                contentType = "image/gif"
+            } else if strings.HasSuffix(strings.ToLower(url), ".webp") {
+                contentType = "image/webp"
+            } else {
+                // Если всё не удалось, пробуем по содержимому
+                // Проверяем сигнатуры файлов
+                if len(data) > 4 && data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF {
+                    // JPEG signature
+                    contentType = "image/jpeg"
+                } else if len(data) > 8 && data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 {
+                    // PNG signature
+                    contentType = "image/png"
+                } else if len(data) > 6 && data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 {
+                    // GIF signature
+                    contentType = "image/gif"
+                } else {
+                    contentType = "image/jpeg" // Предполагаем JPEG по умолчанию
+                }
+            }
+        }
+    }
+    
+    return data, contentType, nil
+}
+func min(a, b int) int {
+    if a < b {
+        return a
+    }
+    return b
+}
 // extractImageFromZip извлекает изображение из ZIP-архива
 func (s *StorefrontService) extractImageFromZip(zipReader *zip.Reader, fileName string) ([]byte, string, error) {
 	// Нормализуем имя файла для поиска (уберем лишние слеши и т.д.)
@@ -325,16 +505,73 @@ func (s *StorefrontService) processImage(imgData []byte, contentType string) ([]
     reader := bytes.NewReader(imgData)
     var img image.Image
     var err error
+    var format string
     
-    if strings.Contains(contentType, "jpeg") || strings.Contains(contentType, "jpg") {
+    // Пробуем определить тип содержимого и декодировать соответственно
+    // Сначала пробуем использовать image.DecodeConfig для определения формата
+    _, format, err = image.DecodeConfig(bytes.NewReader(imgData))
+    if err != nil {
+        log.Printf("Не удалось определить формат изображения с помощью image.DecodeConfig: %v. Будем пробовать другие декодеры.", err)
+        format = ""
+    }
+    
+    // Если формат не удалось определить по контенту, используем contentType
+    if format == "" && contentType != "" {
+        switch {
+        case strings.Contains(contentType, "jpeg") || strings.Contains(contentType, "jpg"):
+            format = "jpeg"
+        case strings.Contains(contentType, "png"):
+            format = "png"
+        case strings.Contains(contentType, "gif"):
+            format = "gif"
+        case strings.Contains(contentType, "webp"):
+            format = "webp"
+        }
+    }
+    
+    // Сбрасываем reader для нового чтения
+    reader.Seek(0, 0)
+    
+    // Пробуем различные форматы декодирования в зависимости от определенного формата
+    if format == "jpeg" {
+        log.Printf("Пробуем декодировать как JPEG")
         img, err = jpeg.Decode(reader)
-        log.Printf("Декодирование JPEG изображения")
-    } else if strings.Contains(contentType, "png") {
+    } else if format == "png" {
+        log.Printf("Пробуем декодировать как PNG")
         img, err = png.Decode(reader)
-        log.Printf("Декодирование PNG изображения")
     } else {
-        img, _, err = image.Decode(reader)
-        log.Printf("Декодирование изображения неизвестного формата")
+        // Если формат определить не удалось, пробуем все поддерживаемые форматы
+        log.Printf("Пробуем универсальное декодирование")
+        reader.Seek(0, 0)
+        img, format, err = image.Decode(reader)
+        if err != nil {
+            // Если не удалось, пробуем принудительно как JPEG
+            reader.Seek(0, 0)
+            log.Printf("Пробуем принудительно декодировать как JPEG")
+            img, err = jpeg.Decode(reader)
+            if err != nil {
+                // Если и это не удалось, пробуем PNG
+                reader.Seek(0, 0)
+                log.Printf("Пробуем принудительно декодировать как PNG")
+                img, err = png.Decode(reader)
+                if err != nil {
+                    // Если и это не удалось, пробуем GIF
+                    reader.Seek(0, 0)
+                    log.Printf("Пробуем принудительно декодировать как GIF")
+                    img, err = gif.Decode(reader)
+                    if err != nil {
+                        log.Printf("Все попытки декодирования изображения не удались: %v", err)
+                        return nil, fmt.Errorf("ошибка декодирования изображения: %w", err)
+                    } else {
+                        format = "gif"
+                    }
+                } else {
+                    format = "png"
+                }
+            } else {
+                format = "jpeg"
+            }
+        }
     }
     
     if err != nil {
@@ -345,7 +582,7 @@ func (s *StorefrontService) processImage(imgData []byte, contentType string) ([]
     // Логирование размеров изображения
     width := img.Bounds().Dx()
     height := img.Bounds().Dy()
-    log.Printf("Изображение успешно декодировано. Размеры: %dx%d", width, height)
+    log.Printf("Изображение успешно декодировано как %s. Размеры: %dx%d", format, width, height)
     
     // Изменяем размер, если изображение слишком большое
     var resizedImg image.Image
@@ -369,13 +606,18 @@ func (s *StorefrontService) processImage(imgData []byte, contentType string) ([]
     log.Printf("Кодируем изображение обратно в байты")
     var buf bytes.Buffer
     
-    if strings.Contains(contentType, "jpeg") || strings.Contains(contentType, "jpg") {
+    // Используем определенный формат для кодирования
+    if format == "jpeg" || format == "" { // По умолчанию JPEG
         err = jpeg.Encode(&buf, imgWithWatermark, &jpeg.Options{Quality: 85})
         log.Printf("Кодирование в JPEG")
-    } else if strings.Contains(contentType, "png") {
+    } else if format == "png" {
         err = png.Encode(&buf, imgWithWatermark)
         log.Printf("Кодирование в PNG")
+    } else if format == "gif" {
+        err = gif.Encode(&buf, imgWithWatermark, &gif.Options{NumColors: 256})
+        log.Printf("Кодирование в GIF")
     } else {
+        // По умолчанию используем JPEG для других форматов
         err = jpeg.Encode(&buf, imgWithWatermark, &jpeg.Options{Quality: 85})
         log.Printf("Кодирование в JPEG (по умолчанию)")
     }
@@ -393,16 +635,19 @@ func (s *StorefrontService) processImage(imgData []byte, contentType string) ([]
 
 // getExtensionFromContentType возвращает расширение файла на основе типа содержимого
 func (s *StorefrontService) getExtensionFromContentType(contentType string) string {
-	switch contentType {
-	case "image/jpeg", "image/jpg":
-		return ".jpg"
-	case "image/png":
-		return ".png"
-	case "image/gif":
-		return ".gif"
-	case "image/webp":
-		return ".webp"
-	default:
-		return ".jpg" // По умолчанию
-	}
+    contentType = strings.ToLower(contentType)
+    switch {
+    case strings.Contains(contentType, "jpeg") || strings.Contains(contentType, "jpg"):
+        return ".jpg"
+    case strings.Contains(contentType, "png"):
+        return ".png"
+    case strings.Contains(contentType, "gif"):
+        return ".gif"
+    case strings.Contains(contentType, "webp"):
+        return ".webp"
+    case strings.Contains(contentType, "bmp"):
+        return ".bmp"
+    default:
+        return ".jpg" // По умолчанию
+    }
 }

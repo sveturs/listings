@@ -83,7 +83,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
-		BodyLimit:    20 * 1024 * 1024, // 20MB
+		BodyLimit:    50 * 1024 * 1024, // 50MB
 		// Добавляем конфигурацию для WebSocket
 		EnableTrustedProxyCheck: true,
 		TrustedProxies:          []string{"127.0.0.1", "::1"},

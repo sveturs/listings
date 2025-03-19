@@ -412,7 +412,59 @@ const StorefrontDetailPage = () => {
         setOpenTranslationDialog(true);
     };
 
-
+     // Обработчик для прямого запуска синхронизации
+const handleRunDirectSync = async (sourceId) => {
+    try {
+      setLoading(true);
+      
+      // Находим источник по ID
+      const source = importSources.find(s => s.id === sourceId);
+      if (!source || !source.url) {
+        setError(t('marketplace:store.import.noUrlConfigured'));
+        return;
+      }
+      
+      // Показываем индикатор запуска синхронизации
+      setBatchActionSuccess(t('marketplace:store.import.syncStarting', { 
+        defaultValue: 'Запуск синхронизации...'
+      }));
+      
+      // Запускаем импорт
+      const response = await axios.post(`/api/v1/storefronts/import-sources/${sourceId}/run`);
+      
+      // Обновляем данные
+      fetchData();
+      fetchImportHistory(sourceId);
+      
+      // Показываем результат синхронизации
+      const result = response.data?.data;
+      if (result) {
+        setBatchActionSuccess(t('marketplace:store.import.syncCompleted', {
+          status: result.status,
+          imported: result.items_imported || 0,
+          total: result.items_total || 0,
+          defaultValue: `Синхронизация завершена. Статус: ${result.status}. Импортировано: ${result.items_imported || 0}/${result.items_total || 0} товаров.`
+        }));
+      } else {
+        setBatchActionSuccess(t('marketplace:store.import.syncSuccess', {
+          defaultValue: 'Синхронизация успешно запущена'
+        }));
+      }
+      
+      // Убираем сообщение через 5 секунд
+      setTimeout(() => setBatchActionSuccess(null), 5000);
+    } catch (err) {
+      console.error('Error running direct sync:', err);
+      setError(err.response?.data?.error || t('marketplace:store.import.syncError', {
+        defaultValue: 'Ошибка при запуске синхронизации'
+      }));
+      
+      // Убираем сообщение об ошибке через 5 секунд
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
     //  метод для подтверждения и выполнения перевода
     const confirmAndExecuteTranslation = async () => {
         if (selectedListings.length === 0) return;
@@ -689,6 +741,7 @@ const StorefrontDetailPage = () => {
                             }
                         }}
                         onFetchHistory={fetchImportHistory}
+                        onRunDirectSync={handleRunDirectSync}
                     />
                     {importSources.length === 0 ? (
                         <Paper sx={{ p: 4, textAlign: 'center' }}>
