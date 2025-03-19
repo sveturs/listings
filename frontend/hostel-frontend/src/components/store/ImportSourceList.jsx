@@ -97,7 +97,7 @@ const ImportSourceList = ({ sources, storefrontId, onUpdate, onDelete, onFetchHi
         <Box mb={4}>
             <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
                 <Typography variant="h6" gutterBottom>
-                    {t('marketplace:store.import.sources')}
+                    {t('marketplace:store.import.sources')}222
                 </Typography>
 
                 <Button
@@ -118,13 +118,7 @@ const ImportSourceList = ({ sources, storefrontId, onUpdate, onDelete, onFetchHi
                     <Typography variant="body1" color="text.secondary" paragraph>
                         {t('marketplace:store.import.createFirstSource')}
                     </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<Plus />}
-                        onClick={handleAdd}
-                    >
-                        {t('marketplace:store.import.addSource')}
-                    </Button>
+
                 </Paper>
             ) : (
                 <Grid container spacing={3}>

@@ -412,59 +412,59 @@ const StorefrontDetailPage = () => {
         setOpenTranslationDialog(true);
     };
 
-     // Обработчик для прямого запуска синхронизации
-const handleRunDirectSync = async (sourceId) => {
-    try {
-      setLoading(true);
-      
-      // Находим источник по ID
-      const source = importSources.find(s => s.id === sourceId);
-      if (!source || !source.url) {
-        setError(t('marketplace:store.import.noUrlConfigured'));
-        return;
-      }
-      
-      // Показываем индикатор запуска синхронизации
-      setBatchActionSuccess(t('marketplace:store.import.syncStarting', { 
-        defaultValue: 'Запуск синхронизации...'
-      }));
-      
-      // Запускаем импорт
-      const response = await axios.post(`/api/v1/storefronts/import-sources/${sourceId}/run`);
-      
-      // Обновляем данные
-      fetchData();
-      fetchImportHistory(sourceId);
-      
-      // Показываем результат синхронизации
-      const result = response.data?.data;
-      if (result) {
-        setBatchActionSuccess(t('marketplace:store.import.syncCompleted', {
-          status: result.status,
-          imported: result.items_imported || 0,
-          total: result.items_total || 0,
-          defaultValue: `Синхронизация завершена. Статус: ${result.status}. Импортировано: ${result.items_imported || 0}/${result.items_total || 0} товаров.`
-        }));
-      } else {
-        setBatchActionSuccess(t('marketplace:store.import.syncSuccess', {
-          defaultValue: 'Синхронизация успешно запущена'
-        }));
-      }
-      
-      // Убираем сообщение через 5 секунд
-      setTimeout(() => setBatchActionSuccess(null), 5000);
-    } catch (err) {
-      console.error('Error running direct sync:', err);
-      setError(err.response?.data?.error || t('marketplace:store.import.syncError', {
-        defaultValue: 'Ошибка при запуске синхронизации'
-      }));
-      
-      // Убираем сообщение об ошибке через 5 секунд
-      setTimeout(() => setError(null), 5000);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Обработчик для прямого запуска синхронизации
+    const handleRunDirectSync = async (sourceId) => {
+        try {
+            setLoading(true);
+
+            // Находим источник по ID
+            const source = importSources.find(s => s.id === sourceId);
+            if (!source || !source.url) {
+                setError(t('marketplace:store.import.noUrlConfigured'));
+                return;
+            }
+
+            // Показываем индикатор запуска синхронизации
+            setBatchActionSuccess(t('marketplace:store.import.syncStarting', {
+                defaultValue: 'Запуск синхронизации...'
+            }));
+
+            // Запускаем импорт
+            const response = await axios.post(`/api/v1/storefronts/import-sources/${sourceId}/run`);
+
+            // Обновляем данные
+            fetchData();
+            fetchImportHistory(sourceId);
+
+            // Показываем результат синхронизации
+            const result = response.data?.data;
+            if (result) {
+                setBatchActionSuccess(t('marketplace:store.import.syncCompleted', {
+                    status: result.status,
+                    imported: result.items_imported || 0,
+                    total: result.items_total || 0,
+                    defaultValue: `Синхронизация завершена. Статус: ${result.status}. Импортировано: ${result.items_imported || 0}/${result.items_total || 0} товаров.`
+                }));
+            } else {
+                setBatchActionSuccess(t('marketplace:store.import.syncSuccess', {
+                    defaultValue: 'Синхронизация успешно запущена'
+                }));
+            }
+
+            // Убираем сообщение через 5 секунд
+            setTimeout(() => setBatchActionSuccess(null), 5000);
+        } catch (err) {
+            console.error('Error running direct sync:', err);
+            setError(err.response?.data?.error || t('marketplace:store.import.syncError', {
+                defaultValue: 'Ошибка при запуске синхронизации'
+            }));
+
+            // Убираем сообщение об ошибке через 5 секунд
+            setTimeout(() => setError(null), 5000);
+        } finally {
+            setLoading(false);
+        }
+    };
     //  метод для подтверждения и выполнения перевода
     const confirmAndExecuteTranslation = async () => {
         if (selectedListings.length === 0) return;
@@ -709,24 +709,8 @@ const handleRunDirectSync = async (sourceId) => {
                         )}
                     </Box>
 
-                    <Box mb={3} mt={5}>
-                        <Typography variant="h6" gutterBottom>
-                            {t('marketplace:store.import.sources')}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" paragraph>
-                            {t('marketplace:store.import.createSourceDescription')}
-                        </Typography>
-                    </Box>
 
-                    <Box mb={2} display="flex" justifyContent="flex-end">
-                        <Button
-                            variant="contained"
-                            startIcon={<Plus />}
-                            onClick={() => setOpenImportModal(true)}
-                        >
-                            {t('marketplace:store.import.addSource')}
-                        </Button>
-                    </Box>
+
                     <ImportSourceList
                         sources={importSources}
                         storefrontId={Number(id)}
@@ -743,140 +727,7 @@ const handleRunDirectSync = async (sourceId) => {
                         onFetchHistory={fetchImportHistory}
                         onRunDirectSync={handleRunDirectSync}
                     />
-                    {importSources.length === 0 ? (
-                        <Paper sx={{ p: 4, textAlign: 'center' }}>
-                            <Database size={64} stroke={1} style={{ margin: '20px auto', opacity: 0.5 }} />
-                            <Typography variant="h6" gutterBottom>
-                                {t('marketplace:store.import.noSources')}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" paragraph>
-                                {t('marketplace:store.import.createFirstSource')}
-                            </Typography>
-                            <Button
-                                variant="contained"
-                                startIcon={<Plus />}
-                                onClick={() => setOpenImportModal(true)}
-                            >
-                                {t('marketplace:store.import.addSource')}
-                            </Button>
-                        </Paper>
-                    ) : (
-                        <Grid container spacing={3}>
-                            {importSources.map((source) => (
-                                <Grid item xs={12} md={6} key={source.id}>
-                                    <Card sx={{ height: '100%' }}>
-                                        <CardHeader
-                                            title={t('marketplace:store.import.sourceType', { type: source.type.toUpperCase() })}
-                                            subheader={t('marketplace:store.import.created', { date: new Date(source.created_at).toLocaleDateString() })}
-                                            action={
-                                                <IconButton onClick={() => handleDeleteImportSource(source.id)}>
-                                                    <Trash2 size={18} />
-                                                </IconButton>
-                                            }
-                                        />
-                                        <Divider />
-                                        <CardContent>
-                                            <Typography variant="subtitle1" gutterBottom>
-                                                {source.url
-                                                    ? t('marketplace:store.import.urlSource', { url: source.url })
-                                                    : t('marketplace:store.import.manualUpload')
-                                                }
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary" paragraph>
-                                                {t('marketplace:store.import.lastImport')}: {source.last_import_at ?
-                                                    new Date(source.last_import_at).toLocaleString() : t('marketplace:store.import.never')}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {t('common:balance.status')}: {source.last_import_status || t('marketplace:store.import.notRun')}
-                                            </Typography>
 
-                                            <Box sx={{ mt: 2 }}>
-                                                <input
-                                                    type="file"
-                                                    id={`file-upload-${source.id}`}
-                                                    accept=".csv,.xml,.json"
-                                                    style={{ display: 'none' }}
-                                                    onChange={handleFileChange}
-                                                />
-
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <Button
-                                                        variant="outlined"
-                                                        size="small"
-                                                        startIcon={<BarChart />}
-                                                        onClick={() => fetchImportHistory(source.id)}
-                                                    >
-                                                        {t('marketplace:store.import.history')}
-                                                    </Button>
-
-                                                    <Button
-                                                        variant="contained"
-                                                        size="small"
-                                                        startIcon={<Upload />}
-                                                        onClick={() => {
-                                                            setOpenImportModal(true);
-                                                            // Сохраняем ID выбранного источника для модального окна
-                                                            setSelectedSourceId(source.id);
-                                                        }}
-                                                    >
-                                                        {t('marketplace:store.import.importData')}
-                                                    </Button>
-                                                </Box>
-
-                                                {/* Показываем выбранный файл */}
-                                                {importFile && (
-                                                    <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
-                                                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                            <FileType size={16} />
-                                                            {importFile.name} ({Math.round(importFile.size / 1024)} {t('marketplace:store.import.kb')})
-                                                        </Typography>
-                                                    </Box>
-                                                )}
-                                            </Box>
-
-                                            {importHistories[source.id] && importHistories[source.id].length > 0 && (
-                                                <Box mt={3}>
-                                                    <Typography variant="subtitle2" gutterBottom>
-                                                        {t('marketplace:store.import.historyTitle')}
-                                                    </Typography>
-                                                    <TableContainer component={Paper} variant="outlined">
-                                                        <Table size="small">
-                                                            <TableHead>
-                                                                <TableRow>
-                                                                    <TableCell>{t('common:balance.date')}</TableCell>
-                                                                    <TableCell>{t('common:balance.status')}</TableCell>
-                                                                    <TableCell align="right">{t('marketplace:store.import.imported')}</TableCell>
-                                                                </TableRow>
-                                                            </TableHead>
-                                                            <TableBody>
-                                                                {importHistories[source.id].map((history) => (
-                                                                    <TableRow key={history.id}>
-                                                                        <TableCell>
-                                                                            {new Date(history.started_at).toLocaleDateString()}
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            {history.status === 'success'
-                                                                                ? t('marketplace:store.import.statusSuccess')
-                                                                                : history.status === 'partial'
-                                                                                    ? t('marketplace:store.import.statusPartial')
-                                                                                    : t('marketplace:store.import.statusError')}
-                                                                        </TableCell>
-                                                                        <TableCell align="right">
-                                                                            {history.items_imported}/{history.items_total}
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                ))}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </TableContainer>
-                                                </Box>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    )}
                 </TabPanel>
 
                 <TabPanel value={activeTab} index={1}>
