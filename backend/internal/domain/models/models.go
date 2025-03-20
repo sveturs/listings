@@ -56,6 +56,7 @@ type MarketplaceListing struct {
 	CategoryPathSlugs []string                `json:"category_path_slugs,omitempty"`
 	CategoryPath      []string                `json:"category_path,omitempty"`
 	StorefrontID      *int                    `json:"storefront_id,omitempty"` // связь с витриной
+	ExternalID      string                   `json:"external_id,omitempty"` 
 	Attributes        []ListingAttributeValue `json:"attributes,omitempty"`
 }
 

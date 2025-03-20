@@ -128,19 +128,21 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
             address_city, address_country, show_on_map, original_language, 
-            storefront_id
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            storefront_id, external_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING id
     `,
 		listing.UserID, listing.CategoryID, listing.Title, listing.Description,
 		listing.Price, listing.Condition, listing.Status, listing.Location,
 		listing.Latitude, listing.Longitude, listing.City, listing.Country,
-		listing.ShowOnMap, listing.OriginalLanguage, listing.StorefrontID,
+		listing.ShowOnMap, listing.OriginalLanguage, listing.StorefrontID, listing.ExternalID,
 	).Scan(&listingID)
 
 	if err != nil {
 		return 0, fmt.Errorf("failed to insert listing: %w", err)
 	}
+
+
 
 	// Сохраняем оригинальный текст как перевод для исходного языка
 	_, err = s.pool.Exec(ctx, `

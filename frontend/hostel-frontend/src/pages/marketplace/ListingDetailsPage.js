@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/pages/marketplace/ListingDetailsPage.js
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';

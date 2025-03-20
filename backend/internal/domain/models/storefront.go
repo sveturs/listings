@@ -42,6 +42,7 @@ type ImportHistory struct {
 	Status        string     `json:"status"` // success, failed, partial
 	ItemsTotal    int        `json:"items_total"`
 	ItemsImported int        `json:"items_imported"`
+	ItemsUpdated  int       `json:"items_updated"` 
 	ItemsFailed   int        `json:"items_failed"`
 	Log           string     `json:"log,omitempty"`
 	StartedAt     time.Time  `json:"started_at"`
