@@ -39,8 +39,10 @@ import {
     Container, Modal, Paper, Grid, Box, Typography,
     Button, Card, CardContent, Skeleton, Stack,
     Avatar, IconButton, useTheme, useMediaQuery,
-    ImageList, ImageListItem
+    ImageList, ImageListItem, Chip
 } from '@mui/material';
+import { Percent } from 'lucide-react';
+import PriceHistoryChart from '../../components/marketplace/PriceHistoryChart';
 
 const ListingDetailsPage = () => {
     const { t, i18n } = useTranslation('marketplace');
@@ -63,6 +65,7 @@ const ListingDetailsPage = () => {
     const [isMapExpanded, setIsMapExpanded] = useState(false);
     const [categories, setCategories] = useState([]);
     const [galleryOpen, setGalleryOpen] = useState(false);
+    const [isPriceHistoryOpen, setIsPriceHistoryOpen] = useState(false);
 
     const getAttributeIcon = (attributeName) => {
         // Определяем иконку в зависимости от типа атрибута
@@ -114,7 +117,43 @@ const ListingDetailsPage = () => {
             default: return <Info size={20} />;
         }
     };
-    const CAR_CATEGORY_ID = 2100; 
+    const renderDiscountInfo = () => {
+        if (!listing || !listing.metadata || !listing.metadata.discount) return null;
+
+        const discount = listing.metadata.discount;
+
+        return (
+            <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                mt: 1,
+                mb: 2,
+                cursor: discount.has_price_history ? 'pointer' : 'default'
+            }}
+                onClick={() => {
+                    if (discount.has_price_history) {
+                        setIsPriceHistoryOpen(true);
+                    }
+                }}>
+                <Chip
+                    icon={<Percent size={16} />}
+                    label={`-${discount.discount_percent}%`}
+                    color="warning"
+                    size="medium"
+                    sx={{ mr: 1, fontWeight: 'bold' }}
+                />
+                <Typography variant="body2" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                    {formatPrice(discount.previous_price)}
+                </Typography>
+                {discount.has_price_history && (
+                    <Typography variant="caption" color="primary.main" sx={{ ml: 1 }}>
+                        {t('listings.details.priceHistory.showHistory')}
+                    </Typography>
+                )}
+            </Box>
+        );
+    };
+    const CAR_CATEGORY_ID = 2100;
     // Функция форматирования значения атрибута
     const formatAttributeValue = (attr) => {
         // Если атрибут не имеет значения - возвращаем "Не указано"
@@ -706,11 +745,11 @@ const ListingDetailsPage = () => {
                             </Box>
                         )}
 
-<Typography 
-    variant="body1" 
-    sx={{ mb: 4 }} 
-    dangerouslySetInnerHTML={{ __html: getTranslatedText('description') }}
-/>
+                        <Typography
+                            variant="body1"
+                            sx={{ mb: 4 }}
+                            dangerouslySetInnerHTML={{ __html: getTranslatedText('description') }}
+                        />
 
                         {/* Отображаем все атрибуты */}
                         {listing.attributes && listing.attributes.length > 0 && (
@@ -720,7 +759,7 @@ const ListingDetailsPage = () => {
                                 </Typography>
 
                                 {/* Специальное отображение для автомобилей */}
-                                
+
                                 {listing.category_id === CAR_CATEGORY_ID && (
                                     <AutoDetails autoProperties={convertAttributesToAutoProps(listing.attributes)} />
                                 )}
@@ -790,6 +829,7 @@ const ListingDetailsPage = () => {
                                 <Typography variant="h4" gutterBottom>
                                     {formatPrice(listing.price)}
                                 </Typography>
+                                {renderDiscountInfo()}
                                 {listing.storefront_id && (
                                     <Card elevation={2} sx={{ mt: 2 }}>
                                         <CardContent>
@@ -970,6 +1010,39 @@ const ListingDetailsPage = () => {
                     galleryMode="fullscreen"
                 />
             )}
+            <Modal
+                open={isPriceHistoryOpen}
+                onClose={() => setIsPriceHistoryOpen(false)}
+                aria-labelledby="price-history-modal-title"
+            >
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: isMobile ? '90%' : 800,
+                    maxWidth: '100%',
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    boxShadow: 24,
+                    p: 4,
+                }}>
+                    <Typography id="price-history-modal-title" variant="h6" component="h2" gutterBottom>
+                        {t('listings.details.priceHistory.title')}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                        {t('listings.details.priceHistory.description')}
+                    </Typography>
+
+                    <PriceHistoryChart listingId={id} />
+
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                        <Button onClick={() => setIsPriceHistoryOpen(false)}>
+                            {t('common.close')}
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
         </Container>
     );
 };

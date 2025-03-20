@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"encoding/json"
 )
 
 const (
@@ -27,13 +28,23 @@ const (
 )
 
 type StorefrontService struct {
-	storage storage.Storage
+	storage             storage.Storage
+	priceHistoryService PriceHistoryServiceInterface
 }
 
 func NewStorefrontService(storage storage.Storage) StorefrontServiceInterface {
 	return &StorefrontService{
-		storage: storage,
+		storage:             storage,
+		priceHistoryService: nil,
 	}
+}
+func (s *StorefrontService) SetPriceHistoryService(priceHistoryService PriceHistoryServiceInterface) {
+	s.priceHistoryService = priceHistoryService
+}
+
+type PriceHistoryServiceInterface interface {
+	AnalyzeDiscount(ctx context.Context, listingID int) (*models.DiscountInfo, error)
+	RecordPriceChange(ctx context.Context, listingID int, oldPrice, newPrice float64, source string) error
 }
 
 // CreateStorefront создает новую витрину с проверкой баланса
@@ -57,7 +68,7 @@ func (s *StorefrontService) CreateStorefront(ctx context.Context, userID int, cr
 	defer tx.Rollback()
 
 	// Создаем транзакцию списания средств
-	now := time.Now()
+	now := time.Now().UTC()
 	transaction := &models.BalanceTransaction{
 		UserID:        userID,
 		Type:          "service_payment",
@@ -1086,359 +1097,411 @@ func isSimilarAttributeName(attrName, importName string) bool {
 }
 
 func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader io.Reader, storefrontID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
-    var itemsTotal, itemsImported, itemsFailed, itemsUpdated int
+	var itemsTotal, itemsImported, itemsFailed, itemsUpdated int
 
-    log.Printf("Starting streaming XML processing for storefront ID %d", storefrontID)
+	log.Printf("Starting streaming XML processing for storefront ID %d", storefrontID)
 
-    // Константа для ID категории "прочее"
-    const DefaultCategoryID = 9999
+	// Константа для ID категории "прочее"
+	const DefaultCategoryID = 9999
 
-    // Создаем XML декодер
-    decoder := xml.NewDecoder(reader)
+	// Создаем XML декодер
+	decoder := xml.NewDecoder(reader)
 
-    // Переменные для сохранения текущего артикула и его полей
-    var (
-        inArtikal   bool
-        inField     string
-        id          string
-        naziv       string
-        kategorija1 string
-        kategorija2 string
-        kategorija3 string
-        opis        string
-        mpCena      string
-        vpCena      string
-        dostupan    string
-        naAkciji    string
-        slike       []string
-        inSlike     bool
-    )
+	// Переменные для сохранения текущего артикула и его полей
+	var (
+		inArtikal   bool
+		inField     string
+		id          string
+		naziv       string
+		kategorija1 string
+		kategorija2 string
+		kategorija3 string
+		opis        string
+		mpCena      string
+		vpCena      string
+		dostupan    string
+		naAkciji    string
+		slike       []string
+		inSlike     bool
+	)
 
-    // Обрабатываем каждый XML токен
-    for {
-        token, err := decoder.Token()
-        if err == io.EOF {
-            break
-        }
-        if err != nil {
-            return itemsTotal, itemsImported, itemsFailed, fmt.Errorf("error decoding XML: %w", err)
-        }
+	// Обрабатываем каждый XML токен
+	for {
+		token, err := decoder.Token()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return itemsTotal, itemsImported, itemsFailed, fmt.Errorf("error decoding XML: %w", err)
+		}
 
-        switch t := token.(type) {
-        case xml.StartElement:
-            // Начало элемента
-            if t.Name.Local == "artikal" {
-                inArtikal = true
-                // Сбрасываем переменные для нового артикула
-                id = ""
-                naziv = ""
-                kategorija1 = ""
-                kategorija2 = ""
-                kategorija3 = ""
-                opis = ""
-                mpCena = ""
-                vpCena = ""
-                dostupan = ""
-                naAkciji = ""
-                slike = nil
-            } else if inArtikal {
-                if t.Name.Local == "slike" {
-                    inSlike = true
-                } else if inSlike && t.Name.Local == "slika" {
-                    // Будем собирать данные изображения внутри slika
-                    inField = "slika"
-                } else {
-                    inField = t.Name.Local
-                }
-            }
-        case xml.EndElement:
-            // Конец элемента
-            if t.Name.Local == "artikal" && inArtikal {
-                inArtikal = false
-                itemsTotal++
-        
-                // Обрабатываем собранные данные артикула
-                if naziv == "" {
-                    itemsFailed++
-                    errorLog.WriteString(fmt.Sprintf("Item with ID %s skipped: no title\n", id))
-                    continue
-                }
-        
-                // Преобразуем цену в число
-                var price float64 = 0.0
-        
-                // Если розничная цена указана и не равна нулю или ".0000"
-                mpCenaClean := strings.TrimSpace(mpCena)
-                if mpCenaClean != "" && mpCenaClean != ".0000" && mpCenaClean != "0.0000" {
-                    // Используем розничную цену
-                    price, err = parsePrice(mpCena)
-                    if err != nil {
-                        // Если ошибка парсинга, пытаемся использовать оптовую цену
-                        price, err = parsePrice(vpCena)
-                        if err != nil || price == 0 {
-                            // Если розничная и оптовая цены некорректны, устанавливаем минимальную цену
-                            price = 1.00
-                            log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
-                        } else {
-                            // Оптовая цена корректна, применяем наценку
-                            price = price * 1.5 // Наценка 50%
-                            log.Printf("For item ID %s: retail price invalid, using wholesale price with markup: %f", id, price)
-                        }
-                    }
-                } else {
-                    // Если розничная цена не указана или равна нулю, используем оптовую цену с наценкой
-                    wholesalePrice, wpErr := parsePrice(vpCena)
-                    if wpErr == nil && wholesalePrice > 0 {
-                        // Если есть корректная оптовая цена, используем её с наценкой
-                        price = wholesalePrice * 1.5 // Наценка 50%
-                        log.Printf("For item ID %s: retail price not set, using wholesale price with markup: %f", id, price)
-                    } else {
-                        // Если обе цены некорректны, устанавливаем минимальную цену
-                        price = 1.00 // Минимальная цена
-                        log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
-                    }
-                }
-        
-                // Находим или создаем категорию
-                categoryID := DefaultCategoryID
-                if kategorija1 != "" {
-                    catID, err := s.findOrCreateCategory(ctx, kategorija1, kategorija2, kategorija3)
-                    if err == nil {
-                        categoryID = catID
-                    } else {
-                        errorLog.WriteString(fmt.Sprintf("Warning for item %s: %v. Using default category.\n", id, err))
-                    }
-                }
-                
-                // НОВЫЙ КОД: Проверка существования объявления по внешнему ID
-                var existingListing *models.MarketplaceListing
-                var existingListingID int
-                
-                // Проверяем, существует ли объявление с таким внешним ID в этой витрине
-                sqlQuery := `
+		switch t := token.(type) {
+		case xml.StartElement:
+			// Начало элемента
+			if t.Name.Local == "artikal" {
+				inArtikal = true
+				// Сбрасываем переменные для нового артикула
+				id = ""
+				naziv = ""
+				kategorija1 = ""
+				kategorija2 = ""
+				kategorija3 = ""
+				opis = ""
+				mpCena = ""
+				vpCena = ""
+				dostupan = ""
+				naAkciji = ""
+				slike = nil
+			} else if inArtikal {
+				if t.Name.Local == "slike" {
+					inSlike = true
+				} else if inSlike && t.Name.Local == "slika" {
+					// Будем собирать данные изображения внутри slika
+					inField = "slika"
+				} else {
+					inField = t.Name.Local
+				}
+			}
+		case xml.EndElement:
+			// Конец элемента
+			if t.Name.Local == "artikal" && inArtikal {
+				inArtikal = false
+				itemsTotal++
+
+				// Обрабатываем собранные данные артикула
+				if naziv == "" {
+					itemsFailed++
+					errorLog.WriteString(fmt.Sprintf("Item with ID %s skipped: no title\n", id))
+					continue
+				}
+
+				// Преобразуем цену в число
+				var price float64 = 0.0
+
+				// Если розничная цена указана и не равна нулю или ".0000"
+				mpCenaClean := strings.TrimSpace(mpCena)
+				if mpCenaClean != "" && mpCenaClean != ".0000" && mpCenaClean != "0.0000" {
+					// Используем розничную цену
+					price, err = parsePrice(mpCena)
+					if err != nil {
+						// Если ошибка парсинга, пытаемся использовать оптовую цену
+						price, err = parsePrice(vpCena)
+						if err != nil || price == 0 {
+							// Если розничная и оптовая цены некорректны, устанавливаем минимальную цену
+							price = 1.00
+							log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
+						} else {
+							// Оптовая цена корректна, применяем наценку
+							price = price * 1.5 // Наценка 50%
+							log.Printf("For item ID %s: retail price invalid, using wholesale price with markup: %f", id, price)
+						}
+					}
+				} else {
+					// Если розничная цена не указана или равна нулю, используем оптовую цену с наценкой
+					wholesalePrice, wpErr := parsePrice(vpCena)
+					if wpErr == nil && wholesalePrice > 0 {
+						// Если есть корректная оптовая цена, используем её с наценкой
+						price = wholesalePrice * 1.5 // Наценка 50%
+						log.Printf("For item ID %s: retail price not set, using wholesale price with markup: %f", id, price)
+					} else {
+						// Если обе цены некорректны, устанавливаем минимальную цену
+						price = 1.00 // Минимальная цена
+						log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
+					}
+				}
+
+				// Находим или создаем категорию
+				categoryID := DefaultCategoryID
+				if kategorija1 != "" {
+					catID, err := s.findOrCreateCategory(ctx, kategorija1, kategorija2, kategorija3)
+					if err == nil {
+						categoryID = catID
+					} else {
+						errorLog.WriteString(fmt.Sprintf("Warning for item %s: %v. Using default category.\n", id, err))
+					}
+				}
+
+				// НОВЫЙ КОД: Проверка существования объявления по внешнему ID
+				var existingListing *models.MarketplaceListing
+				var existingListingID int
+				var existingPrice float64
+
+				// Проверяем, существует ли объявление с таким внешним ID в этой витрине
+				sqlQuery := `
                     SELECT id, price FROM marketplace_listings 
                     WHERE external_id = $1 AND storefront_id = $2 AND user_id = $3 
                     LIMIT 1
                 `
-                
-                var existingPrice float64
-                err := s.storage.QueryRow(ctx, sqlQuery, id, storefrontID, userID).Scan(&existingListingID, &existingPrice)
-                
-                if err == nil {
-                    // Объявление найдено, получаем полные данные
-                    existingListing, err = s.storage.GetListingByID(ctx, existingListingID)
-                    log.Printf("Found existing listing ID %d for external ID %s", existingListingID, id)
-                }
-                
-                // Рассчитываем скидку, если цена снизилась более чем на 10%
-                var discountPercent int = 0
-                var discountLabel string = ""
-                
-                if existingListing != nil && existingPrice > 0 && price < existingPrice {
-                    // Рассчитываем процент скидки
-                    discountPercent = int((existingPrice - price) / existingPrice * 100)
-                    
-                    // Если скидка больше 10%, добавляем метку
-                    if discountPercent >= 10 {
-                        discountLabel = fmt.Sprintf("🔥 %d%% СКИДКА! 🔥\nСтарая цена: %.2f RSD\n\n", 
-                            discountPercent, existingPrice)
-                        log.Printf("Discount detected for item %s: %d%% (old price: %.2f, new price: %.2f)", 
-                            id, discountPercent, existingPrice, price)
-                    }
-                }
-                
-                // Если товар на акции, отмечаем это в описании
-                if naAkciji == "1" {
-                    if discountLabel != "" {
-                        // Уже есть метка скидки, не добавляем дублирующую информацию
-                    } else {
-                        // Добавляем метку акции
-                        discountLabel = "🔥 АКЦИЯ! 🔥\n\n"
-                    }
-                }
-                
-                // Подготовка общих данных для обновления или создания
-                descriptionWithDiscount := discountLabel + opis
-                
-                if existingListing != nil {
-                    // Обновляем существующее объявление
-                    existingListing.Title = naziv
-                    existingListing.Description = descriptionWithDiscount
-                    existingListing.Price = price
-                    existingListing.CategoryID = categoryID
-                    existingListing.Status = func() string {
-                        if dostupan == "1" {
-                            return "active"
-                        }
-                        return "inactive"
-                    }()
-                    
-                    // Обновляем объявление
-                    if err := s.storage.UpdateListing(ctx, existingListing); err != nil {
-                        itemsFailed++
-                        errorLog.WriteString(fmt.Sprintf("Error updating listing %d for item %s: %v\n", 
-                            existingListing.ID, id, err))
-                        continue
-                    }
-                    
-                    itemsUpdated++
-                    log.Printf("Successfully updated listing %d for item %s", existingListing.ID, id)
-                    
-                    // Обновляем изображения для существующего объявления, если указаны
-                    if len(slike) > 0 {
-                        imagesStr := strings.Join(slike, ",")
-                        go func(listID int, imgs string) {
-                            processingCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-                            defer cancel()
-                            s.ProcessImportImages(processingCtx, listID, imgs, nil)
-                            log.Printf("Завершена обработка изображений для листинга %d", listID)
-                        }(existingListing.ID, imagesStr)
-                    }
-                    
-                    // Выполняем переиндексацию обновленного объявления
-                    if err := s.storage.IndexListing(ctx, existingListing); err != nil {
-                        log.Printf("Warning: Failed to reindex updated listing: %v", err)
-                    }
-                    
-                } else {
-                    // Создаем новое объявление
-                    listing := &models.MarketplaceListing{
-                        UserID:          userID,
-                        CategoryID:      categoryID,
-                        StorefrontID:    &storefrontID,
-                        Title:           naziv,
-                        Description:     descriptionWithDiscount,
-                        Price:           price,
-                        Condition:       "new", // По умолчанию новый товар
-                        Status:          func() string {
-                            if dostupan == "1" {
-                                return "active"
-                            }
-                            return "inactive"
-                        }(),
-                        ShowOnMap:        false,
-                        OriginalLanguage: "ru", // Предполагаем русский язык по умолчанию
-                        ExternalID:       id,  // НОВОЕ ПОЛЕ: добавляем внешний ID
-                    }
-        
-                    // Создание объявления
-                    listingID, err := s.storage.CreateListing(ctx, listing)
-                    if err != nil {
-                        itemsFailed++
-                        errorLog.WriteString(fmt.Sprintf("Error creating listing for item %s: %v\n", id, err))
-                        continue
-                    }
-        
-                    // Если есть изображения, сначала добавляем их ссылки в БД
-                    if len(slike) > 0 {
-                        // Добавляем базовую информацию об изображениях в БД с детерминированными именами
-                        for i, imagePath := range slike {
-                            imagePath = strings.TrimSpace(imagePath)
-                            if imagePath == "" {
-                                continue
-                            }
-                            
-                            // Используем детерминированное имя файла
-                            fileName := fmt.Sprintf("%d_image_%d.jpg", listingID, i)
-                            
-                            // Получаем имя файла из URL
-                            parts := strings.Split(imagePath, "/")
-                            imageFileName := ""
-                            if len(parts) > 0 {
-                                imageFileName = parts[len(parts)-1]
-                            }
-                            
-                            // Создаем запись об изображении в базе данных
-                            image := &models.MarketplaceImage{
-                                ListingID:   listingID,
-                                FilePath:    fileName,
-                                FileName:    imageFileName,
-                                FileSize:    0, // Размер будет обновлен после обработки
-                                ContentType: "image/jpeg", // Предположительный тип
-                                IsMain:      i == 0, // Первое изображение - основное
-                            }
-                            
-                            _, err = s.storage.AddListingImage(ctx, image)
-                            if err != nil {
-                                log.Printf("Ошибка при добавлении информации об изображении в БД: %v", err)
-                                continue
-                            }
-                        }
-                        
-                        // Теперь запускаем асинхронную обработку изображений
-                        imagesStr := strings.Join(slike, ",")
-                        go func(listID int, imgs string) {
-                            processingCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-                            defer cancel()
-                            s.ProcessImportImages(processingCtx, listID, imgs, nil)
-                            log.Printf("Завершена обработка изображений для листинга %d", listID)
-                        }(listingID, imagesStr)
-                    }
-                    
-                    // Получаем созданное объявление для индексации с уже добавленными ссылками
-                    createdListing, err := s.storage.GetListingByID(ctx, listingID)
-                    if err != nil {
-                        errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))
-                    } else {
-                        // Индексируем объявление в поисковом движке
-                        err = s.storage.IndexListing(ctx, createdListing)
-                        if err != nil {
-                            errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to index: %v\n", err))
-                        }
-                    }
-        
-                    itemsImported++
-                    log.Printf("Successfully imported item %s (ID: %s) with DB ID %d", naziv, id, listingID)
-                }
-            } else if t.Name.Local == "slike" {
-                inSlike = false
-            } else {
-                inField = ""
-            }
-        case xml.CharData:
-            // Текстовые данные
-            if inArtikal && inField != "" {
-                text := string(t)
-                switch inField {
-                case "id":
-                    id = strings.TrimSpace(text)
-                case "naziv":
-                    naziv = strings.TrimSpace(text)
-                case "kategorija1":
-                    kategorija1 = strings.TrimSpace(text)
-                case "kategorija2":
-                    kategorija2 = strings.TrimSpace(text)
-                case "kategorija3":
-                    kategorija3 = strings.TrimSpace(text)
-                case "opis":
-                    opis = strings.TrimSpace(text)
-                case "mpCena":
-                    mpCena = strings.TrimSpace(text)
-                case "vpCena":
-                    vpCena = strings.TrimSpace(text)
-                case "dostupan":
-                    dostupan = strings.TrimSpace(text)
-                case "naAkciji":
-                    naAkciji = strings.TrimSpace(text)
-                case "slika":
-                    if text = strings.TrimSpace(text); text != "" {
-                        slike = append(slike, text)
-                    }
-                }
-            }
-        case xml.Comment:
-            // Пропускаем комментарии
-        case xml.ProcInst:
-            // Пропускаем инструкции процессора
-        case xml.Directive:
-            // Пропускаем директивы
-        }
-    }
 
-    log.Printf("Streaming XML processing completed. Total: %d, Imported: %d, Updated: %d, Failed: %d", 
-        itemsTotal, itemsImported, itemsUpdated, itemsFailed)
-        
-    return itemsTotal, itemsImported + itemsUpdated, itemsFailed, nil
+				err := s.storage.QueryRow(ctx, sqlQuery, id, storefrontID, userID).Scan(&existingListingID, &existingPrice)
+
+				if err == nil {
+					// Объявление найдено, получаем полные данные
+					existingListing, err = s.storage.GetListingByID(ctx, existingListingID)
+					log.Printf("Found existing listing ID %d for external ID %s", existingListingID, id)
+				}
+
+				// Исправление для файла backend/internal/proj/storefront/service/storefront.go
+
+				// Вызываем сервис истории цен для анализа
+				var discountInfo *models.DiscountInfo
+				if existingListing != nil {
+					// Вызываем сервис истории цен для анализа
+					if existingListing != nil && s.priceHistoryService != nil {
+
+						discountInfo, err = s.priceHistoryService.AnalyzeDiscount(ctx, existingListingID)
+						if err != nil {
+							log.Printf("Ошибка при анализе скидки для товара %s: %v", id, err)
+						}
+					}
+					// остальной код
+				}
+
+				// Формируем описание с учетом информации о скидке
+				var discountLabel string = ""
+				if existingListing != nil && existingPrice > 0 && price < existingPrice {
+					// Рассчитываем базовую скидку (это будет добавлено как метаданные)
+					discountPercent := int((existingPrice - price) / existingPrice * 100)
+
+					// Добавляем метку скидки в описание только если:
+					// 1. Скидка значительная (>= 10%)
+					// 2. Нет признаков манипуляции с ценой
+					if discountInfo != nil && discountInfo.IsRealDiscount && discountInfo.DiscountPercent >= 10 {
+						discountLabel = fmt.Sprintf("🔥 %d%% СКИДКА! 🔥\nСтарая цена: %.2f RSD\n\n",
+							discountInfo.DiscountPercent, existingPrice)
+						log.Printf("Обнаружена реальная скидка для товара %s: %d%% (старая цена: %.2f, новая цена: %.2f)",
+							id, discountInfo.DiscountPercent, existingPrice, price)
+					} else if discountPercent >= 10 {
+						// Если нет полной информации о скидке или для новых товаров, проверяем простой процент
+						discountLabel = fmt.Sprintf("🔥 %d%% СКИДКА! 🔥\nСтарая цена: %.2f RSD\n\n",
+							discountPercent, existingPrice)
+						log.Printf("Обнаружена скидка для товара %s: %d%% (старая цена: %.2f, новая цена: %.2f)",
+							id, discountPercent, existingPrice, price)
+					}
+				}
+
+				// Если товар на акции, отмечаем это в описании
+				if naAkciji == "1" {
+					if discountLabel == "" {
+						// Добавляем метку акции только если еще нет метки скидки
+						discountLabel = "🔥 АКЦИЯ! 🔥\n\n"
+					}
+				}
+
+				// Записываем изменение цены в историю
+				// Для существующих объявлений
+				if existingListing != nil && existingPrice != price {
+					if s.priceHistoryService != nil {
+						err = s.priceHistoryService.RecordPriceChange(ctx, existingListingID, existingPrice, price, "import")
+						if err != nil {
+							log.Printf("Ошибка при записи изменения цены для товара %s: %v", id, err)
+						}
+					}
+				}
+
+				// Подготовка общих данных для обновления или создания
+				descriptionWithDiscount := discountLabel + opis
+
+				if existingListing != nil {
+					// Обновляем существующее объявление
+					existingListing.Title = naziv
+					existingListing.Description = descriptionWithDiscount
+					existingListing.Price = price
+					existingListing.CategoryID = categoryID
+					existingListing.Status = func() string {
+						if dostupan == "1" {
+							return "active"
+						}
+						return "inactive"
+					}()
+
+					// Добавляем информацию о скидке в метаданные объявления, если она есть
+					if discountInfo != nil && discountInfo.DiscountPercent > 0 {
+						// Преобразуем информацию о скидке в упрощенную структуру для фронтенда
+						discountData := models.DiscountData{
+							DiscountPercent: discountInfo.DiscountPercent,
+							PreviousPrice:   discountInfo.PreviousPrice,
+							EffectiveFrom:   discountInfo.EffectiveFrom,
+							HasPriceHistory: true,
+						}
+
+						// Сериализуем в JSON
+						discountJSON, err := json.Marshal(discountData)
+						if err == nil {
+							// Добавляем как метаданные
+							if existingListing.Metadata == nil {
+								existingListing.Metadata = make(map[string]interface{})
+							}
+							existingListing.Metadata["discount"] = json.RawMessage(discountJSON)
+						}
+					}
+
+					// Обновляем объявление
+					if err := s.storage.UpdateListing(ctx, existingListing); err != nil {
+						itemsFailed++
+						errorLog.WriteString(fmt.Sprintf("Error updating listing %d for item %s: %v\n",
+							existingListing.ID, id, err))
+						continue
+					}
+
+					itemsUpdated++
+					log.Printf("Successfully updated listing %d for item %s", existingListing.ID, id)
+
+					// Обновляем изображения для существующего объявления, если указаны
+					if len(slike) > 0 {
+						imagesStr := strings.Join(slike, ",")
+						go func(listID int, imgs string) {
+							processingCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+							defer cancel()
+							s.ProcessImportImages(processingCtx, listID, imgs, nil)
+							log.Printf("Завершена обработка изображений для листинга %d", listID)
+						}(existingListing.ID, imagesStr)
+					}
+
+					// Выполняем переиндексацию обновленного объявления
+					if err := s.storage.IndexListing(ctx, existingListing); err != nil {
+						log.Printf("Warning: Failed to reindex updated listing: %v", err)
+					}
+
+				} else {
+					// Создаем новое объявление
+					listing := &models.MarketplaceListing{
+						UserID:       userID,
+						CategoryID:   categoryID,
+						StorefrontID: &storefrontID,
+						Title:        naziv,
+						Description:  descriptionWithDiscount,
+						Price:        price,
+						Condition:    "new", // По умолчанию новый товар
+						Status: func() string {
+							if dostupan == "1" {
+								return "active"
+							}
+							return "inactive"
+						}(),
+						ShowOnMap:        false,
+						OriginalLanguage: "sr", // Предполагаем русский язык по умолчанию
+						ExternalID:       id,   // НОВОЕ ПОЛЕ: добавляем внешний ID
+					}
+
+					// Создание объявления
+					listingID, err := s.storage.CreateListing(ctx, listing)
+					if err != nil {
+						itemsFailed++
+						errorLog.WriteString(fmt.Sprintf("Error creating listing for item %s: %v\n", id, err))
+						continue
+					}
+
+					// Если есть изображения, сначала добавляем их ссылки в БД
+					if len(slike) > 0 {
+						// Добавляем базовую информацию об изображениях в БД с детерминированными именами
+						for i, imagePath := range slike {
+							imagePath = strings.TrimSpace(imagePath)
+							if imagePath == "" {
+								continue
+							}
+
+							// Используем детерминированное имя файла
+							fileName := fmt.Sprintf("%d_image_%d.jpg", listingID, i)
+
+							// Получаем имя файла из URL
+							parts := strings.Split(imagePath, "/")
+							imageFileName := ""
+							if len(parts) > 0 {
+								imageFileName = parts[len(parts)-1]
+							}
+
+							// Создаем запись об изображении в базе данных
+							image := &models.MarketplaceImage{
+								ListingID:   listingID,
+								FilePath:    fileName,
+								FileName:    imageFileName,
+								FileSize:    0,            // Размер будет обновлен после обработки
+								ContentType: "image/jpeg", // Предположительный тип
+								IsMain:      i == 0,       // Первое изображение - основное
+							}
+
+							_, err = s.storage.AddListingImage(ctx, image)
+							if err != nil {
+								log.Printf("Ошибка при добавлении информации об изображении в БД: %v", err)
+								continue
+							}
+						}
+
+						// Теперь запускаем асинхронную обработку изображений
+						imagesStr := strings.Join(slike, ",")
+						go func(listID int, imgs string) {
+							processingCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+							defer cancel()
+							s.ProcessImportImages(processingCtx, listID, imgs, nil)
+							log.Printf("Завершена обработка изображений для листинга %d", listID)
+						}(listingID, imagesStr)
+					}
+
+					// Получаем созданное объявление для индексации с уже добавленными ссылками
+					createdListing, err := s.storage.GetListingByID(ctx, listingID)
+					if err != nil {
+						errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))
+					} else {
+						// Индексируем объявление в поисковом движке
+						err = s.storage.IndexListing(ctx, createdListing)
+						if err != nil {
+							errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to index: %v\n", err))
+						}
+					}
+
+					itemsImported++
+					log.Printf("Successfully imported item %s (ID: %s) with DB ID %d", naziv, id, listingID)
+				}
+			} else if t.Name.Local == "slike" {
+				inSlike = false
+			} else {
+				inField = ""
+			}
+		case xml.CharData:
+			// Текстовые данные
+			if inArtikal && inField != "" {
+				text := string(t)
+				switch inField {
+				case "id":
+					id = strings.TrimSpace(text)
+				case "naziv":
+					naziv = strings.TrimSpace(text)
+				case "kategorija1":
+					kategorija1 = strings.TrimSpace(text)
+				case "kategorija2":
+					kategorija2 = strings.TrimSpace(text)
+				case "kategorija3":
+					kategorija3 = strings.TrimSpace(text)
+				case "opis":
+					opis = strings.TrimSpace(text)
+				case "mpCena":
+					mpCena = strings.TrimSpace(text)
+				case "vpCena":
+					vpCena = strings.TrimSpace(text)
+				case "dostupan":
+					dostupan = strings.TrimSpace(text)
+				case "naAkciji":
+					naAkciji = strings.TrimSpace(text)
+				case "slika":
+					if text = strings.TrimSpace(text); text != "" {
+						slike = append(slike, text)
+					}
+				}
+			}
+		case xml.Comment:
+			// Пропускаем комментарии
+		case xml.ProcInst:
+			// Пропускаем инструкции процессора
+		case xml.Directive:
+			// Пропускаем директивы
+		}
+	}
+
+	log.Printf("Streaming XML processing completed. Total: %d, Imported: %d, Updated: %d, Failed: %d",
+		itemsTotal, itemsImported, itemsUpdated, itemsFailed)
+
+	return itemsTotal, itemsImported + itemsUpdated, itemsFailed, nil
 }
 
 // processXMLContent обрабатывает содержимое XML и создает товары

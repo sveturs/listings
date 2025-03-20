@@ -32,11 +32,11 @@
           "tooLarge": "File size should not exceed 15MB"
         }
       }
-    },
+    }, 
     "create": {
       "title": "Create Listing",
       "category": "Category",
-      "сategories": "Categories",
+      "categories": "Categories",
       "name": "Product Name",
       "description": "Description",
       "price": "Price",
@@ -70,41 +70,18 @@
         "noImages": "No images",
         "photoCount": "{{count}} photos"
       },
-      "image": {
-        "prev": "Previous image",
-        "next": "Next image",
-        "preview": "Image preview {{number}}"
+      "priceHistory": {
+        "title": "Price History",
+        "description": "The chart shows how the price for this item has changed over time. The chart is updated automatically when the seller changes the price.",
+        "showHistory": "Click to show price history chart",
+        "currentPrice": "Current price",
+        "noData": "No price history data available for this item",
+        "loadError": "Failed to load price history"
       },
-      "info": {
-        "reviews": {
-          "count": "{{count}} reviews",
-          "countOne": "1 review",
-          "countMany": "{{count}} reviews",
-          "goTo": "Go to reviews"
-        },
-        "date": {
-          "created": "Created"
-        }
-      },
-      "price": "Price",
-      "moreDetails": "More details",
-      "ChooseAcategory": "Choose a category...",
-      "condition": "Condition",
-      "location": "Location",
-      "description": "Description",
-      "seller": {
-        "title": "Seller",
-        "memberSince": "Member since {{date}}",
-        "unknownDate": "unknown date",
-        "seeAllReviews": "See all reviews"
-      },
-      "contact": {
-        "call": "Call",
-        "message": "Message",
-        "share": "Share",
-        "errors": {
-          "noPhone": "Seller has not provided a phone number"
-        }
+      "discount": {
+        "title": "Discount",
+        "oldPrice": "Old price",
+        "percentOff": "% off"
       },
       "actions": {
         "edit": "Edit",
@@ -115,75 +92,76 @@
         "add": "Add to favorites",
         "remove": "Remove from favorites"
       },
-      "location": {
-        "show": "Show on map",
-        "title": "Location",
-        "expand": "Expand map",
-        "collapse": "Collapse map"
+      "image": {
+        "next": "Next image",
+        "prev": "Previous image",
+        "preview": "Image preview"
       },
-      "viewDetails": "View details",
+      "info": {
+        "reviews": {
+          "count": "Reviews ({{count}})"
+        }
+      },
+      "price": "Price",
+      "attributes": {
+        "title": "Specifications"
+      },
+      "seller": {
+        "title": "Seller",
+        "memberSince": "Member since {{date}}",
+        "unknownDate": "Unknown date",
+        "seeAllReviews": "See all reviews"
+      },
       "errors": {
         "loadFailed": "Failed to load listing",
-        "deleteFailed": "Error deleting listing",
-        "updateFailed": "Error updating listing"
-      },
-      "storeProduct": "Product from store",
-      "goToStore": "Go to store"
+        "deleteFailed": "Failed to delete listing",
+        "updateFailed": "Failed to update listing"
+      }
     },
     "filters": {
       "title": "Filters",
       "price": {
         "label": "Price",
-        "min": "From",
-        "max": "To"
-      },
-      "distance": {
-        "label": "Distance",
-        "any": "Any distance",
-        "fromYourLocation": "From your location",
-        "needLocation": "To use distance filter, please set your location"
-      },
-      "condition": {
-        "label": "Condition",
-        "any": "Any"
+        "min": "Min",
+        "max": "Max"
       },
       "sort": {
-        "label": "Sort",
+        "label": "Sort by",
         "newest": "Newest first",
-        "cheapest": "Cheapest first",
-        "expensive": "Most expensive first"
+        "cheapest": "Price: low to high",
+        "expensive": "Price: high to low"
       },
-      "apply": "Show results",
+      "apply": "Apply filters",
       "reset": "Reset",
-      "noResults": "No results found for your search"
-    },
-    "map": {
-      "showOnMap": "Show on map",
-      "useMyLocation": "Use my location",
-      "backToList": "Back to list",
-      "list": "List",
-      "radius": "Radius",
-      "yourLocation": "Your location",
-      "itemsOnMap": "listings on map",
-      "mapCenter": "Map center",
-      "locationError": "Failed to get location",
-      "geolocationNotSupported": "Geolocation is not supported by your browser",
-      "needLocation": "To use distance filter, you need to set your location"
-    },
-    "conditions": {
-      "new": "New",
-      "used": "Used"
-    },
-    "condition": {
-      "new": "New",
-      "used": "Used"
-    },
-    "status": {
-      "active": "Active",
-      "inactive": "Inactive"
-    },
-    "views": "{{count}} views"
+      "resetAll": "Reset all"
+    }
   },
+  "map": {
+    "showOnMap": "Show on map",
+    "useMyLocation": "Use my location",
+    "backToList": "Back to list",
+    "list": "List",
+    "radius": "Radius",
+    "yourLocation": "Your location",
+    "itemsOnMap": "listings on map",
+    "mapCenter": "Map center",
+    "locationError": "Failed to get location",
+    "geolocationNotSupported": "Geolocation is not supported by your browser",
+    "needLocation": "To use distance filter, you need to set your location"
+  },
+  "conditions": {
+    "new": "New",
+    "used": "Used"
+  },
+  "condition": {
+    "new": "New",
+    "used": "Used"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "views": "{{count}} views",
   "reviews": {
     "title": "Reviews",
     "write": "Write a review",
@@ -432,13 +410,26 @@
   },
   "search": {
     "didyoumean": "Did you mean",
-    "usesuggestion": "Use suggestion",
+    "usesuggestion": "Use this suggestion",
     "noresults": "No results found for your search"
   },
   "buttons": {
-    "search": "Search"
+    "search": "Search",
+    "create": "Create Ad",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "update": "Update",
+    "edit": "Edit",
+    "loadMore": "Load more"
   },
   "common": {
+    "yes": "Yes",
+    "no": "No",
+    "not_specified": "Not specified",
+    "close": "Close",
     "backToHome": "Back to home"
   },
   "gallery": {

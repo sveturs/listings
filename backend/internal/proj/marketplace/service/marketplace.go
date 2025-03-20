@@ -738,3 +738,13 @@ func (s *MarketplaceService) ReindexAllListings(ctx context.Context) error {
 func (s *MarketplaceService) Storage() storage.Storage {
 	return s.storage
 }
+
+func (s *MarketplaceService) GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error) {
+    // Получаем историю цен из хранилища
+    history, err := s.storage.GetPriceHistory(ctx, listingID)
+    if err != nil {
+        return nil, fmt.Errorf("error getting price history: %w", err)
+    }
+    
+    return history, nil
+}

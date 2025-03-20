@@ -1,7 +1,6 @@
 // backend/internal/storage/opensearch/mappings.go
 package opensearch
 
-// ListingMapping содержит схему для индекса объявлений
 const ListingMapping = `
 {
   "settings": {
@@ -155,6 +154,12 @@ const ListingMapping = `
       "price": {
         "type": "double"
       },
+      "old_price": {
+        "type": "double"
+      },
+      "has_discount": {
+        "type": "boolean"
+      },
       "condition": {
         "type": "text",
         "fields": {
@@ -219,6 +224,28 @@ const ListingMapping = `
       },
       "category_path_ids": {
         "type": "integer"
+      },
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "discount": {
+            "type": "object",
+            "properties": {
+              "discount_percent": {
+                "type": "integer"
+              },
+              "previous_price": {
+                "type": "double"
+              },
+              "effective_from": {
+                "type": "date"
+              },
+              "has_price_history": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
       },
       "translations": {
         "properties": {

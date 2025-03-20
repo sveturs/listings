@@ -56,8 +56,11 @@ type MarketplaceListing struct {
 	CategoryPathSlugs []string                `json:"category_path_slugs,omitempty"`
 	CategoryPath      []string                `json:"category_path,omitempty"`
 	StorefrontID      *int                    `json:"storefront_id,omitempty"` // связь с витриной
-	ExternalID      string                   `json:"external_id,omitempty"` 
+	ExternalID        string                  `json:"external_id,omitempty"`
 	Attributes        []ListingAttributeValue `json:"attributes,omitempty"`
+	OldPrice          float64                 `json:"old_price,omitempty"`
+	HasDiscount       bool                    `json:"has_discount"`
+	Metadata          map[string]interface{}  `json:"metadata,omitempty"` // Для хранения дополнительной информации, включая данные о скидке
 }
 
 type MarketplaceCategory struct {

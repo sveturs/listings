@@ -1420,22 +1420,36 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 			},
 		})
 	}
+
+	// Проверяем результаты на наличие скидок и метаданных
+	if result.Items != nil {
+		for _, item := range result.Items {
+			// Проверяем, есть ли в объявлении метаданные
+			if item.Metadata != nil {
+				// Проверяем наличие информации о скидке
+				if discount, ok := item.Metadata["discount"].(map[string]interface{}); ok {
+					// Добавляем информацию о скидке в ответ
+					log.Printf("Найдена скидка для объявления %d: %+v", item.ID, discount)
+				}
+			}
+		}
+	}
+    
 	log.Printf("Извлечены атрибуты фильтров: %+v", attributeFilters)
 	// Если OpenSearch ответил успешно
 	return utils.SuccessResponse(c, fiber.Map{
 		"data": result.Items,
 		"meta": fiber.Map{
-			"total":       result.Total,
-			"page":        result.Page,
-			"size":        result.Size,
-			"total_pages": result.TotalPages,
-			"facets":      result.Facets,
-			"suggestions": result.Suggestions,
-			"took_ms":     result.Took,
+			"total":               result.Total,
+			"page":                result.Page,
+			"size":                result.Size,
+			"total_pages":         result.TotalPages,
+			"facets":              result.Facets,
+			"suggestions":         result.Suggestions,
+			"took_ms":             result.Took,
+			"spelling_suggestion": result.SpellingSuggestion,
 		},
-		
 	})
-	
 }
 
 // GetSuggestions возвращает предложения автодополнения
@@ -1512,4 +1526,20 @@ func (h *MarketplaceHandler) ReindexAll(c *fiber.Ctx) error {
     return utils.SuccessResponse(c, fiber.Map{
         "message": "Запущена переиндексация всех объявлений",
     })
+}
+func (h *MarketplaceHandler) GetPriceHistory(c *fiber.Ctx) error {
+    id, err := c.ParamsInt("id")
+    if err != nil {
+        log.Printf("Error parsing listing ID: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+    }
+
+    // Получаем историю цен
+    history, err := h.marketplaceService.GetPriceHistory(c.Context(), id)
+    if err != nil {
+        log.Printf("Error fetching price history for listing %d: %v", id, err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch price history")
+    }
+
+    return utils.SuccessResponse(c, history)
 }

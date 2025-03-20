@@ -70,6 +70,19 @@
         "noImages": "Нема слика",
         "photoCount": "{{count}} фото"
       },
+      "priceHistory": {
+        "title": "Istorija cena",
+        "description": "Grafikon prikazuje kako se cena ove stavke menjala tokom vremena. Grafikon se automatski ažurira kada prodavac promeni cenu.",
+        "showHistory": "Kliknite da biste prikazali grafikon istorije cena",
+        "currentPrice": "Trenutna cena",
+        "noData": "Nema dostupnih podataka o istoriji cena za ovu stavku",
+        "loadError": "Neuspelo učitavanje istorije cena"
+      },
+      "discount": {
+        "title": "Popust",
+        "oldPrice": "Stara cena",
+        "percentOff": "% popusta"
+      },
       "image": {
         "prev": "Претходна слика",
         "next": "Следећа слика",

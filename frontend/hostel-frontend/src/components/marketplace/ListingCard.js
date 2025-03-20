@@ -1,4 +1,4 @@
-// src/components/marketplace/ListingCard.js
+// frontend/hostel-frontend/src/components/marketplace/ListingCard.js
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapPin as LocationIcon, Clock as AccessTime, Camera, Store } from 'lucide-react';
@@ -15,16 +15,78 @@ import {
     Button,
     Rating,
     Stack,
-    Tooltip
+    Tooltip,
+    Modal
 } from '@mui/material';
-
+import { Percent } from 'lucide-react';
+import PriceHistoryChart from './PriceHistoryChart';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
 const ListingCard = ({ listing, isMobile, onClick }) => {
     const { t, i18n } = useTranslation('marketplace');
     const [storeName, setStoreName] = useState('Магазин');
     const navigate = useNavigate();
+    const [isPriceHistoryOpen, setIsPriceHistoryOpen] = useState(false);
+    
+    // Добавляем логирование для отладки скидок
+    useEffect(() => {
+        console.log('Listing data:', listing);
+        if (listing && listing.metadata) {
+            console.log('Metadata found:', listing.metadata);
+            if (listing.metadata.discount) {
+                console.log('Discount found!', listing.metadata.discount);
+            } else {
+                console.log('No discount in metadata');
+            }
+        } else if (listing && listing.old_price) {
+            console.log('Old price found:', listing.old_price);
+        } else {
+            console.log('No discount data found for listing:', listing.id);
+        }
+    }, [listing]);
 
+    const renderDiscountBadge = () => {
+        // Проверяем наличие информации о скидке в метаданных
+        if (listing && listing.metadata && listing.metadata.discount) {
+            const discount = listing.metadata.discount;
+            
+            return (
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 10,
+                        left: 10,
+                        zIndex: 2,
+                        bgcolor: 'warning.main',
+                        color: 'warning.contrastText',
+                        borderRadius: '4px',
+                        px: 1,
+                        py: 0.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        fontSize: '0.875rem',
+                        fontWeight: 'bold',
+                        cursor: discount.has_price_history ? 'pointer' : 'default',
+                        boxShadow: 2,
+                    }}
+                    onClick={(e) => {
+                        if (discount.has_price_history) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setIsPriceHistoryOpen(true);
+                        }
+                    }}
+                >
+                    <Percent size={14} />
+                    {`-${discount.discount_percent}%`}
+                </Box>
+            );
+        }
+        
+        return null;
+    };
+    
     // Загружаем название магазина при монтировании компонента
     useEffect(() => {
         const fetchStoreName = async () => {
@@ -70,13 +132,17 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleDateString(i18n.language, {
+        if (!dateString) return t('listings.details.seller.unknownDate');
+
+        // Форматируем дату в соответствии с текущим языком
+        const date = new Intl.DateTimeFormat(i18n.language, {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
-        });
+        }).format(new Date(dateString));
+
+        // Используем переведенный шаблон из JSON с отформатированной датой
+        return t('listings.details.seller.memberSince', { date });
     };
 
     const getMainImageUrl = () => {
@@ -144,6 +210,7 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
         e.stopPropagation();
         navigate(`/marketplace/listings/${listing.id}`);
     };
+    
     const getDisplayLocation = () => {
         // Если есть город, используем его
         if (listing.city) {
@@ -164,13 +231,46 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
         return 'Местоположение не указано';
     };
 
+    // Метод для рендеринга секции с ценой и скидкой
+    const renderPriceSection = () => {
+        return (
+            <Box>
+                <Typography
+                    variant={isMobile ? "body2" : "h5"}
+                    color="primary"
+                    sx={{
+                        mt: 0.5,
+                        fontSize: isMobile ? '0.875rem' : undefined,
+                        fontWeight: 'bold'
+                    }}
+                >
+                    {formatPrice(listing.price)}
+                </Typography>
+                
+                {/* Отображение старой цены, если есть информация о скидке в метаданных */}
+                {listing.metadata && listing.metadata.discount && (
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                            textDecoration: 'line-through',
+                            mt: 0.5
+                        }}
+                    >
+                        {formatPrice(listing.metadata.discount.previous_price)}
+                    </Typography>
+                )}
+            </Box>
+        );
+    };
+
     return (
         <Card
             sx={{
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                position: 'relative', // Важно для абсолютного позиционирования кнопки
+                position: 'relative',
                 '&:hover': {
                     transform: 'translateY(-4px)',
                     boxShadow: 3,
@@ -180,14 +280,14 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
             }}
             onClick={handleCardClick}
         >
-            {/* Кнопка "Магазин тут" с всплывающей подсказкой */}
+            {/* Бейдж магазина */}
             {listing.storefront_id && (
                 <Box
                     sx={{
                         position: 'absolute',
                         top: 10,
                         right: 10,
-                        zIndex: 9999, // Очень высокий z-index
+                        zIndex: 9999,
                         bgcolor: 'primary.main',
                         color: 'white',
                         borderRadius: '4px',
@@ -200,23 +300,19 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                         fontWeight: 'bold',
                         cursor: 'pointer',
                         pointerEvents: 'auto',
-                        opacity: 1, // Убедимся, что кнопка видима
-                        '&::before': {}, // Убираем псевдоэлемент, который может перекрывать
+                        opacity: 1,
+                        '&::before': {},
                     }}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log("Shop button clicked, navigating to:", `/shop/${listing.storefront_id}`);
-                        // Используем более прямой способ перехода
-                        window.location.href = `/shop/${listing.storefront_id}`;
-                        return false;
-                    }}
+                    onClick={handleShopButtonClick}
                     data-shop-button="true"
                 >
                     <Store size={14} />
                     в магазин
                 </Box>
             )}
+            
+            {/* Бейдж скидки */}
+            {renderDiscountBadge()}
 
             <Box sx={{ position: 'relative', pt: isMobile ? '100%' : '75%' }}>
                 <CardMedia
@@ -281,17 +377,8 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                     </Stack>
                 )}
 
-                <Typography
-                    variant={isMobile ? "body2" : "h5"}
-                    color="primary"
-                    sx={{
-                        mt: 0.5,
-                        fontSize: isMobile ? '0.875rem' : undefined,
-                        fontWeight: 'bold'
-                    }}
-                >
-                    {formatPrice(listing.price)}
-                </Typography>
+                {/* Использование обновленного метода для отображения цены и скидки */}
+                {renderPriceSection()}
 
                 {!isMobile && (
                     <>
@@ -321,6 +408,37 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                     </>
                 )}
             </CardContent>
+            
+            {/* Модальное окно для истории цен */}
+            {isPriceHistoryOpen && listing.metadata && listing.metadata.discount && listing.metadata.discount.has_price_history && (
+                <Modal
+                    open={isPriceHistoryOpen}
+                    onClose={() => setIsPriceHistoryOpen(false)}
+                    aria-labelledby="price-history-title"
+                >
+                    <Box sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: isMobile ? '90%' : 600,
+                        bgcolor: 'background.paper',
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: 4,
+                    }}>
+                        <Typography id="price-history-title" variant="h6" component="h2" gutterBottom>
+                            История изменения цены
+                        </Typography>
+                        <PriceHistoryChart listingId={listing.id} />
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                            <Button onClick={() => setIsPriceHistoryOpen(false)}>
+                                Закрыть
+                            </Button>
+                        </Box>
+                    </Box>
+                </Modal>
+            )}
         </Card>
     );
 };

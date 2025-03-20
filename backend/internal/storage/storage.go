@@ -72,7 +72,10 @@ type Storage interface {
 	RemoveFromFavorites(ctx context.Context, userID int, listingID int) error
 	GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error)
 
-
+	GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error)
+	AddPriceHistoryEntry(ctx context.Context, entry *models.PriceHistoryEntry) error
+	ClosePriceHistoryEntry(ctx context.Context, listingID int) error
+	CheckPriceManipulation(ctx context.Context, listingID int) (bool, error)
     
     SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
     GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error)

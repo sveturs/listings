@@ -63,7 +63,7 @@ func (r *Repository) PrepareIndex(ctx context.Context) error {
 		for i := range allListings {
 			listingPtrs[i] = &allListings[i]
 		}
-
+		log.Printf("Запуск переиндексации с обновленной схемой (поддержка метаданных и скидок)")
 		// Индексируем все объявления
 		if err := r.BulkIndexListings(ctx, listingPtrs); err != nil {
 			log.Printf("Ошибка индексации объявлений: %v", err)
@@ -365,7 +365,9 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 	return nil
 }
 
-// listingToDoc преобразует объект модели в документ для индексации
+// В файле backend/internal/proj/marketplace/storage/opensearch/repository.go
+// Обновление функции listingToDoc для включения метаданных
+
 func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string]interface{} {
 	doc := map[string]interface{}{
 		"id":                listing.ID,
@@ -387,6 +389,18 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		"category_id":       listing.CategoryID,
 		"user_id":           listing.UserID,
 		"translations":      listing.Translations,
+	}
+
+	// Добавляем поля для скидок, если они установлены
+	if listing.HasDiscount {
+		doc["has_discount"] = true
+		doc["old_price"] = listing.OldPrice
+	}
+
+	// Добавляем метаданные если они есть
+	if listing.Metadata != nil {
+		doc["metadata"] = listing.Metadata
+		log.Printf("Добавлены метаданные для объявления %d: %+v", listing.ID, listing.Metadata)
 	}
 
 	// Добавляем координаты, если они есть
@@ -561,9 +575,16 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 
 		doc["attributes"] = attributes
 	}
+
+	// Логируем для отладки метаданных
+	if metadata, ok := doc["metadata"]; ok {
+		log.Printf("DEBUG: Метаданные в документе для объявления %d: %+v", listing.ID, metadata)
+	} else {
+		log.Printf("DEBUG: Нет метаданных в документе для объявления %d", listing.ID)
+	}
+
 	return doc
 }
-
 // geocodeCity получает координаты города
 func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float64 }, error) {
 	// Формируем запрос для геокодирования
@@ -1209,7 +1230,8 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 	return result, nil
 }
 
-// docToListing преобразует документ из OpenSearch в модель
+// Замените существующую функцию docToListing в файле backend/internal/proj/marketplace/storage/opensearch/repository.go
+
 func (r *Repository) docToListing(doc map[string]interface{}, language string) (*models.MarketplaceListing, error) {
 	listing := &models.MarketplaceListing{
 		User:     &models.User{},
@@ -1346,6 +1368,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 			listing.User.Email = email
 		}
 	}
+	
 	// Обрабатываем путь категорий
 	if categoryPathIDs, ok := doc["category_path_ids"].([]interface{}); ok && len(categoryPathIDs) > 0 {
 		pathIds := make([]int, len(categoryPathIDs))
@@ -1359,6 +1382,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		// Если путь категорий не найден, хотя бы добавим текущую категорию
 		listing.CategoryPathIds = []int{listing.CategoryID}
 	}
+	
 	// Обрабатываем изображения
 	if imagesArray, ok := doc["images"].([]interface{}); ok {
 		images := make([]models.MarketplaceImage, 0, len(imagesArray))
@@ -1426,6 +1450,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		}
 	}
 
+	// Обрабатываем атрибуты
 	if attributes, ok := doc["attributes"].([]interface{}); ok {
 		for _, attrI := range attributes {
 			if attr, ok := attrI.(map[string]interface{}); ok {
@@ -1463,6 +1488,23 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 				}
 
 				listing.Attributes = append(listing.Attributes, attrValue)
+			}
+		}
+	}
+
+	// НОВЫЙ КОД: Обрабатываем метаданные и информацию о скидках
+	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
+		listing.Metadata = metadata
+		
+		// Проверяем наличие информации о скидке в метаданных
+		if discount, ok := metadata["discount"].(map[string]interface{}); ok {
+			listing.HasDiscount = true
+			
+			// Если есть previous_price, устанавливаем его в поле OldPrice
+			if prevPrice, ok := discount["previous_price"].(float64); ok {
+				listing.OldPrice = prevPrice
+				log.Printf("Найдена скидка для объявления %d: скидка %.2f%%, старая цена: %.2f", 
+					listing.ID, discount["discount_percent"], prevPrice)
 			}
 		}
 	}

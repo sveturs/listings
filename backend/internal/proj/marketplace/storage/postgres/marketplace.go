@@ -1412,7 +1412,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
             u.name, u.email, u.created_at as user_created_at, 
             COALESCE(u.picture_url, ''), u.phone,
-            c.name as category_name, c.slug as category_slug
+            c.name as category_name, c.slug as category_slug, l.metadata
         FROM marketplace_listings l
         LEFT JOIN users u ON l.user_id = u.id
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
@@ -1425,8 +1425,9 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&listing.ShowOnMap, &listing.OriginalLanguage,
 		&listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
 		&listing.User.PictureURL, &listing.User.Phone,
-		&listing.Category.Name, &listing.Category.Slug,
+		&listing.Category.Name, &listing.Category.Slug, &listing.Metadata,
 	)
+	log.Printf("999 DEBUG: Listing %d metadata: %+v", id, listing.Metadata)
 
 	if err != nil {
 		return nil, fmt.Errorf("error getting listing: %w", err)
