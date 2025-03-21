@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 	"regexp"
+	"sort"
 )
 
 type MarketplaceService struct {
@@ -277,7 +278,6 @@ func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.
     return nil
 }
 
-// Модифицируем функцию SynchronizeDiscountData
 func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listingID int) error {
     // Получаем данные из PostgreSQL
     listing, err := s.storage.GetListingByID(ctx, listingID)
@@ -285,66 +285,109 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
         return fmt.Errorf("ошибка получения объявления: %w", err)
     }
 
-    // Проверяем наличие данных о скидке в тексте описания (если нет в метаданных)
-    if listing.Metadata == nil || listing.Metadata["discount"] == nil {
-        // Ищем скидку в описании через регулярное выражение
-        if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
-            discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
-            matches := discountRegex.FindStringSubmatch(listing.Description)
+    // Получаем историю цен
+    priceHistory, err := s.storage.GetPriceHistory(ctx, listingID)
+    if err != nil {
+        log.Printf("Ошибка получения истории цен: %v", err)
+        // Продолжаем выполнение метода даже при ошибке получения истории
+    }
+
+    // Проверяем на манипуляции с ценой, если есть история
+    if len(priceHistory) > 1 {
+        // Сортируем историю цен по дате
+        sort.Slice(priceHistory, func(i, j int) bool {
+            return priceHistory[i].EffectiveFrom.Before(priceHistory[j].EffectiveFrom)
+        })
+        
+        // Проверяем на манипуляции с ценой
+        isManipulation := false
+        for i := 0; i < len(priceHistory)-1; i++ {
+            // Если цена была повышена более чем на 50%, а затем снижена в течение 3 дней
+            var nextEffectiveTo time.Time
+            if priceHistory[i+1].EffectiveTo == nil {
+                nextEffectiveTo = time.Now()
+            } else {
+                nextEffectiveTo = *priceHistory[i+1].EffectiveTo
+            }
             
-            priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
-            priceMatches := priceRegex.FindStringSubmatch(listing.Description)
+            duration := nextEffectiveTo.Sub(priceHistory[i+1].EffectiveFrom)
+            
+            if priceHistory[i].Price*1.5 < priceHistory[i+1].Price && 
+               duration < 3*24*time.Hour && 
+               i+2 < len(priceHistory) && 
+               priceHistory[i+2].Price < priceHistory[i+1].Price {
+                
+                isManipulation = true
+                log.Printf("Обнаружена манипуляция с ценой для объявления %d: повышение с %.2f до %.2f на %.1f часов, затем снижение до %.2f",
+                    listingID, priceHistory[i].Price, priceHistory[i+1].Price, 
+                    duration.Hours(), priceHistory[i+2].Price)
+                break
+            }
+        }
 
-            if len(matches) > 1 && len(priceMatches) > 1 {
-                discountPercent, _ := strconv.Atoi(matches[1])
-                oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
-                oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
+        if isManipulation {
+            // В случае обнаружения манипуляции удаляем информацию о скидке
+            if listing.Metadata != nil && listing.Metadata["discount"] != nil {
+                delete(listing.Metadata, "discount")
+                
+                // Обновляем объявление в БД
+                _, err := s.storage.Exec(ctx, `
+                    UPDATE marketplace_listings
+                    SET metadata = $1
+                    WHERE id = $2
+                `, listing.Metadata, listingID)
+                
+                if err != nil {
+                    log.Printf("Ошибка удаления метаданных о скидке: %v", err)
+                    return err
+                }
+                
+                log.Printf("Удалена информация о скидке из-за обнаружения манипуляций с ценой для объявления %d", listingID)
+                
+                // Переиндексируем объявление без скидки и возвращаемся
+                return s.storage.IndexListing(ctx, listing)
+            }
+        }
 
+        // Находим максимальную цену в истории с учетом минимальной продолжительности
+        var maxPrice float64
+        var maxPriceDate time.Time
+        var minDuration = 24 * time.Hour // Минимальная продолжительность - 1 день
+
+        for _, entry := range priceHistory {
+            // Рассчитываем продолжительность действия цены
+            var duration time.Duration
+            if entry.EffectiveTo == nil {
+                duration = time.Now().Sub(entry.EffectiveFrom)
+            } else {
+                duration = entry.EffectiveTo.Sub(entry.EffectiveFrom)
+            }
+            
+            // Учитываем только цены, которые действовали достаточно долго
+            if duration >= minDuration && entry.Price > maxPrice {
+                maxPrice = entry.Price
+                maxPriceDate = entry.EffectiveFrom
+            }
+        }
+        
+        // Если текущая цена ниже максимальной, создаем скидку
+        if maxPrice > listing.Price && maxPrice > 0 {
+            discountPercent := int((maxPrice - listing.Price) / maxPrice * 100)
+            
+            if discountPercent >= 5 { // Если скидка составляет не менее 5%
                 // Если у объекта нет метаданных, создаем их
                 if listing.Metadata == nil {
                     listing.Metadata = make(map[string]interface{})
                 }
-
-                // Создаем записи в истории цен
-                // 1. Закрываем все предыдущие открытые записи истории цен
-                if err := s.storage.ClosePriceHistoryEntry(ctx, listing.ID); err != nil {
-                    log.Printf("Ошибка закрытия прошлых записей истории цен: %v", err)
-                }
                 
-                // 2. Создаем запись с предыдущей ценой, датированную неделю назад
-                effectiveFrom := time.Now().AddDate(0, 0, -7)
-                // Эффективная дата окончания - не указываем, т.к. этого свойства нет в модели
-                
-                oldPriceEntry := &models.PriceHistoryEntry{
-                    ListingID:     listing.ID,
-                    Price:         oldPrice,
-                    EffectiveFrom: effectiveFrom,
-                    ChangeSource:  "parsed_from_description",
-                }
-                if err := s.storage.AddPriceHistoryEntry(ctx, oldPriceEntry); err != nil {
-                    log.Printf("Ошибка добавления старой цены в историю: %v", err)
-                }
-                
-                // 3. Создаем запись с текущей ценой
-                currentTime := time.Now()
-                newPriceEntry := &models.PriceHistoryEntry{
-                    ListingID:     listing.ID,
-                    Price:         listing.Price,
-                    EffectiveFrom: currentTime,
-                    ChangeSource:  "parsed_from_description",
-                }
-                if err := s.storage.AddPriceHistoryEntry(ctx, newPriceEntry); err != nil {
-                    log.Printf("Ошибка добавления новой цены в историю: %v", err)
-                }
-
                 // Создаем информацию о скидке с установленным флагом has_price_history = true
                 discount := map[string]interface{}{
                     "discount_percent": discountPercent,
-                    "previous_price": oldPrice,
-                    "effective_from": effectiveFrom.Format(time.RFC3339),
-                    "has_price_history": true,  // Важно: теперь устанавливаем true!
+                    "previous_price": maxPrice,
+                    "effective_from": maxPriceDate.Format(time.RFC3339),
+                    "has_price_history": true,
                 }
-
+                
                 // Добавляем информацию о скидке в метаданные
                 listing.Metadata["discount"] = discount
                 
@@ -353,73 +396,156 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
                     UPDATE marketplace_listings
                     SET metadata = $1
                     WHERE id = $2
-                `, listing.Metadata, listing.ID)
+                `, listing.Metadata, listingID)
                 
                 if err != nil {
                     log.Printf("Ошибка обновления метаданных: %v", err)
                     return err
                 }
                 
-                log.Printf("Создана информация о скидке для объявления %d из описания: %d%%, старая цена: %.2f",
-                    listing.ID, discountPercent, oldPrice)
+                log.Printf("Создана информация о скидке для объявления %d из истории цен: %d%%, старая цена: %.2f",
+                    listingID, discountPercent, maxPrice)
+            } else {
+                // Если скидка меньше 5%, удаляем информацию о скидке
+                if listing.Metadata != nil && listing.Metadata["discount"] != nil {
+                    delete(listing.Metadata, "discount")
+                    
+                    // Обновляем объявление в БД
+                    _, err := s.storage.Exec(ctx, `
+                        UPDATE marketplace_listings
+                        SET metadata = $1
+                        WHERE id = $2
+                    `, listing.Metadata, listingID)
+                    
+                    if err != nil {
+                        log.Printf("Ошибка удаления метаданных о малой скидке: %v", err)
+                        return err
+                    }
+                    
+                    log.Printf("Удалена информация о малой скидке (%.1f%%) для объявления %d",
+                        float64(discountPercent), listingID)
+                }
             }
+        } else if listing.Metadata != nil && listing.Metadata["discount"] != nil {
+            // Если максимальная цена не найдена или текущая цена не ниже максимальной,
+            // удаляем информацию о скидке
+            delete(listing.Metadata, "discount")
+            
+            // Обновляем объявление в БД
+            _, err := s.storage.Exec(ctx, `
+                UPDATE marketplace_listings
+                SET metadata = $1
+                WHERE id = $2
+            `, listing.Metadata, listingID)
+            
+            if err != nil {
+                log.Printf("Ошибка удаления метаданных о неактуальной скидке: %v", err)
+                return err
+            }
+            
+            log.Printf("Удалена неактуальная информация о скидке для объявления %d", listingID)
         }
-    } else if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
-        // Если метаданные со скидкой уже есть, но нет истории цен (has_price_history = false)
-        if has_history, ok := discount["has_price_history"].(bool); ok && !has_history {
-            if prev_price, ok := discount["previous_price"].(float64); ok {
-                // Создаем записи в истории цен
-                if err := s.storage.ClosePriceHistoryEntry(ctx, listing.ID); err != nil {
-                    log.Printf("Ошибка закрытия прошлых записей истории цен: %v", err)
-                }
-                
-                effectiveFrom := time.Now().AddDate(0, 0, -7)
-                
-                oldPriceEntry := &models.PriceHistoryEntry{
-                    ListingID:     listing.ID,
-                    Price:         prev_price,
-                    EffectiveFrom: effectiveFrom,
-                    ChangeSource:  "metadata_discount",
-                }
-                if err := s.storage.AddPriceHistoryEntry(ctx, oldPriceEntry); err != nil {
-                    log.Printf("Ошибка добавления старой цены в историю: %v", err)
-                }
-                
-                currentTime := time.Now()
-                newPriceEntry := &models.PriceHistoryEntry{
-                    ListingID:     listing.ID,
-                    Price:         listing.Price,
-                    EffectiveFrom: currentTime,
-                    ChangeSource:  "metadata_discount",
-                }
-                if err := s.storage.AddPriceHistoryEntry(ctx, newPriceEntry); err != nil {
-                    log.Printf("Ошибка добавления новой цены в историю: %v", err)
-                }
-                
-                // Обновляем флаг has_price_history
-                discount["has_price_history"] = true
-                listing.Metadata["discount"] = discount
-                
-                _, err := s.storage.Exec(ctx, `
-                    UPDATE marketplace_listings
-                    SET metadata = $1
-                    WHERE id = $2
-                `, listing.Metadata, listing.ID)
-                
-                if err != nil {
-                    log.Printf("Ошибка обновления метаданных: %v", err)
-                    return err
-                }
-                
-                log.Printf("Создана история цен для объявления %d с существующей скидкой: %.2f -> %.2f",
-                    listing.ID, prev_price, listing.Price)
+    }
+
+    // Проверяем наличие данных о скидке в тексте описания (если нет в метаданных)
+    if (listing.Metadata == nil || listing.Metadata["discount"] == nil) && 
+       (strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!")) {
+        
+        discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
+        matches := discountRegex.FindStringSubmatch(listing.Description)
+        
+        priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
+        priceMatches := priceRegex.FindStringSubmatch(listing.Description)
+
+        if len(matches) > 1 && len(priceMatches) > 1 {
+            discountPercent, _ := strconv.Atoi(matches[1])
+            oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+            oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
+
+            // Проверяем реальность скидки
+            calculatedDiscountPercent := int((oldPrice - listing.Price) / oldPrice * 100)
+            if calculatedDiscountPercent < 0 || abs(calculatedDiscountPercent - discountPercent) > 5 {
+                log.Printf("Объявленная скидка (%d%%) не соответствует расчетной (%d%%) для объявления %d, игнорируем",
+                    discountPercent, calculatedDiscountPercent, listingID)
+                return nil
             }
+
+            // Если у объекта нет метаданных, создаем их
+            if listing.Metadata == nil {
+                listing.Metadata = make(map[string]interface{})
+            }
+
+            // Создаем записи в истории цен
+            // 1. Закрываем все предыдущие открытые записи истории цен
+            if err := s.storage.ClosePriceHistoryEntry(ctx, listing.ID); err != nil {
+                log.Printf("Ошибка закрытия прошлых записей истории цен: %v", err)
+            }
+            
+            // 2. Создаем запись с предыдущей ценой, датированную неделю назад
+            effectiveFrom := time.Now().AddDate(0, 0, -7)
+            
+            oldPriceEntry := &models.PriceHistoryEntry{
+                ListingID:     listing.ID,
+                Price:         oldPrice,
+                EffectiveFrom: effectiveFrom,
+                ChangeSource:  "parsed_from_description",
+            }
+            if err := s.storage.AddPriceHistoryEntry(ctx, oldPriceEntry); err != nil {
+                log.Printf("Ошибка добавления старой цены в историю: %v", err)
+            }
+            
+            // 3. Создаем запись с текущей ценой
+            currentTime := time.Now()
+            newPriceEntry := &models.PriceHistoryEntry{
+                ListingID:     listing.ID,
+                Price:         listing.Price,
+                EffectiveFrom: currentTime,
+                ChangeSource:  "parsed_from_description",
+            }
+            if err := s.storage.AddPriceHistoryEntry(ctx, newPriceEntry); err != nil {
+                log.Printf("Ошибка добавления новой цены в историю: %v", err)
+            }
+
+            // Создаем информацию о скидке с установленным флагом has_price_history = true
+            discount := map[string]interface{}{
+                "discount_percent": discountPercent,
+                "previous_price": oldPrice,
+                "effective_from": effectiveFrom.Format(time.RFC3339),
+                "has_price_history": true,
+            }
+
+            // Добавляем информацию о скидке в метаданные
+            listing.Metadata["discount"] = discount
+            
+            // Обновляем объявление в БД
+            _, err := s.storage.Exec(ctx, `
+                UPDATE marketplace_listings
+                SET metadata = $1
+                WHERE id = $2
+            `, listing.Metadata, listing.ID)
+            
+            if err != nil {
+                log.Printf("Ошибка обновления метаданных: %v", err)
+                return err
+            }
+            
+            log.Printf("Создана информация о скидке для объявления %d из описания: %d%%, старая цена: %.2f",
+                listing.ID, discountPercent, oldPrice)
         }
     }
 
     // Переиндексация в OpenSearch
     return s.storage.IndexListing(ctx, listing)
 }
+
+// Вспомогательная функция для вычисления абсолютного значения
+func abs(x int) int {
+    if x < 0 {
+        return -x
+    }
+    return x
+}
+
 func (s *MarketplaceService) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
 	return s.storage.GetCategoryTree(ctx)
 }

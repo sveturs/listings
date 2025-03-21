@@ -58,12 +58,12 @@ const AdminPage = () => {
         </Typography>
         
         <Alert severity="info" sx={{ mb: 3 }}>
-          Эта страница доступна только для администратора (voroshilovdo@gmail.com)
+          Эта страница доступна только для администратора!  (voroshilovdo@gmail.com)
         </Alert>
 
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>
-            Управление поисковым индексом 
+            Управление поисковым индексом
           </Typography>
           <Typography variant="body2" paragraph color="text.secondary">
             Нажмите кнопку ниже, чтобы запустить полную переиндексацию всех объявлений в OpenSearch.

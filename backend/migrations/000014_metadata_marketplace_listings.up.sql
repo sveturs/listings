@@ -4,15 +4,14 @@ ALTER TABLE marketplace_listings ADD COLUMN IF NOT EXISTS metadata JSONB;
 -- Создаем индекс для быстрого поиска товаров со скидками
 CREATE INDEX IF NOT EXISTS idx_listings_metadata_discount ON marketplace_listings USING GIN ((metadata -> 'discount'));
 
--- Обновляем триггерную функцию для обработки изменений цены
+ -- Обновляем триггерную функцию для обработки изменений цены
 CREATE OR REPLACE FUNCTION update_price_history()
 RETURNS TRIGGER AS $$
 DECLARE
     last_price DECIMAL(12,2);
     price_diff DECIMAL(10,2);
     percentage DECIMAL(10,2);
-        current_timestamp_var TIMESTAMP := CURRENT_TIMESTAMP AT TIME ZONE 'UTC';
-
+    current_timestamp_var TIMESTAMP := CURRENT_TIMESTAMP AT TIME ZONE 'UTC';
     metadata_json JSONB;
 BEGIN
     -- Получаем последнюю цену
@@ -40,27 +39,25 @@ BEGIN
                 percentage := NULL;
             END IF;
             
-            -- Если цена снизилась существенно (10% и более), добавляем информацию о скидке в метаданные
-            IF price_diff < 0 AND percentage <= -10 THEN
+            -- Если цена снизилась существенно (5% и более), добавляем информацию о скидке в метаданные
+            IF price_diff < 0 AND percentage <= -5 THEN
                 metadata_json := COALESCE(NEW.metadata, '{}'::jsonb);
                 
-                -- Проверяем на подозрительные манипуляции с ценой
-                IF NOT check_price_manipulation(NEW.id) THEN
-                    -- Добавляем информацию о скидке в метаданные
-                    metadata_json := jsonb_set(
-                        metadata_json, 
-                        '{discount}', 
-                        jsonb_build_object(
-                            'discount_percent', -1 * ROUND(percentage),
-                            'previous_price', last_price,
-                            'effective_from', current_timestamp_var,
-                            'has_price_history', true
-                        )
-                    );
-                    
-                    -- Обновляем метаданные объявления
-                    NEW.metadata := metadata_json;
-                END IF;
+                -- ИЗМЕНЕНИЕ: Убрана проверка на манипуляции с ценой
+                -- Добавляем информацию о скидке в метаданные
+                metadata_json := jsonb_set(
+                    metadata_json, 
+                    '{discount}', 
+                    jsonb_build_object(
+                        'discount_percent', -1 * ROUND(percentage),
+                        'previous_price', last_price,
+                        'effective_from', current_timestamp_var,
+                        'has_price_history', true
+                    )
+                );
+                
+                -- Обновляем метаданные объявления
+                NEW.metadata := metadata_json;
             ELSIF price_diff >= 0 THEN
                 -- Если цена выросла или не изменилась, удаляем информацию о скидке из метаданных
                 metadata_json := COALESCE(NEW.metadata, '{}'::jsonb);

@@ -242,36 +242,28 @@ const EditListingPage = () => {
         e.preventDefault();
         setError("");
         setSuccess(false);
-
+    
         try {
             const processedAttributes = prepareAttributesForSubmission(attributeValues);
-
+    
+            // Подготавливаем данные для обновления
             const listingData = {
                 ...listing,
                 price: parseFloat(listing.price),
-                original_language: i18n.language,
                 attributes: processedAttributes
             };
-
-            console.log("Отправляемые атрибуты:", processedAttributes);
-
-            const response = await axios.post("/api/v1/marketplace/listings", listingData);
-            const listingId = response.data.data.id;
+    
             if (i18n.language === listing.original_language) {
-                // Сначала обновляем основные данные
-                await axios.put(`/api/v1/marketplace/listings/${id}`, {
-                    ...listing,
-                    price: parseFloat(listing.price),
-                    attributes: attributeValues
-                });
-
+                // Обновляем основные данные
+                await axios.put(`/api/v1/marketplace/listings/${id}`, listingData);
+    
                 // Отправляем новые изображения, если они есть
                 if (images.length > 0) {
                     const formData = new FormData();
                     images.forEach((file) => {
                         formData.append('images', file);
                     });
-
+    
                     await axios.post(
                         `/api/v1/marketplace/listings/${id}/images`,
                         formData,
@@ -283,6 +275,7 @@ const EditListingPage = () => {
                     );
                 }
             } else {
+                // Обновляем только переводы
                 await axios.put(`/api/v1/marketplace/translations/${id}`, {
                     language: i18n.language,
                     translations: {
@@ -292,7 +285,7 @@ const EditListingPage = () => {
                     is_verified: true
                 });
             }
-
+    
             setSuccess(true);
             setTimeout(() => {
                 navigate(`/marketplace/listings/${id}`);

@@ -63,7 +63,7 @@ const AdminPage = () => {
 
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>
-            Управление поисковым индексом ывавыавыа
+            Управление поисковым индексом
           </Typography>
           <Typography variant="body2" paragraph color="text.secondary">
             Нажмите кнопку ниже, чтобы запустить полную переиндексацию всех объявлений в OpenSearch.

@@ -104,3 +104,31 @@ go mod vendor
 
 go build -mod=vendor
 это даст возможность использовать локальные копии библиотеки
+
+
+
+
+hostel_db=# SELECT id, title, price, metadata
+FROM marketplace_listings
+WHERE id = 14;
+ id | title  |   price   |                                                               metadata                                                                
+----+--------+-----------+---------------------------------------------------------------------------------------------------------------------------------------
+ 13 | 999999 | 799999.00 | {"discount": {"effective_from": "2025-03-21T10:06:27Z", "previous_price": 999999, "discount_percent": 20, "has_price_history": true}}
+(1 row)
+
+hostel_db=# SELECT id, title, price, metadata
+FROM marketplace_listings
+WHERE id = 13;
+ id | title  |   price    |                                                               metadata                                                                
+----+--------+------------+---------------------------------------------------------------------------------------------------------------------------------------
+ 13 | 999999 | 2799999.00 | {"discount": {"effective_from": "2025-03-21T10:06:27Z", "previous_price": 999999, "discount_percent": 20, "has_price_history": true}}
+(1 row)
+
+hostel_db=# SELECT * FROM price_history WHERE listing_id = 13 ORDER BY effective_from DESC;
+ id | listing_id |   price    |       effective_from       |        effective_to        | change_source | change_percentage |         created_at         
+----+------------+------------+----------------------------+----------------------------+---------------+-------------------+----------------------------
+  3 |         13 | 2799999.00 | 2025-03-21 10:16:45.202281 |                            | update        |            250.00 | 2025-03-21 10:16:45.202281
+  2 |         13 |  799999.00 | 2025-03-21 10:07:47.031833 | 2025-03-21 10:16:45.202281 | update        |            -20.00 | 2025-03-21 10:07:47.031833
+  1 |         13 |  999999.00 | 2025-03-21 10:06:27.278712 | 2025-03-21 10:07:47.031833 | create        |                   | 2025-03-21 10:06:27.278712
+(3 rows)
+

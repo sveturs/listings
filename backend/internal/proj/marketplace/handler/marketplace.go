@@ -125,7 +125,7 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 								if numValue < 1900 || numValue > float64(currentYear+1) {
 									// Если год вне разумного диапазона, используем текущий год
 									log.Printf("Warning: Invalid year value: %f for attribute %s, using default", numValue, attr.AttributeName)
-									
+
 									// Если значение невалидное, но больше 0, сохраняем его
 									if numValue > 0 {
 										log.Printf("Keeping year value %f as is", numValue)
@@ -208,26 +208,26 @@ var (
 
 // GetCategoryAttributes возвращает атрибуты для указанной категории
 func (h *MarketplaceHandler) GetCategoryAttributes(c *fiber.Ctx) error {
-    categoryID, err := c.ParamsInt("id")
-    log.Printf("Requested attributes for category ID: %d", categoryID)
-    if err != nil {
-        log.Printf("Error parsing category ID: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid category ID")
-    }
+	categoryID, err := c.ParamsInt("id")
+	log.Printf("Requested attributes for category ID: %d", categoryID)
+	if err != nil {
+		log.Printf("Error parsing category ID: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid category ID")
+	}
 
-    attributes, err := h.marketplaceService.GetCategoryAttributes(c.Context(), categoryID)
-    if err != nil {
-        log.Printf("Error fetching category attributes for category %d: %v", categoryID, err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch category attributes")
-    }
+	attributes, err := h.marketplaceService.GetCategoryAttributes(c.Context(), categoryID)
+	if err != nil {
+		log.Printf("Error fetching category attributes for category %d: %v", categoryID, err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch category attributes")
+	}
 
-    log.Printf("Found %d attributes for category %d", len(attributes), categoryID)
-    for i, attr := range attributes {
-        log.Printf("Attribute %d: name=%s, type=%s, options=%v",
-            i, attr.Name, attr.AttributeType, string(attr.Options))
-    }
+	log.Printf("Found %d attributes for category %d", len(attributes), categoryID)
+	for i, attr := range attributes {
+		log.Printf("Attribute %d: name=%s, type=%s, options=%v",
+			i, attr.Name, attr.AttributeType, string(attr.Options))
+	}
 
-    return utils.SuccessResponse(c, attributes)
+	return utils.SuccessResponse(c, attributes)
 }
 
 func (h *MarketplaceHandler) GetCategoryTree(c *fiber.Ctx) error {
@@ -360,64 +360,65 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 		"images":  uploadedImages,
 	})
 }
+
 // В файле backend/internal/proj/marketplace/handler/marketplace.go
 func (h *MarketplaceHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
-    // Проверяем административные права
-    userID, ok := c.Locals("user_id").(int)
-    if !ok || userID == 0 {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
-    }
+	// Проверяем административные права
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
 
-    // Запускаем синхронизацию в фоне
-    go func() {
-        ctx := context.Background()
-        
-        // Получаем список всех объявлений со скидками в описании
-        rows, err := h.services.Storage().Query(ctx, `
+	// Запускаем синхронизацию в фоне
+	go func() {
+		ctx := context.Background()
+
+		// Получаем список всех объявлений со скидками в описании
+		rows, err := h.services.Storage().Query(ctx, `
             SELECT id 
             FROM marketplace_listings 
             WHERE (description LIKE '%СКИДКА%' OR metadata->>'discount' IS NOT NULL)
             AND status = 'active'
         `)
-        
-        if err != nil {
-            log.Printf("Ошибка при поиске объявлений со скидками: %v", err)
-            return
-        }
-        
-        var listingIDs []int
-        for rows.Next() {
-            var id int
-            if err := rows.Scan(&id); err != nil {
-                log.Printf("Ошибка при сканировании ID объявления: %v", err)
-                continue
-            }
-            listingIDs = append(listingIDs, id)
-        }
-        rows.Close()
-        
-        log.Printf("Найдено %d объявлений со скидками для синхронизации", len(listingIDs))
-        
-        // Обрабатываем каждое объявление
-        for _, id := range listingIDs {
-            if err := h.marketplaceService.SynchronizeDiscountData(ctx, id); err != nil {
-                log.Printf("Ошибка синхронизации данных о скидке для объявления %d: %v", id, err)
-            } else {
-                log.Printf("Успешно синхронизированы данные о скидке для объявления %d", id)
-            }
-        }
-        
-        // Запускаем переиндексацию объявлений
-        if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
-            log.Printf("Ошибка переиндексации объявлений: %v", err)
-        } else {
-            log.Println("Синхронизация данных о скидках успешно завершена")
-        }
-    }()
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Запущена синхронизация данных о скидках",
-    })
+		if err != nil {
+			log.Printf("Ошибка при поиске объявлений со скидками: %v", err)
+			return
+		}
+
+		var listingIDs []int
+		for rows.Next() {
+			var id int
+			if err := rows.Scan(&id); err != nil {
+				log.Printf("Ошибка при сканировании ID объявления: %v", err)
+				continue
+			}
+			listingIDs = append(listingIDs, id)
+		}
+		rows.Close()
+
+		log.Printf("Найдено %d объявлений со скидками для синхронизации", len(listingIDs))
+
+		// Обрабатываем каждое объявление
+		for _, id := range listingIDs {
+			if err := h.marketplaceService.SynchronizeDiscountData(ctx, id); err != nil {
+				log.Printf("Ошибка синхронизации данных о скидке для объявления %d: %v", id, err)
+			} else {
+				log.Printf("Успешно синхронизированы данные о скидке для объявления %d", id)
+			}
+		}
+
+		// Запускаем переиндексацию объявлений
+		if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
+			log.Printf("Ошибка переиндексации объявлений: %v", err)
+		} else {
+			log.Println("Синхронизация данных о скидках успешно завершена")
+		}
+	}()
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Запущена синхронизация данных о скидках",
+	})
 }
 
 func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
@@ -752,7 +753,6 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, listing)
 }
 
-// UpdateListing - обновление объявления
 func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 	// Получаем старую версию объявления
 	id, err := strconv.Atoi(c.Params("id"))
@@ -875,6 +875,63 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 			}
 		}
 	}
+
+	// Обработка изменения цены и метаданных о скидке
+	if listing.Price != oldListing.Price {
+		// Если у объявления нет метаданных, создаем их
+		if listing.Metadata == nil {
+			listing.Metadata = make(map[string]interface{})
+		}
+
+		// Проверяем, снизилась ли цена
+		if listing.Price < oldListing.Price {
+			// Определяем исходную цену для расчета скидки
+			var originalPrice float64
+			var hasExistingDiscount bool
+
+			// Проверяем существующие метаданные о скидке
+			if oldListing.Metadata != nil {
+				if discount, ok := oldListing.Metadata["discount"].(map[string]interface{}); ok {
+					if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+						// Используем предыдущую цену из существующей скидки
+						originalPrice = prevPrice
+						hasExistingDiscount = true
+						log.Printf("Найдена существующая скидка для объявления %d. Предыдущая цена: %.2f", listing.ID, originalPrice)
+					}
+				}
+			}
+
+			// Если нет существующей скидки, используем текущую цену объявления
+			if !hasExistingDiscount {
+				originalPrice = oldListing.Price
+			}
+
+			// Вычисляем процент скидки от исходной цены
+			discountPercent := int((originalPrice - listing.Price) / originalPrice * 100)
+			
+			// Добавляем или обновляем информацию о скидке в метаданные
+			listing.Metadata["discount"] = map[string]interface{}{
+				"discount_percent": discountPercent,
+				"previous_price": originalPrice,
+				"effective_from": time.Now().Format(time.RFC3339),
+				"has_price_history": true,
+			}
+
+			log.Printf("Обновлена информация о скидке для объявления %d: %d%% (исходная цена: %.2f, новая цена: %.2f)",
+				listing.ID, discountPercent, originalPrice, listing.Price)
+		} else if listing.Price > oldListing.Price {
+			// Если цена повысилась, проверяем, нужно ли удалить информацию о скидке
+			if oldListing.Metadata != nil {
+				if _, ok := oldListing.Metadata["discount"]; ok {
+					// Удаляем метаданные о скидке при повышении цены
+					delete(listing.Metadata, "discount")
+					log.Printf("Удалена информация о скидке для объявления %d из-за повышения цены", listing.ID)
+				}
+			}
+		}
+		// Если цены равны, оставляем метаданные без изменений
+	}
+	
 	// Обновляем объявление
 	err = h.marketplaceService.UpdateListing(c.Context(), &listing)
 	if err != nil {
@@ -883,6 +940,13 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 
 	// Проверяем изменение цены
 	if oldListing.Price != listing.Price {
+		// Вызываем явно синхронизацию данных о скидке и истории цен
+		err = h.marketplaceService.SynchronizeDiscountData(c.Context(), listing.ID)
+		if err != nil {
+			log.Printf("Ошибка при синхронизации скидки для объявления %d: %v", listing.ID, err)
+			// Не возвращаем ошибку клиенту, чтобы не прерывать обновление
+		}
+		
 		favoritedUsers, err := h.marketplaceService.GetFavoritedUsers(c.Context(), listing.ID)
 		if err != nil {
 			log.Printf("Error getting favorited users: %v", err)
@@ -918,6 +982,7 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 		"message": "Listing updated successfully",
 	})
 }
+
 func (h *MarketplaceHandler) UpdateTranslations(c *fiber.Ctx) error {
 	listingID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -1335,42 +1400,42 @@ func (h *MarketplaceHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 	})
 }
 func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
-    // Получаем параметры поиска
-    log.Printf("Все параметры запроса: %+v", c.Queries())
-    
-    attributeFilters := make(map[string]string)
-    
-    // Более надежный способ извлечения атрибутов - проходим по всем параметрам запроса
-    c.Context().QueryArgs().VisitAll(func(key, value []byte) {
-        keyStr := string(key)
-        if strings.HasPrefix(keyStr, "attr_") {
-            attrName := strings.TrimPrefix(keyStr, "attr_")
-            valueStr := string(value)
-            attributeFilters[attrName] = valueStr
-            log.Printf("Извлечен атрибут из запроса: %s = %s", attrName, valueStr)
-        }
-    })
+	// Получаем параметры поиска
+	log.Printf("Все параметры запроса: %+v", c.Queries())
 
-    log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
+	attributeFilters := make(map[string]string)
 
-    params := &search.ServiceParams{
-        Query:            c.Query("q", ""),
-        CategoryID:       c.Query("category_id", ""),
-        Condition:        c.Query("condition", ""),
-        City:             c.Query("city", ""),
-        Country:          c.Query("country", ""),
-        StorefrontID:     c.Query("storefront_id", ""),
-        Sort:             c.Query("sort_by", ""),
-        SortDirection:    c.Query("sort_direction", "desc"),
-        Distance:         c.Query("distance", ""),
-        Page:             c.QueryInt("page", 1),
-        Size:             c.QueryInt("size", 20),
-        Language:         c.Query("language", ""),
-        AttributeFilters: attributeFilters,
-    }
-    // Дополнительное логирование
-    log.Printf("Полные параметры поиска: %+v", params)
-    log.Printf("Атрибуты фильтров: %+v", attributeFilters)
+	// Более надежный способ извлечения атрибутов - проходим по всем параметрам запроса
+	c.Context().QueryArgs().VisitAll(func(key, value []byte) {
+		keyStr := string(key)
+		if strings.HasPrefix(keyStr, "attr_") {
+			attrName := strings.TrimPrefix(keyStr, "attr_")
+			valueStr := string(value)
+			attributeFilters[attrName] = valueStr
+			log.Printf("Извлечен атрибут из запроса: %s = %s", attrName, valueStr)
+		}
+	})
+
+	log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
+
+	params := &search.ServiceParams{
+		Query:            c.Query("q", ""),
+		CategoryID:       c.Query("category_id", ""),
+		Condition:        c.Query("condition", ""),
+		City:             c.Query("city", ""),
+		Country:          c.Query("country", ""),
+		StorefrontID:     c.Query("storefront_id", ""),
+		Sort:             c.Query("sort_by", ""),
+		SortDirection:    c.Query("sort_direction", "desc"),
+		Distance:         c.Query("distance", ""),
+		Page:             c.QueryInt("page", 1),
+		Size:             c.QueryInt("size", 20),
+		Language:         c.Query("language", ""),
+		AttributeFilters: attributeFilters,
+	}
+	// Дополнительное логирование
+	log.Printf("Полные параметры поиска: %+v", params)
+	log.Printf("Атрибуты фильтров: %+v", attributeFilters)
 
 	// ИСПРАВЛЕНИЕ: сначала проверяем наличие координат, потом устанавливаем distance
 	latParam := c.Query("latitude", "")
@@ -1481,7 +1546,7 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 
 	// Проверяем результаты на наличие скидок и метаданных
 
-    if result.Items != nil {
+	if result.Items != nil {
 		for _, item := range result.Items {
 			if item.ID == 18 { // Для нашего тестового объявления
 				log.Printf("DEBUG: Проверка объявления ID=18: Metadata=%+v", item.Metadata)
@@ -1495,7 +1560,6 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	}
 	log.Printf("Извлечены атрибуты фильтров: %+v", attributeFilters)
 
-	
 	// Если OpenSearch ответил успешно
 	return utils.SuccessResponse(c, fiber.Map{
 		"data": result.Items,
@@ -1567,39 +1631,39 @@ func (h *MarketplaceHandler) GetSuggestions(c *fiber.Ctx) error {
 
 // ReindexAll переиндексирует все объявления
 func (h *MarketplaceHandler) ReindexAll(c *fiber.Ctx) error {
-    // Проверяем административные права
-    userID, ok := c.Locals("user_id").(int)
-    if !ok || userID == 0 {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
-    }
+	// Проверяем административные права
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
 
-    // Запускаем процесс переиндексации в фоне
-    go func() {
-        ctx := context.Background()
-        if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
-            log.Printf("Ошибка переиндексации: %v", err)
-        } else {
-            log.Println("Переиндексация успешно завершена")
-        }
-    }()
+	// Запускаем процесс переиндексации в фоне
+	go func() {
+		ctx := context.Background()
+		if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
+			log.Printf("Ошибка переиндексации: %v", err)
+		} else {
+			log.Println("Переиндексация успешно завершена")
+		}
+	}()
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Запущена переиндексация всех объявлений",
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Запущена переиндексация всех объявлений",
+	})
 }
 func (h *MarketplaceHandler) GetPriceHistory(c *fiber.Ctx) error {
-    id, err := c.ParamsInt("id")
-    if err != nil {
-        log.Printf("Error parsing listing ID: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-    }
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		log.Printf("Error parsing listing ID: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+	}
 
-    // Получаем историю цен
-    history, err := h.marketplaceService.GetPriceHistory(c.Context(), id)
-    if err != nil {
-        log.Printf("Error fetching price history for listing %d: %v", id, err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch price history")
-    }
+	// Получаем историю цен
+	history, err := h.marketplaceService.GetPriceHistory(c.Context(), id)
+	if err != nil {
+		log.Printf("Error fetching price history for listing %d: %v", id, err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch price history")
+	}
 
-    return utils.SuccessResponse(c, history)
+	return utils.SuccessResponse(c, history)
 }
