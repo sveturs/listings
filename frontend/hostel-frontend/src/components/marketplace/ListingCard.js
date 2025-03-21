@@ -46,10 +46,31 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
     }, [listing]);
 
     const renderDiscountBadge = () => {
-        // Проверяем наличие информации о скидке в метаданных
-        if (listing && listing.metadata && listing.metadata.discount) {
-            const discount = listing.metadata.discount;
+        // Проверяем наличие скидки через флаг HasDiscount или через metadata
+        if (listing.has_discount || (listing.metadata && listing.metadata.discount)) {
+            // Определяем процент скидки
+            let discountPercent = 0;
             
+            // Берем из метаданных, если они есть
+            if (listing.metadata && listing.metadata.discount) {
+                discountPercent = listing.metadata.discount.discount_percent;
+            } 
+            // Или вычисляем из OldPrice и Price
+            else if (listing.old_price && listing.price) {
+                discountPercent = Math.round((1 - listing.price / listing.old_price) * 100);
+            }
+            // Если скидка есть, но процент не найден
+            else {
+                // Пытаемся извлечь процент скидки из описания товара
+                const discountMatch = /(\d+)%\s*СКИДКА/.exec(listing.description);
+                if (discountMatch && discountMatch[1]) {
+                    discountPercent = parseInt(discountMatch[1]);
+                } else {
+                    discountPercent = 10; // Значение по умолчанию
+                }
+            }
+            
+            // Отображаем бейдж со скидкой
             return (
                 <Box
                     sx={{
@@ -66,26 +87,18 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                         alignItems: 'center',
                         gap: 0.5,
                         fontSize: '0.875rem',
-                        fontWeight: 'bold',
-                        cursor: discount.has_price_history ? 'pointer' : 'default',
-                        boxShadow: 2,
-                    }}
-                    onClick={(e) => {
-                        if (discount.has_price_history) {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            setIsPriceHistoryOpen(true);
-                        }
+                        fontWeight: 'bold'
                     }}
                 >
                     <Percent size={14} />
-                    {`-${discount.discount_percent}%`}
+                    {`-${discountPercent}%`}
                 </Box>
             );
         }
         
         return null;
     };
+
     
     // Загружаем название магазина при монтировании компонента
     useEffect(() => {

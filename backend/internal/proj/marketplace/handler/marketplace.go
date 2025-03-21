@@ -1422,20 +1422,22 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	}
 
 	// Проверяем результаты на наличие скидок и метаданных
-	if result.Items != nil {
+
+    if result.Items != nil {
 		for _, item := range result.Items {
-			// Проверяем, есть ли в объявлении метаданные
-			if item.Metadata != nil {
-				// Проверяем наличие информации о скидке
-				if discount, ok := item.Metadata["discount"].(map[string]interface{}); ok {
-					// Добавляем информацию о скидке в ответ
-					log.Printf("Найдена скидка для объявления %d: %+v", item.ID, discount)
+			if item.ID == 18 { // Для нашего тестового объявления
+				log.Printf("DEBUG: Проверка объявления ID=18: Metadata=%+v", item.Metadata)
+				if item.Metadata != nil {
+					if discount, ok := item.Metadata["discount"].(map[string]interface{}); ok {
+						log.Printf("DEBUG: Найдена скидка для объявления 18: %+v", discount)
+					}
 				}
 			}
 		}
 	}
-    
 	log.Printf("Извлечены атрибуты фильтров: %+v", attributeFilters)
+
+	
 	// Если OpenSearch ответил успешно
 	return utils.SuccessResponse(c, fiber.Map{
 		"data": result.Items,

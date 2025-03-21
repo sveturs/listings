@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"regexp"
+
 )
 
 // Repository реализует интерфейс MarketplaceSearchRepository
@@ -391,10 +393,43 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		"translations":      listing.Translations,
 	}
 
-	// Добавляем поля для скидок, если они установлены
-	if listing.HasDiscount {
-		doc["has_discount"] = true
-		doc["old_price"] = listing.OldPrice
+	// Добавляем поля для скидок напрямую из текста описания
+	if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
+		// Ищем процент скидки в описании с помощью регулярного выражения
+		discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
+		matches := discountRegex.FindStringSubmatch(listing.Description)
+
+		// Ищем старую цену с помощью регулярного выражения
+		priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
+		priceMatches := priceRegex.FindStringSubmatch(listing.Description)
+
+		if len(matches) > 1 && len(priceMatches) > 1 {
+			discountPercent, _ := strconv.Atoi(matches[1])
+			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
+
+			// Если у объекта нет метаданных, создаем их
+			if listing.Metadata == nil {
+				listing.Metadata = make(map[string]interface{})
+			}
+
+			// Создаем информацию о скидке
+			discount := map[string]interface{}{
+				"discount_percent":  discountPercent,
+				"previous_price":    oldPrice,
+				"effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339), // Примерная дата начала скидки
+				"has_price_history": true,
+			}
+
+			// Добавляем информацию о скидке в метаданные
+			listing.Metadata["discount"] = discount
+
+			// Добавляем OldPrice в документ
+			doc["old_price"] = oldPrice
+			doc["has_discount"] = true
+
+			log.Printf("Извлечена скидка из описания для объявления %d: %v", listing.ID, discount)
+		}
 	}
 
 	// Добавляем метаданные если они есть
@@ -585,6 +620,7 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 
 	return doc
 }
+
 // geocodeCity получает координаты города
 func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float64 }, error) {
 	// Формируем запрос для геокодирования
@@ -1368,7 +1404,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 			listing.User.Email = email
 		}
 	}
-	
+
 	// Обрабатываем путь категорий
 	if categoryPathIDs, ok := doc["category_path_ids"].([]interface{}); ok && len(categoryPathIDs) > 0 {
 		pathIds := make([]int, len(categoryPathIDs))
@@ -1382,7 +1418,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		// Если путь категорий не найден, хотя бы добавим текущую категорию
 		listing.CategoryPathIds = []int{listing.CategoryID}
 	}
-	
+
 	// Обрабатываем изображения
 	if imagesArray, ok := doc["images"].([]interface{}); ok {
 		images := make([]models.MarketplaceImage, 0, len(imagesArray))
@@ -1491,23 +1527,36 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 			}
 		}
 	}
+	// Обрабатываем метаданные и информацию о скидках
+	if metadataRaw, ok := doc["metadata"].(map[string]interface{}); ok {
+		listing.Metadata = metadataRaw
 
-	// НОВЫЙ КОД: Обрабатываем метаданные и информацию о скидках
-	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
-		listing.Metadata = metadata
-		
 		// Проверяем наличие информации о скидке в метаданных
-		if discount, ok := metadata["discount"].(map[string]interface{}); ok {
+		if discount, ok := metadataRaw["discount"].(map[string]interface{}); ok {
 			listing.HasDiscount = true
-			
+
 			// Если есть previous_price, устанавливаем его в поле OldPrice
 			if prevPrice, ok := discount["previous_price"].(float64); ok {
 				listing.OldPrice = prevPrice
-				log.Printf("Найдена скидка для объявления %d: скидка %.2f%%, старая цена: %.2f", 
+				log.Printf("Найдена скидка для объявления %d: скидка %v%%, старая цена: %.2f",
 					listing.ID, discount["discount_percent"], prevPrice)
 			}
 		}
+	} else if oldPrice, ok := doc["old_price"].(float64); ok {
+		// Если нет метаданных, но есть поле old_price
+		listing.OldPrice = oldPrice
+		listing.HasDiscount = true
+		log.Printf("Найдена старая цена для объявления %d: %.2f", listing.ID, oldPrice)
 	}
-
+	if listing.ID == 18 {
+		log.Printf("DEBUG: Преобразование документа для объявления ID=18")
+		log.Printf("DEBUG: Source документа: %+v", doc)
+		if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
+			log.Printf("DEBUG: Метаданные в документе: %+v", metadata)
+			if discount, ok := metadata["discount"].(map[string]interface{}); ok {
+				log.Printf("DEBUG: Скидка в документе: %+v", discount)
+			}
+		}
+	}
 	return listing, nil
 }
