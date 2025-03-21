@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-
+    "regexp"
 	"backend/internal/proj/marketplace/service"
 	"log"
 	"strings"
@@ -1433,6 +1433,67 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		return nil, fmt.Errorf("error getting listing: %w", err)
 	}
 
+	// Обработка метаданных и скидок для согласованного отображения
+	if listing.Metadata != nil {
+		if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
+			listing.HasDiscount = true
+			if prevPrice, ok := discount["previous_price"].(float64); ok {
+				listing.OldPrice = prevPrice
+				
+				// Пересчитываем актуальный процент скидки, чтобы он всегда соответствовал 
+				// текущей разнице между старой и новой ценой
+				if prevPrice > listing.Price {
+					discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
+					discount["discount_percent"] = discountPercent
+					
+					log.Printf("Обновлен процент скидки для просмотра объявления %d: %d%%", 
+						id, discountPercent)
+				}
+			}
+		}
+	} else if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
+		// Если метаданных нет, но в описании упоминается скидка, попробуем ее извлечь
+		pattern := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
+		matches := pattern.FindStringSubmatch(listing.Description)
+		
+		pricePattern := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
+		priceMatches := pricePattern.FindStringSubmatch(listing.Description)
+		
+		if len(matches) > 1 && len(priceMatches) > 1 {
+			discountPercent, _ := strconv.Atoi(matches[1])
+			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
+			
+			// Устанавливаем значения для отображения
+			listing.HasDiscount = true
+			listing.OldPrice = oldPrice
+			
+			if listing.Metadata == nil {
+				listing.Metadata = make(map[string]interface{})
+			}
+			
+			listing.Metadata["discount"] = map[string]interface{}{
+				"discount_percent": discountPercent,
+				"previous_price": oldPrice,
+				"has_price_history": false,
+			}
+			
+			// Сохраняем метаданные в базу
+			_, err := s.pool.Exec(ctx, `
+				UPDATE marketplace_listings
+				SET metadata = $1
+				WHERE id = $2
+			`, listing.Metadata, listing.ID)
+			
+			if err != nil {
+				log.Printf("Ошибка сохранения метаданных о скидке: %v", err)
+			} else {
+				log.Printf("Создана информация о скидке для объявления %d: %d%% (старая цена: %.2f)",
+					listing.ID, discountPercent, oldPrice)
+			}
+		}
+	}
+
 	// Загружаем переводы
 	translations := make(map[string]map[string]string)
 	rows, err := s.pool.Query(ctx, `
@@ -1469,8 +1530,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	// Важно! Присваиваем изображения объявлению
 	listing.Images = images
 	listing.Translations = translations
-	//    log.Printf("Final translations for listing %d: %+v", id, translations)
-	//    log.Printf("Original language: %s", listing.OriginalLanguage)
+	
 	// Достаем информацию о пути категории
 	if listing.CategoryID > 0 {
 		query := `

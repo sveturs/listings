@@ -117,24 +117,33 @@ const ListingDetailsPage = () => {
             default: return <Info size={20} />;
         }
     };
+    // Замените функцию renderDiscountInfo:
     const renderDiscountInfo = () => {
         if (!listing || !listing.metadata || !listing.metadata.discount) return null;
 
         const discount = listing.metadata.discount;
 
+        // Добавляем вывод в консоль для отладки
+        console.log("Render discount info:", discount);
+
         return (
-            <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                mt: 1,
-                mb: 2,
-                cursor: discount.has_price_history ? 'pointer' : 'default'
-            }}
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    mt: 1,
+                    mb: 2,
+                    cursor: discount.has_price_history ? 'pointer' : 'default'
+                }}
                 onClick={() => {
+                    console.log("Discount badge clicked, has_price_history:", discount.has_price_history);
                     if (discount.has_price_history) {
+                        // Явно устанавливаем состояние модального окна в true
                         setIsPriceHistoryOpen(true);
+                        console.log("Setting isPriceHistoryOpen to true");
                     }
-                }}>
+                }}
+            >
                 <Chip
                     icon={<Percent size={16} />}
                     label={`-${discount.discount_percent}%`}
@@ -146,7 +155,11 @@ const ListingDetailsPage = () => {
                     {formatPrice(discount.previous_price)}
                 </Typography>
                 {discount.has_price_history && (
-                    <Typography variant="caption" color="primary.main" sx={{ ml: 1 }}>
+                    <Typography
+                        variant="caption"
+                        color="primary.main"
+                        sx={{ ml: 1 }}
+                    >
                         {t('listings.details.priceHistory.showHistory')}
                     </Typography>
                 )}
@@ -1011,8 +1024,11 @@ const ListingDetailsPage = () => {
                 />
             )}
             <Modal
-                open={isPriceHistoryOpen}
-                onClose={() => setIsPriceHistoryOpen(false)}
+                open={isPriceHistoryOpen} // Убедитесь, что здесь используется правильное имя переменной состояния
+                onClose={() => {
+                    console.log("Closing price history modal");
+                    setIsPriceHistoryOpen(false);
+                }}
                 aria-labelledby="price-history-modal-title"
             >
                 <Box sx={{

@@ -194,7 +194,8 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
     marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", s.marketplace.Marketplace.GetPriceHistory)
-	
+
+
 	// Public review routes
 	review := s.app.Group("/api/v1/reviews")
 	review.Get("/", s.review.Review.GetReviews)
@@ -211,6 +212,7 @@ func (s *Server) setupRoutes() {
 	// Protected routes
 	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
 	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
+	api.Post("/admin/sync-discounts", s.middleware.AdminRequired, s.marketplace.Marketplace.SynchronizeDiscounts)
 
 	// Protected reviews routes
 	protectedReviews := api.Group("/reviews")

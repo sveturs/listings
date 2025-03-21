@@ -9,8 +9,11 @@ const AdminPage = () => {
   const { t } = useTranslation(['common', 'marketplace']);
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [syncResult, setSyncResult] = useState(null);
   const [error, setError] = useState(null);
+  const [syncError, setSyncError] = useState(null);
 
   const handleReindex = async () => {
     setLoading(true);
@@ -25,6 +28,22 @@ const AdminPage = () => {
       setError(err.response?.data?.message || err.message || 'Произошла ошибка при переиндексации');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSyncDiscounts = async () => {
+    setSyncLoading(true);
+    setSyncResult(null);
+    setSyncError(null);
+
+    try {
+      const response = await axios.post('/api/v1/admin/sync-discounts');
+      setSyncResult(response.data);
+    } catch (err) {
+      console.error('Ошибка при синхронизации скидок:', err);
+      setSyncError(err.response?.data?.message || err.message || 'Произошла ошибка при синхронизации скидок');
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -44,7 +63,7 @@ const AdminPage = () => {
 
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>
-            Управление поисковым индексом
+            Управление поисковым индексом 
           </Typography>
           <Typography variant="body2" paragraph color="text.secondary">
             Нажмите кнопку ниже, чтобы запустить полную переиндексацию всех объявлений в OpenSearch.
@@ -57,7 +76,7 @@ const AdminPage = () => {
             onClick={handleReindex}
             disabled={loading}
             startIcon={loading && <CircularProgress size={20} color="inherit" />}
-            sx={{ mt: 2 }}
+            sx={{ mt: 2, mr: 2 }}
           >
             {loading ? 'Выполняется переиндексация...' : 'Запустить переиндексацию'}
           </Button>
@@ -71,6 +90,39 @@ const AdminPage = () => {
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {error}
+            </Alert>
+          )}
+        </Box>
+
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" gutterBottom>
+            Синхронизация данных о скидках
+          </Typography>
+          <Typography variant="body2" paragraph color="text.secondary">
+            Нажмите кнопку ниже, чтобы запустить синхронизацию данных о скидках.
+            Это обновит информацию о скидках для всех объявлений и обеспечит корректное отображение скидок.
+          </Typography>
+
+          <Button 
+            variant="contained" 
+            color="secondary" 
+            onClick={handleSyncDiscounts}
+            disabled={syncLoading}
+            startIcon={syncLoading && <CircularProgress size={20} color="inherit" />}
+            sx={{ mt: 2 }}
+          >
+            {syncLoading ? 'Выполняется синхронизация...' : 'Синхронизировать скидки'}
+          </Button>
+
+          {syncResult && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              Синхронизация скидок успешно запущена! {syncResult.message}
+            </Alert>
+          )}
+
+          {syncError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {syncError}
             </Alert>
           )}
         </Box>

@@ -27,7 +27,8 @@ type MarketplaceServiceInterface interface {
     GetSubcategories(ctx context.Context, parentID string, limit int, offset int) ([]models.CategoryTreeNode, error)
     RefreshCategoryListingCounts(ctx context.Context) error
     GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error)
-
+    SynchronizeDiscountData(ctx context.Context, listingID int) error
+    
     // OpenSearch методы
     SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error)
     GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error)

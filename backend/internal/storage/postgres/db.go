@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-
+	"encoding/json"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -502,4 +502,72 @@ func (db *Database) GetUserRatingSummary(ctx context.Context, userID int) (*mode
 
 func (db *Database) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
 	return db.reviewDB.GetStorefrontRatingSummary(ctx, storefrontID)
+}
+func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {
+    // Получаем все объявления с информацией о скидке
+    query := `
+        SELECT id, price, metadata
+        FROM marketplace_listings
+        WHERE metadata->>'discount' IS NOT NULL
+    `
+    
+    rows, err := db.pool.Query(ctx, query)
+    if err != nil {
+        return fmt.Errorf("error querying listings with discounts: %w", err)
+    }
+    defer rows.Close()
+    
+    count := 0
+    for rows.Next() {
+        var id int
+        var price float64
+        var metadataJSON []byte
+        
+        if err := rows.Scan(&id, &price, &metadataJSON); err != nil {
+            log.Printf("Error scanning row: %v", err)
+            continue
+        }
+        
+        var metadata map[string]interface{}
+        if err := json.Unmarshal(metadataJSON, &metadata); err != nil {
+            log.Printf("Error unmarshaling metadata: %v", err)
+            continue
+        }
+        
+        // Проверяем и обновляем информацию о скидке
+        if discount, ok := metadata["discount"].(map[string]interface{}); ok {
+            if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+                // Пересчитываем актуальный процент скидки
+                if prevPrice > price {
+                    discountPercent := int((prevPrice - price) / prevPrice * 100)
+                    discount["discount_percent"] = float64(discountPercent)
+                    
+                    // Обновляем метаданные в БД
+                    metadata["discount"] = discount
+                    updatedMetadataJSON, err := json.Marshal(metadata)
+                    if err != nil {
+                        log.Printf("Error marshaling updated metadata: %v", err)
+                        continue
+                    }
+                    
+                    _, err = db.pool.Exec(ctx, `
+                        UPDATE marketplace_listings
+                        SET metadata = $1
+                        WHERE id = $2
+                    `, updatedMetadataJSON, id)
+                    
+                    if err != nil {
+                        log.Printf("Error updating metadata for listing %d: %v", id, err)
+                        continue
+                    }
+                    
+                    count++
+                    log.Printf("Updated discount percentage for listing %d: %d%%", id, discountPercent)
+                }
+            }
+        }
+    }
+    
+    log.Printf("Synchronized discount metadata for %d listings", count)
+    return nil
 }

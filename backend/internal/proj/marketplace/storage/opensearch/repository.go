@@ -434,8 +434,29 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 
 	// Добавляем метаданные если они есть
 	if listing.Metadata != nil {
+		// Копируем метаданные
 		doc["metadata"] = listing.Metadata
-		log.Printf("Добавлены метаданные для объявления %d: %+v", listing.ID, listing.Metadata)
+		
+		// Если есть информация о скидке, проверяем и пересчитываем процент
+		if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
+			if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+				// Пересчитываем актуальный процент скидки
+				if prevPrice > listing.Price {
+					discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
+					discount["discount_percent"] = discountPercent
+					
+					// Обновляем метаданные в документе
+					listing.Metadata["discount"] = discount
+					doc["metadata"] = listing.Metadata
+					
+					doc["has_discount"] = true
+					doc["old_price"] = prevPrice
+					
+					log.Printf("Пересчитан процент скидки для OpenSearch: %d%% (объявление %d)",
+						discountPercent, listing.ID)
+				}
+			}
+		}
 	}
 
 	// Добавляем координаты, если они есть

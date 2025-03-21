@@ -79,7 +79,7 @@ type Storage interface {
     
     SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
     GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error)
-
+	SynchronizeDiscountMetadata(ctx context.Context) error  // Добавьте эту строку
 
 	// Balance methods
 	GetUserBalance(ctx context.Context, userID int) (*models.UserBalance, error)

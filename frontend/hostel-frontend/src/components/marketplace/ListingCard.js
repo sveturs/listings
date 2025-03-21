@@ -44,33 +44,39 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
             console.log('No discount data found for listing:', listing.id);
         }
     }, [listing]);
-
+    const getDiscountInfo = () => {
+        // Проверяем наличие метаданных о скидке
+        if (listing.metadata && listing.metadata.discount) {
+            const previousPrice = Number(listing.metadata.discount.previous_price);
+            
+            // Всегда сами пересчитываем процент скидки на базе актуальной цены
+            const calculatedPercent = Math.round((1 - listing.price / previousPrice) * 100);
+            
+            return {
+                percent: calculatedPercent, // используем рассчитанный процент, а не сохраненный
+                oldPrice: previousPrice,
+                hasPriceHistory: listing.metadata.discount.has_price_history || false
+            };
+        }
+        
+        // Если есть флаг и старая цена
+        if (listing.has_discount && listing.old_price) {
+            const percent = Math.round((1 - listing.price / Number(listing.old_price)) * 100);
+            return {
+                percent: percent,
+                oldPrice: listing.old_price,
+                hasPriceHistory: false
+            };
+        }
+        
+        return null;
+    };
+    
+    
     const renderDiscountBadge = () => {
-        // Проверяем наличие скидки через флаг HasDiscount или через metadata
-        if (listing.has_discount || (listing.metadata && listing.metadata.discount)) {
-            // Определяем процент скидки
-            let discountPercent = 0;
-            
-            // Берем из метаданных, если они есть
-            if (listing.metadata && listing.metadata.discount) {
-                discountPercent = listing.metadata.discount.discount_percent;
-            } 
-            // Или вычисляем из OldPrice и Price
-            else if (listing.old_price && listing.price) {
-                discountPercent = Math.round((1 - listing.price / listing.old_price) * 100);
-            }
-            // Если скидка есть, но процент не найден
-            else {
-                // Пытаемся извлечь процент скидки из описания товара
-                const discountMatch = /(\d+)%\s*СКИДКА/.exec(listing.description);
-                if (discountMatch && discountMatch[1]) {
-                    discountPercent = parseInt(discountMatch[1]);
-                } else {
-                    discountPercent = 10; // Значение по умолчанию
-                }
-            }
-            
-            // Отображаем бейдж со скидкой
+        const discount = getDiscountInfo();
+        
+        if (discount) {
             return (
                 <Box
                     sx={{
@@ -91,14 +97,14 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                     }}
                 >
                     <Percent size={14} />
-                    {`-${discountPercent}%`}
+                    {`-${discount.percent}%`}
                 </Box>
             );
         }
         
         return null;
     };
-
+    
     
     // Загружаем название магазина при монтировании компонента
     useEffect(() => {
@@ -246,6 +252,8 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
 
     // Метод для рендеринга секции с ценой и скидкой
     const renderPriceSection = () => {
+        const discount = getDiscountInfo();
+        
         return (
             <Box>
                 <Typography
@@ -260,8 +268,8 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                     {formatPrice(listing.price)}
                 </Typography>
                 
-                {/* Отображение старой цены, если есть информация о скидке в метаданных */}
-                {listing.metadata && listing.metadata.discount && (
+                {/* Отображение старой цены, если есть информация о скидке */}
+                {discount && (
                     <Typography
                         variant="body2"
                         color="text.secondary"
@@ -270,12 +278,13 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                             mt: 0.5
                         }}
                     >
-                        {formatPrice(listing.metadata.discount.previous_price)}
+                        {formatPrice(discount.oldPrice)}
                     </Typography>
                 )}
             </Box>
         );
     };
+    
 
     return (
         <Card
