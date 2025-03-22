@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"log"
 	"mime/multipart"
-	"net/http"
-	"net/url"
+//	"net/http"
+//	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -43,8 +43,7 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 		if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
 			listing.OriginalLanguage = userLang
 		} else {
-			// По умолчанию используем русский
-			listing.OriginalLanguage = "ru"
+ 			listing.OriginalLanguage = "sr"
 		}
 	}
 
@@ -53,9 +52,7 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 		return 0, err
 	}
 
-	// ДОБАВЬТЕ ЭТУ ПРОВЕРКУ:
-	// Если у объявления есть атрибуты, сохраняем их отдельно
-	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+  	if listing.Attributes != nil && len(listing.Attributes) > 0 {
 		// Устанавливаем ID объявления для каждого атрибута
 		for i := range listing.Attributes {
 			listing.Attributes[i].ListingID = listingID
@@ -634,360 +631,351 @@ func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation 
 	return err
 }
 
-// Исправленная версия функции SearchListingsAdvanced
 func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
     log.Printf("Запрос поиска с параметрами: %+v", params)
-    
-    // Преобразуем параметры для OpenSearch
-    osParams := &search.SearchParams{
-        Query:        params.Query,
-        Page:         params.Page,
-        Size:         params.Size,
-        Aggregations: params.Aggregations,
-        Language:     params.Language,
+
+    fields := []string{
+        "title^3", "description",
+        "title.sr^4", "description.sr", "translations.sr.title^4", "translations.sr.description",
+        "title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
+        "title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
     }
 
-    // Корректно инициализируем фильтры атрибутов, если они есть в params
-    if params.AttributeFilters != nil && len(params.AttributeFilters) > 0 {
-        log.Printf("Атрибуты из params: %+v", params.AttributeFilters)
-        
-        osParams.AttributeFilters = make(map[string]string)
-        for key, value := range params.AttributeFilters {
-            osParams.AttributeFilters[key] = value
-            log.Printf("Передаю атрибут в OpenSearch: %s = %s", key, value)
+    query := map[string]interface{}{
+        "query": map[string]interface{}{
+            "bool": map[string]interface{}{
+                "must":   []interface{}{},
+                "filter": []interface{}{},
+            },
+        },
+        "from": (params.Page - 1) * params.Size,
+        "size": params.Size,
+    }
+
+    if params.Query != "" {
+        multiMatch := map[string]interface{}{
+            "multi_match": map[string]interface{}{
+                "query":                params.Query,
+                "fields":               fields,
+                "type":                 "best_fields",
+                "operator":             "AND",
+                "fuzziness":            "AUTO",
+                "minimum_should_match": "70%",
+            },
+        }
+        if params.MinimumShouldMatch != "" {
+            multiMatch["multi_match"].(map[string]interface{})["minimum_should_match"] = params.MinimumShouldMatch
+        }
+        if params.Fuzziness != "" {
+            multiMatch["multi_match"].(map[string]interface{})["fuzziness"] = params.Fuzziness
+        }
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = append(
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{}),
+            multiMatch,
+        )
+    }
+
+    if params.CategoryID != "" {
+        categoryID, err := strconv.Atoi(params.CategoryID)
+        if err == nil {
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+                query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+                map[string]interface{}{
+                    "term": map[string]interface{}{
+                        "category_id": categoryID,
+                    },
+                },
+            )
         }
     }
 
-                
-        // Копируем атрибуты без изменений
-        osParams.AttributeFilters = make(map[string]string)
-        for key, value := range params.AttributeFilters {
-            // Передаем значение без изменений
-            osParams.AttributeFilters[key] = value
-            log.Printf("Передаю атрибут в OpenSearch: %s = %s", key, value)
+    if params.PriceMin > 0 {
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+            map[string]interface{}{
+                "range": map[string]interface{}{
+                    "price": map[string]interface{}{
+                        "gte": params.PriceMin,
+                    },
+                },
+            },
+        )
+    }
+
+    if params.PriceMax > 0 {
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+            map[string]interface{}{
+                "range": map[string]interface{}{
+                    "price": map[string]interface{}{
+                        "lte": params.PriceMax,
+                    },
+                },
+            },
+        )
+    }
+
+    if params.Condition != "" {
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+            map[string]interface{}{
+                "term": map[string]interface{}{
+                    "condition": params.Condition,
+                },
+            },
+        )
+    }
+
+    if params.City != "" {
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+            map[string]interface{}{
+                "term": map[string]interface{}{
+                    "city": params.City,
+                },
+            },
+        )
+    }
+
+    if params.Country != "" {
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+            map[string]interface{}{
+                "term": map[string]interface{}{
+                    "country": params.Country,
+                },
+            },
+        )
+    }
+
+    if params.StorefrontID != "" {
+        storefrontID, err := strconv.Atoi(params.StorefrontID)
+        if err == nil {
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+                query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+                map[string]interface{}{
+                    "term": map[string]interface{}{
+                        "storefront_id": storefrontID,
+                    },
+                },
+            )
         }
-    
-    
+    }
 
-	// Устанавливаем необязательные параметры нечеткого поиска, если они указаны
-	if params.MinimumShouldMatch != "" {
-		osParams.MinimumShouldMatch = params.MinimumShouldMatch
-	}
+    // Добавляем фильтры по атрибутам
+    if len(params.AttributeFilters) > 0 {
+        for attrName, attrValue := range params.AttributeFilters {
+            log.Printf("Добавляем фильтр по атрибуту: %s = %s", attrName, attrValue)
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+                query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+                map[string]interface{}{
+                    "nested": map[string]interface{}{
+                        "path": "attributes",
+                        "query": map[string]interface{}{
+                            "bool": map[string]interface{}{
+                                "must": []map[string]interface{}{
+                                    {
+                                        "term": map[string]interface{}{
+                                            "attributes.attribute_name": attrName,
+                                        },
+                                    },
+                                    {
+                                        "match": map[string]interface{}{
+                                            "attributes.display_value": attrValue,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            )
+        }
+    }
 
-	if params.Fuzziness != "" {
-		osParams.Fuzziness = params.Fuzziness
-	}
+    sortField := "created_at"
+    sortOrder := "desc"
+    if params.Sort != "" {
+        switch params.Sort {
+        case "date_desc":
+            sortField = "created_at"
+            sortOrder = "desc"
+        case "date_asc":
+            sortField = "created_at"
+            sortOrder = "asc"
+        case "price_desc":
+            sortField = "price"
+            sortOrder = "desc"
+        case "price_asc":
+            sortField = "price"
+            sortOrder = "asc"
+        case "distance":
+            if params.Latitude != 0 && params.Longitude != 0 {
+                sortField = "_geo_distance"
+                sortOrder = params.SortDirection
+                query["sort"] = []interface{}{
+                    map[string]interface{}{
+                        "_geo_distance": map[string]interface{}{
+                            "coordinates": map[string]interface{}{
+                                "lat": params.Latitude,
+                                "lon": params.Longitude,
+                            },
+                            "order": sortOrder,
+                            "unit":  "km",
+                        },
+                    },
+                }
+            }
+        default:
+            sortField = params.Sort
+            sortOrder = params.SortDirection
+        }
+    }
+    if sortField != "_geo_distance" {
+        query["sort"] = []interface{}{
+            map[string]interface{}{
+                sortField: map[string]interface{}{
+                    "order": sortOrder,
+                },
+            },
+        }
+    }
 
-	// Добавляем фильтры
-	if params.CategoryID != "" {
-		categoryID, err := strconv.Atoi(params.CategoryID)
-		if err == nil {
-			osParams.CategoryID = &categoryID
-		}
-	}
+    if params.Latitude != 0 && params.Longitude != 0 && params.Distance != "" {
+        log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)",
+            params.Distance, params.Latitude, params.Longitude)
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+            map[string]interface{}{
+                "geo_distance": map[string]interface{}{
+                    "distance": params.Distance,
+                    "coordinates": map[string]interface{}{
+                        "lat": params.Latitude,
+                        "lon": params.Longitude,
+                    },
+                },
+            },
+        )
+    }
 
-	if params.PriceMin > 0 {
-		osParams.PriceMin = &params.PriceMin
-	}
+    log.Printf("Сформированный запрос: %v", query)
 
-	if params.PriceMax > 0 {
-		osParams.PriceMax = &params.PriceMax
-	}
+    // Преобразуем ServiceParams в SearchParams
+    searchParams := &search.SearchParams{
+        Query:            params.Query,
+        Page:             params.Page,
+        Size:             params.Size,
+        Aggregations:     params.Aggregations,
+        Language:         params.Language,
+        AttributeFilters: params.AttributeFilters,
+        CategoryID:       nil,
+        PriceMin:         nil,
+        PriceMax:         nil,
+        Condition:        params.Condition,
+        City:             params.City,
+        Country:          params.Country,
+        StorefrontID:     nil,
+        Sort:             params.Sort,
+        SortDirection:    params.SortDirection,
+        Distance:         params.Distance,
+        CustomQuery:      query,
+    }
 
-	if params.Condition != "" {
-		osParams.Condition = params.Condition
-	}
+    if params.CategoryID != "" {
+        if catID, err := strconv.Atoi(params.CategoryID); err == nil {
+            searchParams.CategoryID = &catID
+        }
+    }
+    if params.PriceMin > 0 {
+        priceMin := params.PriceMin
+        searchParams.PriceMin = &priceMin
+    }
+    if params.PriceMax > 0 {
+        priceMax := params.PriceMax
+        searchParams.PriceMax = &priceMax
+    }
+    if params.StorefrontID != "" {
+        if storeID, err := strconv.Atoi(params.StorefrontID); err == nil {
+            searchParams.StorefrontID = &storeID
+        }
+    }
+    if params.Latitude != 0 && params.Longitude != 0 {
+        searchParams.Location = &search.GeoLocation{
+            Lat: params.Latitude,
+            Lon: params.Longitude,
+        }
+    }
 
-	if params.City != "" {
-		osParams.City = params.City
-	}
+    searchResult, err := s.storage.SearchListingsOpenSearch(ctx, searchParams)
+    if err != nil {
+        log.Printf("Ошибка поиска: %v", err)
+        filters := map[string]string{
+            "condition": params.Condition,
+            "city":      params.City,
+            "country":   params.Country,
+            "sort_by":   params.Sort,
+        }
+        if params.CategoryID != "" {
+            filters["category_id"] = params.CategoryID
+        }
+        if params.StorefrontID != "" {
+            filters["storefront_id"] = params.StorefrontID
+        }
+        if params.PriceMin > 0 {
+            filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
+        }
+        if params.PriceMax > 0 {
+            filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
+        }
+        if params.Query != "" {
+            filters["query"] = params.Query
+        }
+        listings, total, err := s.GetListings(ctx, filters, params.Size, (params.Page-1)*params.Size)
+        if err != nil {
+            log.Printf("Ошибка стандартного поиска: %v", err)
+            return nil, fmt.Errorf("ошибка поиска: %w", err)
+        }
+        listingPtrs := make([]*models.MarketplaceListing, len(listings))
+        for i := range listings {
+            listingPtrs[i] = &listings[i]
+        }
+        return &search.ServiceResult{
+            Items:      listingPtrs,
+            Total:      int(total),
+            Page:       params.Page,
+            Size:       params.Size,
+            TotalPages: (int(total) + params.Size - 1) / params.Size,
+        }, nil
+    }
 
-	if params.Country != "" {
-		osParams.Country = params.Country
-	}
+    log.Printf("Найдено %d объявлений", len(searchResult.Listings))
+    for i, listing := range searchResult.Listings {
+        log.Printf("Объявление %d: ID=%d, Название=%s, Координаты=%v,%v, Статус=%s",
+            i+1, listing.ID, listing.Title, listing.Latitude, listing.Longitude, listing.Status)
+    }
 
-	if params.StorefrontID != "" {
-		storefrontID, err := strconv.Atoi(params.StorefrontID)
-		if err == nil {
-			osParams.StorefrontID = &storefrontID
-		}
-	}
+    result := &search.ServiceResult{
+        Items:      searchResult.Listings,
+        Total:      searchResult.Total,
+        Page:       params.Page,
+        Size:       params.Size,
+        TotalPages: (searchResult.Total + params.Size - 1) / params.Size,
+        Took:       searchResult.Took,
+    }
 
-	// Устанавливаем сортировку
-	if params.Sort != "" {
-		osParams.Sort = params.Sort
-		osParams.SortDirection = params.SortDirection
-	}
+    if len(searchResult.Aggregations) > 0 {
+        result.Facets = make(map[string][]search.Bucket)
+        for key, buckets := range searchResult.Aggregations {
+            result.Facets[key] = buckets
+        }
+    }
 
-	// Добавляем геолокацию
-	var geoSearchEnabled bool
+    if len(searchResult.Suggestions) > 0 {
+        result.Suggestions = searchResult.Suggestions
+    }
 
-	// Проверяем наличие координат для геопоиска
-	if params.Latitude != 0 && params.Longitude != 0 && params.Distance != "" {
-		log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)",
-			params.Distance, params.Latitude, params.Longitude)
-
-		osParams.Location = &search.GeoLocation{
-			Lat: params.Latitude,
-			Lon: params.Longitude,
-		}
-		osParams.Distance = params.Distance
-		geoSearchEnabled = true
-	} else if (params.City != "" || params.Country != "") && params.Distance != "" {
-		// Если координаты не указаны, но указан город/страна и расстояние,
-		// попробуем получить координаты города
-		log.Printf("Попытка определить координаты для города: %s, страна: %s",
-			params.City, params.Country)
-
-		// Формируем запрос для геокодирования
-		query := params.City
-		if params.Country != "" {
-			query += ", " + params.Country
-		}
-
-		// Используем OSM для получения координат города
-		// В реальном коде лучше реализовать отдельный сервис и кэширование результатов
-		geoResult, err := s.geocodeAddress(ctx, query)
-		if err == nil && geoResult != nil {
-			log.Printf("Получены координаты для города: %s (%.6f, %.6f)",
-				query, geoResult.Lat, geoResult.Lon)
-
-			osParams.Location = &search.GeoLocation{
-				Lat: geoResult.Lat,
-				Lon: geoResult.Lon,
-			}
-			osParams.Distance = params.Distance
-			geoSearchEnabled = true
-		} else {
-			log.Printf("Не удалось получить координаты для города: %s, ошибка: %v",
-				query, err)
-		}
-	}
-
-	// Выполняем поиск
-	log.Printf("Отправляем запрос в OpenSearch: %+v", osParams)
-	var osResult *search.SearchResult
-	var err error
-
-	if geoSearchEnabled {
-		// Если геопоиск возможен, пробуем его
-		osResult, err = s.storage.SearchListingsOpenSearch(ctx, osParams)
-
-		if err != nil {
-			log.Printf("Ошибка геопоиска в OpenSearch: %v", err)
-
-			// Если ошибка связана с geo_distance, выполняем обычный поиск без геопараметров
-			if strings.Contains(err.Error(), "geo") {
-				log.Printf("Проблема с geo-поиском, выполняем запрос без геопараметров")
-				osParams.Location = nil
-				osParams.Distance = ""
-
-				osResult, err = s.storage.SearchListingsOpenSearch(ctx, osParams)
-			}
-		}
-	} else {
-		// Обычный поиск без геопараметров
-		osResult, err = s.storage.SearchListingsOpenSearch(ctx, osParams)
-	}
-
-	if err != nil {
-		log.Printf("Ошибка поиска в OpenSearch: %v", err)
-
-		// Если поиск в OpenSearch не удался, используем стандартный поиск через БД
-		filters := map[string]string{
-			"category_id":   params.CategoryID,
-			"condition":     params.Condition,
-			"city":          params.City,
-			"country":       params.Country,
-			"storefront_id": params.StorefrontID,
-			"sort_by":       params.Sort,
-		}
-
-		// Добавляем числовые фильтры, если они указаны
-		if params.PriceMin > 0 {
-			filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
-		}
-		if params.PriceMax > 0 {
-			filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
-		}
-
-		// Добавляем текстовый поиск
-		if params.Query != "" {
-			filters["query"] = params.Query
-		}
-
-		// Пробуем получить обычным методом
-		listings, total, err := s.GetListings(ctx, filters, params.Size, (params.Page-1)*params.Size)
-		if err != nil {
-			log.Printf("Ошибка стандартного поиска: %v", err)
-			return nil, fmt.Errorf("ошибка поиска: %w", err)
-		}
-
-		// Преобразуем результаты
-		listingPtrs := make([]*models.MarketplaceListing, len(listings))
-		for i := range listings {
-			listingPtrs[i] = &listings[i]
-		}
-
-		// Формируем такой же результат, как от OpenSearch
-		result := &search.ServiceResult{
-			Items:      listingPtrs,
-			Total:      int(total),
-			Page:       params.Page,
-			Size:       params.Size,
-			TotalPages: (int(total) + params.Size - 1) / params.Size,
-		}
-
-		return result, nil
-	}
-
-	// Преобразуем результат
-	result := &search.ServiceResult{
-		Items:      osResult.Listings,
-		Total:      osResult.Total,
-		Page:       params.Page,
-		Size:       params.Size,
-		TotalPages: (osResult.Total + params.Size - 1) / params.Size,
-		Took:       osResult.Took,
-	}
-
-	// Если не найдено результатов и есть поисковый запрос, попробуем более гибкий поиск
-	if len(result.Items) == 0 && params.Query != "" {
-		// Создаем копию параметров
-		fuzzyParams := *osParams
-
-		// Изменяем параметры для более нечеткого поиска
-		fuzzyParams.MinimumShouldMatch = "50%"
-		fuzzyParams.Fuzziness = "2"
-
-		// Повторяем поиск с новыми параметрами
-		fuzzyResult, err := s.storage.SearchListingsOpenSearch(ctx, &fuzzyParams)
-		if err == nil && fuzzyResult != nil && len(fuzzyResult.Listings) > 0 {
-			// Используем результаты нечеткого поиска
-			result.Items = fuzzyResult.Listings
-			result.Total = fuzzyResult.Total
-
-			// Добавляем предложение исправления
-			if len(fuzzyResult.Suggestions) > 0 {
-				result.Suggestions = fuzzyResult.Suggestions
-			} else {
-				// Добавляем подсказку, что результаты нечеткие
-				result.Suggestions = []string{params.Query + " (исправлено)"}
-			}
-		}
-	}
-
-	// Добавляем фасеты
-	if len(osResult.Aggregations) > 0 {
-		result.Facets = make(map[string][]search.Bucket)
-		for name, buckets := range osResult.Aggregations {
-			result.Facets[name] = buckets
-		}
-	}
-
-	// Добавляем предложения
-	if len(osResult.Suggestions) > 0 {
-		result.Suggestions = osResult.Suggestions
-	}
-
-	if len(result.Items) < 2 && params.Query != "" {
-		// Получаем предложения исправлений напрямую из базы данных
-		query := `
-            SELECT DISTINCT title 
-            FROM marketplace_listings 
-            WHERE LOWER(title) LIKE $1 
-            AND status = 'active'
-            LIMIT 5
-        `
-		rows, err := s.storage.Query(ctx, query, "%"+params.Query+"%")
-		if err == nil {
-			var suggestions []string
-			for rows.Next() {
-				var title string
-				if err := rows.Scan(&title); err == nil {
-					suggestions = append(suggestions, title)
-				}
-			}
-			rows.Close()
-
-			// Если найдены предложения, добавляем их в результат
-			if len(suggestions) > 0 {
-				result.Suggestions = suggestions
-
-				// Возможно, добавить наилучшее предложение как исправление опечатки
-				if len(result.Items) == 0 {
-					result.SpellingSuggestion = suggestions[0]
-				}
-			}
-		}
-	}
-
-	return result, nil
+    return result, nil
 }
-
-// geocodeAddress получает координаты по адресу/городу
-func (s *MarketplaceService) geocodeAddress(ctx context.Context, address string) (*search.GeoLocation, error) {
-	// Проверка кэша для ускорения работы
-	// TODO: Реализовать кэширование
-
-	// Используем OSM Nominatim для геокодирования
-	// В реальном приложении лучше использовать платное API или создать свою БД городов
-	client := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-
-	url := fmt.Sprintf(
-		"https://nominatim.openstreetmap.org/search?format=json&q=%s&limit=1",
-		url.QueryEscape(address),
-	)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// OSM требует User-Agent
-	req.Header.Set("User-Agent", "HostelBookingSystem/1.0")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("неверный статус ответа: %d", resp.StatusCode)
-	}
-
-	var results []struct {
-		Lat string `json:"lat"`
-		Lon string `json:"lon"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
-		return nil, err
-	}
-
-	if len(results) == 0 {
-		return nil, fmt.Errorf("адрес не найден")
-	}
-
-	lat, err := strconv.ParseFloat(results[0].Lat, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	lon, err := strconv.ParseFloat(results[0].Lon, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	return &search.GeoLocation{
-		Lat: lat,
-		Lon: lon,
-	}, nil
-}
-
 // GetSuggestions возвращает предложения автодополнения
 func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error) {
 	log.Printf("Запрос подсказок в сервисе: '%s'", prefix)
@@ -1004,8 +992,7 @@ func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, 
 			log.Printf("Ошибка при получении подсказок из OpenSearch: %v", err)
 		}
 
-		// При ошибке используем запасной вариант из базы данных
-		// Находим примерно строку 542
+
 		query := `
     SELECT DISTINCT title,
            CASE WHEN LOWER(title) = LOWER($2) THEN 0

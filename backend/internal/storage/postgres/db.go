@@ -78,12 +78,12 @@ func (db *Database) Close() {
 	}
 }
 func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	if db.osMarketplaceRepo == nil {
-		return nil, fmt.Errorf("OpenSearch не настроен")
-	}
-
-	return db.osMarketplaceRepo.SearchListings(ctx, params)
+    if db.osMarketplaceRepo == nil {
+        return nil, fmt.Errorf("OpenSearch не настроен")
+    }
+    return db.osMarketplaceRepo.SearchListings(ctx, params)
 }
+
 func (db *Database) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
 	if db.osMarketplaceRepo == nil {
 		return fmt.Errorf("OpenSearch не настроен")

@@ -8,9 +8,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/microcosm-cc/bluemonday"
 	"io"
 	"io/ioutil"
 	"log"
@@ -20,7 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"encoding/json"
+
+	"github.com/microcosm-cc/bluemonday"
 )
 
 const (
@@ -1267,15 +1268,15 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					// 1. Скидка значительная (>= 10%)
 					// 2. Нет признаков манипуляции с ценой
 					if discountInfo != nil && discountInfo.IsRealDiscount && discountInfo.DiscountPercent >= 10 {
-						discountLabel = fmt.Sprintf("🔥 %d%% СКИДКА! 🔥\nСтарая цена: %.2f RSD\n\n",
+						discountLabel = fmt.Sprintf("🔥 %d%% SALE! 🔥\nold price: %.2f RSD\n\n",
 							discountInfo.DiscountPercent, existingPrice)
-						log.Printf("Обнаружена реальная скидка для товара %s: %d%% (старая цена: %.2f, новая цена: %.2f)",
+						log.Printf("Обнаружена реальная скидка для товара %s: %d%% (old price: %.2f, новая цена: %.2f)",
 							id, discountInfo.DiscountPercent, existingPrice, price)
 					} else if discountPercent >= 10 {
 						// Если нет полной информации о скидке или для новых товаров, проверяем простой процент
-						discountLabel = fmt.Sprintf("🔥 %d%% СКИДКА! 🔥\nСтарая цена: %.2f RSD\n\n",
+						discountLabel = fmt.Sprintf("🔥 %d%% SALE! 🔥\nold price: %.2f RSD\n\n",
 							discountPercent, existingPrice)
-						log.Printf("Обнаружена скидка для товара %s: %d%% (старая цена: %.2f, новая цена: %.2f)",
+						log.Printf("Обнаружена скидка для товара %s: %d%% (old price: %.2f, новая цена: %.2f)",
 							id, discountPercent, existingPrice, price)
 					}
 				}
@@ -1284,7 +1285,7 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 				if naAkciji == "1" {
 					if discountLabel == "" {
 						// Добавляем метку акции только если еще нет метки скидки
-						discountLabel = "🔥 АКЦИЯ! 🔥\n\n"
+						discountLabel = "🔥 SALE! 🔥\n\n"
 					}
 				}
 

@@ -50,7 +50,7 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 	// Устанавливаем ID пользователя
 	listing.UserID = userID
 
-	// Парсим атрибуты из запроса
+	// Парсим атрибуты из запроса (оставляем как есть)
 	var requestBody map[string]interface{}
 	if err := json.Unmarshal(c.Body(), &requestBody); err == nil {
 		if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
@@ -174,7 +174,6 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 						}
 					}
 
-					// Добавляем атрибут в список, если есть хотя бы одно значение
 					if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
 						listing.Attributes = append(listing.Attributes, attr)
 					}
@@ -182,11 +181,116 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 			}
 		}
 	}
+	if listing.StorefrontID == nil {
+		fullText := listing.Title + "\n" + listing.Description
+		detectedLanguage, confidence, err := h.services.Translation().DetectLanguage(c.Context(), fullText)
+		if err != nil || confidence < 0.8 {
+			// Если не удалось определить язык или уверенность низкая
+			if listing.OriginalLanguage != "" {
+				detectedLanguage = listing.OriginalLanguage
+			} else if userLang, ok := c.Locals("language").(string); ok && userLang != "" {
+				detectedLanguage = userLang
+			} else {
+				detectedLanguage = "en" // Язык по умолчанию
+			}
+		}
+		listing.OriginalLanguage = detectedLanguage
 
+		// Модерируем текст перед сохранением
+		moderatedTitle, err := h.services.Translation().ModerateText(c.Context(), listing.Title, listing.OriginalLanguage)
+		if err != nil {
+			log.Printf("Failed to moderate title: %v", err)
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка модерации заголовка")
+		}
+		listing.Title = moderatedTitle
+
+		moderatedDesc, err := h.services.Translation().ModerateText(c.Context(), listing.Description, listing.OriginalLanguage)
+		if err != nil {
+			log.Printf("Failed to moderate description: %v", err)
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка модерации описания")
+		}
+		listing.Description = moderatedDesc
+	}
 	// Создаем объявление
 	listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при создании объявления")
+	}
+
+	// Сохраняем переводы только для обычных пользователей (не витрин)
+	if listing.StorefrontID == nil {
+		// Сохраняем оригинальный текст как перевод для исходного языка
+		err = h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
+			EntityType:          "listing",
+			EntityID:            listingID,
+			Language:            listing.OriginalLanguage,
+			FieldName:           "title",
+			TranslatedText:      listing.Title,
+			IsMachineTranslated: false,
+			IsVerified:          true,
+		})
+		if err != nil {
+			log.Printf("Error saving original title translation: %v", err)
+		}
+
+		err = h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
+			EntityType:          "listing",
+			EntityID:            listingID,
+			Language:            listing.OriginalLanguage,
+			FieldName:           "description",
+			TranslatedText:      listing.Description,
+			IsMachineTranslated: false,
+			IsVerified:          true,
+		})
+		if err != nil {
+			log.Printf("Error saving original description translation: %v", err)
+		}
+
+		// Переводим на другие языки
+		targetLanguages := []string{"en", "ru", "sr"}
+		for _, targetLang := range targetLanguages {
+			if targetLang == listing.OriginalLanguage {
+				continue
+			}
+
+			// Переводим заголовок
+			translatedTitle, err := h.services.Translation().Translate(c.Context(), listing.Title, listing.OriginalLanguage, targetLang)
+			if err == nil {
+				err = h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
+					EntityType:          "listing",
+					EntityID:            listingID,
+					Language:            targetLang,
+					FieldName:           "title",
+					TranslatedText:      translatedTitle,
+					IsMachineTranslated: true,
+					IsVerified:          false,
+				})
+				if err != nil {
+					log.Printf("Error saving %s title translation: %v", targetLang, err)
+				}
+			} else {
+				log.Printf("Error translating title to %s: %v", targetLang, err)
+			}
+
+			// Переводим описание
+			translatedDesc, err := h.services.Translation().Translate(c.Context(), listing.Description, listing.OriginalLanguage, targetLang)
+			if err == nil {
+				err = h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
+					EntityType:          "listing",
+					EntityID:            listingID,
+					Language:            targetLang,
+					FieldName:           "description",
+					TranslatedText:      translatedDesc,
+					IsMachineTranslated: true,
+					IsVerified:          false,
+				})
+				if err != nil {
+					log.Printf("Error saving %s description translation: %v", targetLang, err)
+				}
+			} else {
+				log.Printf("Error translating description to %s: %v", targetLang, err)
+			}
+		}
 	}
 
 	// Обновляем материализованное представление
@@ -362,18 +466,18 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 }
 
 func (h *MarketplaceHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
-    // Проверяем административные права
-    userID, ok := c.Locals("user_id").(int)
-    if !ok || userID == 0 {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
-    }
+	// Проверяем административные права
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
 
-    // Запускаем синхронизацию в фоне
-    go func() {
-        ctx := context.Background()
+	// Запускаем синхронизацию в фоне
+	go func() {
+		ctx := context.Background()
 
-        // Изменённый запрос: ищем все объявления с историей цен или упоминанием скидки
-        rows, err := h.services.Storage().Query(ctx, `
+		// Изменённый запрос: ищем все объявления с историей цен или упоминанием скидки
+		rows, err := h.services.Storage().Query(ctx, `
             SELECT id 
             FROM marketplace_listings 
             WHERE (
@@ -391,46 +495,45 @@ func (h *MarketplaceHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
             AND status = 'active'
         `)
 
-        if err != nil {
-            log.Printf("Ошибка при поиске объявлений со скидками: %v", err)
-            return
-        }
+		if err != nil {
+			log.Printf("Ошибка при поиске объявлений со скидками: %v", err)
+			return
+		}
 
-        var listingIDs []int
-        for rows.Next() {
-            var id int
-            if err := rows.Scan(&id); err != nil {
-                log.Printf("Ошибка при сканировании ID объявления: %v", err)
-                continue
-            }
-            listingIDs = append(listingIDs, id)
-        }
-        rows.Close()
+		var listingIDs []int
+		for rows.Next() {
+			var id int
+			if err := rows.Scan(&id); err != nil {
+				log.Printf("Ошибка при сканировании ID объявления: %v", err)
+				continue
+			}
+			listingIDs = append(listingIDs, id)
+		}
+		rows.Close()
 
-        log.Printf("Найдено %d объявлений со скидками для синхронизации", len(listingIDs))
+		log.Printf("Найдено %d объявлений со скидками для синхронизации", len(listingIDs))
 
-        // Обрабатываем каждое объявление
-        for _, id := range listingIDs {
-            if err := h.marketplaceService.SynchronizeDiscountData(ctx, id); err != nil {
-                log.Printf("Ошибка синхронизации данных о скидке для объявления %d: %v", id, err)
-            } else {
-                log.Printf("Успешно синхронизированы данные о скидке для объявления %d", id)
-            }
-        }
+		// Обрабатываем каждое объявление
+		for _, id := range listingIDs {
+			if err := h.marketplaceService.SynchronizeDiscountData(ctx, id); err != nil {
+				log.Printf("Ошибка синхронизации данных о скидке для объявления %d: %v", id, err)
+			} else {
+				log.Printf("Успешно синхронизированы данные о скидке для объявления %d", id)
+			}
+		}
 
-        // Запускаем переиндексацию объявлений
-        if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
-            log.Printf("Ошибка переиндексации объявлений: %v", err)
-        } else {
-            log.Println("Синхронизация данных о скидках успешно завершена")
-        }
-    }()
+		// Запускаем переиндексацию объявлений
+		if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
+			log.Printf("Ошибка переиндексации объявлений: %v", err)
+		} else {
+			log.Println("Синхронизация данных о скидках успешно завершена")
+		}
+	}()
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Запущена синхронизация данных о скидках",
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Запущена синхронизация данных о скидках",
+	})
 }
-
 
 func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	prefix := c.Query("q", "")
@@ -919,12 +1022,12 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 
 			// Вычисляем процент скидки от исходной цены
 			discountPercent := int((originalPrice - listing.Price) / originalPrice * 100)
-			
+
 			// Добавляем или обновляем информацию о скидке в метаданные
 			listing.Metadata["discount"] = map[string]interface{}{
-				"discount_percent": discountPercent,
-				"previous_price": originalPrice,
-				"effective_from": time.Now().Format(time.RFC3339),
+				"discount_percent":  discountPercent,
+				"previous_price":    originalPrice,
+				"effective_from":    time.Now().Format(time.RFC3339),
 				"has_price_history": true,
 			}
 
@@ -942,13 +1045,23 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 		}
 		// Если цены равны, оставляем метаданные без изменений
 	}
-	
+
 	// Обновляем объявление
 	err = h.marketplaceService.UpdateListing(c.Context(), &listing)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
 	}
-
+	// Переиндексируем объявление в OpenSearch
+	updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listing.ID)
+	if err != nil {
+		log.Printf("Failed to get updated listing for reindexing: %v", err)
+	} else {
+		if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
+			log.Printf("Failed to reindex listing %d: %v", listing.ID, err)
+		} else {
+			log.Printf("Successfully reindexed listing %d", listing.ID)
+		}
+	}
 	// Проверяем изменение цены
 	if oldListing.Price != listing.Price {
 		// Вызываем явно синхронизацию данных о скидке и истории цен
@@ -957,7 +1070,7 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 			log.Printf("Ошибка при синхронизации скидки для объявления %d: %v", listing.ID, err)
 			// Не возвращаем ошибку клиенту, чтобы не прерывать обновление
 		}
-		
+
 		favoritedUsers, err := h.marketplaceService.GetFavoritedUsers(c.Context(), listing.ID)
 		if err != nil {
 			log.Printf("Error getting favorited users: %v", err)
@@ -1153,7 +1266,7 @@ func (h *MarketplaceHandler) BatchTranslateListings(c *fiber.Ctx) error {
 		// Источниковый язык
 		sourceLanguage := listing.OriginalLanguage
 		if sourceLanguage == "" {
-			sourceLanguage = "ru" // По умолчанию
+			sourceLanguage = "sr" // По умолчанию
 		}
 
 		// Переводим на каждый целевой язык

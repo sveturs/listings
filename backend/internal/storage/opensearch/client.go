@@ -1,3 +1,4 @@
+// backend/internal/storage/opensearch/client.go
 package opensearch
 
 import (

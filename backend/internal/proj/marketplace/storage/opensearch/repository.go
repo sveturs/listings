@@ -147,34 +147,39 @@ func (r *Repository) extractDocumentID(hit map[string]interface{}) (int, error) 
 
 // SearchListings выполняет поиск объявлений
 func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	// Строим запрос к OpenSearch
-	query := r.buildSearchQuery(params)
+    var query map[string]interface{}
+    if params.CustomQuery != nil {
+        // Используем переданный готовый запрос
+        query = params.CustomQuery
+    } else {
+        // Строим запрос к OpenSearch, если CustomQuery не указан
+        query = r.buildSearchQuery(params)
+    }
 
-	// Дополнительное логирование
-	queryJSON, _ := json.MarshalIndent(query, "", "  ")
-	log.Printf("Поисковый запрос: %s", string(queryJSON))
+    // Дополнительное логирование
+    queryJSON, _ := json.MarshalIndent(query, "", "  ")
+    log.Printf("Поисковый запрос: %s", string(queryJSON))
 
-	// Выполняем поиск
-	responseBytes, err := r.client.Search(r.indexName, query)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
-	}
+    // Выполняем поиск
+    responseBytes, err := r.client.Search(r.indexName, query)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
+    }
 
-	// Разбираем ответ
-	var searchResponse map[string]interface{}
-	if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
-		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
-	}
+    // Разбираем ответ
+    var searchResponse map[string]interface{}
+    if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
+        return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
+    }
 
-	// Извлекаем результаты
-	result, err := r.parseSearchResponse(searchResponse, params.Language)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка обработки результатов: %w", err)
-	}
+    // Извлекаем результаты
+    result, err := r.parseSearchResponse(searchResponse, params.Language)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка обработки результатов: %w", err)
+    }
 
-	return result, nil
+    return result, nil
 }
-
 // SuggestListings предлагает автодополнение для поиска
 func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
 	if prefix == "" {
@@ -710,66 +715,58 @@ func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float6
 
 // buildSearchQuery создает поисковый запрос OpenSearch
 func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]interface{} {
-	log.Printf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s",
-		params.CategoryID, params.Language, params.Query)
-	query := map[string]interface{}{
-		"from": (params.Page - 1) * params.Size,
-		"size": params.Size,
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"must":   []interface{}{},
-				"filter": []interface{}{},
-			},
-		},
-	}
+    log.Printf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s",
+        params.CategoryID, params.Language, params.Query)
 
-	mustClauses := []interface{}{}
-	filterClauses := []interface{}{}
+    query := map[string]interface{}{
+        "from": (params.Page - 1) * params.Size,
+        "size": params.Size,
+        "query": map[string]interface{}{
+            "bool": map[string]interface{}{
+                "must":   []interface{}{},
+                "filter": []interface{}{},
+            },
+        },
+    }
 
-	if params.Query != "" {
-		log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
+    mustClauses := []interface{}{}
+    filterClauses := []interface{}{}
 
-		// Определяем поля для поиска с учетом языка
-		searchFields := []string{"title^3", "description"}
-		if params.Language != "" {
-			// Добавляем языко-специфичные поля, если указан язык
-			searchFields = append(
-				searchFields,
-				fmt.Sprintf("title.%s^4", params.Language),
-				fmt.Sprintf("description.%s", params.Language),
-				fmt.Sprintf("translations.%s.title^4", params.Language),
-				fmt.Sprintf("translations.%s.description", params.Language),
-			)
-		}
+    if params.Query != "" {
+        log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
 
-		// Настройки нечеткого поиска
-		minimumShouldMatch := "70%"
-		if params.MinimumShouldMatch != "" {
-			minimumShouldMatch = params.MinimumShouldMatch
-		}
+        // Используем все поля переводов, если CustomQuery не указан
+        searchFields := []string{
+            "title^3", "description",
+            "title.sr^4", "description.sr", "translations.sr.title^4", "translations.sr.description",
+            "title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
+            "title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
+        }
 
-		fuzziness := "AUTO"
-		if params.Fuzziness != "" {
-			fuzziness = params.Fuzziness
-		}
+        minimumShouldMatch := "70%"
+        if params.MinimumShouldMatch != "" {
+            minimumShouldMatch = params.MinimumShouldMatch
+        }
 
-		// Создаем запрос для поиска
-		queryObj := map[string]interface{}{
-			"multi_match": map[string]interface{}{
-				"query":                params.Query,
-				"fields":               searchFields,
-				"type":                 "best_fields",
-				"fuzziness":            fuzziness,
-				"operator":             "AND",
-				"minimum_should_match": minimumShouldMatch,
-			},
-		}
+        fuzziness := "AUTO"
+        if params.Fuzziness != "" {
+            fuzziness = params.Fuzziness
+        }
 
-		// Добавляем запрос в mustClauses
-		mustClauses = append(mustClauses, queryObj)
+        queryObj := map[string]interface{}{
+            "multi_match": map[string]interface{}{
+                "query":                params.Query,
+                "fields":               searchFields,
+                "type":                 "best_fields",
+                "fuzziness":            fuzziness,
+                "operator":             "AND",
+                "minimum_should_match": minimumShouldMatch,
+            },
+        }
 
-		log.Printf("Добавлен поисковый запрос для полей: %v", searchFields)
-	}
+        mustClauses = append(mustClauses, queryObj)
+        log.Printf("Добавлен поисковый запрос для полей: %v", searchFields)
+    }
 
 	// Добавляем фильтры по категории
 	if params.CategoryID != nil {
@@ -964,22 +961,18 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	// Добавляем clauses в запрос
 	if len(mustClauses) > 0 {
-		log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
-		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
+        log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
+        mustClausesJSON, _ := json.Marshal(mustClauses)
+        log.Printf("Must-клаузы: %s", string(mustClausesJSON))
+    }
 
-		// Добавим лог содержимого must-клауз
-		mustClausesJSON, _ := json.Marshal(mustClauses)
-		log.Printf("Must-клаузы: %s", string(mustClausesJSON))
-	}
-
-	if len(filterClauses) > 0 {
-		log.Printf("Добавляем %d filter клауз в запрос", len(filterClauses))
-		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
-
-		// Добавим лог содержимого filter-клауз
-		filterClausesJSON, _ := json.Marshal(filterClauses)
-		log.Printf("Filter-клаузы: %s", string(filterClausesJSON))
-	}
+    if len(filterClauses) > 0 {
+        log.Printf("Добавляем %d filter клауз в запрос", len(filterClauses))
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
+        filterClausesJSON, _ := json.Marshal(filterClauses)
+        log.Printf("Filter-клаузы: %s", string(filterClausesJSON))
+    }
 
 	// Добавляем настройки сортировки
 	sortOpt := []interface{}{}
@@ -1126,9 +1119,8 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	// Для отладки выводим запрос в лог
 	queryJSON, _ := json.MarshalIndent(query, "", "  ")
-	log.Printf("Сформированный запрос: %s", queryJSON)
-
-	return query
+    log.Printf("Сформированный запрос: %s", queryJSON)
+    return query
 }
 
 // parseSearchResponse обрабатывает ответ от OpenSearch

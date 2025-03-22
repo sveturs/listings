@@ -26,6 +26,9 @@ type SearchParams struct {
 	MinimumShouldMatch string            // Минимальное количество совпадений (70%, 50% и т.д.)
 	Fuzziness          string            // Уровень нечеткости (AUTO, 1, 2, ...)
 	AttributeFilters   map[string]string //  поле для фильтров атрибутов
+	UseAllTranslations bool //
+	CustomQuery      map[string]interface{} //
+	Status           string //
 }
 
 // SearchParams параметры поиска для OpenSearch
@@ -50,6 +53,7 @@ type ServiceParams struct {
 	MinimumShouldMatch string            // Минимальное количество совпадений (70%, 50% и т.д.)
 	Fuzziness          string            // Уровень нечеткости (AUTO, 1, 2, ...)
 	AttributeFilters   map[string]string //  поле для фильтров атрибутов
+	Status           string
 }
 
 // GeoLocation координаты для геопоиска
