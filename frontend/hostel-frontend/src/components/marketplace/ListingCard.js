@@ -40,6 +40,8 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
             }
         } else if (listing && listing.old_price) {
             console.log('Old price found:', listing.old_price);
+        } else if (listing && listing.has_discount) {
+            console.log('Has discount flag is true, but no old_price or metadata');
         } else {
             console.log('No discount data found for listing:', listing.id);
         }

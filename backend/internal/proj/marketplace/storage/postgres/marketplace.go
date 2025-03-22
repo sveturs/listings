@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-    "regexp"
+	//"regexp"
 	"backend/internal/proj/marketplace/service"
 	"log"
 	"strings"
@@ -141,8 +141,6 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 	if err != nil {
 		return 0, fmt.Errorf("failed to insert listing: %w", err)
 	}
-
-
 
 	// Сохраняем оригинальный текст как перевод для исходного языка
 	_, err = s.pool.Exec(ctx, `
@@ -374,19 +372,23 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         l.created_at,
         l.updated_at,
         l.show_on_map,
-        l.original_language,`
+    l.original_language,`
 
 	// Добавляем поле storefront_id, если оно существует
 	if hasStorefrontID {
 		baseQuery += `
-        l.storefront_id,`
+    l.storefront_id,`
 	} else {
 		baseQuery += `
-        NULL as storefront_id,`
+    NULL as storefront_id,`
 	}
 
+	// Добавляем поле для метаданных
 	baseQuery += `
-        u.name as user_name, 
+    l.metadata,`
+
+	baseQuery += `
+    u.name as user_name, 
         u.email as user_email,
         u.created_at as user_created_at,
         u.picture_url as user_picture_url,
@@ -499,6 +501,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 
 		listing.User = &models.User{}
 		listing.Category = &models.MarketplaceCategory{}
+		var metadataJSON []byte
 
 		var (
 			tempEmail        sql.NullString
@@ -533,6 +536,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			&listing.ShowOnMap,
 			&listing.OriginalLanguage,
 			&tempStorefrontID,
+			&metadataJSON,
 			&listing.User.Name,
 			&tempEmail,
 			&listing.User.CreatedAt,
@@ -543,7 +547,22 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			&listing.IsFavorite,
 			&totalCount,
 		)
-
+		// После Scan добавьте обработку метаданных
+		if len(metadataJSON) > 0 {
+			if err := json.Unmarshal(metadataJSON, &listing.Metadata); err != nil {
+				log.Printf("Error unmarshaling metadata for listing %d: %v", listing.ID, err)
+			} else {
+				// Обработка метаданных о скидках
+				if listing.Metadata != nil {
+					if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
+						listing.HasDiscount = true
+						if prevPrice, ok := discount["previous_price"].(float64); ok {
+							listing.OldPrice = prevPrice
+						}
+					}
+				}
+			}
+		}
 		if err != nil {
 			return nil, 0, fmt.Errorf("error scanning listing: %w", err)
 		}
@@ -992,116 +1011,116 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 
 // SaveListingAttributes сохраняет значения атрибутов для объявления
 func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
-    log.Printf("Storage: Saving %d attributes for listing %d", len(attributes), listingID)
+	log.Printf("Storage: Saving %d attributes for listing %d", len(attributes), listingID)
 
-    // Начинаем транзакцию
-    tx, err := s.pool.Begin(ctx)
-    if err != nil {
-        return fmt.Errorf("error starting transaction: %w", err)
-    }
-    defer tx.Rollback(ctx)
+	// Начинаем транзакцию
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
 
-    // Удаляем старые атрибуты
-    _, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)
-    if err != nil {
-        return fmt.Errorf("error deleting old attributes: %w", err)
-    }
+	// Удаляем старые атрибуты
+	_, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)
+	if err != nil {
+		return fmt.Errorf("error deleting old attributes: %w", err)
+	}
 
-    // Проверяем, есть ли атрибуты для сохранения
-    if len(attributes) == 0 {
-        log.Printf("Storage: No attributes to save for listing %d", listingID)
-        return tx.Commit(ctx)
-    }
+	// Проверяем, есть ли атрибуты для сохранения
+	if len(attributes) == 0 {
+		log.Printf("Storage: No attributes to save for listing %d", listingID)
+		return tx.Commit(ctx)
+	}
 
-    // Подготавливаем запрос для множественной вставки
-    valueStrings := make([]string, 0, len(attributes))
-    valueArgs := make([]interface{}, 0, len(attributes)*4)
-    counter := 1
+	// Подготавливаем запрос для множественной вставки
+	valueStrings := make([]string, 0, len(attributes))
+	valueArgs := make([]interface{}, 0, len(attributes)*4)
+	counter := 1
 
-    for _, attr := range attributes {
-        // Проверяем наличие значений
-        if attr.TextValue == nil && attr.NumericValue == nil && attr.BooleanValue == nil && attr.JSONValue == nil {
-            log.Printf("Storage: Skipping attribute %d: No value provided", attr.AttributeID)
-            continue
-        }
+	for _, attr := range attributes {
+		// Проверяем наличие значений
+		if attr.TextValue == nil && attr.NumericValue == nil && attr.BooleanValue == nil && attr.JSONValue == nil {
+			log.Printf("Storage: Skipping attribute %d: No value provided", attr.AttributeID)
+			continue
+		}
 
-        // Подготавливаем часть запроса для этого атрибута
-        valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d)",
-            counter, counter+1, counter+2, counter+3, counter+4, counter+5))
-        
-        // Добавляем параметры
-        valueArgs = append(valueArgs, listingID, attr.AttributeID)
-        
-        // Текстовое значение
-        if attr.TextValue != nil {
-            valueArgs = append(valueArgs, *attr.TextValue)
-        } else {
-            valueArgs = append(valueArgs, nil)
-        }
-        
-        // Числовое значение
-        if attr.NumericValue != nil {
-            // Проверка больших значений для числовых атрибутов
-            if attr.AttributeName == "mileage" && *attr.NumericValue > 10000000 {
-                log.Printf("Storage: High mileage value detected: %f", *attr.NumericValue)
-                // Для больших значений проверяем, что они в допустимом диапазоне DECIMAL(15,5)
-                if *attr.NumericValue > 999999999999.99999 {
-                    log.Printf("Storage: Mileage value too large, capping at max allowed")
-                    maxValue := 999999999999.99999
-                    attr.NumericValue = &maxValue
-                }
-            }
-            valueArgs = append(valueArgs, *attr.NumericValue)
-        } else {
-            valueArgs = append(valueArgs, nil)
-        }
-        
-        // Логическое значение
-        if attr.BooleanValue != nil {
-            valueArgs = append(valueArgs, *attr.BooleanValue)
-        } else {
-            valueArgs = append(valueArgs, nil)
-        }
-        
-        // JSON значение
-        if attr.JSONValue != nil {
-            valueArgs = append(valueArgs, string(attr.JSONValue))
-        } else {
-            valueArgs = append(valueArgs, nil)
-        }
-        
-        counter += 6
-    }
+		// Подготавливаем часть запроса для этого атрибута
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d)",
+			counter, counter+1, counter+2, counter+3, counter+4, counter+5))
 
-    // Если нет атрибутов для вставки, завершаем транзакцию
-    if len(valueStrings) == 0 {
-        log.Printf("Storage: No valid attributes found for listing %d", listingID)
-        return tx.Commit(ctx)
-    }
+		// Добавляем параметры
+		valueArgs = append(valueArgs, listingID, attr.AttributeID)
 
-    // Составляем запрос для множественной вставки
-    query := fmt.Sprintf(`
+		// Текстовое значение
+		if attr.TextValue != nil {
+			valueArgs = append(valueArgs, *attr.TextValue)
+		} else {
+			valueArgs = append(valueArgs, nil)
+		}
+
+		// Числовое значение
+		if attr.NumericValue != nil {
+			// Проверка больших значений для числовых атрибутов
+			if attr.AttributeName == "mileage" && *attr.NumericValue > 10000000 {
+				log.Printf("Storage: High mileage value detected: %f", *attr.NumericValue)
+				// Для больших значений проверяем, что они в допустимом диапазоне DECIMAL(15,5)
+				if *attr.NumericValue > 999999999999.99999 {
+					log.Printf("Storage: Mileage value too large, capping at max allowed")
+					maxValue := 999999999999.99999
+					attr.NumericValue = &maxValue
+				}
+			}
+			valueArgs = append(valueArgs, *attr.NumericValue)
+		} else {
+			valueArgs = append(valueArgs, nil)
+		}
+
+		// Логическое значение
+		if attr.BooleanValue != nil {
+			valueArgs = append(valueArgs, *attr.BooleanValue)
+		} else {
+			valueArgs = append(valueArgs, nil)
+		}
+
+		// JSON значение
+		if attr.JSONValue != nil {
+			valueArgs = append(valueArgs, string(attr.JSONValue))
+		} else {
+			valueArgs = append(valueArgs, nil)
+		}
+
+		counter += 6
+	}
+
+	// Если нет атрибутов для вставки, завершаем транзакцию
+	if len(valueStrings) == 0 {
+		log.Printf("Storage: No valid attributes found for listing %d", listingID)
+		return tx.Commit(ctx)
+	}
+
+	// Составляем запрос для множественной вставки
+	query := fmt.Sprintf(`
         INSERT INTO listing_attribute_values (
             listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value
         ) VALUES %s
     `, strings.Join(valueStrings, ","))
 
-    // Выполняем запрос
-    _, err = tx.Exec(ctx, query, valueArgs...)
-    if err != nil {
-        log.Printf("Storage: Error executing bulk insert: %v", err)
-        log.Printf("Storage: Query: %s", query)
-        log.Printf("Storage: Args: %+v", valueArgs)
-        return fmt.Errorf("error inserting attribute values: %w", err)
-    }
+	// Выполняем запрос
+	_, err = tx.Exec(ctx, query, valueArgs...)
+	if err != nil {
+		log.Printf("Storage: Error executing bulk insert: %v", err)
+		log.Printf("Storage: Query: %s", query)
+		log.Printf("Storage: Args: %+v", valueArgs)
+		return fmt.Errorf("error inserting attribute values: %w", err)
+	}
 
-    // Фиксируем транзакцию
-    if err = tx.Commit(ctx); err != nil {
-        return fmt.Errorf("error committing transaction: %w", err)
-    }
+	// Фиксируем транзакцию
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("error committing transaction: %w", err)
+	}
 
-    log.Printf("Storage: Successfully saved %d attributes for listing %d", len(valueStrings), listingID)
-    return nil
+	log.Printf("Storage: Successfully saved %d attributes for listing %d", len(valueStrings), listingID)
+	return nil
 }
 
 // GetListingAttributes получает значения атрибутов для объявления без дублирования
@@ -1206,7 +1225,7 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 
 // GetCategoryAttributes получает атрибуты для указанной категории
 func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-    query := `
+	query := `
     WITH RECURSIVE category_hierarchy AS (
         -- Находим все родительские категории (включая текущую)
         WITH RECURSIVE parents AS (
@@ -1255,61 +1274,61 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
     ORDER BY a.id, m.category_id = $1 DESC, a.sort_order, a.display_name
     `
 
-    rows, err := s.pool.Query(ctx, query, categoryID)
-    if err != nil {
-        return nil, fmt.Errorf("error querying category attributes: %w", err)
-    }
-    defer rows.Close()
+	rows, err := s.pool.Query(ctx, query, categoryID)
+	if err != nil {
+		return nil, fmt.Errorf("error querying category attributes: %w", err)
+	}
+	defer rows.Close()
 
-    var attributes []models.CategoryAttribute
-    for rows.Next() {
-        var attr models.CategoryAttribute
-        var options, validRules sql.NullString
-        var translationsJson []byte
+	var attributes []models.CategoryAttribute
+	for rows.Next() {
+		var attr models.CategoryAttribute
+		var options, validRules sql.NullString
+		var translationsJson []byte
 
-        if err := rows.Scan(
-            &attr.ID,
-            &attr.Name,
-            &attr.DisplayName,
-            &attr.AttributeType,
-            &options,
-            &validRules,
-            &attr.IsSearchable,
-            &attr.IsFilterable,
-            &attr.IsRequired,
-            &attr.SortOrder,
-            &attr.CreatedAt,
-            &translationsJson,
-        ); err != nil {
-            return nil, fmt.Errorf("error scanning category attribute: %w", err)
-        }
+		if err := rows.Scan(
+			&attr.ID,
+			&attr.Name,
+			&attr.DisplayName,
+			&attr.AttributeType,
+			&options,
+			&validRules,
+			&attr.IsSearchable,
+			&attr.IsFilterable,
+			&attr.IsRequired,
+			&attr.SortOrder,
+			&attr.CreatedAt,
+			&translationsJson,
+		); err != nil {
+			return nil, fmt.Errorf("error scanning category attribute: %w", err)
+		}
 
-        // Обработка опциональных JSON полей
-        if options.Valid {
-            attr.Options = json.RawMessage(options.String)
-        }
-        if validRules.Valid {
-            attr.ValidRules = json.RawMessage(validRules.String)
-        }
+		// Обработка опциональных JSON полей
+		if options.Valid {
+			attr.Options = json.RawMessage(options.String)
+		}
+		if validRules.Valid {
+			attr.ValidRules = json.RawMessage(validRules.String)
+		}
 
-        // Обработка переводов
-        attr.Translations = make(map[string]string)
-        if err := json.Unmarshal(translationsJson, &attr.Translations); err != nil {
-            // Просто логируем ошибку, но продолжаем работу
-            fmt.Printf("Error parsing translations for attribute %d: %v\n", attr.ID, err)
-        }
+		// Обработка переводов
+		attr.Translations = make(map[string]string)
+		if err := json.Unmarshal(translationsJson, &attr.Translations); err != nil {
+			// Просто логируем ошибку, но продолжаем работу
+			fmt.Printf("Error parsing translations for attribute %d: %v\n", attr.ID, err)
+		}
 
-        attributes = append(attributes, attr)
-    }
+		attributes = append(attributes, attr)
+	}
 
-    if err := rows.Err(); err != nil {
-        return nil, fmt.Errorf("error iterating category attributes: %w", err)
-    }
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating category attributes: %w", err)
+	}
 
-    return attributes, nil
+	return attributes, nil
 }
-	
-	func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
+
+func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
 	log.Printf("GetCategories: starting to fetch categories")
 	query := `
         WITH category_translations AS (
@@ -1438,19 +1457,19 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 			listing.HasDiscount = true
 			if prevPrice, ok := discount["previous_price"].(float64); ok {
 				listing.OldPrice = prevPrice
-				
-				// Пересчитываем актуальный процент скидки, чтобы он всегда соответствовал 
+
+				// Пересчитываем актуальный процент скидки, чтобы он всегда соответствовал
 				// текущей разнице между старой и новой ценой
 				if prevPrice > listing.Price {
 					discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
 					discount["discount_percent"] = discountPercent
-					
-					log.Printf("Обновлен процент скидки для просмотра объявления %d: %d%%", 
+
+					log.Printf("Обновлен процент скидки для просмотра объявления %d: %d%%",
 						id, discountPercent)
 				}
 			}
 		}
-	} 
+	}
 
 	// Загружаем переводы
 	translations := make(map[string]map[string]string)
@@ -1488,7 +1507,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	// Важно! Присваиваем изображения объявлению
 	listing.Images = images
 	listing.Translations = translations
-	
+
 	// Достаем информацию о пути категории
 	if listing.CategoryID > 0 {
 		query := `
