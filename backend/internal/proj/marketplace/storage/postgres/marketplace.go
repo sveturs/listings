@@ -991,7 +991,6 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 }
 
 // SaveListingAttributes сохраняет значения атрибутов для объявления
-// SaveListingAttributes сохраняет значения атрибутов для объявления
 func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
     log.Printf("Storage: Saving %d attributes for listing %d", len(attributes), listingID)
 
@@ -1451,48 +1450,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 				}
 			}
 		}
-	} else if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
-		// Если метаданных нет, но в описании упоминается скидка, попробуем ее извлечь
-		pattern := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
-		matches := pattern.FindStringSubmatch(listing.Description)
-		
-		pricePattern := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
-		priceMatches := pricePattern.FindStringSubmatch(listing.Description)
-		
-		if len(matches) > 1 && len(priceMatches) > 1 {
-			discountPercent, _ := strconv.Atoi(matches[1])
-			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
-			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
-			
-			// Устанавливаем значения для отображения
-			listing.HasDiscount = true
-			listing.OldPrice = oldPrice
-			
-			if listing.Metadata == nil {
-				listing.Metadata = make(map[string]interface{})
-			}
-			
-			listing.Metadata["discount"] = map[string]interface{}{
-				"discount_percent": discountPercent,
-				"previous_price": oldPrice,
-				"has_price_history": false,
-			}
-			
-			// Сохраняем метаданные в базу
-			_, err := s.pool.Exec(ctx, `
-				UPDATE marketplace_listings
-				SET metadata = $1
-				WHERE id = $2
-			`, listing.Metadata, listing.ID)
-			
-			if err != nil {
-				log.Printf("Ошибка сохранения метаданных о скидке: %v", err)
-			} else {
-				log.Printf("Создана информация о скидке для объявления %d: %d%% (старая цена: %.2f)",
-					listing.ID, discountPercent, oldPrice)
-			}
-		}
-	}
+	} 
 
 	// Загружаем переводы
 	translations := make(map[string]map[string]string)

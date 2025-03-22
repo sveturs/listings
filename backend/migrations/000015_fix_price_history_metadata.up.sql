@@ -1,9 +1,10 @@
--- Создаем новую триггерную функцию для обновления метаданных
+-- Исправление функции update_listing_metadata_after_price_change
 CREATE OR REPLACE FUNCTION update_listing_metadata_after_price_change()
 RETURNS TRIGGER AS $$
 DECLARE
     last_price DECIMAL(12,2);
     max_price DECIMAL(12,2);
+    max_price_date TIMESTAMP;
     price_diff DECIMAL(10,2);
     percentage DECIMAL(10,2);
     current_timestamp_var TIMESTAMP := CURRENT_TIMESTAMP AT TIME ZONE 'UTC';
@@ -16,21 +17,23 @@ BEGIN
     FROM marketplace_listings
     WHERE id = NEW.listing_id;
     
-    -- Получаем историю цен для анализа
-    WITH price_data AS (
-        SELECT 
-            price,
-            effective_from,
-            effective_to,
-            EXTRACT(EPOCH FROM (COALESCE(effective_to, CURRENT_TIMESTAMP) - effective_from))/86400 as duration_days
+    -- Получаем максимальную цену из истории, которая существовала достаточно долго
+    SELECT price, effective_from INTO max_price, max_price_date
+    FROM price_history
+    WHERE listing_id = NEW.listing_id
+      AND EXTRACT(EPOCH FROM (COALESCE(effective_to, CURRENT_TIMESTAMP) - effective_from))/86400 >= min_price_duration
+    ORDER BY price DESC
+    LIMIT 1;
+    
+    -- Если максимальная цена не найдена, ищем просто максимальную
+    IF max_price IS NULL THEN
+        SELECT price, effective_from INTO max_price, max_price_date
         FROM price_history
         WHERE listing_id = NEW.listing_id
-        ORDER BY effective_from DESC
-    )
-    SELECT 
-        MAX(price) INTO max_price
-    FROM price_data
-    WHERE duration_days >= min_price_duration; -- Учитываем только цены, которые были активны минимальный период
+          AND price > NEW.price -- Только если выше текущей
+        ORDER BY price DESC
+        LIMIT 1;
+    END IF;
     
     -- Получаем предыдущую цену (непосредственно перед текущим изменением)
     SELECT price INTO last_price
@@ -40,9 +43,9 @@ BEGIN
     ORDER BY effective_to DESC
     LIMIT 1;
     
-    -- Ключевая логика обработки скидок
+    -- Ключевая логика обработки скидок - если есть скидка от максимальной цены
     IF max_price IS NOT NULL AND NEW.price < max_price THEN
-        -- У нас есть скидка от некоторой максимальной цены
+        -- Вычисляем процент скидки
         percentage := ((NEW.price - max_price) / max_price) * 100;
         
         -- Если процент скидки значительный (>= 5%)
@@ -57,7 +60,7 @@ BEGIN
                 jsonb_build_object(
                     'discount_percent', ROUND(ABS(percentage)),
                     'previous_price', max_price,
-                    'effective_from', current_timestamp_var,
+                    'effective_from', max_price_date,
                     'has_price_history', true
                 )
             );
@@ -67,20 +70,18 @@ BEGIN
             SET metadata = metadata_json
             WHERE id = NEW.listing_id;
             
-            RAISE NOTICE 'Обновлена информация о скидке для объявления %d: %.2f -> %.2f (скидка %.0f%%)',
+            RAISE NOTICE 'Обновлена информация о скидке для объявления %: %.2f -> %.2f (скидка %.0f%%)',
                 NEW.listing_id, max_price, NEW.price, ABS(percentage);
         END IF;
     ELSIF listing_data.metadata IS NOT NULL AND listing_data.metadata ? 'discount' THEN
         -- Если скидка больше не актуальна, удаляем информацию о ней
+        -- (например, если цена выросла выше максимальной)
         metadata_json := listing_data.metadata - 'discount';
         
         -- Обновляем метаданные, удаляя информацию о скидке
         UPDATE marketplace_listings
         SET metadata = metadata_json
         WHERE id = NEW.listing_id;
-        
-        RAISE NOTICE 'Удалена информация о скидке для объявления %d - текущая цена %.2f не ниже максимальной %.2f',
-            NEW.listing_id, NEW.price, COALESCE(max_price, 0);
     END IF;
 
     RETURN NULL;

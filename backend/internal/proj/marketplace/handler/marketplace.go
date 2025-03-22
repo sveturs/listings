@@ -361,65 +361,76 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 	})
 }
 
-// В файле backend/internal/proj/marketplace/handler/marketplace.go
 func (h *MarketplaceHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
-	// Проверяем административные права
-	userID, ok := c.Locals("user_id").(int)
-	if !ok || userID == 0 {
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
-	}
+    // Проверяем административные права
+    userID, ok := c.Locals("user_id").(int)
+    if !ok || userID == 0 {
+        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+    }
 
-	// Запускаем синхронизацию в фоне
-	go func() {
-		ctx := context.Background()
+    // Запускаем синхронизацию в фоне
+    go func() {
+        ctx := context.Background()
 
-		// Получаем список всех объявлений со скидками в описании
-		rows, err := h.services.Storage().Query(ctx, `
+        // Изменённый запрос: ищем все объявления с историей цен или упоминанием скидки
+        rows, err := h.services.Storage().Query(ctx, `
             SELECT id 
             FROM marketplace_listings 
-            WHERE (description LIKE '%СКИДКА%' OR metadata->>'discount' IS NOT NULL)
+            WHERE (
+                -- Объявления со скидками в описании или метаданных
+                description LIKE '%СКИДКА%' OR metadata->>'discount' IS NOT NULL
+                OR 
+                -- Объявления, у которых есть история цен с изменениями
+                id IN (
+                    SELECT listing_id 
+                    FROM price_history
+                    GROUP BY listing_id
+                    HAVING COUNT(*) > 1
+                )
+            )
             AND status = 'active'
         `)
 
-		if err != nil {
-			log.Printf("Ошибка при поиске объявлений со скидками: %v", err)
-			return
-		}
+        if err != nil {
+            log.Printf("Ошибка при поиске объявлений со скидками: %v", err)
+            return
+        }
 
-		var listingIDs []int
-		for rows.Next() {
-			var id int
-			if err := rows.Scan(&id); err != nil {
-				log.Printf("Ошибка при сканировании ID объявления: %v", err)
-				continue
-			}
-			listingIDs = append(listingIDs, id)
-		}
-		rows.Close()
+        var listingIDs []int
+        for rows.Next() {
+            var id int
+            if err := rows.Scan(&id); err != nil {
+                log.Printf("Ошибка при сканировании ID объявления: %v", err)
+                continue
+            }
+            listingIDs = append(listingIDs, id)
+        }
+        rows.Close()
 
-		log.Printf("Найдено %d объявлений со скидками для синхронизации", len(listingIDs))
+        log.Printf("Найдено %d объявлений со скидками для синхронизации", len(listingIDs))
 
-		// Обрабатываем каждое объявление
-		for _, id := range listingIDs {
-			if err := h.marketplaceService.SynchronizeDiscountData(ctx, id); err != nil {
-				log.Printf("Ошибка синхронизации данных о скидке для объявления %d: %v", id, err)
-			} else {
-				log.Printf("Успешно синхронизированы данные о скидке для объявления %d", id)
-			}
-		}
+        // Обрабатываем каждое объявление
+        for _, id := range listingIDs {
+            if err := h.marketplaceService.SynchronizeDiscountData(ctx, id); err != nil {
+                log.Printf("Ошибка синхронизации данных о скидке для объявления %d: %v", id, err)
+            } else {
+                log.Printf("Успешно синхронизированы данные о скидке для объявления %d", id)
+            }
+        }
 
-		// Запускаем переиндексацию объявлений
-		if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
-			log.Printf("Ошибка переиндексации объявлений: %v", err)
-		} else {
-			log.Println("Синхронизация данных о скидках успешно завершена")
-		}
-	}()
+        // Запускаем переиндексацию объявлений
+        if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
+            log.Printf("Ошибка переиндексации объявлений: %v", err)
+        } else {
+            log.Println("Синхронизация данных о скидках успешно завершена")
+        }
+    }()
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Запущена синхронизация данных о скидках",
-	})
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Запущена синхронизация данных о скидках",
+    })
 }
+
 
 func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	prefix := c.Query("q", "")
