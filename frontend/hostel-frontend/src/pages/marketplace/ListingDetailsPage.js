@@ -566,60 +566,76 @@ const ListingDetailsPage = () => {
                         {listing.images && Array.isArray(listing.images) && listing.images.length > 0 ? (
                             <>
                                 <Box
-                                    component="img"
-                                    src={getImageUrl(listing.images[currentImageIndex])}
-                                    alt={listing.title}
+                                    component="div"
                                     sx={{
                                         width: '100%',
                                         height: isMobile ? '300px' : '500px',
-                                        objectFit: 'cover',
                                         borderRadius: 2,
-                                        cursor: 'pointer' // Курсор указывает, что изображение кликабельно
+                                        overflow: 'hidden',
+                                        position: 'relative',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: '#f5f5f5'
                                     }}
-                                    onClick={handleMainImageClick} // Открываем галерею при клике
-                                />
-                                {listing.images.length > 1 && (
-                                    <>
-                                        <IconButton
-                                            aria-label={t('listings.details.image.prev')}
-                                            sx={{
-                                                position: 'absolute',
-                                                left: 8,
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                bgcolor: 'background.paper',
-                                                '&:hover': { bgcolor: 'background.paper' }
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation(); // Предотвращаем открытие галереи
-                                                setCurrentImageIndex(prev =>
-                                                    prev > 0 ? prev - 1 : listing.images.length - 1
-                                                );
-                                            }}
-                                        >
-                                            <ChevronLeft />
-                                        </IconButton>
-                                        <IconButton
-                                            aria-label={t('listings.details.image.next')}
-                                            sx={{
-                                                position: 'absolute',
-                                                right: 8,
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                bgcolor: 'background.paper',
-                                                '&:hover': { bgcolor: 'background.paper' }
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation(); // Предотвращаем открытие галереи
-                                                setCurrentImageIndex(prev =>
-                                                    prev < listing.images.length - 1 ? prev + 1 : 0
-                                                );
-                                            }}
-                                        >
-                                            <ChevronRight />
-                                        </IconButton>
-                                    </>
-                                )}
+                                >
+                                    <Box
+                                        component="img"
+                                        src={getImageUrl(listing.images[currentImageIndex])}
+                                        alt={listing.title}
+                                        sx={{
+                                            maxWidth: '100%',
+                                            maxHeight: '100%',
+                                            objectFit: 'contain',
+                                            cursor: 'pointer',
+                                            width: 'auto',
+                                            height: 'auto'
+                                        }}
+                                        onClick={handleMainImageClick}
+                                    />
+                                    {listing.images.length > 1 && (
+                                        <>
+                                            <IconButton
+                                                aria-label={t('listings.details.image.prev')}
+                                                sx={{
+                                                    position: 'absolute',
+                                                    left: 8,
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    bgcolor: 'background.paper',
+                                                    '&:hover': { bgcolor: 'background.paper' }
+                                                }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation(); // Предотвращаем открытие галереи
+                                                    setCurrentImageIndex(prev =>
+                                                        prev > 0 ? prev - 1 : listing.images.length - 1
+                                                    );
+                                                }}
+                                            >
+                                                <ChevronLeft />
+                                            </IconButton>
+                                            <IconButton
+                                                aria-label={t('listings.details.image.next')}
+                                                sx={{
+                                                    position: 'absolute',
+                                                    right: 8,
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    bgcolor: 'background.paper',
+                                                    '&:hover': { bgcolor: 'background.paper' }
+                                                }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation(); // Предотвращаем открытие галереи
+                                                    setCurrentImageIndex(prev =>
+                                                        prev < listing.images.length - 1 ? prev + 1 : 0
+                                                    );
+                                                }}
+                                            >
+                                                <ChevronRight />
+                                            </IconButton>
+                                        </>
+                                    )}
+                                </Box>
                             </>
                         ) : (
                             <Box
@@ -642,33 +658,52 @@ const ListingDetailsPage = () => {
 
                     {/* Thumbnails */}
                     {listing.images && listing.images.length > 1 && (
-                        <ImageList
-                            sx={{ mt: 2, maxHeight: 100 }}
-                            cols={Math.min(listing.images.length, 6)}
-                            rowHeight={100}
-                        >
-                            {listing.images.map((image, index) => (
-                                <ImageListItem
-                                    key={image.id}
-                                    sx={{
-                                        cursor: 'pointer',
-                                        opacity: currentImageIndex === index ? 1 : 0.6,
-                                        transition: 'opacity 0.2s',
-                                        '&:hover': { opacity: 1 }
-                                    }}
-                                    onClick={() => setCurrentImageIndex(index)}
-                                >
-                                    <img
-                                        src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${image.file_path}`}
-                                        alt={t('listings.details.image.preview', { number: index + 1 })}
-                                        style={{
-                                            height: '100%',
-                                            objectFit: 'cover'
+                        <Box sx={{ mt: 2, overflowX: 'auto' }}>
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                sx={{
+                                    py: 1,
+                                    minHeight: 100
+                                }}
+                            >
+                                {listing.images.map((image, index) => (
+                                    <Box
+                                        key={image.id || index}
+                                        sx={{
+                                            width: 100,
+                                            height: 100,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            backgroundColor: '#f5f5f5',
+                                            borderRadius: 1,
+                                            overflow: 'hidden',
+                                            opacity: currentImageIndex === index ? 1 : 0.6,
+                                            border: currentImageIndex === index ? '2px solid #1976d2' : 'none',
+                                            transition: 'opacity 0.2s',
+                                            '&:hover': { opacity: 1 },
+                                            flexShrink: 0
                                         }}
-                                    />
-                                </ImageListItem>
-                            ))}
-                        </ImageList>
+                                        onClick={() => setCurrentImageIndex(index)}
+                                    >
+                                        <Box
+                                            component="img"
+                                            src={getImageUrl(image)}
+                                            alt={t('listings.details.image.preview', { number: index + 1 })}
+                                            sx={{
+                                                maxWidth: '100%',
+                                                maxHeight: '100%',
+                                                width: 'auto',
+                                                height: 'auto',
+                                                objectFit: 'contain'
+                                            }}
+                                        />
+                                    </Box>
+                                ))}
+                            </Stack>
+                        </Box>
                     )}
 
                     {/* Listing Description */}
@@ -847,7 +882,7 @@ const ListingDetailsPage = () => {
                                     <Card elevation={2} sx={{ mt: 2 }}>
                                         <CardContent>
                                             <Typography variant="h6" gutterBottom>
-                                                Товар из магазина
+                                                {t('listings.details.storeProduct')}
                                             </Typography>
                                             <Button
                                                 variant="contained"
@@ -857,7 +892,7 @@ const ListingDetailsPage = () => {
                                                 to={`/shop/${listing.storefront_id}`}
                                                 sx={{ mt: 1 }}
                                             >
-                                                Перейти в магазин
+                                                {t('listings.details.goToStore')}
                                             </Button>
                                         </CardContent>
                                     </Card>
@@ -1023,6 +1058,8 @@ const ListingDetailsPage = () => {
                     galleryMode="fullscreen"
                 />
             )}
+
+            {/* Модальное окно истории цен */}
             <Modal
                 open={isPriceHistoryOpen} // Убедитесь, что здесь используется правильное имя переменной состояния
                 onClose={() => {
@@ -1054,7 +1091,7 @@ const ListingDetailsPage = () => {
 
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
                         <Button onClick={() => setIsPriceHistoryOpen(false)}>
-                            {t('common.close')}
+                            {t('common.close', { defaultValue: 'Закрыть' })}
                         </Button>
                     </Box>
                 </Box>
