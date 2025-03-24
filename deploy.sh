@@ -49,8 +49,17 @@ if [ -d "/tmp/hostel-backup/conf" ]; then
   cp -r /tmp/hostel-backup/conf certbot/ 2>/dev/null || true
 fi
 
-# Удаляем старые образы (но не удаляем контейнеры и данные)
-docker image prune -f
+# Удаляем старые образы и принудительно пересоздаем контейнеры
+echo "Останавливаем сервисы..."
+docker-compose -f docker-compose.prod.yml down --remove-orphans
+
+# Принудительно удаляем все связанные контейнеры, но оставляем тома нетронутыми
+echo "Удаляем старые контейнеры, сохраняя тома с данными..."
+docker-compose -f docker-compose.prod.yml rm -f
+
+# Удаляем старые образы, чтобы принудительно пересобрать их
+echo "Удаляем старые образы для принудительной пересборки..."
+docker-compose -f docker-compose.prod.yml build --no-cache
 
 # Собираем фронтенд
 echo "Собираем фронтенд..."
@@ -139,11 +148,7 @@ fi
 
 cd ../..
 
-# Останавливаем только контейнеры, не удаляя тома
-echo "Останавливаем сервисы (без удаления томов)..."
-docker-compose -f docker-compose.prod.yml down
-
-# Запускаем с обновленными образами
+# Запускаем с полностью обновленными образами
 echo "Запускаем сервисы с обновленными образами..."
 docker-compose -f docker-compose.prod.yml up --build -d
 
