@@ -309,6 +309,223 @@ var (
 	categoryTreeLastUpdate time.Time
 	categoryTreeMutex      sync.RWMutex
 )
+// GetSimilarListings возвращает похожие объявления
+func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
+    listingID, err := c.ParamsInt("id")
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+    }
+    
+    limit := c.QueryInt("limit", 8) // По умолчанию ограничиваем 8 похожими объявлениями
+    
+    // Получаем исходное объявление
+    listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+    if err != nil {
+        log.Printf("Ошибка при получении объявления: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить объявление")
+    }
+    
+    // Формируем запрос для расширенного поиска в OpenSearch
+    // Используем multi-match для поиска по заголовку и описанию
+    matchQuery := make([]map[string]interface{}, 0)
+    
+    // Добавляем поиск по названию объявления
+    if listing.Title != "" {
+        // Добавляем запрос на похожие названия с небольшой нечеткостью
+        matchQuery = append(matchQuery, map[string]interface{}{
+            "match": map[string]interface{}{
+                "title": map[string]interface{}{
+                    "query": listing.Title,
+                    "boost": 3.0, // Высокий вес для названия
+                    "fuzziness": "AUTO",
+                },
+            },
+        })
+    }
+    
+    // Если есть описание, добавляем его в поиск
+    if len(listing.Description) > 20 {
+        // Берем только первые 200 символов для более точного соответствия
+        descriptionExcerpt := listing.Description
+        if len(descriptionExcerpt) > 200 {
+            descriptionExcerpt = descriptionExcerpt[:200]
+        }
+        
+        matchQuery = append(matchQuery, map[string]interface{}{
+            "match": map[string]interface{}{
+                "description": map[string]interface{}{
+                    "query": descriptionExcerpt,
+                    "boost": 1.0,
+                    "fuzziness": "AUTO",
+                },
+            },
+        })
+    }
+    
+    // Строим сложный запрос для OpenSearch
+    query := map[string]interface{}{
+        "query": map[string]interface{}{
+            "bool": map[string]interface{}{
+                "should": matchQuery,
+                "must": []map[string]interface{}{
+                    {
+                        "term": map[string]interface{}{
+                            "category_id": listing.CategoryID,
+                        },
+                    },
+                    {
+                        "term": map[string]interface{}{
+                            "status": "active",
+                        },
+                    },
+                },
+                "must_not": []map[string]interface{}{
+                    {
+                        "term": map[string]interface{}{
+                            "id": listingID, // Исключаем текущее объявление
+                        },
+                    },
+                },
+                "minimum_should_match": 1,
+            },
+        },
+        "size": limit,
+    }
+    
+    // Добавляем ценовой диапазон если есть цена
+    if listing.Price > 0 {
+        // Определяем диапазон цен (например, ±30% от текущей цены)
+        minPrice := listing.Price * 0.7
+        maxPrice := listing.Price * 1.3
+        
+        priceQuery := map[string]interface{}{
+            "range": map[string]interface{}{
+                "price": map[string]interface{}{
+                    "gte": minPrice,
+                    "lte": maxPrice,
+                    "boost": 1.5, // Придаем вес объявлениям с похожей ценой
+                },
+            },
+        }
+        
+        shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
+        shouldClause = append(shouldClause, priceQuery)
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
+    }
+    
+    // Учитываем атрибуты для повышения релевантности
+    if len(listing.Attributes) > 0 {
+        for _, attr := range listing.Attributes {
+            // Выбираем только значимые атрибуты
+            if isSignificantAttribute(attr.AttributeName) && attr.DisplayValue != "" {
+                attrQuery := map[string]interface{}{
+                    "nested": map[string]interface{}{
+                        "path": "attributes",
+                        "query": map[string]interface{}{
+                            "bool": map[string]interface{}{
+                                "must": []map[string]interface{}{
+                                    {
+                                        "term": map[string]interface{}{
+                                            "attributes.attribute_name": attr.AttributeName,
+                                        },
+                                    },
+                                    {
+                                        "match": map[string]interface{}{
+                                            "attributes.display_value": map[string]interface{}{
+                                                "query": attr.DisplayValue,
+                                                "boost": 2.0, // Высокий вес для совпадения по атрибутам
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        "boost": 2.5,
+                    },
+                }
+                
+                shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
+                shouldClause = append(shouldClause, attrQuery)
+                query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
+            }
+        }
+    }
+    
+    // Формируем параметры поиска для OpenSearch
+    searchParams := &search.SearchParams{
+        Page: 1,
+        Size: limit,
+        CustomQuery: query,
+    }
+    
+    // Выполняем поиск с использованием OpenSearch
+    var similarListings []*models.MarketplaceListing
+    result, err := h.marketplaceService.Storage().SearchListings(c.Context(), searchParams)
+    
+    if err != nil {
+        log.Printf("Ошибка поиска похожих объявлений через OpenSearch: %v", err)
+        
+        // Если OpenSearch поиск не удался, используем запасной вариант
+        // с простым поиском по категории
+        fallbackParams := &search.ServiceParams{
+            CategoryID: strconv.Itoa(listing.CategoryID),
+            Size: limit + 1,
+            Page: 1,
+            Sort: "date_desc",
+        }
+        
+        fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
+        if fallbackErr != nil {
+            log.Printf("Ошибка запасного поиска: %v", fallbackErr)
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить похожие объявления")
+        }
+        
+        // Фильтруем результаты, убирая исходное объявление
+        for _, item := range fallbackResult.Items {
+            if item.ID != listingID {
+                similarListings = append(similarListings, item)
+                if len(similarListings) >= limit {
+                    break
+                }
+            }
+        }
+    } else {
+        // Используем результаты из OpenSearch
+        similarListings = result.Listings
+    }
+    
+    log.Printf("Найдено %d похожих объявлений для объявления ID=%d", len(similarListings), listingID)
+    
+    return utils.SuccessResponse(c, similarListings)
+}
+
+// isSignificantAttribute определяет, является ли атрибут значимым для поиска похожих объявлений
+func isSignificantAttribute(attrName string) bool {
+    // Список значимых атрибутов, влияющих на определение похожести
+    significantAttrs := map[string]bool{
+        "make":             true,
+        "model":            true,
+        "brand":            true,
+        "year":             true,
+        "manufacturer":     true,
+        "type":             true,
+        "category":         true,
+        "rooms":            true,
+        "property_type":    true,
+        "body_type":        true,
+        "engine_capacity":  true,
+        "processor":        true,
+        "screen_size":      true,
+        "memory":           true,
+        "ram":              true,
+        "os":               true,
+        "color":            true,
+        "material":         true,
+        "size":             true,
+    }
+    
+    return significantAttrs[attrName]
+}
 
 // GetCategoryAttributes возвращает атрибуты для указанной категории
 func (h *MarketplaceHandler) GetCategoryAttributes(c *fiber.Ctx) error {

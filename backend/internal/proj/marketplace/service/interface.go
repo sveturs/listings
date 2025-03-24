@@ -28,7 +28,8 @@ type MarketplaceServiceInterface interface {
     RefreshCategoryListingCounts(ctx context.Context) error
     GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error)
     SynchronizeDiscountData(ctx context.Context, listingID int) error
-    
+    GetSimilarListings(ctx context.Context, listingID int, limit int) ([]*models.MarketplaceListing, error)
+
     // OpenSearch методы
     SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error)
     GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error)

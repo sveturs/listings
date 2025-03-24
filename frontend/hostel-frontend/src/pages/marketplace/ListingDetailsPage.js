@@ -18,6 +18,7 @@ import { Store } from 'lucide-react';
 import GalleryViewer from '../../components/shared/GalleryViewer';
 import UserRating from '../../components/user/UserRating';
 import AutoDetails from '../../components/marketplace/AutoDetails';
+import SimilarListings from '../../components/marketplace/SimilarListings';
 
 import {
     MapPin,
@@ -1096,6 +1097,7 @@ const ListingDetailsPage = () => {
                     </Box>
                 </Box>
             </Modal>
+            <SimilarListings listingId={id} />
         </Container>
     );
 };

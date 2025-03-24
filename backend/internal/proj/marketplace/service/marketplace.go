@@ -18,6 +18,7 @@ import (
 	"time"
 	"regexp"
 	"sort"
+    
 )
 
 type MarketplaceService struct {
@@ -83,7 +84,72 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 
 	return listingID, nil
 }
+func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID int, limit int) ([]*models.MarketplaceListing, error) {
+    // Получаем исходное объявление
+    listing, err := s.GetListingByID(ctx, listingID)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка получения объявления: %w", err)
+    }
+    
+    // Формируем параметры поиска
+    params := &search.ServiceParams{
+        CategoryID: strconv.Itoa(listing.CategoryID),
+        Size: limit,
+        Page: 1,
+        Sort: "date_desc", // Сортировка по дате по умолчанию
+    }
+    
+    // Если есть атрибуты, можно использовать их для уточнения поиска
+    if len(listing.Attributes) > 0 {
+        attributeFilters := make(map[string]string)
+        // Добавляем наиболее важные атрибуты для поиска похожих объявлений
+        for _, attr := range listing.Attributes {
+            // Выбираем только ключевые атрибуты для повышения релевантности
+            if isKeyAttribute(attr.AttributeName) && attr.DisplayValue != "" {
+                attributeFilters[attr.AttributeName] = attr.DisplayValue
+            }
+        }
+        if len(attributeFilters) > 0 {
+            params.AttributeFilters = attributeFilters
+        }
+    }
+    
+    // Выполняем поиск похожих объявлений
+    results, err := s.SearchListingsAdvanced(ctx, params)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка поиска похожих объявлений: %w", err)
+    }
+    
+    // Фильтруем результаты, убирая исходное объявление и ограничивая количество
+    var similarListings []*models.MarketplaceListing
+    for _, item := range results.Items {
+        if item.ID != listingID {
+            similarListings = append(similarListings, item)
+        }
+        if len(similarListings) >= limit {
+            break
+        }
+    }
+    
+    return similarListings, nil
+}
 
+// Вспомогательная функция для определения ключевых атрибутов
+func isKeyAttribute(attrName string) bool {
+    // Список ключевых атрибутов для поиска похожих товаров
+    keyAttributes := map[string]bool{
+        "make": true,
+        "model": true,
+        "brand": true,
+        "category": true,
+        "type": true,
+        "rooms": true,
+        "property_type": true,
+        "body_type": true,
+    }
+    
+    return keyAttributes[attrName]
+}
 func (s *MarketplaceService) GetSubcategories(ctx context.Context, parentID string, limit, offset int) ([]models.CategoryTreeNode, error) {
 	var parentIDInt *int
 

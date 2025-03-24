@@ -194,6 +194,7 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
     marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", s.marketplace.Marketplace.GetPriceHistory)
+	marketplace.Get("/listings/:id/similar", s.marketplace.Marketplace.GetSimilarListings)
 
 
 	// Public review routes

@@ -114,6 +114,8 @@ type Storage interface {
 	DeleteImportSource(ctx context.Context, id int) error
 
 	// OpenSearch методы
+	SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
+
 	SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
 	SuggestListings(ctx context.Context, prefix string, size int) ([]string, error)
 	ReindexAllListings(ctx context.Context) error

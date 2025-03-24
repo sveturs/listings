@@ -426,7 +426,13 @@ func (db *Database) UpdateNotificationSettings(ctx context.Context, s *models.No
 func (db *Database) SaveTelegramConnection(ctx context.Context, userID int, chatID string, username string) error {
 	return db.notificationsDB.SaveTelegramConnection(ctx, userID, chatID, username)
 }
-
+// SearchListings выполняет поиск объявлений с пользовательским запросом
+func (db *Database) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
+    if db.osMarketplaceRepo == nil {
+        return nil, fmt.Errorf("OpenSearch не настроен")
+    }
+    return db.osMarketplaceRepo.SearchListings(ctx, params)
+}
 func (db *Database) GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error) {
 	return db.notificationsDB.GetTelegramConnection(ctx, userID)
 }
