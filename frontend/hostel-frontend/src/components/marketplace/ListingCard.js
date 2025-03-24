@@ -182,12 +182,14 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
 
     const getDisplayLocation = () => {
         if (listing.city) return listing.city;
+
         if (listing.location) {
             const locationParts = listing.location.split(',');
             return locationParts.length > 0 ? locationParts[0].trim() : listing.location;
         }
-        return t('listings.location.unknown'); // Используем перевод вместо хардкода
-        };
+
+        return t('listings.location.unknown');
+    };
 
     const renderPriceSection = () => {
         const discount = getDiscountInfo();
@@ -253,7 +255,7 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                         fontWeight: 'bold',
                         cursor: 'pointer',
                         pointerEvents: 'auto',
-                        
+
                     }}
                     onClick={handleShopButtonClick}
                     data-shop-button="true"

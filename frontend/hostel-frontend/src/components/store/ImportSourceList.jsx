@@ -97,7 +97,7 @@ const ImportSourceList = ({ sources, storefrontId, onUpdate, onDelete, onFetchHi
         <Box mb={4}>
             <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
                 <Typography variant="h6" gutterBottom>
-                    {t('marketplace:store.import.sources')}222
+                    {t('marketplace:store.import.sources')}
                 </Typography>
 
                 <Button

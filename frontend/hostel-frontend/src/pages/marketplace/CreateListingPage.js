@@ -226,12 +226,39 @@ const CreateListing = () => {
             return newAttr;
         });
     };
+ 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
         setSuccess(false);
 
         try {
+            // Получаем профиль пользователя для получения города, если не указан
+            let userCity = listing.city;
+            let userCountry = listing.country;
+
+            // Если координаты или город не указаны, пытаемся получить из профиля
+            if ((!listing.latitude || !listing.longitude || !listing.city) && !locationWarning) {
+                try {
+                    const profileResponse = await axios.get('/api/v1/users/profile');
+                    const userProfile = profileResponse.data.data;
+
+                    // Используем город из профиля, если он есть и не был указан
+                    if (!listing.city && userProfile.city) {
+                        userCity = userProfile.city;
+                    }
+
+                    // Используем страну из профиля, если она есть и не была указана
+                    if (!listing.country && userProfile.country) {
+                        userCountry = userProfile.country;
+                    }
+
+                    setLocationWarning(true);
+                } catch (profileError) {
+                    console.error("Failed to fetch user profile:", profileError);
+                }
+            }
+
             // Преобразуем атрибуты перед отправкой
             const processedAttributes = prepareAttributesForSubmission(attributeValues);
 
@@ -240,14 +267,18 @@ const CreateListing = () => {
                 ...listing,
                 price: parseFloat(listing.price),
                 original_language: i18n.language,
-                attributes: processedAttributes
+                attributes: processedAttributes,
+                city: userCity || listing.city,
+                country: userCountry || listing.country
             });
 
             const response = await axios.post("/api/v1/marketplace/listings", {
                 ...listing,
                 price: parseFloat(listing.price),
                 original_language: i18n.language,
-                attributes: processedAttributes
+                attributes: processedAttributes,
+                city: userCity || listing.city,
+                country: userCountry || listing.country
             });
 
             const listingId = response.data.data.id;

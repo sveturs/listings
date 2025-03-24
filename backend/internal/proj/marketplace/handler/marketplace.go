@@ -50,6 +50,27 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 	// Устанавливаем ID пользователя
 	listing.UserID = userID
 
+	// Проверяем, указаны ли город и страна в объявлении
+	// Если нет, попробуем получить их из профиля пользователя
+	if (listing.City == "" || listing.Country == "") && (listing.Latitude == nil || listing.Longitude == nil) {
+		userProfile, err := h.services.User().GetUserProfile(c.Context(), userID)
+		if err == nil && userProfile != nil {
+			// Устанавливаем город из профиля, если не указан в объявлении
+			if listing.City == "" && userProfile.City != "" {
+				listing.City = userProfile.City
+				log.Printf("Using city from user profile: %s", userProfile.City)
+			}
+			
+			// Устанавливаем страну из профиля, если не указана в объявлении
+			if listing.Country == "" && userProfile.Country != "" {
+				listing.Country = userProfile.Country
+				log.Printf("Using country from user profile: %s", userProfile.Country)
+			}
+		} else {
+			log.Printf("Could not get user profile or profile has no location info: %v", err)
+		}
+	}
+
 	// Парсим атрибуты из запроса (оставляем как есть)
 	var requestBody map[string]interface{}
 	if err := json.Unmarshal(c.Body(), &requestBody); err == nil {
@@ -303,7 +324,6 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 		"message": "Объявление успешно создано",
 	})
 }
-
 var (
 	categoryTreeCache      []models.CategoryTreeNode
 	categoryTreeLastUpdate time.Time

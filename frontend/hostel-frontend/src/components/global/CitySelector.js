@@ -1,5 +1,5 @@
 // frontend/hostel-frontend/src/components/global/CitySelector.js
-import { MapPin, Navigation, Search } from 'lucide-react';
+import { MapPin, Navigation, Search, Save } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
 import {
     Box,
@@ -13,19 +13,29 @@ import {
     Button,
     Divider,
     CircularProgress,
-    Tooltip
+    Tooltip,
+    Checkbox,
+    FormControlLabel,
+    Snackbar,
+    Alert
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
 import { useLocation } from '../../contexts/LocationContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const CitySelector = ({ isMobile = false }) => {
     const { t } = useTranslation('common');
     const { userLocation, setCity, detectUserLocation, isGeolocating } = useLocation();
+    const { user, isAuthenticated } = useAuth();
     const [open, setOpen] = useState(false);
     const [searchValue, setSearchValue] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [saveToProfile, setSaveToProfile] = useState(true);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const anchorRef = useRef(null);
 
     const handleSearch = async (value) => {
@@ -84,7 +94,7 @@ const CitySelector = ({ isMobile = false }) => {
         setOpen(false);
     };
 
-    const handleSelectCity = (city) => {
+    const handleSelectCity = async (city) => {
         // Явно устанавливаем город через контекст
         setCity({
             city: city.city,
@@ -93,16 +103,72 @@ const CitySelector = ({ isMobile = false }) => {
             lon: city.lon
         });
         
+        // Если пользователь авторизован и выбрал опцию сохранения в профиль
+        if (isAuthenticated && saveToProfile) {
+            try {
+                await updateUserProfile(city);
+                // Показываем уведомление об успешном сохранении
+                setSnackbarMessage(t('location.savedToProfile', { defaultValue: 'Город сохранен в профиле' }));
+                setSnackbarSeverity('success');
+                setSnackbarOpen(true);
+            } catch (error) {
+                console.error('Error updating user profile:', error);
+                // Показываем уведомление об ошибке
+                setSnackbarMessage(t('location.errorSavingToProfile', { defaultValue: 'Ошибка сохранения города в профиле' }));
+                setSnackbarSeverity('error');
+                setSnackbarOpen(true);
+            }
+        }
+        
         handleClose();
+    };
+
+    // Функция для обновления профиля пользователя
+    const updateUserProfile = async (city) => {
+        await axios.put('/api/v1/users/profile', {
+            city: city.city,
+            country: city.country
+        });
     };
 
     const handleUseLocation = async () => {
         try {
             await detectUserLocation();
+            
+            // Если пользователь авторизован и выбрал опцию сохранения в профиль
+            if (isAuthenticated && saveToProfile && userLocation) {
+                // Создаем небольшую задержку, чтобы userLocation успел обновиться
+                setTimeout(async () => {
+                    try {
+                        await updateUserProfile({
+                            city: userLocation.city,
+                            country: userLocation.country
+                        });
+                        // Показываем уведомление об успешном сохранении
+                        setSnackbarMessage(t('location.savedToProfile', { defaultValue: 'Город сохранен в профиле' }));
+                        setSnackbarSeverity('success');
+                        setSnackbarOpen(true);
+                    } catch (error) {
+                        console.error('Error updating user profile:', error);
+                        // Показываем уведомление об ошибке
+                        setSnackbarMessage(t('location.errorSavingToProfile', { defaultValue: 'Ошибка сохранения города в профиле' }));
+                        setSnackbarSeverity('error');
+                        setSnackbarOpen(true);
+                    }
+                }, 500);
+            }
+            
             handleClose();
         } catch (error) {
             console.error('Error getting location:', error);
         }
+    };
+
+    const handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbarOpen(false);
     };
 
     return (
@@ -186,6 +252,24 @@ const CitySelector = ({ isMobile = false }) => {
                             ? t('location.detectingLocation', { defaultValue: 'Определение местоположения...' })
                             : t('location.useCurrentLocation', { defaultValue: 'Использовать моё местоположение' })}
                     </Button>
+
+                    {isAuthenticated && (
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={saveToProfile}
+                                    onChange={(e) => setSaveToProfile(e.target.checked)}
+                                    size="small"
+                                />
+                            }
+                            label={
+                                <Typography variant="body2">
+                                    {t('location.saveToProfile', { defaultValue: 'Сохранить в профиле' })}
+                                </Typography>
+                            }
+                            sx={{ mt: 1 }}
+                        />
+                    )}
                 </Box>
 
                 <Divider />
@@ -239,6 +323,17 @@ const CitySelector = ({ isMobile = false }) => {
                     )}
                 </Box>
             </Popover>
+
+            <Snackbar 
+                open={snackbarOpen} 
+                autoHideDuration={4000} 
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </>
     );
 };

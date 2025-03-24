@@ -17,6 +17,14 @@ type Storefront struct {
 	CreationTransactionID *int     `json:"creation_transaction_id,omitempty"`
 	CreatedAt           time.Time `json:"created_at"`
 	UpdatedAt           time.Time `json:"updated_at"`
+	Phone                 string          `json:"phone,omitempty"`
+    Email                 string          `json:"email,omitempty"`
+    Website               string          `json:"website,omitempty"`
+    Address               string          `json:"address,omitempty"`
+    City                  string          `json:"city,omitempty"`
+    Country               string          `json:"country,omitempty"`
+    Latitude              *float64        `json:"latitude,omitempty"`
+    Longitude             *float64        `json:"longitude,omitempty"`
 }
 
 // ImportSource представляет источник данных для импорта
@@ -54,6 +62,14 @@ type StorefrontCreate struct {
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description"`
 	Logo        []byte `json:"-"`
+	Phone       string  `json:"phone,omitempty"`
+    Email       string  `json:"email,omitempty"`
+    Website     string  `json:"website,omitempty"`
+    Address     string  `json:"address,omitempty"`
+    City        string  `json:"city,omitempty"`
+    Country     string  `json:"country,omitempty"`
+    Latitude    *float64 `json:"latitude,omitempty"`
+    Longitude   *float64 `json:"longitude,omitempty"`
 }
 
 // ImportSourceCreate содержит данные для создания источника импорта

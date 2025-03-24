@@ -6,15 +6,25 @@ import (
     "fmt"
     "strings"
     "backend/internal/domain/models"
+    "database/sql"
 )
+
+// backend/internal/proj/users/storage/postgres/user_profile.go
+
+// backend/internal/proj/users/storage/postgres/user_profile.go
 
 func (s *Storage) GetUserProfile(ctx context.Context, userID int) (*models.UserProfile, error) {
     profile := &models.UserProfile{}
+    
+    // Используем нативные nullable типы для полей, которые могут быть NULL
+    var city, country sql.NullString
+    
     err := s.pool.QueryRow(ctx, `
         SELECT 
             id, name, email, google_id, picture_url, created_at,
             phone, bio, notification_email, 
-            timezone, last_seen, account_status, settings
+            timezone, last_seen, account_status, settings,
+            city, country
         FROM users 
         WHERE id = $1
     `, userID).Scan(
@@ -22,12 +32,24 @@ func (s *Storage) GetUserProfile(ctx context.Context, userID int) (*models.UserP
         &profile.CreatedAt, &profile.Phone, &profile.Bio, &profile.NotificationEmail,
         &profile.Timezone, &profile.LastSeen,
         &profile.AccountStatus, &profile.Settings,
+        &city, &country,
     )
     if err != nil {
         return nil, err
     }
+    
+    // Преобразуем nullable типы в обычные строки
+    if city.Valid {
+        profile.City = city.String
+    }
+    if country.Valid {
+        profile.Country = country.String
+    }
+    
     return profile, nil
 }
+
+// backend/internal/proj/users/storage/postgres/user_profile.go
 
 func (s *Storage) UpdateUserProfile(ctx context.Context, userID int, update *models.UserProfileUpdate) error {
     var setFields []string
@@ -57,6 +79,17 @@ func (s *Storage) UpdateUserProfile(ctx context.Context, userID int, update *mod
     if update.Settings != nil {
         setFields = append(setFields, fmt.Sprintf("settings = $%d", paramCount))
         params = append(params, update.Settings)
+        paramCount++
+    }
+    // Добавляем новые поля для города и страны
+    if update.City != nil {
+        setFields = append(setFields, fmt.Sprintf("city = $%d", paramCount))
+        params = append(params, update.City)
+        paramCount++
+    }
+    if update.Country != nil {
+        setFields = append(setFields, fmt.Sprintf("country = $%d", paramCount))
+        params = append(params, update.Country)
         paramCount++
     }
 

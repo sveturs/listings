@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+
 import {
     Box,
     TextField,
@@ -10,14 +12,17 @@ import {
     Alert,
     Stack,
     Avatar,
-    IconButton
+    IconButton,
+    Divider
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLocation } from '../../contexts/LocationContext';
 import axios from '../../api/axios';
 
 const UserProfile = ({ onClose }) => {
     const { user } = useAuth();
+    const { userLocation } = useLocation();
     const [profile, setProfile] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState('');
@@ -27,7 +32,9 @@ const UserProfile = ({ onClose }) => {
         bio: '',
         notification_email: true,
         notification_push: true,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        city: '',
+        country: ''
     });
 
     useEffect(() => {
@@ -40,7 +47,9 @@ const UserProfile = ({ onClose }) => {
                     bio: response.data.data.bio || '',
                     notification_email: response.data.data.notification_email,
                     notification_push: response.data.data.notification_push,
-                    timezone: response.data.data.timezone
+                    timezone: response.data.data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    city: response.data.data.city || '',
+                    country: response.data.data.country || ''
                 });
             } catch (err) {
                 setError('Ошибка загрузки профиля');
@@ -48,6 +57,17 @@ const UserProfile = ({ onClose }) => {
         };
         fetchProfile();
     }, []);
+
+    // Используем данные местоположения, если они доступны и нет данных в профиле
+    useEffect(() => {
+        if (userLocation && (!formData.city || !formData.country)) {
+            setFormData(prev => ({
+                ...prev,
+                city: prev.city || userLocation.city || '',
+                country: prev.country || userLocation.country || ''
+            }));
+        }
+    }, [userLocation, formData.city, formData.country]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -58,6 +78,10 @@ const UserProfile = ({ onClose }) => {
             await axios.put('/api/v1/users/profile', formData);
             setSuccess('Профиль успешно обновлен');
             setIsEditing(false);
+            
+            // Обновляем данные профиля после сохранения
+            const response = await axios.get('/api/v1/users/profile');
+            setProfile(response.data.data);
         } catch (err) {
             setError(err.response?.data?.error || 'Ошибка обновления профиля');
         }
@@ -95,6 +119,11 @@ const UserProfile = ({ onClose }) => {
                             <Typography variant="body2" color="text.secondary">
                                 {profile.email}
                             </Typography>
+                            {profile.city && (
+                                <Typography variant="body2" color="text.secondary">
+                                    {profile.city}{profile.country ? `, ${profile.country}` : ''}
+                                </Typography>
+                            )}
                         </Box>
                     </Box>
 
@@ -127,7 +156,30 @@ const UserProfile = ({ onClose }) => {
                                 fullWidth
                             />
 
+                            <Divider sx={{ my: 1 }} />
+                            <Typography variant="subtitle1">Местоположение</Typography>
 
+                            <TextField
+                                label="Город"
+                                value={formData.city}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    city: e.target.value
+                                })}
+                                disabled={!isEditing}
+                                fullWidth
+                            />
+
+                            <TextField
+                                label="Страна"
+                                value={formData.country}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    country: e.target.value
+                                })}
+                                disabled={!isEditing}
+                                fullWidth
+                            />
 
                             {isEditing ? (
                                 <Box sx={{ display: 'flex', gap: 1 }}>
