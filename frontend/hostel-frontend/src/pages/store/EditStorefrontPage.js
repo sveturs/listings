@@ -11,9 +11,11 @@ import {
     Box,
     Grid,
     CircularProgress,
-    Alert
+    Alert,
+    Divider
 } from '@mui/material';
 import axios from '../../api/axios';
+import LocationPicker from '../../components/global/LocationPicker';
 
 const EditStorefrontPage = () => {
     const { t } = useTranslation(['common', 'marketplace']);
@@ -25,7 +27,15 @@ const EditStorefrontPage = () => {
     const [storefront, setStorefront] = useState({
         name: '',
         description: '',
-        slug: ''
+        slug: '',
+        phone: '',
+        email: '',
+        website: '',
+        address: '',
+        city: '',
+        country: '',
+        latitude: null,
+        longitude: null
     });
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -78,6 +88,17 @@ const EditStorefrontPage = () => {
         }));
     };
 
+    const handleLocationSelect = (location) => {
+        setStorefront(prev => ({
+            ...prev,
+            address: location.formatted_address || '',
+            city: location.address_components?.city || '',
+            country: location.address_components?.country || '',
+            latitude: location.latitude,
+            longitude: location.longitude
+        }));
+    };
+
     if (loading) {
         return (
             <Container maxWidth="md" sx={{ py: 4, textAlign: 'center' }}>
@@ -108,6 +129,12 @@ const EditStorefrontPage = () => {
             <Paper sx={{ p: 3 }}>
                 <form onSubmit={handleSubmit}>
                     <Grid container spacing={3}>
+                        <Grid item xs={12}>
+                            <Typography variant="h6" gutterBottom>
+                                {t('marketplace:store.settings.basic')}
+                            </Typography>
+                        </Grid>
+                        
                         <Grid item xs={12}>
                             <TextField
                                 name="name"
@@ -144,9 +171,72 @@ const EditStorefrontPage = () => {
                                 disabled={saving}
                             />
                         </Grid>
+                        
+                        <Grid item xs={12}>
+                            <Divider sx={{ my: 2 }} />
+                            <Typography variant="h6" gutterBottom>
+                                {t('marketplace:store.settings.contactInfo')}
+                            </Typography>
+                        </Grid>
+                        
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                name="phone"
+                                label={t('marketplace:store.settings.phone')}
+                                value={storefront.phone || ''}
+                                onChange={handleChange}
+                                fullWidth
+                                disabled={saving}
+                            />
+                        </Grid>
+                        
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                name="email"
+                                label={t('marketplace:store.settings.email')}
+                                value={storefront.email || ''}
+                                onChange={handleChange}
+                                fullWidth
+                                disabled={saving}
+                            />
+                        </Grid>
+                        
+                        <Grid item xs={12}>
+                            <TextField
+                                name="website"
+                                label={t('marketplace:store.settings.website')}
+                                value={storefront.website || ''}
+                                onChange={handleChange}
+                                fullWidth
+                                disabled={saving}
+                                placeholder="https://"
+                            />
+                        </Grid>
+                        
+                        <Grid item xs={12}>
+                            <Divider sx={{ my: 2 }} />
+                            <Typography variant="h6" gutterBottom>
+                                {t('marketplace:store.settings.location')}
+                            </Typography>
+                        </Grid>
+                        
+                        <Grid item xs={12}>
+                            <LocationPicker 
+                                onLocationSelect={handleLocationSelect}
+                                initialLocation={{
+                                    latitude: storefront.latitude,
+                                    longitude: storefront.longitude,
+                                    formatted_address: storefront.address,
+                                    address_components: {
+                                        city: storefront.city,
+                                        country: storefront.country
+                                    }
+                                }}
+                            />
+                        </Grid>
 
                         <Grid item xs={12}>
-                            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
                                 <Button
                                     variant="outlined"
                                     onClick={() => navigate(`/storefronts/${id}`)}

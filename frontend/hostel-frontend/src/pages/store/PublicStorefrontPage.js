@@ -16,11 +16,14 @@ import {
     Divider,
     Paper,
     Avatar,
-    Button
+    Button,
+    Chip,
+    Stack
 } from '@mui/material';
-import { Store } from 'lucide-react';
+import { Store, Phone, Mail, Globe, MapPin } from 'lucide-react';
 import axios from '../../api/axios';
 import ListingCard from '../../components/marketplace/ListingCard';
+import MiniMap from '../../components/maps/MiniMap';
 
 const PublicStorefrontPage = () => {
     const { t } = useTranslation(['common', 'marketplace']);
@@ -75,6 +78,9 @@ const PublicStorefrontPage = () => {
         );
     }
 
+    const hasLocation = storefront.latitude && storefront.longitude;
+    const hasContactInfo = storefront.phone || storefront.email || storefront.website;
+
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
@@ -105,8 +111,85 @@ const PublicStorefrontPage = () => {
                         {storefront.description}
                     </Typography>
                 )}
+
+                <Grid container spacing={3} sx={{ mt: 1 }}>
+                    {hasContactInfo && (
+                        <Grid item xs={12} md={hasLocation ? 6 : 12}>
+                            <Card variant="outlined">
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        {t('marketplace:store.contactInfo')}
+                                    </Typography>
+                                    <Stack spacing={1}>
+                                        {storefront.phone && (
+                                            <Box display="flex" alignItems="center" gap={1}>
+                                                <Phone size={18} />
+                                                <Typography>
+                                                    <a href={`tel:${storefront.phone}`}>{storefront.phone}</a>
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                        {storefront.email && (
+                                            <Box display="flex" alignItems="center" gap={1}>
+                                                <Mail size={18} />
+                                                <Typography>
+                                                    <a href={`mailto:${storefront.email}`}>{storefront.email}</a>
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                        {storefront.website && (
+                                            <Box display="flex" alignItems="center" gap={1}>
+                                                <Globe size={18} />
+                                                <Typography>
+                                                    <a href={storefront.website} target="_blank" rel="noopener noreferrer">
+                                                        {storefront.website.replace(/^https?:\/\//, '')}
+                                                    </a>
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                        {storefront.address && (
+                                            <Box display="flex" alignItems="center" gap={1}>
+                                                <MapPin size={18} />
+                                                <Typography>
+                                                    {storefront.address}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Stack>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    )}
+
+                    {hasLocation && (
+                        <Grid item xs={12} md={hasContactInfo ? 6 : 12}>
+                            <Card variant="outlined" sx={{ height: '100%' }}>
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        {t('marketplace:store.location')}
+                                    </Typography>
+                                    <MiniMap
+                                        latitude={storefront.latitude}
+                                        longitude={storefront.longitude}
+                                        address={storefront.address || `${storefront.city}, ${storefront.country}`}
+                                    />
+                                    {storefront.city && storefront.country && (
+                                        <Chip
+                                            icon={<MapPin size={14} />}
+                                            label={`${storefront.city}, ${storefront.country}`}
+                                            size="small"
+                                            sx={{ mt: 1 }}
+                                        />
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    )}
+                </Grid>
+
+                <Divider sx={{ my: 3 }} />
+
                 <StorefrontRating storefrontId={id} />
-                {/* Кнопка для просмотра всех отзывов */}
                 <Box display="flex" justifyContent="center" mt={2}>
                     <Button
                         component={Link}

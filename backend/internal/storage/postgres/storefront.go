@@ -11,83 +11,98 @@ import (
 
 // CreateStorefront создает новую витрину
 func (db *Database) CreateStorefront(ctx context.Context, storefront *models.Storefront) (int, error) {
-	var id int
-	err := db.pool.QueryRow(ctx, `
-		INSERT INTO user_storefronts (
-			user_id, name, description, logo_path, slug,
-			status, creation_transaction_id, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id
-	`,
-		storefront.UserID, storefront.Name, storefront.Description, storefront.LogoPath,
-		storefront.Slug, storefront.Status, storefront.CreationTransactionID,
-		storefront.CreatedAt, storefront.UpdatedAt,
-	).Scan(&id)
+    var id int
+    err := db.pool.QueryRow(ctx, `
+        INSERT INTO user_storefronts (
+            user_id, name, description, logo_path, slug,
+            status, creation_transaction_id, created_at, updated_at,
+            phone, email, website, address, city, country, latitude, longitude
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+        RETURNING id
+    `,
+        storefront.UserID, storefront.Name, storefront.Description, storefront.LogoPath,
+        storefront.Slug, storefront.Status, storefront.CreationTransactionID,
+        storefront.CreatedAt, storefront.UpdatedAt,
+        storefront.Phone, storefront.Email, storefront.Website, 
+        storefront.Address, storefront.City, storefront.Country,
+        storefront.Latitude, storefront.Longitude,
+    ).Scan(&id)
 
-	return id, err
+    return id, err
 }
 
 // GetUserStorefronts возвращает все витрины пользователя
 func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]models.Storefront, error) {
-	rows, err := db.pool.Query(ctx, `
-		SELECT id, user_id, name, description, logo_path, slug,
-		       status, creation_transaction_id, created_at, updated_at
-		FROM user_storefronts
-		WHERE user_id = $1
-		ORDER BY created_at DESC
-	`, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    rows, err := db.pool.Query(ctx, `
+        SELECT id, user_id, name, description, logo_path, slug,
+               status, creation_transaction_id, created_at, updated_at,
+               phone, email, website, address, city, country, latitude, longitude
+        FROM user_storefronts
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+    `, userID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-	var storefronts []models.Storefront
-	for rows.Next() {
-		var s models.Storefront
-		err := rows.Scan(
-			&s.ID, &s.UserID, &s.Name, &s.Description, &s.LogoPath,
-			&s.Slug, &s.Status, &s.CreationTransactionID, &s.CreatedAt, &s.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-		storefronts = append(storefronts, s)
-	}
+    var storefronts []models.Storefront
+    for rows.Next() {
+        var s models.Storefront
+        err := rows.Scan(
+            &s.ID, &s.UserID, &s.Name, &s.Description, &s.LogoPath,
+            &s.Slug, &s.Status, &s.CreationTransactionID, &s.CreatedAt, &s.UpdatedAt,
+            &s.Phone, &s.Email, &s.Website, &s.Address, &s.City, &s.Country,
+            &s.Latitude, &s.Longitude,
+        )
+        if err != nil {
+            return nil, err
+        }
+        storefronts = append(storefronts, s)
+    }
 
-	return storefronts, rows.Err()
+    return storefronts, rows.Err()
 }
 
 // GetStorefrontByID возвращает витрину по ID
 func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
-	var s models.Storefront
-	err := db.pool.QueryRow(ctx, `
-		SELECT id, user_id, name, description, logo_path, slug,
-		       status, creation_transaction_id, created_at, updated_at
-		FROM user_storefronts
-		WHERE id = $1
-	`, id).Scan(
-		&s.ID, &s.UserID, &s.Name, &s.Description, &s.LogoPath,
-		&s.Slug, &s.Status, &s.CreationTransactionID, &s.CreatedAt, &s.UpdatedAt,
-	)
-	if err != nil {
-		return nil, err
-	}
+    var s models.Storefront
+    err := db.pool.QueryRow(ctx, `
+        SELECT id, user_id, name, description, logo_path, slug,
+               status, creation_transaction_id, created_at, updated_at,
+               phone, email, website, address, city, country, latitude, longitude
+        FROM user_storefronts
+        WHERE id = $1
+    `, id).Scan(
+        &s.ID, &s.UserID, &s.Name, &s.Description, &s.LogoPath,
+        &s.Slug, &s.Status, &s.CreationTransactionID, &s.CreatedAt, &s.UpdatedAt,
+        &s.Phone, &s.Email, &s.Website, &s.Address, &s.City, &s.Country,
+        &s.Latitude, &s.Longitude,
+    )
+    if err != nil {
+        return nil, err
+    }
 
-	return &s, nil
+    return &s, nil
 }
 
 // UpdateStorefront обновляет информацию о витрине
 func (db *Database) UpdateStorefront(ctx context.Context, storefront *models.Storefront) error {
-	_, err := db.pool.Exec(ctx, `
-		UPDATE user_storefronts
-		SET name = $1, description = $2, logo_path = $3, slug = $4,
-		    status = $5, updated_at = $6
-		WHERE id = $7
-	`,
-		storefront.Name, storefront.Description, storefront.LogoPath,
-		storefront.Slug, storefront.Status, time.Now(), storefront.ID,
-	)
-	return err
+    _, err := db.pool.Exec(ctx, `
+        UPDATE user_storefronts
+        SET name = $1, description = $2, logo_path = $3, slug = $4,
+            status = $5, updated_at = $6,
+            phone = $7, email = $8, website = $9, address = $10,
+            city = $11, country = $12, latitude = $13, longitude = $14
+        WHERE id = $15
+    `,
+        storefront.Name, storefront.Description, storefront.LogoPath,
+        storefront.Slug, storefront.Status, time.Now(),
+        storefront.Phone, storefront.Email, storefront.Website, storefront.Address,
+        storefront.City, storefront.Country, storefront.Latitude, storefront.Longitude,
+        storefront.ID,
+    )
+    return err
 }
 
 // DeleteStorefront удаляет витрину

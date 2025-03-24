@@ -22,18 +22,28 @@ import {
 import { Plus, Store, Upload, Database, AlertTriangle } from 'lucide-react';
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
+import LocationPicker from "../../components/global/LocationPicker";
 
 const StorefrontPage = () => {
   const { t } = useTranslation(['common', 'marketplace']);
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [loading, setLoading] = useState(true);
   const [storefronts, setStorefronts] = useState([]);
   const [error, setError] = useState(null);
   const [balance, setBalance] = useState(0);
   const [openCreateModal, setOpenCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: '', description: '' });
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    description: '',
+    phone: '',
+    email: '',
+    website: '',
+    address: '',
+    city: '',
+    country: ''
+  });
   const [creationError, setCreationError] = useState(null);
   const [creationLoading, setCreationLoading] = useState(false);
 
@@ -45,7 +55,7 @@ const StorefrontPage = () => {
           axios.get('/api/v1/storefronts'),
           axios.get('/api/v1/balance')
         ]);
-        
+
         setStorefronts(storefrontsResponse.data.data || []);
         setBalance(balanceResponse.data.data?.balance || 0);
       } catch (err) {
@@ -55,7 +65,7 @@ const StorefrontPage = () => {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [t]);
 
@@ -63,17 +73,17 @@ const StorefrontPage = () => {
     try {
       setCreationLoading(true);
       setCreationError(null);
-      
+
       if (!createForm.name.trim()) {
         setCreationError(t('marketplace:store.create.nameRequired'));
         return;
       }
-      
+
       const response = await axios.post('/api/v1/storefronts', createForm);
       setStorefronts(prev => [...prev, response.data.data]);
       setOpenCreateModal(false);
       setCreateForm({ name: '', description: '' });
-      
+
       // Обновляем баланс
       const balanceResponse = await axios.get('/api/v1/balance');
       setBalance(balanceResponse.data.data?.balance || 0);
@@ -122,9 +132,9 @@ const StorefrontPage = () => {
       {balance < 15000 && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           {t('marketplace:store.create.balanceWarning', { balance: balance.toLocaleString() })}
-          <Button 
-            variant="outlined" 
-            size="small" 
+          <Button
+            variant="outlined"
+            size="small"
             sx={{ ml: 2 }}
             onClick={() => navigate('/balance')}
           >
@@ -177,8 +187,8 @@ const StorefrontPage = () => {
                       variant="caption"
                       color={storefront.status === 'active' ? 'success.main' : 'error.main'}
                     >
-                      {storefront.status === 'active' 
-                        ? t('marketplace:store.statusActive') 
+                      {storefront.status === 'active'
+                        ? t('marketplace:store.statusActive')
                         : t('marketplace:store.statusInactive')}
                     </Typography>
                   </Box>
@@ -219,24 +229,25 @@ const StorefrontPage = () => {
           <Typography variant="h5" component="h2" gutterBottom>
             {t('marketplace:store.create.title')}
           </Typography>
-          
+
           <Typography variant="body2" color="text.secondary" paragraph>
             {t('marketplace:store.create.costNote')}
           </Typography>
-          
+
           <Box mb={2}>
             <Typography variant="body2" fontWeight="bold">
               {t('marketplace:store.create.yourBalance')}: {balance.toLocaleString()} RSD
             </Typography>
           </Box>
-          
+
           {creationError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {creationError}
             </Alert>
           )}
-          
+
           <Stack spacing={2} mb={3}>
+            {/* Существующие поля name и description */}
             <TextField
               label={t('marketplace:store.settings.name')}
               fullWidth
@@ -245,7 +256,7 @@ const StorefrontPage = () => {
               onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
               disabled={creationLoading}
             />
-            
+
             <TextField
               label={t('common:common.description')}
               fullWidth
@@ -255,8 +266,52 @@ const StorefrontPage = () => {
               onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
               disabled={creationLoading}
             />
+<Box mb={3}>
+  <Typography variant="subtitle1" gutterBottom>
+    {t('marketplace:store.settings.location')}
+  </Typography>
+  
+  <LocationPicker 
+    onLocationSelect={(location) => {
+      setCreateForm({
+        ...createForm,
+        address: location.formatted_address,
+        city: location.address_components?.city || '',
+        country: location.address_components?.country || '',
+        latitude: location.latitude,
+        longitude: location.longitude
+      });
+    }}
+  />
+</Box>
+            {/* Добавить новые поля для контактной информации */}
+            <TextField
+              label={t('marketplace:store.settings.phone')}
+              fullWidth
+              value={createForm.phone}
+              onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
+              disabled={creationLoading}
+            />
+
+            <TextField
+              label={t('marketplace:store.settings.email')}
+              fullWidth
+              value={createForm.email}
+              onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+              disabled={creationLoading}
+            />
+
+            <TextField
+              label={t('marketplace:store.settings.website')}
+              fullWidth
+              value={createForm.website}
+              onChange={(e) => setCreateForm({ ...createForm, website: e.target.value })}
+              disabled={creationLoading}
+            />
+
+
           </Stack>
-          
+
           <Box display="flex" justifyContent="space-between">
             <Button
               variant="outlined"
@@ -265,7 +320,7 @@ const StorefrontPage = () => {
             >
               {t('common:buttons.cancel')}
             </Button>
-            
+
             <Button
               variant="contained"
               onClick={handleCreateStorefront}
@@ -275,7 +330,7 @@ const StorefrontPage = () => {
               {creationLoading ? t('marketplace:store.create.creating') : t('marketplace:store.create.button')}
             </Button>
           </Box>
-          
+
           {balance < 15000 && (
             <Alert severity="warning" sx={{ mt: 2 }} icon={<AlertTriangle />}>
               {t('marketplace:store.create.insufficientFunds')}
