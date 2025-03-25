@@ -31,7 +31,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
             setAttributes([]);
             return;
         }
-
+    
         const fetchAttributes = async () => {
             setLoading(true);
             try {
@@ -39,14 +39,16 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 if (response.data?.data) {
                     console.log("Полученные атрибуты для категории:", categoryId, response.data.data);
                     setAttributes(response.data.data);
-
-                    // Инициализируем значения атрибутов только если они еще не установлены
-                    // или изменилась категория
-                    if (values.length === 0 || values[0]?.attribute_id !== response.data.data[0]?.id) {
+    
+                    // Проверяем, нужно ли сбросить значения атрибутов
+                    const needReset = !values.length || 
+                                      !response.data.data.some(attr => 
+                                          values.some(val => val.attribute_id === attr.id));
+    
+                    if (needReset) {
                         const initialValues = response.data.data.map(attr => {
-                            // Логируем атрибуты для отладки
                             console.log(`Атрибут: ${attr.name}, тип: ${attr.attribute_type}, опции:`, attr.options);
-
+    
                             // Создаем базовое значение атрибута
                             const attrValue = {
                                 attribute_id: attr.id,
@@ -55,24 +57,22 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                                 display_name: attr.display_name,
                                 value: getDefaultValueForType(attr.attribute_type)
                             };
-
-                            // В зависимости от типа атрибута, добавляем соответствующее поле
+    
+                            // Обработка разных типов атрибутов
                             switch (attr.attribute_type) {
                                 case 'text':
                                 case 'select':
                                     attrValue.text_value = "";
                                     break;
                                 case 'number':
-                                    // Используем некоторые разумные значения по умолчанию, но не переопределяем 
-                                    // их, если они уже установлены в существующих атрибутах
                                     let defaultValue = 0;
-
+    
                                     if (attr.options) {
                                         try {
                                             const options = typeof attr.options === 'string'
                                                 ? JSON.parse(attr.options)
                                                 : attr.options;
-
+    
                                             if (options.min !== undefined) {
                                                 defaultValue = options.min;
                                             }
@@ -80,22 +80,16 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                                             console.error(`Ошибка при разборе options для ${attr.name}:`, e);
                                         }
                                     }
-
-                                    // Особые правила для некоторых атрибутов
+    
+                                    // Специальные правила по умолчанию для разных атрибутов
                                     if (attr.name === 'year') {
-                                        // Используем 2020 год как значение по умолчанию только для нового атрибута
-                                        // Но не переопределяем существующее значение
-                                        if (!attrValue.value) {
-                                            defaultValue = 2020;
-                                        } else {
-                                            defaultValue = attrValue.value; // Сохраняем существующее значение
-                                        }
+                                        defaultValue = new Date().getFullYear();
                                     } else if (attr.name === 'mileage') {
-                                        defaultValue = 0; // Пробег по умолчанию
+                                        defaultValue = 0;
                                     } else if (attr.name === 'engine_capacity') {
-                                        defaultValue = 1.6; // Средний объем двигателя
+                                        defaultValue = 1.6;
                                     }
-
+    
                                     attrValue.value = defaultValue;
                                     attrValue.numeric_value = defaultValue;
                                     break;
@@ -103,10 +97,10 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                                     attrValue.boolean_value = false;
                                     break;
                             }
-
+    
                             return attrValue;
                         });
-
+    
                         setValues(initialValues);
                         if (onChange) onChange(initialValues);
                     }
@@ -117,10 +111,10 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 setLoading(false);
             }
         };
-
+    
         fetchAttributes();
-    }, [categoryId, i18n.language]); // Удаляем values и onChange из зависимостей
-
+    }, [categoryId, i18n.language]);
+    
     const getDefaultValueForType = (type) => {
         switch (type) {
             case 'text':

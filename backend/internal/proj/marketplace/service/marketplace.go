@@ -778,8 +778,20 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
 				query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
 				map[string]interface{}{
-					"term": map[string]interface{}{
-						"category_id": categoryID,
+					"bool": map[string]interface{}{
+						"should": []map[string]interface{}{
+							{
+								"term": map[string]interface{}{
+									"category_id": categoryID,
+								},
+							},
+							{
+								"term": map[string]interface{}{
+									"category_path_ids": categoryID,
+								},
+							},
+						},
+						"minimum_should_match": 1,
 					},
 				},
 			)

@@ -109,13 +109,13 @@ const MarketplacePage = () => {
                 return;
             }
             lastQueryRef.current = queryString;
-
+    
             setLoading(true);
             setError(null);
             setSpellingSuggestion(null);
-
+    
             const params = {};
-
+    
             // Обрабатываем основные фильтры
             Object.entries(currentFilters).forEach(([key, value]) => {
                 if (value !== '' && key !== 'city' && key !== 'country' && key !== 'attributeFilters') {
@@ -126,7 +126,7 @@ const MarketplacePage = () => {
                     }
                 }
             });
-
+    
             // Добавляем атрибуты, если они есть
             if (currentFilters.attributeFilters && typeof currentFilters.attributeFilters === 'object') {
                 Object.entries(currentFilters.attributeFilters).forEach(([attrKey, attrValue]) => {
@@ -136,22 +136,51 @@ const MarketplacePage = () => {
                     }
                 });
             }
-
-            console.log('Отправляем запрос:', params);
+    
+            console.log('Отправляем запрос поиска объявлений с параметрами:', params);
             const response = await axios.get('/api/v1/marketplace/search', { params });
-            // console.log('Получен ответ API:', response.data);
-
+            console.log('Получен ответ API:', response.data);
+    
+            // Проверка на наличие данных
+            if (!response.data) {
+                console.error('Ответ API не содержит данных');
+                setListings([]);
+                return;
+            }
+    
             // Улучшенная обработка данных с дополнительными проверками
-            if (response.data && response.data.data) {
+            if (response.data.data) {
                 if (Array.isArray(response.data.data)) {
-                    console.log('Найдено объявлений:', response.data.data.length);
+                    console.log('Найдено объявлений (массив):', response.data.data.length);
                     setListings(response.data.data);
                 } else if (response.data.data.data && Array.isArray(response.data.data.data)) {
-                    console.log('Найдено объявлений (вложенная структура):', response.data.data.data.length);
+                    console.log('Найдено объявлений (вложенный массив):', response.data.data.data.length);
                     setListings(response.data.data.data);
+                } else if (response.data.data.items && Array.isArray(response.data.data.items)) {
+                    console.log('Найдено объявлений (items):', response.data.data.items.length);
+                    setListings(response.data.data.items);
                 } else {
-                    console.error('Данные не являются массивом:', response.data.data);
-                    setListings([]);
+                    // Попытка найти массив в ответе
+                    let foundArray = null;
+                    Object.entries(response.data).forEach(([key, value]) => {
+                        if (Array.isArray(value) && value.length > 0 && value[0].id) {
+                            foundArray = value;
+                        } else if (typeof value === 'object' && value !== null) {
+                            Object.entries(value).forEach(([innerKey, innerValue]) => {
+                                if (Array.isArray(innerValue) && innerValue.length > 0 && innerValue[0].id) {
+                                    foundArray = innerValue;
+                                }
+                            });
+                        }
+                    });
+    
+                    if (foundArray) {
+                        console.log('Найден массив объявлений в нестандартном месте:', foundArray.length);
+                        setListings(foundArray);
+                    } else {
+                        console.error('Данные не являются массивом:', response.data);
+                        setListings([]);
+                    }
                 }
             } else {
                 console.error('Ответ API не содержит ожидаемую структуру данных:', response.data);
@@ -182,38 +211,50 @@ const MarketplacePage = () => {
 
         setFilters(prev => {
             // Создаем обновленные фильтры
-            const updated = { ...prev, ...newFilters };
+            let updated = { ...prev };
 
-            // Обновляем URL, но убираем обратный вызов fetchListings
+            // Обрабатываем attributeFilters особым образом
+            if (newFilters.attributeFilters) {
+                updated.attributeFilters = {
+                    ...(prev.attributeFilters || {}),
+                    ...newFilters.attributeFilters
+                };
+
+                // Удаляем attributeFilters из newFilters, чтобы избежать дублирования
+                const { attributeFilters, ...restFilters } = newFilters;
+                Object.assign(updated, restFilters);
+            } else {
+                // Если это обычное обновление фильтров, просто обновляем
+                Object.assign(updated, newFilters);
+            }
+
+            // Обновляем URL параметры
             const nextParams = new URLSearchParams();
+
+            // Добавляем стандартные фильтры
             Object.entries(updated).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== '') {
-                    // Обрабатываем атрибуты особым образом
-                    if (key === 'attributeFilters' && typeof value === 'object') {
-                        // Для объекта attributeFilters добавляем каждый ключ в URL с префиксом 'attr_'
-                        Object.entries(value).forEach(([attrKey, attrValue]) => {
-                            if (attrValue) {
-                                nextParams.set(`attr_${attrKey}`, attrValue);
-                            }
-                        });
-                    } else {
-                        nextParams.set(key, value);
-                    }
+                if (value !== null && value !== undefined && value !== '' && key !== 'attributeFilters') {
+                    nextParams.set(key, value);
                 }
             });
 
-            // Обновляем URL параметры
+            // Добавляем атрибуты с префиксом attr_
+            if (updated.attributeFilters) {
+                Object.entries(updated.attributeFilters).forEach(([attrKey, attrValue]) => {
+                    if (attrValue) {
+                        nextParams.set(`attr_${attrKey}`, attrValue);
+                    }
+                });
+            }
+
             setSearchParams(nextParams);
 
-            // Возвращаем обновленные фильтры
+            // Вызываем запрос с обновленными фильтрами
+            debouncedFetchListings(updated);
+
             return updated;
         });
-
-        // Вынесем вызов fetchListings за пределы обновления состояния
-        // Используем debouncedFetchListings для предотвращения частых запросов
-        debouncedFetchListings(newFilters);
-
-    }, [setSearchParams, debouncedFetchListings]);
+    }, [debouncedFetchListings, setSearchParams]);
 
     // ТЕПЕРЬ объявляем resetAttributeFilters после handleFilterChange
     const resetAttributeFilters = useCallback(() => {
@@ -369,24 +410,13 @@ const MarketplacePage = () => {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                // Проверяем наличие distance без координат
-                const distanceParam = searchParams.get('distance');
-                const latParam = searchParams.get('latitude');
-                const lonParam = searchParams.get('longitude');
-
-                // Убираем код, который сбрасывает параметр distance, и просто логируем
-                if (distanceParam && (!latParam || !lonParam)) {
-                    console.log("Параметр distance присутствует без координат, будет запрошена текущая геолокация");
-                    // Запрос геолокации оставляем как есть, но НЕ обновляем фильтры напрямую
-                }
-
                 // Загрузка категорий
                 const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
                 if (categoriesResponse.data?.data) {
                     setCategories(categoriesResponse.data.data);
                 }
 
-                // Получаем начальные фильтры из URL
+                // Извлекаем атрибуты из URL
                 const attributeFilters = {};
                 searchParams.forEach((value, key) => {
                     if (key.startsWith('attr_')) {
@@ -407,15 +437,20 @@ const MarketplacePage = () => {
                     sort_by: searchParams.get('sort_by') || 'date_desc',
                     distance: searchParams.get('distance') || '',
                     latitude: searchParams.get('latitude') ? parseFloat(searchParams.get('latitude')) : null,
-                    longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')) : null,
-                    attributeFilters: Object.keys(attributeFilters).length > 0 ? attributeFilters : undefined
+                    longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')) : null
                 };
+
+                // Добавляем атрибуты, только если они есть
+                if (Object.keys(attributeFilters).length > 0) {
+                    initialFilters.attributeFilters = attributeFilters;
+                }
+
+                console.log('Начальные фильтры с атрибутами:', initialFilters);
 
                 // Устанавливаем начальные фильтры
                 setFilters(initialFilters);
 
-                // Этот вызов оставляем, чтобы выполнить начальный запрос данных
-                // Но важно НЕ добавлять fetchListings в зависимости эффекта
+                // Выполняем первоначальный запрос данных
                 await fetchListings(initialFilters);
             } catch (err) {
                 console.error('Error fetching initial data:', err);
@@ -424,7 +459,8 @@ const MarketplacePage = () => {
         };
 
         fetchInitialData();
-        // Убираем fetchListings из зависимостей, чтобы избежать зацикливания
+
+        // Важно! Не добавляем fetchListings в зависимости
     }, [searchParams, setSearchParams]);
 
     useEffect(() => {

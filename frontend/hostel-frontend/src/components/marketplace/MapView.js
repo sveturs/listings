@@ -50,27 +50,27 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
     if (!images || !Array.isArray(images) || images.length === 0) {
       return null;
     }
-    
+
     // Сначала пытаемся найти главное изображение
     let mainImage = images.find(img => img && img.is_main === true);
-    
+
     // Если главное не найдено, берем первое изображение
     if (!mainImage) {
       mainImage = images[0];
     }
-    
+
     // Если изображение - это строка с путем
     if (typeof mainImage === 'string') {
       const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
       return `${baseUrl}/uploads/${mainImage}`;
     }
-    
+
     // Если изображение - это объект с file_path
     if (mainImage && typeof mainImage === 'object' && mainImage.file_path) {
       const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
       return `${baseUrl}/uploads/${mainImage.file_path}`;
     }
-    
+
     return null;
   };
 
@@ -148,17 +148,17 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const { userLocation, detectUserLocation } = useLocation();
-  
+
   // Создаем правильный объект с координатами из userLocation
   const locationCoordinates = userLocation ? {
     latitude: userLocation.lat,
     longitude: userLocation.lon
   } : null;
-  
+
   // Логируем для отладки
   console.log("MapView userLocation:", userLocation);
   console.log("MapView locationCoordinates:", locationCoordinates);
-  
+
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const mapContainerRef = useRef(null);
@@ -174,7 +174,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
 
   // Убедимся, что у нас всегда есть userLocationState
   const [userLocationState, setUserLocationState] = useState(locationCoordinates);
-  
+
   // Обновляем userLocationState при изменении userLocation
   useEffect(() => {
     if (userLocation) {
@@ -190,14 +190,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
   }, [userLocation]);
 
   // Варианты радиуса поиска
-  const radiusOptions = [
-    { value: "1km", label: "1 км" },
-    { value: "3km", label: "3 км" },
-    { value: "5km", label: "5 км" },
-    { value: "10km", label: "10 км" },
-    { value: "15km", label: "15 км" },
-    { value: "30km", label: "30 км" }
-  ];
+
 
   // Инициализация карты
   useEffect(() => {
@@ -212,9 +205,9 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
           : [45.2671, 19.8335]; // Координаты Нови-Сада по умолчанию
 
         // Проверка, что контейнер существует и имеет размеры
-        if (!mapContainerRef.current || 
-            mapContainerRef.current.clientWidth === 0 || 
-            mapContainerRef.current.clientHeight === 0) {
+        if (!mapContainerRef.current ||
+          mapContainerRef.current.clientWidth === 0 ||
+          mapContainerRef.current.clientHeight === 0) {
           console.log("Map container not ready yet, retrying...");
           return;
         }
@@ -405,7 +398,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
   // Обработчик для открытия полноэкранной карты
   const handleExpandMap = () => {
     // Получаем список всех объявлений с координатами
-    const validListings = listings.filter(listing => 
+    const validListings = listings.filter(listing =>
       listing.latitude && listing.longitude && listing.show_on_map !== false
     );
 
@@ -430,7 +423,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         title: selectedListing.title
       };
       console.log("Используем координаты выбранного объявления:", center);
-    } 
+    }
     // Второй случай: местоположение пользователя
     else if (userLocation && userLocation.lat && userLocation.lon) {
       center = {
@@ -490,7 +483,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
     center.longitude = Number(center.longitude);
 
     console.log("Итоговые координаты для полноэкранной карты:", center);
-    
+
     // Устанавливаем состояние и открываем модальное окно
     setExpandedMapCenter(center);
     setExpandedMapMarkers(markersForFullscreen);
@@ -502,7 +495,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
     try {
       // Используем функцию из контекста местоположения
       const locationData = await detectUserLocation();
-      
+
       // Если успешно получили местоположение, обновляем фильтры
       onFilterChange({
         ...filters,
@@ -510,7 +503,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         longitude: locationData.lon,
         distance: filters.distance || '5km'
       });
-      
+
       // Центрируем карту на новых координатах
       if (mapRef.current) {
         mapRef.current.setView([locationData.lat, locationData.lon], 13);
@@ -527,7 +520,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
   }, [filters.distance, filters.latitude, filters.longitude]);
 
   const isDistanceWithoutCoordinates = filters.distance && (!filters.latitude || !filters.longitude);
-  
+
   return (
     <Box
       sx={{
@@ -553,9 +546,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="subtitle1">
-            {t('listings.map.showOnMap')}
-          </Typography>
+
 
           <Chip
             label={`${listings.filter(l => l.latitude && l.longitude && l.show_on_map !== false).length} ${t('listings.map.itemsOnMap')}`}
@@ -565,23 +556,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {userLocation && (
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel id="radius-select-label">{t('listings.map.radius')}</InputLabel>
-              <Select
-                labelId="radius-select-label"
-                value={filters.distance || '5km'}
-                label={t('listings.map.radius')}
-                onChange={handleRadiusChange}
-              >
-                {radiusOptions.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
+
 
           <Button
             variant="outlined"
@@ -625,9 +600,9 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
           ref={mapContainerRef}
           style={{ width: '100%', height: '100%' }}
         />
-        
+
         {!mapReady && (
-          <Box 
+          <Box
             sx={{
               position: 'absolute',
               top: 0,

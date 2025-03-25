@@ -12,11 +12,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"regexp"
-
 )
 
 // Repository реализует интерфейс MarketplaceSearchRepository
@@ -147,39 +146,40 @@ func (r *Repository) extractDocumentID(hit map[string]interface{}) (int, error) 
 
 // SearchListings выполняет поиск объявлений
 func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-    var query map[string]interface{}
-    if params.CustomQuery != nil {
-        // Используем переданный готовый запрос
-        query = params.CustomQuery
-    } else {
-        // Строим запрос к OpenSearch, если CustomQuery не указан
-        query = r.buildSearchQuery(params)
-    }
+	var query map[string]interface{}
+	if params.CustomQuery != nil {
+		// Используем переданный готовый запрос
+		query = params.CustomQuery
+	} else {
+		// Строим запрос к OpenSearch, если CustomQuery не указан
+		query = r.buildSearchQuery(params)
+	}
 
-    // Дополнительное логирование
-    queryJSON, _ := json.MarshalIndent(query, "", "  ")
-    log.Printf("Поисковый запрос: %s", string(queryJSON))
+	// Дополнительное логирование
+	queryJSON, _ := json.MarshalIndent(query, "", "  ")
+	log.Printf("Поисковый запрос: %s", string(queryJSON))
 
-    // Выполняем поиск
-    responseBytes, err := r.client.Search(r.indexName, query)
-    if err != nil {
-        return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
-    }
+	// Выполняем поиск
+	responseBytes, err := r.client.Search(r.indexName, query)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
+	}
 
-    // Разбираем ответ
-    var searchResponse map[string]interface{}
-    if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
-        return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
-    }
+	// Разбираем ответ
+	var searchResponse map[string]interface{}
+	if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
+		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
+	}
 
-    // Извлекаем результаты
-    result, err := r.parseSearchResponse(searchResponse, params.Language)
-    if err != nil {
-        return nil, fmt.Errorf("ошибка обработки результатов: %w", err)
-    }
+	// Извлекаем результаты
+	result, err := r.parseSearchResponse(searchResponse, params.Language)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка обработки результатов: %w", err)
+	}
 
-    return result, nil
+	return result, nil
 }
+
 // SuggestListings предлагает автодополнение для поиска
 func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
 	if prefix == "" {
@@ -377,374 +377,512 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 // Обновление функции listingToDoc для включения метаданных
 
 func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string]interface{} {
-    doc := map[string]interface{}{
-        "id":                listing.ID,
-        "title":             listing.Title,
-        "description":       listing.Description,
-        "title_suggest":     listing.Title,
-        "title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
-        "price":             listing.Price,
-        "condition":         listing.Condition,
-        "status":            listing.Status,
-        "location":          listing.Location,
-        "city":              listing.City,
-        "country":           listing.Country,
-        "views_count":       listing.ViewsCount,
-        "created_at":        listing.CreatedAt.Format(time.RFC3339),
-        "updated_at":        listing.UpdatedAt.Format(time.RFC3339),
-        "show_on_map":       listing.ShowOnMap,
-        "original_language": listing.OriginalLanguage,
-        "category_id":       listing.CategoryID,
-        "user_id":           listing.UserID,
-        "translations":      listing.Translations,
-    }
-    
-    // Логирование информации о местоположении для отладки
-    log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s", 
-        listing.ID, listing.City, listing.Country, listing.Location)
-    
-    doc["has_discount"] = listing.HasDiscount
-    if listing.OldPrice > 0 {
-        doc["old_price"] = listing.OldPrice
-    }
-    
-    // Добавляем поля для скидок напрямую из текста описания
-    if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
-        // Ищем процент скидки в описании с помощью регулярного выражения
-        discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
-        matches := discountRegex.FindStringSubmatch(listing.Description)
+	doc := map[string]interface{}{
+		"id":                listing.ID,
+		"title":             listing.Title,
+		"description":       listing.Description,
+		"title_suggest":     listing.Title,
+		"title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
+		"price":             listing.Price,
+		"condition":         listing.Condition,
+		"status":            listing.Status,
+		"location":          listing.Location,
+		"city":              listing.City,
+		"country":           listing.Country,
+		"views_count":       listing.ViewsCount,
+		"created_at":        listing.CreatedAt.Format(time.RFC3339),
+		"updated_at":        listing.UpdatedAt.Format(time.RFC3339),
+		"show_on_map":       listing.ShowOnMap,
+		"original_language": listing.OriginalLanguage,
+		"category_id":       listing.CategoryID,
+		"user_id":           listing.UserID,
+		"translations":      listing.Translations,
+	}
 
-        // Ищем старую цену с помощью регулярного выражения
-        priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
-        priceMatches := priceRegex.FindStringSubmatch(listing.Description)
+	// Логирование информации о местоположении для отладки
+	log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
+		listing.ID, listing.City, listing.Country, listing.Location)
 
-        if len(matches) > 1 && len(priceMatches) > 1 {
-            discountPercent, _ := strconv.Atoi(matches[1])
-            oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
-            oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
+	doc["has_discount"] = listing.HasDiscount
+	if listing.OldPrice > 0 {
+		doc["old_price"] = listing.OldPrice
+	}
 
-            // Если у объекта нет метаданных, создаем их
-            if listing.Metadata == nil {
-                listing.Metadata = make(map[string]interface{})
-            }
+	// Добавляем поля для скидок напрямую из текста описания
+	if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
+		// Ищем процент скидки в описании с помощью регулярного выражения
+		discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
+		matches := discountRegex.FindStringSubmatch(listing.Description)
 
-            // Создаем информацию о скидке
-            discount := map[string]interface{}{
-                "discount_percent":  discountPercent,
-                "previous_price":    oldPrice,
-                "effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339), // Примерная дата начала скидки
-                "has_price_history": true,
-            }
+		// Ищем старую цену с помощью регулярного выражения
+		priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
+		priceMatches := priceRegex.FindStringSubmatch(listing.Description)
 
-            // Добавляем информацию о скидке в метаданные
-            listing.Metadata["discount"] = discount
+		if len(matches) > 1 && len(priceMatches) > 1 {
+			discountPercent, _ := strconv.Atoi(matches[1])
+			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
 
-            // Добавляем OldPrice в документ
-            doc["old_price"] = oldPrice
-            doc["has_discount"] = true
+			// Если у объекта нет метаданных, создаем их
+			if listing.Metadata == nil {
+				listing.Metadata = make(map[string]interface{})
+			}
 
-            log.Printf("Извлечена скидка из описания для объявления %d: %v", listing.ID, discount)
-        }
-    }
+			// Создаем информацию о скидке
+			discount := map[string]interface{}{
+				"discount_percent":  discountPercent,
+				"previous_price":    oldPrice,
+				"effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339), // Примерная дата начала скидки
+				"has_price_history": true,
+			}
 
-    // Добавляем метаданные если они есть
-    if listing.Metadata != nil {
-        // Копируем метаданные
-        doc["metadata"] = listing.Metadata
-        
-        // Если есть информация о скидке, проверяем и пересчитываем процент
-        if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
-            if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
-                // Пересчитываем актуальный процент скидки
-                if prevPrice > listing.Price {
-                    discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
-                    discount["discount_percent"] = discountPercent
-                    
-                    // Обновляем метаданные в документе
-                    listing.Metadata["discount"] = discount
-                    doc["metadata"] = listing.Metadata
-                    
-                    doc["has_discount"] = true
-                    doc["old_price"] = prevPrice
-                    
-                    log.Printf("Пересчитан процент скидки для OpenSearch: %d%% (объявление %d)",
-                        discountPercent, listing.ID)
-                }
-            }
-        }
-    }
+			// Добавляем информацию о скидке в метаданные
+			listing.Metadata["discount"] = discount
 
-    // Пытаемся получить и применить адресную информацию из витрины если она отсутствует в объявлении
-    if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-        needStorefrontInfo := false
-        
-        // Проверяем, нужно ли получать информацию о витрине
-        if listing.City == "" || listing.Country == "" || listing.Location == "" || 
-           listing.Latitude == nil || listing.Longitude == nil {
-            needStorefrontInfo = true
-        }
-        
-        if needStorefrontInfo {
-            log.Printf("Получаем данные о витрине %d для заполнения адресной информации для объявления %d", 
-                *listing.StorefrontID, listing.ID)
-            
-            // Получаем информацию о витрине для заполнения адресных данных
-            var storefront models.Storefront
-            err := r.storage.QueryRow(context.Background(), `
+			// Добавляем OldPrice в документ
+			doc["old_price"] = oldPrice
+			doc["has_discount"] = true
+
+			log.Printf("Извлечена скидка из описания для объявления %d: %v", listing.ID, discount)
+		}
+	}
+
+	// Добавляем метаданные если они есть
+	if listing.Metadata != nil {
+		// Копируем метаданные
+		doc["metadata"] = listing.Metadata
+
+		// Если есть информация о скидке, проверяем и пересчитываем процент
+		if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
+			if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+				// Пересчитываем актуальный процент скидки
+				if prevPrice > listing.Price {
+					discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
+					discount["discount_percent"] = discountPercent
+
+					// Обновляем метаданные в документе
+					listing.Metadata["discount"] = discount
+					doc["metadata"] = listing.Metadata
+
+					doc["has_discount"] = true
+					doc["old_price"] = prevPrice
+
+					log.Printf("Пересчитан процент скидки для OpenSearch: %d%% (объявление %d)",
+						discountPercent, listing.ID)
+				}
+			}
+		}
+	}
+
+	// Пытаемся получить и применить адресную информацию из витрины если она отсутствует в объявлении
+	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+		needStorefrontInfo := false
+
+		// Проверяем, нужно ли получать информацию о витрине
+		if listing.City == "" || listing.Country == "" || listing.Location == "" ||
+			listing.Latitude == nil || listing.Longitude == nil {
+			needStorefrontInfo = true
+		}
+
+		if needStorefrontInfo {
+			log.Printf("Получаем данные о витрине %d для заполнения адресной информации для объявления %d",
+				*listing.StorefrontID, listing.ID)
+
+			// Получаем информацию о витрине для заполнения адресных данных
+			var storefront models.Storefront
+			err := r.storage.QueryRow(context.Background(), `
                 SELECT name, city, address, country, latitude, longitude
                 FROM user_storefronts 
                 WHERE id = $1
             `, *listing.StorefrontID).Scan(
-                &storefront.Name, 
-                &storefront.City, 
-                &storefront.Address, 
-                &storefront.Country,
-                &storefront.Latitude,
-                &storefront.Longitude,
-            )
-            
-            if err == nil {
-                // Применяем информацию о витрине
-                if listing.City == "" && storefront.City != "" {
-                    doc["city"] = storefront.City
-                    log.Printf("Применен город витрины '%s' для объявления %d", storefront.City, listing.ID)
-                }
-                
-                if listing.Country == "" && storefront.Country != "" {
-                    doc["country"] = storefront.Country
-                    log.Printf("Применена страна витрины '%s' для объявления %d", storefront.Country, listing.ID)
-                }
-                
-                if listing.Location == "" && storefront.Address != "" {
-                    doc["location"] = storefront.Address
-                    log.Printf("Применен адрес витрины '%s' для объявления %d", storefront.Address, listing.ID)
-                }
-                
-                // Если у объявления нет координат, но они есть у витрины
-                if (listing.Latitude == nil || listing.Longitude == nil || 
-                    *listing.Latitude == 0 || *listing.Longitude == 0) && 
-                    storefront.Latitude != nil && storefront.Longitude != nil && 
-                    *storefront.Latitude != 0 && *storefront.Longitude != 0 {
-                    
-                    // Создаем объект с полями lat и lon для geo_point
-                    doc["coordinates"] = map[string]interface{}{
-                        "lat": *storefront.Latitude,
-                        "lon": *storefront.Longitude,
-                    }
-                    
-                    log.Printf("Применены координаты витрины для объявления %d: lat=%f, lon=%f",
-                        listing.ID, *storefront.Latitude, *storefront.Longitude)
-                    
-                    // Устанавливаем показ на карте для координат витрины
-                    doc["show_on_map"] = true
-                }
-            } else {
-                log.Printf("Не удалось получить информацию о витрине %d: %v", *listing.StorefrontID, err)
-            }
-        }
-    }
+				&storefront.Name,
+				&storefront.City,
+				&storefront.Address,
+				&storefront.Country,
+				&storefront.Latitude,
+				&storefront.Longitude,
+			)
 
-    // Добавляем координаты, если они есть в объявлении
-    if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
-        // Создаем объект с полями lat и lon для geo_point
-        doc["coordinates"] = map[string]interface{}{
-            "lat": *listing.Latitude,
-            "lon": *listing.Longitude,
-        }
+			if err == nil {
+				// Применяем информацию о витрине
+				if listing.City == "" && storefront.City != "" {
+					doc["city"] = storefront.City
+					log.Printf("Применен город витрины '%s' для объявления %d", storefront.City, listing.ID)
+				}
 
-        log.Printf("Добавлены координаты из объявления для листинга %d: lat=%f, lon=%f",
-            listing.ID, *listing.Latitude, *listing.Longitude)
-    } else if _, ok := doc["coordinates"]; !ok { // Если координаты все еще не добавлены
-        // Если координаты отсутствуют, но есть город, попробуем геокодировать
-        if cityVal, ok := doc["city"].(string); ok && cityVal != "" {
-            countryVal := ""
-            if c, ok := doc["country"].(string); ok {
-                countryVal = c
-            }
-            
-            geocoded, err := r.geocodeCity(cityVal, countryVal)
-            if err == nil && geocoded != nil {
-                // Добавляем найденные координаты
-                doc["coordinates"] = map[string]interface{}{
-                    "lat": geocoded.Lat,
-                    "lon": geocoded.Lon,
-                }
-                log.Printf("Добавлены геокодированные координаты для листинга %d (город %s): lat=%f, lon=%f",
-                    listing.ID, cityVal, geocoded.Lat, geocoded.Lon)
-                
-                // Устанавливаем показ на карте для геокодированных координат
-                doc["show_on_map"] = true
-            } else {
-                log.Printf("Не удалось геокодировать город %s для листинга %d: %v",
-                    cityVal, listing.ID, err)
-            }
-        } else {
-            log.Printf("У листинга %d нет координат и не указан город", listing.ID)
-        }
-    }
+				if listing.Country == "" && storefront.Country != "" {
+					doc["country"] = storefront.Country
+					log.Printf("Применена страна витрины '%s' для объявления %d", storefront.Country, listing.ID)
+				}
 
-    // Добавляем storefront_id, если есть
-    if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-        doc["storefront_id"] = *listing.StorefrontID
-        log.Printf("Добавлен storefront_id: %d для объявления %d в индекс", *listing.StorefrontID, listing.ID)
-    } else {
-        log.Printf("Нет storefront_id для объявления %d или значение некорректно", listing.ID)
-    }
+				if listing.Location == "" && storefront.Address != "" {
+					doc["location"] = storefront.Address
+					log.Printf("Применен адрес витрины '%s' для объявления %d", storefront.Address, listing.ID)
+				}
 
-    // Добавляем путь категорий, если есть
-    if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
-        doc["category_path_ids"] = listing.CategoryPathIds
-    } else {
-        // Если путь категорий не задан, нужно его создать
-        // Для этого выполним дополнительный запрос к базе данных
-        parentID := listing.CategoryID
-        pathIDs := []int{parentID}
+				// Если у объявления нет координат, но они есть у витрины
+				if (listing.Latitude == nil || listing.Longitude == nil ||
+					*listing.Latitude == 0 || *listing.Longitude == 0) &&
+					storefront.Latitude != nil && storefront.Longitude != nil &&
+					*storefront.Latitude != 0 && *storefront.Longitude != 0 {
 
-        for parentID > 0 {
-            var cat models.MarketplaceCategory
-            err := r.storage.QueryRow(context.Background(),
-                "SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
-                Scan(&cat.ParentID)
+					// Создаем объект с полями lat и lon для geo_point
+					doc["coordinates"] = map[string]interface{}{
+						"lat": *storefront.Latitude,
+						"lon": *storefront.Longitude,
+					}
 
-            if err != nil || cat.ParentID == nil {
-                break
-            }
+					log.Printf("Применены координаты витрины для объявления %d: lat=%f, lon=%f",
+						listing.ID, *storefront.Latitude, *storefront.Longitude)
 
-            parentID = *cat.ParentID
-            pathIDs = append([]int{parentID}, pathIDs...)
-        }
+					// Устанавливаем показ на карте для координат витрины
+					doc["show_on_map"] = true
+				}
+			} else {
+				log.Printf("Не удалось получить информацию о витрине %d: %v", *listing.StorefrontID, err)
+			}
+		}
+	}
 
-        doc["category_path_ids"] = pathIDs
-        log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
-    }
+	// Добавляем координаты, если они есть в объявлении
+	if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
+		// Создаем объект с полями lat и lon для geo_point
+		doc["coordinates"] = map[string]interface{}{
+			"lat": *listing.Latitude,
+			"lon": *listing.Longitude,
+		}
 
-    // Добавляем информацию о категории, если есть
-    if listing.Category != nil {
-        doc["category"] = map[string]interface{}{
-            "id":   listing.Category.ID,
-            "name": listing.Category.Name,
-            "slug": listing.Category.Slug,
-        }
-    }
+		log.Printf("Добавлены координаты из объявления для листинга %d: lat=%f, lon=%f",
+			listing.ID, *listing.Latitude, *listing.Longitude)
+	} else if _, ok := doc["coordinates"]; !ok { // Если координаты все еще не добавлены
+		// Если координаты отсутствуют, но есть город, попробуем геокодировать
+		if cityVal, ok := doc["city"].(string); ok && cityVal != "" {
+			countryVal := ""
+			if c, ok := doc["country"].(string); ok {
+				countryVal = c
+			}
 
-    // Добавляем информацию о пользователе, если есть
-    if listing.User != nil {
-        doc["user"] = map[string]interface{}{
-            "id":    listing.User.ID,
-            "name":  listing.User.Name,
-            "email": listing.User.Email,
-        }
-    }
+			geocoded, err := r.geocodeCity(cityVal, countryVal)
+			if err == nil && geocoded != nil {
+				// Добавляем найденные координаты
+				doc["coordinates"] = map[string]interface{}{
+					"lat": geocoded.Lat,
+					"lon": geocoded.Lon,
+				}
+				log.Printf("Добавлены геокодированные координаты для листинга %d (город %s): lat=%f, lon=%f",
+					listing.ID, cityVal, geocoded.Lat, geocoded.Lon)
 
-    // Добавляем изображения, если есть
-    if listing.Images != nil && len(listing.Images) > 0 {
-        log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
-        imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
+				// Устанавливаем показ на карте для геокодированных координат
+				doc["show_on_map"] = true
+			} else {
+				log.Printf("Не удалось геокодировать город %s для листинга %d: %v",
+					cityVal, listing.ID, err)
+			}
+		} else {
+			log.Printf("У листинга %d нет координат и не указан город", listing.ID)
+		}
+	}
 
-        for i, img := range listing.Images {
-            // Логирование деталей каждого изображения для отладки
-            log.Printf("  Изображение %d: ID=%d, Путь=%s, IsMain=%v",
-                i+1, img.ID, img.FilePath, img.IsMain)
+	// Добавляем storefront_id, если есть
+	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+		doc["storefront_id"] = *listing.StorefrontID
+		log.Printf("Добавлен storefront_id: %d для объявления %d в индекс", *listing.StorefrontID, listing.ID)
+	} else {
+		log.Printf("Нет storefront_id для объявления %d или значение некорректно", listing.ID)
+	}
 
-            imagesDoc = append(imagesDoc, map[string]interface{}{
-                "id":        img.ID,
-                "file_path": img.FilePath,
-                "is_main":   img.IsMain,
-            })
-        }
+	// Добавляем путь категорий, если есть
+	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
+		doc["category_path_ids"] = listing.CategoryPathIds
+	} else {
+		// Если путь категорий не задан, нужно его создать
+		// Для этого выполним дополнительный запрос к базе данных
+		parentID := listing.CategoryID
+		pathIDs := []int{parentID}
 
-        // Проверяем, что у нас есть хотя бы одно изображение с указанным путем
-        hasValidImage := false
-        for _, img := range imagesDoc {
-            if path, ok := img["file_path"].(string); ok && path != "" {
-                hasValidImage = true
-                break
-            }
-        }
+		for parentID > 0 {
+			var cat models.MarketplaceCategory
+			err := r.storage.QueryRow(context.Background(),
+				"SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
+				Scan(&cat.ParentID)
 
-        if hasValidImage {
-            doc["images"] = imagesDoc
-            log.Printf("  Добавлено %d изображений в индекс", len(imagesDoc))
-        } else {
-            log.Printf("  ВНИМАНИЕ: У объявления %d нет изображений с корректным путем", listing.ID)
-        }
-    } else {
-        // Пытаемся загрузить изображения из базы данных, если их нет в объекте
-        images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
-        if err != nil {
-            log.Printf("  Ошибка при загрузке изображений для объявления %d: %v", listing.ID, err)
-        } else if len(images) > 0 {
-            log.Printf("  Загружено %d изображений из базы данных для объявления %d", len(images), listing.ID)
+			if err != nil || cat.ParentID == nil {
+				break
+			}
 
-            imagesDoc := make([]map[string]interface{}, 0, len(images))
-            for i, img := range images {
-                log.Printf("    Изображение %d: ID=%d, Путь=%s, IsMain=%v",
-                    i+1, img.ID, img.FilePath, img.IsMain)
+			parentID = *cat.ParentID
+			pathIDs = append([]int{parentID}, pathIDs...)
+		}
 
-                imagesDoc = append(imagesDoc, map[string]interface{}{
-                    "id":        img.ID,
-                    "file_path": img.FilePath,
-                    "is_main":   img.IsMain,
-                })
-            }
+		doc["category_path_ids"] = pathIDs
+		log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
+	}
 
-            doc["images"] = imagesDoc
-            log.Printf("  Добавлено %d изображений из базы данных в индекс", len(imagesDoc))
-        } else {
-            log.Printf("  Объявление %d не имеет изображений", listing.ID)
-        }
-    }
+	// Добавляем информацию о категории, если есть
+	if listing.Category != nil {
+		doc["category"] = map[string]interface{}{
+			"id":   listing.Category.ID,
+			"name": listing.Category.Name,
+			"slug": listing.Category.Slug,
+		}
+	}
 
-    // Добавляем атрибуты, если они есть
-    if listing.Attributes != nil && len(listing.Attributes) > 0 {
-        attributes := make([]map[string]interface{}, 0, len(listing.Attributes))
+	// Добавляем информацию о пользователе, если есть
+	if listing.User != nil {
+		doc["user"] = map[string]interface{}{
+			"id":    listing.User.ID,
+			"name":  listing.User.Name,
+			"email": listing.User.Email,
+		}
+	}
 
-        for _, attr := range listing.Attributes {
-            attrDoc := map[string]interface{}{
-                "attribute_id":   attr.AttributeID,
-                "attribute_name": attr.AttributeName,
-                "display_name":   attr.DisplayName,
-                "attribute_type": attr.AttributeType,
-                "display_value":  attr.DisplayValue,
-            }
+	// Добавляем изображения, если есть
+	if listing.Images != nil && len(listing.Images) > 0 {
+		log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
+		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
 
-            // Добавляем типизированные значения в зависимости от типа атрибута
-            if attr.TextValue != nil {
-                attrDoc["text_value"] = *attr.TextValue
-            }
-            if attr.NumericValue != nil {
-                attrDoc["numeric_value"] = *attr.NumericValue
-            }
-            if attr.BooleanValue != nil {
-                attrDoc["boolean_value"] = *attr.BooleanValue
-            }
-            if attr.JSONValue != nil {
-                attrDoc["json_value"] = string(attr.JSONValue)
-            }
+		for i, img := range listing.Images {
+			// Логирование деталей каждого изображения для отладки
+			log.Printf("  Изображение %d: ID=%d, Путь=%s, IsMain=%v",
+				i+1, img.ID, img.FilePath, img.IsMain)
 
-            attributes = append(attributes, attrDoc)
-        }
+			imagesDoc = append(imagesDoc, map[string]interface{}{
+				"id":        img.ID,
+				"file_path": img.FilePath,
+				"is_main":   img.IsMain,
+			})
+		}
 
-        doc["attributes"] = attributes
-    }
+		// Проверяем, что у нас есть хотя бы одно изображение с указанным путем
+		hasValidImage := false
+		for _, img := range imagesDoc {
+			if path, ok := img["file_path"].(string); ok && path != "" {
+				hasValidImage = true
+				break
+			}
+		}
 
-    // Финальная проверка наличия местоположения и дополнительное логирование
-    if doc["city"] == "" || doc["country"] == "" || doc["location"] == "" {
-        log.Printf("ВНИМАНИЕ: После всех обработок у объявления %d все еще отсутствует информация о местоположении: город=%v, страна=%v, адрес=%v", 
-            listing.ID, doc["city"], doc["country"], doc["location"])
-    } else {
-        log.Printf("Объявление %d имеет полную информацию о местоположении: город=%v, страна=%v, адрес=%v",
-            listing.ID, doc["city"], doc["country"], doc["location"])
-    }
+		if hasValidImage {
+			doc["images"] = imagesDoc
+			log.Printf("  Добавлено %d изображений в индекс", len(imagesDoc))
+		} else {
+			log.Printf("  ВНИМАНИЕ: У объявления %d нет изображений с корректным путем", listing.ID)
+		}
+	} else {
+		// Пытаемся загрузить изображения из базы данных, если их нет в объекте
+		images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
+		if err != nil {
+			log.Printf("  Ошибка при загрузке изображений для объявления %d: %v", listing.ID, err)
+		} else if len(images) > 0 {
+			log.Printf("  Загружено %d изображений из базы данных для объявления %d", len(images), listing.ID)
 
-    // Логируем для отладки метаданных
-    if metadata, ok := doc["metadata"]; ok {
-        log.Printf("DEBUG: Метаданные в документе для объявления %d: %+v", listing.ID, metadata)
-    } else {
-        log.Printf("DEBUG: Нет метаданных в документе для объявления %d", listing.ID)
-    }
+			imagesDoc := make([]map[string]interface{}, 0, len(images))
+			for i, img := range images {
+				log.Printf("    Изображение %d: ID=%d, Путь=%s, IsMain=%v",
+					i+1, img.ID, img.FilePath, img.IsMain)
 
-    return doc
+				imagesDoc = append(imagesDoc, map[string]interface{}{
+					"id":        img.ID,
+					"file_path": img.FilePath,
+					"is_main":   img.IsMain,
+				})
+			}
+
+			doc["images"] = imagesDoc
+			log.Printf("  Добавлено %d изображений из базы данных в индекс", len(imagesDoc))
+		} else {
+			log.Printf("  Объявление %d не имеет изображений", listing.ID)
+		}
+	}
+
+	// Добавляем атрибуты, если они есть
+	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+		attributes := make([]map[string]interface{}, 0, len(listing.Attributes))
+
+		// Создаем карту для отслеживания добавленных атрибутов
+		addedAttributes := make(map[string]bool)
+
+		for _, attr := range listing.Attributes {
+			// Проверяем, что атрибут имеет хотя бы одно значение
+			if attr.TextValue == nil && attr.NumericValue == nil &&
+				attr.BooleanValue == nil && attr.JSONValue == nil &&
+				attr.DisplayValue == "" {
+				continue
+			}
+
+			// Для избежания дубликатов атрибутов с одинаковым именем
+			attrKey := fmt.Sprintf("%s_%d", attr.AttributeName, attr.AttributeID)
+			if addedAttributes[attrKey] {
+				continue
+			}
+			addedAttributes[attrKey] = true
+
+			attrDoc := map[string]interface{}{
+				"attribute_id":   attr.AttributeID,
+				"attribute_name": attr.AttributeName,
+				"display_name":   attr.DisplayName,
+				"attribute_type": attr.AttributeType,
+				"display_value":  attr.DisplayValue,
+			}
+
+			// Добавляем типизированные значения в зависимости от типа атрибута
+			if attr.TextValue != nil && *attr.TextValue != "" {
+				attrDoc["text_value"] = *attr.TextValue
+
+				// Добавляем вариации для улучшения поиска
+				attrDoc["text_value_lowercase"] = strings.ToLower(*attr.TextValue)
+				attrDoc["text_value_variations"] = []string{
+					*attr.TextValue,
+					strings.ToLower(*attr.TextValue),
+				}
+			}
+
+			if attr.NumericValue != nil {
+				attrDoc["numeric_value"] = *attr.NumericValue
+
+				// Проверяем, не является ли числовое значение аномальным
+				if *attr.NumericValue < 0 && attr.AttributeName != "temperature" {
+					log.Printf("ВНИМАНИЕ: Отрицательное числовое значение %f для атрибута %s",
+						*attr.NumericValue, attr.AttributeName)
+				}
+
+				if *attr.NumericValue > 1000000000 {
+					log.Printf("ВНИМАНИЕ: Очень большое числовое значение %f для атрибута %s",
+						*attr.NumericValue, attr.AttributeName)
+				}
+
+				// Добавим вспомогательные поля для поиска по диапазонам
+				if attr.AttributeName == "year" ||
+					attr.AttributeName == "price" ||
+					attr.AttributeName == "mileage" ||
+					attr.AttributeName == "engine_capacity" ||
+					attr.AttributeName == "power" ||
+					attr.AttributeName == "area" ||
+					attr.AttributeName == "screen_size" {
+
+					// Для числовых атрибутов создаем отдельные поля
+					doc[fmt.Sprintf("%s_value", attr.AttributeName)] = *attr.NumericValue
+
+					// Добавляем специальные диапазонные метки для улучшения фильтрации
+					if attr.AttributeName == "year" {
+						yearVal := int(*attr.NumericValue)
+						doc["year_decade"] = (yearVal / 10) * 10 // Группировка по десятилетиям
+					} else if attr.AttributeName == "mileage" {
+						mileageVal := int(*attr.NumericValue)
+						doc["mileage_range"] = getMileageRange(mileageVal)
+					} else if attr.AttributeName == "price" {
+						priceVal := int(*attr.NumericValue)
+						doc["price_range"] = getPriceRange(priceVal)
+					}
+				}
+			}
+
+			if attr.BooleanValue != nil {
+				attrDoc["boolean_value"] = *attr.BooleanValue
+				if *attr.BooleanValue {
+					attrDoc["boolean_text"] = "да"
+				} else {
+					attrDoc["boolean_text"] = "нет"
+				}
+			}
+
+			if attr.JSONValue != nil {
+				jsonStr := string(attr.JSONValue)
+				if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
+					attrDoc["json_value"] = jsonStr
+					var jsonData interface{}
+					if err := json.Unmarshal(attr.JSONValue, &jsonData); err == nil {
+						if strArray, ok := jsonData.([]string); ok {
+							attrDoc["json_array"] = strArray
+						}
+					}
+				}
+			}
+
+			attributes = append(attributes, attrDoc)
+		}
+
+		doc["attributes"] = attributes
+
+		// Добавляем отдельные индексы для common attributes
+		for _, attr := range listing.Attributes {
+			if attr.AttributeName == "brand" ||
+				attr.AttributeName == "make" ||
+				attr.AttributeName == "model" ||
+				attr.AttributeName == "year" ||
+				attr.AttributeName == "color" ||
+				attr.AttributeName == "rooms" ||
+				attr.AttributeName == "property_type" {
+				if attr.TextValue != nil && *attr.TextValue != "" {
+					doc[attr.AttributeName] = *attr.TextValue
+					doc[attr.AttributeName+"_facet"] = *attr.TextValue
+				} else if attr.NumericValue != nil {
+					doc[attr.AttributeName] = *attr.NumericValue
+				} else if attr.DisplayValue != "" {
+					doc[attr.AttributeName] = attr.DisplayValue
+					doc[attr.AttributeName+"_facet"] = attr.DisplayValue
+				}
+			}
+		}
+	}
+
+	// Финальная проверка наличия местоположения и дополнительное логирование
+	if doc["city"] == "" || doc["country"] == "" || doc["location"] == "" {
+		log.Printf("ВНИМАНИЕ: После всех обработок у объявления %d все еще отсутствует информация о местоположении: город=%v, страна=%v, адрес=%v",
+			listing.ID, doc["city"], doc["country"], doc["location"])
+	} else {
+		log.Printf("Объявление %d имеет полную информацию о местоположении: город=%v, страна=%v, адрес=%v",
+			listing.ID, doc["city"], doc["country"], doc["location"])
+	}
+
+	// Логируем для отладки метаданных
+	if metadata, ok := doc["metadata"]; ok {
+		log.Printf("DEBUG: Метаданные в документе для объявления %d: %+v", listing.ID, metadata)
+	} else {
+		log.Printf("DEBUG: Нет метаданных в документе для объявления %d", listing.ID)
+	}
+
+	return doc
+}
+
+// Функция для определения диапазона пробега
+func getMileageRange(mileage int) string {
+	switch {
+	case mileage <= 5000:
+		return "0-5000"
+	case mileage <= 10000:
+		return "5001-10000"
+	case mileage <= 50000:
+		return "10001-50000"
+	case mileage <= 100000:
+		return "50001-100000"
+	case mileage <= 150000:
+		return "100001-150000"
+	case mileage <= 200000:
+		return "150001-200000"
+	default:
+		return "200001+"
+	}
+}
+
+// Функция для определения ценового диапазона
+func getPriceRange(price int) string {
+	switch {
+	case price <= 5000:
+		return "0-5000"
+	case price <= 10000:
+		return "5001-10000"
+	case price <= 20000:
+		return "10001-20000"
+	case price <= 50000:
+		return "20001-50000"
+	case price <= 100000:
+		return "50001-100000"
+	case price <= 500000:
+		return "100001-500000"
+	default:
+		return "500001+"
+	}
 }
 
 // geocodeCity получает координаты города
@@ -811,68 +949,79 @@ func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float6
 
 // buildSearchQuery создает поисковый запрос OpenSearch
 func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]interface{} {
-    log.Printf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s",
-        params.CategoryID, params.Language, params.Query)
+	log.Printf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s",
+		params.CategoryID, params.Language, params.Query)
 
-    query := map[string]interface{}{
-        "from": (params.Page - 1) * params.Size,
-        "size": params.Size,
-        "query": map[string]interface{}{
-            "bool": map[string]interface{}{
-                "must":   []interface{}{},
-                "filter": []interface{}{},
-            },
-        },
-    }
+	query := map[string]interface{}{
+		"from": (params.Page - 1) * params.Size,
+		"size": params.Size,
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must":   []interface{}{},
+				"filter": []interface{}{},
+			},
+		},
+	}
 
-    mustClauses := []interface{}{}
-    filterClauses := []interface{}{}
+	mustClauses := []interface{}{}
+	filterClauses := []interface{}{}
 
-    if params.Query != "" {
-        log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
+	if params.Query != "" {
+		log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
 
-        // Используем все поля переводов, если CustomQuery не указан
-        searchFields := []string{
-            "title^3", "description",
-            "title.sr^4", "description.sr", "translations.sr.title^4", "translations.sr.description",
-            "title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
-            "title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
-        }
+		// Используем все поля переводов, если CustomQuery не указан
+		searchFields := []string{
+			"title^3", "description",
+			"title.sr^4", "description.sr", "translations.sr.title^4", "translations.sr.description",
+			"title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
+			"title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
+		}
 
-        minimumShouldMatch := "70%"
-        if params.MinimumShouldMatch != "" {
-            minimumShouldMatch = params.MinimumShouldMatch
-        }
+		minimumShouldMatch := "70%"
+		if params.MinimumShouldMatch != "" {
+			minimumShouldMatch = params.MinimumShouldMatch
+		}
 
-        fuzziness := "AUTO"
-        if params.Fuzziness != "" {
-            fuzziness = params.Fuzziness
-        }
+		fuzziness := "AUTO"
+		if params.Fuzziness != "" {
+			fuzziness = params.Fuzziness
+		}
 
-        queryObj := map[string]interface{}{
-            "multi_match": map[string]interface{}{
-                "query":                params.Query,
-                "fields":               searchFields,
-                "type":                 "best_fields",
-                "fuzziness":            fuzziness,
-                "operator":             "AND",
-                "minimum_should_match": minimumShouldMatch,
-            },
-        }
+		queryObj := map[string]interface{}{
+			"multi_match": map[string]interface{}{
+				"query":                params.Query,
+				"fields":               searchFields,
+				"type":                 "best_fields",
+				"fuzziness":            fuzziness,
+				"operator":             "AND",
+				"minimum_should_match": minimumShouldMatch,
+			},
+		}
 
-        mustClauses = append(mustClauses, queryObj)
-        log.Printf("Добавлен поисковый запрос для полей: %v", searchFields)
-    }
+		mustClauses = append(mustClauses, queryObj)
+		log.Printf("Добавлен поисковый запрос для полей: %v", searchFields)
+	}
 
-	// Добавляем фильтры по категории
 	if params.CategoryID != nil {
 		categoryID := *params.CategoryID
-		log.Printf("Фильтрация по CategoryID: %d", categoryID)
-
-		// Используем фильтр по category_path_ids
+		log.Printf("Фильтрация по категории с иерархией для CategoryID: %d", categoryID)
+	
+		// Поиск по принадлежности к категории или ее подкатегориям
 		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"category_path_ids": categoryID,
+			"bool": map[string]interface{}{
+				"should": []map[string]interface{}{
+					{
+						"term": map[string]interface{}{
+							"category_id": categoryID,
+						},
+					},
+					{
+						"term": map[string]interface{}{
+							"category_path_ids": categoryID,
+						},
+					},
+				},
+				"minimum_should_match": 1,
 			},
 		})
 	}
@@ -977,7 +1126,6 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			log.Printf("Обработка атрибута фильтра: %s = %s", attrName, attrValue)
 
 			// Проверяем, содержит ли значение диапазон (для числовых значений)
-			// Проверяем, содержит ли значение диапазон (для числовых значений)
 			if strings.Contains(attrValue, ",") {
 				// Распознаём диапазоны для числовых полей
 				parts := strings.Split(attrValue, ",")
@@ -988,7 +1136,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					if minErr == nil && maxErr == nil {
 						log.Printf("Применяем диапазонный фильтр для %s: от %f до %f", attrName, minVal, maxVal)
 
-						// Использовать диапазонный фильтр в nested запросе
+						// Использовать улучшенный диапазонный фильтр в nested запросе
 						filterClauses = append(filterClauses, map[string]interface{}{
 							"nested": map[string]interface{}{
 								"path": "attributes",
@@ -1011,8 +1159,21 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 										},
 									},
 								},
+								"score_mode": "avg",
 							},
 						})
+
+						// Также добавляем поиск по специальным полям для распространенных атрибутов
+						if attrName == "year" || attrName == "mileage" || attrName == "price" {
+							filterClauses = append(filterClauses, map[string]interface{}{
+								"range": map[string]interface{}{
+									fmt.Sprintf("%s_value", attrName): map[string]interface{}{
+										"gte": minVal,
+										"lte": maxVal,
+									},
+								},
+							})
+						}
 
 						// Важно! Логируем добавленный фильтр
 						queryJSON, _ := json.MarshalIndent(filterClauses[len(filterClauses)-1], "", "  ")
@@ -1025,29 +1186,180 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				}
 			}
 
-			// Для всех остальных атрибутов - общий случай
+			// Для всех остальных атрибутов - общий случай с улучшениями
 			log.Printf("Применяем общий фильтр для %s: %s", attrName, attrValue)
-			filterClauses = append(filterClauses, map[string]interface{}{
-				"nested": map[string]interface{}{
-					"path": "attributes",
-					"query": map[string]interface{}{
-						"bool": map[string]interface{}{
-							"must": []map[string]interface{}{
-								{
-									"term": map[string]interface{}{
-										"attributes.attribute_name": attrName,
+
+			// Проверяем, оканчивается ли значение на "+"
+			if strings.HasSuffix(attrValue, "+") {
+				// Извлекаем базовое число без "+"
+				baseNum := strings.TrimSuffix(attrValue, "+")
+				// Пытаемся преобразовать в число
+				if num, err := strconv.ParseFloat(baseNum, 64); err == nil {
+					// Используем диапазонный запрос для числовых значений со знаком "+"
+					log.Printf("Применяем улучшенный диапазонный фильтр для %s >= %f", attrName, num)
+
+					// Добавляем nested фильтр
+					filterClauses = append(filterClauses, map[string]interface{}{
+						"nested": map[string]interface{}{
+							"path": "attributes",
+							"query": map[string]interface{}{
+								"bool": map[string]interface{}{
+									"must": []map[string]interface{}{
+										{
+											"term": map[string]interface{}{
+												"attributes.attribute_name": attrName,
+											},
+										},
+										{
+											"range": map[string]interface{}{
+												"attributes.numeric_value": map[string]interface{}{
+													"gte": num, // Больше или равно указанному числу
+												},
+											},
+										},
 									},
 								},
-								{
-									"match": map[string]interface{}{
-										"attributes.display_value": attrValue,
+							},
+							"score_mode": "avg",
+						},
+					})
+
+					// Также добавляем прямой фильтр по выделенному полю, если это распространенный атрибут
+					if attrName == "year" || attrName == "mileage" || attrName == "price" {
+						filterClauses = append(filterClauses, map[string]interface{}{
+							"range": map[string]interface{}{
+								fmt.Sprintf("%s_value", attrName): map[string]interface{}{
+									"gte": num,
+								},
+							},
+						})
+					}
+				} else {
+					// Если не удалось преобразовать в число, используем улучшенный поиск текста
+					log.Printf("Применяем расширенный поиск по шаблону для %s: %s*", attrName, baseNum)
+					filterClauses = append(filterClauses, map[string]interface{}{
+						"nested": map[string]interface{}{
+							"path": "attributes",
+							"query": map[string]interface{}{
+								"bool": map[string]interface{}{
+									"must": []map[string]interface{}{
+										{
+											"term": map[string]interface{}{
+												"attributes.attribute_name": attrName,
+											},
+										},
+										{
+											"bool": map[string]interface{}{
+												"should": []map[string]interface{}{
+													{
+														"wildcard": map[string]interface{}{
+															"attributes.display_value": baseNum + "*",
+														},
+													},
+													{
+														"prefix": map[string]interface{}{
+															"attributes.display_value": baseNum,
+														},
+													},
+												},
+												"minimum_should_match": 1,
+											},
+										},
+									},
+								},
+							},
+							"score_mode": "max",
+						},
+					})
+				}
+			} else if attrValue == "true" || attrValue == "false" {
+				// Специальная обработка для логических значений
+				boolValue := attrValue == "true"
+				log.Printf("Применяем булев фильтр для %s: %t", attrName, boolValue)
+
+				filterClauses = append(filterClauses, map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "attributes",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"attributes.attribute_name": attrName,
+										},
+									},
+									{
+										"term": map[string]interface{}{
+											"attributes.boolean_value": boolValue,
+										},
 									},
 								},
 							},
 						},
 					},
-				},
-			})
+				})
+			} else {
+				// Улучшенный поиск по текстовым значениям с использованием match и term
+				// для лучшего поиска по атрибутам
+				filterClauses = append(filterClauses, map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "attributes",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"attributes.attribute_name": attrName,
+										},
+									},
+									{
+										"bool": map[string]interface{}{
+											"should": []map[string]interface{}{
+												{
+													"match": map[string]interface{}{
+														"attributes.display_value": map[string]interface{}{
+															"query":    attrValue,
+															"operator": "and",
+															"boost":    2.0,
+														},
+													},
+												},
+												{
+													"term": map[string]interface{}{
+														"attributes.display_value.keyword": map[string]interface{}{
+															"value": attrValue,
+															"boost": 3.0,
+														},
+													},
+												},
+												{
+													"match_phrase": map[string]interface{}{
+														"attributes.display_value": map[string]interface{}{
+															"query": attrValue,
+															"boost": 2.5,
+														},
+													},
+												},
+											},
+											"minimum_should_match": 1,
+										},
+									},
+								},
+							},
+						},
+						"score_mode": "max",
+					},
+				})
+
+				// Добавляем прямой поиск по выделенным полям для распространенных атрибутов
+				if attrName == "make" || attrName == "brand" || attrName == "model" {
+					filterClauses = append(filterClauses, map[string]interface{}{
+						"match": map[string]interface{}{
+							attrName: attrValue,
+						},
+					})
+				}
+			}
 
 			// Логируем добавленный фильтр
 			queryJSON, _ := json.MarshalIndent(filterClauses[len(filterClauses)-1], "", "  ")
@@ -1057,18 +1369,18 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	// Добавляем clauses в запрос
 	if len(mustClauses) > 0 {
-        log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
-        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
-        mustClausesJSON, _ := json.Marshal(mustClauses)
-        log.Printf("Must-клаузы: %s", string(mustClausesJSON))
-    }
+		log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
+		mustClausesJSON, _ := json.Marshal(mustClauses)
+		log.Printf("Must-клаузы: %s", string(mustClausesJSON))
+	}
 
-    if len(filterClauses) > 0 {
-        log.Printf("Добавляем %d filter клауз в запрос", len(filterClauses))
-        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
-        filterClausesJSON, _ := json.Marshal(filterClauses)
-        log.Printf("Filter-клаузы: %s", string(filterClausesJSON))
-    }
+	if len(filterClauses) > 0 {
+		log.Printf("Добавляем %d filter клауз в запрос", len(filterClauses))
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
+		filterClausesJSON, _ := json.Marshal(filterClauses)
+		log.Printf("Filter-клаузы: %s", string(filterClausesJSON))
+	}
 
 	// Добавляем настройки сортировки
 	sortOpt := []interface{}{}
@@ -1215,8 +1527,8 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	// Для отладки выводим запрос в лог
 	queryJSON, _ := json.MarshalIndent(query, "", "  ")
-    log.Printf("Сформированный запрос: %s", queryJSON)
-    return query
+	log.Printf("Сформированный запрос: %s", queryJSON)
+	return query
 }
 
 // parseSearchResponse обрабатывает ответ от OpenSearch
@@ -1642,35 +1954,35 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 	}
 
 	if hasDiscount, ok := doc["has_discount"].(bool); ok {
-    listing.HasDiscount = hasDiscount
-}
+		listing.HasDiscount = hasDiscount
+	}
 
-if oldPrice, ok := doc["old_price"].(float64); ok {
-    listing.OldPrice = oldPrice
-}
+	if oldPrice, ok := doc["old_price"].(float64); ok {
+		listing.OldPrice = oldPrice
+	}
 
-// Обрабатываем метаданные и информацию о скидках
-if metadataRaw, ok := doc["metadata"].(map[string]interface{}); ok {
-    listing.Metadata = metadataRaw
-    
-    // Проверяем наличие информации о скидке в метаданных
-    if discount, ok := metadataRaw["discount"].(map[string]interface{}); ok {
-        // Обязательно устанавливаем флаг скидки
-        listing.HasDiscount = true
-        
-        // Если есть previous_price, устанавливаем его в поле OldPrice
-        if prevPrice, ok := discount["previous_price"].(float64); ok {
-            listing.OldPrice = prevPrice
-            log.Printf("Найдена скидка для объявления %d: скидка %v%%, старая цена: %.2f",
-                listing.ID, discount["discount_percent"], prevPrice)
-        }
-    }
-}
+	// Обрабатываем метаданные и информацию о скидках
+	if metadataRaw, ok := doc["metadata"].(map[string]interface{}); ok {
+		listing.Metadata = metadataRaw
 
-// Убедимся, что HasDiscount установлен корректно на основе OldPrice
-if listing.OldPrice > 0 && listing.OldPrice > listing.Price {
-    listing.HasDiscount = true
-}
+		// Проверяем наличие информации о скидке в метаданных
+		if discount, ok := metadataRaw["discount"].(map[string]interface{}); ok {
+			// Обязательно устанавливаем флаг скидки
+			listing.HasDiscount = true
+
+			// Если есть previous_price, устанавливаем его в поле OldPrice
+			if prevPrice, ok := discount["previous_price"].(float64); ok {
+				listing.OldPrice = prevPrice
+				log.Printf("Найдена скидка для объявления %d: скидка %v%%, старая цена: %.2f",
+					listing.ID, discount["discount_percent"], prevPrice)
+			}
+		}
+	}
+
+	// Убедимся, что HasDiscount установлен корректно на основе OldPrice
+	if listing.OldPrice > 0 && listing.OldPrice > listing.Price {
+		listing.HasDiscount = true
+	}
 	if listing.ID == 18 {
 		log.Printf("DEBUG: Преобразование документа для объявления ID=18")
 		log.Printf("DEBUG: Source документа: %+v", doc)

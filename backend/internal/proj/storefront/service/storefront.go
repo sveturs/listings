@@ -187,42 +187,65 @@ func (s *StorefrontService) DeleteStorefront(ctx context.Context, id int, userID
 	return s.storage.DeleteStorefront(ctx, id)
 }
 func (s *StorefrontService) findOrCreateCategory(ctx context.Context, cat1, cat2, cat3 string) (int, error) {
-	mapping := map[string]int{
-		"OPREMA ZA MOBILNI":        3000,  // Электроника
-		"BATERIJE":                 3121,  // Аккумуляторы
-		"PUNJACI ZA TELEFONE":      3123,  // Зарядные устройства
-		"KUCNI PUNJACI":            3123,  // Зарядные устройства
-		"ALATI":                    2835,  // Инструменты (из авто)
-		"SRAFCIGERI":               2835,  // Инструменты
-		"ZASTITE ZA EKRANE":        3126,  // Чехлы и плёнки
-		"ZASTITNA STAKLA OUTLET":   3126,  // Чехлы и плёнки
-		"DATA KABLOVI":             3124,  // Кабели и адаптеры
-		"TYPE-C KABLOVI":           3124,  // Кабели и адаптеры
-		"MASKE OUTLET":             3126,  // Чехлы и плёнки
-		"OUTLET":                   -1,    // Игнорируем как категорию
-		"AUTO OPREMA OUTLET":       2800,  // Запчасти и аксессуары (авто)
-		"SECURITY":                 10000, // Безопасность
-		"VIDEO NADZOR":             10100, // Видеонаблюдение
-		"KONEKTORI I VIDEO BALUNI": 10410, // Коннекторы и видео баллуны
-	}
+    // Маппинг для комбинаций категорий (ключ - комбинация категории 1 и 2)
+    combinedMapping := map[string]int{
+        "OPREMA ZA MOBILNI|ALATI":           3127,  // Запчасти для телефонов
+        "OPREMA ZA MOBILNI|SRAFCIGERI":      3127,  // Запчасти для телефонов
+        "OPREMA ZA MOBILNI|BATERIJE":        3121,  // Аккумуляторы
+        "OPREMA ZA MOBILNI|PUNJACI ZA TELEFONE": 3123, // Зарядные устройства
+        "OPREMA ZA MOBILNI|KUCNI PUNJACI":    3123,  // Зарядные устройства
+        "OPREMA ZA MOBILNI|ZASTITE ZA EKRANE": 3126, // Чехлы и плёнки
+        "OPREMA ZA MOBILNI|ZASTITNA STAKLA OUTLET": 3126, // Чехлы и плёнки
+        "OPREMA ZA MOBILNI|DATA KABLOVI":    3124,  // Кабели и адаптеры
+        "OPREMA ZA MOBILNI|TYPE-C KABLOVI":  3124,  // Кабели и адаптеры
+        "OPREMA ZA MOBILNI|MASKE OUTLET":    3126,  // Чехлы и плёнки
+    }
 
-	// Проверяем kategorija2 как основной уровень
-	if cat2 != "" {
-		if catID, ok := mapping[cat2]; ok && catID != -1 {
-			return catID, nil
-		}
-	}
+    // Простой маппинг для отдельных категорий
+    simpleMapping := map[string]int{
+        "OPREMA ZA MOBILNI":        3000,  // Электроника
+        "BATERIJE":                 3121,  // Аккумуляторы
+        "PUNJACI ZA TELEFONE":      3123,  // Зарядные устройства
+        "KUCNI PUNJACI":            3123,  // Зарядные устройства
+        "ALATI":                    2835,  // Инструменты (из авто)
+        "SRAFCIGERI":               2835,  // Инструменты
+        "ZASTITE ZA EKRANE":        3126,  // Чехлы и плёнки
+        "ZASTITNA STAKLA OUTLET":   3126,  // Чехлы и плёнки
+        "DATA KABLOVI":             3124,  // Кабели и адаптеры
+        "TYPE-C KABLOVI":           3124,  // Кабели и адаптеры
+        "MASKE OUTLET":             3126,  // Чехлы и плёнки
+        "OUTLET":                   -1,    // Игнорируем как категорию
+        "AUTO OPREMA OUTLET":       2800,  // Запчасти и аксессуары (авто)
+        "SECURITY":                 10000, // Безопасность
+        "VIDEO NADZOR":             10100, // Видеонаблюдение
+        "KONEKTORI I VIDEO BALUNI": 10410, // Коннекторы и видео баллуны
+    }
 
-	// Если нет, проверяем kategorija1
-	if cat1 != "" {
-		if catID, ok := mapping[cat1]; ok && catID != -1 {
-			return catID, nil
-		}
-	}
+    // Сначала проверяем комбинацию cat1|cat2
+    if cat1 != "" && cat2 != "" {
+        combinedKey := cat1 + "|" + cat2
+        if catID, ok := combinedMapping[combinedKey]; ok && catID != -1 {
+            return catID, nil
+        }
+    }
 
-	// Если ничего не найдено, возвращаем "Прочее"
-	log.Printf("Категория не найдена для %s > %s > %s, используется 'Прочее' (9999)", cat1, cat2, cat3)
-	return 9999, nil
+    // Если комбинация не найдена, проверяем kategorija2 как основной уровень
+    if cat2 != "" {
+        if catID, ok := simpleMapping[cat2]; ok && catID != -1 {
+            return catID, nil
+        }
+    }
+
+    // Если нет, проверяем kategorija1
+    if cat1 != "" {
+        if catID, ok := simpleMapping[cat1]; ok && catID != -1 {
+            return catID, nil
+        }
+    }
+
+    // Если ничего не найдено, возвращаем "Прочее"
+    log.Printf("Категория не найдена для %s > %s > %s, используется 'Прочее' (9999)", cat1, cat2, cat3)
+    return 9999, nil
 }
 
 // CreateImportSource создает новый источник импорта

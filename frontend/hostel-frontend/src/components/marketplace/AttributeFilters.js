@@ -1,6 +1,5 @@
 // frontend/hostel-frontend/src/components/marketplace/AttributeFilters.js
-// Изменения для логирования и отладки
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { debounce } from 'lodash';
 import {
@@ -16,9 +15,9 @@ import {
     FormGroup,
     Grid,
     Paper,
-    Divider,
     Stack,
-    CircularProgress
+    CircularProgress,
+    InputAdornment
 } from '@mui/material';
 import axios from '../../api/axios';
 
@@ -26,32 +25,18 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
     const { t, i18n } = useTranslation('marketplace');
     const [attributes, setAttributes] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [attributeFilters, setAttributeFilters] = useState(() => ({ ...filters }));
+    const [attributeFilters, setAttributeFilters] = useState({...filters});
     const [attributeCount, setAttributeCount] = useState(0);
     const [error, setError] = useState(null);
-    console.log(`AttributeFilters: Запрашиваем атрибуты для категории ${categoryId}`);
-    console.log(`AttributeFilters: Текущие фильтры:`, filters);
+    const isFirstRender = useRef(true);
+    
+    // Создаем отложенную функцию обновления фильтров
     const debouncedFilterChange = useCallback(
-        debounce((name, value) => {
-            console.log(`Применяем отложенный фильтр ${name}: ${value}`);
-            
-            // Обновляем локальное состояние фильтров
-            setAttributeFilters(prevFilters => {
-                const updatedFilters = { ...prevFilters };
-                
-                if (value === undefined || value === null || value === '') {
-                    delete updatedFilters[name];
-                } else {
-                    updatedFilters[name] = value;
-                }
-
-                // Вызываем основной обработчик фильтров
-                if (onFilterChange) {
-                    onFilterChange(updatedFilters);
-                }
-                
-                return updatedFilters;
-            });
+        debounce((newFilters) => {
+            console.log(`Вызываем отложенное обновление фильтров:`, newFilters);
+            if (onFilterChange) {
+                onFilterChange(newFilters);
+            }
         }, 500),
         [onFilterChange]
     );
@@ -59,10 +44,10 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
     // Обработчик изменения фильтров по атрибутам
     const handleFilterChange = useCallback((attributeName, value) => {
         console.log(`Изменение атрибута ${attributeName}: ${value}`);
-
-        // Обновляем UI немедленно
-        setAttributeFilters(prevFilters => {
-            const updatedFilters = { ...prevFilters };
+        
+        // Обновляем локальное состояние сразу для отзывчивого UI
+        setAttributeFilters(prev => {
+            const updatedFilters = {...prev};
             
             if (value === undefined || value === null || value === '') {
                 delete updatedFilters[attributeName];
@@ -70,12 +55,18 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                 updatedFilters[attributeName] = value;
             }
             
+            // Вызываем отложенное обновление родительского компонента
+            debouncedFilterChange(updatedFilters);
+            
             return updatedFilters;
         });
-        
-        // Отложенно применяем фильтр
-        debouncedFilterChange(attributeName, value);
     }, [debouncedFilterChange]);
+
+    // Обработчик изменения для диапазонных фильтров
+    const handleRangeFilter = useCallback((attributeName, min, max) => {
+        const value = `${min},${max}`;
+        handleFilterChange(attributeName, value);
+    }, [handleFilterChange]);
 
     // Загрузка атрибутов при изменении категории
     useEffect(() => {
@@ -83,24 +74,23 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
             console.log("Нет ID категории, пропускаем запрос атрибутов");
             setAttributes([]);
             setAttributeCount(0);
-            // Вызываем колбэк с false, так как атрибутов нет
+            
+            // Уведомляем родительский компонент об отсутствии атрибутов
             if (onAttributesLoaded) {
                 onAttributesLoaded(false);
             }
             return;
         }
 
-        console.log(`Загружаем атрибуты для категории ${categoryId}`);
+        // Сбрасываем состояние перед новым запросом
         setLoading(true);
         setError(null);
 
         const fetchAttributes = async () => {
-            console.log(`AttributeFilters: Начинаем fetchAttributes для категории ${categoryId}`);
             try {
-                console.log(`Начинаю запрос атрибутов для категории ${categoryId}`);
+                console.log(`Запрос атрибутов для категории ${categoryId}`);
                 const response = await axios.get(`/api/v1/marketplace/categories/${categoryId}/attributes`);
-                console.log(`Ответ API для категории ${categoryId}:`, response);
-                console.log(`AttributeFilters: Отправляем запрос к API: /api/v1/marketplace/categories/${categoryId}/attributes`);
+                
                 if (response.status === 200 && response.data?.data) {
                     // Фильтруем только те атрибуты, которые можно использовать для фильтрации
                     const filterableAttrs = response.data.data.filter(attr => attr.is_filterable);
@@ -109,29 +99,14 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                     if (filterableAttrs.length > 0) {
                         setAttributes(filterableAttrs);
                         setAttributeCount(filterableAttrs.length);
-                        console.log(`Атрибуты для категории ${categoryId}:`, filterableAttrs.map(a => a.name).join(', '));
                         
                         // Уведомляем родительский компонент о наличии атрибутов
                         if (onAttributesLoaded) {
                             onAttributesLoaded(true);
                         }
-
-                        // Сохраняем текущие значения атрибутов
-                        const currentFilters = {...attributeFilters};
                         
-                        // Добавляем значения из переданных фильтров, которые еще не учтены
-                        filterableAttrs.forEach(attr => {
-                            // Если в переданных фильтрах есть значение и оно еще не сохранено
-                            if (filters[attr.name] && currentFilters[attr.name] !== filters[attr.name]) {
-                                currentFilters[attr.name] = filters[attr.name];
-                            }
-                        });
-
-                        // Обновляем состояние только если изменились фильтры
-                        if (JSON.stringify(currentFilters) !== JSON.stringify(attributeFilters)) {
-                            setAttributeFilters(currentFilters);
-                            console.log("Обновлены атрибутные фильтры:", currentFilters);
-                        }
+                        // Синхронизируем локальное состояние с переданными фильтрами
+                        setAttributeFilters({...filters});
                     } else {
                         console.log(`Для категории ${categoryId} нет фильтруемых атрибутов`);
                         if (onAttributesLoaded) {
@@ -145,7 +120,6 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                         onAttributesLoaded(false);
                     }
                 }
-                console.log(`AttributeFilters: Получен ответ:`, response);
             } catch (error) {
                 console.error(`Ошибка при запросе атрибутов для категории ${categoryId}:`, error);
                 setError(`Ошибка: ${error.message}`);
@@ -155,11 +129,22 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
             } finally {
                 setLoading(false);
             }
-            console.log(`AttributeFilters: useEffect выполнен для категории ${categoryId}`);
         };
 
         fetchAttributes();
     }, [categoryId, i18n.language, onAttributesLoaded]);
+
+    // Обновление локального состояния при изменении входных фильтров
+    useEffect(() => {
+        // Пропускаем первый рендер
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        
+        console.log("Обновление локальных фильтров из пропсов:", filters);
+        setAttributeFilters({...filters});
+    }, [filters]);
 
     // Получение переведенного имени атрибута
     const getTranslatedName = (attribute) => {
@@ -174,7 +159,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 2 }}>
                 <CircularProgress size={24} />
                 <Typography sx={{ ml: 2 }}>{t('common.loading', { defaultValue: 'Загрузка' })}...</Typography>
             </Box>
@@ -190,13 +175,9 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
     }
 
     if (!categoryId || attributes.length === 0) {
-        // Вызываем колбэк с false, так как атрибутов нет
-        if (onAttributesLoaded) {
-            onAttributesLoaded(false);
-        }
         return null;
     }
-    console.log(`AttributeFilters: Начало useEffect для категории ${categoryId}`);
+
     // Группировка атрибутов по типам для лучшего представления
     const numberAttrs = attributes.filter(attr => attr.attribute_type === 'number');
     const selectAttrs = attributes.filter(attr => attr.attribute_type === 'select');
@@ -212,10 +193,8 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
         const attributeName = attribute.name;
         const currentValue = attributeFilters[attributeName] || '';
 
-        // Остается без изменений, так как эта логика работает правильно
         switch (attribute.attribute_type) {
             case 'text':
-                // Код для текстовых атрибутов
                 return (
                     <TextField
                         label={displayName}
@@ -223,57 +202,60 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                         size="small"
                         value={currentValue}
                         onChange={(e) => handleFilterChange(attributeName, e.target.value)}
-                        onBlur={(e) => debouncedFilterChange(attributeName, e.target.value)}
                     />
                 );
 
-            case 'number': {
-                // Код для числовых атрибутов
-                // Остается без изменений
-                // ...
-                let options = {};
-                try {
-                    if (typeof attribute.options === 'string') {
-                        options = JSON.parse(attribute.options);
-                    } else if (attribute.options && typeof attribute.options === 'object') {
-                        options = attribute.options;
+                case 'number': {
+                    let options = {};
+                    try {
+                        if (typeof attribute.options === 'string') {
+                            options = JSON.parse(attribute.options);
+                        } else if (attribute.options && typeof attribute.options === 'object') {
+                            options = attribute.options;
+                        }
+                    } catch (e) {
+                        console.error(`Ошибка при парсинге options для ${attribute.name}:`, e);
+                        options = {};
                     }
-                } catch (e) {
-                    console.error(`Ошибка при парсинге options для ${attribute.name}:`, e);
-                    options = {};
-                }
-
-                const min = options.min !== undefined ? Number(options.min) : 0;
-                const max = options.max !== undefined ? Number(options.max) : 100;
-
-                // Устанавливаем значения по умолчанию в зависимости от типа атрибута
-                let defaultMin = min;
-                let defaultMax = max;
-
-                switch (attribute.name) {
-                    case 'mileage': // Пробег
-                        defaultMin = min !== undefined ? min : 0;
-                        defaultMax = max !== undefined ? max : 500000; // до 500,000 км
-                        break;
-                    case 'year': // Год выпуска
-                        defaultMin = min !== undefined ? min : 1900;
-                        defaultMax = max !== undefined ? max : new Date().getFullYear();
-                        break;
-                    case 'engine_capacity': // Объем двигателя
-                        defaultMin = min !== undefined ? min : 0.1;
-                        defaultMax = max !== undefined ? max : 8.0; // до 8 литров
-                        break;
-                    case 'price': // Цена
-                        defaultMin = min !== undefined ? min : 0;
-                        defaultMax = max !== undefined ? max : 10000000; // до 10 миллионов
-                        break;
-                    default:
-                        defaultMin = min !== undefined ? min : 0;
-                        defaultMax = max !== undefined ? max : 100;
-                }
+                
+                    // Задаем адекватные значения по умолчанию в зависимости от типа атрибута
+                    let min, max;
+                    
+                    switch(attribute.name) {
+                        case 'year':
+                            min = options.min !== undefined ? Number(options.min) : 1900;
+                            max = options.max !== undefined ? Number(options.max) : new Date().getFullYear() + 1;
+                            break;
+                        case 'mileage':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 500000;
+                            break;
+                        case 'engine_capacity':
+                            min = options.min !== undefined ? Number(options.min) : 0.1;
+                            max = options.max !== undefined ? Number(options.max) : 10;
+                            break;
+                        case 'power':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 1000;
+                            break;
+                        case 'price':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 1000000;
+                            break;
+                        case 'area':
+                        case 'land_area':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 10000;
+                            break;
+                        default:
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 100;
+                    }
+                
+                
 
                 // Парсим текущее значение из currentValue
-                let value = [defaultMin, defaultMax];
+                let value = [min, max];
                 if (currentValue) {
                     try {
                         const parts = currentValue.split(',');
@@ -303,90 +285,72 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                         <Typography id={`filter-${attribute.id}-label`} gutterBottom>
                             {displayName}
                         </Typography>
-
+                
                         <Slider
-                            value={value}
+                            value={[parseFloat(value[0]) || min, parseFloat(value[1]) || max]}
                             onChange={(e, newValue) => {
-                                // Обновляем только локальный UI
+                                // Только локальное обновление UI
                                 setAttributeFilters(prev => ({
                                     ...prev,
                                     [attributeName]: `${newValue[0]},${newValue[1]}`
                                 }));
                             }}
                             onChangeCommitted={(e, newValue) => {
-                                // Применяем фильтр только после отпускания ползунка
-                                handleFilterChange(
+                                // Вызываем обработчик диапазона при отпускании слайдера
+                                handleRangeFilter(
                                     attributeName,
-                                    `${newValue[0]},${newValue[1]}`
+                                    newValue[0],
+                                    newValue[1]
                                 );
                             }}
                             valueLabelDisplay="auto"
                             valueLabelFormat={(value) => value + valueSuffix}
-                            min={defaultMin}
-                            max={defaultMax}
+                            min={min}
+                            max={max}
                             step={step}
-                            aria-labelledby={`filter-${attribute.id}-label`}
                         />
-
-                        <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
                             <TextField
-                                label={t('filters.min', { defaultValue: 'От' })}
-                                type="number"
                                 size="small"
+                                type="number"
                                 value={value[0]}
                                 onChange={(e) => {
-                                    const newValue = [Number(e.target.value), value[1]];
-                                    // Обновляем только локальный UI
-                                    setAttributeFilters(prev => ({
-                                        ...prev,
-                                        [attributeName]: `${newValue[0]},${newValue[1]}`
-                                    }));
+                                    const newValue = [parseFloat(e.target.value) || min, value[1]];
+                                    handleRangeFilter(attributeName, newValue[0], newValue[1]);
                                 }}
-                                onBlur={(e) => {
-                                    // Применяем фильтр при потере фокуса
-                                    const newValue = [Number(e.target.value), value[1]];
-                                    handleFilterChange(attributeName, `${newValue[0]},${newValue[1]}`);
+                                InputProps={{
+                                    endAdornment: valueSuffix ? (
+                                        <InputAdornment position="end">
+                                            {valueSuffix}
+                                        </InputAdornment>
+                                    ) : null,
                                 }}
-                                inputProps={{
-                                    min: defaultMin,
-                                    max: value[1],
-                                    step: attribute.name === 'engine_capacity' ? 0.1 : 1
-                                }}
-                                fullWidth
+                                sx={{ width: '45%' }}
                             />
                             <TextField
-                                label={t('filters.max', { defaultValue: 'До' })}
-                                type="number"
                                 size="small"
+                                type="number"
                                 value={value[1]}
                                 onChange={(e) => {
-                                    const newValue = [value[0], Number(e.target.value)];
-                                    // Обновляем только локальный UI
-                                    setAttributeFilters(prev => ({
-                                        ...prev,
-                                        [attributeName]: `${newValue[0]},${newValue[1]}`
-                                    }));
+                                    const newValue = [value[0], parseFloat(e.target.value) || max];
+                                    handleRangeFilter(attributeName, newValue[0], newValue[1]);
                                 }}
-                                onBlur={(e) => {
-                                    // Применяем фильтр при потере фокуса
-                                    const newValue = [value[0], Number(e.target.value)];
-                                    handleFilterChange(attributeName, `${newValue[0]},${newValue[1]}`);
+                                InputProps={{
+                                    endAdornment: valueSuffix ? (
+                                        <InputAdornment position="end">
+                                            {valueSuffix}
+                                        </InputAdornment>
+                                    ) : null,
                                 }}
-                                inputProps={{
-                                    min: value[0],
-                                    max: defaultMax,
-                                    step: attribute.name === 'engine_capacity' ? 0.1 : 1
-                                }}
-                                fullWidth
+                                sx={{ width: '45%' }}
                             />
-                        </Stack>
+                        </Box>
                     </Box>
                 );
             }
 
             case 'select': {
-                // Код для атрибутов с выбором из списка
-                // ...
                 let options = [];
                 try {
                     // Проверяем формат options
@@ -449,7 +413,6 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
             }
 
             case 'boolean':
-                // Код для булевых атрибутов
                 return (
                     <FormControl component="fieldset">
                         <Typography>{displayName}</Typography>
@@ -483,10 +446,6 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
 
     return (
         <Box sx={{ mt: 1 }}>
-            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2 }}>
-                {t('listings.filters.specific_attributes', { defaultValue: 'Параметры' })} ({attributeCount})
-            </Typography>
-
             {/* Отображаем атрибуты в сетке, сгруппированные по типам */}
             {numberAttrs.length > 0 && (
                 <Box sx={{ mb: 3 }}>

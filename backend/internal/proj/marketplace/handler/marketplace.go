@@ -60,7 +60,7 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 				listing.City = userProfile.City
 				log.Printf("Using city from user profile: %s", userProfile.City)
 			}
-			
+
 			// Устанавливаем страну из профиля, если не указана в объявлении
 			if listing.Country == "" && userProfile.Country != "" {
 				listing.Country = userProfile.Country
@@ -74,133 +74,7 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 	// Парсим атрибуты из запроса (оставляем как есть)
 	var requestBody map[string]interface{}
 	if err := json.Unmarshal(c.Body(), &requestBody); err == nil {
-		if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
-			log.Printf("DEBUG: Found %d attributes in request", len(attributesRaw))
-
-			// Обработка значений атрибутов
-			// Обработка значений атрибутов
-			for _, attrRaw := range attributesRaw {
-				if attrMap, ok := attrRaw.(map[string]interface{}); ok {
-					var attr models.ListingAttributeValue
-
-					// ID атрибута
-					if attrID, ok := attrMap["attribute_id"].(float64); ok {
-						attr.AttributeID = int(attrID)
-					}
-
-					// Имя атрибута для отладки
-					if attrName, ok := attrMap["attribute_name"].(string); ok {
-						attr.AttributeName = attrName
-					}
-
-					// Имя для отображения
-					if displayName, ok := attrMap["display_name"].(string); ok {
-						attr.DisplayName = displayName
-					}
-
-					// Тип атрибута
-					if attrType, ok := attrMap["attribute_type"].(string); ok {
-						attr.AttributeType = attrType
-
-						// Обработка значения в зависимости от типа
-						switch attrType {
-						case "text", "select":
-							if value, ok := attrMap["value"].(string); ok && value != "" {
-								attr.TextValue = &value
-								log.Printf("DEBUG: Attribute %d (%s) text value: %s", attr.AttributeID, attr.AttributeName, value)
-							}
-							// Изменяем обработку числовых значений для атрибутов
-						// Изменяем обработку числовых значений для атрибутов
-						case "number":
-							// Безопасно обрабатываем числовые значения любого размера
-							var numValue float64
-
-							if value, ok := attrMap["value"].(float64); ok {
-								numValue = value
-								log.Printf("DEBUG: Получено числовое значение value: %f для атрибута %s", value, attr.AttributeName)
-							} else if value, ok := attrMap["numeric_value"].(float64); ok {
-								numValue = value
-								log.Printf("DEBUG: Получено числовое значение numeric_value: %f для атрибута %s", value, attr.AttributeName)
-							} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
-								// Используем ParseFloat с 64-битной точностью
-								parsedValue, parseErr := strconv.ParseFloat(strValue, 64)
-								if parseErr == nil {
-									numValue = parsedValue
-									log.Printf("DEBUG: Преобразовано строковое значение '%s' в число %f для атрибута %s", strValue, parsedValue, attr.AttributeName)
-								} else {
-									// Логируем ошибку, но продолжаем
-									log.Printf("Error parsing numeric value '%s' for attribute %s: %v", strValue, attr.AttributeName, parseErr)
-									// Используем более гибкий подход - пытаемся удалить запятые/пробелы
-									cleanValue := strings.ReplaceAll(strings.ReplaceAll(strValue, ",", ""), " ", "")
-									if parsedClean, err := strconv.ParseFloat(cleanValue, 64); err == nil {
-										numValue = parsedClean
-										log.Printf("DEBUG: Успешно преобразовано очищенное значение '%s' в число %f для атрибута %s", cleanValue, parsedClean, attr.AttributeName)
-									}
-								}
-							}
-
-							// Проверяем и корректируем значения для особых атрибутов
-							if attr.AttributeName == "year" {
-								// Специальная обработка для года выпуска
-								currentYear := time.Now().Year()
-								if numValue < 1900 || numValue > float64(currentYear+1) {
-									// Если год вне разумного диапазона, используем текущий год
-									log.Printf("Warning: Invalid year value: %f for attribute %s, using default", numValue, attr.AttributeName)
-
-									// Если значение невалидное, но больше 0, сохраняем его
-									if numValue > 0 {
-										log.Printf("Keeping year value %f as is", numValue)
-									} else {
-										// Иначе используем текущий год
-										numValue = float64(currentYear)
-										log.Printf("Setting year to current year: %f", numValue)
-									}
-								} else {
-									// Округляем год до целого числа
-									numValue = math.Floor(numValue)
-									log.Printf("Rounded year value to %f", numValue)
-								}
-							} else if attr.AttributeName == "mileage" && numValue > 10000000 {
-								log.Printf("Warning: Very high mileage value: %f for listing, but accepting it", numValue)
-							} else if attr.AttributeName == "engine_capacity" {
-								// Округляем до 1 знака после запятой
-								numValue = math.Round(numValue*10) / 10
-								log.Printf("Rounded engine capacity to: %f", numValue)
-							}
-
-							attr.NumericValue = &numValue
-							log.Printf("DEBUG: Attribute %d (%s) final numeric value: %f", attr.AttributeID, attr.AttributeName, numValue)
-						case "boolean":
-							if value, ok := attrMap["value"].(bool); ok {
-								attr.BooleanValue = &value
-								log.Printf("DEBUG: Attribute %d (%s) boolean value: %t", attr.AttributeID, attr.AttributeName, value)
-							} else if strValue, ok := attrMap["value"].(string); ok {
-								boolValue := strValue == "true" || strValue == "1"
-								attr.BooleanValue = &boolValue
-								log.Printf("DEBUG: Attribute %d (%s) converted string to boolean value: %t", attr.AttributeID, attr.AttributeName, boolValue)
-							}
-						}
-					}
-
-					// Устанавливаем display_value для любого типа атрибута
-					if attr.TextValue != nil {
-						attr.DisplayValue = *attr.TextValue
-					} else if attr.NumericValue != nil {
-						attr.DisplayValue = fmt.Sprintf("%g", *attr.NumericValue)
-					} else if attr.BooleanValue != nil {
-						if *attr.BooleanValue {
-							attr.DisplayValue = "Да"
-						} else {
-							attr.DisplayValue = "Нет"
-						}
-					}
-
-					if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
-						listing.Attributes = append(listing.Attributes, attr)
-					}
-				}
-			}
-		}
+		processAttributesFromRequest(requestBody, &listing)
 	}
 	if listing.StorefrontID == nil {
 		fullText := listing.Title + "\n" + listing.Description
@@ -324,227 +198,349 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 		"message": "Объявление успешно создано",
 	})
 }
+
 var (
 	categoryTreeCache      []models.CategoryTreeNode
 	categoryTreeLastUpdate time.Time
 	categoryTreeMutex      sync.RWMutex
 )
+
 // GetSimilarListings возвращает похожие объявления
 func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
-    listingID, err := c.ParamsInt("id")
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
-    }
-    
-    limit := c.QueryInt("limit", 8) // По умолчанию ограничиваем 8 похожими объявлениями
-    
-    // Получаем исходное объявление
-    listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
-    if err != nil {
-        log.Printf("Ошибка при получении объявления: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить объявление")
-    }
-    
-    // Формируем запрос для расширенного поиска в OpenSearch
-    // Используем multi-match для поиска по заголовку и описанию
-    matchQuery := make([]map[string]interface{}, 0)
-    
-    // Добавляем поиск по названию объявления
-    if listing.Title != "" {
-        // Добавляем запрос на похожие названия с небольшой нечеткостью
-        matchQuery = append(matchQuery, map[string]interface{}{
-            "match": map[string]interface{}{
-                "title": map[string]interface{}{
-                    "query": listing.Title,
-                    "boost": 3.0, // Высокий вес для названия
-                    "fuzziness": "AUTO",
-                },
-            },
-        })
-    }
-    
-    // Если есть описание, добавляем его в поиск
-    if len(listing.Description) > 20 {
-        // Берем только первые 200 символов для более точного соответствия
-        descriptionExcerpt := listing.Description
-        if len(descriptionExcerpt) > 200 {
-            descriptionExcerpt = descriptionExcerpt[:200]
-        }
-        
-        matchQuery = append(matchQuery, map[string]interface{}{
-            "match": map[string]interface{}{
-                "description": map[string]interface{}{
-                    "query": descriptionExcerpt,
-                    "boost": 1.0,
-                    "fuzziness": "AUTO",
-                },
-            },
-        })
-    }
-    
-    // Строим сложный запрос для OpenSearch
-    query := map[string]interface{}{
-        "query": map[string]interface{}{
-            "bool": map[string]interface{}{
-                "should": matchQuery,
-                "must": []map[string]interface{}{
-                    {
-                        "term": map[string]interface{}{
-                            "category_id": listing.CategoryID,
-                        },
-                    },
-                    {
-                        "term": map[string]interface{}{
-                            "status": "active",
-                        },
-                    },
-                },
-                "must_not": []map[string]interface{}{
-                    {
-                        "term": map[string]interface{}{
-                            "id": listingID, // Исключаем текущее объявление
-                        },
-                    },
-                },
-                "minimum_should_match": 1,
-            },
-        },
-        "size": limit,
-    }
-    
-    // Добавляем ценовой диапазон если есть цена
-    if listing.Price > 0 {
-        // Определяем диапазон цен (например, ±30% от текущей цены)
-        minPrice := listing.Price * 0.7
-        maxPrice := listing.Price * 1.3
-        
-        priceQuery := map[string]interface{}{
-            "range": map[string]interface{}{
-                "price": map[string]interface{}{
-                    "gte": minPrice,
-                    "lte": maxPrice,
-                    "boost": 1.5, // Придаем вес объявлениям с похожей ценой
-                },
-            },
-        }
-        
-        shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
-        shouldClause = append(shouldClause, priceQuery)
-        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
-    }
-    
-    // Учитываем атрибуты для повышения релевантности
-    if len(listing.Attributes) > 0 {
-        for _, attr := range listing.Attributes {
-            // Выбираем только значимые атрибуты
-            if isSignificantAttribute(attr.AttributeName) && attr.DisplayValue != "" {
-                attrQuery := map[string]interface{}{
-                    "nested": map[string]interface{}{
-                        "path": "attributes",
-                        "query": map[string]interface{}{
-                            "bool": map[string]interface{}{
-                                "must": []map[string]interface{}{
-                                    {
-                                        "term": map[string]interface{}{
-                                            "attributes.attribute_name": attr.AttributeName,
-                                        },
-                                    },
-                                    {
-                                        "match": map[string]interface{}{
-                                            "attributes.display_value": map[string]interface{}{
-                                                "query": attr.DisplayValue,
-                                                "boost": 2.0, // Высокий вес для совпадения по атрибутам
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        "boost": 2.5,
-                    },
-                }
-                
-                shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
-                shouldClause = append(shouldClause, attrQuery)
-                query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
-            }
-        }
-    }
-    
-    // Формируем параметры поиска для OpenSearch
-    searchParams := &search.SearchParams{
-        Page: 1,
-        Size: limit,
-        CustomQuery: query,
-    }
-    
-    // Выполняем поиск с использованием OpenSearch
-    var similarListings []*models.MarketplaceListing
-    result, err := h.marketplaceService.Storage().SearchListings(c.Context(), searchParams)
-    
-    if err != nil {
-        log.Printf("Ошибка поиска похожих объявлений через OpenSearch: %v", err)
-        
-        // Если OpenSearch поиск не удался, используем запасной вариант
-        // с простым поиском по категории
-        fallbackParams := &search.ServiceParams{
-            CategoryID: strconv.Itoa(listing.CategoryID),
-            Size: limit + 1,
-            Page: 1,
-            Sort: "date_desc",
-        }
-        
-        fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
-        if fallbackErr != nil {
-            log.Printf("Ошибка запасного поиска: %v", fallbackErr)
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить похожие объявления")
-        }
-        
-        // Фильтруем результаты, убирая исходное объявление
-        for _, item := range fallbackResult.Items {
-            if item.ID != listingID {
-                similarListings = append(similarListings, item)
-                if len(similarListings) >= limit {
-                    break
-                }
-            }
-        }
-    } else {
-        // Используем результаты из OpenSearch
-        similarListings = result.Listings
-    }
-    
-    log.Printf("Найдено %d похожих объявлений для объявления ID=%d", len(similarListings), listingID)
-    
-    return utils.SuccessResponse(c, similarListings)
+	listingID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+	}
+
+	limit := c.QueryInt("limit", 8) // По умолчанию ограничиваем 8 похожими объявлениями
+
+	// Получаем исходное объявление
+	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+	if err != nil {
+		log.Printf("Ошибка при получении объявления: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить объявление")
+	}
+
+	// Формируем запрос для расширенного поиска в OpenSearch
+	// Используем multi-match для поиска по заголовку и описанию
+	matchQuery := make([]map[string]interface{}, 0)
+
+	// Добавляем поиск по названию объявления
+	if listing.Title != "" {
+		// Добавляем запрос на похожие названия с небольшой нечеткостью
+		matchQuery = append(matchQuery, map[string]interface{}{
+			"match": map[string]interface{}{
+				"title": map[string]interface{}{
+					"query":     listing.Title,
+					"boost":     3.0, // Высокий вес для названия
+					"fuzziness": "AUTO",
+				},
+			},
+		})
+	}
+
+	// Если есть описание, добавляем его в поиск
+	if len(listing.Description) > 20 {
+		// Берем только первые 200 символов для более точного соответствия
+		descriptionExcerpt := listing.Description
+		if len(descriptionExcerpt) > 200 {
+			descriptionExcerpt = descriptionExcerpt[:200]
+		}
+
+		matchQuery = append(matchQuery, map[string]interface{}{
+			"match": map[string]interface{}{
+				"description": map[string]interface{}{
+					"query":     descriptionExcerpt,
+					"boost":     1.0,
+					"fuzziness": "AUTO",
+				},
+			},
+		})
+	}
+
+	// Строим сложный запрос для OpenSearch
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"should": matchQuery,
+				"must": []map[string]interface{}{
+					{
+						"term": map[string]interface{}{
+							"category_id": listing.CategoryID,
+						},
+					},
+					{
+						"term": map[string]interface{}{
+							"status": "active",
+						},
+					},
+				},
+				"must_not": []map[string]interface{}{
+					{
+						"term": map[string]interface{}{
+							"id": listingID, // Исключаем текущее объявление
+						},
+					},
+				},
+				"minimum_should_match": 1,
+			},
+		},
+		"size": limit,
+	}
+
+	// Добавляем ценовой диапазон если есть цена
+	if listing.Price > 0 {
+		// Определяем диапазон цен (например, ±30% от текущей цены)
+		minPrice := listing.Price * 0.7
+		maxPrice := listing.Price * 1.3
+
+		priceQuery := map[string]interface{}{
+			"range": map[string]interface{}{
+				"price": map[string]interface{}{
+					"gte":   minPrice,
+					"lte":   maxPrice,
+					"boost": 1.5, // Придаем вес объявлениям с похожей ценой
+				},
+			},
+		}
+
+		shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
+		shouldClause = append(shouldClause, priceQuery)
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
+	}
+
+	// Учитываем атрибуты для повышения релевантности
+	if len(listing.Attributes) > 0 {
+		for _, attr := range listing.Attributes {
+			// Выбираем только значимые атрибуты
+			if isSignificantAttribute(attr.AttributeName) && attr.DisplayValue != "" {
+				attrQuery := map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "attributes",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"attributes.attribute_name": attr.AttributeName,
+										},
+									},
+									{
+										"match": map[string]interface{}{
+											"attributes.display_value": map[string]interface{}{
+												"query": attr.DisplayValue,
+												"boost": 2.0, // Высокий вес для совпадения по атрибутам
+											},
+										},
+									},
+								},
+							},
+						},
+						"boost": 2.5,
+					},
+				}
+
+				shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
+				shouldClause = append(shouldClause, attrQuery)
+				query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
+			}
+		}
+	}
+
+	// Формируем параметры поиска для OpenSearch
+	searchParams := &search.SearchParams{
+		Page:        1,
+		Size:        limit,
+		CustomQuery: query,
+	}
+
+	// Выполняем поиск с использованием OpenSearch
+	var similarListings []*models.MarketplaceListing
+	result, err := h.marketplaceService.Storage().SearchListings(c.Context(), searchParams)
+
+	if err != nil {
+		log.Printf("Ошибка поиска похожих объявлений через OpenSearch: %v", err)
+
+		// Если OpenSearch поиск не удался, используем запасной вариант
+		// с простым поиском по категории
+		fallbackParams := &search.ServiceParams{
+			CategoryID: strconv.Itoa(listing.CategoryID),
+			Size:       limit + 1,
+			Page:       1,
+			Sort:       "date_desc",
+		}
+
+		fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
+		if fallbackErr != nil {
+			log.Printf("Ошибка запасного поиска: %v", fallbackErr)
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить похожие объявления")
+		}
+
+		// Фильтруем результаты, убирая исходное объявление
+		for _, item := range fallbackResult.Items {
+			if item.ID != listingID {
+				similarListings = append(similarListings, item)
+				if len(similarListings) >= limit {
+					break
+				}
+			}
+		}
+	} else {
+		// Используем результаты из OpenSearch
+		similarListings = result.Listings
+	}
+
+	log.Printf("Найдено %d похожих объявлений для объявления ID=%d", len(similarListings), listingID)
+
+	return utils.SuccessResponse(c, similarListings)
 }
 
 // isSignificantAttribute определяет, является ли атрибут значимым для поиска похожих объявлений
 func isSignificantAttribute(attrName string) bool {
-    // Список значимых атрибутов, влияющих на определение похожести
-    significantAttrs := map[string]bool{
-        "make":             true,
-        "model":            true,
-        "brand":            true,
-        "year":             true,
-        "manufacturer":     true,
-        "type":             true,
-        "category":         true,
-        "rooms":            true,
-        "property_type":    true,
-        "body_type":        true,
-        "engine_capacity":  true,
-        "processor":        true,
-        "screen_size":      true,
-        "memory":           true,
-        "ram":              true,
-        "os":               true,
-        "color":            true,
-        "material":         true,
-        "size":             true,
-    }
-    
-    return significantAttrs[attrName]
+	// Список значимых атрибутов, влияющих на определение похожести
+	significantAttrs := map[string]bool{
+		"make":            true,
+		"model":           true,
+		"brand":           true,
+		"year":            true,
+		"manufacturer":    true,
+		"type":            true,
+		"category":        true,
+		"rooms":           true,
+		"property_type":   true,
+		"body_type":       true,
+		"engine_capacity": true,
+		"processor":       true,
+		"screen_size":     true,
+		"memory":          true,
+		"ram":             true,
+		"os":              true,
+		"color":           true,
+		"material":        true,
+		"size":            true,
+	}
+
+	return significantAttrs[attrName]
+}
+
+// processAttributesFromRequest обрабатывает атрибуты из запроса и добавляет их в объявление
+func processAttributesFromRequest(requestBody map[string]interface{}, listing *models.MarketplaceListing) {
+	if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
+		log.Printf("DEBUG: Found %d attributes in request", len(attributesRaw))
+
+		for _, attrRaw := range attributesRaw {
+			if attrMap, ok := attrRaw.(map[string]interface{}); ok {
+				var attr models.ListingAttributeValue
+
+				// ID атрибута
+				if attrID, ok := attrMap["attribute_id"].(float64); ok {
+					attr.AttributeID = int(attrID)
+				}
+
+				// Имя атрибута для отладки
+				if attrName, ok := attrMap["attribute_name"].(string); ok {
+					attr.AttributeName = attrName
+				}
+
+				// Имя для отображения
+				if displayName, ok := attrMap["display_name"].(string); ok {
+					attr.DisplayName = displayName
+				}
+
+				// Тип атрибута
+				if attrType, ok := attrMap["attribute_type"].(string); ok {
+					attr.AttributeType = attrType
+
+					// Обработка значения в зависимости от типа
+					switch attrType {
+					case "text", "select":
+						if value, ok := attrMap["value"].(string); ok && value != "" {
+							attr.TextValue = &value
+							log.Printf("DEBUG: Attribute %d (%s) text value: %s", attr.AttributeID, attr.AttributeName, value)
+						}
+					case "number":
+						// Универсальная обработка числовых значений
+						var numValue float64
+						var isSet bool
+
+						if value, ok := attrMap["value"].(float64); ok {
+							numValue = value
+							isSet = true
+							log.Printf("DEBUG: Получено числовое значение value: %f для атрибута %s", value, attr.AttributeName)
+						} else if value, ok := attrMap["numeric_value"].(float64); ok {
+							numValue = value
+							isSet = true
+							log.Printf("DEBUG: Получено числовое значение numeric_value: %f для атрибута %s", value, attr.AttributeName)
+						} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
+							// Используем ParseFloat с 64-битной точностью
+							parsedValue, parseErr := strconv.ParseFloat(strValue, 64)
+							if parseErr == nil {
+								numValue = parsedValue
+								isSet = true
+								log.Printf("DEBUG: Преобразовано строковое значение '%s' в число %f для атрибута %s", strValue, parsedValue, attr.AttributeName)
+							} else {
+								// Пробуем удалить запятые/пробелы
+								cleanValue := strings.ReplaceAll(strings.ReplaceAll(strValue, ",", ""), " ", "")
+								if parsedClean, err := strconv.ParseFloat(cleanValue, 64); err == nil {
+									numValue = parsedClean
+									isSet = true
+									log.Printf("DEBUG: Успешно преобразовано очищенное значение '%s' в число %f для атрибута %s", cleanValue, parsedClean, attr.AttributeName)
+								}
+							}
+						}
+
+						// Если значение установлено, обрабатываем особые случаи
+						if isSet {
+							// Проверка и корректировка для особых атрибутов
+							if attr.AttributeName == "year" {
+								currentYear := time.Now().Year()
+								if numValue < 1900 || numValue > float64(currentYear+1) {
+									if numValue > 0 {
+										log.Printf("Keeping year value %f as is", numValue)
+									} else {
+										numValue = float64(currentYear)
+										log.Printf("Setting year to current year: %f", numValue)
+									}
+								}
+								// Округляем год до целого числа
+								numValue = math.Floor(numValue)
+							} else if attr.AttributeName == "engine_capacity" {
+								// Округляем до 1 знака после запятой
+								numValue = math.Round(numValue*10) / 10
+							}
+
+							attr.NumericValue = &numValue
+						}
+					case "boolean":
+						if value, ok := attrMap["value"].(bool); ok {
+							attr.BooleanValue = &value
+						} else if strValue, ok := attrMap["value"].(string); ok {
+							boolValue := strValue == "true" || strValue == "1"
+							attr.BooleanValue = &boolValue
+						}
+					}
+				}
+
+				// Устанавливаем display_value для любого типа атрибута
+				if attr.TextValue != nil {
+					attr.DisplayValue = *attr.TextValue
+				} else if attr.NumericValue != nil {
+					attr.DisplayValue = fmt.Sprintf("%g", *attr.NumericValue)
+				} else if attr.BooleanValue != nil {
+					if *attr.BooleanValue {
+						attr.DisplayValue = "Да"
+					} else {
+						attr.DisplayValue = "Нет"
+					}
+				}
+
+				// Добавляем атрибут только если есть какое-то значение
+				if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
+					listing.Attributes = append(listing.Attributes, attr)
+				}
+			}
+		}
+	}
 }
 
 // GetCategoryAttributes возвращает атрибуты для указанной категории
@@ -1128,105 +1124,9 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 	}
 
 	var requestBody map[string]interface{}
-	if err := c.BodyParser(&requestBody); err == nil {
-		if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
-			// Обработка значений атрибутов
-			for _, attrRaw := range attributesRaw {
-				if attrMap, ok := attrRaw.(map[string]interface{}); ok {
-					var attr models.ListingAttributeValue
-
-					// ID атрибута
-					if attrID, ok := attrMap["attribute_id"].(float64); ok {
-						attr.AttributeID = int(attrID)
-					}
-
-					// Имя атрибута для отладки
-					if attrName, ok := attrMap["attribute_name"].(string); ok {
-						attr.AttributeName = attrName
-					}
-
-					// Имя для отображения
-					if displayName, ok := attrMap["display_name"].(string); ok {
-						attr.DisplayName = displayName
-					}
-
-					// Тип атрибута
-					if attrType, ok := attrMap["attribute_type"].(string); ok {
-						attr.AttributeType = attrType
-
-						// Обработка значения в зависимости от типа
-						switch attrType {
-						case "text", "select":
-							if value, ok := attrMap["value"].(string); ok && value != "" {
-								attr.TextValue = &value
-								log.Printf("DEBUG: Attribute %d (%s) text value: %s", attr.AttributeID, attr.AttributeName, value)
-							}
-							// Изменяем обработку числовых значений для атрибутов
-						case "number":
-							// Безопасно обрабатываем числовые значения любого размера
-							var numValue float64
-
-							if value, ok := attrMap["value"].(float64); ok {
-								numValue = value
-							} else if value, ok := attrMap["numeric_value"].(float64); ok {
-								numValue = value
-							} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
-								// Используем ParseFloat с 64-битной точностью
-								parsedValue, parseErr := strconv.ParseFloat(strValue, 64)
-								if parseErr == nil {
-									numValue = parsedValue
-								} else {
-									// Логируем ошибку, но продолжаем
-									log.Printf("Error parsing numeric value '%s' for attribute %s: %v", strValue, attr.AttributeName, parseErr)
-									// Используем более гибкий подход - пытаемся удалить запятые/пробелы
-									cleanValue := strings.ReplaceAll(strings.ReplaceAll(strValue, ",", ""), " ", "")
-									if parsedClean, err := strconv.ParseFloat(cleanValue, 64); err == nil {
-										numValue = parsedClean
-									}
-								}
-							}
-
-							// Проверяем допустимые диапазоны для некоторых атрибутов
-							if attr.AttributeName == "mileage" && numValue > 10000000 {
-								log.Printf("Warning: Very high mileage value: %f for listing, but accepting it", numValue)
-							}
-
-							attr.NumericValue = &numValue
-							log.Printf("DEBUG: Attribute %d (%s) numeric value: %f", attr.AttributeID, attr.AttributeName, numValue)
-						case "boolean":
-							if value, ok := attrMap["value"].(bool); ok {
-								attr.BooleanValue = &value
-								log.Printf("DEBUG: Attribute %d (%s) boolean value: %t", attr.AttributeID, attr.AttributeName, value)
-							} else if strValue, ok := attrMap["value"].(string); ok {
-								boolValue := strValue == "true" || strValue == "1"
-								attr.BooleanValue = &boolValue
-								log.Printf("DEBUG: Attribute %d (%s) converted string to boolean value: %t", attr.AttributeID, attr.AttributeName, boolValue)
-							}
-						}
-					}
-
-					// Устанавливаем display_value для любого типа атрибута
-					if attr.TextValue != nil {
-						attr.DisplayValue = *attr.TextValue
-					} else if attr.NumericValue != nil {
-						attr.DisplayValue = fmt.Sprintf("%g", *attr.NumericValue)
-					} else if attr.BooleanValue != nil {
-						if *attr.BooleanValue {
-							attr.DisplayValue = "Да"
-						} else {
-							attr.DisplayValue = "Нет"
-						}
-					}
-
-					// Добавляем атрибут в список, если есть хотя бы одно значение
-					if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
-						listing.Attributes = append(listing.Attributes, attr)
-					}
-				}
-			}
-		}
+	if err := json.Unmarshal(c.Body(), &requestBody); err == nil {
+		processAttributesFromRequest(requestBody, &listing)
 	}
-
 	// Обработка изменения цены и метаданных о скидке
 	if listing.Price != oldListing.Price {
 		// Если у объявления нет метаданных, создаем их

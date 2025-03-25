@@ -17,10 +17,9 @@ import { ChevronRight, ChevronDown } from 'lucide-react';
 const ITEM_SIZE = 40;
 const PAGE_SIZE = 20;
 
-const buildTree = (flatList) => {
-    // Создаем Map для быстрого доступа к категориям по ID
+const buildTree = (flatList, i18n) => {
     const categoryMap = new Map();
-    
+
     // Сначала добавляем все категории в Map
     flatList.forEach(category => {
         categoryMap.set(category.id, {
@@ -29,19 +28,17 @@ const buildTree = (flatList) => {
             children: []
         });
     });
-    
-    // Корневые категории - те, у которых нет родителя
+
+    // Корневые категории
     const rootCategories = [];
-    
+
     // Строим дерево
     flatList.forEach(category => {
         const categoryWithChildren = categoryMap.get(category.id);
-        
+
         if (!category.parent_id) {
-            // Корневая категория
             rootCategories.push(categoryWithChildren);
         } else {
-            // Дочерняя категория - добавляем к родителю
             const parent = categoryMap.get(category.parent_id);
             if (parent) {
                 categoryWithChildren.level = parent.level + 1;
@@ -52,19 +49,24 @@ const buildTree = (flatList) => {
             }
         }
     });
-    
-    // Сортируем категории по имени
+
+    // Оптимизированная сортировка
     const sortCategoriesByName = (categories) => {
-        categories.sort((a, b) => a.name.localeCompare(b.name));
+        categories.sort((a, b) => {
+            const nameA = a.translations?.[i18n.language] || a.name;
+            const nameB = b.translations?.[i18n.language] || b.name;
+            return nameA.localeCompare(nameB);
+        });
+
         categories.forEach(category => {
             if (category.children.length > 0) {
                 sortCategoriesByName(category.children);
             }
         });
     };
-    
+
     sortCategoriesByName(rootCategories);
-    
+
     return rootCategories;
 };
 
@@ -86,31 +88,31 @@ const CategoryItem = React.memo(({ data, index, style }) => {
     const isSelected = selectedId === String(item.id) || selectedId === item.id;
     const hasChildren = item.children?.length > 0;
     const paddingLeft = item.level * 24;
-    
+
     // Функция для получения переведенного имени категории
     // Исправленная функция getTranslatedName в CategoryItem
-const getTranslatedName = (category) => {
-    if (!category) return '';
-    
-    // Проверяем наличие переводов
-    if (category.translations && typeof category.translations === 'object') {
-        // Если есть прямой перевод на текущий язык
-        if (category.translations[i18n.language]) {
-            return category.translations[i18n.language];
-        }
-        
-        // Если прямого перевода нет, пробуем найти по приоритету
-        const langPriority = [i18n.language, 'ru', 'sr', 'en'];
-        for (const lang of langPriority) {
-            if (category.translations[lang]) {
-                return category.translations[lang];
+    const getTranslatedName = (category) => {
+        if (!category) return '';
+
+        // Проверяем наличие переводов
+        if (category.translations && typeof category.translations === 'object') {
+            // Если есть прямой перевод на текущий язык
+            if (category.translations[i18n.language]) {
+                return category.translations[i18n.language];
+            }
+
+            // Если прямого перевода нет, пробуем найти по приоритету
+            const langPriority = [i18n.language, 'ru', 'sr', 'en'];
+            for (const lang of langPriority) {
+                if (category.translations[lang]) {
+                    return category.translations[lang];
+                }
             }
         }
-    }
-    
-    // Если переводов нет или они не подходят, возвращаем исходное имя
-    return category.name;
-};
+
+        // Если переводов нет или они не подходят, возвращаем исходное имя
+        return category.name;
+    };
 
     const categoryName = getTranslatedName(item);
 
@@ -164,7 +166,7 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
     const [flattenedItems, setFlattenedItems] = useState([]);
     const [treeData, setTreeData] = useState(null);
     const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
-    
+
     // Отслеживаем изменение языка
     useEffect(() => {
         if (currentLanguage !== i18n.language) {
@@ -175,7 +177,7 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
 
     const buildFlattenedList = useCallback((items, level = 0, result = []) => {
         if (!items || !Array.isArray(items)) return result;
-        
+
         for (const item of items) {
             // Добавляем элемент с его уровнем
             const itemCopy = {
@@ -184,13 +186,13 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
                 hasChildren: Array.isArray(item.children) && item.children.length > 0
             };
             result.push(itemCopy);
-            
+
             // Если элемент развёрнут и имеет дочерние элементы, добавляем их с увеличенным уровнем
             if (expandedItems.has(item.id) && Array.isArray(item.children) && item.children.length > 0) {
                 buildFlattenedList(item.children, level + 1, result);
             }
         }
-        
+
         return result;
     }, [expandedItems]);
 
@@ -217,17 +219,17 @@ const VirtualizedCategoryTree = ({ selectedId, onSelectCategory }) => {
     useEffect(() => {
         if (queryResult?.pages?.[0]?.data) {
             const flatData = queryResult.pages[0].data;
-            
+
             // Добавляем логирование структуры переводов для отладки
             if (process.env.NODE_ENV === 'development') {
                 if (flatData.length > 0) {
-                    console.log(`Пример переводов категории:`, 
+                    console.log(`Пример переводов категории:`,
                         flatData[0].translations ? flatData[0].translations : 'Нет переводов');
                 }
             }
-            
-            const treeStructure = buildTree(flatData);
-            
+
+            const treeStructure = buildTree(flatData, i18n);
+
             setTreeData(treeStructure);
             const initialFlatList = buildFlattenedList(treeStructure);
             setFlattenedItems(initialFlatList);
