@@ -120,9 +120,15 @@ const ListingDetailsPage = () => {
     };
     // Замените функцию renderDiscountInfo:
     const renderDiscountInfo = () => {
-        if (!listing || !listing.metadata || !listing.metadata.discount) return null;
-
+        console.log("Rendering discount info. Full listing metadata:", listing.metadata);
+    
+        if (!listing || !listing.metadata || !listing.metadata.discount) {
+            console.log("No discount metadata found. Listing:", listing?.id);
+            return null;
+        }
+    
         const discount = listing.metadata.discount;
+        console.log("Discount data found:", discount);
 
         // Добавляем вывод в консоль для отладки
         console.log("Render discount info:", discount);
@@ -366,8 +372,11 @@ const ListingDetailsPage = () => {
                 is_favorite: favoritesResponse.data?.data?.some?.(
                     item => item.id === Number(id)
                 ) || false,
-                images: listingData.images || []
+                images: listingData.images || [],
+                // Убедитесь, что metadata сохраняется здесь
+                metadata: listingData.metadata // Добавьте эту строку, если её нет
             });
+            
             console.log("Listing data:", listingData);
             console.log("Storefront ID:", listingData.storefront_id);
         } catch (err) {
@@ -554,7 +563,9 @@ const ListingDetailsPage = () => {
             </Container>
         );
     }
-
+    console.log("Discount data available:", 
+        listing?.metadata?.discount?.discount_percent, 
+        listing?.metadata?.discount?.previous_price);
     if (!listing) return null;
 
     return (

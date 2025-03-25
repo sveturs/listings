@@ -377,278 +377,374 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 // Обновление функции listingToDoc для включения метаданных
 
 func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string]interface{} {
-	doc := map[string]interface{}{
-		"id":                listing.ID,
-		"title":             listing.Title,
-		"description":       listing.Description,
-		"title_suggest":     listing.Title,
-		"title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
-		"price":             listing.Price,
-		"condition":         listing.Condition,
-		"status":            listing.Status,
-		"location":          listing.Location,
-		"city":              listing.City,
-		"country":           listing.Country,
-		"views_count":       listing.ViewsCount,
-		"created_at":        listing.CreatedAt.Format(time.RFC3339),
-		"updated_at":        listing.UpdatedAt.Format(time.RFC3339),
-		"show_on_map":       listing.ShowOnMap,
-		"original_language": listing.OriginalLanguage,
-		"category_id":       listing.CategoryID,
-		"user_id":           listing.UserID,
-		"translations":      listing.Translations,
-	}
-	doc["has_discount"] = listing.HasDiscount
-	if listing.OldPrice > 0 {
-		doc["old_price"] = listing.OldPrice
-	}
-	// Добавляем поля для скидок напрямую из текста описания
-	if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
-		// Ищем процент скидки в описании с помощью регулярного выражения
-		discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
-		matches := discountRegex.FindStringSubmatch(listing.Description)
+    doc := map[string]interface{}{
+        "id":                listing.ID,
+        "title":             listing.Title,
+        "description":       listing.Description,
+        "title_suggest":     listing.Title,
+        "title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
+        "price":             listing.Price,
+        "condition":         listing.Condition,
+        "status":            listing.Status,
+        "location":          listing.Location,
+        "city":              listing.City,
+        "country":           listing.Country,
+        "views_count":       listing.ViewsCount,
+        "created_at":        listing.CreatedAt.Format(time.RFC3339),
+        "updated_at":        listing.UpdatedAt.Format(time.RFC3339),
+        "show_on_map":       listing.ShowOnMap,
+        "original_language": listing.OriginalLanguage,
+        "category_id":       listing.CategoryID,
+        "user_id":           listing.UserID,
+        "translations":      listing.Translations,
+    }
+    
+    // Логирование информации о местоположении для отладки
+    log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s", 
+        listing.ID, listing.City, listing.Country, listing.Location)
+    
+    doc["has_discount"] = listing.HasDiscount
+    if listing.OldPrice > 0 {
+        doc["old_price"] = listing.OldPrice
+    }
+    
+    // Добавляем поля для скидок напрямую из текста описания
+    if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
+        // Ищем процент скидки в описании с помощью регулярного выражения
+        discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
+        matches := discountRegex.FindStringSubmatch(listing.Description)
 
-		// Ищем старую цену с помощью регулярного выражения
-		priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
-		priceMatches := priceRegex.FindStringSubmatch(listing.Description)
+        // Ищем старую цену с помощью регулярного выражения
+        priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
+        priceMatches := priceRegex.FindStringSubmatch(listing.Description)
 
-		if len(matches) > 1 && len(priceMatches) > 1 {
-			discountPercent, _ := strconv.Atoi(matches[1])
-			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
-			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
+        if len(matches) > 1 && len(priceMatches) > 1 {
+            discountPercent, _ := strconv.Atoi(matches[1])
+            oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+            oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
 
-			// Если у объекта нет метаданных, создаем их
-			if listing.Metadata == nil {
-				listing.Metadata = make(map[string]interface{})
-			}
+            // Если у объекта нет метаданных, создаем их
+            if listing.Metadata == nil {
+                listing.Metadata = make(map[string]interface{})
+            }
 
-			// Создаем информацию о скидке
-			discount := map[string]interface{}{
-				"discount_percent":  discountPercent,
-				"previous_price":    oldPrice,
-				"effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339), // Примерная дата начала скидки
-				"has_price_history": true,
-			}
+            // Создаем информацию о скидке
+            discount := map[string]interface{}{
+                "discount_percent":  discountPercent,
+                "previous_price":    oldPrice,
+                "effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339), // Примерная дата начала скидки
+                "has_price_history": true,
+            }
 
-			// Добавляем информацию о скидке в метаданные
-			listing.Metadata["discount"] = discount
+            // Добавляем информацию о скидке в метаданные
+            listing.Metadata["discount"] = discount
 
-			// Добавляем OldPrice в документ
-			doc["old_price"] = oldPrice
-			doc["has_discount"] = true
+            // Добавляем OldPrice в документ
+            doc["old_price"] = oldPrice
+            doc["has_discount"] = true
 
-			log.Printf("Извлечена скидка из описания для объявления %d: %v", listing.ID, discount)
-		}
-	}
+            log.Printf("Извлечена скидка из описания для объявления %d: %v", listing.ID, discount)
+        }
+    }
 
-	// Добавляем метаданные если они есть
-	if listing.Metadata != nil {
-		// Копируем метаданные
-		doc["metadata"] = listing.Metadata
-		
-		// Если есть информация о скидке, проверяем и пересчитываем процент
-		if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
-			if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
-				// Пересчитываем актуальный процент скидки
-				if prevPrice > listing.Price {
-					discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
-					discount["discount_percent"] = discountPercent
-					
-					// Обновляем метаданные в документе
-					listing.Metadata["discount"] = discount
-					doc["metadata"] = listing.Metadata
-					
-					doc["has_discount"] = true
-					doc["old_price"] = prevPrice
-					
-					log.Printf("Пересчитан процент скидки для OpenSearch: %d%% (объявление %d)",
-						discountPercent, listing.ID)
-				}
-			}
-		}
-	}
+    // Добавляем метаданные если они есть
+    if listing.Metadata != nil {
+        // Копируем метаданные
+        doc["metadata"] = listing.Metadata
+        
+        // Если есть информация о скидке, проверяем и пересчитываем процент
+        if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
+            if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+                // Пересчитываем актуальный процент скидки
+                if prevPrice > listing.Price {
+                    discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
+                    discount["discount_percent"] = discountPercent
+                    
+                    // Обновляем метаданные в документе
+                    listing.Metadata["discount"] = discount
+                    doc["metadata"] = listing.Metadata
+                    
+                    doc["has_discount"] = true
+                    doc["old_price"] = prevPrice
+                    
+                    log.Printf("Пересчитан процент скидки для OpenSearch: %d%% (объявление %d)",
+                        discountPercent, listing.ID)
+                }
+            }
+        }
+    }
 
-	// Добавляем координаты, если они есть
-	if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
-		// Создаем объект с полями lat и lon для geo_point
-		doc["coordinates"] = map[string]interface{}{
-			"lat": *listing.Latitude,
-			"lon": *listing.Longitude,
-		}
+    // Пытаемся получить и применить адресную информацию из витрины если она отсутствует в объявлении
+    if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+        needStorefrontInfo := false
+        
+        // Проверяем, нужно ли получать информацию о витрине
+        if listing.City == "" || listing.Country == "" || listing.Location == "" || 
+           listing.Latitude == nil || listing.Longitude == nil {
+            needStorefrontInfo = true
+        }
+        
+        if needStorefrontInfo {
+            log.Printf("Получаем данные о витрине %d для заполнения адресной информации для объявления %d", 
+                *listing.StorefrontID, listing.ID)
+            
+            // Получаем информацию о витрине для заполнения адресных данных
+            var storefront models.Storefront
+            err := r.storage.QueryRow(context.Background(), `
+                SELECT name, city, address, country, latitude, longitude
+                FROM user_storefronts 
+                WHERE id = $1
+            `, *listing.StorefrontID).Scan(
+                &storefront.Name, 
+                &storefront.City, 
+                &storefront.Address, 
+                &storefront.Country,
+                &storefront.Latitude,
+                &storefront.Longitude,
+            )
+            
+            if err == nil {
+                // Применяем информацию о витрине
+                if listing.City == "" && storefront.City != "" {
+                    doc["city"] = storefront.City
+                    log.Printf("Применен город витрины '%s' для объявления %d", storefront.City, listing.ID)
+                }
+                
+                if listing.Country == "" && storefront.Country != "" {
+                    doc["country"] = storefront.Country
+                    log.Printf("Применена страна витрины '%s' для объявления %d", storefront.Country, listing.ID)
+                }
+                
+                if listing.Location == "" && storefront.Address != "" {
+                    doc["location"] = storefront.Address
+                    log.Printf("Применен адрес витрины '%s' для объявления %d", storefront.Address, listing.ID)
+                }
+                
+                // Если у объявления нет координат, но они есть у витрины
+                if (listing.Latitude == nil || listing.Longitude == nil || 
+                    *listing.Latitude == 0 || *listing.Longitude == 0) && 
+                    storefront.Latitude != nil && storefront.Longitude != nil && 
+                    *storefront.Latitude != 0 && *storefront.Longitude != 0 {
+                    
+                    // Создаем объект с полями lat и lon для geo_point
+                    doc["coordinates"] = map[string]interface{}{
+                        "lat": *storefront.Latitude,
+                        "lon": *storefront.Longitude,
+                    }
+                    
+                    log.Printf("Применены координаты витрины для объявления %d: lat=%f, lon=%f",
+                        listing.ID, *storefront.Latitude, *storefront.Longitude)
+                    
+                    // Устанавливаем показ на карте для координат витрины
+                    doc["show_on_map"] = true
+                }
+            } else {
+                log.Printf("Не удалось получить информацию о витрине %d: %v", *listing.StorefrontID, err)
+            }
+        }
+    }
 
-		log.Printf("Добавлены координаты для листинга %d: lat=%f, lon=%f",
-			listing.ID, *listing.Latitude, *listing.Longitude)
-	} else {
-		// Если координаты отсутствуют, но есть город, попробуем геокодировать
-		if listing.City != "" {
-			geocoded, err := r.geocodeCity(listing.City, listing.Country)
-			if err == nil && geocoded != nil {
-				// Добавляем найденные координаты
-				doc["coordinates"] = map[string]interface{}{
-					"lat": geocoded.Lat,
-					"lon": geocoded.Lon,
-				}
-				log.Printf("Добавлены геокодированные координаты для листинга %d (город %s): lat=%f, lon=%f",
-					listing.ID, listing.City, geocoded.Lat, geocoded.Lon)
-			} else {
-				log.Printf("Не удалось геокодировать город %s для листинга %d: %v",
-					listing.City, listing.ID, err)
-			}
-		} else {
-			log.Printf("У листинга %d нет координат и не указан город", listing.ID)
-		}
-	}
+    // Добавляем координаты, если они есть в объявлении
+    if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
+        // Создаем объект с полями lat и lon для geo_point
+        doc["coordinates"] = map[string]interface{}{
+            "lat": *listing.Latitude,
+            "lon": *listing.Longitude,
+        }
 
-	// Добавляем storefront_id, если есть
-	if listing.StorefrontID != nil {
-		doc["storefront_id"] = *listing.StorefrontID
-	}
+        log.Printf("Добавлены координаты из объявления для листинга %d: lat=%f, lon=%f",
+            listing.ID, *listing.Latitude, *listing.Longitude)
+    } else if _, ok := doc["coordinates"]; !ok { // Если координаты все еще не добавлены
+        // Если координаты отсутствуют, но есть город, попробуем геокодировать
+        if cityVal, ok := doc["city"].(string); ok && cityVal != "" {
+            countryVal := ""
+            if c, ok := doc["country"].(string); ok {
+                countryVal = c
+            }
+            
+            geocoded, err := r.geocodeCity(cityVal, countryVal)
+            if err == nil && geocoded != nil {
+                // Добавляем найденные координаты
+                doc["coordinates"] = map[string]interface{}{
+                    "lat": geocoded.Lat,
+                    "lon": geocoded.Lon,
+                }
+                log.Printf("Добавлены геокодированные координаты для листинга %d (город %s): lat=%f, lon=%f",
+                    listing.ID, cityVal, geocoded.Lat, geocoded.Lon)
+                
+                // Устанавливаем показ на карте для геокодированных координат
+                doc["show_on_map"] = true
+            } else {
+                log.Printf("Не удалось геокодировать город %s для листинга %d: %v",
+                    cityVal, listing.ID, err)
+            }
+        } else {
+            log.Printf("У листинга %d нет координат и не указан город", listing.ID)
+        }
+    }
 
-	// Добавляем путь категорий, если есть
-	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
-		doc["category_path_ids"] = listing.CategoryPathIds
-	} else {
-		// Если путь категорий не задан, нужно его создать
-		// Для этого выполним дополнительный запрос к базе данных
-		parentID := listing.CategoryID
-		pathIDs := []int{parentID}
+    // Добавляем storefront_id, если есть
+    if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+        doc["storefront_id"] = *listing.StorefrontID
+        log.Printf("Добавлен storefront_id: %d для объявления %d в индекс", *listing.StorefrontID, listing.ID)
+    } else {
+        log.Printf("Нет storefront_id для объявления %d или значение некорректно", listing.ID)
+    }
 
-		for parentID > 0 {
-			var cat models.MarketplaceCategory
-			err := r.storage.QueryRow(context.Background(),
-				"SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
-				Scan(&cat.ParentID)
+    // Добавляем путь категорий, если есть
+    if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
+        doc["category_path_ids"] = listing.CategoryPathIds
+    } else {
+        // Если путь категорий не задан, нужно его создать
+        // Для этого выполним дополнительный запрос к базе данных
+        parentID := listing.CategoryID
+        pathIDs := []int{parentID}
 
-			if err != nil || cat.ParentID == nil {
-				break
-			}
+        for parentID > 0 {
+            var cat models.MarketplaceCategory
+            err := r.storage.QueryRow(context.Background(),
+                "SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
+                Scan(&cat.ParentID)
 
-			parentID = *cat.ParentID
-			pathIDs = append([]int{parentID}, pathIDs...)
-		}
+            if err != nil || cat.ParentID == nil {
+                break
+            }
 
-		doc["category_path_ids"] = pathIDs
-		log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
-	}
+            parentID = *cat.ParentID
+            pathIDs = append([]int{parentID}, pathIDs...)
+        }
 
-	// Добавляем информацию о категории, если есть
-	if listing.Category != nil {
-		doc["category"] = map[string]interface{}{
-			"id":   listing.Category.ID,
-			"name": listing.Category.Name,
-			"slug": listing.Category.Slug,
-		}
-	}
+        doc["category_path_ids"] = pathIDs
+        log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
+    }
 
-	// Добавляем информацию о пользователе, если есть
-	if listing.User != nil {
-		doc["user"] = map[string]interface{}{
-			"id":    listing.User.ID,
-			"name":  listing.User.Name,
-			"email": listing.User.Email,
-		}
-	}
+    // Добавляем информацию о категории, если есть
+    if listing.Category != nil {
+        doc["category"] = map[string]interface{}{
+            "id":   listing.Category.ID,
+            "name": listing.Category.Name,
+            "slug": listing.Category.Slug,
+        }
+    }
 
-	// Добавляем изображения, если есть
-	if listing.Images != nil && len(listing.Images) > 0 {
-		log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
-		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
+    // Добавляем информацию о пользователе, если есть
+    if listing.User != nil {
+        doc["user"] = map[string]interface{}{
+            "id":    listing.User.ID,
+            "name":  listing.User.Name,
+            "email": listing.User.Email,
+        }
+    }
 
-		for i, img := range listing.Images {
-			// Логирование деталей каждого изображения для отладки
-			log.Printf("  Изображение %d: ID=%d, Путь=%s, IsMain=%v",
-				i+1, img.ID, img.FilePath, img.IsMain)
+    // Добавляем изображения, если есть
+    if listing.Images != nil && len(listing.Images) > 0 {
+        log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
+        imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
 
-			imagesDoc = append(imagesDoc, map[string]interface{}{
-				"id":        img.ID,
-				"file_path": img.FilePath,
-				"is_main":   img.IsMain,
-			})
-		}
+        for i, img := range listing.Images {
+            // Логирование деталей каждого изображения для отладки
+            log.Printf("  Изображение %d: ID=%d, Путь=%s, IsMain=%v",
+                i+1, img.ID, img.FilePath, img.IsMain)
 
-		// Проверяем, что у нас есть хотя бы одно изображение с указанным путем
-		hasValidImage := false
-		for _, img := range imagesDoc {
-			if path, ok := img["file_path"].(string); ok && path != "" {
-				hasValidImage = true
-				break
-			}
-		}
+            imagesDoc = append(imagesDoc, map[string]interface{}{
+                "id":        img.ID,
+                "file_path": img.FilePath,
+                "is_main":   img.IsMain,
+            })
+        }
 
-		if hasValidImage {
-			doc["images"] = imagesDoc
-			log.Printf("  Добавлено %d изображений в индекс", len(imagesDoc))
-		} else {
-			log.Printf("  ВНИМАНИЕ: У объявления %d нет изображений с корректным путем", listing.ID)
-		}
-	} else {
-		// Пытаемся загрузить изображения из базы данных, если их нет в объекте
-		images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
-		if err != nil {
-			log.Printf("  Ошибка при загрузке изображений для объявления %d: %v", listing.ID, err)
-		} else if len(images) > 0 {
-			log.Printf("  Загружено %d изображений из базы данных для объявления %d", len(images), listing.ID)
+        // Проверяем, что у нас есть хотя бы одно изображение с указанным путем
+        hasValidImage := false
+        for _, img := range imagesDoc {
+            if path, ok := img["file_path"].(string); ok && path != "" {
+                hasValidImage = true
+                break
+            }
+        }
 
-			imagesDoc := make([]map[string]interface{}, 0, len(images))
-			for i, img := range images {
-				log.Printf("    Изображение %d: ID=%d, Путь=%s, IsMain=%v",
-					i+1, img.ID, img.FilePath, img.IsMain)
+        if hasValidImage {
+            doc["images"] = imagesDoc
+            log.Printf("  Добавлено %d изображений в индекс", len(imagesDoc))
+        } else {
+            log.Printf("  ВНИМАНИЕ: У объявления %d нет изображений с корректным путем", listing.ID)
+        }
+    } else {
+        // Пытаемся загрузить изображения из базы данных, если их нет в объекте
+        images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
+        if err != nil {
+            log.Printf("  Ошибка при загрузке изображений для объявления %d: %v", listing.ID, err)
+        } else if len(images) > 0 {
+            log.Printf("  Загружено %d изображений из базы данных для объявления %d", len(images), listing.ID)
 
-				imagesDoc = append(imagesDoc, map[string]interface{}{
-					"id":        img.ID,
-					"file_path": img.FilePath,
-					"is_main":   img.IsMain,
-				})
-			}
+            imagesDoc := make([]map[string]interface{}, 0, len(images))
+            for i, img := range images {
+                log.Printf("    Изображение %d: ID=%d, Путь=%s, IsMain=%v",
+                    i+1, img.ID, img.FilePath, img.IsMain)
 
-			doc["images"] = imagesDoc
-			log.Printf("  Добавлено %d изображений из базы данных в индекс", len(imagesDoc))
-		} else {
-			log.Printf("  Объявление %d не имеет изображений", listing.ID)
-		}
-	}
+                imagesDoc = append(imagesDoc, map[string]interface{}{
+                    "id":        img.ID,
+                    "file_path": img.FilePath,
+                    "is_main":   img.IsMain,
+                })
+            }
 
-	// Добавляем атрибуты, если они есть
-	if listing.Attributes != nil && len(listing.Attributes) > 0 {
-		attributes := make([]map[string]interface{}, 0, len(listing.Attributes))
+            doc["images"] = imagesDoc
+            log.Printf("  Добавлено %d изображений из базы данных в индекс", len(imagesDoc))
+        } else {
+            log.Printf("  Объявление %d не имеет изображений", listing.ID)
+        }
+    }
 
-		for _, attr := range listing.Attributes {
-			attrDoc := map[string]interface{}{
-				"attribute_id":   attr.AttributeID,
-				"attribute_name": attr.AttributeName,
-				"display_name":   attr.DisplayName,
-				"attribute_type": attr.AttributeType,
-				"display_value":  attr.DisplayValue,
-			}
+    // Добавляем атрибуты, если они есть
+    if listing.Attributes != nil && len(listing.Attributes) > 0 {
+        attributes := make([]map[string]interface{}, 0, len(listing.Attributes))
 
-			// Добавляем типизированные значения в зависимости от типа атрибута
-			if attr.TextValue != nil {
-				attrDoc["text_value"] = *attr.TextValue
-			}
-			if attr.NumericValue != nil {
-				attrDoc["numeric_value"] = *attr.NumericValue
-			}
-			if attr.BooleanValue != nil {
-				attrDoc["boolean_value"] = *attr.BooleanValue
-			}
-			if attr.JSONValue != nil {
-				attrDoc["json_value"] = string(attr.JSONValue)
-			}
+        for _, attr := range listing.Attributes {
+            attrDoc := map[string]interface{}{
+                "attribute_id":   attr.AttributeID,
+                "attribute_name": attr.AttributeName,
+                "display_name":   attr.DisplayName,
+                "attribute_type": attr.AttributeType,
+                "display_value":  attr.DisplayValue,
+            }
 
-			attributes = append(attributes, attrDoc)
-		}
+            // Добавляем типизированные значения в зависимости от типа атрибута
+            if attr.TextValue != nil {
+                attrDoc["text_value"] = *attr.TextValue
+            }
+            if attr.NumericValue != nil {
+                attrDoc["numeric_value"] = *attr.NumericValue
+            }
+            if attr.BooleanValue != nil {
+                attrDoc["boolean_value"] = *attr.BooleanValue
+            }
+            if attr.JSONValue != nil {
+                attrDoc["json_value"] = string(attr.JSONValue)
+            }
 
-		doc["attributes"] = attributes
-	}
+            attributes = append(attributes, attrDoc)
+        }
 
-	// Логируем для отладки метаданных
-	if metadata, ok := doc["metadata"]; ok {
-		log.Printf("DEBUG: Метаданные в документе для объявления %d: %+v", listing.ID, metadata)
-	} else {
-		log.Printf("DEBUG: Нет метаданных в документе для объявления %d", listing.ID)
-	}
+        doc["attributes"] = attributes
+    }
 
-	return doc
+    // Финальная проверка наличия местоположения и дополнительное логирование
+    if doc["city"] == "" || doc["country"] == "" || doc["location"] == "" {
+        log.Printf("ВНИМАНИЕ: После всех обработок у объявления %d все еще отсутствует информация о местоположении: город=%v, страна=%v, адрес=%v", 
+            listing.ID, doc["city"], doc["country"], doc["location"])
+    } else {
+        log.Printf("Объявление %d имеет полную информацию о местоположении: город=%v, страна=%v, адрес=%v",
+            listing.ID, doc["city"], doc["country"], doc["location"])
+    }
+
+    // Логируем для отладки метаданных
+    if metadata, ok := doc["metadata"]; ok {
+        log.Printf("DEBUG: Метаданные в документе для объявления %d: %+v", listing.ID, metadata)
+    } else {
+        log.Printf("DEBUG: Нет метаданных в документе для объявления %d", listing.ID)
+    }
+
+    return doc
 }
 
 // geocodeCity получает координаты города

@@ -488,7 +488,11 @@ INSERT INTO marketplace_categories (id, name, slug, parent_id, icon, created_at)
     (9745, 'Товары для школы', 'school-supplies', 9700, 'backpack', '2025-02-07 07:13:52.823283'),
     (9750, 'Детская одежда и обувь, аксессуары', 'kids-fashion', 9700, 'baby', '2025-02-07 07:13:52.823283'),
 
-(9999, 'Прочее', 'any', NULL, 'any', '2025-02-07 07:13:52.823283');
-
+(9999, 'Прочее', 'any', NULL, 'any', '2025-02-07 07:13:52.823283'),
+(10000, 'Безопасность', 'security', NULL, 'paw', '2025-02-07 07:13:52.823283'),
+    -- Animals categories (родитель id=10000)
+    (10100, 'Видеонаблюдение', 'video-surveillance', 10000, 'camera', '2025-02-07 07:13:52.823283'),
+            -- Подкатегории Видеонаблюдения (родитель id=10100)
+        (10410, 'Коннекторы и видео баллуны', 'connectors-baluns', 10100, 'connector', '2025-02-07 07:13:52.823283');
 -- Обновляем sequence
-SELECT setval('marketplace_categories_id_seq', 9999, true);
+SELECT setval('marketplace_categories_id_seq', 10410, true);

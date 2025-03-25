@@ -242,7 +242,7 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                         position: 'absolute',
                         top: 10,
                         right: 10,
-                        zIndex: 9999,
+                        zIndex: 1200,
                         bgcolor: 'primary.main',
                         color: 'white',
                         borderRadius: '4px',

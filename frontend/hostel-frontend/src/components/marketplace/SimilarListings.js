@@ -91,7 +91,7 @@ const SimilarListings = ({ listingId }) => {
                     position: 'absolute',
                     top: 8,
                     left: 8,
-                    zIndex: 2,
+                    zIndex: 1100,
                     fontWeight: 'bold',
                     fontSize: '0.75rem'
                 }}

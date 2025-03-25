@@ -186,6 +186,44 @@ func (s *StorefrontService) DeleteStorefront(ctx context.Context, id int, userID
 
 	return s.storage.DeleteStorefront(ctx, id)
 }
+func (s *StorefrontService) findOrCreateCategory(ctx context.Context, cat1, cat2, cat3 string) (int, error) {
+	mapping := map[string]int{
+		"OPREMA ZA MOBILNI":        3000,  // Электроника
+		"BATERIJE":                 3121,  // Аккумуляторы
+		"PUNJACI ZA TELEFONE":      3123,  // Зарядные устройства
+		"KUCNI PUNJACI":            3123,  // Зарядные устройства
+		"ALATI":                    2835,  // Инструменты (из авто)
+		"SRAFCIGERI":               2835,  // Инструменты
+		"ZASTITE ZA EKRANE":        3126,  // Чехлы и плёнки
+		"ZASTITNA STAKLA OUTLET":   3126,  // Чехлы и плёнки
+		"DATA KABLOVI":             3124,  // Кабели и адаптеры
+		"TYPE-C KABLOVI":           3124,  // Кабели и адаптеры
+		"MASKE OUTLET":             3126,  // Чехлы и плёнки
+		"OUTLET":                   -1,    // Игнорируем как категорию
+		"AUTO OPREMA OUTLET":       2800,  // Запчасти и аксессуары (авто)
+		"SECURITY":                 10000, // Безопасность
+		"VIDEO NADZOR":             10100, // Видеонаблюдение
+		"KONEKTORI I VIDEO BALUNI": 10410, // Коннекторы и видео баллуны
+	}
+
+	// Проверяем kategorija2 как основной уровень
+	if cat2 != "" {
+		if catID, ok := mapping[cat2]; ok && catID != -1 {
+			return catID, nil
+		}
+	}
+
+	// Если нет, проверяем kategorija1
+	if cat1 != "" {
+		if catID, ok := mapping[cat1]; ok && catID != -1 {
+			return catID, nil
+		}
+	}
+
+	// Если ничего не найдено, возвращаем "Прочее"
+	log.Printf("Категория не найдена для %s > %s > %s, используется 'Прочее' (9999)", cat1, cat2, cat3)
+	return 9999, nil
+}
 
 // CreateImportSource создает новый источник импорта
 func (s *StorefrontService) CreateImportSource(ctx context.Context, source *models.ImportSourceCreate, userID int) (*models.ImportSource, error) {
@@ -306,6 +344,107 @@ func (s *StorefrontService) checkURLAccessibility(url string) error {
 	return nil
 }
 
+// ReindexStorefrontListings переиндексирует все объявления для конкретной витрины
+// Улучшенная функция ReindexStorefrontListings
+func (s *StorefrontService) ReindexStorefrontListings(ctx context.Context, storefrontID int) error {
+	log.Printf("Переиндексация всех объявлений для витрины %d...", storefrontID)
+
+	// Получаем список всех объявлений для витрины, независимо от статуса
+	query := `
+        SELECT id FROM marketplace_listings 
+        WHERE storefront_id = $1
+    `
+
+	rows, err := s.storage.Query(ctx, query, storefrontID)
+	if err != nil {
+		return fmt.Errorf("ошибка получения списка объявлений: %w", err)
+	}
+	defer rows.Close()
+
+	var listingIDs []int
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			log.Printf("Ошибка при сканировании ID объявления: %v", err)
+			continue
+		}
+		listingIDs = append(listingIDs, id)
+	}
+
+	log.Printf("Найдено %d объявлений для переиндексации", len(listingIDs))
+
+	// Переиндексируем каждое объявление
+	successCount := 0
+	failCount := 0
+
+	for i, listingID := range listingIDs {
+		if i > 0 && i%100 == 0 {
+			// Логируем прогресс каждые 100 объявлений
+			log.Printf("Переиндексировано %d из %d объявлений...", i, len(listingIDs))
+		}
+
+		listing, err := s.storage.GetListingByID(ctx, listingID)
+		if err != nil {
+			log.Printf("Ошибка получения объявления %d: %v", listingID, err)
+			failCount++
+			continue
+		}
+		if listing.City == "" || listing.Country == "" || listing.Location == "" {
+			// Получаем информацию о витрине
+			storefront, err := s.storage.GetStorefrontByID(ctx, storefrontID)
+			if err == nil && storefront != nil {
+				updated := false
+
+				if listing.City == "" && storefront.City != "" {
+					listing.City = storefront.City
+					updated = true
+				}
+
+				if listing.Country == "" && storefront.Country != "" {
+					listing.Country = storefront.Country
+					updated = true
+				}
+
+				if listing.Location == "" && storefront.Address != "" {
+					listing.Location = storefront.Address
+					updated = true
+				}
+
+				if updated {
+					log.Printf("Обновлена адресная информация для объявления %d из витрины", listing.ID)
+
+					// Обновляем объявление в базе данных
+					if err := s.storage.UpdateListing(ctx, listing); err != nil {
+						log.Printf("Ошибка обновления адресной информации для объявления %d: %v", listing.ID, err)
+					}
+				}
+			}
+		}
+		// Проверка наличия storefront_id
+		if listing.StorefrontID == nil || *listing.StorefrontID != storefrontID {
+			// Исправляем storefront_id, если он отсутствует или неверен
+			listing.StorefrontID = &storefrontID
+			log.Printf("Исправлен storefront_id для объявления %d", listingID)
+
+			// Обновляем объявление в базе данных
+			if err := s.storage.UpdateListing(ctx, listing); err != nil {
+				log.Printf("Ошибка обновления объявления %d в БД: %v", listingID, err)
+			}
+		}
+
+		if err := s.storage.IndexListing(ctx, listing); err != nil {
+			log.Printf("Ошибка индексации объявления %d: %v", listingID, err)
+			failCount++
+		} else {
+			successCount++
+		}
+	}
+
+	log.Printf("Завершена переиндексация %d объявлений для витрины %d (успешно: %d, ошибок: %d)",
+		len(listingIDs), storefrontID, successCount, failCount)
+	return nil
+}
+
 // Обновленная функция RunImport с проверкой доступности URL
 func (s *StorefrontService) RunImport(ctx context.Context, sourceID int, userID int) (*models.ImportHistory, error) {
 	// Получаем информацию об источнике
@@ -407,6 +546,18 @@ func (s *StorefrontService) RunImport(ctx context.Context, sourceID int, userID 
 			return history, fmt.Errorf("error importing CSV: %w", err)
 		}
 		return updatedHistory, err
+	}
+	if updatedHistory != nil && (updatedHistory.Status == "success" || updatedHistory.Status == "partial") {
+		log.Printf("Запуск переиндексации всех объявлений после импорта...")
+		// Запускаем переиндексацию синхронно, а не в горутине
+		reindexCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+		defer cancel()
+
+		if err := s.ReindexStorefrontListings(reindexCtx, source.StorefrontID); err != nil {
+			log.Printf("Ошибка при переиндексации объявлений витрины после импорта: %v", err)
+		} else {
+			log.Printf("Переиндексация объявлений витрины после импорта успешно завершена")
+		}
 	}
 
 	return updatedHistory, nil
@@ -699,30 +850,44 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 		}
 
 		// Устанавливаем связь с витриной
+		// После установки связи с витриной
 		listingData.UserID = userID
 		listingData.StorefrontID = &storefront.ID
-		if listingData.City == "" && storefront != nil && storefront.City != "" {
-			listingData.City = storefront.City
-			log.Printf("Применен город витрины для товара: %s", storefront.City)
-		}
 
-		if listingData.Country == "" && storefront != nil && storefront.Country != "" {
-			listingData.Country = storefront.Country
-			log.Printf("Применена страна витрины для товара: %s", storefront.Country)
-		}
+		// Применяем данные о местоположении из витрины ВСЕГДА
+		if storefront != nil {
+			// Для города
+			if listingData.City == "" && storefront.City != "" {
+				listingData.City = storefront.City
+				log.Printf("Применен город витрины для товара: %s", storefront.City)
+			}
 
-		if listingData.Location == "" && storefront != nil && storefront.Address != "" {
-			listingData.Location = storefront.Address
-			log.Printf("Применен адрес витрины для товара: %s", storefront.Address)
-		}
+			// Для страны
+			if listingData.Country == "" && storefront.Country != "" {
+				listingData.Country = storefront.Country
+				log.Printf("Применена страна витрины для товара: %s", storefront.Country)
+			}
 
-		// Если нет координат
-		if (listingData.Latitude == nil || listingData.Longitude == nil) &&
-			storefront != nil && storefront.Latitude != nil && storefront.Longitude != nil {
-			listingData.Latitude = storefront.Latitude
-			listingData.Longitude = storefront.Longitude
-			log.Printf("Применены координаты витрины для товара: Lat=%f, Lon=%f",
-				*storefront.Latitude, *storefront.Longitude)
+			// Для адреса
+			if listingData.Location == "" && storefront.Address != "" {
+				listingData.Location = storefront.Address
+				log.Printf("Применен адрес витрины для товара: %s", storefront.Address)
+			}
+
+			// Для координат
+			if (listingData.Latitude == nil || listingData.Longitude == nil) &&
+				storefront.Latitude != nil && storefront.Longitude != nil {
+				listingData.Latitude = storefront.Latitude
+				listingData.Longitude = storefront.Longitude
+				log.Printf("Применены координаты витрины для товара: Lat=%f, Lon=%f",
+					*storefront.Latitude, *storefront.Longitude)
+			}
+
+			// Включаем показ на карте, если есть координаты
+			if listingData.Latitude != nil && listingData.Longitude != nil &&
+				*listingData.Latitude != 0 && *listingData.Longitude != 0 {
+				listingData.ShowOnMap = true
+			}
 		}
 		// Создание объявления
 		listingID, err := s.storage.CreateListing(ctx, &listingData)
@@ -732,54 +897,18 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 			continue
 		}
 
-		// Если есть колонка с изображениями, обрабатываем их с новым подходом
+		// Если есть колонка с изображениями, обрабатываем их
 		if imagesIdx, ok := columnMap["images"]; ok && imagesIdx < len(row) && row[imagesIdx] != "" {
 			imagesStr := row[imagesIdx]
-			imagesList := strings.Split(imagesStr, ",")
 
-			// Добавляем базовую информацию об изображениях в БД с предсказуемыми именами
-			for i, imagePath := range imagesList {
-				imagePath = strings.TrimSpace(imagePath)
-				if imagePath == "" {
-					continue
-				}
-
-				// ИЗМЕНЕНИЕ: Используем детерминированное имя файла
-				fileName := fmt.Sprintf("%d_image_%d.jpg", listingID, i)
-
-				// Получаем имя файла из URL
-				parts := strings.Split(imagePath, "/")
-				imageFileName := ""
-				if len(parts) > 0 {
-					imageFileName = parts[len(parts)-1]
-				}
-
-				// Создаем запись об изображении в базе данных
-				image := &models.MarketplaceImage{
-					ListingID:   listingID,
-					FilePath:    fileName,
-					FileName:    imageFileName,
-					FileSize:    0,            // Размер будет обновлен после обработки
-					ContentType: "image/jpeg", // Предположительный тип
-					IsMain:      i == 0,       // Первое изображение - основное
-				}
-
-				_, err = s.storage.AddListingImage(ctx, image)
-				if err != nil {
-					log.Printf("Ошибка при добавлении информации об изображении в БД: %v", err)
-					continue
-				}
-			}
-
-			// Теперь запускаем асинхронную обработку изображений
+			// Запускаем асинхронную обработку изображений без предварительного создания записей
 			go func(listID int, imgs string, zipR *zip.Reader) {
 				processingCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 				defer cancel()
-				s.ProcessImportImages(processingCtx, listID, imgs, zipR)
-				log.Printf("Завершена обработка изображений для листинга %d", listID)
+				s.ProcessImportImagesAsync(processingCtx, listID, imgs, zipR)
+				log.Printf("Запущена обработка изображений для листинга %d", listID)
 			}(listingID, imagesStr, zipReader)
 		}
-
 		// Получаем созданное объявление для индексации
 		createdListing, err := s.storage.GetListingByID(ctx, listingID)
 		if err != nil {
@@ -1045,6 +1174,21 @@ func (s *StorefrontService) ImportXMLFromZip(ctx context.Context, sourceID int, 
 	source.LastImportLog = errorLog.String()
 	s.storage.UpdateImportSource(ctx, source)
 
+	if history.Status == "success" || history.Status == "partial" {
+		log.Printf("Запуск переиндексации всех объявлений после XML импорта...")
+		go func() {
+			reindexCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+			defer cancel()
+
+			// Запускаем переиндексацию всех объявлений
+			if err := s.ReindexStorefrontListings(reindexCtx, source.StorefrontID); err != nil {
+				log.Printf("Ошибка при переиндексации объявлений витрины после импорта: %v", err)
+			} else {
+				log.Printf("Переиндексация объявлений витрины после импорта успешно завершена")
+			}
+		}()
+	}
+
 	return history, nil
 }
 
@@ -1129,13 +1273,10 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 		log.Printf("Ошибка получения информации о витрине для адресов: %v", err)
 		// Продолжаем выполнение, даже если не удалось получить витрину
 	}
-	// Константа для ID категории "прочее"
 	const DefaultCategoryID = 9999
 
-	// Создаем XML декодер
 	decoder := xml.NewDecoder(reader)
 
-	// Переменные для сохранения текущего артикула и его полей
 	var (
 		inArtikal   bool
 		inField     string
@@ -1153,7 +1294,6 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 		inSlike     bool
 	)
 
-	// Обрабатываем каждый XML токен
 	for {
 		token, err := decoder.Token()
 		if err == io.EOF {
@@ -1165,10 +1305,8 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 
 		switch t := token.(type) {
 		case xml.StartElement:
-			// Начало элемента
 			if t.Name.Local == "artikal" {
 				inArtikal = true
-				// Сбрасываем переменные для нового артикула
 				id = ""
 				naziv = ""
 				kategorija1 = ""
@@ -1184,93 +1322,72 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 				if t.Name.Local == "slike" {
 					inSlike = true
 				} else if inSlike && t.Name.Local == "slika" {
-					// Будем собирать данные изображения внутри slika
 					inField = "slika"
 				} else {
 					inField = t.Name.Local
 				}
 			}
 		case xml.EndElement:
-			// Конец элемента
 			if t.Name.Local == "artikal" && inArtikal {
 				inArtikal = false
 				itemsTotal++
 
-				// Обрабатываем собранные данные артикула
 				if naziv == "" {
 					itemsFailed++
 					errorLog.WriteString(fmt.Sprintf("Item with ID %s skipped: no title\n", id))
 					continue
 				}
 
-				// Преобразуем цену в число
 				var price float64 = 0.0
-
-				// Если розничная цена указана и не равна нулю или ".0000"
 				mpCenaClean := strings.TrimSpace(mpCena)
 				if mpCenaClean != "" && mpCenaClean != ".0000" && mpCenaClean != "0.0000" {
-					// Используем розничную цену
-					price, err = parsePrice(mpCena)
+					price, err = s.parsePrice(mpCena)
 					if err != nil {
-						// Если ошибка парсинга, пытаемся использовать оптовую цену
-						price, err = parsePrice(vpCena)
+						price, err = s.parsePrice(vpCena)
 						if err != nil || price == 0 {
-							// Если розничная и оптовая цены некорректны, устанавливаем минимальную цену
 							price = 1.00
 							log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
 						} else {
-							// Оптовая цена корректна, применяем наценку
-							price = price * 1.5 // Наценка 50%
+							price = price * 1.5
 							log.Printf("For item ID %s: retail price invalid, using wholesale price with markup: %f", id, price)
 						}
 					}
 				} else {
-					// Если розничная цена не указана или равна нулю, используем оптовую цену с наценкой
-					wholesalePrice, wpErr := parsePrice(vpCena)
+					wholesalePrice, wpErr := s.parsePrice(vpCena)
 					if wpErr == nil && wholesalePrice > 0 {
-						// Если есть корректная оптовая цена, используем её с наценкой
-						price = wholesalePrice * 1.5 // Наценка 50%
+						price = wholesalePrice * 1.5
 						log.Printf("For item ID %s: retail price not set, using wholesale price with markup: %f", id, price)
 					} else {
-						// Если обе цены некорректны, устанавливаем минимальную цену
-						price = 1.00 // Минимальная цена
+						price = 1.00
 						log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
 					}
 				}
 
-				// Находим или создаем категорию
-				categoryID := DefaultCategoryID
-				if kategorija1 != "" {
-					catID, err := s.findOrCreateCategory(ctx, kategorija1, kategorija2, kategorija3)
-					if err == nil {
-						categoryID = catID
-					} else {
-						errorLog.WriteString(fmt.Sprintf("Warning for item %s: %v. Using default category.\n", id, err))
-					}
+				categoryID, err := s.findOrCreateCategory(ctx, kategorija1, kategorija2, kategorija3)
+				if err != nil {
+					errorLog.WriteString(fmt.Sprintf("Warning for item %s: %v. Using default category.\n", id, err))
+					categoryID = DefaultCategoryID
 				}
 
-				// НОВЫЙ КОД: Проверка существования объявления по внешнему ID
 				var existingListing *models.MarketplaceListing
 				var existingListingID int
 				var existingPrice float64
 
-				// Проверяем, существует ли объявление с таким внешним ID в этой витрине
 				sqlQuery := `
                     SELECT id, price FROM marketplace_listings 
                     WHERE external_id = $1 AND storefront_id = $2 AND user_id = $3 
                     LIMIT 1
                 `
-
-				err := s.storage.QueryRow(ctx, sqlQuery, id, storefrontID, userID).Scan(&existingListingID, &existingPrice)
-
+				err = s.storage.QueryRow(ctx, sqlQuery, id, storefrontID, userID).Scan(&existingListingID, &existingPrice)
 				if err == nil {
-					// Объявление найдено, получаем полные данные
 					existingListing, err = s.storage.GetListingByID(ctx, existingListingID)
-					log.Printf("Found existing listing ID %d for external ID %s", existingListingID, id)
+					if err != nil {
+						log.Printf("Failed to fetch existing listing %d: %v", existingListingID, err)
+					} else {
+						log.Printf("Found existing listing ID %d for external ID %s", existingListingID, id)
+					}
 				}
 
- 
-				// Вызываем сервис истории цен для анализа
 				var discountInfo *models.DiscountInfo
 				if existingListing != nil && s.priceHistoryService != nil {
 					discountInfo, err = s.priceHistoryService.AnalyzeDiscount(ctx, existingListingID)
@@ -1279,22 +1396,15 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					}
 				}
 
-				// Формируем описание с учетом информации о скидке
-				var discountLabel string = ""
+				var discountLabel string
 				if existingListing != nil && existingPrice > 0 && price < existingPrice {
-					// Рассчитываем базовую скидку (это будет добавлено как метаданные)
 					discountPercent := int((existingPrice - price) / existingPrice * 100)
-
-					// Добавляем метку скидки в описание только если:
-					// 1. Скидка значительная (>= 10%)
-					// 2. Нет признаков манипуляции с ценой
 					if discountInfo != nil && discountInfo.IsRealDiscount && discountInfo.DiscountPercent >= 10 {
 						discountLabel = fmt.Sprintf("🔥 %d%% SALE! 🔥\nold price: %.2f RSD\n\n",
 							discountInfo.DiscountPercent, existingPrice)
 						log.Printf("Обнаружена реальная скидка для товара %s: %d%% (old price: %.2f, новая цена: %.2f)",
 							id, discountInfo.DiscountPercent, existingPrice, price)
 					} else if discountPercent >= 10 {
-						// Если нет полной информации о скидке или для новых товаров, проверяем простой процент
 						discountLabel = fmt.Sprintf("🔥 %d%% SALE! 🔥\nold price: %.2f RSD\n\n",
 							discountPercent, existingPrice)
 						log.Printf("Обнаружена скидка для товара %s: %d%% (old price: %.2f, новая цена: %.2f)",
@@ -1302,16 +1412,10 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					}
 				}
 
-				// Если товар на акции, отмечаем это в описании
-				if naAkciji == "1" {
-					if discountLabel == "" {
-						// Добавляем метку акции только если еще нет метки скидки
-						discountLabel = "🔥 SALE! 🔥\n\n"
-					}
+				if naAkciji == "1" && discountLabel == "" {
+					discountLabel = "🔥 SALE! 🔥\n\n"
 				}
 
-				// Записываем изменение цены в историю
-				// Для существующих объявлений
 				if existingListing != nil && existingPrice != price && s.priceHistoryService != nil {
 					err = s.priceHistoryService.RecordPriceChange(ctx, existingListingID, existingPrice, price, "import")
 					if err != nil {
@@ -1319,36 +1423,28 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					}
 				}
 
-				// Подготовка общих данных для обновления или создания
 				descriptionWithDiscount := discountLabel + opis
 
 				if existingListing != nil {
-					// Обновляем существующее объявление
 					existingListing.Title = naziv
 					existingListing.Description = descriptionWithDiscount
 					existingListing.Price = price
 					existingListing.CategoryID = categoryID
-					existingListing.Status = func() string {
-						if dostupan == "1" {
-							return "active"
-						}
-						return "inactive"
-					}()
+					if dostupan == "1" {
+						existingListing.Status = "active"
+					} else {
+						existingListing.Status = "inactive"
+					}
 
-					// Добавляем информацию о скидке в метаданные объявления, если она есть
 					if discountInfo != nil && discountInfo.DiscountPercent > 0 {
-						// Преобразуем информацию о скидке в упрощенную структуру для фронтенда
 						discountData := models.DiscountData{
 							DiscountPercent: discountInfo.DiscountPercent,
 							PreviousPrice:   discountInfo.PreviousPrice,
 							EffectiveFrom:   discountInfo.EffectiveFrom,
 							HasPriceHistory: true,
 						}
-
-						// Сериализуем в JSON
 						discountJSON, err := json.Marshal(discountData)
 						if err == nil {
-							// Добавляем как метаданные
 							if existingListing.Metadata == nil {
 								existingListing.Metadata = make(map[string]interface{})
 							}
@@ -1356,7 +1452,6 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 						}
 					}
 
-					// Обновляем объявление
 					if err := s.storage.UpdateListing(ctx, existingListing); err != nil {
 						itemsFailed++
 						errorLog.WriteString(fmt.Sprintf("Error updating listing %d for item %s: %v\n",
@@ -1367,7 +1462,6 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					itemsUpdated++
 					log.Printf("Successfully updated listing %d for item %s", existingListing.ID, id)
 
-					// Обновляем изображения для существующего объявления, если указаны
 					if len(slike) > 0 {
 						imagesStr := strings.Join(slike, ",")
 						go func(listID int, imgs string) {
@@ -1378,59 +1472,67 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 						}(existingListing.ID, imagesStr)
 					}
 
-					// Выполняем переиндексацию обновленного объявления
 					if err := s.storage.IndexListing(ctx, existingListing); err != nil {
 						log.Printf("Warning: Failed to reindex updated listing: %v", err)
 					}
-
 				} else {
 					// Создаем новое объявление
+					status := "inactive"
+					if dostupan == "1" {
+						status = "active"
+					}
+
+					// Внутри блока для создания нового объявления
+
 					listing := &models.MarketplaceListing{
-						UserID:       userID,
-						CategoryID:   categoryID,
-						StorefrontID: &storefrontID,
-						Title:        naziv,
-						Description:  discountLabel + opis,
-						Price:        price,
-						Condition:    "new", // По умолчанию новый товар
-						Status: func() string {
-							if dostupan == "1" {
-								return "active"
-							}
-							return "inactive"
-						}(),
+						UserID:           userID,
+						CategoryID:       categoryID,
+						StorefrontID:     &storefrontID,
+						Title:            naziv,
+						Description:      descriptionWithDiscount,
+						Price:            price,
+						Condition:        "new",
+						Status:           status,
 						ShowOnMap:        false,
-						OriginalLanguage: "sr", // По умолчанию сербский язык
-						ExternalID:       id,   // НОВОЕ ПОЛЕ: добавляем внешний ID
+						OriginalLanguage: "sr",
+						ExternalID:       id,
 					}
-					
-					// Применяем данные о местоположении из витрины, с проверкой на nil
-					if listing.City == "" && storefront != nil && storefront.City != "" {
-						listing.City = storefront.City
-						log.Printf("Применен город витрины для товара: %s", storefront.City)
+
+					// Применяем данные о местоположении из витрины ВСЕГДА, но не перезаписываем существующие значения
+					if storefront != nil {
+						// Для города
+						if listing.City == "" && storefront.City != "" {
+							listing.City = storefront.City
+							log.Printf("Применен город витрины для товара %s: %s", id, storefront.City)
+						}
+
+						// Для страны
+						if listing.Country == "" && storefront.Country != "" {
+							listing.Country = storefront.Country
+							log.Printf("Применена страна витрины для товара %s: %s", id, storefront.Country)
+						}
+
+						// Для адреса
+						if listing.Location == "" && storefront.Address != "" {
+							listing.Location = storefront.Address
+							log.Printf("Применен адрес витрины для товара %s: %s", id, storefront.Address)
+						}
+
+						// Для координат
+						if (listing.Latitude == nil || listing.Longitude == nil) &&
+							storefront.Latitude != nil && storefront.Longitude != nil {
+							listing.Latitude = storefront.Latitude
+							listing.Longitude = storefront.Longitude
+							log.Printf("Применены координаты витрины для товара %s: Lat=%f, Lon=%f",
+								id, *storefront.Latitude, *storefront.Longitude)
+						}
+
+						// Включаем показ на карте, если есть координаты
+						if listing.Latitude != nil && listing.Longitude != nil &&
+							*listing.Latitude != 0 && *listing.Longitude != 0 {
+							listing.ShowOnMap = true
+						}
 					}
-					
-					if listing.Country == "" && storefront != nil && storefront.Country != "" {
-						listing.Country = storefront.Country
-						log.Printf("Применена страна витрины для товара: %s", storefront.Country)
-					}
-					
-					if listing.Location == "" && storefront != nil && storefront.Address != "" {
-						listing.Location = storefront.Address
-						log.Printf("Применен адрес витрины для товара: %s", storefront.Address)
-					}
-					
-					// Если нет координат
-					if (listing.Latitude == nil || listing.Longitude == nil) &&
-					   storefront != nil && storefront.Latitude != nil && storefront.Longitude != nil {
-						listing.Latitude = storefront.Latitude
-						listing.Longitude = storefront.Longitude
-						log.Printf("Применены координаты витрины для товара: Lat=%f, Lon=%f", 
-								  *storefront.Latitude, *storefront.Longitude)
-					}
-					
-					
-					// Создание объявления
 					listingID, err := s.storage.CreateListing(ctx, listing)
 					if err != nil {
 						itemsFailed++
@@ -1438,58 +1540,19 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 						continue
 					}
 
-					// Если есть изображения, сначала добавляем их ссылки в БД
 					if len(slike) > 0 {
-						// Добавляем базовую информацию об изображениях в БД с детерминированными именами
-						for i, imagePath := range slike {
-							imagePath = strings.TrimSpace(imagePath)
-							if imagePath == "" {
-								continue
-							}
-
-							// Используем детерминированное имя файла
-							fileName := fmt.Sprintf("%d_image_%d.jpg", listingID, i)
-
-							// Получаем имя файла из URL
-							parts := strings.Split(imagePath, "/")
-							imageFileName := ""
-							if len(parts) > 0 {
-								imageFileName = parts[len(parts)-1]
-							}
-
-							// Создаем запись об изображении в базе данных
-							image := &models.MarketplaceImage{
-								ListingID:   listingID,
-								FilePath:    fileName,
-								FileName:    imageFileName,
-								FileSize:    0,            // Размер будет обновлен после обработки
-								ContentType: "image/jpeg", // Предположительный тип
-								IsMain:      i == 0,       // Первое изображение - основное
-							}
-
-							_, err = s.storage.AddListingImage(ctx, image)
-							if err != nil {
-								log.Printf("Ошибка при добавлении информации об изображении в БД: %v", err)
-								continue
-							}
-						}
-
-						// Теперь запускаем асинхронную обработку изображений
 						imagesStr := strings.Join(slike, ",")
 						go func(listID int, imgs string) {
 							processingCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 							defer cancel()
-							s.ProcessImportImages(processingCtx, listID, imgs, nil)
-							log.Printf("Завершена обработка изображений для листинга %d", listID)
+							s.ProcessImportImagesAsync(processingCtx, listID, imgs, nil)
+							log.Printf("Запущена обработка изображений для листинга %d", listID)
 						}(listingID, imagesStr)
 					}
-
-					// Получаем созданное объявление для индексации с уже добавленными ссылками
 					createdListing, err := s.storage.GetListingByID(ctx, listingID)
 					if err != nil {
 						errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))
 					} else {
-						// Индексируем объявление в поисковом движке
 						err = s.storage.IndexListing(ctx, createdListing)
 						if err != nil {
 							errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to index: %v\n", err))
@@ -1505,7 +1568,6 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 				inField = ""
 			}
 		case xml.CharData:
-			// Текстовые данные
 			if inArtikal && inField != "" {
 				text := string(t)
 				switch inField {
@@ -1535,12 +1597,6 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					}
 				}
 			}
-		case xml.Comment:
-			// Пропускаем комментарии
-		case xml.ProcInst:
-			// Пропускаем инструкции процессора
-		case xml.Directive:
-			// Пропускаем директивы
 		}
 	}
 
@@ -1549,186 +1605,200 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 
 	return itemsTotal, itemsImported + itemsUpdated, itemsFailed, nil
 }
-// processXMLContent обрабатывает содержимое XML и создает товары
+
 // processXMLContent обрабатывает содержимое XML и создает товары
 func (s *StorefrontService) processXMLContent(ctx context.Context, xmlContent string, storefrontID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
-    var itemsTotal, itemsImported, itemsFailed int
+	var itemsTotal, itemsImported, itemsFailed int
 
-    // Добавим логирование для отладки
-    log.Printf("Starting XML processing for storefront ID %d, content length: %d bytes", storefrontID, len(xmlContent))
+	// Добавим логирование для отладки
+	log.Printf("Starting XML processing for storefront ID %d, content length: %d bytes", storefrontID, len(xmlContent))
 
-    // Получаем информацию о витрине для использования в данных о местоположении
-    storefront, err := s.storage.GetStorefrontByID(ctx, storefrontID)
-    if err != nil {
-        log.Printf("Ошибка получения информации о витрине для адресов: %v", err)
-        // Продолжаем выполнение, даже если не удалось получить витрину
-    }
+	// Получаем информацию о витрине для использования в данных о местоположении
+	storefront, err := s.storage.GetStorefrontByID(ctx, storefrontID)
+	if err != nil {
+		log.Printf("Ошибка получения информации о витрине для адресов: %v", err)
+		// Продолжаем выполнение, даже если не удалось получить витрину
+	}
 
-    // Константа для ID категории "прочее"
-    const DefaultCategoryID = 9999
+	// Константа для ID категории "прочее"
+	const DefaultCategoryID = 9999
 
-    // Используем regexp для поиска всех <artikal> элементов
-    re := regexp.MustCompile(`<artikal>(.*?)</artikal>`)
-    matches := re.FindAllStringSubmatch(xmlContent, -1)
+	// Используем regexp для поиска всех <artikal> элементов
+	re := regexp.MustCompile(`<artikal>(.*?)</artikal>`)
+	matches := re.FindAllStringSubmatch(xmlContent, -1)
 
-    // Добавим логирование количества найденных товаров
-    log.Printf("Found %d <artikal> elements in XML", len(matches))
+	// Добавим логирование количества найденных товаров
+	log.Printf("Found %d <artikal> elements in XML", len(matches))
 
-    for _, match := range matches {
-        if len(match) < 2 {
-            continue
-        }
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
 
-        itemsTotal++
-        artikal := match[1]
+		itemsTotal++
+		artikal := match[1]
 
-        // Извлекаем необходимые поля из элемента artikal
-        id := extractField(artikal, "id")
-        naziv := cleanXMLContent(extractField(artikal, "naziv"))
-        kategorija1 := cleanXMLContent(extractField(artikal, "kategorija1"))
-        kategorija2 := cleanXMLContent(extractField(artikal, "kategorija2"))
-        kategorija3 := cleanXMLContent(extractField(artikal, "kategorija3"))
-        opis := cleanXMLContent(extractField(artikal, "opis"))
-        mpCena := extractField(artikal, "mpCena")
-        vpCena := extractField(artikal, "vpCena")
-        dostupan := extractField(artikal, "dostupan")
-        naAkciji := extractField(artikal, "naAkciji")
+		// Извлекаем необходимые поля из элемента artikal
+		id := extractField(artikal, "id")
+		naziv := cleanXMLContent(extractField(artikal, "naziv"))
+		kategorija1 := cleanXMLContent(extractField(artikal, "kategorija1"))
+		kategorija2 := cleanXMLContent(extractField(artikal, "kategorija2"))
+		kategorija3 := cleanXMLContent(extractField(artikal, "kategorija3"))
+		opis := cleanXMLContent(extractField(artikal, "opis"))
+		mpCena := extractField(artikal, "mpCena")
+		vpCena := extractField(artikal, "vpCena")
+		dostupan := extractField(artikal, "dostupan")
+		naAkciji := extractField(artikal, "naAkciji")
 
-        // Извлекаем ссылки на изображения
-        slike := extractImages(artikal)
+		// Извлекаем ссылки на изображения
+		slike := extractImages(artikal)
 
-        // Добавим логирование для отладки отдельных товаров
-        log.Printf("Processing item: ID=%s, Title=%s, Images=%d", id, naziv, len(slike))
+		// Добавим логирование для отладки отдельных товаров
+		log.Printf("Processing item: ID=%s, Title=%s, Images=%d", id, naziv, len(slike))
 
-        // Если нет названия, пропускаем этот товар
-        if naziv == "" {
-            itemsFailed++
-            errorLog.WriteString(fmt.Sprintf("Item with ID %s skipped: no title\n", id))
-            continue
-        }
+		// Если нет названия, пропускаем этот товар
+		if naziv == "" {
+			itemsFailed++
+			errorLog.WriteString(fmt.Sprintf("Item with ID %s skipped: no title\n", id))
+			continue
+		}
 
-        // Преобразуем цену в число
-        price, err := parsePrice(mpCena)
-        if err != nil {
-            // Если не удалось разобрать цену, логируем и устанавливаем 0
-            errorLog.WriteString(fmt.Sprintf("Warning for item %s: invalid price %s: %v. Using 0.\n", id, mpCena, err))
-            price = 0
-        }
+		// Преобразуем цену в число
+		price, err := s.parsePrice(mpCena)
+		if err != nil {
+			// Если не удалось разобрать цену, логируем и устанавливаем 0
+			errorLog.WriteString(fmt.Sprintf("Warning for item %s: invalid price %s: %v. Using 0.\n", id, mpCena, err))
+			price = 0
+		}
 
-        // Пробуем получить оптовую цену, если розничная равна 0
-        if price == 0 && vpCena != "" {
-            wholesalePrice, _ := parsePrice(vpCena)
-            if wholesalePrice > 0 {
-                // Если есть оптовая цена, используем её с наценкой 100%
-                price = wholesalePrice * 2
-                errorLog.WriteString(fmt.Sprintf("Warning for item %s: retail price is 0, using wholesale price with markup: %f.\n", id, price))
-            }
-        }
+		// Пробуем получить оптовую цену, если розничная равна 0
+		if price == 0 && vpCena != "" {
+			wholesalePrice, _ := s.parsePrice(vpCena)
+			if wholesalePrice > 0 {
+				// Если есть оптовая цена, используем её с наценкой 100%
+				price = wholesalePrice * 2
+				errorLog.WriteString(fmt.Sprintf("Warning for item %s: retail price is 0, using wholesale price with markup: %f.\n", id, price))
+			}
+		}
 
-        // Если после всех попыток цена все равно 0, устанавливаем минимальную цену
-        if price == 0 {
-            price = 1.00 // Минимальная цена в 1.00
-            errorLog.WriteString(fmt.Sprintf("Warning for item %s: both retail and wholesale prices are invalid. Using minimal price of %f.\n", id, price))
-        }
+		// Если после всех попыток цена все равно 0, устанавливаем минимальную цену
+		if price == 0 {
+			price = 1.00 // Минимальная цена в 1.00
+			errorLog.WriteString(fmt.Sprintf("Warning for item %s: both retail and wholesale prices are invalid. Using minimal price of %f.\n", id, price))
+		}
 
-        // Находим или создаем категорию
-        categoryID := DefaultCategoryID
-        if kategorija1 != "" {
-            catID, err := s.findOrCreateCategory(ctx, kategorija1, kategorija2, kategorija3)
-            if err == nil {
-                categoryID = catID
-            } else {
-                errorLog.WriteString(fmt.Sprintf("Warning for item %s: %v. Using default category.\n", id, err))
-            }
-        }
+		// Находим или создаем категорию
+		categoryID := DefaultCategoryID
+		if kategorija1 != "" {
+			catID, err := s.findOrCreateCategory(ctx, kategorija1, kategorija2, kategorija3)
+			if err == nil {
+				categoryID = catID
+			} else {
+				errorLog.WriteString(fmt.Sprintf("Warning for item %s: %v. Using default category.\n", id, err))
+			}
+		}
 
-        // Определяем метку скидки, если товар на акции
-        var discountLabel string = ""
-        if naAkciji == "1" {
-            discountLabel = "🔥 SALE! 🔥\n\n"
-        }
+		// Определяем метку скидки, если товар на акции
+		// Определяем метку скидки, если товар на акции
+		var discountLabel string = ""
+		if naAkciji == "1" {
+			discountLabel = "🔥 SALE! 🔥\n\n"
+		}
 
-        // Создаем объявление
-        listing := &models.MarketplaceListing{
-            UserID:       userID,
-            CategoryID:   categoryID,
-            StorefrontID: &storefrontID,
-            Title:        naziv,
-            Description:  discountLabel + opis,
-            Price:        price,
-            Condition:    "new", // По умолчанию новый товар
-            Status: func() string {
-                if dostupan == "1" {
-                    return "active"
-                }
-                return "inactive"
-            }(),
-            ShowOnMap:        false,
-            OriginalLanguage: "sr", // По умолчанию сербский язык
-            ExternalID:       id,   // НОВОЕ ПОЛЕ: добавляем внешний ID
-        }
-        
-        // Применяем данные о местоположении из витрины, с проверкой на nil
-        if listing.City == "" && storefront != nil && storefront.City != "" {
-            listing.City = storefront.City
-            log.Printf("Применен город витрины для товара: %s", storefront.City)
-        }
-        
-        if listing.Country == "" && storefront != nil && storefront.Country != "" {
-            listing.Country = storefront.Country
-            log.Printf("Применена страна витрины для товара: %s", storefront.Country)
-        }
-        
-        if listing.Location == "" && storefront != nil && storefront.Address != "" {
-            listing.Location = storefront.Address
-            log.Printf("Применен адрес витрины для товара: %s", storefront.Address)
-        }
-        
-        // Если нет координат и витрина существует
-        if (listing.Latitude == nil || listing.Longitude == nil) && 
-           storefront != nil && storefront.Latitude != nil && storefront.Longitude != nil {
-            listing.Latitude = storefront.Latitude
-            listing.Longitude = storefront.Longitude
-            log.Printf("Применены координаты витрины для товара: Lat=%f, Lon=%f", 
-                       *storefront.Latitude, *storefront.Longitude)
-        }
+		// Определяем статус в зависимости от значения dostupan
+		var status string
+		if dostupan == "1" {
+			status = "active"
+		} else {
+			status = "inactive"
+		}
 
-        // Создание объявления
-        listingID, err := s.storage.CreateListing(ctx, listing)
-        if err != nil {
-            itemsFailed++
-            errorLog.WriteString(fmt.Sprintf("Error creating listing for item %s: %v\n", id, err))
-            continue
-        }
+		// Создаем объявление
+		listing := &models.MarketplaceListing{
+			UserID:           userID,
+			CategoryID:       categoryID,
+			StorefrontID:     &storefrontID,
+			Title:            naziv,
+			Description:      discountLabel + opis,
+			Price:            price,
+			Condition:        "new", // По умолчанию новый товар
+			Status:           status,
+			ShowOnMap:        false,
+			OriginalLanguage: "sr", // По умолчанию сербский язык
+			ExternalID:       id,   // НОВОЕ ПОЛЕ: добавляем внешний ID
+		}
 
-        // Если есть изображения, обрабатываем их
-        if len(slike) > 0 {
-            imagesStr := strings.Join(slike, ",")
-            // Используем асинхронную обработку изображений
-            s.ProcessImportImagesAsync(ctx, listingID, imagesStr, nil)
-        }
+		// Применяем данные о местоположении из витрины ВСЕГДА, но не перезаписываем существующие значения
+		if storefront != nil {
+			// Для города
+			if listing.City == "" && storefront.City != "" {
+				listing.City = storefront.City
+				log.Printf("Применен город витрины для товара %s: %s", id, storefront.City)
+			}
 
-        // Получаем созданное объявление для индексации
-        createdListing, err := s.storage.GetListingByID(ctx, listingID)
-        if err != nil {
-            errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))
-        } else {
-            // Индексируем объявление в поисковом движке
-            err = s.storage.IndexListing(ctx, createdListing)
-            if err != nil {
-                errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to index: %v\n", err))
-            }
-        }
+			// Для страны
+			if listing.Country == "" && storefront.Country != "" {
+				listing.Country = storefront.Country
+				log.Printf("Применена страна витрины для товара %s: %s", id, storefront.Country)
+			}
 
-        itemsImported++
-        // Добавляем лог об успешном импорте
-        log.Printf("Successfully imported item %s with ID %d", naziv, listingID)
-    }
+			// Для адреса
+			if listing.Location == "" && storefront.Address != "" {
+				listing.Location = storefront.Address
+				log.Printf("Применен адрес витрины для товара %s: %s", id, storefront.Address)
+			}
 
-    // Итоговый лог
-    log.Printf("Import completed. Total: %d, Imported: %d, Failed: %d", itemsTotal, itemsImported, itemsFailed)
+			// Для координат
+			if (listing.Latitude == nil || listing.Longitude == nil) &&
+				storefront.Latitude != nil && storefront.Longitude != nil {
+				listing.Latitude = storefront.Latitude
+				listing.Longitude = storefront.Longitude
+				log.Printf("Применены координаты витрины для товара %s: Lat=%f, Lon=%f",
+					id, *storefront.Latitude, *storefront.Longitude)
+			}
 
-    return itemsTotal, itemsImported, itemsFailed, nil
+			// Включаем показ на карте, если есть координаты
+			if listing.Latitude != nil && listing.Longitude != nil &&
+				*listing.Latitude != 0 && *listing.Longitude != 0 {
+				listing.ShowOnMap = true
+			}
+		}
+		// Создание объявления
+		listingID, err := s.storage.CreateListing(ctx, listing)
+		if err != nil {
+			itemsFailed++
+			errorLog.WriteString(fmt.Sprintf("Error creating listing for item %s: %v\n", id, err))
+			continue
+		}
+
+		// Если есть изображения, обрабатываем их
+		if len(slike) > 0 {
+			imagesStr := strings.Join(slike, ",")
+			// Используем асинхронную обработку изображений
+			s.ProcessImportImagesAsync(ctx, listingID, imagesStr, nil)
+		}
+
+		// Получаем созданное объявление для индексации
+		createdListing, err := s.storage.GetListingByID(ctx, listingID)
+		if err != nil {
+			errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to retrieve for indexing: %v\n", err))
+		} else {
+			// Индексируем объявление в поисковом движке
+			err = s.storage.IndexListing(ctx, createdListing)
+			if err != nil {
+				errorLog.WriteString(fmt.Sprintf("Warning: Listing created but failed to index: %v\n", err))
+			}
+		}
+
+		itemsImported++
+		// Добавляем лог об успешном импорте
+		log.Printf("Successfully imported item %s with ID %d", naziv, listingID)
+	}
+
+	// Итоговый лог
+	log.Printf("Import completed. Total: %d, Imported: %d, Failed: %d", itemsTotal, itemsImported, itemsFailed)
+
+	return itemsTotal, itemsImported, itemsFailed, nil
 }
 
 // extractField извлекает значение поля из XML-элемента
@@ -1811,39 +1881,15 @@ func extractImages(xml string) []string {
 }
 
 // parsePrice преобразует строку с ценой в число
-func parsePrice(priceStr string) (float64, error) {
-	// Удаляем все нечисловые символы, кроме точки и запятой
-	priceStr = regexp.MustCompile(`[^0-9.,]`).ReplaceAllString(priceStr, "")
-
-	// Заменяем запятые на точки (для обработки европейского формата чисел)
+func (s *StorefrontService) parsePrice(priceStr string) (float64, error) {
 	priceStr = strings.Replace(priceStr, ",", ".", -1)
-
-	// Проверяем пустую строку или строку только с точкой
+	priceStr = strings.TrimSpace(priceStr)
 	if priceStr == "" || priceStr == "." {
 		return 0, nil
 	}
-
-	// Если строка начинается с точки, добавляем 0 в начало
-	if strings.HasPrefix(priceStr, ".") {
-		priceStr = "0" + priceStr
-	}
-
-	// Логируем для отладки
-	log.Printf("Обработка цены: исходная строка='%s', после обработки='%s'", priceStr, priceStr)
-
-	// Конвертируем в число
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
-		log.Printf("Ошибка парсинга цены '%s': %v. Устанавливаем цену 0", priceStr, err)
-		return 0, nil // Возвращаем 0 вместо ошибки для более устойчивой обработки
+		return 0, err
 	}
-
 	return price, nil
-}
-
-// findOrCreateCategory находит или создает категорию по имени
-func (s *StorefrontService) findOrCreateCategory(ctx context.Context, cat1, cat2, cat3 string) (int, error) {
-	// Этот метод должен быть реализован для поиска или создания категорий
-	// Для упрощения примера просто возвращаем категорию "Прочее"
-	return 9999, nil
 }
