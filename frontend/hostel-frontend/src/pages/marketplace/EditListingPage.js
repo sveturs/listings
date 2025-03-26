@@ -60,111 +60,168 @@ const EditListingPage = () => {
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const [loading, setLoading] = useState(true);
     const [attributeValues, setAttributeValues] = useState([]);
-// frontend/hostel-frontend/src/pages/marketplace/EditListingPage.js
+    const [attributesLoaded, setAttributesLoaded] = useState(false); // Флаг для отслеживания загрузки атрибутов
 
-// В useEffect, где вы загружаете данные объявления, добавьте установку attributeValues
-useEffect(() => {
-    const fetchData = async () => {
-        try {
-            const [listingResponse, categoriesResponse] = await Promise.all([
-                axios.get(`/api/v1/marketplace/listings/${id}`),
-                axios.get("/api/v1/marketplace/categories")
-            ]);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [listingResponse, categoriesResponse] = await Promise.all([
+                    axios.get(`/api/v1/marketplace/listings/${id}`),
+                    axios.get("/api/v1/marketplace/categories")
+                ]);
 
-            const listingData = listingResponse.data.data;
+                const listingData = listingResponse.data.data;
 
-            if (listingData.user_id !== user?.id) {
-                navigate('/marketplace');
-                return;
-            }
+                if (listingData.user_id !== user?.id) {
+                    navigate('/marketplace');
+                    return;
+                }
 
-            // Получаем текст на нужном языке
-            const title = i18n.language === listingData.original_language
-                ? listingData.title
-                : listingData.translations?.[i18n.language]?.title || listingData.title;
+                // Получаем текст на нужном языке
+                const title = i18n.language === listingData.original_language
+                    ? listingData.title
+                    : listingData.translations?.[i18n.language]?.title || listingData.title;
 
-            const description = i18n.language === listingData.original_language
-                ? listingData.description
-                : listingData.translations?.[i18n.language]?.description || listingData.description;
+                const description = i18n.language === listingData.original_language
+                    ? listingData.description
+                    : listingData.translations?.[i18n.language]?.description || listingData.description;
 
-            setListing({
-                ...listingData,
-                title,
-                description,
-                price: listingData.price,
-                category_id: listingData.category_id,
-                condition: listingData.condition,
-                location: listingData.location,
-                city: listingData.city,
-                country: listingData.country,
-                show_on_map: listingData.show_on_map,
-                latitude: listingData.latitude,
-                longitude: listingData.longitude
-            });
+                setListing({
+                    ...listingData,
+                    title,
+                    description,
+                    price: listingData.price,
+                    category_id: listingData.category_id,
+                    condition: listingData.condition,
+                    location: listingData.location,
+                    city: listingData.city,
+                    country: listingData.country,
+                    show_on_map: listingData.show_on_map,
+                    latitude: listingData.latitude,
+                    longitude: listingData.longitude
+                });
 
-            // Устанавливаем значения атрибутов, если они есть
-            if (listingData.attributes && listingData.attributes.length > 0) {
-                console.log("Загружаем атрибуты объявления:", listingData.attributes);
-                
-                // Преобразуем атрибуты в нужный формат для компонента AttributeFields
-                const formattedAttributes = listingData.attributes.map(attr => {
-                    // Создаем базовую структуру атрибута
-                    const formattedAttr = {
-                        attribute_id: attr.attribute_id,
-                        attribute_name: attr.attribute_name,
-                        attribute_type: attr.attribute_type,
-                        display_name: attr.display_name,
-                        display_value: attr.display_value
-                    };
+                if (listingData.images) {
+                    setPreviewUrls(listingData.images.map(img =>
+                        `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
+                    ));
+                }
+
+                setCategories(categoriesResponse.data.data || []);
+                const removeDuplicateAttributes = (attributes) => {
+                    const uniqueAttributes = {};
+                    const result = [];
                     
-                    // Устанавливаем значение в зависимости от типа атрибута
-                    switch (attr.attribute_type) {
-                        case 'text':
-                        case 'select':
-                            formattedAttr.text_value = attr.text_value;
-                            formattedAttr.value = attr.text_value;
-                            break;
-                        case 'number':
-                            formattedAttr.numeric_value = attr.numeric_value;
-                            formattedAttr.value = attr.numeric_value;
-                            break;
-                        case 'boolean':
-                            formattedAttr.boolean_value = attr.boolean_value;
-                            formattedAttr.value = attr.boolean_value;
-                            break;
-                        default:
-                            formattedAttr.value = attr.display_value;
+                    // Ищем уникальные атрибуты по ID
+                    attributes.forEach(attr => {
+                        // Если атрибут с таким ID еще не добавлен или текущий атрибут имеет значение
+                        const hasValue = (attr.text_value !== null && attr.text_value !== undefined) ||
+                                         (attr.numeric_value !== null && attr.numeric_value !== undefined) ||
+                                         (attr.boolean_value !== null && attr.boolean_value !== undefined) ||
+                                         (attr.json_value !== null && attr.json_value !== undefined);
+                        
+                        // Если атрибут с таким ID еще не был добавлен или текущий имеет значение, а предыдущий - нет
+                        if (!uniqueAttributes[attr.attribute_id] || 
+                            (hasValue && !uniqueAttributes[attr.attribute_id].hasValue)) {
+                            
+                            // Запоминаем, имеет ли атрибут значение
+                            attr.hasValue = hasValue;
+                            uniqueAttributes[attr.attribute_id] = attr;
+                        }
+                    });
+                    
+                    // Преобразуем объект в массив
+                    for (const id in uniqueAttributes) {
+                        result.push(uniqueAttributes[id]);
                     }
                     
-                    console.log(`Атрибут ${attr.attribute_name} (${attr.attribute_type}): ${formattedAttr.value}`);
-                    return formattedAttr;
-                });
+                    console.log(`Отфильтровано ${attributes.length} атрибутов до ${result.length} уникальных`);
+                    return result;
+                };
+                // Обработка атрибутов объявления, если они есть
+                if (listingData.attributes && listingData.attributes.length > 0) {
+                    console.log("Загружаем атрибуты объявления:", listingData.attributes);
+                    
+                    // Преобразуем атрибуты в нужный формат для AttributeFields
+                    const formattedAttributes = listingData.attributes.map(attr => {
+                        // Для отладки выводим каждый атрибут
+                        console.log(`Атрибут ${attr.attribute_name} (${attr.attribute_type}): ${attr.display_value}`);
+                        
+                        // Создаем основную структуру атрибута
+                        const formattedAttr = {
+                            attribute_id: attr.attribute_id,
+                            attribute_name: attr.attribute_name,
+                            attribute_type: attr.attribute_type,
+                            display_name: attr.display_name,
+                            display_value: attr.display_value,
+                            listing_id: listingData.id
+                        };
+                        
+                        // Устанавливаем значение в зависимости от типа атрибута
+                        switch (attr.attribute_type) {
+                            case 'text':
+                            case 'select':
+                                formattedAttr.text_value = attr.text_value || '';
+                                formattedAttr.value = attr.text_value || attr.display_value || '';
+                                break;
+                            case 'number':
+                                const numValue = attr.numeric_value !== null ? attr.numeric_value : 
+                                                (attr.display_value ? parseFloat(attr.display_value) : 0);
+                                                
+                                formattedAttr.numeric_value = numValue;
+                                formattedAttr.value = numValue;
+                                
+                                // Особый случай для года - проверяем на валидность
+                                if (attr.attribute_name === 'year' && (numValue < 1900 || numValue > new Date().getFullYear() + 1)) {
+                                    const currentYear = new Date().getFullYear();
+                                    formattedAttr.numeric_value = currentYear;
+                                    formattedAttr.value = currentYear;
+                                    console.log(`Корректировка невалидного года ${numValue} -> ${currentYear}`);
+                                }
+                                break;
+                            case 'boolean':
+                                // Преобразуем разные форматы в булево значение
+                                let boolValue = false;
+                                if (attr.boolean_value !== null && attr.boolean_value !== undefined) {
+                                    boolValue = !!attr.boolean_value;
+                                } else if (attr.display_value) {
+                                    boolValue = attr.display_value.toLowerCase() === 'да' || 
+                                                attr.display_value.toLowerCase() === 'true' || 
+                                                attr.display_value === '1';
+                                }
+                                formattedAttr.boolean_value = boolValue;
+                                formattedAttr.value = boolValue;
+                                break;
+                            default:
+                                // Если тип не определен, используем отображаемое значение
+                                formattedAttr.value = attr.display_value || '';
+                        }
+                        
+                        return formattedAttr;
+                    });
+                    
+                    console.log("Форматированные атрибуты для редактирования:", formattedAttributes);
+                    setAttributeValues(formattedAttributes);
+                    setAttributesLoaded(true); // Устанавливаем флаг, что атрибуты загружены
+                } else {
+                    console.log("Атрибуты не найдены в объявлении");
+                    setAttributesLoaded(true); // Устанавливаем флаг даже если атрибутов нет
+                } 
                 
-                setAttributeValues(formattedAttributes);
-            } else {
-                console.log("Атрибуты не найдены в объявлении");
-                setAttributeValues([]);
+                setLoading(false);
+            } catch (err) {
+                console.error("Ошибка при загрузке данных:", err);
+                setError(t('listings.edit.errors.loadFailed'));
+                setLoading(false);
+                setAttributesLoaded(true); // Устанавливаем флаг даже при ошибке
             }
+        };
 
-            if (listingData.images) {
-                setPreviewUrls(listingData.images.map(img =>
-                    `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
-                ));
-            }
-
-            setCategories(categoriesResponse.data.data || []);
-            setLoading(false);
-        } catch (err) {
-            console.error("Ошибка при загрузке данных:", err);
-            setError(t('listings.edit.errors.loadFailed'));
-            setLoading(false);
+        if (user?.id) {
+            fetchData();
         }
-    };
+    }, [id, user, navigate, t, i18n.language]);
 
-    if (user?.id) {
-        fetchData();
-    }
-}, [id, user, navigate, t, i18n.language]);
     // Добавляем эффект для отслеживания изменения языка
     useEffect(() => {
         const updateContent = async () => {
@@ -207,39 +264,25 @@ useEffect(() => {
             country: location.address_components?.country || ''
         }));
     };
+
+    // Отслеживаем изменения атрибутов и выводим их в консоль для отладки
     useEffect(() => {
-        if (listing && listing.translations) {
-            const newListing = { ...listing };
-
-            // Если текущий язык совпадает с оригинальным
-            if (i18n.language === listing.original_language) {
-                newListing.title = listing.title;
-                newListing.description = listing.description;
-            } else {
-                // Берем перевод из translations
-                const translation = listing.translations[i18n.language];
-                if (translation) {
-                    newListing.title = translation.title || listing.title;
-                    newListing.description = translation.description || listing.description;
-                }
-            }
-
-            setListing(newListing);
-            setCurrentLanguage(i18n.language);
+        if (attributeValues.length > 0) {
+            console.log("Текущие значения атрибутов:", attributeValues);
         }
-    }, [i18n.language]);
+    }, [attributeValues]);
 
     // Преобразует массив атрибутов для отправки на сервер
     const prepareAttributesForSubmission = (attributes) => {
         return attributes.map(attr => {
             // Создаем копию атрибута для изменения
             const newAttr = { ...attr };
-
+    
             // Обеспечиваем правильный формат числовых значений
             if (attr.attribute_type === 'number' && attr.value !== undefined) {
                 // Преобразуем в число и убеждаемся, что оно сохранено в правильном поле
                 let numValue;
-
+    
                 // Обрабатываем дробные значения для объема двигателя
                 if (attr.attribute_name === 'engine_capacity') {
                     // Для объема двигателя используем parseFloat для сохранения дробной части
@@ -253,7 +296,7 @@ useEffect(() => {
                     numValue = parseInt(attr.value);
                     // Логируем для отладки
                     console.log(`Подготовка года выпуска для отправки: ${attr.value} -> ${numValue}`);
-
+    
                     // Проверяем на валидный год
                     if (isNaN(numValue) || numValue < 1900 || numValue > new Date().getFullYear() + 1) {
                         // Если год невалидный, устанавливаем текущий год
@@ -265,22 +308,34 @@ useEffect(() => {
                     // Для других числовых полей по-прежнему используем parseFloat
                     numValue = parseFloat(attr.value);
                 }
-
+    
                 if (!isNaN(numValue)) {
                     // Гарантируем, что numeric_value всегда устанавливается для числовых атрибутов
                     newAttr.numeric_value = numValue;
                     // Обновляем основное значение для согласованности
                     newAttr.value = numValue;
-
+    
                     // Также обновляем отображаемое значение
                     if (attr.attribute_name === 'year') {
+                        newAttr.display_value = String(numValue);
+                    } else {
                         newAttr.display_value = String(numValue);
                     }
                 } else {
                     console.error(`Не удалось преобразовать "${attr.value}" в число для атрибута ${attr.attribute_name}`);
                 }
+            } else if (attr.attribute_type === 'boolean') {
+                // Для булевых значений
+                newAttr.boolean_value = Boolean(attr.value);
+                newAttr.value = newAttr.boolean_value;
+                newAttr.display_value = newAttr.boolean_value ? 'Да' : 'Нет';
+            } else if (attr.attribute_type === 'text' || attr.attribute_type === 'select') {
+                // Для текстовых значений
+                newAttr.text_value = String(attr.value || '');
+                newAttr.value = newAttr.text_value;
+                newAttr.display_value = newAttr.text_value;
             }
-
+    
             return newAttr;
         });
     };
@@ -291,7 +346,51 @@ useEffect(() => {
         setSuccess(false);
     
         try {
+            if (attributeValues.length === 0 && attributesLoaded) {
+                console.log("Атрибуты отсутствуют, но страница загружена. Пробуем повторно получить атрибуты для категории", listing.category_id);
+                
+                try {
+                    const attributesResponse = await axios.get(`/api/v1/marketplace/categories/${listing.category_id}/attributes`);
+                    if (attributesResponse.data?.data && attributesResponse.data.data.length > 0) {
+                        console.log("Получены атрибуты категории:", attributesResponse.data.data);
+                        
+                        // Инициализируем атрибуты со значениями по умолчанию, так как исходные значения потеряны
+                        const defaultAttributes = attributesResponse.data.data.map(attr => {
+                            const attrValue = {
+                                attribute_id: attr.id,
+                                attribute_name: attr.name,
+                                attribute_type: attr.attribute_type,
+                                display_name: attr.display_name,
+                                value: ''
+                            };
+                            
+                            switch (attr.attribute_type) {
+                                case 'text':
+                                case 'select':
+                                    attrValue.text_value = '';
+                                    break;
+                                case 'number':
+                                    attrValue.numeric_value = 0;
+                                    break;
+                                case 'boolean':
+                                    attrValue.boolean_value = false;
+                                    break;
+                            }
+                            
+                            return attrValue;
+                        });
+                        
+                        console.log("Инициализированы атрибуты по умолчанию:", defaultAttributes);
+                        // Обновляем атрибуты для отправки
+                        attributeValues = defaultAttributes;
+                    }
+                } catch (error) {
+                    console.error("Ошибка при получении атрибутов категории:", error);
+                }
+            }
+            
             const processedAttributes = prepareAttributesForSubmission(attributeValues);
+            console.log("Отправляем на сервер атрибуты:", processedAttributes);
     
             // Подготавливаем данные для обновления
             const listingData = {
@@ -338,6 +437,7 @@ useEffect(() => {
                 navigate(`/marketplace/listings/${id}`);
             }, 1500);
         } catch (error) {
+            console.error("Ошибка при обновлении:", error);
             setError(t('listings.edit.errors.updateFailed'));
         }
     };
@@ -383,7 +483,7 @@ useEffect(() => {
                                     label={t('listings.create.name')}
                                     fullWidth
                                     required
-                                    value={listing.title}
+                                    value={listing.title || ''}
                                     onChange={(e) => setListing({ ...listing, title: e.target.value })}
                                 />
                             </Grid>
@@ -395,7 +495,7 @@ useEffect(() => {
                                     required
                                     multiline
                                     rows={4}
-                                    value={listing.description}
+                                    value={listing.description || ''}
                                     onChange={(e) => setListing({ ...listing, description: e.target.value })}
                                 />
                             </Grid>
@@ -406,7 +506,7 @@ useEffect(() => {
                                     type="number"
                                     fullWidth
                                     required
-                                    value={listing.price}
+                                    value={listing.price || ''}
                                     onChange={(e) => setListing({ ...listing, price: e.target.value })}
                                 />
                             </Grid>
@@ -415,7 +515,7 @@ useEffect(() => {
                                 <FormControl fullWidth required>
                                     <InputLabel>{t('listings.create.category')}</InputLabel>
                                     <Select
-                                        value={listing.category_id}
+                                        value={listing.category_id || ''}
                                         onChange={(e) => setListing({ ...listing, category_id: e.target.value })}
                                     >
                                         {categories.map((category) => (
@@ -431,7 +531,7 @@ useEffect(() => {
                                 <FormControl fullWidth required>
                                     <InputLabel>{t('listings.create.condition.label')}</InputLabel>
                                     <Select
-                                        value={listing.condition}
+                                        value={listing.condition || 'new'}
                                         onChange={(e) => setListing({ ...listing, condition: e.target.value })}
                                     >
                                         <MenuItem value="new">{t('listings.create.condition.new')}</MenuItem>
@@ -529,11 +629,16 @@ useEffect(() => {
                                 </Box>
                             </Grid>
                             <Grid item xs={12}>
-                                <AttributeFields
-                                    categoryId={listing.category_id}
-                                    value={attributeValues}
-                                    onChange={setAttributeValues}
-                                />
+                                {listing.category_id && attributesLoaded && (
+                                    <AttributeFields
+                                        categoryId={listing.category_id}
+                                        value={attributeValues}
+                                        onChange={(newValues) => {
+                                            console.log("Новые значения атрибутов:", newValues);
+                                            setAttributeValues(newValues);
+                                        }}
+                                    />
+                                )}
                             </Grid>
                             <Grid item xs={12}>
                                 <Box sx={{ display: 'flex', gap: 2 }}>
@@ -543,7 +648,7 @@ useEffect(() => {
                                         color="primary"
                                         fullWidth
                                         size="large"
-                                        disabled={!listing.title || !listing.description || !listing.category_id || listing.price <= 0}
+                                        disabled={!listing.title || !listing.description || !listing.category_id || !listing.price || listing.price <= 0}
                                     >
                                         {t('listings.edit.saveChanges')}
                                     </Button>

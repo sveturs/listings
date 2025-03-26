@@ -1,120 +1,216 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { debounce } from 'lodash';
 import {
+    Box,
+    Typography,
     TextField,
+    Slider,
     FormControl,
     InputLabel,
     Select,
     MenuItem,
     FormControlLabel,
+    Radio,
+    RadioGroup,
     Switch,
     FormHelperText,
     Checkbox,
     ListItemText,
     OutlinedInput,
-    Box,
-    Typography,
-    Slider
+    FormGroup,
+    Grid,
+    Paper,
+    Stack,
+    CircularProgress,
+    InputAdornment
 } from '@mui/material';
 import axios from '../../api/axios';
-import { InputAdornment } from '@mui/material';
 
 const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
     const { t, i18n } = useTranslation('marketplace');
     const [attributes, setAttributes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [values, setValues] = useState(value);
+    const [requestInProgress, setRequestInProgress] = useState(false);
+
+    // Отслеживаем предыдущую категорию для предотвращения повторных запросов
+    const prevCategoryIdRef = useRef(null);
+    // Отслеживаем, были ли установлены внешние значения
+    const hasSetExternalValues = useRef(false);
 
     // Загрузка атрибутов при изменении категории
     useEffect(() => {
-        if (!categoryId) {
-            setAttributes([]);
+        // Проверка изменения категории и избежание повторных запросов
+        if (!categoryId || (prevCategoryIdRef.current === categoryId && attributes.length > 0) || requestInProgress) {
             return;
         }
-    
+
         const fetchAttributes = async () => {
             setLoading(true);
+            setRequestInProgress(true);
+
             try {
+                console.log(`Запрос атрибутов для категории ${categoryId}`);
+
                 const response = await axios.get(`/api/v1/marketplace/categories/${categoryId}/attributes`);
+
                 if (response.data?.data) {
-                    console.log("Полученные атрибуты для категории:", categoryId, response.data.data);
+                    console.log(`Получено ${response.data.data.length} атрибутов для категории ${categoryId}`);
                     setAttributes(response.data.data);
-    
+
                     // Проверяем, нужно ли сбросить значения атрибутов
-                    const needReset = !values.length || 
-                                      !response.data.data.some(attr => 
-                                          values.some(val => val.attribute_id === attr.id));
-    
+                    const needReset = !values.length ||
+                        !value.length ||
+                        !hasSetExternalValues.current ||
+                        !response.data.data.some(attr =>
+                            values.some(val => val.attribute_id === attr.id));
+
                     if (needReset) {
+                        console.log("Инициализация значений атрибутов по умолчанию");
                         const initialValues = response.data.data.map(attr => {
-                            console.log(`Атрибут: ${attr.name}, тип: ${attr.attribute_type}, опции:`, attr.options);
-    
-                            // Создаем базовое значение атрибута
+                            // Инициализация значения по умолчанию в зависимости от типа
+                            let defaultValue = getDefaultValueForType(attr.attribute_type);
+
+                            // Создаем базовую структуру атрибута
                             const attrValue = {
                                 attribute_id: attr.id,
                                 attribute_name: attr.name,
                                 attribute_type: attr.attribute_type,
                                 display_name: attr.display_name,
-                                value: getDefaultValueForType(attr.attribute_type)
+                                value: defaultValue
                             };
-    
+
                             // Обработка разных типов атрибутов
                             switch (attr.attribute_type) {
                                 case 'text':
                                 case 'select':
                                     attrValue.text_value = "";
+                                    attrValue.display_value = "";
                                     break;
+
                                 case 'number':
-                                    let defaultValue = 0;
-    
+                                    let numDefaultValue = 0;
+
+                                    // Пытаемся получить минимальное значение из опций
                                     if (attr.options) {
                                         try {
                                             const options = typeof attr.options === 'string'
                                                 ? JSON.parse(attr.options)
                                                 : attr.options;
-    
+
                                             if (options.min !== undefined) {
-                                                defaultValue = options.min;
+                                                numDefaultValue = parseFloat(options.min);
                                             }
                                         } catch (e) {
-                                            console.error(`Ошибка при разборе options для ${attr.name}:`, e);
+                                            console.error(`AttributeFields: Ошибка при разборе options для ${attr.name}:`, e);
                                         }
                                     }
-    
+
                                     // Специальные правила по умолчанию для разных атрибутов
                                     if (attr.name === 'year') {
-                                        defaultValue = new Date().getFullYear();
+                                        numDefaultValue = new Date().getFullYear();
                                     } else if (attr.name === 'mileage') {
-                                        defaultValue = 0;
+                                        numDefaultValue = 0;
                                     } else if (attr.name === 'engine_capacity') {
-                                        defaultValue = 1.6;
+                                        numDefaultValue = 1.6;
                                     }
-    
-                                    attrValue.value = defaultValue;
-                                    attrValue.numeric_value = defaultValue;
+
+                                    attrValue.value = numDefaultValue;
+                                    attrValue.numeric_value = numDefaultValue;
+
+                                    // Формируем отображаемое значение
+                                    let displayValue = numDefaultValue.toString();
+                                    if (attr.name === 'mileage') {
+                                        displayValue += ' км';
+                                    } else if (attr.name === 'engine_capacity') {
+                                        displayValue += ' л';
+                                    } else if (attr.name === 'power') {
+                                        displayValue += ' л.с.';
+                                    }
+
+                                    attrValue.display_value = displayValue;
                                     break;
+
                                 case 'boolean':
                                     attrValue.boolean_value = false;
+                                    attrValue.display_value = 'Нет';
                                     break;
+
+                                default:
+                                    attrValue.display_value = "";
                             }
-    
+
+                            console.log(`AttributeFields: Инициализирован атрибут ${attr.name} (${attr.attribute_type}) со значением:`, attrValue.value);
                             return attrValue;
                         });
-    
+
                         setValues(initialValues);
-                        if (onChange) onChange(initialValues);
+
+                        // Отложенный вызов onChange для избежания race condition
+                        setTimeout(() => {
+                            console.log("AttributeFields: Применяем начальные значения атрибутов:", initialValues);
+                            if (onChange) onChange(initialValues);
+                        }, 0);
                     }
                 }
             } catch (error) {
                 console.error('Error fetching attributes:', error);
             } finally {
                 setLoading(false);
+                setRequestInProgress(false);
+                prevCategoryIdRef.current = categoryId;
             }
         };
-    
+
         fetchAttributes();
     }, [categoryId, i18n.language]);
-    
+
+    // Обработка внешних значений value
+    // Проверяем, есть ли входящие данные и отличаются ли они от текущих
+    useEffect(() => {
+        // Проверяем, есть ли входящие данные и отличаются ли они от текущих
+        if (value && value.length > 0 && JSON.stringify(value) !== JSON.stringify(values)) {
+            console.log("AttributeFields: Получены внешние значения атрибутов:", value);
+
+            // Дополнительная проверка и коррекция входящих значений
+            const processedValues = [];
+            const seen = {}; // Для отслеживания дубликатов
+
+            value.forEach(attr => {
+                // Пропускаем дубликаты атрибутов
+                if (seen[attr.attribute_id]) {
+                    console.log(`AttributeFields: Пропущен дубликат атрибута ${attr.attribute_name} (ID: ${attr.attribute_id})`);
+                    return;
+                }
+                seen[attr.attribute_id] = true;
+
+                const processed = { ...attr };
+
+                // Исправляем проблемы с полем value
+                if (processed.value === undefined || processed.value === null) {
+                    // Восстанавливаем значение на основе типизированных полей
+                    if (processed.attribute_type === 'text' || processed.attribute_type === 'select') {
+                        processed.value = processed.text_value || processed.display_value || '';
+                    } else if (processed.attribute_type === 'number') {
+                        processed.value = processed.numeric_value !== null ? processed.numeric_value :
+                            (processed.display_value ? parseFloat(processed.display_value) : 0);
+                    } else if (processed.attribute_type === 'boolean') {
+                        processed.value = processed.boolean_value !== null ? processed.boolean_value : false;
+                    }
+
+                    console.log(`AttributeFields: Восстановлено отсутствующее значение для атрибута ${processed.attribute_name}: ${processed.value}`);
+                }
+
+                processedValues.push(processed);
+            });
+
+            console.log("AttributeFields: Обработанные значения атрибутов:", processedValues);
+            setValues(processedValues);
+            hasSetExternalValues.current = true;
+        }
+    }, [value]);
+
     const getDefaultValueForType = (type) => {
         switch (type) {
             case 'text':
@@ -133,9 +229,12 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
 
     // Обработчик изменения значения атрибута
     const handleAttributeChange = (attributeId, newValue) => {
+        console.log(`AttributeFields: handleAttributeChange вызван для атрибута ${attributeId}, новое значение:`, newValue);
+
         const updatedValues = values.map(attr => {
             if (attr.attribute_id === attributeId) {
                 const attribute = attributes.find(a => a.id === attributeId);
+
                 // Сначала создаем копию атрибута и сохраняем новое значение
                 const updatedAttr = { ...attr, value: newValue };
 
@@ -143,41 +242,68 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 if (attribute && attribute.attribute_type === 'number') {
                     // Используем более строгую проверку на число
                     let parsedValue = parseFloat(newValue);
+
                     if (!isNaN(parsedValue)) {
                         updatedAttr.numeric_value = parsedValue;
-                        // Обязательно обновляем и типизированное значение, и общее значение
                         updatedAttr.value = parsedValue;
 
-                        // Добавляем специальную логику для года выпуска для предотвращения сброса
+                        // Особая обработка для атрибута year (год выпуска)
                         if (attribute.name === 'year') {
-                            // Логирование для отладки
-                            console.log(`Меняем год выпуска на: ${parsedValue}`);
+                            // Проверяем, что год в разумных пределах
+                            const currentYear = new Date().getFullYear();
+                            if (parsedValue < 1900 || parsedValue > currentYear + 1) {
+                                parsedValue = currentYear;
+                                updatedAttr.numeric_value = parsedValue;
+                                updatedAttr.value = parsedValue;
+                                console.log(`AttributeFields: Корректируем год выпуска на ${parsedValue}`);
+                            }
+                        }
+
+                        // Для дробных значений округляем до 1-2 знаков после запятой
+                        if (attribute.name === 'engine_capacity') {
+                            parsedValue = Math.round(parsedValue * 10) / 10; // Округление до 0.1
+                            updatedAttr.numeric_value = parsedValue;
+                            updatedAttr.value = parsedValue;
                         }
                     } else {
-                        console.error(`Ошибка преобразования "${newValue}" в число для атрибута ${attribute.name}`);
+                        console.error(`AttributeFields: Ошибка преобразования "${newValue}" в число для атрибута ${attribute.name}`);
+                        // В случае ошибки устанавливаем значение по умолчанию
+                        updatedAttr.numeric_value = 0;
+                        updatedAttr.value = 0;
                     }
                 } else if (attribute && attribute.attribute_type === 'boolean') {
                     updatedAttr.boolean_value = Boolean(newValue);
                     updatedAttr.value = updatedAttr.boolean_value;
                 } else {
-                    updatedAttr.text_value = String(newValue);
+                    updatedAttr.text_value = String(newValue || '');
                     updatedAttr.value = updatedAttr.text_value;
                 }
 
                 // Обновляем отображаемое значение
                 if (attribute && attribute.attribute_type === 'boolean') {
-                    updatedAttr.display_value = updatedAttr.boolean_value ? 'true' : 'false';
+                    updatedAttr.display_value = updatedAttr.boolean_value ? 'Да' : 'Нет';
+                } else if (attribute && attribute.attribute_type === 'number') {
+                    updatedAttr.display_value = String(updatedAttr.numeric_value);
+
+                    // Добавляем единицы измерения для улучшения читаемости
+                    if (attribute.name === 'mileage') {
+                        updatedAttr.display_value += ' км';
+                    } else if (attribute.name === 'engine_capacity') {
+                        updatedAttr.display_value += ' л';
+                    } else if (attribute.name === 'power') {
+                        updatedAttr.display_value += ' л.с.';
+                    }
                 } else {
-                    updatedAttr.display_value = String(newValue);
+                    updatedAttr.display_value = String(newValue || '');
                 }
 
+                console.log(`AttributeFields: Обновлен атрибут ${attribute ? attribute.name : attributeId}:`, updatedAttr);
                 return updatedAttr;
             }
             return attr;
         });
 
         // Сохраняем обновленные значения
-        console.log("Обновленные значения атрибутов:", updatedValues);
         setValues(updatedValues);
         if (onChange) onChange(updatedValues);
     };
@@ -196,13 +322,28 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
     // Рендер поля в зависимости от типа атрибута
     const renderField = (attribute) => {
         const attr = attributes.find(a => a.id === attribute.attribute_id);
-        if (!attr) return null;
-
+        if (!attr) {
+            console.error(`AttributeFields: Не найден атрибут с ID=${attribute.attribute_id} для отображения`);
+            return null;
+        }
+        let attrValue = attribute.value;
+        if (attrValue === undefined || attrValue === null) {
+            // Пытаемся извлечь значение из типизированных полей
+            if (attribute.attribute_type === 'text' || attribute.attribute_type === 'select') {
+                attrValue = attribute.text_value || '';
+            } else if (attribute.attribute_type === 'number') {
+                attrValue = attribute.numeric_value !== null ? attribute.numeric_value : 0;
+            } else if (attribute.attribute_type === 'boolean') {
+                attrValue = attribute.boolean_value !== null ? attribute.boolean_value : false;
+            } else {
+                attrValue = '';
+            }
+            console.log(`AttributeFields: Исправлено отсутствующее значение для ${attribute.attribute_name}: ${attrValue}`);
+        }
         const displayName = getTranslatedName(attr);
         const isRequired = attr.is_required;
 
         // Получаем текущее значение
-        const attrValue = attribute.value;
 
         switch (attr.attribute_type) {
             case 'text':
@@ -226,7 +367,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 }
 
                 const min = options.min !== undefined ? options.min : 0;
-                
+
                 // Устанавливаем разумные максимальные значения в зависимости от типа атрибута
                 let max;
                 if (attr.name === 'engine_capacity') {
@@ -330,7 +471,6 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 let options = [];
 
                 try {
-                    // Детальное логирование для отладки
                     console.log(`Парсинг опций для ${attr.name}, исходные данные:`, attr.options);
 
                     // Проверяем формат options
@@ -458,7 +598,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {values.map((attribute) => (
-                    <Box key={attribute.attribute_id}>
+                    <Box key={`attr-${attribute.attribute_id}`}>
                         {renderField(attribute)}
                     </Box>
                 ))}

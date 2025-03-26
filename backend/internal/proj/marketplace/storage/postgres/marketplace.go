@@ -8,10 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	//"regexp"
+	"regexp"
 	"backend/internal/proj/marketplace/service"
 	"log"
 	"strings"
+	"math"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	//"time"
@@ -1011,122 +1012,163 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 
 // SaveListingAttributes сохраняет значения атрибутов для объявления
 func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
-	log.Printf("Storage: Saving %d attributes for listing %d", len(attributes), listingID)
+    log.Printf("Saving %d attributes for listing %d", len(attributes), listingID)
 
-	// Начинаем транзакцию
-	tx, err := s.pool.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
+    // Дополнительное логирование значений
+    for i, attr := range attributes {
+        log.Printf("Attribute %d: ID=%d, Name=%s, Type=%s",
+            i, attr.AttributeID, attr.AttributeName, attr.AttributeType)
+            
+        // Проверяем наличие значений
+        if attr.TextValue != nil {
+            log.Printf("  Text value: %s", *attr.TextValue)
+        }
+        if attr.NumericValue != nil {
+            log.Printf("  Numeric value: %f", *attr.NumericValue)
+        }
+        if attr.BooleanValue != nil {
+            log.Printf("  Boolean value: %t", *attr.BooleanValue)
+        }
+        if attr.JSONValue != nil {
+            log.Printf("  JSON value: %s", string(attr.JSONValue))
+        }
+        
+        log.Printf("  Display value: %s", attr.DisplayValue)
+    }
 
-	// Удаляем старые атрибуты
-	_, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)
-	if err != nil {
-		return fmt.Errorf("error deleting old attributes: %w", err)
-	}
+    // Начинаем транзакцию
+    tx, err := s.pool.Begin(ctx)
+    if err != nil {
+        return fmt.Errorf("error starting transaction: %w", err)
+    }
+    defer tx.Rollback(ctx)
 
-	// Проверяем, есть ли атрибуты для сохранения
-	if len(attributes) == 0 {
-		log.Printf("Storage: No attributes to save for listing %d", listingID)
-		return tx.Commit(ctx)
-	}
+    // Удаляем старые атрибуты
+    _, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)
+    if err != nil {
+        return fmt.Errorf("error deleting old attributes: %w", err)
+    }
 
-	// Подготавливаем запрос для множественной вставки
-	valueStrings := make([]string, 0, len(attributes))
-	valueArgs := make([]interface{}, 0, len(attributes)*4)
-	counter := 1
+    // Проверяем, есть ли атрибуты для сохранения
+    if len(attributes) == 0 {
+        log.Printf("Storage: No attributes to save for listing %d", listingID)
+        return tx.Commit(ctx)
+    }
 
-	for _, attr := range attributes {
-		// Проверяем наличие значений
-		if attr.TextValue == nil && attr.NumericValue == nil && attr.BooleanValue == nil && attr.JSONValue == nil {
-			log.Printf("Storage: Skipping attribute %d: No value provided", attr.AttributeID)
-			continue
-		}
+    // Подготавливаем запрос для множественной вставки
+    valueStrings := make([]string, 0, len(attributes))
+    valueArgs := make([]interface{}, 0, len(attributes)*4)
+    counter := 1
 
-		// Подготавливаем часть запроса для этого атрибута
-		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d)",
-			counter, counter+1, counter+2, counter+3, counter+4, counter+5))
+    for _, attr := range attributes {
+        // Проверка на нулевые значения ID атрибута
+        if attr.AttributeID <= 0 {
+            log.Printf("Storage: Invalid attribute ID: %d, skipping", attr.AttributeID)
+            continue
+        }
+        
+        // Проверяем, что есть хотя бы одно значение для сохранения
+        hasValue := attr.TextValue != nil || attr.NumericValue != nil || 
+                    attr.BooleanValue != nil || attr.JSONValue != nil ||
+                    attr.DisplayValue != ""
+                    
+        if !hasValue {
+            log.Printf("Storage: No value provided for attribute %d, skipping", attr.AttributeID)
+            continue
+        }
 
-		// Добавляем параметры
-		valueArgs = append(valueArgs, listingID, attr.AttributeID)
+        // Подготавливаем часть запроса для этого атрибута
+        valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d)",
+            counter, counter+1, counter+2, counter+3, counter+4, counter+5))
 
-		// Текстовое значение
-		if attr.TextValue != nil {
-			valueArgs = append(valueArgs, *attr.TextValue)
-		} else {
-			valueArgs = append(valueArgs, nil)
-		}
+        // Добавляем параметры
+        valueArgs = append(valueArgs, listingID, attr.AttributeID)
 
-		// Числовое значение
-		if attr.NumericValue != nil {
-			// Проверка больших значений для числовых атрибутов
-			if attr.AttributeName == "mileage" && *attr.NumericValue > 10000000 {
-				log.Printf("Storage: High mileage value detected: %f", *attr.NumericValue)
-				// Для больших значений проверяем, что они в допустимом диапазоне DECIMAL(15,5)
-				if *attr.NumericValue > 999999999999.99999 {
-					log.Printf("Storage: Mileage value too large, capping at max allowed")
-					maxValue := 999999999999.99999
-					attr.NumericValue = &maxValue
-				}
-			}
-			valueArgs = append(valueArgs, *attr.NumericValue)
-		} else {
-			valueArgs = append(valueArgs, nil)
-		}
+        // Текстовое значение
+        if attr.TextValue != nil {
+            valueArgs = append(valueArgs, *attr.TextValue)
+        } else {
+            valueArgs = append(valueArgs, nil)
+        }
 
-		// Логическое значение
-		if attr.BooleanValue != nil {
-			valueArgs = append(valueArgs, *attr.BooleanValue)
-		} else {
-			valueArgs = append(valueArgs, nil)
-		}
+        // Числовое значение
+        if attr.NumericValue != nil {
+            // Проверка больших значений для числовых атрибутов
+            if attr.AttributeName == "mileage" && *attr.NumericValue > 10000000 {
+                log.Printf("Storage: High mileage value detected: %f", *attr.NumericValue)
+                // Для больших значений проверяем, что они в допустимом диапазоне DECIMAL(15,5)
+                if *attr.NumericValue > 999999999999.99999 {
+                    log.Printf("Storage: Mileage value too large, capping at max allowed")
+                    maxValue := 999999999999.99999
+                    attr.NumericValue = &maxValue
+                }
+            }
+            
+            // Проверка на NaN или Inf
+            if math.IsNaN(*attr.NumericValue) || math.IsInf(*attr.NumericValue, 0) {
+                log.Printf("Storage: Invalid numeric value (NaN/Inf) for attribute %d, using 0", attr.AttributeID)
+                zeroValue := 0.0
+                attr.NumericValue = &zeroValue
+            }
+            
+            valueArgs = append(valueArgs, *attr.NumericValue)
+        } else {
+            valueArgs = append(valueArgs, nil)
+        }
 
-		// JSON значение
-		if attr.JSONValue != nil {
-			valueArgs = append(valueArgs, string(attr.JSONValue))
-		} else {
-			valueArgs = append(valueArgs, nil)
-		}
+        // Логическое значение
+        if attr.BooleanValue != nil {
+            valueArgs = append(valueArgs, *attr.BooleanValue)
+        } else {
+            valueArgs = append(valueArgs, nil)
+        }
 
-		counter += 6
-	}
+        // JSON значение
+        if attr.JSONValue != nil {
+            valueArgs = append(valueArgs, string(attr.JSONValue))
+        } else {
+            valueArgs = append(valueArgs, nil)
+        }
 
-	// Если нет атрибутов для вставки, завершаем транзакцию
-	if len(valueStrings) == 0 {
-		log.Printf("Storage: No valid attributes found for listing %d", listingID)
-		return tx.Commit(ctx)
-	}
+        counter += 6
+    }
 
-	// Составляем запрос для множественной вставки
-	query := fmt.Sprintf(`
+    // Если нет атрибутов для вставки, завершаем транзакцию
+    if len(valueStrings) == 0 {
+        log.Printf("Storage: No valid attributes found for listing %d", listingID)
+        return tx.Commit(ctx)
+    }
+
+    // Составляем запрос для множественной вставки
+    query := fmt.Sprintf(`
         INSERT INTO listing_attribute_values (
             listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value
         ) VALUES %s
     `, strings.Join(valueStrings, ","))
 
-	// Выполняем запрос
-	_, err = tx.Exec(ctx, query, valueArgs...)
-	if err != nil {
-		log.Printf("Storage: Error executing bulk insert: %v", err)
-		log.Printf("Storage: Query: %s", query)
-		log.Printf("Storage: Args: %+v", valueArgs)
-		return fmt.Errorf("error inserting attribute values: %w", err)
-	}
+    // Выполняем запрос
+    _, err = tx.Exec(ctx, query, valueArgs...)
+    if err != nil {
+        log.Printf("Storage: Error executing bulk insert: %v", err)
+        log.Printf("Storage: Query: %s", query)
+        log.Printf("Storage: Args: %+v", valueArgs)
+        return fmt.Errorf("error inserting attribute values: %w", err)
+    }
 
-	// Фиксируем транзакцию
-	if err = tx.Commit(ctx); err != nil {
-		return fmt.Errorf("error committing transaction: %w", err)
-	}
+    // Фиксируем транзакцию
+    if err = tx.Commit(ctx); err != nil {
+        return fmt.Errorf("error committing transaction: %w", err)
+    }
 
-	log.Printf("Storage: Successfully saved %d attributes for listing %d", len(valueStrings), listingID)
-	return nil
+    log.Printf("Storage: Successfully saved %d attributes for listing %d", len(valueStrings), listingID)
+    return nil
 }
 
 // GetListingAttributes получает значения атрибутов для объявления без дублирования
 func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
-	query := `
-        SELECT 
+    // Улучшенный запрос с явным DISTINCT ON для удаления дубликатов
+    query := `
+        SELECT DISTINCT ON (a.id) 
             v.listing_id,
             v.attribute_id,
             a.name AS attribute_name,
@@ -1139,88 +1181,100 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
         FROM listing_attribute_values v
         JOIN category_attributes a ON v.attribute_id = a.id
         WHERE v.listing_id = $1
-        ORDER BY a.sort_order, a.display_name
+        ORDER BY a.id, a.sort_order, a.display_name
     `
 
-	rows, err := s.pool.Query(ctx, query, listingID)
-	if err != nil {
-		return nil, fmt.Errorf("error querying listing attributes: %w", err)
-	}
-	defer rows.Close()
+    rows, err := s.pool.Query(ctx, query, listingID)
+    if err != nil {
+        return nil, fmt.Errorf("error querying listing attributes: %w", err)
+    }
+    defer rows.Close()
 
-	// Добавим дополнительное логирование для отладки
-	var allAttributes []models.ListingAttributeValue
+    // Добавим дополнительное логирование для отладки
+    log.Printf("Запрос атрибутов для объявления %d", listingID)
+    var allAttributes []models.ListingAttributeValue
+    
+    // Для защиты от дубликатов по ID атрибута используем карту
+    seen := make(map[int]bool)
 
-	for rows.Next() {
-		var attr models.ListingAttributeValue
-		var textValue sql.NullString
-		var numericValue sql.NullFloat64
-		var boolValue sql.NullBool
-		var jsonValue sql.NullString
+    for rows.Next() {
+        var attr models.ListingAttributeValue
+        var textValue sql.NullString
+        var numericValue sql.NullFloat64
+        var boolValue sql.NullBool
+        var jsonValue sql.NullString
 
-		if err := rows.Scan(
-			&attr.ListingID,
-			&attr.AttributeID,
-			&attr.AttributeName,
-			&attr.DisplayName,
-			&attr.AttributeType,
-			&textValue,
-			&numericValue,
-			&boolValue,
-			&jsonValue,
-		); err != nil {
-			log.Printf("Error scanning attribute: %v", err)
-			return nil, fmt.Errorf("error scanning listing attribute: %w", err)
-		}
+        if err := rows.Scan(
+            &attr.ListingID,
+            &attr.AttributeID,
+            &attr.AttributeName,
+            &attr.DisplayName,
+            &attr.AttributeType,
+            &textValue,
+            &numericValue,
+            &boolValue,
+            &jsonValue,
+        ); err != nil {
+            log.Printf("Error scanning attribute: %v", err)
+            return nil, fmt.Errorf("error scanning listing attribute: %w", err)
+        }
 
-		// Заполняем значения в зависимости от типа
-		if textValue.Valid {
-			attr.TextValue = &textValue.String
-			attr.DisplayValue = textValue.String
-			log.Printf("DEBUG: Attribute %d (%s) has text value: %s",
-				attr.AttributeID, attr.AttributeName, textValue.String)
-		}
-		if numericValue.Valid {
-			attr.NumericValue = &numericValue.Float64
-			attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
-			log.Printf("DEBUG: Attribute %d (%s) has numeric value: %f",
-				attr.AttributeID, attr.AttributeName, numericValue.Float64)
-		}
-		if boolValue.Valid {
-			attr.BooleanValue = &boolValue.Bool
-			if boolValue.Bool {
-				attr.DisplayValue = "Да"
-			} else {
-				attr.DisplayValue = "Нет"
-			}
-			log.Printf("DEBUG: Attribute %d (%s) has boolean value: %t",
-				attr.AttributeID, attr.AttributeName, boolValue.Bool)
-		}
-		if jsonValue.Valid {
-			attr.JSONValue = json.RawMessage(jsonValue.String)
-			// Для multiselect можно форматировать массив значений
-			if attr.AttributeType == "multiselect" {
-				var values []string
-				if err := json.Unmarshal(attr.JSONValue, &values); err == nil {
-					attr.DisplayValue = strings.Join(values, ", ")
-				}
-			} else {
-				attr.DisplayValue = jsonValue.String
-			}
-			log.Printf("DEBUG: Attribute %d (%s) has JSON value: %s",
-				attr.AttributeID, attr.AttributeName, jsonValue.String)
-		}
+        // Проверяем, не добавляли ли мы уже этот атрибут
+        if seen[attr.AttributeID] {
+            log.Printf("WARNING: Skipping duplicate attribute ID=%d, Name=%s", 
+                       attr.AttributeID, attr.AttributeName)
+            continue
+        }
+        seen[attr.AttributeID] = true
 
-		allAttributes = append(allAttributes, attr)
-	}
+        // Заполняем значения в зависимости от типа
+        if textValue.Valid {
+            attr.TextValue = &textValue.String
+            attr.DisplayValue = textValue.String
+            log.Printf("DEBUG: Attribute %d (%s) has text value: %s",
+                attr.AttributeID, attr.AttributeName, textValue.String)
+        }
+        if numericValue.Valid {
+            attr.NumericValue = &numericValue.Float64
+            attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
+            log.Printf("DEBUG: Attribute %d (%s) has numeric value: %f",
+                attr.AttributeID, attr.AttributeName, numericValue.Float64)
+        }
+        if boolValue.Valid {
+            attr.BooleanValue = &boolValue.Bool
+            if boolValue.Bool {
+                attr.DisplayValue = "Да"
+            } else {
+                attr.DisplayValue = "Нет"
+            }
+            log.Printf("DEBUG: Attribute %d (%s) has boolean value: %t",
+                attr.AttributeID, attr.AttributeName, boolValue.Bool)
+        }
+        if jsonValue.Valid {
+            attr.JSONValue = json.RawMessage(jsonValue.String)
+            // Для multiselect можно форматировать массив значений
+            if attr.AttributeType == "multiselect" {
+                var values []string
+                if err := json.Unmarshal(attr.JSONValue, &values); err == nil {
+                    attr.DisplayValue = strings.Join(values, ", ")
+                }
+            } else {
+                attr.DisplayValue = jsonValue.String
+            }
+            log.Printf("DEBUG: Attribute %d (%s) has JSON value: %s",
+                attr.AttributeID, attr.AttributeName, jsonValue.String)
+        }
 
-	log.Printf("DEBUG: Found %d attributes for listing %d", len(allAttributes), listingID)
+        allAttributes = append(allAttributes, attr)
+    }
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating listing attributes: %w", err)
-	}
+    log.Printf("DEBUG: Found %d unique attributes for listing %d", len(allAttributes), listingID)
 
-	return allAttributes, nil
+    if err := rows.Err(); err != nil {
+        return nil, fmt.Errorf("error iterating listing attributes: %w", err)
+    }
+
+    return allAttributes, nil
 }
 
 // GetCategoryAttributes получает атрибуты для указанной категории
@@ -1553,6 +1607,73 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		log.Printf("Error loading attributes for listing %d: %v", id, err)
 	} else {
 		log.Printf("INFO: Loaded %d attributes for listing %d", len(attributes), id)
+
+		// Проверка и обработка значений атрибутов
+		for i, attr := range attributes {
+			// Проверка на пустые значения и установка отображаемого значения
+			hasValue := false
+
+			if attr.TextValue != nil && *attr.TextValue != "" {
+				hasValue = true
+				attr.DisplayValue = *attr.TextValue
+			}
+
+			if attr.NumericValue != nil {
+				hasValue = true
+				// Форматирование числовых значений
+				if attr.AttributeName == "year" {
+					attr.DisplayValue = fmt.Sprintf("%d", int(*attr.NumericValue))
+				} else if attr.AttributeName == "engine_capacity" {
+					attr.DisplayValue = fmt.Sprintf("%.1f л", *attr.NumericValue)
+				} else if attr.AttributeName == "mileage" {
+					attr.DisplayValue = fmt.Sprintf("%d км", int(*attr.NumericValue))
+				} else if attr.AttributeName == "power" {
+					attr.DisplayValue = fmt.Sprintf("%d л.с.", int(*attr.NumericValue))
+				} else {
+					attr.DisplayValue = fmt.Sprintf("%g", *attr.NumericValue)
+				}
+			}
+
+			if attr.BooleanValue != nil {
+				hasValue = true
+				if *attr.BooleanValue {
+					attr.DisplayValue = "Да"
+				} else {
+					attr.DisplayValue = "Нет"
+				}
+			}
+
+			if attr.JSONValue != nil && len(attr.JSONValue) > 0 {
+				hasValue = true
+				if attr.DisplayValue == "" {
+					attr.DisplayValue = string(attr.JSONValue)
+				}
+			}
+
+			// Если нет значения, но есть отображаемое значение
+			if !hasValue && attr.DisplayValue != "" {
+				// Попытка восстановить типизированное значение из отображаемого
+				if attr.AttributeType == "text" || attr.AttributeType == "select" {
+					strVal := attr.DisplayValue
+					attr.TextValue = &strVal
+				} else if attr.AttributeType == "number" {
+					// Удаляем неожиданные символы (буквы, единицы измерения)
+					clean := regexp.MustCompile(`[^\d\.-]`).ReplaceAllString(attr.DisplayValue, "")
+					if numVal, err := strconv.ParseFloat(clean, 64); err == nil {
+						attr.NumericValue = &numVal
+					}
+				} else if attr.AttributeType == "boolean" {
+					boolVal := strings.ToLower(attr.DisplayValue) == "да" ||
+						strings.ToLower(attr.DisplayValue) == "true" ||
+						attr.DisplayValue == "1"
+					attr.BooleanValue = &boolVal
+				}
+			}
+
+			// Обновляем атрибут в массиве
+			attributes[i] = attr
+		}
+
 		listing.Attributes = attributes
 	}
 
