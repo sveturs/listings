@@ -60,64 +60,111 @@ const EditListingPage = () => {
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const [loading, setLoading] = useState(true);
     const [attributeValues, setAttributeValues] = useState([]);
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [listingResponse, categoriesResponse] = await Promise.all([
-                    axios.get(`/api/v1/marketplace/listings/${id}`),
-                    axios.get("/api/v1/marketplace/categories")
-                ]);
+// frontend/hostel-frontend/src/pages/marketplace/EditListingPage.js
 
-                const listingData = listingResponse.data.data;
+// В useEffect, где вы загружаете данные объявления, добавьте установку attributeValues
+useEffect(() => {
+    const fetchData = async () => {
+        try {
+            const [listingResponse, categoriesResponse] = await Promise.all([
+                axios.get(`/api/v1/marketplace/listings/${id}`),
+                axios.get("/api/v1/marketplace/categories")
+            ]);
 
-                if (listingData.user_id !== user?.id) {
-                    navigate('/marketplace');
-                    return;
-                }
+            const listingData = listingResponse.data.data;
 
-                // Получаем текст на нужном языке
-                const title = i18n.language === listingData.original_language
-                    ? listingData.title
-                    : listingData.translations?.[i18n.language]?.title || listingData.title;
-
-                const description = i18n.language === listingData.original_language
-                    ? listingData.description
-                    : listingData.translations?.[i18n.language]?.description || listingData.description;
-
-                setListing({
-                    ...listingData,
-                    title,
-                    description,
-                    price: listingData.price,
-                    category_id: listingData.category_id,
-                    condition: listingData.condition,
-                    location: listingData.location,
-                    city: listingData.city,
-                    country: listingData.country,
-                    show_on_map: listingData.show_on_map,
-                    latitude: listingData.latitude,
-                    longitude: listingData.longitude
-                });
-
-                if (listingData.images) {
-                    setPreviewUrls(listingData.images.map(img =>
-                        `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
-                    ));
-                }
-
-                setCategories(categoriesResponse.data.data || []);
-                setLoading(false);
-            } catch (err) {
-                setError(t('listings.edit.errors.loadFailed'));
-                setLoading(false);
+            if (listingData.user_id !== user?.id) {
+                navigate('/marketplace');
+                return;
             }
-        };
 
-        if (user?.id) {
-            fetchData();
+            // Получаем текст на нужном языке
+            const title = i18n.language === listingData.original_language
+                ? listingData.title
+                : listingData.translations?.[i18n.language]?.title || listingData.title;
+
+            const description = i18n.language === listingData.original_language
+                ? listingData.description
+                : listingData.translations?.[i18n.language]?.description || listingData.description;
+
+            setListing({
+                ...listingData,
+                title,
+                description,
+                price: listingData.price,
+                category_id: listingData.category_id,
+                condition: listingData.condition,
+                location: listingData.location,
+                city: listingData.city,
+                country: listingData.country,
+                show_on_map: listingData.show_on_map,
+                latitude: listingData.latitude,
+                longitude: listingData.longitude
+            });
+
+            // Устанавливаем значения атрибутов, если они есть
+            if (listingData.attributes && listingData.attributes.length > 0) {
+                console.log("Загружаем атрибуты объявления:", listingData.attributes);
+                
+                // Преобразуем атрибуты в нужный формат для компонента AttributeFields
+                const formattedAttributes = listingData.attributes.map(attr => {
+                    // Создаем базовую структуру атрибута
+                    const formattedAttr = {
+                        attribute_id: attr.attribute_id,
+                        attribute_name: attr.attribute_name,
+                        attribute_type: attr.attribute_type,
+                        display_name: attr.display_name,
+                        display_value: attr.display_value
+                    };
+                    
+                    // Устанавливаем значение в зависимости от типа атрибута
+                    switch (attr.attribute_type) {
+                        case 'text':
+                        case 'select':
+                            formattedAttr.text_value = attr.text_value;
+                            formattedAttr.value = attr.text_value;
+                            break;
+                        case 'number':
+                            formattedAttr.numeric_value = attr.numeric_value;
+                            formattedAttr.value = attr.numeric_value;
+                            break;
+                        case 'boolean':
+                            formattedAttr.boolean_value = attr.boolean_value;
+                            formattedAttr.value = attr.boolean_value;
+                            break;
+                        default:
+                            formattedAttr.value = attr.display_value;
+                    }
+                    
+                    console.log(`Атрибут ${attr.attribute_name} (${attr.attribute_type}): ${formattedAttr.value}`);
+                    return formattedAttr;
+                });
+                
+                setAttributeValues(formattedAttributes);
+            } else {
+                console.log("Атрибуты не найдены в объявлении");
+                setAttributeValues([]);
+            }
+
+            if (listingData.images) {
+                setPreviewUrls(listingData.images.map(img =>
+                    `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
+                ));
+            }
+
+            setCategories(categoriesResponse.data.data || []);
+            setLoading(false);
+        } catch (err) {
+            console.error("Ошибка при загрузке данных:", err);
+            setError(t('listings.edit.errors.loadFailed'));
+            setLoading(false);
         }
-    }, [id, user, navigate, t, i18n.language]); // Добавляем i18n.language в зависимости
+    };
 
+    if (user?.id) {
+        fetchData();
+    }
+}, [id, user, navigate, t, i18n.language]);
     // Добавляем эффект для отслеживания изменения языка
     useEffect(() => {
         const updateContent = async () => {

@@ -1805,7 +1805,23 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		})
 	}
 
-	// Проверяем результаты на наличие скидок и метаданных
+	// После получения результатов поиска
+	log.Printf("Результаты поиска: найдено %d объявлений", len(result.Items))
+	for i, listing := range result.Items {
+		log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
+
+		// Добавляем отладочную информацию об атрибутах
+		if len(listing.Attributes) > 0 {
+			log.Printf("  Атрибуты объявления %d:", listing.ID)
+			for _, attr := range listing.Attributes {
+				log.Printf("    Имя: %s, Тип: %s, Значение: %s",
+					attr.AttributeName, attr.AttributeType, attr.DisplayValue)
+			}
+		} else {
+			log.Printf("  Объявление %d не имеет атрибутов", listing.ID)
+		}
+	}
+		// Проверяем результаты на наличие скидок и метаданных
 
 	if result.Items != nil {
 		for _, item := range result.Items {

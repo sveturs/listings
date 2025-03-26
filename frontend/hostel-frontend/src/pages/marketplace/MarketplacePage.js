@@ -525,22 +525,41 @@ const MarketplacePage = () => {
     }, [filters.category_id, categories]);
 
     const renderContent = () => {
+        // Отображаем фильтры атрибутов до проверки наличия объявлений
+        const categoryFilters = filters.category_id ? (
+            <CentralAttributeFilters
+                categoryId={filters.category_id}
+                onFilterChange={(newAttrFilters) => {
+                    console.log("CentralAttributeFilters вызвал onFilterChange с:", newAttrFilters);
+                    handleFilterChange({ attributeFilters: newAttrFilters });
+                }}
+                filters={filters.attributeFilters || {}}
+                resetAttributeFilters={resetAttributeFilters}
+            />
+        ) : null;
+    
         if (loading) {
             return (
-                <Box display="flex" justifyContent="center" p={4}>
-                    <CircularProgress />
-                </Box>
+                <>
+                    {categoryFilters}
+                    <Box display="flex" justifyContent="center" p={4}>
+                        <CircularProgress />
+                    </Box>
+                </>
             );
         }
-
+    
         if (error) {
             return (
-                <Alert severity="error" sx={{ m: 2 }}>
-                    {error}
-                </Alert>
+                <>
+                    {categoryFilters}
+                    <Alert severity="error" sx={{ m: 2 }}>
+                        {error}
+                    </Alert>
+                </>
             );
         }
-
+    
         // Если активен режим карты
         if (mapViewActive) {
             return (
@@ -553,12 +572,13 @@ const MarketplacePage = () => {
                 />
             );
         }
-
+    
         // Проверка, что listings - это массив
         if (!listings || !Array.isArray(listings) || listings.length === 0) {
             if (spellingSuggestion) {
                 return (
                     <>
+                        {categoryFilters}
                         <Alert
                             severity="info"
                             sx={{ m: 2 }}
@@ -580,37 +600,27 @@ const MarketplacePage = () => {
                     </>
                 );
             }
-            console.log(`renderContent: filters.category_id=${filters.category_id}, тип: ${typeof filters.category_id}`);
-            console.log(`renderContent: attributeFilters=`, filters.attributeFilters);
+            
             return (
-                <Alert severity="info" sx={{ m: 2 }}>
-                    No results found for your search
-                </Alert>
+                <>
+                    {categoryFilters}
+                    <Alert severity="info" sx={{ m: 2 }}>
+                        {t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })}
+                    </Alert>
+                </>
             );
         }
-
+    
         return (
             <>
-                {/* Добавляем CentralAttributeFilters перед отображением листингов */}
-                {filters.category_id && (
-                    <CentralAttributeFilters
-                        categoryId={filters.category_id}
-                        onFilterChange={(newAttrFilters) => {
-                            console.log("CentralAttributeFilters вызвал onFilterChange с:", newAttrFilters);
-                            handleFilterChange({ attributeFilters: newAttrFilters });
-                        }}
-                        filters={filters.attributeFilters || {}}  // Гарантированно передаем объект
-                        resetAttributeFilters={resetAttributeFilters}
-                    />
-                )}
-
-                {/* Отображение листингов (как было в оригинале) */}
+                {categoryFilters}
+                
+                {/* Отображение листингов */}
                 {isMobile ? (
                     <MobileListingGrid listings={listings} />
                 ) : (
                     <Grid container spacing={3}>
                         {listings.map((listing, index) => {
-                            // Создаем уникальный идентификатор из других полей, если ID = 0
                             const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
                             return (
                                 <Grid item xs={12} sm={6} md={4} key={effectiveId}>
@@ -618,10 +628,8 @@ const MarketplacePage = () => {
                                         if (listing.id) {
                                             navigate(`/marketplace/listings/${listing.id}`);
                                         } else {
-                                            // Используем стандартный поиск для получения объявления по другим параметрам
                                             const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
                                             console.log("Переход к объявлению с временным URL:", url);
-                                            // Можно показать уведомление пользователю, что фильтр применен
                                         }
                                     }}>
                                         <ListingCard listing={listing} />

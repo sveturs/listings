@@ -871,10 +871,54 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		}
 	}
 
-	// Добавляем фильтры по атрибутам
+ 	// Добавляем фильтры по атрибутам
 	if len(params.AttributeFilters) > 0 {
 		for attrName, attrValue := range params.AttributeFilters {
 			log.Printf("Добавляем фильтр по атрибуту: %s = %s", attrName, attrValue)
+
+			// Проверяем, содержит ли значение диапазон (для числовых значений)
+			if strings.Contains(attrValue, ",") {
+				// Для диапазонов чисел (например "1900,2020")
+				parts := strings.Split(attrValue, ",")
+				if len(parts) == 2 {
+					minVal, minErr := strconv.ParseFloat(parts[0], 64)
+					maxVal, maxErr := strconv.ParseFloat(parts[1], 64)
+
+					if minErr == nil && maxErr == nil {
+						// Используем корректный диапазонный фильтр
+						query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+							query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
+							map[string]interface{}{
+								"nested": map[string]interface{}{
+									"path": "attributes",
+									"query": map[string]interface{}{
+										"bool": map[string]interface{}{
+											"must": []map[string]interface{}{
+												{
+													"term": map[string]interface{}{
+														"attributes.attribute_name": attrName,
+													},
+												},
+												{
+													"range": map[string]interface{}{
+														"attributes.numeric_value": map[string]interface{}{
+															"gte": minVal,
+															"lte": maxVal,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						)
+						continue
+					}
+				}
+			}
+
+			// Существующий код для нечисловых атрибутов
 			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
 				query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
 				map[string]interface{}{
@@ -1082,7 +1126,21 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 	if len(searchResult.Suggestions) > 0 {
 		result.Suggestions = searchResult.Suggestions
 	}
-
+	log.Printf("Результаты поиска для атрибутов %v:", params.AttributeFilters)
+	for i, listing := range searchResult.Listings {
+		log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
+		
+		// Добавляем отладочную информацию о атрибутах
+		if len(listing.Attributes) > 0 {
+			log.Printf("  Объявление %d имеет %d атрибутов:", listing.ID, len(listing.Attributes))
+			for _, attr := range listing.Attributes {
+				log.Printf("  Атрибут: name=%s, type=%s, value=%s", 
+					attr.AttributeName, attr.AttributeType, attr.DisplayValue)
+			}
+		} else {
+			log.Printf("  Объявление %d не имеет атрибутов", listing.ID)
+		}
+	}
 	return result, nil
 }
 

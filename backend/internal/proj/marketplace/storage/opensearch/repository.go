@@ -176,7 +176,21 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 	if err != nil {
 		return nil, fmt.Errorf("ошибка обработки результатов: %w", err)
 	}
-
+	log.Printf("Результаты поиска для атрибутов %v:", params.AttributeFilters)
+	for i, listing := range result.Listings {
+		log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
+		
+		// Добавляем отладочную информацию о атрибутах
+		if len(listing.Attributes) > 0 {
+			log.Printf("  Объявление %d имеет %d атрибутов:", listing.ID, len(listing.Attributes))
+			for _, attr := range listing.Attributes {
+				log.Printf("  Атрибут: name=%s, type=%s, value=%s", 
+					attr.AttributeName, attr.AttributeType, attr.DisplayValue)
+			}
+		} else {
+			log.Printf("  Объявление %d не имеет атрибутов", listing.ID)
+		}
+	}
 	return result, nil
 }
 
@@ -1005,7 +1019,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 	if params.CategoryID != nil {
 		categoryID := *params.CategoryID
 		log.Printf("Фильтрация по категории с иерархией для CategoryID: %d", categoryID)
-	
+
 		// Поиск по принадлежности к категории или ее подкатегориям
 		filterClauses = append(filterClauses, map[string]interface{}{
 			"bool": map[string]interface{}{
@@ -1119,11 +1133,11 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 	}
 
 	// Добавляем фильтры по атрибутам, если они указаны
+	// Находим место в коде, где обрабатываются атрибуты
+	// Модифицируем обработку атрибутов в buildSearchQuery
 	if len(params.AttributeFilters) > 0 {
-		log.Printf("Применяем фильтры по атрибутам: %+v", params.AttributeFilters)
-
 		for attrName, attrValue := range params.AttributeFilters {
-			log.Printf("Обработка атрибута фильтра: %s = %s", attrName, attrValue)
+			log.Printf("Добавляем фильтр по атрибуту: %s = %s", attrName, attrValue)
 
 			// Проверяем, содержит ли значение диапазон (для числовых значений)
 			if strings.Contains(attrValue, ",") {
@@ -1136,8 +1150,9 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					if minErr == nil && maxErr == nil {
 						log.Printf("Применяем диапазонный фильтр для %s: от %f до %f", attrName, minVal, maxVal)
 
-						// Использовать улучшенный диапазонный фильтр в nested запросе
-						filterClauses = append(filterClauses, map[string]interface{}{
+						// Создаем запрос, который должен быть в should, а не must
+						// Так мы повысим рейтинг подходящих записей, но не исключим не содержащие атрибуты
+						shouldClause := map[string]interface{}{
 							"nested": map[string]interface{}{
 								"path": "attributes",
 								"query": map[string]interface{}{
@@ -1161,23 +1176,28 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 								},
 								"score_mode": "avg",
 							},
-						})
-
-						// Также добавляем поиск по специальным полям для распространенных атрибутов
-						if attrName == "year" || attrName == "mileage" || attrName == "price" {
-							filterClauses = append(filterClauses, map[string]interface{}{
-								"range": map[string]interface{}{
-									fmt.Sprintf("%s_value", attrName): map[string]interface{}{
-										"gte": minVal,
-										"lte": maxVal,
-									},
-								},
-							})
 						}
 
-						// Важно! Логируем добавленный фильтр
-						queryJSON, _ := json.MarshalIndent(filterClauses[len(filterClauses)-1], "", "  ")
-						log.Printf("Добавлен фильтр: %s", string(queryJSON))
+						// Получаем текущие should условия или создаем новый массив
+						boolQuery := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
+						var shouldClauses []interface{}
+
+						if existing, ok := boolQuery["should"]; ok {
+							shouldClauses = existing.([]interface{})
+						} else {
+							shouldClauses = []interface{}{}
+						}
+
+						// Добавляем наше условие
+						shouldClauses = append(shouldClauses, shouldClause)
+						boolQuery["should"] = shouldClauses
+
+						// Если у нас есть should условия, устанавливаем minimum_should_match
+						if len(shouldClauses) > 0 {
+							// Устанавливаем minimum_should_match в 0 для мягкого поиска
+							// Это позволит возвращать документы, даже если у них нет атрибутов
+							boolQuery["minimum_should_match"] = 0
+						}
 
 						continue
 					} else {
@@ -1186,184 +1206,52 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				}
 			}
 
-			// Для всех остальных атрибутов - общий случай с улучшениями
-			log.Printf("Применяем общий фильтр для %s: %s", attrName, attrValue)
-
-			// Проверяем, оканчивается ли значение на "+"
-			if strings.HasSuffix(attrValue, "+") {
-				// Извлекаем базовое число без "+"
-				baseNum := strings.TrimSuffix(attrValue, "+")
-				// Пытаемся преобразовать в число
-				if num, err := strconv.ParseFloat(baseNum, 64); err == nil {
-					// Используем диапазонный запрос для числовых значений со знаком "+"
-					log.Printf("Применяем улучшенный диапазонный фильтр для %s >= %f", attrName, num)
-
-					// Добавляем nested фильтр
-					filterClauses = append(filterClauses, map[string]interface{}{
-						"nested": map[string]interface{}{
-							"path": "attributes",
-							"query": map[string]interface{}{
-								"bool": map[string]interface{}{
-									"must": []map[string]interface{}{
-										{
-											"term": map[string]interface{}{
-												"attributes.attribute_name": attrName,
-											},
-										},
-										{
-											"range": map[string]interface{}{
-												"attributes.numeric_value": map[string]interface{}{
-													"gte": num, // Больше или равно указанному числу
-												},
-											},
-										},
+			// Для всех остальных атрибутов также используем should вместо must
+			shouldClause := map[string]interface{}{
+				"nested": map[string]interface{}{
+					"path": "attributes",
+					"query": map[string]interface{}{
+						"bool": map[string]interface{}{
+							"must": []map[string]interface{}{
+								{
+									"term": map[string]interface{}{
+										"attributes.attribute_name": attrName,
 									},
 								},
-							},
-							"score_mode": "avg",
-						},
-					})
-
-					// Также добавляем прямой фильтр по выделенному полю, если это распространенный атрибут
-					if attrName == "year" || attrName == "mileage" || attrName == "price" {
-						filterClauses = append(filterClauses, map[string]interface{}{
-							"range": map[string]interface{}{
-								fmt.Sprintf("%s_value", attrName): map[string]interface{}{
-									"gte": num,
-								},
-							},
-						})
-					}
-				} else {
-					// Если не удалось преобразовать в число, используем улучшенный поиск текста
-					log.Printf("Применяем расширенный поиск по шаблону для %s: %s*", attrName, baseNum)
-					filterClauses = append(filterClauses, map[string]interface{}{
-						"nested": map[string]interface{}{
-							"path": "attributes",
-							"query": map[string]interface{}{
-								"bool": map[string]interface{}{
-									"must": []map[string]interface{}{
-										{
-											"term": map[string]interface{}{
-												"attributes.attribute_name": attrName,
-											},
-										},
-										{
-											"bool": map[string]interface{}{
-												"should": []map[string]interface{}{
-													{
-														"wildcard": map[string]interface{}{
-															"attributes.display_value": baseNum + "*",
-														},
-													},
-													{
-														"prefix": map[string]interface{}{
-															"attributes.display_value": baseNum,
-														},
-													},
-												},
-												"minimum_should_match": 1,
-											},
-										},
-									},
-								},
-							},
-							"score_mode": "max",
-						},
-					})
-				}
-			} else if attrValue == "true" || attrValue == "false" {
-				// Специальная обработка для логических значений
-				boolValue := attrValue == "true"
-				log.Printf("Применяем булев фильтр для %s: %t", attrName, boolValue)
-
-				filterClauses = append(filterClauses, map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "attributes",
-						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"attributes.attribute_name": attrName,
-										},
-									},
-									{
-										"term": map[string]interface{}{
-											"attributes.boolean_value": boolValue,
+								{
+									"match": map[string]interface{}{
+										"attributes.display_value": map[string]interface{}{
+											"query": attrValue,
+											"boost": 2.0,
 										},
 									},
 								},
 							},
 						},
 					},
-				})
-			} else {
-				// Улучшенный поиск по текстовым значениям с использованием match и term
-				// для лучшего поиска по атрибутам
-				filterClauses = append(filterClauses, map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "attributes",
-						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"attributes.attribute_name": attrName,
-										},
-									},
-									{
-										"bool": map[string]interface{}{
-											"should": []map[string]interface{}{
-												{
-													"match": map[string]interface{}{
-														"attributes.display_value": map[string]interface{}{
-															"query":    attrValue,
-															"operator": "and",
-															"boost":    2.0,
-														},
-													},
-												},
-												{
-													"term": map[string]interface{}{
-														"attributes.display_value.keyword": map[string]interface{}{
-															"value": attrValue,
-															"boost": 3.0,
-														},
-													},
-												},
-												{
-													"match_phrase": map[string]interface{}{
-														"attributes.display_value": map[string]interface{}{
-															"query": attrValue,
-															"boost": 2.5,
-														},
-													},
-												},
-											},
-											"minimum_should_match": 1,
-										},
-									},
-								},
-							},
-						},
-						"score_mode": "max",
-					},
-				})
-
-				// Добавляем прямой поиск по выделенным полям для распространенных атрибутов
-				if attrName == "make" || attrName == "brand" || attrName == "model" {
-					filterClauses = append(filterClauses, map[string]interface{}{
-						"match": map[string]interface{}{
-							attrName: attrValue,
-						},
-					})
-				}
+					"score_mode": "avg",
+				},
 			}
 
-			// Логируем добавленный фильтр
-			queryJSON, _ := json.MarshalIndent(filterClauses[len(filterClauses)-1], "", "  ")
-			log.Printf("Добавлен фильтр: %s", string(queryJSON))
+			// Получаем текущие should условия или создаем новый массив
+			boolQuery := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
+			var shouldClauses []interface{}
+
+			if existing, ok := boolQuery["should"]; ok {
+				shouldClauses = existing.([]interface{})
+			} else {
+				shouldClauses = []interface{}{}
+			}
+
+			// Добавляем наше условие
+			shouldClauses = append(shouldClauses, shouldClause)
+			boolQuery["should"] = shouldClauses
+
+			// Если у нас есть should условия, устанавливаем minimum_should_match
+			if len(shouldClauses) > 0 {
+				// Устанавливаем minimum_should_match в 0 для мягкого поиска
+				boolQuery["minimum_should_match"] = 0
+			}
 		}
 	}
 

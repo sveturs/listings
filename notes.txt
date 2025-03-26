@@ -132,3 +132,28 @@ hostel_db=# SELECT * FROM price_history WHERE listing_id = 13 ORDER BY effective
   1 |         13 |  999999.00 | 2025-03-21 10:06:27.278712 | 2025-03-21 10:07:47.031833 | create        |                   | 2025-03-21 10:06:27.278712
 (3 rows)
 
+смена категорий:
+
+-- Обновление категорий для товаров, которые были неправильно классифицированы
+UPDATE marketplace_listings 
+SET category_id = 3127  -- Запчасти для телефонов
+WHERE external_id IN (
+    -- Здесь перечислите ID товаров, которые нужно обновить
+    '65474', '87985', '50047'
+)
+AND category_id = 2835;  -- Только если они находятся в категории автомобильных инструментов
+
+-- Также можно обновить все товары с неправильной категорией,
+-- которые содержат определенные ключевые слова в названии:
+UPDATE marketplace_listings 
+SET category_id = 3127  -- Запчасти для телефонов
+WHERE title LIKE '%BGA%' 
+  OR title LIKE '%iPhone%'
+  OR title LIKE '%Samsung%'
+  OR title LIKE '%Touch%'
+  OR title LIKE '%Mobile%'
+  OR title LIKE '%Phone%'
+AND category_id = 2835;  -- Только если они находятся в категории автомобильных инструментов
+
+
+конец смены категорий

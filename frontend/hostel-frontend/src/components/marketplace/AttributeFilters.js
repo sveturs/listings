@@ -25,11 +25,11 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
     const { t, i18n } = useTranslation('marketplace');
     const [attributes, setAttributes] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [attributeFilters, setAttributeFilters] = useState({...filters});
+    const [attributeFilters, setAttributeFilters] = useState({ ...filters });
     const [attributeCount, setAttributeCount] = useState(0);
     const [error, setError] = useState(null);
     const isFirstRender = useRef(true);
-    
+
     // Создаем отложенную функцию обновления фильтров
     const debouncedFilterChange = useCallback(
         debounce((newFilters) => {
@@ -44,28 +44,33 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
     // Обработчик изменения фильтров по атрибутам
     const handleFilterChange = useCallback((attributeName, value) => {
         console.log(`Изменение атрибута ${attributeName}: ${value}`);
-        
+
         // Обновляем локальное состояние сразу для отзывчивого UI
         setAttributeFilters(prev => {
-            const updatedFilters = {...prev};
-            
+            const updatedFilters = { ...prev };
+
             if (value === undefined || value === null || value === '') {
                 delete updatedFilters[attributeName];
             } else {
                 updatedFilters[attributeName] = value;
             }
-            
+
             // Вызываем отложенное обновление родительского компонента
             debouncedFilterChange(updatedFilters);
-            
+
             return updatedFilters;
         });
     }, [debouncedFilterChange]);
 
     // Обработчик изменения для диапазонных фильтров
-    const handleRangeFilter = useCallback((attributeName, min, max) => {
-        const value = `${min},${max}`;
-        handleFilterChange(attributeName, value);
+    const handleRangeFilter = useCallback((attributeName, minValue, maxValue) => {
+        console.log(`Изменение диапазона атрибута ${attributeName}: ${minValue}-${maxValue}`);
+
+        // Формируем значение диапазона в формате "min,max"
+        const rangeValue = `${minValue},${maxValue}`;
+
+        // Обновляем фильтры
+        handleFilterChange(attributeName, rangeValue);
     }, [handleFilterChange]);
 
     // Загрузка атрибутов при изменении категории
@@ -74,7 +79,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
             console.log("Нет ID категории, пропускаем запрос атрибутов");
             setAttributes([]);
             setAttributeCount(0);
-            
+
             // Уведомляем родительский компонент об отсутствии атрибутов
             if (onAttributesLoaded) {
                 onAttributesLoaded(false);
@@ -90,23 +95,23 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
             try {
                 console.log(`Запрос атрибутов для категории ${categoryId}`);
                 const response = await axios.get(`/api/v1/marketplace/categories/${categoryId}/attributes`);
-                
+
                 if (response.status === 200 && response.data?.data) {
                     // Фильтруем только те атрибуты, которые можно использовать для фильтрации
                     const filterableAttrs = response.data.data.filter(attr => attr.is_filterable);
                     console.log(`Получено ${response.data.data.length} атрибутов, из них фильтруемых: ${filterableAttrs.length}`);
-                    
+
                     if (filterableAttrs.length > 0) {
                         setAttributes(filterableAttrs);
                         setAttributeCount(filterableAttrs.length);
-                        
+
                         // Уведомляем родительский компонент о наличии атрибутов
                         if (onAttributesLoaded) {
                             onAttributesLoaded(true);
                         }
-                        
+
                         // Синхронизируем локальное состояние с переданными фильтрами
-                        setAttributeFilters({...filters});
+                        setAttributeFilters({ ...filters });
                     } else {
                         console.log(`Для категории ${categoryId} нет фильтруемых атрибутов`);
                         if (onAttributesLoaded) {
@@ -141,9 +146,9 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
             isFirstRender.current = false;
             return;
         }
-        
+
         console.log("Обновление локальных фильтров из пропсов:", filters);
-        setAttributeFilters({...filters});
+        setAttributeFilters({ ...filters });
     }, [filters]);
 
     // Получение переведенного имени атрибута
@@ -205,54 +210,54 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                     />
                 );
 
-                case 'number': {
-                    let options = {};
-                    try {
-                        if (typeof attribute.options === 'string') {
-                            options = JSON.parse(attribute.options);
-                        } else if (attribute.options && typeof attribute.options === 'object') {
-                            options = attribute.options;
-                        }
-                    } catch (e) {
-                        console.error(`Ошибка при парсинге options для ${attribute.name}:`, e);
-                        options = {};
+            case 'number': {
+                let options = {};
+                try {
+                    if (typeof attribute.options === 'string') {
+                        options = JSON.parse(attribute.options);
+                    } else if (attribute.options && typeof attribute.options === 'object') {
+                        options = attribute.options;
                     }
-                
-                    // Задаем адекватные значения по умолчанию в зависимости от типа атрибута
-                    let min, max;
-                    
-                    switch(attribute.name) {
-                        case 'year':
-                            min = options.min !== undefined ? Number(options.min) : 1900;
-                            max = options.max !== undefined ? Number(options.max) : new Date().getFullYear() + 1;
-                            break;
-                        case 'mileage':
-                            min = options.min !== undefined ? Number(options.min) : 0;
-                            max = options.max !== undefined ? Number(options.max) : 500000;
-                            break;
-                        case 'engine_capacity':
-                            min = options.min !== undefined ? Number(options.min) : 0.1;
-                            max = options.max !== undefined ? Number(options.max) : 10;
-                            break;
-                        case 'power':
-                            min = options.min !== undefined ? Number(options.min) : 0;
-                            max = options.max !== undefined ? Number(options.max) : 1000;
-                            break;
-                        case 'price':
-                            min = options.min !== undefined ? Number(options.min) : 0;
-                            max = options.max !== undefined ? Number(options.max) : 1000000;
-                            break;
-                        case 'area':
-                        case 'land_area':
-                            min = options.min !== undefined ? Number(options.min) : 0;
-                            max = options.max !== undefined ? Number(options.max) : 10000;
-                            break;
-                        default:
-                            min = options.min !== undefined ? Number(options.min) : 0;
-                            max = options.max !== undefined ? Number(options.max) : 100;
-                    }
-                
-                
+                } catch (e) {
+                    console.error(`Ошибка при парсинге options для ${attribute.name}:`, e);
+                    options = {};
+                }
+
+                // Задаем адекватные значения по умолчанию в зависимости от типа атрибута
+                let min, max;
+
+                switch (attribute.name) {
+                    case 'year':
+                        min = options.min !== undefined ? Number(options.min) : 1900;
+                        max = options.max !== undefined ? Number(options.max) : new Date().getFullYear() + 1;
+                        break;
+                    case 'mileage':
+                        min = options.min !== undefined ? Number(options.min) : 0;
+                        max = options.max !== undefined ? Number(options.max) : 500000;
+                        break;
+                    case 'engine_capacity':
+                        min = options.min !== undefined ? Number(options.min) : 0.1;
+                        max = options.max !== undefined ? Number(options.max) : 10;
+                        break;
+                    case 'power':
+                        min = options.min !== undefined ? Number(options.min) : 0;
+                        max = options.max !== undefined ? Number(options.max) : 1000;
+                        break;
+                    case 'price':
+                        min = options.min !== undefined ? Number(options.min) : 0;
+                        max = options.max !== undefined ? Number(options.max) : 1000000;
+                        break;
+                    case 'area':
+                    case 'land_area':
+                        min = options.min !== undefined ? Number(options.min) : 0;
+                        max = options.max !== undefined ? Number(options.max) : 10000;
+                        break;
+                    default:
+                        min = options.min !== undefined ? Number(options.min) : 0;
+                        max = options.max !== undefined ? Number(options.max) : 100;
+                }
+
+
 
                 // Парсим текущее значение из currentValue
                 let value = [min, max];
@@ -285,7 +290,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                         <Typography id={`filter-${attribute.id}-label`} gutterBottom>
                             {displayName}
                         </Typography>
-                
+
                         <Slider
                             value={[parseFloat(value[0]) || min, parseFloat(value[1]) || max]}
                             onChange={(e, newValue) => {
@@ -309,7 +314,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                             max={max}
                             step={step}
                         />
-                        
+
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
                             <TextField
                                 size="small"

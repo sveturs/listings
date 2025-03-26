@@ -1,5 +1,5 @@
 // frontend/hostel-frontend/src/components/marketplace/CentralAttributeFilters.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
     Paper, 
     Typography, 
@@ -16,8 +16,6 @@ import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import AttributeFilters from './AttributeFilters';
 import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
-
-// ОТЛАДОЧНАЯ ВЕРСИЯ: форсированно показывает компонент и прямо делает запрос к API
 
 const CentralAttributeFilters = ({ 
     categoryId, 
@@ -112,7 +110,6 @@ const CentralAttributeFilters = ({
         }
     };
 
-    // ОТЛАДКА: Всегда показываем компонент для любой категории
     return (
         <Paper 
             sx={{ 
@@ -172,39 +169,22 @@ const CentralAttributeFilters = ({
                 </IconButton>
             </Box>
             
-            {/* Отладочная информация */}
-            {expanded && (
+            {/* Добавляем кнопку сброса фильтров, которая всегда видна если есть активные фильтры */}
+            {hasActiveFilters && expanded && (
                 <Box sx={{ mb: 2 }}>
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                        <Typography variant="body2">
-                            <strong>Отладка для категории {categoryId}:</strong><br/>
-                            {debugLoading ? 'Загрузка...' : 
-                             debugError ? `Ошибка: ${debugError}` :
-                             debugData ? `Найдено ${debugData.total} атрибутов, фильтруемых: ${debugData.filterable}` :
-                             'Нет данных'}
-                            {debugData && debugData.attributes && (
-                                <Box component="span" sx={{ display: 'block', mt: 1 }}>
-                                    Атрибуты: {debugData.attributes.join(', ')}
-                                </Box>
-                            )}
-                        </Typography>
-                    </Alert>
-                    
-                    {hasActiveFilters && (
-                        <Button 
-                            size="small" 
-                            color="error" 
-                            variant="outlined"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (resetAttributeFilters) {
-                                    resetAttributeFilters();
-                                }
-                            }}
-                        >
-                            {t('listings.filters.resetAttributes', { defaultValue: 'Сбросить параметры' })}
-                        </Button>
-                    )}
+                    <Button 
+                        size="small" 
+                        color="error" 
+                        variant="outlined"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (resetAttributeFilters) {
+                                resetAttributeFilters();
+                            }
+                        }}
+                    >
+                        {t('listings.filters.resetAttributes', { defaultValue: 'Сбросить параметры' })}
+                    </Button>
                 </Box>
             )}
 
