@@ -57,6 +57,13 @@ docker-compose -f docker-compose.prod.yml down --remove-orphans
 echo "Удаляем старые контейнеры, сохраняя тома с данными..."
 docker-compose -f docker-compose.prod.yml rm -f
 
+# Проверяем, нет ли застрявших или мертвых контейнеров
+echo "Проверяем наличие застрявших контейнеров..."
+for container in $(docker ps -a --filter "name=hostel_db" --filter "name=opensearch" --filter "status=exited" --format "{{.ID}}"); do
+  echo "Найден застрявший контейнер: $container. Удаляем..."
+  docker rm -f $container 2>/dev/null || true
+done
+
 # Удаляем старые образы, чтобы принудительно пересобрать их
 echo "Удаляем старые образы для принудительной пересборки..."
 docker-compose -f docker-compose.prod.yml build --no-cache
@@ -65,14 +72,20 @@ docker-compose -f docker-compose.prod.yml build --no-cache
 echo "Собираем фронтенд..."
 cd frontend/hostel-frontend
 
-# Создаем измененный package.json с дополнительными зависимостями
-echo "Добавляем необходимые зависимости в package.json..."
+# Проверяем существование package.json и создаем измененный файл
+echo "Проверяем package.json и добавляем необходимые зависимости..."
 if [ -f "package.json" ]; then
   # Сохраняем оригинальный package.json
   cp package.json package.json.orig
   
-  # Добавляем react-query в зависимости
-  sed -i 's/"dependencies": {/"dependencies": {\n    "react-query": "^3.39.3",\n    "react-window": "^1.8.9",/g' package.json
+  # Проверяем, есть ли уже react-query и react-window в зависимостях
+  if ! grep -q '"react-query"' package.json; then
+    sed -i 's/"dependencies": {/"dependencies": {\n    "react-query": "^3.39.3",/g' package.json
+  fi
+  
+  if ! grep -q '"react-window"' package.json; then
+    sed -i 's/"dependencies": {/"dependencies": {\n    "react-window": "^1.8.9",/g' package.json
+  fi
 fi
 
 # Создаем кастомный скрипт для сборки фронтенда
@@ -148,32 +161,73 @@ fi
 
 cd ../..
 
-# Запускаем с полностью обновленными образами
-echo "Запускаем сервисы с обновленными образами..."
-docker-compose -f docker-compose.prod.yml up --build -d
+# Запускаем только базу данных сначала
+echo "Запускаем только базу данных..."
+docker-compose -f docker-compose.prod.yml up -d db
 
-# Проверяем базу данных
+# Проверяем готовность базы данных с увеличенным таймаутом
 echo "Проверяем готовность базы данных..."
-RETRY_COUNT=30
+RETRY_COUNT=60  # Увеличенное число попыток
 for i in $(seq 1 $RETRY_COUNT); do
   if docker-compose -f docker-compose.prod.yml exec -T db pg_isready -U postgres > /dev/null 2>&1; then
-    echo "База данных готова!"
+    echo "База данных готова! (попытка $i/$RETRY_COUNT)"
+    # Добавляем дополнительную задержку для полной стабилизации БД
+    echo "Ожидаем дополнительное время для стабилизации БД..."
+    sleep 10
     break
   fi
   echo "Ожидаем готовность базы данных... Попытка $i/$RETRY_COUNT"
-  sleep 2
+  sleep 5
 done
 
+# Если после всех попыток БД не готова, прерываем
 if ! docker-compose -f docker-compose.prod.yml exec -T db pg_isready -U postgres > /dev/null 2>&1; then
-  echo "Не удалось запустить базу данных"
+  echo "Не удалось запустить базу данных после $RETRY_COUNT попыток. Деплой прерван."
   exit 1
 fi
 
-# Запускаем миграции
-echo "Запускаем миграции..."
-docker run --rm --network hostel-booking-system_hostel_network -v $(pwd)/backend/migrations:/migrations migrate/migrate -path=/migrations/ -database="postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable" up
+# Запускаем миграции напрямую
+echo "Запускаем миграции вручную..."
+docker run --rm --network hostel-booking-system_hostel_network \
+  -v $(pwd)/backend/migrations:/migrations \
+  migrate/migrate \
+  -path=/migrations/ \
+  -database="postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable" \
+  up || {
+    echo "Ошибка при выполнении миграций. Продолжаем запуск других сервисов..."
+  }
+
+# Запускаем остальные сервисы
+echo "Запускаем остальные сервисы..."
+docker-compose -f docker-compose.prod.yml up -d opensearch
+
+# Даем время OpenSearch запуститься
+echo "Ожидаем запуска OpenSearch..."
+sleep 15
+
+# Запускаем оставшиеся сервисы
+echo "Запускаем backend и другие сервисы..."
+docker-compose -f docker-compose.prod.yml up -d backend opensearch-dashboards nginx
+
+# Проверяем, все ли сервисы запущены
+echo "Проверяем статус всех сервисов..."
+SERVICES_STATUS=$(docker-compose -f docker-compose.prod.yml ps)
+echo "$SERVICES_STATUS"
+
+# Проверяем здоровье backend
+echo "Проверяем здоровье backend..."
+RETRY_COUNT=30
+for i in $(seq 1 $RETRY_COUNT); do
+  if docker-compose -f docker-compose.prod.yml exec -T backend curl -s -f http://localhost:3000 > /dev/null 2>&1; then
+    echo "Backend здоров! (попытка $i/$RETRY_COUNT)"
+    break
+  fi
+  echo "Ожидаем готовность backend... Попытка $i/$RETRY_COUNT"
+  sleep 3
+done
 
 # Сохраняем последние 5 бэкапов и удаляем более старые
 find /tmp/hostel-backup/db -name "*.sql" -type f | sort -r | tail -n +6 | xargs rm -f 2>/dev/null || true
 
 echo "Деплой завершен!"
+echo "Логи контейнеров можно посмотреть с помощью: docker-compose -f docker-compose.prod.yml logs -f"
