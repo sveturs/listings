@@ -266,7 +266,20 @@ fi
 
 # Останавливаем все контейнеры базы данных и удаляем их
 echo "Останавливаем все контейнеры базы данных..."
-docker ps -a --filter "name=hostel_db" -q | xargs docker rm -f 2>/dev/null || true
+DB_CONTAINERS=$(docker ps -a --filter "name=hostel_db" -q)
+if [ -n "$DB_CONTAINERS" ]; then
+  echo "Найдены контейнеры базы данных: $DB_CONTAINERS"
+  for DB_CONTAINER in $DB_CONTAINERS; do
+    echo "Удаляем контейнер $DB_CONTAINER..."
+    # Сначала останавливаем
+    docker stop "$DB_CONTAINER" 2>/dev/null || true
+    sleep 2
+    # Затем удаляем
+    docker rm -f "$DB_CONTAINER" 2>/dev/null || true
+  done
+else
+  echo "Контейнеры базы данных не найдены"
+fi
 
 # Полностью очищаем директорию базы данных
 echo "Полностью очищаем директорию базы данных..."
@@ -289,18 +302,64 @@ if ! grep -q "PGDATA:" docker-compose.prod.yml; then
 fi
 
 # Убеждаемся, что никакие контейнеры с тем же именем не работают
-docker ps -a | grep -E 'hostel_db|opensearch|backend|nginx' | awk '{print $1}' | xargs docker rm -f 2>/dev/null || true
-
-# Убеждаемся, что нужная сеть существует и удаляем её, если она есть
-NETWORK_NAME="hostel-booking-system_hostel_network"
-if docker network ls | grep -q "$NETWORK_NAME"; then
-  echo "Удаляем существующую сеть $NETWORK_NAME..."
-  docker network rm "$NETWORK_NAME" 2>/dev/null || true
+echo "Проверяем и удаляем все контейнеры системы бронирования..."
+CONTAINERS=$(docker ps -a | grep -E 'hostel_db|opensearch|backend|nginx|hostel-' | awk '{print $1}')
+if [ -n "$CONTAINERS" ]; then
+  echo "Найдены контейнеры: $CONTAINERS"
+  for CONTAINER in $CONTAINERS; do
+    echo "Останавливаем и удаляем контейнер $CONTAINER..."
+    docker stop "$CONTAINER" 2>/dev/null || true
+    sleep 1
+    docker rm -f "$CONTAINER" 2>/dev/null || true
+  done
+else
+  echo "Не найдено контейнеров для удаления"
 fi
 
-# Создаем сеть заново
-echo "Создаем сеть $NETWORK_NAME..."
-docker network create "$NETWORK_NAME" 2>/dev/null || true
+# Проверяем, есть ли активные контейнеры в сети
+NETWORK_NAME="hostel-booking-system_hostel_network"
+if docker network ls | grep -q "$NETWORK_NAME"; then
+  echo "Проверяем активные контейнеры в сети $NETWORK_NAME..."
+  
+  # Находим все контейнеры, подключенные к этой сети
+  CONTAINERS=$(docker network inspect -f '{{range $key, $value := .Containers}}{{$key}} {{end}}' "$NETWORK_NAME" 2>/dev/null || echo "")
+  
+  if [ -n "$CONTAINERS" ]; then
+    echo "Найдены активные контейнеры в сети: $CONTAINERS"
+    echo "Останавливаем их перед удалением сети..."
+    
+    # Отключаем все контейнеры от сети и затем останавливаем их
+    for CONTAINER_ID in $CONTAINERS; do
+      # Отключаем контейнер от сети
+      docker network disconnect -f "$NETWORK_NAME" "$CONTAINER_ID" 2>/dev/null || true
+      # Останавливаем и удаляем контейнер
+      docker stop "$CONTAINER_ID" 2>/dev/null || true
+      docker rm -f "$CONTAINER_ID" 2>/dev/null || true
+    done
+  fi
+  
+  # После отключения всех контейнеров пробуем удалить сеть
+  echo "Удаляем существующую сеть $NETWORK_NAME..."
+  docker network rm "$NETWORK_NAME" 2>/dev/null || true
+  
+  # Проверяем, была ли сеть успешно удалена
+  if docker network ls | grep -q "$NETWORK_NAME"; then
+    echo "ВНИМАНИЕ: Не удалось удалить сеть $NETWORK_NAME. Пробуем принудительное удаление всех контейнеров..."
+    # Принудительно удаляем все контейнеры в системе
+    docker ps -aq | xargs docker rm -f 2>/dev/null || true
+    sleep 3
+    # Еще одна попытка удалить сеть
+    docker network rm "$NETWORK_NAME" 2>/dev/null || true
+  fi
+fi
+
+# Создаем сеть заново - только если она не существует
+if ! docker network ls | grep -q "$NETWORK_NAME"; then
+  echo "Создаем сеть $NETWORK_NAME..."
+  docker network create "$NETWORK_NAME" 2>/dev/null || true
+else
+  echo "Сеть $NETWORK_NAME уже существует, используем её"
+fi
 
 # Запускаем все сервисы
 echo "Запускаем все сервисы..."
@@ -333,5 +392,26 @@ done
 # Сохраняем последние 5 бэкапов и удаляем более старые
 find /tmp/hostel-backup/db -name "*.sql" -type f | sort -r | tail -n +6 | xargs rm -f 2>/dev/null || true
 
-echo "Деплой завершен успешно!"
+# Проверка фактического состояния всех сервисов
+echo "Проверка фактического состояния всех сервисов..."
+RUNNING_SERVICES=$(docker-compose -f docker-compose.prod.yml ps --services --filter "status=running")
+EXPECTED_SERVICES="db opensearch opensearch-dashboards backend nginx"
+
+# Проверяем, все ли ожидаемые сервисы запущены
+ALL_SERVICES_RUNNING=true
+for SERVICE in $EXPECTED_SERVICES; do
+  if ! echo "$RUNNING_SERVICES" | grep -q "$SERVICE"; then
+    ALL_SERVICES_RUNNING=false
+    echo "ВНИМАНИЕ: Сервис $SERVICE не запущен!"
+  fi
+done
+
+if $ALL_SERVICES_RUNNING; then
+  echo "Все сервисы успешно запущены!"
+  echo "Деплой завершен успешно!"
+else
+  echo "ВНИМАНИЕ: Некоторые сервисы не запущены. Статус системы может быть некорректным."
+  echo "Проверьте логи для выяснения причин проблем:"
+  docker-compose -f docker-compose.prod.yml logs --tail=20
+fi
 echo "Логи контейнеров можно посмотреть с помощью: docker-compose -f docker-compose.prod.yml logs -f"
