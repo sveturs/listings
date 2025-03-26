@@ -255,188 +255,161 @@ cd ../..
 echo "Проверяем состояние тома базы данных..."
 DB_VOLUME_PATH="/opt/hostel-data/db"
 
-# Проверка прав доступа
-if [ -d "$DB_VOLUME_PATH" ]; then
-  echo "Проверяем и исправляем права доступа на томе базы данных..."
-  chown -R 999:999 "$DB_VOLUME_PATH"  # 999 - стандартный UID для postgres в контейнере
-  chmod -R 700 "$DB_VOLUME_PATH"
-  
-  # Проверка на наличие критичных файлов PostgreSQL
-  if [ -f "$DB_VOLUME_PATH/PG_VERSION" ]; then
-    echo "Обнаружен файл PG_VERSION, проверяем версию PostgreSQL..."
-    PG_VERSION=$(cat "$DB_VOLUME_PATH/PG_VERSION")
-    echo "Версия PostgreSQL в томе: $PG_VERSION"
-    
-    # Проверяем целостность кластера
-    if [ ! -f "$DB_VOLUME_PATH/global/pg_control" ]; then
-      echo "ВНИМАНИЕ: Файл pg_control не найден. Возможно, кластер PostgreSQL поврежден."
-      echo "Создаем резервную копию текущего тома и инициализируем новый кластер..."
-      BACKUP_PATH="${DB_VOLUME_PATH}_backup_$(date +%Y%m%d_%H%M%S)"
-      mv "$DB_VOLUME_PATH" "$BACKUP_PATH"
-      mkdir -p "$DB_VOLUME_PATH"
-      chown 999:999 "$DB_VOLUME_PATH"
-      chmod 700 "$DB_VOLUME_PATH"
-      echo "Старый том сохранен в $BACKUP_PATH, создан новый том."
-    fi
-  else
-    # Если директория не пустая, но файла PG_VERSION нет, значит это не валидный кластер PostgreSQL
-    if [ -n "$(ls -A $DB_VOLUME_PATH 2>/dev/null)" ]; then
-      echo "ВНИМАНИЕ: Том базы данных содержит файлы, но это не кластер PostgreSQL."
-      echo "Создаем резервную копию директории и инициализируем новый кластер..."
-      BACKUP_PATH="${DB_VOLUME_PATH}_backup_$(date +%Y%m%d_%H%M%S)"
-      mv "$DB_VOLUME_PATH" "$BACKUP_PATH"
-      mkdir -p "$DB_VOLUME_PATH"
-      chown 999:999 "$DB_VOLUME_PATH"
-      chmod 700 "$DB_VOLUME_PATH"
-      echo "Старый том сохранен в $BACKUP_PATH, создан новый том."
-    fi
-  fi
+# Создаем новую структуру директорий для PostgreSQL
+echo "Настраиваем новую структуру для PostgreSQL с вложенными директориями..."
+# Делаем резервную копию текущего состояния при наличии данных
+if [ -d "$DB_VOLUME_PATH" ] && [ -n "$(ls -A $DB_VOLUME_PATH 2>/dev/null)" ]; then
+  BACKUP_DIR="${DB_VOLUME_PATH}_backup_$(date +%Y%m%d_%H%M%S)"
+  echo "Сохраняем текущее состояние в $BACKUP_DIR..."
+  cp -r "$DB_VOLUME_PATH" "$BACKUP_DIR" 2>/dev/null || true
 fi
 
-# Проверка на наличие битого PID файла
-PID_FILE="$DB_VOLUME_PATH/postmaster.pid"
-if [ -f "$PID_FILE" ]; then
-  echo "Обнаружен PID файл. Это может быть причиной проблемы. Удаляем его..."
-  rm -f "$PID_FILE"
-fi
+# Остановим все контейнеры базы данных
+echo "Останавливаем все контейнеры базы данных..."
+docker-compose -f docker-compose.prod.yml stop db
+docker-compose -f docker-compose.prod.yml rm -f db
 
-# Создаем файл .postgresql_empty для указания PostgreSQL использовать PGDATA как пустую директорию
-echo "Создаем файл-флаг для корректной инициализации PostgreSQL..."
-mkdir -p "$DB_VOLUME_PATH/pgdata" 2>/dev/null || true
-touch "$DB_VOLUME_PATH/pgdata/.postgresql_empty" 2>/dev/null || true
+# Полностью очищаем директорию базы данных
+echo "Полностью очищаем директорию базы данных..."
+rm -rf "$DB_VOLUME_PATH"
+mkdir -p "$DB_VOLUME_PATH"
 
-# Добавляем вспомогательный скрипт для восстановления после ошибок инициализации
-DOCKER_ENTRYPOINT_DIR="$DB_VOLUME_PATH/docker-entrypoint-initdb.d"
-mkdir -p "$DOCKER_ENTRYPOINT_DIR"
-cat > "$DOCKER_ENTRYPOINT_DIR/fix-initdb.sh" << 'EOSCRIPT'
-#!/bin/bash
-set -e
+# Создаем более глубокую структуру вложенности для решения проблемы точек монтирования
+echo # Создаем вложенную структуру каталогов..."
+mkdir -p "$DB_VOLUME_PATH/data"
+chown -R 999:999 "$DB_VOLUME_PATH"
+chmod -R 700 "$DB_VOLUME_PATH"
 
-# Скрипт для корректной инициализации PostgreSQL
-echo "Проверяем директорию данных..."
-if [ -f "${PGDATA}/.postgresql_empty" ]; then
-  echo "Обнаружен флаг .postgresql_empty, выполняем специальную инициализацию..."
-  rm -f "${PGDATA}/.postgresql_empty"
-fi
+# Модифицируем docker-compose.prod.yml для использования новой структуры
+echo "Модифицируем docker-compose.prod.yml для использования новой структуры..."
+TEMP_COMPOSE_FILE=$(mktemp)
 
-echo "Инициализация PostgreSQL завершена успешно."
-EOSCRIPT
+# Создаем временную копию с измененными параметрами только для DB
+cat > "$TEMP_COMPOSE_FILE" << EOL
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    container_name: hostel_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: c9XWc7Cm
+      POSTGRES_DB: hostel_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hostel_network
+    stop_grace_period: 10s
+    stop_signal: SIGINT
+    restart: unless-stopped
 
-chmod +x "$DOCKER_ENTRYPOINT_DIR/fix-initdb.sh"
+volumes:
+  db_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/hostel-data/db/data
 
-# Модифицируем docker-compose.prod.yml для использования pgdata как подкаталога
-echo "Модифицируем docker-compose.prod.yml для использования PGDATA..."
-if ! grep -q "PGDATA:" docker-compose.prod.yml; then
-  sed -i '/POSTGRES_DB:/a\      PGDATA: /var/lib/postgresql/data/pgdata  # Подкаталог для хранения файлов БД' docker-compose.prod.yml
-fi
+networks:
+  hostel_network:
+    name: hostel-booking-system_hostel_network
+    driver: bridge
+EOL
 
-# Запускаем базу данных через docker-compose
-echo "Запускаем базу данных с правильной конфигурацией PGDATA..."
-docker-compose -f docker-compose.prod.yml up -d db
+# Запускаем только базу данных с временной конфигурацией
+echo "Запускаем базу данных с новой конфигурацией..."
+docker-compose -f "$TEMP_COMPOSE_FILE" up -d db
 
 # Проверяем готовность базы данных
 echo "Проверяем готовность базы данных..."
 MAX_DB_ATTEMPTS=30
 for i in $(seq 1 $MAX_DB_ATTEMPTS); do
-  if docker-compose -f docker-compose.prod.yml exec -T db pg_isready -U postgres > /dev/null 2>&1; then
+  if docker-compose -f "$TEMP_COMPOSE_FILE" exec -T db pg_isready -U postgres > /dev/null 2>&1; then
     echo "База данных готова! (попытка $i/$MAX_DB_ATTEMPTS)"
+    
     # Проверяем соединение с базой дополнительно
-    if docker-compose -f docker-compose.prod.yml exec -T db psql -U postgres -c "SELECT 1" > /dev/null 2>&1; then
+    if docker-compose -f "$TEMP_COMPOSE_FILE" exec -T db psql -U postgres -c "SELECT 1" > /dev/null 2>&1; then
       echo "Успешно проверено соединение с базой данных!"
       
-      # Задержка для полной стабилизации БД
-      echo "Ожидаем дополнительное время для стабилизации БД..."
-      sleep 5
+      # Если подключение работает, обновляем только путь тома в основном файле
+      echo "Обновляем пути томов в основном docker-compose.prod.yml..."
+      # Ищем и заменяем строку с путем тома db_data
+      sed -i 's|device: /opt/hostel-data/db|device: /opt/hostel-data/db/data|g' docker-compose.prod.yml
+      
+      # Добавляем PGDATA, если его еще нет
+      if ! grep -q "PGDATA:" docker-compose.prod.yml; then
+        sed -i '/POSTGRES_DB:/a\      PGDATA: /var/lib/postgresql/data/pgdata  # Подкаталог для хранения файлов БД' docker-compose.prod.yml
+      fi
+      
+      # НЕ останавливаем временную базу данных, а используем ее
+      echo "Используем запущенную базу данных для дальнейших операций..."
       break
     else
       echo "pg_isready вернул успех, но не удалось подключиться через psql. Продолжаем ожидание..."
     fi
   fi
   
-  # На последней попытке выполняем продвинутую диагностику
   if [ $i -eq $MAX_DB_ATTEMPTS ]; then
-    echo "Выполняем продвинутую диагностику базы данных..."
-    
-    # Проверяем состояние контейнера
-    CONTAINER_ID=$(docker-compose -f docker-compose.prod.yml ps -q db)
-    if [ -n "$CONTAINER_ID" ]; then
-      echo "Контейнер БД имеет ID: $CONTAINER_ID"
-      
-      echo "Логи контейнера базы данных:"
-      docker logs "$CONTAINER_ID"
-      
-      # Исправление ошибки с флагом -T
-      echo "Файлы в директории данных:"
-      docker exec "$CONTAINER_ID" ls -la /var/lib/postgresql/data || true
-      
-      # Исправление ошибки с флагом -T
-      echo "Пробуем перезапустить PostgreSQL внутри контейнера..."
-      docker exec "$CONTAINER_ID" bash -c "pg_ctl -D /var/lib/postgresql/data restart" || true
-      
-      # Даем время на перезапуск
-      sleep 10
-      
-      # Проверяем еще раз
-      if docker-compose -f docker-compose.prod.yml exec -T db pg_isready -U postgres > /dev/null 2>&1; then
-        echo "БД заработала после перезапуска!"
-        break
-      fi
-    else
-      echo "Контейнер БД не найден. Это странно..."
-    fi
-    
-    # Последняя попытка - полностью удаляем содержимое тома и инициализируем новый кластер
-    echo "ВНИМАНИЕ: Все предыдущие попытки не сработали. Удаляем содержимое тома и создаем новый кластер."
-    echo "Создаем резервную копию текущего тома..."
-    FINAL_BACKUP_PATH="${DB_VOLUME_PATH}_final_backup_$(date +%Y%m%d_%H%M%S)"
-    cp -r "$DB_VOLUME_PATH" "$FINAL_BACKUP_PATH" 2>/dev/null || true
-    rm -rf "$DB_VOLUME_PATH"/*
-    mkdir -p "$DB_VOLUME_PATH/pgdata"
-    touch "$DB_VOLUME_PATH/pgdata/.postgresql_empty"
-    chown -R 999:999 "$DB_VOLUME_PATH"
-    chmod -R 700 "$DB_VOLUME_PATH"
-    
-    # Останавливаем и удаляем контейнер
-    docker-compose -f docker-compose.prod.yml stop db
-    docker-compose -f docker-compose.prod.yml rm -f db
-    
-    # Запускаем с новым томом
-    echo "Запускаем БД с чистым томом..."
-    docker-compose -f docker-compose.prod.yml up -d db
-    
-    # Даем время на инициализацию
-    sleep 15
-    
-    # Проверяем состояние
-    if docker-compose -f docker-compose.prod.yml exec -T db pg_isready -U postgres > /dev/null 2>&1; then
-      echo "БД заработала с новым кластером!"
-      echo "ВАЖНО: Все данные предыдущего кластера сохранены в $FINAL_BACKUP_PATH"
-      echo "Необходимо будет восстановить данные из резервной копии после завершения деплоя."
-      break
-    else
-      echo "БД все еще не работает. Продолжаем деплой без проверки БД..."
-      echo "ВНИМАНИЕ: Это может привести к ошибкам в работе приложения!"
-      break
-    fi
+    echo "Не удалось запустить базу данных. Продолжаем деплой без проверки БД..."
+    echo "ВНИМАНИЕ: Это может привести к ошибкам в работе приложения!"
   fi
   
   echo "Ожидаем готовность базы данных... Попытка $i/$MAX_DB_ATTEMPTS"
   sleep 5
 done
 
+# Проверяем, существует ли нужная сеть - она уже должна существовать после запуска временной базы данных
+NETWORK_NAME="hostel-booking-system_hostel_network"
+if ! docker network ls | grep -q "$NETWORK_NAME"; then
+  echo "Сеть $NETWORK_NAME не существует, создаем..."
+  docker network create "$NETWORK_NAME"
+fi
+
 # Запускаем миграции напрямую
 echo "Запускаем миграции..."
-docker run --rm --network hostel-booking-system_hostel_network \
-  -v $(pwd)/backend/migrations:/migrations \
-  migrate/migrate \
-  -path=/migrations/ \
-  -database="postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable" \
-  up || {
-    echo "Ошибка при выполнении миграций. Продолжаем запуск других сервисов..."
-  }
 
-# Запускаем остальные сервисы
-echo "Запускаем остальные сервисы..."
+# Проверяем работу базы данных перед миграцией
+if docker-compose -f "$TEMP_COMPOSE_FILE" exec -T db pg_isready -U postgres > /dev/null 2>&1; then
+  echo "База данных готова для миграций!"
+  
+  # Получаем IP адрес базы данных
+  DB_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' hostel_db)
+  if [ -n "$DB_IP" ]; then
+    echo "IP-адрес базы данных: $DB_IP"
+    
+    # Запускаем миграции с использованием IP-адреса
+    docker run --rm --network "$NETWORK_NAME" \
+      -v $(pwd)/backend/migrations:/migrations \
+      migrate/migrate \
+      -path=/migrations/ \
+      -database="postgres://postgres:c9XWc7Cm@$DB_IP:5432/hostel_db?sslmode=disable" \
+      up || {
+        echo "Ошибка при выполнении миграций. Продолжаем запуск других сервисов..."
+      }
+  else
+    echo "Не удалось получить IP-адрес базы данных. Используем имя хоста..."
+    docker run --rm --network "$NETWORK_NAME" \
+      -v $(pwd)/backend/migrations:/migrations \
+      migrate/migrate \
+      -path=/migrations/ \
+      -database="postgres://postgres:c9XWc7Cm@hostel_db:5432/hostel_db?sslmode=disable" \
+      up || {
+        echo "Ошибка при выполнении миграций. Продолжаем запуск других сервисов..."
+      }
+  fi
+else
+  echo "ВНИМАНИЕ: База данных не готова для миграций!"
+fi
+
+# Запускаем остальные сервисы, НЕ запуская базу данных снова
+echo "Запускаем остальные сервисы, используя текущую базу данных..."
 docker-compose -f docker-compose.prod.yml up -d opensearch
 
 # Даем время OpenSearch запуститься
@@ -446,6 +419,9 @@ sleep 15
 # Запускаем оставшиеся сервисы
 echo "Запускаем backend и другие сервисы..."
 docker-compose -f docker-compose.prod.yml up -d backend opensearch-dashboards nginx
+
+# Удаляем временный файл
+rm -f "$TEMP_COMPOSE_FILE"
 
 # Проверяем, все ли сервисы запущены
 echo "Проверяем статус всех сервисов..."
@@ -460,6 +436,13 @@ for i in $(seq 1 $RETRY_COUNT); do
     echo "Backend здоров! (попытка $i/$RETRY_COUNT)"
     break
   fi
+  
+  # Проверяем, почему backend не отвечает
+  if [ $i -eq 10 ] || [ $i -eq 20 ]; then
+    echo "Backend все еще не отвечает. Проверяем логи..."
+    docker-compose -f docker-compose.prod.yml logs --tail=30 backend
+  fi
+  
   echo "Ожидаем готовность backend... Попытка $i/$RETRY_COUNT"
   sleep 3
 done
