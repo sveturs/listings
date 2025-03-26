@@ -264,10 +264,9 @@ if [ -d "$DB_VOLUME_PATH" ] && [ -n "$(ls -A $DB_VOLUME_PATH 2>/dev/null)" ]; th
   cp -r "$DB_VOLUME_PATH" "$BACKUP_DIR" 2>/dev/null || true
 fi
 
-# Остановим все контейнеры базы данных
+# Останавливаем все контейнеры базы данных и удаляем их
 echo "Останавливаем все контейнеры базы данных..."
-docker-compose -f docker-compose.prod.yml stop db
-docker-compose -f docker-compose.prod.yml rm -f db
+docker ps -a --filter "name=hostel_db" -q | xargs docker rm -f 2>/dev/null || true
 
 # Полностью очищаем директорию базы данных
 echo "Полностью очищаем директорию базы данных..."
@@ -282,143 +281,30 @@ chmod -R 700 "$DB_VOLUME_PATH"
 
 # Модифицируем docker-compose.prod.yml для использования новой структуры
 echo "Модифицируем docker-compose.prod.yml для использования новой структуры..."
-TEMP_COMPOSE_FILE=$(mktemp)
+sed -i 's|device: /opt/hostel-data/db|device: /opt/hostel-data/db/data|g' docker-compose.prod.yml
 
-# Создаем временную копию с измененными параметрами только для DB
-cat > "$TEMP_COMPOSE_FILE" << EOL
-version: '3.8'
-services:
-  db:
-    image: postgres:15
-    container_name: hostel_db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: c9XWc7Cm
-      POSTGRES_DB: hostel_db
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - hostel_network
-    stop_grace_period: 10s
-    stop_signal: SIGINT
-    restart: unless-stopped
+# Добавляем PGDATA, если его еще нет
+if ! grep -q "PGDATA:" docker-compose.prod.yml; then
+  sed -i '/POSTGRES_DB:/a\      PGDATA: /var/lib/postgresql/data/pgdata  # Подкаталог для хранения файлов БД' docker-compose.prod.yml
+fi
 
-volumes:
-  db_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /opt/hostel-data/db/data
+# Убеждаемся, что никакие контейнеры с тем же именем не работают
+docker ps -a | grep -E 'hostel_db|opensearch|backend|nginx' | awk '{print $1}' | xargs docker rm -f 2>/dev/null || true
 
-networks:
-  hostel_network:
-    name: hostel-booking-system_hostel_network
-    driver: bridge
-EOL
-
-# Запускаем только базу данных с временной конфигурацией
-echo "Запускаем базу данных с новой конфигурацией..."
-docker-compose -f "$TEMP_COMPOSE_FILE" up -d db
-
-# Проверяем готовность базы данных
-echo "Проверяем готовность базы данных..."
-MAX_DB_ATTEMPTS=30
-for i in $(seq 1 $MAX_DB_ATTEMPTS); do
-  if docker-compose -f "$TEMP_COMPOSE_FILE" exec -T db pg_isready -U postgres > /dev/null 2>&1; then
-    echo "База данных готова! (попытка $i/$MAX_DB_ATTEMPTS)"
-    
-    # Проверяем соединение с базой дополнительно
-    if docker-compose -f "$TEMP_COMPOSE_FILE" exec -T db psql -U postgres -c "SELECT 1" > /dev/null 2>&1; then
-      echo "Успешно проверено соединение с базой данных!"
-      
-      # Если подключение работает, обновляем только путь тома в основном файле
-      echo "Обновляем пути томов в основном docker-compose.prod.yml..."
-      # Ищем и заменяем строку с путем тома db_data
-      sed -i 's|device: /opt/hostel-data/db|device: /opt/hostel-data/db/data|g' docker-compose.prod.yml
-      
-      # Добавляем PGDATA, если его еще нет
-      if ! grep -q "PGDATA:" docker-compose.prod.yml; then
-        sed -i '/POSTGRES_DB:/a\      PGDATA: /var/lib/postgresql/data/pgdata  # Подкаталог для хранения файлов БД' docker-compose.prod.yml
-      fi
-      
-      # НЕ останавливаем временную базу данных, а используем ее
-      echo "Используем запущенную базу данных для дальнейших операций..."
-      break
-    else
-      echo "pg_isready вернул успех, но не удалось подключиться через psql. Продолжаем ожидание..."
-    fi
-  fi
-  
-  if [ $i -eq $MAX_DB_ATTEMPTS ]; then
-    echo "Не удалось запустить базу данных. Продолжаем деплой без проверки БД..."
-    echo "ВНИМАНИЕ: Это может привести к ошибкам в работе приложения!"
-  fi
-  
-  echo "Ожидаем готовность базы данных... Попытка $i/$MAX_DB_ATTEMPTS"
-  sleep 5
-done
-
-# Проверяем, существует ли нужная сеть - она уже должна существовать после запуска временной базы данных
+# Убеждаемся, что нужная сеть существует и удаляем её, если она есть
 NETWORK_NAME="hostel-booking-system_hostel_network"
-if ! docker network ls | grep -q "$NETWORK_NAME"; then
-  echo "Сеть $NETWORK_NAME не существует, создаем..."
-  docker network create "$NETWORK_NAME"
+if docker network ls | grep -q "$NETWORK_NAME"; then
+  echo "Удаляем существующую сеть $NETWORK_NAME..."
+  docker network rm "$NETWORK_NAME" 2>/dev/null || true
 fi
 
-# Запускаем миграции напрямую
-echo "Запускаем миграции..."
+# Создаем сеть заново
+echo "Создаем сеть $NETWORK_NAME..."
+docker network create "$NETWORK_NAME" 2>/dev/null || true
 
-# Проверяем работу базы данных перед миграцией
-if docker-compose -f "$TEMP_COMPOSE_FILE" exec -T db pg_isready -U postgres > /dev/null 2>&1; then
-  echo "База данных готова для миграций!"
-  
-  # Получаем IP адрес базы данных
-  DB_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' hostel_db)
-  if [ -n "$DB_IP" ]; then
-    echo "IP-адрес базы данных: $DB_IP"
-    
-    # Запускаем миграции с использованием IP-адреса
-    docker run --rm --network "$NETWORK_NAME" \
-      -v $(pwd)/backend/migrations:/migrations \
-      migrate/migrate \
-      -path=/migrations/ \
-      -database="postgres://postgres:c9XWc7Cm@$DB_IP:5432/hostel_db?sslmode=disable" \
-      up || {
-        echo "Ошибка при выполнении миграций. Продолжаем запуск других сервисов..."
-      }
-  else
-    echo "Не удалось получить IP-адрес базы данных. Используем имя хоста..."
-    docker run --rm --network "$NETWORK_NAME" \
-      -v $(pwd)/backend/migrations:/migrations \
-      migrate/migrate \
-      -path=/migrations/ \
-      -database="postgres://postgres:c9XWc7Cm@hostel_db:5432/hostel_db?sslmode=disable" \
-      up || {
-        echo "Ошибка при выполнении миграций. Продолжаем запуск других сервисов..."
-      }
-  fi
-else
-  echo "ВНИМАНИЕ: База данных не готова для миграций!"
-fi
-
-# Запускаем остальные сервисы, НЕ запуская базу данных снова
-echo "Запускаем все сервисы вместе..."
-# Останавливаем временный контейнер БД
-docker stop hostel_db > /dev/null 2>&1 || true
-docker rm hostel_db > /dev/null 2>&1 || true
-
-# Запускаем все сервисы через docker-compose
+# Запускаем все сервисы
+echo "Запускаем все сервисы..."
 docker-compose -f docker-compose.prod.yml up -d
-
-# Удаляем временный файл
-rm -f "$TEMP_COMPOSE_FILE"
 
 # Проверяем, все ли сервисы запущены
 echo "Проверяем статус всех сервисов..."
@@ -447,5 +333,5 @@ done
 # Сохраняем последние 5 бэкапов и удаляем более старые
 find /tmp/hostel-backup/db -name "*.sql" -type f | sort -r | tail -n +6 | xargs rm -f 2>/dev/null || true
 
-echo "Деплой завершен!"
+echo "Деплой завершен успешно!"
 echo "Логи контейнеров можно посмотреть с помощью: docker-compose -f docker-compose.prod.yml logs -f"

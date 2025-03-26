@@ -435,7 +435,10 @@ const EditListingPage = () => {
                 </Typography>
                 {i18n.language !== listing?.original_language && (
                     <Alert severity="info" sx={{ mb: 2 }}>
-                        {t('listings.edit.translationNote')} {t('language', { ns: 'common', context: listing?.original_language })}
+                        {t('listings.edit.translationNote')}
+                        {listing?.original_language === 'ru' && " Русский"}
+                        {listing?.original_language === 'en' && " English"}
+                        {listing?.original_language === 'sr' && " Српски"}
                     </Alert>
                 )}
                 {error && (
