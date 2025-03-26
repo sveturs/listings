@@ -275,7 +275,7 @@ rm -rf "$DB_VOLUME_PATH"
 mkdir -p "$DB_VOLUME_PATH"
 
 # Создаем более глубокую структуру вложенности для решения проблемы точек монтирования
-echo # Создаем вложенную структуру каталогов..."
+echo "Создаем вложенную структуру каталогов..."
 mkdir -p "$DB_VOLUME_PATH/data"
 chown -R 999:999 "$DB_VOLUME_PATH"
 chmod -R 700 "$DB_VOLUME_PATH"
