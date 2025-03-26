@@ -409,16 +409,13 @@ else
 fi
 
 # Запускаем остальные сервисы, НЕ запуская базу данных снова
-echo "Запускаем остальные сервисы, используя текущую базу данных..."
-docker-compose -f docker-compose.prod.yml up -d opensearch
+echo "Запускаем все сервисы вместе..."
+# Останавливаем временный контейнер БД
+docker stop hostel_db > /dev/null 2>&1 || true
+docker rm hostel_db > /dev/null 2>&1 || true
 
-# Даем время OpenSearch запуститься
-echo "Ожидаем запуска OpenSearch..."
-sleep 15
-
-# Запускаем оставшиеся сервисы
-echo "Запускаем backend и другие сервисы..."
-docker-compose -f docker-compose.prod.yml up -d backend opensearch-dashboards nginx
+# Запускаем все сервисы через docker-compose
+docker-compose -f docker-compose.prod.yml up -d
 
 # Удаляем временный файл
 rm -f "$TEMP_COMPOSE_FILE"
