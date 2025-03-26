@@ -374,29 +374,11 @@ const EditListingPage = () => {
                 attributes: processedAttributes
             };
 
-            if (i18n.language === listing.original_language) {
-                // Обновляем основные данные
-                await axios.put(`/api/v1/marketplace/listings/${id}`, listingData);
+            // Всегда обновляем основные данные объявления
+            await axios.put(`/api/v1/marketplace/listings/${id}`, listingData);
 
-                // Отправляем новые изображения, если они есть
-                if (images.length > 0) {
-                    const formData = new FormData();
-                    images.forEach((file) => {
-                        formData.append('images', file);
-                    });
-
-                    await axios.post(
-                        `/api/v1/marketplace/listings/${id}/images`,
-                        formData,
-                        {
-                            headers: {
-                                'Content-Type': 'multipart/form-data'
-                            }
-                        }
-                    );
-                }
-            } else {
-                // Обновляем только переводы
+            // Если язык не совпадает с оригиналом, также обновляем переводы
+            if (i18n.language !== listing.original_language) {
                 await axios.put(`/api/v1/marketplace/translations/${id}`, {
                     language: i18n.language,
                     translations: {
@@ -405,6 +387,24 @@ const EditListingPage = () => {
                     },
                     is_verified: true
                 });
+            }
+
+            // Отправляем новые изображения, если они есть
+            if (images.length > 0) {
+                const formData = new FormData();
+                images.forEach((file) => {
+                    formData.append('images', file);
+                });
+
+                await axios.post(
+                    `/api/v1/marketplace/listings/${id}/images`,
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    }
+                );
             }
 
             setSuccess(true);
@@ -435,7 +435,7 @@ const EditListingPage = () => {
                 </Typography>
                 {i18n.language !== listing?.original_language && (
                     <Alert severity="info" sx={{ mb: 2 }}>
-                        {t('listings.edit.translationNote')}
+                        {t('listings.edit.translationNote')} {t('language', { ns: 'common', context: listing?.original_language })}
                     </Alert>
                 )}
                 {error && (
@@ -604,7 +604,7 @@ const EditListingPage = () => {
                                 </Box>
                             </Grid>
                             <Grid item xs={12}>
- 
+
                                 {listing.category_id && (
                                     <AttributeFields
                                         key={`attr-fields-${attributesLoaded ? 'loaded' : 'loading'}-${listing.category_id}`}

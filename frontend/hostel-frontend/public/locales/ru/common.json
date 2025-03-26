@@ -1,57 +1,62 @@
 {
-    "buttons": {
-      "create": "Создать",
-      "edit": "Редактировать",
-      "delete": "Удалить",
-      "save": "Сохранить",
-      "cancel": "Отмена",
-      "close": "Закрыть",
-      "back": "Назад",
-      "search": "Поиск",
-      "share": "Поделиться",
-      "favorite": "В избранное",
-      "unfavorite": "Убрать из избранного"
-    },
-    "navigation": {
-      "home": "Главная",
-      "marketplace": "Маркетплейс",
-      "myListings": "Мои объявления",
-      "favorites": "Избранное",
-      "messages": "Сообщения",
-      "profile": "Профиль",
-      "notifications": "Уведомления",
-      "settings": "Настройки"
-    },
-    "auth": {
-      "signIn": "Войти",
-      "signOut": "Выйти",
-      "profile": "Профиль",
-      "needAuth": "Необходима авторизация",
-      "pleaseLogin": "Пожалуйста, войдите в систему"
-    },
-    "common": {
-      "loading": "Загрузка...",
-      "error": "Ошибка",
-      "success": "Успешно",
-      "notFound": "Не найдено",
-      "price": "Цена",
-      "condition": "Состояние",
-      "category": "Категория",
-      "location": "Местоположение",
-      "description": "Описание",
-      "photos": "Фотографии",
-      "new": "Новое",
-      "used": "Б/у"
-    },
-    "time": {
-      "today": "Сегодня",
-      "yesterday": "Вчера",
-      "ago": "назад",
-      "minute": "минуту",
-      "minutes": "минут",
-      "hour": "час",
-      "hours": "часов",
-      "day": "день",
-      "days": "дней"
-    }
+  "buttons": {
+    "create": "Создать",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "back": "Назад",
+    "search": "Поиск",
+    "share": "Поделиться",
+    "favorite": "В избранное",
+    "unfavorite": "Убрать из избранного"
+  },
+  "navigation": {
+    "home": "Главная",
+    "marketplace": "Маркетплейс",
+    "myListings": "Мои объявления",
+    "favorites": "Избранное",
+    "messages": "Сообщения",
+    "profile": "Профиль",
+    "notifications": "Уведомления",
+    "settings": "Настройки"
+  },
+  "auth": {
+    "signIn": "Войти",
+    "signOut": "Выйти",
+    "profile": "Профиль",
+    "needAuth": "Необходима авторизация",
+    "pleaseLogin": "Пожалуйста, войдите в систему"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "notFound": "Не найдено",
+    "price": "Цена",
+    "condition": "Состояние",
+    "category": "Категория",
+    "location": "Местоположение",
+    "description": "Описание",
+    "photos": "Фотографии",
+    "new": "Новое",
+    "used": "Б/у"
+  },
+  "time": {
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "ago": "назад",
+    "minute": "минуту",
+    "minutes": "минут",
+    "hour": "час",
+    "hours": "часов",
+    "day": "день",
+    "days": "дней"
+  },
+  "language": {
+    "ru": "Русский",
+    "en": "Английский",
+    "sr": "Сербский"
   }
+}

@@ -576,9 +576,7 @@ const handleSearch = async () => {
 
     return (
         <Paper sx={{ p: isMobile ? 0 : 2, bgcolor: isMobile ? 'transparent' : 'background.paper', elevation: isMobile ? 0 : 1 }}>
-            <Typography variant={isMobile ? "subtitle1" : "h6"} gutterBottom>
-                Местоположение объекта
-            </Typography>
+
             <Box sx={{ mb: isMobile ? 1 : 2, position: 'relative' }}>
                 <TextField
                     id="location-search"

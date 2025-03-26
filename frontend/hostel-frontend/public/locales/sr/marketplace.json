@@ -209,5 +209,10 @@
     },
     "test": "Pošalji test obaveštenje",
     "inDevelopment": "U razvoju"
+  },
+  "language": {
+    "ru": "Ruski",
+    "en": "Engelski",
+    "sr": "Srpski"
   }
 }
