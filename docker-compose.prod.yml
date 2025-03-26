@@ -1,25 +1,25 @@
 version: '3.8'
 services:
-db:
-  image: postgres:15
-  container_name: hostel_db
-  environment:
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: c9XWc7Cm
-    POSTGRES_DB: hostel_db
-    PGDATA: /var/lib/postgresql/data/pgdata
-  volumes:
-    - db_data:/var/lib/postgresql/data
-  healthcheck:
-    test: ["CMD", "pg_isready", "-U", "postgres"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
-  networks:
-    - hostel_network
-  stop_grace_period: 10s
-  stop_signal: SIGINT
-  restart: unless-stopped
+  db:
+    image: postgres:15
+    container_name: hostel_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: c9XWc7Cm
+      POSTGRES_DB: hostel_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hostel_network
+    stop_grace_period: 10s
+    stop_signal: SIGINT
+    restart: unless-stopped
 
   opensearch:
     image: opensearchproject/opensearch:2.11.0
