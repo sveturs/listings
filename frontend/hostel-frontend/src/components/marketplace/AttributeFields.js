@@ -170,9 +170,9 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
     // Проверяем, есть ли входящие данные и отличаются ли они от текущих
     useEffect(() => {
         // Проверяем, есть ли входящие данные и отличаются ли они от текущих
-        if (value && value.length > 0 && JSON.stringify(value) !== JSON.stringify(values)) {
+        if (value && value.length > 0) {
             console.log("AttributeFields: Получены внешние значения атрибутов:", value);
-
+            
             // Дополнительная проверка и коррекция входящих значений
             const processedValues = [];
             const seen = {}; // Для отслеживания дубликатов
@@ -208,6 +208,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
             console.log("AttributeFields: Обработанные значения атрибутов:", processedValues);
             setValues(processedValues);
             hasSetExternalValues.current = true;
+            // }
         }
     }, [value]);
 
