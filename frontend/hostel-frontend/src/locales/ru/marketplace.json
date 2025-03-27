@@ -145,6 +145,7 @@
       "goToStore": "В магазин"
     },
     "filters": {
+      "any": "Любой",
       "title": "Фильтры",
       "price": {
         "label": "Цена",

@@ -1,4 +1,3 @@
-// frontend/hostel-frontend/src/components/marketplace/AttributeFilters.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { debounce } from 'lodash';
@@ -11,13 +10,13 @@ import {
     FormControlLabel,
     Radio,
     RadioGroup,
-    Checkbox,
-    FormGroup,
     Grid,
     Paper,
-    Stack,
     CircularProgress,
-    InputAdornment
+    InputAdornment,
+    MenuItem,
+    Select,
+    InputLabel
 } from '@mui/material';
 import axios from '../../api/axios';
 
@@ -26,7 +25,6 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
     const [attributes, setAttributes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [attributeFilters, setAttributeFilters] = useState({ ...filters });
-    const [attributeCount, setAttributeCount] = useState(0);
     const [error, setError] = useState(null);
     const isFirstRender = useRef(true);
 
@@ -40,6 +38,30 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
         }, 500),
         [onFilterChange]
     );
+
+    // Функция для получения переведенного значения опции атрибута
+    const getTranslatedOptionValue = (attribute, value) => {
+        // Для отладки
+        console.log(`Получение перевода для опции: ${value} атрибута ${attribute?.name}`);
+        console.log("Опции переводов:", attribute?.option_translations);
+
+        if (!value || !attribute) return value;
+
+        // Проверяем, есть ли переводы опций
+        if (attribute.option_translations &&
+            attribute.option_translations[i18n.language]) {
+
+            // Ищем перевод для конкретного значения
+            const optionKey = `option_${value}`;
+            if (attribute.option_translations[i18n.language][optionKey]) {
+                const translatedValue = attribute.option_translations[i18n.language][optionKey];
+                console.log(`Найден перевод: ${value} -> ${translatedValue}`);
+                return translatedValue;
+            }
+        }
+
+        return value;
+    };
 
     // Обработчик изменения фильтров по атрибутам
     const handleFilterChange = useCallback((attributeName, value) => {
@@ -78,7 +100,6 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
         if (!categoryId) {
             console.log("Нет ID категории, пропускаем запрос атрибутов");
             setAttributes([]);
-            setAttributeCount(0);
 
             // Уведомляем родительский компонент об отсутствии атрибутов
             if (onAttributesLoaded) {
@@ -101,9 +122,29 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                     const filterableAttrs = response.data.data.filter(attr => attr.is_filterable);
                     console.log(`Получено ${response.data.data.length} атрибутов, из них фильтруемых: ${filterableAttrs.length}`);
 
+                    // Отладочный вывод для проверки переводов
+                    filterableAttrs.forEach(attr => {
+                        if (attr.option_translations) {
+                            console.log(`Атрибут ${attr.name} имеет переводы опций:`, attr.option_translations);
+                            if (attr.option_translations[i18n.language]) {
+                                console.log(`Доступны переводы для языка ${i18n.language}:`,
+                                    attr.option_translations[i18n.language]);
+
+                                // Проверяем наличие ключей с префиксом "option_"
+                                const hasOptionPrefix = Object.keys(attr.option_translations[i18n.language])
+                                    .some(key => key.startsWith('option_'));
+
+                                console.log(`Атрибут ${attr.name} имеет ключи с префиксом option_: ${hasOptionPrefix}`);
+                            } else {
+                                console.log(`Нет переводов для языка ${i18n.language}`);
+                            }
+                        } else {
+                            console.log(`Атрибут ${attr.name} не имеет переводов опций`);
+                        }
+                    });
+
                     if (filterableAttrs.length > 0) {
                         setAttributes(filterableAttrs);
-                        setAttributeCount(filterableAttrs.length);
 
                         // Уведомляем родительский компонент о наличии атрибутов
                         if (onAttributesLoaded) {
@@ -137,7 +178,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
         };
 
         fetchAttributes();
-    }, [categoryId, i18n.language, onAttributesLoaded]);
+    }, [categoryId, i18n.language, onAttributesLoaded, filters]);
 
     // Обновление локального состояния при изменении входных фильтров
     useEffect(() => {
@@ -194,6 +235,8 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
 
     // Рендер фильтра в зависимости от типа атрибута
     const renderFilter = (attribute) => {
+        console.log(`Рендеринг фильтра для атрибута: ${attribute.name} (${attribute.attribute_type})`);
+
         const displayName = getTranslatedName(attribute);
         const attributeName = attribute.name;
         const currentValue = attributeFilters[attributeName] || '';
@@ -256,8 +299,6 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                         min = options.min !== undefined ? Number(options.min) : 0;
                         max = options.max !== undefined ? Number(options.max) : 100;
                 }
-
-
 
                 // Парсим текущее значение из currentValue
                 let value = [min, max];
@@ -358,10 +399,13 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
             case 'select': {
                 let options = [];
                 try {
+                    console.log(`Парсинг опций для ${attribute.name}, исходные данные:`, attribute.options);
+
                     // Проверяем формат options
                     if (typeof attribute.options === 'string') {
                         // Если options - строка JSON
                         const parsedOptions = JSON.parse(attribute.options);
+                        console.log("Распарсенные опции из строки:", parsedOptions);
 
                         if (Array.isArray(parsedOptions.values)) {
                             options = parsedOptions.values;
@@ -371,18 +415,31 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                         }
                     } else if (attribute.options && typeof attribute.options === 'object') {
                         // Если options уже объект
-                        if (Array.isArray(attribute.options.values)) {
-                            options = attribute.options.values;
-                        } else if (attribute.options.values) {
-                            // Если values существует, но не массив
-                            options = [String(attribute.options.values)];
+                        console.log("Опции уже в формате объекта:", attribute.options);
+
+                        if (attribute.options.values) {
+                            if (Array.isArray(attribute.options.values)) {
+                                options = attribute.options.values;
+                            } else {
+                                // Если values существует, но не массив
+                                options = [String(attribute.options.values)];
+                            }
                         }
                     }
+
+                    console.log(`Итоговые опции для ${attribute.name}:`, options);
+
+                    // Отладка переводов опций
+                    options.forEach(option => {
+                        const translated = getTranslatedOptionValue(attribute, option);
+                        console.log(`Опция ${option} -> ${translated} (${option === translated ? 'не переведено' : 'переведено'})`);
+                    });
                 } catch (e) {
                     console.error(`Ошибка при обработке опций для ${attribute.name}:`, e);
                     options = [];
                 }
 
+                // Отображаем варианты или сообщение о их отсутствии
                 return (
                     <FormControl component="fieldset">
                         <Typography>{displayName}</Typography>
@@ -393,7 +450,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                             <FormControlLabel
                                 value=""
                                 control={<Radio size="small" />}
-                                label={t('listings.filters.any', { defaultValue: 'Любой' })}
+                                label={t('listings.filters.any')}
                             />
                             {options.length > 0 ? (
                                 options.map((option) => (
@@ -401,7 +458,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                                         key={option}
                                         value={option}
                                         control={<Radio size="small" />}
-                                        label={option}
+                                        label={getTranslatedOptionValue(attribute, option)}
                                     />
                                 ))
                             ) : (
@@ -428,7 +485,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                             <FormControlLabel
                                 value=""
                                 control={<Radio size="small" />}
-                                label={t('listings.filters.any', { defaultValue: 'Любой' })}
+                                label={t('listings.filters.any')}
                             />
                             <FormControlLabel
                                 value="true"
@@ -448,6 +505,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                 return null;
         }
     };
+
 
     return (
         <Box sx={{ mt: 1 }}>

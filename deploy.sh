@@ -6,6 +6,43 @@ log() {
     echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1"
 }
 
+# Настройка логирования
+LOG_FILE="/var/log/deploy.log"
+# Проверка наличия и доступности директории для логов
+if [ ! -d "/var/log" ] || [ ! -w "/var/log" ]; then
+    LOG_FILE="/tmp/deploy.log"
+    log "ВНИМАНИЕ: Невозможно записать в /var/log, используем $LOG_FILE"
+fi
+
+# Проверка наличия лог-файла
+if [ ! -f "$LOG_FILE" ]; then
+    touch "$LOG_FILE" 2>/dev/null || true
+fi
+
+# Проверка прав на запись
+if [ ! -w "$LOG_FILE" ] && [ -f "$LOG_FILE" ]; then
+    chmod 666 "$LOG_FILE" 2>/dev/null || true
+    if [ ! -w "$LOG_FILE" ]; then
+        LOG_FILE="/tmp/deploy.log"
+        touch "$LOG_FILE" 2>/dev/null || true
+        log "ВНИМАНИЕ: Проблемы с правами доступа, используем $LOG_FILE"
+    fi
+fi
+
+# Ротация логов деплоя
+if [ -f "$LOG_FILE" ] && [ -w "$LOG_FILE" ]; then
+    log "Ротация логов деплоя..."
+    if [ -w "$(dirname "$LOG_FILE")" ]; then
+        cp -f "$LOG_FILE" "${LOG_FILE}.$(date +%Y%m%d)" 2>/dev/null || true
+        find "$(dirname "$LOG_FILE")" -name "$(basename "$LOG_FILE").*" -type f -mtime +7 -delete 2>/dev/null || true
+        : > "$LOG_FILE" # Очищаем текущий лог-файл
+    else
+        log "ВНИМАНИЕ: Нет прав на ротацию логов в директории $(dirname "$LOG_FILE")"
+    fi
+fi
+
+log "Начинаем деплой..."
+
 # Функция для принудительной очистки Docker
 docker_force_cleanup() {
     log "=== Выполняем принудительную очистку Docker ==="
@@ -65,6 +102,7 @@ cleanup_on_interrupt() {
 
 # Устанавливаем обработчик сигналов прерывания
 trap cleanup_on_interrupt SIGINT SIGTERM
+
 
 log "Начинаем деплой..."
 cd /opt/hostel-booking-system

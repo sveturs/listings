@@ -10,7 +10,7 @@ import ImageUploader from '../../components/marketplace/ImageUploader';
 import FullscreenMap from '../../components/maps/FullscreenMap';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import AttributeFields from '../../components/marketplace/AttributeFields';
-import CategorySelect from '../../components/marketplace/CategorySelect'; // Добавляем импорт CategorySelect
+import CategorySelect from '../../components/marketplace/CategorySelect'; // Импортируем CategorySelect
 import {
     Container,
     TextField,
@@ -499,6 +499,7 @@ const EditListingPage = () => {
                                     >
                                         {t('listings.create.category')}
                                     </InputLabel>
+                                    {/* Используем CategorySelect с параметром displaySelectedValueOnly */}
                                     <CategorySelect
                                         categories={categories}
                                         value={listing.category_id}

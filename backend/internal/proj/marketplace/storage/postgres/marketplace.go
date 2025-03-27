@@ -1276,10 +1276,13 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 
     return allAttributes, nil
 }
-
-// GetCategoryAttributes получает атрибуты для указанной категории
+// Исправленная версия функции GetCategoryAttributes
+// Исправленная версия функции GetCategoryAttributes
 func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-	query := `
+    // Добавляем логирование для отладки
+    log.Printf("GetCategoryAttributes: Получение атрибутов для категории %d", categoryID)
+    
+    query := `
     WITH RECURSIVE category_hierarchy AS (
         -- Находим все родительские категории (включая текущую)
         WITH RECURSIVE parents AS (
@@ -1297,12 +1300,28 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
     ),
     attribute_translations AS (
         SELECT 
-            t.entity_id,
-            t.language,
-            t.translated_text
-        FROM translations t
-        WHERE t.entity_type = 'attribute' 
-        AND t.field_name = 'display_name'
+            entity_id,
+            jsonb_object_agg(language, translated_text) as translations
+        FROM translations
+        WHERE entity_type = 'attribute' 
+        AND field_name = 'display_name'
+        GROUP BY entity_id
+    ),
+    option_translations AS (
+        SELECT 
+            entity_id,
+            language,
+            jsonb_object_agg(field_name, translated_text) as field_translations
+        FROM translations
+        WHERE entity_type = 'attribute_option'
+        GROUP BY entity_id, language
+    ),
+    option_lang_agg AS (
+        SELECT
+            entity_id,
+            jsonb_object_agg(language, field_translations) as option_translations
+        FROM option_translations
+        GROUP BY entity_id
     )
     SELECT DISTINCT ON (a.id)
         a.id, 
@@ -1316,70 +1335,82 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
         COALESCE(m.is_required, a.is_required) as is_required,
         a.sort_order,
         a.created_at,
-        jsonb_object_agg(COALESCE(t.language, ''), COALESCE(t.translated_text, '')) FILTER (WHERE t.language IS NOT NULL) as translations
+        COALESCE(at.translations, '{}'::jsonb) as translations,
+        COALESCE(ol.option_translations, '{}'::jsonb) as option_translations
     FROM category_attribute_mapping m
     JOIN category_attributes a ON m.attribute_id = a.id
     JOIN category_hierarchy h ON m.category_id = h.id
-    LEFT JOIN attribute_translations t ON a.id = t.entity_id
+    LEFT JOIN attribute_translations at ON a.id = at.entity_id
+    LEFT JOIN option_lang_agg ol ON a.id = ol.entity_id
     WHERE m.is_enabled = true
-    GROUP BY a.id, a.name, a.display_name, a.attribute_type, a.options, 
-            a.validation_rules, a.is_searchable, a.is_filterable, m.is_required, 
-            a.is_required, a.sort_order, a.created_at, m.category_id
     ORDER BY a.id, m.category_id = $1 DESC, a.sort_order, a.display_name
     `
 
-	rows, err := s.pool.Query(ctx, query, categoryID)
-	if err != nil {
-		return nil, fmt.Errorf("error querying category attributes: %w", err)
-	}
-	defer rows.Close()
+    // Выполняем запрос
+    rows, err := s.pool.Query(ctx, query, categoryID)
+    if err != nil {
+        log.Printf("GetCategoryAttributes: Ошибка запроса: %v", err)
+        return nil, fmt.Errorf("error querying category attributes: %w", err)
+    }
+    defer rows.Close()
 
-	var attributes []models.CategoryAttribute
-	for rows.Next() {
-		var attr models.CategoryAttribute
-		var options, validRules sql.NullString
-		var translationsJson []byte
+    var attributes []models.CategoryAttribute
+    for rows.Next() {
+        var attr models.CategoryAttribute
+        var options, validRules sql.NullString
+        var translationsJson, optionTranslationsJson []byte
 
-		if err := rows.Scan(
-			&attr.ID,
-			&attr.Name,
-			&attr.DisplayName,
-			&attr.AttributeType,
-			&options,
-			&validRules,
-			&attr.IsSearchable,
-			&attr.IsFilterable,
-			&attr.IsRequired,
-			&attr.SortOrder,
-			&attr.CreatedAt,
-			&translationsJson,
-		); err != nil {
-			return nil, fmt.Errorf("error scanning category attribute: %w", err)
-		}
+        if err := rows.Scan(
+            &attr.ID,
+            &attr.Name,
+            &attr.DisplayName,
+            &attr.AttributeType,
+            &options,
+            &validRules,
+            &attr.IsSearchable,
+            &attr.IsFilterable,
+            &attr.IsRequired,
+            &attr.SortOrder,
+            &attr.CreatedAt,
+            &translationsJson,
+            &optionTranslationsJson,
+        ); err != nil {
+            log.Printf("GetCategoryAttributes: Ошибка при сканировании результата: %v", err)
+            return nil, fmt.Errorf("error scanning category attribute: %w", err)
+        }
 
-		// Обработка опциональных JSON полей
-		if options.Valid {
-			attr.Options = json.RawMessage(options.String)
-		}
-		if validRules.Valid {
-			attr.ValidRules = json.RawMessage(validRules.String)
-		}
+        // Обработка опциональных JSON полей
+        if options.Valid {
+            attr.Options = json.RawMessage(options.String)
+        }
+        if validRules.Valid {
+            attr.ValidRules = json.RawMessage(validRules.String)
+        }
 
-		// Обработка переводов
-		attr.Translations = make(map[string]string)
-		if err := json.Unmarshal(translationsJson, &attr.Translations); err != nil {
-			// Просто логируем ошибку, но продолжаем работу
-			fmt.Printf("Error parsing translations for attribute %d: %v\n", attr.ID, err)
-		}
+        // Обработка переводов
+        attr.Translations = make(map[string]string)
+        if err := json.Unmarshal(translationsJson, &attr.Translations); err != nil {
+            log.Printf("GetCategoryAttributes: Ошибка парсинга переводов для атрибута %d: %v", attr.ID, err)
+        }
 
-		attributes = append(attributes, attr)
-	}
+        // Обработка переводов опций
+        attr.OptionTranslations = make(map[string]map[string]string)
+        if err := json.Unmarshal(optionTranslationsJson, &attr.OptionTranslations); err != nil {
+            log.Printf("GetCategoryAttributes: Ошибка парсинга переводов опций для атрибута %d: %v", attr.ID, err)
+        } else {
+            log.Printf("GetCategoryAttributes: Получены переводы опций для атрибута %d: %v", attr.ID, attr.OptionTranslations)
+        }
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating category attributes: %w", err)
-	}
+        attributes = append(attributes, attr)
+    }
 
-	return attributes, nil
+    if err := rows.Err(); err != nil {
+        log.Printf("GetCategoryAttributes: Ошибка при итерации результатов: %v", err)
+        return nil, fmt.Errorf("error iterating category attributes: %w", err)
+    }
+
+    log.Printf("GetCategoryAttributes: Успешно получено %d атрибутов для категории %d", len(attributes), categoryID)
+    return attributes, nil
 }
 
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {

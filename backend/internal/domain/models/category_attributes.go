@@ -7,18 +7,19 @@ import (
 
 // CategoryAttribute представляет атрибут категории
 type CategoryAttribute struct {
-	ID            int             `json:"id"`
-	Name          string          `json:"name"`
-	DisplayName   string          `json:"display_name"`
-	AttributeType string          `json:"attribute_type"`
-	Options       json.RawMessage `json:"options,omitempty"`
-	ValidRules    json.RawMessage `json:"validation_rules,omitempty"`
-	IsSearchable  bool            `json:"is_searchable"`
-	IsFilterable  bool            `json:"is_filterable"`
-	IsRequired    bool            `json:"is_required"`
-	SortOrder     int             `json:"sort_order"`
-	CreatedAt     time.Time       `json:"created_at"`
-	Translations  map[string]string `json:"translations,omitempty"`
+    ID                 int             `json:"id"`
+    Name               string          `json:"name"`
+    DisplayName        string          `json:"display_name"`
+    AttributeType      string          `json:"attribute_type"`
+    Options            json.RawMessage `json:"options,omitempty"`
+    ValidRules         json.RawMessage `json:"validation_rules,omitempty"`
+    IsSearchable       bool            `json:"is_searchable"`
+    IsFilterable       bool            `json:"is_filterable"`
+    IsRequired         bool            `json:"is_required"`
+    SortOrder          int             `json:"sort_order"`
+    CreatedAt          time.Time       `json:"created_at"`
+    Translations       map[string]string `json:"translations,omitempty"`
+    OptionTranslations map[string]map[string]string `json:"option_translations,omitempty"`
 }
 
 // AttributeOptions содержит опции для атрибутов типа select

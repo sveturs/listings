@@ -38,6 +38,25 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
     const prevCategoryIdRef = useRef(null);
     // Отслеживаем, были ли установлены внешние значения
     const hasSetExternalValues = useRef(false);
+    
+    // Функция для получения переведенного значения опции атрибута
+    const getTranslatedOptionValue = (attribute, value) => {
+        // Если у нас нет значения, просто возвращаем пустую строку
+        if (!value) return '';
+
+        // Сначала проверяем, есть ли переводы опций
+        if (attribute && attribute.option_translations) {
+            // Ищем перевод для конкретного значения
+            const optionKey = `option_${value}`;
+            if (attribute.option_translations[i18n.language] &&
+                attribute.option_translations[i18n.language][optionKey]) {
+                return attribute.option_translations[i18n.language][optionKey];
+            }
+        }
+
+        // Если нет перевода, возвращаем оригинальное значение
+        return value;
+    };
 
     // Загрузка атрибутов при изменении категории
     useEffect(() => {
@@ -57,6 +76,20 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
 
                 if (response.data?.data) {
                     console.log(`Получено ${response.data.data.length} атрибутов для категории ${categoryId}`);
+                    
+                    // Отладка: проверяем переводы опций для каждого атрибута
+                    response.data.data.forEach(attr => {
+                        if (attr.option_translations) {
+                            console.log(`Атрибут ${attr.name} имеет переводы опций:`, attr.option_translations);
+                            if (attr.option_translations[i18n.language]) {
+                                console.log(`  Доступны переводы для языка ${i18n.language}:`, 
+                                    attr.option_translations[i18n.language]);
+                            }
+                        } else {
+                            console.log(`Атрибут ${attr.name} не имеет переводов опций`);
+                        }
+                    });
+                    
                     setAttributes(response.data.data);
 
                     // Проверяем, нужно ли сбросить значения атрибутов
@@ -172,7 +205,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
         // Проверяем, есть ли входящие данные и отличаются ли они от текущих
         if (value && value.length > 0) {
             console.log("AttributeFields: Получены внешние значения атрибутов:", value);
-            
+
             // Дополнительная проверка и коррекция входящих значений
             const processedValues = [];
             const seen = {}; // Для отслеживания дубликатов
@@ -501,6 +534,12 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                     }
 
                     console.log(`Итоговые опции для ${attr.name}:`, options);
+                    
+                    // Отладка переводов опций
+                    options.forEach(option => {
+                        const translated = getTranslatedOptionValue(attr, option);
+                        console.log(`Опция ${option} -> ${translated} (${option === translated ? 'не переведено' : 'переведено'})`);
+                    });
                 } catch (e) {
                     console.error(`Ошибка при обработке опций для ${attr.name}:`, e);
                     options = [];
@@ -518,7 +557,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                             {options.length > 0 ? (
                                 options.map((option) => (
                                     <MenuItem key={option} value={option}>
-                                        {option}
+                                        {getTranslatedOptionValue(attr, option)}
                                     </MenuItem>
                                 ))
                             ) : (
@@ -570,7 +609,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                             {options.map((option) => (
                                 <MenuItem key={option} value={option}>
                                     <Checkbox checked={selectedValues.indexOf(option) > -1} />
-                                    <ListItemText primary={option} />
+                                    <ListItemText primary={getTranslatedOptionValue(attr, option)} />
                                 </MenuItem>
                             ))}
                         </Select>
