@@ -251,38 +251,53 @@ fi
 
 cd ../..
 
-# Проверяем наличие проблем с томами базы данных и исправляем их
-echo "Проверяем состояние тома базы данных..."
+# Функция для принудительной очистки Docker
+docker_force_cleanup() {
+  echo "=== Выполняем принудительную очистку Docker ==="
+  
+  # Остановка и удаление всех контейнеров
+  docker ps -a -q | xargs -r docker stop
+  docker ps -a -q | xargs -r docker rm -f
+  
+  # Обработка проблемной сети
+  local network_id=$(docker network ls | grep "hostel-booking-system_hostel_network" | awk '{print $1}')
+  if [ -n "$network_id" ]; then
+    echo "Найдена сеть с ID: $network_id, пробуем удалить..."
+    
+    # Отключение всех контейнеров от сети
+    local endpoints=$(docker network inspect $network_id -f '{{range $k, $v := .Containers}}{{$k}} {{end}}' 2>/dev/null || echo "")
+    for ep in $endpoints; do
+      echo "Отключение контейнера $ep от сети..."
+      docker network disconnect -f $network_id $ep 2>/dev/null || true
+    done
+    
+    # Удаление сети
+    docker network rm $network_id 2>/dev/null || true
+    
+    # Если сеть не удалось удалить, вывести предупреждение
+    if docker network ls | grep -q $network_id; then
+      echo "ВНИМАНИЕ: Не удалось удалить сеть. Будет создана новая сеть с другим именем."
+      NETWORK_SUFFIX=$(date +%s)
+      NETWORK_NAME="hostel-booking-system_hostel_network_${NETWORK_SUFFIX}"
+      echo "Создаем новую сеть с именем $NETWORK_NAME"
+      docker network create "$NETWORK_NAME"
+      
+      # Обновляем docker-compose.prod.yml для использования новой сети
+      sed -i "s/hostel_network:$/hostel_network_${NETWORK_SUFFIX}:/g" docker-compose.prod.yml
+      sed -i "s/hostel_network$/hostel_network_${NETWORK_SUFFIX}/g" docker-compose.prod.yml
+    fi
+  fi
+  
+  # Очистка неиспользуемых ресурсов Docker
+  docker system prune -f
+  
+  echo "=== Очистка Docker завершена ==="
+}
+
+# Выполняем принудительную очистку перед продолжением
+docker_force_cleanup
+
 DB_VOLUME_PATH="/opt/hostel-data/db"
-
-# Создаем новую структуру директорий для PostgreSQL
-echo "Настраиваем новую структуру для PostgreSQL с вложенными директориями..."
-# Делаем резервную копию текущего состояния при наличии данных
-if [ -d "$DB_VOLUME_PATH" ] && [ -n "$(ls -A $DB_VOLUME_PATH 2>/dev/null)" ]; then
-  BACKUP_DIR="${DB_VOLUME_PATH}_backup_$(date +%Y%m%d_%H%M%S)"
-  echo "Сохраняем текущее состояние в $BACKUP_DIR..."
-  cp -r "$DB_VOLUME_PATH" "$BACKUP_DIR" 2>/dev/null || true
-fi
-
-# Останавливаем все контейнеры базы данных и удаляем их
-echo "Останавливаем все контейнеры базы данных..."
-DB_CONTAINERS=$(docker ps -a --filter "name=hostel_db" -q)
-if [ -n "$DB_CONTAINERS" ]; then
-  echo "Найдены контейнеры базы данных: $DB_CONTAINERS"
-  for DB_CONTAINER in $DB_CONTAINERS; do
-    echo "Удаляем контейнер $DB_CONTAINER..."
-    # Сначала останавливаем
-    docker stop "$DB_CONTAINER" 2>/dev/null || true
-    sleep 2
-    # Затем удаляем
-    docker rm -f "$DB_CONTAINER" 2>/dev/null || true
-  done
-else
-  echo "Контейнеры базы данных не найдены"
-fi
-
-# Полностью очищаем директорию базы данных
-echo "Полностью очищаем директорию базы данных..."
 rm -rf "$DB_VOLUME_PATH"
 mkdir -p "$DB_VOLUME_PATH"
 
@@ -295,80 +310,13 @@ chmod -R 700 "$DB_VOLUME_PATH"
 # Модифицируем docker-compose.prod.yml для использования новой структуры
 echo "Модифицируем docker-compose.prod.yml для использования новой структуры..."
 sed -i 's|device: /opt/hostel-data/db|device: /opt/hostel-data/db/data|g' docker-compose.prod.yml
-
-# Добавляем PGDATA, если его еще нет
 if ! grep -q "PGDATA:" docker-compose.prod.yml; then
   sed -i '/POSTGRES_DB:/a\      PGDATA: /var/lib/postgresql/data/pgdata  # Подкаталог для хранения файлов БД' docker-compose.prod.yml
 fi
 
-# Убеждаемся, что никакие контейнеры с тем же именем не работают
-echo "Проверяем и удаляем все контейнеры системы бронирования..."
-CONTAINERS=$(docker ps -a | grep -E 'hostel_db|opensearch|backend|nginx|hostel-' | awk '{print $1}')
-if [ -n "$CONTAINERS" ]; then
-  echo "Найдены контейнеры: $CONTAINERS"
-  for CONTAINER in $CONTAINERS; do
-    echo "Останавливаем и удаляем контейнер $CONTAINER..."
-    docker stop "$CONTAINER" 2>/dev/null || true
-    sleep 1
-    docker rm -f "$CONTAINER" 2>/dev/null || true
-  done
-else
-  echo "Не найдено контейнеров для удаления"
-fi
-
-# Проверяем, есть ли активные контейнеры в сети
-NETWORK_NAME="hostel-booking-system_hostel_network"
-if docker network ls | grep -q "$NETWORK_NAME"; then
-  echo "Проверяем активные контейнеры в сети $NETWORK_NAME..."
-  
-  # Находим все контейнеры, подключенные к этой сети
-  CONTAINERS=$(docker network inspect -f '{{range $key, $value := .Containers}}{{$key}} {{end}}' "$NETWORK_NAME" 2>/dev/null || echo "")
-  
-  if [ -n "$CONTAINERS" ]; then
-    echo "Найдены активные контейнеры в сети: $CONTAINERS"
-    echo "Останавливаем их перед удалением сети..."
-    
-    # Отключаем все контейнеры от сети и затем останавливаем их
-    for CONTAINER_ID in $CONTAINERS; do
-      # Отключаем контейнер от сети
-      docker network disconnect -f "$NETWORK_NAME" "$CONTAINER_ID" 2>/dev/null || true
-      # Останавливаем и удаляем контейнер
-      docker stop "$CONTAINER_ID" 2>/dev/null || true
-      docker rm -f "$CONTAINER_ID" 2>/dev/null || true
-    done
-  fi
-  
-  # После отключения всех контейнеров пробуем удалить сеть
-  echo "Удаляем существующую сеть $NETWORK_NAME..."
-  docker network rm "$NETWORK_NAME" 2>/dev/null || true
-  
-  # Проверяем, была ли сеть успешно удалена
-  if docker network ls | grep -q "$NETWORK_NAME"; then
-    echo "ВНИМАНИЕ: Не удалось удалить сеть $NETWORK_NAME. Пробуем принудительное удаление всех контейнеров..."
-    # Принудительно удаляем все контейнеры в системе
-    docker ps -aq | xargs docker rm -f 2>/dev/null || true
-    sleep 3
-    # Еще одна попытка удалить сеть
-    docker network rm "$NETWORK_NAME" 2>/dev/null || true
-  fi
-fi
-
-# Создаем сеть заново - только если она не существует
-if ! docker network ls | grep -q "$NETWORK_NAME"; then
-  echo "Создаем сеть $NETWORK_NAME..."
-  docker network create "$NETWORK_NAME" 2>/dev/null || true
-else
-  echo "Сеть $NETWORK_NAME уже существует, используем её"
-fi
-
 # Запускаем все сервисы
 echo "Запускаем все сервисы..."
-docker-compose -f docker-compose.prod.yml up -d
-
-# Проверяем, все ли сервисы запущены
-echo "Проверяем статус всех сервисов..."
-SERVICES_STATUS=$(docker-compose -f docker-compose.prod.yml ps)
-echo "$SERVICES_STATUS"
+docker-compose -f docker-compose.prod.yml up -d --force-recreate
 
 # Проверяем здоровье backend
 echo "Проверяем здоровье backend..."
@@ -388,9 +336,6 @@ for i in $(seq 1 $RETRY_COUNT); do
   echo "Ожидаем готовность backend... Попытка $i/$RETRY_COUNT"
   sleep 3
 done
-
-# Сохраняем последние 5 бэкапов и удаляем более старые
-find /tmp/hostel-backup/db -name "*.sql" -type f | sort -r | tail -n +6 | xargs rm -f 2>/dev/null || true
 
 # Проверка фактического состояния всех сервисов
 echo "Проверка фактического состояния всех сервисов..."
@@ -414,4 +359,9 @@ else
   echo "Проверьте логи для выяснения причин проблем:"
   docker-compose -f docker-compose.prod.yml logs --tail=20
 fi
+
+# Сохраняем последние 5 бэкапов и удаляем более старые
+find /tmp/hostel-backup/db -name "*.sql" -type f | sort -r | tail -n +6 | xargs rm -f 2>/dev/null || true
+
+echo "Деплой завершен!"
 echo "Логи контейнеров можно посмотреть с помощью: docker-compose -f docker-compose.prod.yml logs -f"
