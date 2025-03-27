@@ -10,6 +10,7 @@ import ImageUploader from '../../components/marketplace/ImageUploader';
 import FullscreenMap from '../../components/maps/FullscreenMap';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import AttributeFields from '../../components/marketplace/AttributeFields';
+import CategorySelect from '../../components/marketplace/CategorySelect'; // Добавляем импорт CategorySelect
 import {
     Container,
     TextField,
@@ -60,141 +61,137 @@ const EditListingPage = () => {
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const [loading, setLoading] = useState(true);
     const [attributeValues, setAttributeValues] = useState([]);
-    const [attributesLoaded, setAttributesLoaded] = useState(false); // Флаг для отслеживания загрузки атрибутов
+    const [attributesLoaded, setAttributesLoaded] = useState(false);
 
-// frontend/hostel-frontend/src/pages/marketplace/EditListingPage.js
-// Примерно в строке 120-180
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [listingResponse, categoriesResponse] = await Promise.all([
+                    axios.get(`/api/v1/marketplace/listings/${id}`),
+                    axios.get("/api/v1/marketplace/categories")
+                ]);
 
-useEffect(() => {
-    const fetchData = async () => {
-        try {
-            const [listingResponse, categoriesResponse] = await Promise.all([
-                axios.get(`/api/v1/marketplace/listings/${id}`),
-                axios.get("/api/v1/marketplace/categories")
-            ]);
+                const listingData = listingResponse.data.data;
 
-            const listingData = listingResponse.data.data;
+                if (listingData.user_id !== user?.id) {
+                    navigate('/marketplace');
+                    return;
+                }
 
-            if (listingData.user_id !== user?.id) {
-                navigate('/marketplace');
-                return;
-            }
+                // Получаем текст на нужном языке
+                const title = i18n.language === listingData.original_language
+                    ? listingData.title
+                    : listingData.translations?.[i18n.language]?.title || listingData.title;
 
-            // Получаем текст на нужном языке
-            const title = i18n.language === listingData.original_language
-                ? listingData.title
-                : listingData.translations?.[i18n.language]?.title || listingData.title;
+                const description = i18n.language === listingData.original_language
+                    ? listingData.description
+                    : listingData.translations?.[i18n.language]?.description || listingData.description;
 
-            const description = i18n.language === listingData.original_language
-                ? listingData.description
-                : listingData.translations?.[i18n.language]?.description || listingData.description;
-
-            setListing({
-                ...listingData,
-                title,
-                description,
-                price: listingData.price,
-                category_id: listingData.category_id,
-                condition: listingData.condition,
-                location: listingData.location,
-                city: listingData.city,
-                country: listingData.country,
-                show_on_map: listingData.show_on_map,
-                latitude: listingData.latitude,
-                longitude: listingData.longitude
-            });
-
-            if (listingData.images) {
-                setPreviewUrls(listingData.images.map(img =>
-                    `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
-                ));
-            }
-
-            setCategories(categoriesResponse.data.data || []);
-
-            // Обработка атрибутов объявления, если они есть
-            if (listingData.attributes && listingData.attributes.length > 0) {
-                console.log("Загружаем атрибуты объявления:", listingData.attributes);
-
-                // ИЗМЕНЕНИЕ: Убрали setTimeout и сразу обрабатываем атрибуты
-                const formattedAttributes = listingData.attributes.map(attr => {
-                    // Для отладки выводим каждый атрибут
-                    console.log(`Атрибут ${attr.attribute_name} (${attr.attribute_type}): ${attr.display_value}`);
-
-                    // Создаем основную структуру атрибута
-                    const formattedAttr = {
-                        attribute_id: attr.attribute_id,
-                        attribute_name: attr.attribute_name,
-                        attribute_type: attr.attribute_type,
-                        display_name: attr.display_name,
-                        display_value: attr.display_value,
-                        listing_id: listingData.id
-                    };
-
-                    // Устанавливаем значение в зависимости от типа атрибута
-                    switch (attr.attribute_type) {
-                        case 'text':
-                        case 'select':
-                            formattedAttr.text_value = attr.text_value || '';
-                            formattedAttr.value = attr.text_value || attr.display_value || '';
-                            break;
-                        case 'number':
-                            const numValue = attr.numeric_value !== null ? attr.numeric_value :
-                                (attr.display_value ? parseFloat(attr.display_value) : 0);
-
-                            formattedAttr.numeric_value = numValue;
-                            formattedAttr.value = numValue;
-
-                            // Особый случай для года - проверяем на валидность
-                            if (attr.attribute_name === 'year' && (numValue < 1900 || numValue > new Date().getFullYear() + 1)) {
-                                const currentYear = new Date().getFullYear();
-                                formattedAttr.numeric_value = currentYear;
-                                formattedAttr.value = currentYear;
-                                console.log(`Корректировка невалидного года ${numValue} -> ${currentYear}`);
-                            }
-                            break;
-                        case 'boolean':
-                            // Преобразуем разные форматы в булево значение
-                            let boolValue = false;
-                            if (attr.boolean_value !== null && attr.boolean_value !== undefined) {
-                                boolValue = !!attr.boolean_value;
-                            } else if (attr.display_value) {
-                                boolValue = attr.display_value.toLowerCase() === 'да' ||
-                                    attr.display_value.toLowerCase() === 'true' ||
-                                    attr.display_value === '1';
-                            }
-                            formattedAttr.boolean_value = boolValue;
-                            formattedAttr.value = boolValue;
-                            break;
-                        default:
-                            // Если тип не определен, используем отображаемое значение
-                            formattedAttr.value = attr.display_value || '';
-                    }
-
-                    return formattedAttr;
+                setListing({
+                    ...listingData,
+                    title,
+                    description,
+                    price: listingData.price,
+                    category_id: listingData.category_id,
+                    condition: listingData.condition,
+                    location: listingData.location,
+                    city: listingData.city,
+                    country: listingData.country,
+                    show_on_map: listingData.show_on_map,
+                    latitude: listingData.latitude,
+                    longitude: listingData.longitude
                 });
 
-                console.log("Устанавливаем атрибуты:", formattedAttributes);
-                setAttributeValues(formattedAttributes);
-            } else {
-                console.log("Атрибуты не найдены в объявлении");
+                if (listingData.images) {
+                    setPreviewUrls(listingData.images.map(img =>
+                        `${process.env.REACT_APP_BACKEND_URL}/uploads/${img.file_path}`
+                    ));
+                }
+
+                // Просто сохраняем категории, CategorySelect компонент сам обработает переводы
+                setCategories(categoriesResponse.data.data || []);
+
+                // Обработка атрибутов объявления, если они есть
+                if (listingData.attributes && listingData.attributes.length > 0) {
+                    console.log("Загружаем атрибуты объявления:", listingData.attributes);
+
+                    const formattedAttributes = listingData.attributes.map(attr => {
+                        // Для отладки выводим каждый атрибут
+                        console.log(`Атрибут ${attr.attribute_name} (${attr.attribute_type}): ${attr.display_value}`);
+
+                        // Создаем основную структуру атрибута
+                        const formattedAttr = {
+                            attribute_id: attr.attribute_id,
+                            attribute_name: attr.attribute_name,
+                            attribute_type: attr.attribute_type,
+                            display_name: attr.display_name,
+                            display_value: attr.display_value,
+                            listing_id: listingData.id
+                        };
+
+                        // Устанавливаем значение в зависимости от типа атрибута
+                        switch (attr.attribute_type) {
+                            case 'text':
+                            case 'select':
+                                formattedAttr.text_value = attr.text_value || '';
+                                formattedAttr.value = attr.text_value || attr.display_value || '';
+                                break;
+                            case 'number':
+                                const numValue = attr.numeric_value !== null ? attr.numeric_value :
+                                    (attr.display_value ? parseFloat(attr.display_value) : 0);
+
+                                formattedAttr.numeric_value = numValue;
+                                formattedAttr.value = numValue;
+
+                                // Особый случай для года - проверяем на валидность
+                                if (attr.attribute_name === 'year' && (numValue < 1900 || numValue > new Date().getFullYear() + 1)) {
+                                    const currentYear = new Date().getFullYear();
+                                    formattedAttr.numeric_value = currentYear;
+                                    formattedAttr.value = currentYear;
+                                    console.log(`Корректировка невалидного года ${numValue} -> ${currentYear}`);
+                                }
+                                break;
+                            case 'boolean':
+                                // Преобразуем разные форматы в булево значение
+                                let boolValue = false;
+                                if (attr.boolean_value !== null && attr.boolean_value !== undefined) {
+                                    boolValue = !!attr.boolean_value;
+                                } else if (attr.display_value) {
+                                    boolValue = attr.display_value.toLowerCase() === 'да' ||
+                                        attr.display_value.toLowerCase() === 'true' ||
+                                        attr.display_value === '1';
+                                }
+                                formattedAttr.boolean_value = boolValue;
+                                formattedAttr.value = boolValue;
+                                break;
+                            default:
+                                // Если тип не определен, используем отображаемое значение
+                                formattedAttr.value = attr.display_value || '';
+                        }
+
+                        return formattedAttr;
+                    });
+
+                    console.log("Устанавливаем атрибуты:", formattedAttributes);
+                    setAttributeValues(formattedAttributes);
+                } else {
+                    console.log("Атрибуты не найдены в объявлении");
+                }
+
+                setLoading(false);
+                setAttributesLoaded(true);
+            } catch (err) {
+                console.error("Ошибка при загрузке данных:", err);
+                setError(t('listings.edit.errors.loadFailed'));
+                setLoading(false);
+                setAttributesLoaded(true);
             }
+        };
 
-            // ИЗМЕНЕНИЕ: Перенесли установку флага загрузки и атрибутов на конец функции
-            setLoading(false);
-            setAttributesLoaded(true); // Устанавливаем флаг в любом случае
-        } catch (err) {
-            console.error("Ошибка при загрузке данных:", err);
-            setError(t('listings.edit.errors.loadFailed'));
-            setLoading(false);
-            setAttributesLoaded(true); // Устанавливаем флаг даже при ошибке
+        if (user?.id) {
+            fetchData();
         }
-    };
-
-    if (user?.id) {
-        fetchData();
-    }
-}, [id, user, navigate, t, i18n.language]);
+    }, [id, user, navigate, t, i18n.language]);
 
     // Добавляем эффект для отслеживания изменения языка
     useEffect(() => {
@@ -489,18 +486,26 @@ useEffect(() => {
                             </Grid>
 
                             <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth required>
-                                    <InputLabel>{t('listings.create.category')}</InputLabel>
-                                    <Select
-                                        value={listing.category_id || ''}
-                                        onChange={(e) => setListing({ ...listing, category_id: e.target.value })}
+                                <FormControl fullWidth required error={!listing.category_id}>
+                                    <InputLabel 
+                                        shrink 
+                                        sx={{ 
+                                            backgroundColor: 'background.paper', 
+                                            px: 1, 
+                                            '&.MuiInputLabel-shrink': { 
+                                                transform: 'translate(14px, -6px) scale(0.75)' 
+                                            } 
+                                        }}
                                     >
-                                        {categories.map((category) => (
-                                            <MenuItem key={category.id} value={category.id}>
-                                                {category.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
+                                        {t('listings.create.category')}
+                                    </InputLabel>
+                                    <CategorySelect
+                                        categories={categories}
+                                        value={listing.category_id}
+                                        onChange={(value) => setListing({ ...listing, category_id: value })}
+                                        error={!listing.category_id}
+                                        displaySelectedValueOnly={true}
+                                    />
                                 </FormControl>
                             </Grid>
 
@@ -606,7 +611,6 @@ useEffect(() => {
                                 </Box>
                             </Grid>
                             <Grid item xs={12}>
-
                                 {listing.category_id && (
                                     <AttributeFields
                                         key={`attr-fields-${attributesLoaded ? 'loaded' : 'loading'}-${listing.category_id}`}
