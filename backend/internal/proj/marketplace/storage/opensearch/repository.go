@@ -9,7 +9,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"log"
+
 	"net/http"
 	"net/url"
 	"regexp"
@@ -179,12 +181,12 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 	log.Printf("Результаты поиска для атрибутов %v:", params.AttributeFilters)
 	for i, listing := range result.Listings {
 		log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
-		
+
 		// Добавляем отладочную информацию о атрибутах
 		if len(listing.Attributes) > 0 {
 			log.Printf("  Объявление %d имеет %d атрибутов:", listing.ID, len(listing.Attributes))
 			for _, attr := range listing.Attributes {
-				log.Printf("  Атрибут: name=%s, type=%s, value=%s", 
+				log.Printf("  Атрибут: name=%s, type=%s, value=%s",
 					attr.AttributeName, attr.AttributeType, attr.DisplayValue)
 			}
 		} else {
@@ -386,480 +388,578 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 	log.Printf("Успешно проиндексировано %d объявлений", totalIndexed)
 	return nil
 }
+func (r *Repository) getAttributeOptionTranslations(attrName, value string) (map[string]string, error) {
+	// Используем фоновый контекст
+	ctx := context.Background()
 
-// В файле backend/internal/proj/marketplace/storage/opensearch/repository.go
-// Обновление функции listingToDoc для включения метаданных
+	// Остальной код функции
+	query := `
+        SELECT option_value, en_translation, sr_translation
+        FROM attribute_option_translations
+        WHERE attribute_name = $1 AND option_value = $2
+    `
 
+	var optionValue, enTranslation, srTranslation string
+	err := r.storage.QueryRow(ctx, query, attrName, value).Scan(
+		&optionValue, &enTranslation, &srTranslation,
+	)
+
+	if err != nil {
+		if err != pgx.ErrNoRows {
+			log.Printf("Ошибка получения переводов для атрибута %s, значение %s: %v", attrName, value, err)
+		}
+		return nil, err
+	}
+	// Формируем карту с переводами
+	translations := map[string]string{
+		"en": enTranslation,
+		"sr": srTranslation,
+	}
+
+	return translations, nil
+}
 func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string]interface{} {
-	doc := map[string]interface{}{
-		"id":                listing.ID,
-		"title":             listing.Title,
-		"description":       listing.Description,
-		"title_suggest":     listing.Title,
-		"title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
-		"price":             listing.Price,
-		"condition":         listing.Condition,
-		"status":            listing.Status,
-		"location":          listing.Location,
-		"city":              listing.City,
-		"country":           listing.Country,
-		"views_count":       listing.ViewsCount,
-		"created_at":        listing.CreatedAt.Format(time.RFC3339),
-		"updated_at":        listing.UpdatedAt.Format(time.RFC3339),
-		"show_on_map":       listing.ShowOnMap,
-		"original_language": listing.OriginalLanguage,
-		"category_id":       listing.CategoryID,
-		"user_id":           listing.UserID,
-		"translations":      listing.Translations,
-	}
+    doc := map[string]interface{}{
+        "id":                listing.ID,
+        "title":             listing.Title,
+        "description":       listing.Description,
+        "title_suggest":     listing.Title,
+        "title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
+        "price":             listing.Price,
+        "condition":         listing.Condition,
+        "status":            listing.Status,
+        "location":          listing.Location,
+        "city":              listing.City,
+        "country":           listing.Country,
+        "views_count":       listing.ViewsCount,
+        "created_at":        listing.CreatedAt.Format(time.RFC3339),
+        "updated_at":        listing.UpdatedAt.Format(time.RFC3339),
+        "show_on_map":       listing.ShowOnMap,
+        "original_language": listing.OriginalLanguage,
+        "category_id":       listing.CategoryID,
+        "user_id":           listing.UserID,
+        "translations":      listing.Translations,
+    }
 
-	// Логирование информации о местоположении для отладки
-	log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
-		listing.ID, listing.City, listing.Country, listing.Location)
+    // Логирование информации о местоположении для отладки
+    log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
+        listing.ID, listing.City, listing.Country, listing.Location)
 
-	doc["has_discount"] = listing.HasDiscount
-	if listing.OldPrice > 0 {
-		doc["old_price"] = listing.OldPrice
-	}
+    doc["has_discount"] = listing.HasDiscount
+    if listing.OldPrice > 0 {
+        doc["old_price"] = listing.OldPrice
+    }
 
-	// Добавляем поля для скидок напрямую из текста описания
-	if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
-		// Ищем процент скидки в описании с помощью регулярного выражения
-		discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
-		matches := discountRegex.FindStringSubmatch(listing.Description)
+    // Добавляем поля для скидок напрямую из текста описания
+    if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
+        // Ищем процент скидки в описании с помощью регулярного выражения
+        discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
+        matches := discountRegex.FindStringSubmatch(listing.Description)
 
-		// Ищем старую цену с помощью регулярного выражения
-		priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
-		priceMatches := priceRegex.FindStringSubmatch(listing.Description)
+        // Ищем старую цену с помощью регулярного выражения
+        priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
+        priceMatches := priceRegex.FindStringSubmatch(listing.Description)
 
-		if len(matches) > 1 && len(priceMatches) > 1 {
-			discountPercent, _ := strconv.Atoi(matches[1])
-			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
-			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
+        if len(matches) > 1 && len(priceMatches) > 1 {
+            discountPercent, _ := strconv.Atoi(matches[1])
+            oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+            oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
 
-			// Если у объекта нет метаданных, создаем их
-			if listing.Metadata == nil {
-				listing.Metadata = make(map[string]interface{})
-			}
+            // Если у объекта нет метаданных, создаем их
+            if listing.Metadata == nil {
+                listing.Metadata = make(map[string]interface{})
+            }
 
-			// Создаем информацию о скидке
-			discount := map[string]interface{}{
-				"discount_percent":  discountPercent,
-				"previous_price":    oldPrice,
-				"effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339), // Примерная дата начала скидки
-				"has_price_history": true,
-			}
+            // Создаем информацию о скидке
+            discount := map[string]interface{}{
+                "discount_percent":  discountPercent,
+                "previous_price":    oldPrice,
+                "effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339), // Примерная дата начала скидки
+                "has_price_history": true,
+            }
 
-			// Добавляем информацию о скидке в метаданные
-			listing.Metadata["discount"] = discount
+            // Добавляем информацию о скидке в метаданные
+            listing.Metadata["discount"] = discount
 
-			// Добавляем OldPrice в документ
-			doc["old_price"] = oldPrice
-			doc["has_discount"] = true
+            // Добавляем OldPrice в документ
+            doc["old_price"] = oldPrice
+            doc["has_discount"] = true
 
-			log.Printf("Извлечена скидка из описания для объявления %d: %v", listing.ID, discount)
-		}
-	}
+            log.Printf("Извлечена скидка из описания для объявления %d: %v", listing.ID, discount)
+        }
+    }
 
-	// Добавляем метаданные если они есть
-	if listing.Metadata != nil {
-		// Копируем метаданные
-		doc["metadata"] = listing.Metadata
+    // Добавляем метаданные если они есть
+    if listing.Metadata != nil {
+        // Копируем метаданные
+        doc["metadata"] = listing.Metadata
 
-		// Если есть информация о скидке, проверяем и пересчитываем процент
-		if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
-			if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
-				// Пересчитываем актуальный процент скидки
-				if prevPrice > listing.Price {
-					discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
-					discount["discount_percent"] = discountPercent
+        // Если есть информация о скидке, проверяем и пересчитываем процент
+        if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
+            if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+                // Пересчитываем актуальный процент скидки
+                if prevPrice > listing.Price {
+                    discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
+                    discount["discount_percent"] = discountPercent
 
-					// Обновляем метаданные в документе
-					listing.Metadata["discount"] = discount
-					doc["metadata"] = listing.Metadata
+                    // Обновляем метаданные в документе
+                    listing.Metadata["discount"] = discount
+                    doc["metadata"] = listing.Metadata
 
-					doc["has_discount"] = true
-					doc["old_price"] = prevPrice
+                    doc["has_discount"] = true
+                    doc["old_price"] = prevPrice
 
-					log.Printf("Пересчитан процент скидки для OpenSearch: %d%% (объявление %d)",
-						discountPercent, listing.ID)
-				}
-			}
-		}
-	}
+                    log.Printf("Пересчитан процент скидки для OpenSearch: %d%% (объявление %d)",
+                        discountPercent, listing.ID)
+                }
+            }
+        }
+    }
 
-	// Пытаемся получить и применить адресную информацию из витрины если она отсутствует в объявлении
-	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-		needStorefrontInfo := false
+    // Пытаемся получить и применить адресную информацию из витрины если она отсутствует в объявлении
+    if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+        needStorefrontInfo := false
 
-		// Проверяем, нужно ли получать информацию о витрине
-		if listing.City == "" || listing.Country == "" || listing.Location == "" ||
-			listing.Latitude == nil || listing.Longitude == nil {
-			needStorefrontInfo = true
-		}
+        // Проверяем, нужно ли получать информацию о витрине
+        if listing.City == "" || listing.Country == "" || listing.Location == "" ||
+            listing.Latitude == nil || listing.Longitude == nil {
+            needStorefrontInfo = true
+        }
 
-		if needStorefrontInfo {
-			log.Printf("Получаем данные о витрине %d для заполнения адресной информации для объявления %d",
-				*listing.StorefrontID, listing.ID)
+        if needStorefrontInfo {
+            log.Printf("Получаем данные о витрине %d для заполнения адресной информации для объявления %d",
+                *listing.StorefrontID, listing.ID)
 
-			// Получаем информацию о витрине для заполнения адресных данных
-			var storefront models.Storefront
-			err := r.storage.QueryRow(context.Background(), `
+            // Получаем информацию о витрине для заполнения адресных данных
+            var storefront models.Storefront
+            err := r.storage.QueryRow(context.Background(), `
                 SELECT name, city, address, country, latitude, longitude
                 FROM user_storefronts 
                 WHERE id = $1
             `, *listing.StorefrontID).Scan(
-				&storefront.Name,
-				&storefront.City,
-				&storefront.Address,
-				&storefront.Country,
-				&storefront.Latitude,
-				&storefront.Longitude,
-			)
+                &storefront.Name,
+                &storefront.City,
+                &storefront.Address,
+                &storefront.Country,
+                &storefront.Latitude,
+                &storefront.Longitude,
+            )
 
-			if err == nil {
-				// Применяем информацию о витрине
-				if listing.City == "" && storefront.City != "" {
-					doc["city"] = storefront.City
-					log.Printf("Применен город витрины '%s' для объявления %d", storefront.City, listing.ID)
-				}
+            if err == nil {
+                // Применяем информацию о витрине
+                if listing.City == "" && storefront.City != "" {
+                    doc["city"] = storefront.City
+                    log.Printf("Применен город витрины '%s' для объявления %d", storefront.City, listing.ID)
+                }
 
-				if listing.Country == "" && storefront.Country != "" {
-					doc["country"] = storefront.Country
-					log.Printf("Применена страна витрины '%s' для объявления %d", storefront.Country, listing.ID)
-				}
+                if listing.Country == "" && storefront.Country != "" {
+                    doc["country"] = storefront.Country
+                    log.Printf("Применена страна витрины '%s' для объявления %d", storefront.Country, listing.ID)
+                }
 
-				if listing.Location == "" && storefront.Address != "" {
-					doc["location"] = storefront.Address
-					log.Printf("Применен адрес витрины '%s' для объявления %d", storefront.Address, listing.ID)
-				}
+                if listing.Location == "" && storefront.Address != "" {
+                    doc["location"] = storefront.Address
+                    log.Printf("Применен адрес витрины '%s' для объявления %d", storefront.Address, listing.ID)
+                }
 
-				// Если у объявления нет координат, но они есть у витрины
-				if (listing.Latitude == nil || listing.Longitude == nil ||
-					*listing.Latitude == 0 || *listing.Longitude == 0) &&
-					storefront.Latitude != nil && storefront.Longitude != nil &&
-					*storefront.Latitude != 0 && *storefront.Longitude != 0 {
+                // Если у объявления нет координат, но они есть у витрины
+                if (listing.Latitude == nil || listing.Longitude == nil ||
+                    *listing.Latitude == 0 || *listing.Longitude == 0) &&
+                    storefront.Latitude != nil && storefront.Longitude != nil &&
+                    *storefront.Latitude != 0 && *storefront.Longitude != 0 {
 
-					// Создаем объект с полями lat и lon для geo_point
-					doc["coordinates"] = map[string]interface{}{
-						"lat": *storefront.Latitude,
-						"lon": *storefront.Longitude,
-					}
+                    // Создаем объект с полями lat и lon для geo_point
+                    doc["coordinates"] = map[string]interface{}{
+                        "lat": *storefront.Latitude,
+                        "lon": *storefront.Longitude,
+                    }
 
-					log.Printf("Применены координаты витрины для объявления %d: lat=%f, lon=%f",
-						listing.ID, *storefront.Latitude, *storefront.Longitude)
+                    log.Printf("Применены координаты витрины для объявления %d: lat=%f, lon=%f",
+                        listing.ID, *storefront.Latitude, *storefront.Longitude)
 
-					// Устанавливаем показ на карте для координат витрины
-					doc["show_on_map"] = true
-				}
-			} else {
-				log.Printf("Не удалось получить информацию о витрине %d: %v", *listing.StorefrontID, err)
-			}
-		}
-	}
+                    // Устанавливаем показ на карте для координат витрины
+                    doc["show_on_map"] = true
+                }
+            } else {
+                log.Printf("Не удалось получить информацию о витрине %d: %v", *listing.StorefrontID, err)
+            }
+        }
+    }
 
-	// Добавляем координаты, если они есть в объявлении
-	if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
-		// Создаем объект с полями lat и lon для geo_point
-		doc["coordinates"] = map[string]interface{}{
-			"lat": *listing.Latitude,
-			"lon": *listing.Longitude,
-		}
+    // Добавляем координаты, если они есть в объявлении
+    if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
+        // Создаем объект с полями lat и lon для geo_point
+        doc["coordinates"] = map[string]interface{}{
+            "lat": *listing.Latitude,
+            "lon": *listing.Longitude,
+        }
 
-		log.Printf("Добавлены координаты из объявления для листинга %d: lat=%f, lon=%f",
-			listing.ID, *listing.Latitude, *listing.Longitude)
-	} else if _, ok := doc["coordinates"]; !ok { // Если координаты все еще не добавлены
-		// Если координаты отсутствуют, но есть город, попробуем геокодировать
-		if cityVal, ok := doc["city"].(string); ok && cityVal != "" {
-			countryVal := ""
-			if c, ok := doc["country"].(string); ok {
-				countryVal = c
-			}
+        log.Printf("Добавлены координаты из объявления для листинга %d: lat=%f, lon=%f",
+            listing.ID, *listing.Latitude, *listing.Longitude)
+    } else if _, ok := doc["coordinates"]; !ok { // Если координаты все еще не добавлены
+        // Если координаты отсутствуют, но есть город, попробуем геокодировать
+        if cityVal, ok := doc["city"].(string); ok && cityVal != "" {
+            countryVal := ""
+            if c, ok := doc["country"].(string); ok {
+                countryVal = c
+            }
 
-			geocoded, err := r.geocodeCity(cityVal, countryVal)
-			if err == nil && geocoded != nil {
-				// Добавляем найденные координаты
-				doc["coordinates"] = map[string]interface{}{
-					"lat": geocoded.Lat,
-					"lon": geocoded.Lon,
-				}
-				log.Printf("Добавлены геокодированные координаты для листинга %d (город %s): lat=%f, lon=%f",
-					listing.ID, cityVal, geocoded.Lat, geocoded.Lon)
+            geocoded, err := r.geocodeCity(cityVal, countryVal)
+            if err == nil && geocoded != nil {
+                // Добавляем найденные координаты
+                doc["coordinates"] = map[string]interface{}{
+                    "lat": geocoded.Lat,
+                    "lon": geocoded.Lon,
+                }
+                log.Printf("Добавлены геокодированные координаты для листинга %d (город %s): lat=%f, lon=%f",
+                    listing.ID, cityVal, geocoded.Lat, geocoded.Lon)
 
-				// Устанавливаем показ на карте для геокодированных координат
-				doc["show_on_map"] = true
-			} else {
-				log.Printf("Не удалось геокодировать город %s для листинга %d: %v",
-					cityVal, listing.ID, err)
-			}
-		} else {
-			log.Printf("У листинга %d нет координат и не указан город", listing.ID)
-		}
-	}
+                // Устанавливаем показ на карте для геокодированных координат
+                doc["show_on_map"] = true
+            } else {
+                log.Printf("Не удалось геокодировать город %s для листинга %d: %v",
+                    cityVal, listing.ID, err)
+            }
+        } else {
+            log.Printf("У листинга %d нет координат и не указан город", listing.ID)
+        }
+    }
 
-	// Добавляем storefront_id, если есть
-	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-		doc["storefront_id"] = *listing.StorefrontID
-		log.Printf("Добавлен storefront_id: %d для объявления %d в индекс", *listing.StorefrontID, listing.ID)
-	} else {
-		log.Printf("Нет storefront_id для объявления %d или значение некорректно", listing.ID)
-	}
+    // Добавляем storefront_id, если есть
+    if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+        doc["storefront_id"] = *listing.StorefrontID
+        log.Printf("Добавлен storefront_id: %d для объявления %d в индекс", *listing.StorefrontID, listing.ID)
+    } else {
+        log.Printf("Нет storefront_id для объявления %d или значение некорректно", listing.ID)
+    }
 
-	// Добавляем путь категорий, если есть
-	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
-		doc["category_path_ids"] = listing.CategoryPathIds
-	} else {
-		// Если путь категорий не задан, нужно его создать
-		// Для этого выполним дополнительный запрос к базе данных
-		parentID := listing.CategoryID
-		pathIDs := []int{parentID}
+    // Добавляем путь категорий, если есть
+    if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
+        doc["category_path_ids"] = listing.CategoryPathIds
+    } else {
+        // Если путь категорий не задан, нужно его создать
+        // Для этого выполним дополнительный запрос к базе данных
+        parentID := listing.CategoryID
+        pathIDs := []int{parentID}
 
-		for parentID > 0 {
-			var cat models.MarketplaceCategory
-			err := r.storage.QueryRow(context.Background(),
-				"SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
-				Scan(&cat.ParentID)
+        for parentID > 0 {
+            var cat models.MarketplaceCategory
+            err := r.storage.QueryRow(context.Background(),
+                "SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
+                Scan(&cat.ParentID)
 
-			if err != nil || cat.ParentID == nil {
-				break
-			}
+            if err != nil || cat.ParentID == nil {
+                break
+            }
 
-			parentID = *cat.ParentID
-			pathIDs = append([]int{parentID}, pathIDs...)
-		}
+            parentID = *cat.ParentID
+            pathIDs = append([]int{parentID}, pathIDs...)
+        }
 
-		doc["category_path_ids"] = pathIDs
-		log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
-	}
+        doc["category_path_ids"] = pathIDs
+        log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
+    }
 
-	// Добавляем информацию о категории, если есть
-	if listing.Category != nil {
-		doc["category"] = map[string]interface{}{
-			"id":   listing.Category.ID,
-			"name": listing.Category.Name,
-			"slug": listing.Category.Slug,
-		}
-	}
+    // Добавляем информацию о категории, если есть
+    if listing.Category != nil {
+        doc["category"] = map[string]interface{}{
+            "id":   listing.Category.ID,
+            "name": listing.Category.Name,
+            "slug": listing.Category.Slug,
+        }
+    }
 
-	// Добавляем информацию о пользователе, если есть
-	if listing.User != nil {
-		doc["user"] = map[string]interface{}{
-			"id":    listing.User.ID,
-			"name":  listing.User.Name,
-			"email": listing.User.Email,
-		}
-	}
+    // Добавляем информацию о пользователе, если есть
+    if listing.User != nil {
+        doc["user"] = map[string]interface{}{
+            "id":    listing.User.ID,
+            "name":  listing.User.Name,
+            "email": listing.User.Email,
+        }
+    }
 
-	// Добавляем изображения, если есть
-	if listing.Images != nil && len(listing.Images) > 0 {
-		log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
-		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
+    // Добавляем изображения, если есть
+    if listing.Images != nil && len(listing.Images) > 0 {
+        log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
+        imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
 
-		for i, img := range listing.Images {
-			// Логирование деталей каждого изображения для отладки
-			log.Printf("  Изображение %d: ID=%d, Путь=%s, IsMain=%v",
-				i+1, img.ID, img.FilePath, img.IsMain)
+        for i, img := range listing.Images {
+            // Логирование деталей каждого изображения для отладки
+            log.Printf("  Изображение %d: ID=%d, Путь=%s, IsMain=%v",
+                i+1, img.ID, img.FilePath, img.IsMain)
 
-			imagesDoc = append(imagesDoc, map[string]interface{}{
-				"id":        img.ID,
-				"file_path": img.FilePath,
-				"is_main":   img.IsMain,
-			})
-		}
+            imagesDoc = append(imagesDoc, map[string]interface{}{
+                "id":        img.ID,
+                "file_path": img.FilePath,
+                "is_main":   img.IsMain,
+            })
+        }
 
-		// Проверяем, что у нас есть хотя бы одно изображение с указанным путем
-		hasValidImage := false
-		for _, img := range imagesDoc {
-			if path, ok := img["file_path"].(string); ok && path != "" {
-				hasValidImage = true
-				break
-			}
-		}
+        // Проверяем, что у нас есть хотя бы одно изображение с указанным путем
+        hasValidImage := false
+        for _, img := range imagesDoc {
+            if path, ok := img["file_path"].(string); ok && path != "" {
+                hasValidImage = true
+                break
+            }
+        }
 
-		if hasValidImage {
-			doc["images"] = imagesDoc
-			log.Printf("  Добавлено %d изображений в индекс", len(imagesDoc))
-		} else {
-			log.Printf("  ВНИМАНИЕ: У объявления %d нет изображений с корректным путем", listing.ID)
-		}
-	} else {
-		// Пытаемся загрузить изображения из базы данных, если их нет в объекте
-		images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
-		if err != nil {
-			log.Printf("  Ошибка при загрузке изображений для объявления %d: %v", listing.ID, err)
-		} else if len(images) > 0 {
-			log.Printf("  Загружено %d изображений из базы данных для объявления %d", len(images), listing.ID)
+        if hasValidImage {
+            doc["images"] = imagesDoc
+            log.Printf("  Добавлено %d изображений в индекс", len(imagesDoc))
+        } else {
+            log.Printf("  ВНИМАНИЕ: У объявления %d нет изображений с корректным путем", listing.ID)
+        }
+    } else {
+        // Пытаемся загрузить изображения из базы данных, если их нет в объекте
+        images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
+        if err != nil {
+            log.Printf("  Ошибка при загрузке изображений для объявления %d: %v", listing.ID, err)
+        } else if len(images) > 0 {
+            log.Printf("  Загружено %d изображений из базы данных для объявления %d", len(images), listing.ID)
 
-			imagesDoc := make([]map[string]interface{}, 0, len(images))
-			for i, img := range images {
-				log.Printf("    Изображение %d: ID=%d, Путь=%s, IsMain=%v",
-					i+1, img.ID, img.FilePath, img.IsMain)
+            imagesDoc := make([]map[string]interface{}, 0, len(images))
+            for i, img := range images {
+                log.Printf("    Изображение %d: ID=%d, Путь=%s, IsMain=%v",
+                    i+1, img.ID, img.FilePath, img.IsMain)
 
-				imagesDoc = append(imagesDoc, map[string]interface{}{
-					"id":        img.ID,
-					"file_path": img.FilePath,
-					"is_main":   img.IsMain,
-				})
-			}
+                imagesDoc = append(imagesDoc, map[string]interface{}{
+                    "id":        img.ID,
+                    "file_path": img.FilePath,
+                    "is_main":   img.IsMain,
+                })
+            }
 
-			doc["images"] = imagesDoc
-			log.Printf("  Добавлено %d изображений из базы данных в индекс", len(imagesDoc))
-		} else {
-			log.Printf("  Объявление %d не имеет изображений", listing.ID)
-		}
-	}
+            doc["images"] = imagesDoc
+            log.Printf("  Добавлено %d изображений из базы данных в индекс", len(imagesDoc))
+        } else {
+            log.Printf("  Объявление %d не имеет изображений", listing.ID)
+        }
+    }
 
-	// Добавляем атрибуты, если они есть
-	if listing.Attributes != nil && len(listing.Attributes) > 0 {
-		attributes := make([]map[string]interface{}, 0, len(listing.Attributes))
+    // Изменить раздел с атрибутами для добавления атрибутов в корень документа
+    if listing.Attributes != nil && len(listing.Attributes) > 0 {
+        attributes := make([]map[string]interface{}, 0, len(listing.Attributes))
+        
+        // Создаем карту для отслеживания добавленных атрибутов
+        addedAttributes := make(map[string]bool)
+        
+        // Используем map для отслеживания уникальных значений атрибутов
+        uniqueTextValues := make(map[string]bool)
+        attributeTextValues := make(map[string][]string)
+        
+        // Массив для select_values
+        selectValues := []string{}
+        
+        // Явно определяем переменные для марки и модели автомобиля
+        var makeValue, modelValue string
+        
+        for _, attr := range listing.Attributes {
+            // Проверяем, что атрибут имеет хотя бы одно значение
+            if attr.TextValue == nil && attr.NumericValue == nil &&
+                attr.BooleanValue == nil && attr.JSONValue == nil &&
+                attr.DisplayValue == "" {
+                continue
+            }
+            
+            // Извлекаем значения make и model для последующего использования
+            if attr.AttributeName == "make" && attr.TextValue != nil && *attr.TextValue != "" {
+                makeValue = *attr.TextValue
+            }
+            if attr.AttributeName == "model" && attr.TextValue != nil && *attr.TextValue != "" {
+                modelValue = *attr.TextValue
+            }
+        
+            // Для атрибутов select и text, явно добавляем их в корень документа
+            if attr.AttributeType == "select" || attr.AttributeType == "text" {
+                var attrValue string
+                if attr.TextValue != nil && *attr.TextValue != "" {
+                    attrValue = *attr.TextValue
+                } else if attr.DisplayValue != "" {
+                    attrValue = attr.DisplayValue
+                }
+                
+                if attrValue != "" {
+                    // Добавляем в корень документа, независимо от важности
+                    doc[attr.AttributeName] = attrValue 
+                    doc[attr.AttributeName+"_lowercase"] = strings.ToLower(attrValue)
+                    
+                    // Улучшаем поиск для select-значений, добавляя варианты
+                    if attr.AttributeType == "select" {
+                        if doc["select_values"] == nil {
+                            doc["select_values"] = []string{}
+                        }
+                        selectValues := doc["select_values"].([]string)
+                        doc["select_values"] = append(selectValues, attrValue, strings.ToLower(attrValue))
+                    }
+                    
+                    // Ведем лог для проверки
+                    log.Printf("Добавлен атрибут %s = %s в корень документа для объявления %d", 
+                        attr.AttributeName, attrValue, listing.ID)
+                }
+            }
+    
+            // Для избежания дубликатов атрибутов с одинаковым именем
+            attrKey := fmt.Sprintf("%s_%d", attr.AttributeName, attr.AttributeID)
+            if addedAttributes[attrKey] {
+                continue
+            }
+            addedAttributes[attrKey] = true
+    
+            attrDoc := map[string]interface{}{
+                "attribute_id":   attr.AttributeID,
+                "attribute_name": attr.AttributeName,
+                "display_name":   attr.DisplayName,
+                "attribute_type": attr.AttributeType,
+                "display_value":  attr.DisplayValue,
+            }
+    
+            // Добавляем типизированные значения в зависимости от типа атрибута
+            if attr.TextValue != nil && *attr.TextValue != "" {
+                attrDoc["text_value"] = *attr.TextValue
+                attrDoc["text_value_lowercase"] = strings.ToLower(*attr.TextValue)
+                
+                // Для uniqueness tracking
+                textValue := *attr.TextValue
+                lowerTextValue := strings.ToLower(textValue)
+                
+                // Добавляем уникальные значения в attributeTextValues
+                if _, ok := attributeTextValues[attr.AttributeName]; !ok {
+                    attributeTextValues[attr.AttributeName] = []string{}
+                }
+                
+                // Проверяем уникальность перед добавлением
+                if !uniqueTextValues[textValue] {
+                    attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], textValue)
+                    uniqueTextValues[textValue] = true
+                }
+                
+                if !uniqueTextValues[lowerTextValue] {
+                    attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], lowerTextValue)
+                    uniqueTextValues[lowerTextValue] = true
+                }
+                
+                // Добавляем в корень документа
+                if isImportantAttribute(attr.AttributeName) {
+                    doc[attr.AttributeName] = textValue
+                    doc[attr.AttributeName+"_facet"] = textValue
+                    doc[attr.AttributeName+"_lowercase"] = lowerTextValue
+                }
+                
+                // Добавляем в select_values если это select атрибут
+                if attr.AttributeType == "select" {
+                    selectValues = append(selectValues, textValue, lowerTextValue)
+                }
+            }
 
-		// Создаем карту для отслеживания добавленных атрибутов
-		addedAttributes := make(map[string]bool)
+            if attr.JSONValue != nil {
+                jsonStr := string(attr.JSONValue)
+                if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
+                    attrDoc["json_value"] = jsonStr
+                    var jsonData interface{}
+                    if err := json.Unmarshal(attr.JSONValue, &jsonData); err == nil {
+                        if strArray, ok := jsonData.([]string); ok {
+                            attrDoc["json_array"] = strArray
 
-		for _, attr := range listing.Attributes {
-			// Проверяем, что атрибут имеет хотя бы одно значение
-			if attr.TextValue == nil && attr.NumericValue == nil &&
-				attr.BooleanValue == nil && attr.JSONValue == nil &&
-				attr.DisplayValue == "" {
-				continue
-			}
+                            // Добавляем значения для поиска
+                            if _, ok := attributeTextValues[attr.AttributeName]; !ok {
+                                attributeTextValues[attr.AttributeName] = []string{}
+                            }
+                            attributeTextValues[attr.AttributeName] = append(
+                                attributeTextValues[attr.AttributeName],
+                                strArray...,
+                            )
+                        }
+                    }
+                }
+            }
 
-			// Для избежания дубликатов атрибутов с одинаковым именем
-			attrKey := fmt.Sprintf("%s_%d", attr.AttributeName, attr.AttributeID)
-			if addedAttributes[attrKey] {
-				continue
-			}
-			addedAttributes[attrKey] = true
+            // Получаем переводы значений атрибутов, если это select или другое поле с переводимыми значениями
+            if attr.AttributeType == "select" && (attr.TextValue != nil || attr.DisplayValue != "") {
+                // Запрашиваем переводы из таблицы attribute_option_translations
+                value := ""
+                if attr.TextValue != nil {
+                    value = *attr.TextValue
+                } else {
+                    value = attr.DisplayValue
+                }
 
-			attrDoc := map[string]interface{}{
-				"attribute_id":   attr.AttributeID,
-				"attribute_name": attr.AttributeName,
-				"display_name":   attr.DisplayName,
-				"attribute_type": attr.AttributeType,
-				"display_value":  attr.DisplayValue,
-			}
+                if value != "" {
+                    translations, err := r.getAttributeOptionTranslations(attr.AttributeName, value)
+                    if err == nil && len(translations) > 0 {
+                        attrDoc["translations"] = translations
 
-			// Добавляем типизированные значения в зависимости от типа атрибута
-			if attr.TextValue != nil && *attr.TextValue != "" {
-				attrDoc["text_value"] = *attr.TextValue
+                        // Добавляем переведенные значения для поиска
+                        for lang, translation := range translations {
+                            if _, ok := attributeTextValues[attr.AttributeName+"_"+lang]; !ok {
+                                attributeTextValues[attr.AttributeName+"_"+lang] = []string{}
+                            }
+                            attributeTextValues[attr.AttributeName+"_"+lang] = append(
+                                attributeTextValues[attr.AttributeName+"_"+lang],
+                                translation,
+                                strings.ToLower(translation),
+                            )
+                        }
+                    }
+                }
+            }
 
-				// Добавляем вариации для улучшения поиска
-				attrDoc["text_value_lowercase"] = strings.ToLower(*attr.TextValue)
-				attrDoc["text_value_variations"] = []string{
-					*attr.TextValue,
-					strings.ToLower(*attr.TextValue),
-				}
-			}
-
-			if attr.NumericValue != nil {
-				attrDoc["numeric_value"] = *attr.NumericValue
-
-				// Проверяем, не является ли числовое значение аномальным
-				if *attr.NumericValue < 0 && attr.AttributeName != "temperature" {
-					log.Printf("ВНИМАНИЕ: Отрицательное числовое значение %f для атрибута %s",
-						*attr.NumericValue, attr.AttributeName)
-				}
-
-				if *attr.NumericValue > 1000000000 {
-					log.Printf("ВНИМАНИЕ: Очень большое числовое значение %f для атрибута %s",
-						*attr.NumericValue, attr.AttributeName)
-				}
-
-				// Добавим вспомогательные поля для поиска по диапазонам
-				if attr.AttributeName == "year" ||
-					attr.AttributeName == "price" ||
-					attr.AttributeName == "mileage" ||
-					attr.AttributeName == "engine_capacity" ||
-					attr.AttributeName == "power" ||
-					attr.AttributeName == "area" ||
-					attr.AttributeName == "screen_size" {
-
-					// Для числовых атрибутов создаем отдельные поля
-					doc[fmt.Sprintf("%s_value", attr.AttributeName)] = *attr.NumericValue
-
-					// Добавляем специальные диапазонные метки для улучшения фильтрации
-					if attr.AttributeName == "year" {
-						yearVal := int(*attr.NumericValue)
-						doc["year_decade"] = (yearVal / 10) * 10 // Группировка по десятилетиям
-					} else if attr.AttributeName == "mileage" {
-						mileageVal := int(*attr.NumericValue)
-						doc["mileage_range"] = getMileageRange(mileageVal)
-					} else if attr.AttributeName == "price" {
-						priceVal := int(*attr.NumericValue)
-						doc["price_range"] = getPriceRange(priceVal)
-					}
-				}
-			}
-
-			if attr.BooleanValue != nil {
-				attrDoc["boolean_value"] = *attr.BooleanValue
-				if *attr.BooleanValue {
-					attrDoc["boolean_text"] = "да"
-				} else {
-					attrDoc["boolean_text"] = "нет"
-				}
-			}
-
-			if attr.JSONValue != nil {
-				jsonStr := string(attr.JSONValue)
-				if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
-					attrDoc["json_value"] = jsonStr
-					var jsonData interface{}
-					if err := json.Unmarshal(attr.JSONValue, &jsonData); err == nil {
-						if strArray, ok := jsonData.([]string); ok {
-							attrDoc["json_array"] = strArray
-						}
-					}
-				}
-			}
-
-			attributes = append(attributes, attrDoc)
-		}
-
-		doc["attributes"] = attributes
-
-		// Добавляем отдельные индексы для common attributes
-		for _, attr := range listing.Attributes {
-			if attr.AttributeName == "brand" ||
-				attr.AttributeName == "make" ||
-				attr.AttributeName == "model" ||
-				attr.AttributeName == "year" ||
-				attr.AttributeName == "color" ||
-				attr.AttributeName == "rooms" ||
-				attr.AttributeName == "property_type" {
-				if attr.TextValue != nil && *attr.TextValue != "" {
-					doc[attr.AttributeName] = *attr.TextValue
-					doc[attr.AttributeName+"_facet"] = *attr.TextValue
-				} else if attr.NumericValue != nil {
-					doc[attr.AttributeName] = *attr.NumericValue
-				} else if attr.DisplayValue != "" {
-					doc[attr.AttributeName] = attr.DisplayValue
-					doc[attr.AttributeName+"_facet"] = attr.DisplayValue
-				}
-			}
-		}
-	}
-
-	// Финальная проверка наличия местоположения и дополнительное логирование
-	if doc["city"] == "" || doc["country"] == "" || doc["location"] == "" {
-		log.Printf("ВНИМАНИЕ: После всех обработок у объявления %d все еще отсутствует информация о местоположении: город=%v, страна=%v, адрес=%v",
-			listing.ID, doc["city"], doc["country"], doc["location"])
-	} else {
-		log.Printf("Объявление %d имеет полную информацию о местоположении: город=%v, страна=%v, адрес=%v",
-			listing.ID, doc["city"], doc["country"], doc["location"])
-	}
-
-	// Логируем для отладки метаданных
-	if metadata, ok := doc["metadata"]; ok {
-		log.Printf("DEBUG: Метаданные в документе для объявления %d: %+v", listing.ID, metadata)
-	} else {
-		log.Printf("DEBUG: Нет метаданных в документе для объявления %d", listing.ID)
-	}
-
-	return doc
+            attributes = append(attributes, attrDoc)
+        }
+        
+        // Явно добавляем марку и модель в корень документа, если они были найдены
+        if makeValue != "" {
+            doc["make"] = makeValue
+            doc["make_lowercase"] = strings.ToLower(makeValue)
+            log.Printf("Явно добавлена марка автомобиля '%s' в корень документа для объявления %d", 
+                makeValue, listing.ID)
+        }
+        
+        if modelValue != "" {
+            doc["model"] = modelValue
+            doc["model_lowercase"] = strings.ToLower(modelValue)
+            log.Printf("Явно добавлена модель автомобиля '%s' в корень документа для объявления %d", 
+                modelValue, listing.ID)
+        }
+        
+        // Добавляем select_values в документ
+        if len(selectValues) > 0 {
+            // Удаляем дубликаты из selectValues
+            uniqueSelectValues := make([]string, 0)
+            selectValuesMap := make(map[string]bool)
+            
+            for _, val := range selectValues {
+                if !selectValuesMap[val] {
+                    selectValuesMap[val] = true
+                    uniqueSelectValues = append(uniqueSelectValues, val)
+                }
+            }
+            
+            doc["select_values"] = uniqueSelectValues
+        }
+        
+        // Добавляем атрибуты в документ
+        doc["attributes"] = attributes
+        
+        // Добавляем all_attributes_text без дублирования
+        allAttrsSet := make(map[string]bool)
+        allAttrs := []string{}
+        
+        for _, values := range attributeTextValues {
+            for _, value := range values {
+                if !allAttrsSet[value] {
+                    allAttrsSet[value] = true
+                    allAttrs = append(allAttrs, value)
+                }
+            }
+        }
+        
+        doc["all_attributes_text"] = allAttrs
+    }
+    return doc
 }
 
-// Функция для определения диапазона пробега
+
 func getMileageRange(mileage int) string {
 	switch {
 	case mileage <= 5000:
@@ -878,8 +978,6 @@ func getMileageRange(mileage int) string {
 		return "200001+"
 	}
 }
-
-// Функция для определения ценового диапазона
 func getPriceRange(price int) string {
 	switch {
 	case price <= 5000:
@@ -897,6 +995,29 @@ func getPriceRange(price int) string {
 	default:
 		return "500001+"
 	}
+}
+func isImportantAttribute(attrName string) bool {
+	// Список важных атрибутов, которые должны быть добавлены в корень документа
+	importantAttrs := map[string]bool{
+		"make":            true,
+		"model":           true,
+		"brand":           true,
+		"year":            true,
+		"color":           true,
+		"rooms":           true,
+		"property_type":   true,
+		"body_type":       true,
+		"engine_capacity": true,
+		"fuel_type":       true,
+		"transmission":    true,
+		"cpu":             true,
+		"gpu":             true,
+		"memory":          true,
+		"ram":             true,
+		"storage_type":    true,
+		"screen_size":     true,
+	}
+	return importantAttrs[attrName]
 }
 
 // geocodeCity получает координаты города
@@ -960,464 +1081,386 @@ func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float6
 
 	return &struct{ Lat, Lon float64 }{lat, lon}, nil
 }
-
-// buildSearchQuery создает поисковый запрос OpenSearch
 func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]interface{} {
-	log.Printf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s",
-		params.CategoryID, params.Language, params.Query)
+    log.Printf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s",
+        params.CategoryID, params.Language, params.Query)
 
-	query := map[string]interface{}{
-		"from": (params.Page - 1) * params.Size,
-		"size": params.Size,
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"must":   []interface{}{},
-				"filter": []interface{}{},
-			},
-		},
-	}
+    query := map[string]interface{}{
+        "from": (params.Page - 1) * params.Size,
+        "size": params.Size,
+        "query": map[string]interface{}{
+            "bool": map[string]interface{}{
+                "must":   []interface{}{},
+                "filter": []interface{}{},
+                "should": []interface{}{},
+            },
+        },
+    }
 
-	mustClauses := []interface{}{}
-	filterClauses := []interface{}{}
+    // Изменить раздел с текстовым поиском в функции buildSearchQuery
+    if params.Query != "" {
+        log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
 
-	if params.Query != "" {
-		log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
+        // Используем все поля переводов и атрибутов
+        searchFields := []string{
+            "title^3", "description",
+            "title.serbian^4", "description.serbian", "translations.sr.title^4", "translations.sr.description",
+            "title.russian^4", "description.russian", "translations.ru.title^4", "translations.ru.description",
+            "title.english^4", "description.english", "translations.en.title^4", "translations.en.description",
+            // Добавляем поля с атрибутами для поиска
+            "all_attributes_text^2",
+            "attributes.display_value^1.5",
+            "attributes.text_value^1.5",
+            "attributes.text_value_lowercase^1.5", // Добавляем текст в нижнем регистре
+            "attributes.boolean_text^1.5",
+            // Специальные поля для важных атрибутов (расширенный список)
+            "make^5", // Увеличиваем вес поля make для лучшего поиска по марке
+            "model^4",
+            "color^3",
+            "brand^4",
+            "year^3",
+            "rooms^3",
+            "property_type^3",
+            "body_type^3",
+            "cpu^3",
+            "gpu^3",
+            "memory^3",
+            "ram^3",
+            "storage_capacity^3",
+            "screen_size^3",
+            "attr_make_text^5", // Увеличиваем вес для атрибутов make
+            "attr_model_text^4",
+            "attr_color_text^3",
+            "attr_brand_text^4",
+            "attr_year_text^3",
+            "attr_rooms_text^3",
+            "attr_property_type_text^3",
+            "attr_body_type_text^3",
+            "attr_cpu_text^3",
+            "attr_gpu_text^3",
+            "attr_memory_text^3",
+            "attr_ram_text^3",
+            "attr_storage_capacity_text^3",
+            "attr_screen_size_text^3",
+        }
 
-		// Используем все поля переводов, если CustomQuery не указан
-		searchFields := []string{
-			"title^3", "description",
-			"title.sr^4", "description.sr", "translations.sr.title^4", "translations.sr.description",
-			"title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
-			"title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
-		}
+        // Определяем язык запроса для приоритизации полей
+        languagePriority := "sr" // По умолчанию сербский
+        if params.Language != "" {
+            languagePriority = params.Language
+        }
 
-		minimumShouldMatch := "70%"
-		if params.MinimumShouldMatch != "" {
-			minimumShouldMatch = params.MinimumShouldMatch
-		}
+        // Увеличиваем вес полей для выбранного языка
+        switch languagePriority {
+        case "sr":
+            searchFields = append(searchFields,
+                "title.serbian^5",
+                "translations.sr.title^5",
+                "attr_*_sr^4",
+            )
+        case "ru":
+            searchFields = append(searchFields,
+                "title.russian^5",
+                "translations.ru.title^5",
+                "attr_*_ru^4",
+            )
+        case "en":
+            searchFields = append(searchFields,
+                "title.english^5",
+                "translations.en.title^5",
+                "attr_*_en^4",
+            )
+        }
 
-		fuzziness := "AUTO"
-		if params.Fuzziness != "" {
-			fuzziness = params.Fuzziness
-		}
+        minimumShouldMatch := "60%" // Понижаем с 70% до 60%, чтобы обеспечить более гибкий поиск
+        if params.MinimumShouldMatch != "" {
+            minimumShouldMatch = params.MinimumShouldMatch
+        }
 
-		queryObj := map[string]interface{}{
-			"multi_match": map[string]interface{}{
-				"query":                params.Query,
-				"fields":               searchFields,
-				"type":                 "best_fields",
-				"fuzziness":            fuzziness,
-				"operator":             "AND",
-				"minimum_should_match": minimumShouldMatch,
-			},
-		}
+        fuzziness := "AUTO"
+        if params.Fuzziness != "" {
+            fuzziness = params.Fuzziness
+        }
 
-		mustClauses = append(mustClauses, queryObj)
-		log.Printf("Добавлен поисковый запрос для полей: %v", searchFields)
-	}
+        // Основной multi_match запрос для поиска по всем полям
+        multiMatch := map[string]interface{}{
+            "multi_match": map[string]interface{}{
+                "query":                params.Query,
+                "fields":               searchFields,
+                "type":                 "best_fields",
+                "fuzziness":            fuzziness,
+                "operator":             "AND",
+                "minimum_should_match": minimumShouldMatch,
+            },
+        }
 
-	if params.CategoryID != nil {
-		categoryID := *params.CategoryID
-		log.Printf("Фильтрация по категории с иерархией для CategoryID: %d", categoryID)
+        // Создаем запросы по атрибутам для отдельных слов
+        words := strings.Fields(params.Query)
+        multiWordQueries := []map[string]interface{}{}
 
-		// Поиск по принадлежности к категории или ее подкатегориям
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"bool": map[string]interface{}{
-				"should": []map[string]interface{}{
-					{
-						"term": map[string]interface{}{
-							"category_id": categoryID,
-						},
-					},
-					{
-						"term": map[string]interface{}{
-							"category_path_ids": categoryID,
-						},
-					},
-				},
-				"minimum_should_match": 1,
-			},
-		})
-	}
+        if len(words) > 1 {
+            // Многословный запрос - разбираем на отдельные слова и ищем каждое в соответствующих атрибутах
+            for _, word := range words {
+                if len(word) < 3 {
+                    continue // Пропускаем слишком короткие слова
+                }
 
-	// Добавляем фильтры по цене
-	if params.PriceMin != nil || params.PriceMax != nil {
-		priceRange := map[string]interface{}{}
-		if params.PriceMin != nil {
-			priceRange["gte"] = *params.PriceMin
-		}
-		if params.PriceMax != nil {
-			priceRange["lte"] = *params.PriceMax
-		}
+                // Проверяем каждое слово на соответствие важным атрибутам
+                autoAttributes := []struct {
+                    name  string
+                    boost float64
+                }{
+                    {"make", 5.0}, // Увеличиваем вес для make
+                    {"model", 4.0},
+                    {"color", 3.0},
+                    {"brand", 4.0},
+                    {"body_type", 2.5},
+                    {"year", 3.0},
+                    {"rooms", 3.0},
+                    {"property_type", 3.0},
+                    {"cpu", 3.0},
+                    {"gpu", 3.0},
+                    {"memory", 3.0},
+                    {"ram", 3.0},
+                    {"storage_capacity", 3.0},
+                    {"screen_size", 3.0},
+                }
 
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"range": map[string]interface{}{
-				"price": priceRange,
-			},
-		})
-	}
+                for _, attr := range autoAttributes {
+                    nestedQuery := map[string]interface{}{
+                        "nested": map[string]interface{}{
+                            "path": "attributes",
+                            "query": map[string]interface{}{
+                                "bool": map[string]interface{}{
+                                    "must": []map[string]interface{}{
+                                        {
+                                            "term": map[string]interface{}{
+                                                "attributes.attribute_name": attr.name,
+                                            },
+                                        },
+                                        {
+                                            "bool": map[string]interface{}{
+                                                "should": []map[string]interface{}{
+                                                    {
+                                                        "match": map[string]interface{}{
+                                                            "attributes.text_value": map[string]interface{}{
+                                                                "query":     word,
+                                                                "boost":     attr.boost,
+                                                                "fuzziness": "AUTO",
+                                                            },
+                                                        },
+                                                    },
+                                                    {
+                                                        "match": map[string]interface{}{
+                                                            "attributes.text_value_lowercase": map[string]interface{}{
+                                                                "query":     strings.ToLower(word),
+                                                                "boost":     attr.boost,
+                                                                "fuzziness": "AUTO",
+                                                            },
+                                                        },
+                                                    },
+                                                    {
+                                                        "match": map[string]interface{}{
+                                                            "attributes.display_value": map[string]interface{}{
+                                                                "query":     word,
+                                                                "boost":     attr.boost * 0.8,
+                                                                "fuzziness": "AUTO",
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                                "minimum_should_match": 1,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            "score_mode": "max",
+                            "boost":      attr.boost,
+                        },
+                    }
 
-	// Добавляем фильтр по состоянию
-	if params.Condition != "" {
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"condition.keyword": params.Condition,
-			},
-		})
-	}
+                    multiWordQueries = append(multiWordQueries, nestedQuery)
+                }
+            }
+        }
 
-	// Добавляем фильтры по городу
-	if params.City != "" {
-		// Проверяем, не является ли city URL-закодированным значением
-		if strings.Contains(params.City, "%") {
-			decodedCity, err := url.QueryUnescape(params.City)
-			if err == nil {
-				params.City = decodedCity
-			}
-		}
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"city.keyword": params.City,
-			},
-		})
-	}
+        // Создаем общий запрос для вложенных атрибутов
+        // Оптимизируем создание запросов для атрибутов, используя цикл вместо дублирования кода
+        attributes := []struct {
+            name  string
+            boost float64
+        }{
+            {"make", 5.0}, // Увеличиваем вес для make
+            {"model", 4.0},
+            {"color", 3.0},
+            {"brand", 4.0},
+            {"year", 3.0},
+            {"rooms", 3.0},
+            {"property_type", 3.0},
+            {"body_type", 3.0},
+            {"cpu", 3.0},
+            {"gpu", 3.0},
+            {"memory", 3.0},
+            {"ram", 3.0},
+            {"storage_capacity", 3.0},
+            {"screen_size", 3.0},
+        }
 
-	// Добавляем фильтры по стране
-	if params.Country != "" {
-		// Проверяем, не является ли country URL-закодированным значением
-		if strings.Contains(params.Country, "%") {
-			decodedCountry, err := url.QueryUnescape(params.Country)
-			if err == nil {
-				params.Country = decodedCountry
-			}
-		}
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"country.keyword": params.Country,
-			},
-		})
-	}
+        // Добавляем прямые запросы к полям make и model в корне документа
+        shouldQueries := []map[string]interface{}{
+            // Ищем по корневому полю make
+            {
+                "match": map[string]interface{}{
+                    "make": map[string]interface{}{
+                        "query": params.Query,
+                        "boost": 5.0,
+                        "fuzziness": "AUTO",
+                    },
+                },
+            },
+            {
+                "match": map[string]interface{}{
+                    "make_lowercase": map[string]interface{}{
+                        "query": strings.ToLower(params.Query),
+                        "boost": 5.0,
+                        "fuzziness": "AUTO",
+                    },
+                },
+            },
+            // Ищем по корневому полю model
+            {
+                "match": map[string]interface{}{
+                    "model": map[string]interface{}{
+                        "query": params.Query,
+                        "boost": 4.0,
+                        "fuzziness": "AUTO",
+                    },
+                },
+            },
+            {
+                "match": map[string]interface{}{
+                    "model_lowercase": map[string]interface{}{
+                        "query": strings.ToLower(params.Query),
+                        "boost": 4.0,
+                        "fuzziness": "AUTO",
+                    },
+                },
+            },
+            // Ищем по полю select_values, которое содержит все select-значения
+            {
+                "match": map[string]interface{}{
+                    "select_values": map[string]interface{}{
+                        "query": params.Query,
+                        "boost": 3.0,
+                        "fuzziness": "AUTO",
+                    },
+                },
+            },
+        }
+        
+        // Добавим эти запросы в should-блок основного запроса
+        boolMap := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
+        should := boolMap["should"].([]interface{})
+        
+        for _, q := range shouldQueries {
+            should = append(should, q)
+        }
+        
+        boolMap["should"] = should
+        boolMap["minimum_should_match"] = 1
+        
+        // Создаем блоки поиска для каждого важного атрибута
+        attrQueries := make([]map[string]interface{}, 0, len(attributes))
+        for _, attr := range attributes {
+            attrQuery := map[string]interface{}{
+                "bool": map[string]interface{}{
+                    "must": []map[string]interface{}{
+                        {
+                            "term": map[string]interface{}{
+                                "attributes.attribute_name": attr.name,
+                            },
+                        },
+                        {
+                            "bool": map[string]interface{}{
+                                "should": []map[string]interface{}{
+                                    {
+                                        "match": map[string]interface{}{
+                                            "attributes.text_value": map[string]interface{}{
+                                                "query":     params.Query,
+                                                "boost":     attr.boost,
+                                                "fuzziness": "AUTO",
+                                            },
+                                        },
+                                    },
+                                    {
+                                        "match": map[string]interface{}{
+                                            "attributes.text_value_lowercase": map[string]interface{}{
+                                                "query":     strings.ToLower(params.Query),
+                                                "boost":     attr.boost,
+                                                "fuzziness": "AUTO",
+                                            },
+                                        },
+                                    },
+                                    {
+                                        "match": map[string]interface{}{
+                                            "attributes.display_value": map[string]interface{}{
+                                                "query":     params.Query,
+                                                "boost":     attr.boost * 0.8,
+                                                "fuzziness": "AUTO",
+                                            },
+                                        },
+                                    },
+                                },
+                                "minimum_should_match": 1,
+                            },
+                        },
+                    },
+                },
+            }
+            attrQueries = append(attrQueries, attrQuery)
+        }
 
-	// Добавляем фильтр по ID витрины
-	if params.StorefrontID != nil {
-		filterClauses = append(filterClauses, map[string]interface{}{
-			"term": map[string]interface{}{
-				"storefront_id": *params.StorefrontID,
-			},
-		})
-	}
+        // Создаем вложенный запрос с блоками атрибутов
+        nestedQuery := map[string]interface{}{
+            "nested": map[string]interface{}{
+                "path": "attributes",
+                "query": map[string]interface{}{
+                    "bool": map[string]interface{}{
+                        "should":               attrQueries,
+                        "minimum_should_match": 1,
+                    },
+                },
+                "score_mode": "max",
+                "boost":      3.0,
+            },
+        }
 
-	// Добавляем фильтр по статусу (только активные объявления)
-	filterClauses = append(filterClauses, map[string]interface{}{
-		"term": map[string]interface{}{
-			"status": "active",
-		},
-	})
+        // Добавляем основные запросы в must-блок
+        must := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{})
+        must = append(must, multiMatch, nestedQuery)
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = must
 
-	// Добавляем геопоиск, если указаны координаты
-	if params.Location != nil && params.Distance != "" {
-		// Проверяем, что координаты имеют ненулевые значения
-		if params.Location.Lat == 0 && params.Location.Lon == 0 {
-			log.Printf("Игнорируем параметр distance (%s) из-за нулевых координат", params.Distance)
-		} else {
-			filterClauses = append(filterClauses, map[string]interface{}{
-				"geo_distance": map[string]interface{}{
-					"distance": params.Distance,
-					"coordinates": map[string]interface{}{
-						"lat": params.Location.Lat,
-						"lon": params.Location.Lon,
-					},
-				},
-			})
-		}
-	}
+        // Добавляем запросы по отдельным словам в should-блок
+        if len(multiWordQueries) > 0 {
+            // Обновляем should блок
+            should := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]interface{})
+            
+            // Добавляем все запросы из multiWordQueries
+            for _, q := range multiWordQueries {
+                should = append(should, q)
+            }
+            
+            // Устанавливаем обновленный should блок
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = should
+        }
+    }
+    
 
-	// Добавляем фильтры по атрибутам, если они указаны
-	// Находим место в коде, где обрабатываются атрибуты
-	// Модифицируем обработку атрибутов в buildSearchQuery
-	if len(params.AttributeFilters) > 0 {
-		for attrName, attrValue := range params.AttributeFilters {
-			log.Printf("Добавляем фильтр по атрибуту: %s = %s", attrName, attrValue)
-
-			// Проверяем, содержит ли значение диапазон (для числовых значений)
-			if strings.Contains(attrValue, ",") {
-				// Распознаём диапазоны для числовых полей
-				parts := strings.Split(attrValue, ",")
-				if len(parts) == 2 {
-					minVal, minErr := strconv.ParseFloat(parts[0], 64)
-					maxVal, maxErr := strconv.ParseFloat(parts[1], 64)
-
-					if minErr == nil && maxErr == nil {
-						log.Printf("Применяем диапазонный фильтр для %s: от %f до %f", attrName, minVal, maxVal)
-
-						// Создаем запрос, который должен быть в should, а не must
-						// Так мы повысим рейтинг подходящих записей, но не исключим не содержащие атрибуты
-						shouldClause := map[string]interface{}{
-							"nested": map[string]interface{}{
-								"path": "attributes",
-								"query": map[string]interface{}{
-									"bool": map[string]interface{}{
-										"must": []map[string]interface{}{
-											{
-												"term": map[string]interface{}{
-													"attributes.attribute_name": attrName,
-												},
-											},
-											{
-												"range": map[string]interface{}{
-													"attributes.numeric_value": map[string]interface{}{
-														"gte": minVal,
-														"lte": maxVal,
-													},
-												},
-											},
-										},
-									},
-								},
-								"score_mode": "avg",
-							},
-						}
-
-						// Получаем текущие should условия или создаем новый массив
-						boolQuery := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
-						var shouldClauses []interface{}
-
-						if existing, ok := boolQuery["should"]; ok {
-							shouldClauses = existing.([]interface{})
-						} else {
-							shouldClauses = []interface{}{}
-						}
-
-						// Добавляем наше условие
-						shouldClauses = append(shouldClauses, shouldClause)
-						boolQuery["should"] = shouldClauses
-
-						// Если у нас есть should условия, устанавливаем minimum_should_match
-						if len(shouldClauses) > 0 {
-							// Устанавливаем minimum_should_match в 0 для мягкого поиска
-							// Это позволит возвращать документы, даже если у них нет атрибутов
-							boolQuery["minimum_should_match"] = 0
-						}
-
-						continue
-					} else {
-						log.Printf("Ошибка парсинга диапазона для %s: %v, %v", attrName, minErr, maxErr)
-					}
-				}
-			}
-
-			// Для всех остальных атрибутов также используем should вместо must
-			shouldClause := map[string]interface{}{
-				"nested": map[string]interface{}{
-					"path": "attributes",
-					"query": map[string]interface{}{
-						"bool": map[string]interface{}{
-							"must": []map[string]interface{}{
-								{
-									"term": map[string]interface{}{
-										"attributes.attribute_name": attrName,
-									},
-								},
-								{
-									"match": map[string]interface{}{
-										"attributes.display_value": map[string]interface{}{
-											"query": attrValue,
-											"boost": 2.0,
-										},
-									},
-								},
-							},
-						},
-					},
-					"score_mode": "avg",
-				},
-			}
-
-			// Получаем текущие should условия или создаем новый массив
-			boolQuery := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
-			var shouldClauses []interface{}
-
-			if existing, ok := boolQuery["should"]; ok {
-				shouldClauses = existing.([]interface{})
-			} else {
-				shouldClauses = []interface{}{}
-			}
-
-			// Добавляем наше условие
-			shouldClauses = append(shouldClauses, shouldClause)
-			boolQuery["should"] = shouldClauses
-
-			// Если у нас есть should условия, устанавливаем minimum_should_match
-			if len(shouldClauses) > 0 {
-				// Устанавливаем minimum_should_match в 0 для мягкого поиска
-				boolQuery["minimum_should_match"] = 0
-			}
-		}
-	}
-
-	// Добавляем clauses в запрос
-	if len(mustClauses) > 0 {
-		log.Printf("Добавляем %d must клауз в запрос", len(mustClauses))
-		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
-		mustClausesJSON, _ := json.Marshal(mustClauses)
-		log.Printf("Must-клаузы: %s", string(mustClausesJSON))
-	}
-
-	if len(filterClauses) > 0 {
-		log.Printf("Добавляем %d filter клауз в запрос", len(filterClauses))
-		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filterClauses
-		filterClausesJSON, _ := json.Marshal(filterClauses)
-		log.Printf("Filter-клаузы: %s", string(filterClausesJSON))
-	}
-
-	// Добавляем настройки сортировки
-	sortOpt := []interface{}{}
-
-	if params.Sort != "" {
-		direction := "desc"
-		if params.SortDirection == "asc" {
-			direction = "asc"
-		}
-
-		// Проверяем специальные случаи сортировки
-		sortField := params.Sort
-		if sortField == "date_desc" {
-			sortField = "created_at"
-			direction = "desc" // Явно указываем desc
-		} else if sortField == "date_asc" {
-			sortField = "created_at"
-			direction = "asc" // Явно указываем asc
-		} else if sortField == "price_desc" {
-			sortField = "price"
-			direction = "desc" // Явно указываем desc
-		} else if sortField == "price_asc" {
-			sortField = "price"
-			direction = "asc" // Явно указываем asc
-		}
-
-		log.Printf("Сортировка по полю %s в порядке %s", sortField, direction)
-
-		// Особая обработка для геосортировки
-		if sortField == "distance" && params.Location != nil {
-			sortOpt = append(sortOpt, map[string]interface{}{
-				"_geo_distance": map[string]interface{}{
-					"coordinates": map[string]interface{}{
-						"lat": params.Location.Lat,
-						"lon": params.Location.Lon,
-					},
-					"order": direction,
-					"unit":  "km",
-				},
-			})
-		} else {
-			// Стандартная сортировка
-			sortOpt = append(sortOpt, map[string]interface{}{
-				sortField: map[string]interface{}{
-					"order": direction,
-				},
-			})
-		}
-	} else {
-		// По умолчанию сортируем по дате создания по убыванию
-		sortOpt = append(sortOpt, map[string]interface{}{
-			"created_at": map[string]interface{}{
-				"order": "desc", // Изменено с asc на desc
-			},
-		})
-	}
-
-	query["sort"] = sortOpt
-
-	// Добавляем агрегации для фасетной фильтрации
-	aggregations := map[string]interface{}{}
-
-	// Стандартные агрегации по категориям, ценам и т.д.
-	aggregations["categories"] = map[string]interface{}{
-		"terms": map[string]interface{}{
-			"field": "category_id",
-			"size":  100,
-		},
-	}
-
-	aggregations["conditions"] = map[string]interface{}{
-		"terms": map[string]interface{}{
-			"field": "condition.keyword",
-			"size":  10,
-		},
-	}
-
-	aggregations["cities"] = map[string]interface{}{
-		"terms": map[string]interface{}{
-			"field": "city.keyword",
-			"size":  50,
-		},
-	}
-
-	aggregations["countries"] = map[string]interface{}{
-		"terms": map[string]interface{}{
-			"field": "country.keyword",
-			"size":  50,
-		},
-	}
-
-	aggregations["price_ranges"] = map[string]interface{}{
-		"range": map[string]interface{}{
-			"field": "price",
-			"ranges": []interface{}{
-				map[string]interface{}{"to": 1000},
-				map[string]interface{}{"from": 1000, "to": 5000},
-				map[string]interface{}{"from": 5000, "to": 10000},
-				map[string]interface{}{"from": 10000, "to": 50000},
-				map[string]interface{}{"from": 50000},
-			},
-		},
-	}
-
-	// Добавляем запрос на подсказки (исправление опечаток)
-	if params.Query != "" {
-		query["suggest"] = map[string]interface{}{
-			"text": params.Query,
-			"simple_phrase": map[string]interface{}{
-				"phrase": map[string]interface{}{
-					"field":      "title",
-					"size":       5,
-					"gram_size":  3,
-					"confidence": 2.0,
-					"max_errors": 2,
-					"direct_generator": []interface{}{
-						map[string]interface{}{
-							"field":           "title",
-							"suggest_mode":    "always",
-							"min_word_length": 3,
-						},
-					},
-				},
-			},
-		}
-	}
-
-	// Запрашиваем только нужные агрегации
-	requestedAggs := map[string]interface{}{}
-	if len(params.Aggregations) > 0 {
-		for _, agg := range params.Aggregations {
-			if aggDef, ok := aggregations[agg]; ok {
-				requestedAggs[agg] = aggDef
-			}
-		}
-	} else {
-		// Если не указаны, добавляем все
-		requestedAggs = aggregations
-	}
-
-	if len(requestedAggs) > 0 {
-		query["aggs"] = requestedAggs
-	}
-
-	// Для отладки выводим запрос в лог
-	queryJSON, _ := json.MarshalIndent(query, "", "  ")
-	log.Printf("Сформированный запрос: %s", queryJSON)
-	return query
+    
+    return query
 }
+
 
 // parseSearchResponse обрабатывает ответ от OpenSearch
 func (r *Repository) parseSearchResponse(response map[string]interface{}, language string) (*search.SearchResult, error) {

@@ -1014,28 +1014,6 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
     log.Printf("Saving %d attributes for listing %d", len(attributes), listingID)
 
-    // Дополнительное логирование значений
-    for i, attr := range attributes {
-        log.Printf("Attribute %d: ID=%d, Name=%s, Type=%s",
-            i, attr.AttributeID, attr.AttributeName, attr.AttributeType)
-            
-        // Проверяем наличие значений
-        if attr.TextValue != nil {
-            log.Printf("  Text value: %s", *attr.TextValue)
-        }
-        if attr.NumericValue != nil {
-            log.Printf("  Numeric value: %f", *attr.NumericValue)
-        }
-        if attr.BooleanValue != nil {
-            log.Printf("  Boolean value: %t", *attr.BooleanValue)
-        }
-        if attr.JSONValue != nil {
-            log.Printf("  JSON value: %s", string(attr.JSONValue))
-        }
-        
-        log.Printf("  Display value: %s", attr.DisplayValue)
-    }
-
     // Начинаем транзакцию
     tx, err := s.pool.Begin(ctx)
     if err != nil {
@@ -1055,23 +1033,46 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
         return tx.Commit(ctx)
     }
 
-    // Подготавливаем запрос для множественной вставки
+    // Карта для отслеживания уникальных attribute_id
+    seen := make(map[int]bool)
     valueStrings := make([]string, 0, len(attributes))
-    valueArgs := make([]interface{}, 0, len(attributes)*4)
+    valueArgs := make([]interface{}, 0, len(attributes)*6) // Увеличиваем до 6, так как добавляем все поля
     counter := 1
 
     for _, attr := range attributes {
-        // Проверка на нулевые значения ID атрибута
+        // Проверка на нулевые или некорректные attribute_id
         if attr.AttributeID <= 0 {
             log.Printf("Storage: Invalid attribute ID: %d, skipping", attr.AttributeID)
             continue
         }
-        
+
+        // Проверка на дубликаты по attribute_id
+        if seen[attr.AttributeID] {
+            log.Printf("Storage: Duplicate attribute ID %d for listing %d, skipping", attr.AttributeID, listingID)
+            continue
+        }
+        seen[attr.AttributeID] = true
+
+        // Логирование значений атрибута
+        log.Printf("Attribute: ID=%d, Name=%s, Type=%s", attr.AttributeID, attr.AttributeName, attr.AttributeType)
+        if attr.TextValue != nil {
+            log.Printf("  Text value: %s", *attr.TextValue)
+        }
+        if attr.NumericValue != nil {
+            log.Printf("  Numeric value: %f", *attr.NumericValue)
+        }
+        if attr.BooleanValue != nil {
+            log.Printf("  Boolean value: %t", *attr.BooleanValue)
+        }
+        if attr.JSONValue != nil {
+            log.Printf("  JSON value: %s", string(attr.JSONValue))
+        }
+        log.Printf("  Display value: %s", attr.DisplayValue)
+
         // Проверяем, что есть хотя бы одно значение для сохранения
-        hasValue := attr.TextValue != nil || attr.NumericValue != nil || 
+        hasValue := attr.TextValue != nil || attr.NumericValue != nil ||
                     attr.BooleanValue != nil || attr.JSONValue != nil ||
                     attr.DisplayValue != ""
-                    
         if !hasValue {
             log.Printf("Storage: No value provided for attribute %d, skipping", attr.AttributeID)
             continue
@@ -1085,7 +1086,7 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
         valueArgs = append(valueArgs, listingID, attr.AttributeID)
 
         // Текстовое значение
-        if attr.TextValue != nil {
+        if attr.TextValue != nil && *attr.TextValue != "" {
             valueArgs = append(valueArgs, *attr.TextValue)
         } else {
             valueArgs = append(valueArgs, nil)
@@ -1093,25 +1094,21 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
 
         // Числовое значение
         if attr.NumericValue != nil {
-            // Проверка больших значений для числовых атрибутов
-            if attr.AttributeName == "mileage" && *attr.NumericValue > 10000000 {
-                log.Printf("Storage: High mileage value detected: %f", *attr.NumericValue)
-                // Для больших значений проверяем, что они в допустимом диапазоне DECIMAL(15,5)
-                if *attr.NumericValue > 999999999999.99999 {
+            numericVal := *attr.NumericValue
+            // Проверка больших значений для mileage
+            if attr.AttributeName == "mileage" && numericVal > 10000000 {
+                log.Printf("Storage: High mileage value detected: %f", numericVal)
+                if numericVal > 999999999999.99999 {
                     log.Printf("Storage: Mileage value too large, capping at max allowed")
-                    maxValue := 999999999999.99999
-                    attr.NumericValue = &maxValue
+                    numericVal = 999999999999.99999
                 }
             }
-            
             // Проверка на NaN или Inf
-            if math.IsNaN(*attr.NumericValue) || math.IsInf(*attr.NumericValue, 0) {
+            if math.IsNaN(numericVal) || math.IsInf(numericVal, 0) {
                 log.Printf("Storage: Invalid numeric value (NaN/Inf) for attribute %d, using 0", attr.AttributeID)
-                zeroValue := 0.0
-                attr.NumericValue = &zeroValue
+                numericVal = 0.0
             }
-            
-            valueArgs = append(valueArgs, *attr.NumericValue)
+            valueArgs = append(valueArgs, numericVal)
         } else {
             valueArgs = append(valueArgs, nil)
         }
@@ -1124,7 +1121,7 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
         }
 
         // JSON значение
-        if attr.JSONValue != nil {
+        if attr.JSONValue != nil && len(attr.JSONValue) > 0 {
             valueArgs = append(valueArgs, string(attr.JSONValue))
         } else {
             valueArgs = append(valueArgs, nil)
@@ -1135,7 +1132,7 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
 
     // Если нет атрибутов для вставки, завершаем транзакцию
     if len(valueStrings) == 0 {
-        log.Printf("Storage: No valid attributes found for listing %d", listingID)
+        log.Printf("Storage: No valid attributes found for listing %d after filtering", listingID)
         return tx.Commit(ctx)
     }
 
@@ -1144,6 +1141,11 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
         INSERT INTO listing_attribute_values (
             listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value
         ) VALUES %s
+        ON CONFLICT (listing_id, attribute_id) DO UPDATE SET
+            text_value = EXCLUDED.text_value,
+            numeric_value = EXCLUDED.numeric_value,
+            boolean_value = EXCLUDED.boolean_value,
+            json_value = EXCLUDED.json_value
     `, strings.Join(valueStrings, ","))
 
     // Выполняем запрос
@@ -1160,10 +1162,9 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
         return fmt.Errorf("error committing transaction: %w", err)
     }
 
-    log.Printf("Storage: Successfully saved %d attributes for listing %d", len(valueStrings), listingID)
+    log.Printf("Storage: Successfully saved %d unique attributes for listing %d", len(valueStrings), listingID)
     return nil
 }
-
 // GetListingAttributes получает значения атрибутов для объявления без дублирования
 func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
     // Улучшенный запрос с явным DISTINCT ON для удаления дубликатов

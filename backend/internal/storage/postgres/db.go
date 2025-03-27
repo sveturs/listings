@@ -433,6 +433,34 @@ func (db *Database) SearchListings(ctx context.Context, params *search.SearchPar
     }
     return db.osMarketplaceRepo.SearchListings(ctx, params)
 }
+// Добавить этот метод в структуру Database
+func (db *Database) GetAttributeOptionTranslations(ctx context.Context, attributeName, optionValue string) (map[string]string, error) {
+    query := `
+        SELECT option_value, en_translation, sr_translation
+        FROM attribute_option_translations
+        WHERE attribute_name = $1 AND option_value = $2
+    `
+    
+    var optValue, enTrans, srTrans string
+    err := db.pool.QueryRow(ctx, query, attributeName, optionValue).Scan(
+        &optValue, &enTrans, &srTrans,
+    )
+    
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            return nil, nil
+        }
+        return nil, fmt.Errorf("error getting attribute translations: %w", err)
+    }
+    
+    translations := map[string]string{
+        "en": enTrans,
+        "sr": srTrans,
+    }
+    
+    return translations, nil
+}
+
 func (db *Database) GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error) {
 	return db.notificationsDB.GetTelegramConnection(ctx, userID)
 }

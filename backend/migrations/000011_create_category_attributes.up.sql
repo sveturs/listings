@@ -47,19 +47,19 @@ CREATE INDEX IF NOT EXISTS idx_listing_attr_boolean ON listing_attribute_values(
 
 -- Автомобили
 INSERT INTO category_attributes (name, display_name, attribute_type, options, is_searchable, is_filterable, is_required) VALUES
-('make', 'Марка', 'select', '{"values": ["Audi", "BMW", "Mercedes", "Toyota", "Honda", "Ford", "Chevrolet", "Volkswagen", "Nissan", "Other"]}', true, true, true),
-('model', 'Модель', 'text', NULL, true, true, true),
-('year', 'Год выпуска', 'number', '{"min": 1900, "max": 2025}', true, true, true),
-('mileage', 'Пробег (км)', 'number', '{"min": 0}', true, true, false),
-('engine_capacity', 'Объем двигателя (л)', 'number', '{"min": 0.1, "max": 10, "step": 0.1}', true, true, false),
-('fuel_type', 'Тип топлива', 'select', '{"values": ["Бензин", "Дизель", "Гибрид", "Электро", "Газ"]}', true, true, false),
-('transmission', 'Коробка передач', 'select', '{"values": ["Механика", "Автомат", "Робот", "Вариатор"]}', true, true, false),
-('body_type', 'Тип кузова', 'select', '{"values": ["Седан", "Хэтчбек", "Универсал", "Внедорожник", "Купе", "Кабриолет", "Минивэн", "Пикап"]}', true, true, false),
-('color', 'Цвет', 'select', '{"values": ["Белый", "Черный", "Серый", "Серебристый", "Красный", "Синий", "Зеленый", "Желтый", "Коричневый", "Другой"]}', true, true, false),
-('power', 'Мощность (л.с.)', 'number', '{"min": 1, "max": 2000}', true, true, false),
-('drive_type', 'Привод', 'select', '{"values": ["Передний", "Задний", "Полный", "Другой"]}', true, true, false),
-('number_of_doors', 'Количество дверей', 'select', '{"values": ["2", "3", "4", "5", "6+"]}', true, true, false),
-('number_of_seats', 'Количество мест', 'select', '{"values": ["1", "2", "3", "4", "5", "6", "7", "8+"]}', true, true, false)
+('make', 'Make', 'select', '{"values": ["Audi", "BMW", "Mercedes", "Toyota", "Honda", "Ford", "Chevrolet", "Volkswagen", "Nissan", "Other"]}', true, true, true),
+('model', 'Model', 'text', NULL, true, true, true),
+('year', 'Year', 'number', '{"min": 1990, "max": 2025}', true, true, true),
+('mileage', 'Mileage', 'number', '{"min": 0}', true, true, false),
+('engine_capacity', 'Engine capacity', 'number', '{"min": 0.1, "max": 10, "step": 0.1}', true, true, false),
+('fuel_type', 'Fuel type', 'select', '{"values": ["Бензин", "Дизель", "Гибрид", "Электро", "Газ"]}', true, true, false),
+('transmission', 'Transmission', 'select', '{"values": ["Механика", "Автомат", "Робот", "Вариатор"]}', true, true, false),
+('body_type', 'Body type', 'select', '{"values": ["Седан", "Хэтчбек", "Универсал", "Внедорожник", "Купе", "Кабриолет", "Минивэн", "Пикап"]}', true, true, false),
+('color', 'Color', 'select', '{"values": ["Белый", "Черный", "Серый", "Серебристый", "Красный", "Синий", "Зеленый", "Желтый", "Коричневый", "Другой"]}', true, true, false),
+('power', 'Power', 'number', '{"min": 1, "max": 2000}', true, true, false),
+('drive_type', 'Drive type', 'select', '{"values": ["Передний", "Задний", "Полный", "Другой"]}', true, true, false),
+('number_of_doors', 'Number of doors', 'select', '{"values": ["2", "3", "4", "5", "6+"]}', true, true, false),
+('number_of_seats', 'Number of seats', 'select', '{"values": ["1", "2", "3", "4", "5", "6", "7", "8+"]}', true, true, false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Недвижимость
@@ -327,7 +327,7 @@ AND category_id IN (
     SELECT id FROM marketplace_categories 
     WHERE id IN (3310, 3320, 3600) OR parent_id IN (3310, 3320, 3600)
 );
-
+CREATE UNIQUE INDEX IF NOT EXISTS idx_listing_attr_unique ON listing_attribute_values (listing_id, attribute_id);
 -- Обновляем материализованное представление категорий, если оно существует
 DO $$
 BEGIN

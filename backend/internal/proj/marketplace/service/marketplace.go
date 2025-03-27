@@ -33,13 +33,10 @@ func (s *MarketplaceService) GetUserFavorites(ctx context.Context, userID int) (
 	return s.storage.GetUserFavorites(ctx, userID)
 }
 func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
-	// Устанавливаем начальные значения
 	listing.Status = "active"
 	listing.ViewsCount = 0
 
-	// Если язык не указан, определяем его
 	if listing.OriginalLanguage == "" {
-		// Получаем язык из контекста, если есть
 		if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
 			listing.OriginalLanguage = userLang
 		} else {
@@ -79,35 +76,37 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 			log.Printf("Could not get storefront or storefront has no location info: %v", err)
 		}
 	}
+
 	listingID, err := s.storage.CreateListing(ctx, listing)
 	if err != nil {
 		return 0, err
 	}
 
 	if listing.Attributes != nil && len(listing.Attributes) > 0 {
-		// Устанавливаем ID объявления для каждого атрибута
-		for i := range listing.Attributes {
-			listing.Attributes[i].ListingID = listingID
+		// Фильтрация дубликатов атрибутов
+		uniqueAttrs := make(map[int]models.ListingAttributeValue)
+		for _, attr := range listing.Attributes {
+			uniqueAttrs[attr.AttributeID] = attr // Последнее значение перезапишет предыдущее
 		}
 
-		// Сохраняем атрибуты
-		if err := s.SaveListingAttributes(ctx, listingID, listing.Attributes); err != nil {
+		// Преобразуем карту обратно в срез
+		filteredAttrs := make([]models.ListingAttributeValue, 0, len(uniqueAttrs))
+		for _, attr := range uniqueAttrs {
+			attr.ListingID = listingID
+			filteredAttrs = append(filteredAttrs, attr)
+		}
+
+		if err := s.SaveListingAttributes(ctx, listingID, filteredAttrs); err != nil {
 			log.Printf("Error saving attributes for listing %d: %v", listingID, err)
-			// Не возвращаем ошибку, чтобы не прерывать создание объявления
 		} else {
-			log.Printf("Successfully saved %d attributes for listing %d", len(listing.Attributes), listingID)
+			log.Printf("Successfully saved %d attributes for listing %d", len(filteredAttrs), listingID)
 		}
 	}
-
-	// Синхронизируем с OpenSearch
 	listing.ID = listingID
-
-	// Получаем полное объявление со всеми связанными данными
 	fullListing, err := s.storage.GetListingByID(ctx, listingID)
 	if err != nil {
 		log.Printf("Ошибка получения полного объявления для индексации: %v", err)
 	} else {
-		// Индексируем объявление в OpenSearch
 		if err := s.storage.IndexListing(ctx, fullListing); err != nil {
 			log.Printf("Ошибка индексации объявления в OpenSearch: %v", err)
 		}
@@ -729,48 +728,57 @@ func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation 
 }
 
 func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
-	log.Printf("Запрос поиска с параметрами: %+v", params)
+    log.Printf("Запрос поиска с параметрами: %+v", params)
 
-	fields := []string{
-		"title^3", "description",
-		"title.sr^4", "description.sr", "translations.sr.title^4", "translations.sr.description",
-		"title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
-		"title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
-	}
+    fields := []string{
+        "title^3", "description",
+        "title.sr^4", "description.sr", "translations.sr.title^4", "translations.sr.description",
+        "title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
+        "title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
+        "model^2", "make^5", // Добавлено поле model
+    }
 
-	query := map[string]interface{}{
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"must":   []interface{}{},
-				"filter": []interface{}{},
-			},
-		},
-		"from": (params.Page - 1) * params.Size,
-		"size": params.Size,
-	}
+    query := map[string]interface{}{
+        "query": map[string]interface{}{
+            "bool": map[string]interface{}{
+                "must":   []interface{}{},
+                "filter": []interface{}{},
+            },
+        },
+        "from": (params.Page - 1) * params.Size,
+        "size": params.Size,
+    }
 
-	if params.Query != "" {
-		multiMatch := map[string]interface{}{
-			"multi_match": map[string]interface{}{
-				"query":                params.Query,
-				"fields":               fields,
-				"type":                 "best_fields",
-				"operator":             "AND",
-				"fuzziness":            "AUTO",
-				"minimum_should_match": "70%",
-			},
-		}
-		if params.MinimumShouldMatch != "" {
-			multiMatch["multi_match"].(map[string]interface{})["minimum_should_match"] = params.MinimumShouldMatch
-		}
-		if params.Fuzziness != "" {
-			multiMatch["multi_match"].(map[string]interface{})["fuzziness"] = params.Fuzziness
-		}
-		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = append(
-			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{}),
-			multiMatch,
-		)
-	}
+    if params.Query != "" {
+        multiMatch := map[string]interface{}{
+            "multi_match": map[string]interface{}{
+                "query":                params.Query,
+                "fields":               fields,
+                "type":                 "best_fields",
+                "operator":             "AND",
+                "fuzziness":            "AUTO",
+                "minimum_should_match": "70%",
+            },
+        }
+        nestedQuery := map[string]interface{}{
+            "nested": map[string]interface{}{
+                "path": "attributes",
+                "query": map[string]interface{}{
+                    "match": map[string]interface{}{
+                        "attributes.text_value": map[string]interface{}{
+                            "query": params.Query,
+                            "boost": 2,
+                        },
+                    },
+                },
+            },
+        }
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = append(
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{}),
+            multiMatch,
+            nestedQuery,
+        )
+    }
 
 	if params.CategoryID != "" {
 		categoryID, err := strconv.Atoi(params.CategoryID)
@@ -871,7 +879,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		}
 	}
 
- 	// Добавляем фильтры по атрибутам
+	// Добавляем фильтры по атрибутам
 	if len(params.AttributeFilters) > 0 {
 		for attrName, attrValue := range params.AttributeFilters {
 			log.Printf("Добавляем фильтр по атрибуту: %s = %s", attrName, attrValue)
@@ -885,43 +893,86 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 					maxVal, maxErr := strconv.ParseFloat(parts[1], 64)
 
 					if minErr == nil && maxErr == nil {
-						// Используем корректный диапазонный фильтр
-						query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
-							query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
-							map[string]interface{}{
-								"nested": map[string]interface{}{
-									"path": "attributes",
-									"query": map[string]interface{}{
-										"bool": map[string]interface{}{
-											"must": []map[string]interface{}{
-												{
-													"term": map[string]interface{}{
-														"attributes.attribute_name": attrName,
-													},
+						// Используем корректный диапазонный фильтр с должным весом
+						rangeFilter := map[string]interface{}{
+							"nested": map[string]interface{}{
+								"path": "attributes",
+								"query": map[string]interface{}{
+									"bool": map[string]interface{}{
+										"must": []map[string]interface{}{
+											{
+												"term": map[string]interface{}{
+													"attributes.attribute_name": attrName,
 												},
-												{
-													"range": map[string]interface{}{
-														"attributes.numeric_value": map[string]interface{}{
-															"gte": minVal,
-															"lte": maxVal,
-														},
+											},
+											{
+												"range": map[string]interface{}{
+													"attributes.numeric_value": map[string]interface{}{
+														"gte": minVal,
+														"lte": maxVal,
 													},
 												},
 											},
 										},
 									},
 								},
+								"score_mode": "max", // Максимальный вес вместо среднего
+								"boost":      3.0,   // Увеличиваем вес точного соответствия
 							},
-						)
+						}
+
+						// Получаем текущие should условия или создаем новый массив
+						boolQuery := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
+						var filterClauses []interface{}
+
+						if existing, ok := boolQuery["filter"]; ok {
+							filterClauses = existing.([]interface{})
+						} else {
+							filterClauses = []interface{}{}
+						}
+
+						// Добавляем наше условие как фильтр (не should)
+						filterClauses = append(filterClauses, rangeFilter)
+						boolQuery["filter"] = filterClauses
+
+						log.Printf("Добавлен диапазонный фильтр для атрибута %s: от %f до %f",
+							attrName, minVal, maxVal)
+
 						continue
 					}
 				}
 			}
 
-			// Существующий код для нечисловых атрибутов
-			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
-				query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{}),
-				map[string]interface{}{
+			// Создаем массив вариантов значений для поиска на разных языках
+			valueVariations := []string{attrValue}
+
+			// Пробуем найти переводы значения в базе данных
+			translations, err := s.storage.GetAttributeOptionTranslations(ctx, attrName, attrValue)
+			if err == nil && len(translations) > 0 {
+				// Добавляем переводы в вариации значений
+				for _, translation := range translations {
+					valueVariations = append(valueVariations, translation)
+				}
+			}
+
+			// Создаем более сложный фильтр для поддержки всех языков
+			shouldClauses := make([]map[string]interface{}, 0, len(valueVariations))
+
+			// Создаем отдельное условие для каждой вариации значения
+			for _, value := range valueVariations {
+				// Добавляем нечеткий поиск для текстовых значений
+				shouldClauses = append(shouldClauses, map[string]interface{}{
+					"match": map[string]interface{}{
+						"attributes.display_value": map[string]interface{}{
+							"query":     value,
+							"fuzziness": "AUTO",
+							"boost":     2.0,
+						},
+					},
+				})
+
+				// Также ищем в переводах атрибутов
+				shouldClauses = append(shouldClauses, map[string]interface{}{
 					"nested": map[string]interface{}{
 						"path": "attributes",
 						"query": map[string]interface{}{
@@ -934,15 +985,82 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 									},
 									{
 										"match": map[string]interface{}{
-											"attributes.display_value": attrValue,
+											"attributes.translations.en": map[string]interface{}{
+												"query": value,
+												"boost": 1.5,
+											},
 										},
 									},
 								},
 							},
 						},
 					},
+				})
+
+				shouldClauses = append(shouldClauses, map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "attributes",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"attributes.attribute_name": attrName,
+										},
+									},
+									{
+										"match": map[string]interface{}{
+											"attributes.translations.sr": map[string]interface{}{
+												"query": value,
+												"boost": 1.5,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				})
+			}
+
+			// Объединяем все варианты поиска в один фильтр
+			attrFilter := map[string]interface{}{
+				"nested": map[string]interface{}{
+					"path": "attributes",
+					"query": map[string]interface{}{
+						"bool": map[string]interface{}{
+							"must": []map[string]interface{}{
+								{
+									"term": map[string]interface{}{
+										"attributes.attribute_name": attrName,
+									},
+								},
+							},
+							"should":               shouldClauses,
+							"minimum_should_match": 1,
+						},
+					},
+					"score_mode": "max",
+					"boost":      3.0,
 				},
-			)
+			}
+
+			// Получаем текущие filter условия
+			boolQuery := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
+			var filterClauses []interface{}
+
+			if existing, ok := boolQuery["filter"]; ok {
+				filterClauses = existing.([]interface{})
+			} else {
+				filterClauses = []interface{}{}
+			}
+
+			// Добавляем наше условие
+			filterClauses = append(filterClauses, attrFilter)
+			boolQuery["filter"] = filterClauses
+
+			log.Printf("Добавлен мультиязычный фильтр для атрибута %s со значением %s",
+				attrName, attrValue)
 		}
 	}
 
@@ -1129,12 +1247,12 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 	log.Printf("Результаты поиска для атрибутов %v:", params.AttributeFilters)
 	for i, listing := range searchResult.Listings {
 		log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
-		
+
 		// Добавляем отладочную информацию о атрибутах
 		if len(listing.Attributes) > 0 {
 			log.Printf("  Объявление %d имеет %d атрибутов:", listing.ID, len(listing.Attributes))
 			for _, attr := range listing.Attributes {
-				log.Printf("  Атрибут: name=%s, type=%s, value=%s", 
+				log.Printf("  Атрибут: name=%s, type=%s, value=%s",
 					attr.AttributeName, attr.AttributeType, attr.DisplayValue)
 			}
 		} else {

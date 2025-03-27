@@ -358,56 +358,126 @@ const ListingMapping = `
         }
       },
       "attributes": {
-        "type": "nested",
-        "properties": {
-          "attribute_id": {
-            "type": "integer"
-          },
-          "attribute_name": {
-            "type": "keyword"
-          },
-          "display_name": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword"
+          "type": "nested",
+          "properties": {
+              "attribute_id": {
+                  "type": "integer"
+              },
+              "attribute_name": {
+                  "type": "keyword"
+              },
+              "display_name": {
+                  "type": "text",
+                  "fields": {
+                      "keyword": {
+                          "type": "keyword"
+                      }
+                  }
+              },
+              "attribute_type": {
+                  "type": "keyword"
+              },
+              "text_value": {
+                  "type": "text",
+                  "analyzer": "default_analyzer",
+                  "fields": {
+                      "keyword": {
+                          "type": "keyword"
+                      },
+                      "serbian": {
+                          "type": "text",
+                          "analyzer": "serbian_analyzer"
+                      },
+                      "russian": {
+                          "type": "text",
+                          "analyzer": "russian_analyzer"
+                      },
+                      "english": {
+                          "type": "text",
+                          "analyzer": "english_analyzer"
+                      }
+                  }
+              },
+              "text_value_lowercase": {
+                  "type": "keyword"
+              },
+              "text_value_variations": {
+                  "type": "text",
+                  "analyzer": "default_analyzer"
+              },
+              "numeric_value": {
+                  "type": "double"
+              },
+              "boolean_value": {
+                  "type": "boolean"
+              },
+              "boolean_text": {
+                  "type": "object"
+              },
+              "json_value": {
+                  "type": "text",
+                  "fields": {
+                      "keyword": {
+                          "type": "keyword"
+                      }
+                  }
+              },
+              "json_array": {
+                  "type": "text",
+                  "fields": {
+                      "keyword": {
+                          "type": "keyword"
+                      }
+                  }
+              },
+              "display_value": {
+                  "type": "text",
+                  "analyzer": "default_analyzer",
+                  "fields": {
+                      "keyword": {
+                          "type": "keyword"
+                      },
+                      "serbian": {
+                          "type": "text",
+                          "analyzer": "serbian_analyzer"
+                      },
+                      "russian": {
+                          "type": "text",
+                          "analyzer": "russian_analyzer"
+                      },
+                      "english": {
+                          "type": "text",
+                          "analyzer": "english_analyzer"
+                      }
+                  }
+              },
+              "translations": {
+                  "type": "object",
+                  "properties": {
+                      "en": { "type": "text", "analyzer": "english_analyzer" },
+                      "sr": { "type": "text", "analyzer": "serbian_analyzer" },
+                      "ru": { "type": "text", "analyzer": "russian_analyzer" }
+                  }
               }
-            }
-          },
-          "attribute_type": {
-            "type": "keyword"
-          },
-          "text_value": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword"
-              }
-            }
-          },
-          "numeric_value": {
-            "type": "double"
-          },
-          "boolean_value": {
-            "type": "boolean"
-          },
-          "json_value": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword"
-              }
-            }
-          },
-          "display_value": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword"
-              }
-            }
           }
-        }
+      },
+      "all_attributes_text": {
+          "type": "text",
+          "analyzer": "default_analyzer",
+          "fields": {
+              "serbian": {
+                  "type": "text",
+                  "analyzer": "serbian_analyzer"
+              },
+              "russian": {
+                  "type": "text",
+                  "analyzer": "russian_analyzer"
+              },
+              "english": {
+                  "type": "text",
+                  "analyzer": "english_analyzer"
+              }
+          }
       }
     }
   }
