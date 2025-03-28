@@ -1104,9 +1104,9 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
         // Используем все поля переводов и атрибутов
         searchFields := []string{
             "title^3", "description",
-            "title.serbian^4", "description.serbian", "translations.sr.title^4", "translations.sr.description",
-            "title.russian^4", "description.russian", "translations.ru.title^4", "translations.ru.description",
-            "title.english^4", "description.english", "translations.en.title^4", "translations.en.description",
+            "title.sr^4", "description.sr", "translations.sr.title^4", "translations.sr.description",
+            "title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
+            "title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
             // Добавляем поля с атрибутами для поиска
             "all_attributes_text^2",
             "attributes.display_value^1.5",
@@ -1154,19 +1154,19 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
         switch languagePriority {
         case "sr":
             searchFields = append(searchFields,
-                "title.serbian^5",
+                "title.sr^5",
                 "translations.sr.title^5",
                 "attr_*_sr^4",
             )
         case "ru":
             searchFields = append(searchFields,
-                "title.russian^5",
+                "title.ru^5",
                 "translations.ru.title^5",
                 "attr_*_ru^4",
             )
         case "en":
             searchFields = append(searchFields,
-                "title.english^5",
+                "title.en^5",
                 "translations.en.title^5",
                 "attr_*_en^4",
             )
@@ -1182,129 +1182,183 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
             fuzziness = params.Fuzziness
         }
 
-        // Основной multi_match запрос для поиска по всем полям
-        multiMatch := map[string]interface{}{
-            "multi_match": map[string]interface{}{
-                "query":                params.Query,
-                "fields":               searchFields,
-                "type":                 "best_fields",
-                "fuzziness":            fuzziness,
-                "operator":             "AND",
-                "minimum_should_match": minimumShouldMatch,
-            },
-        }
+        // Объявляем multiMatch заранее
+        var multiMatch map[string]interface{}
 
         // Создаем запросы по атрибутам для отдельных слов
         words := strings.Fields(params.Query)
         multiWordQueries := []map[string]interface{}{}
 
         if len(words) > 1 {
-            // Многословный запрос - разбираем на отдельные слова и ищем каждое в соответствующих атрибутах
+            // Для многословных запросов используем основной запрос с OR
+            multiMatch = map[string]interface{}{
+                "multi_match": map[string]interface{}{
+                    "query":                params.Query,
+                    "fields":               searchFields,
+                    "type":                 "best_fields",
+                    "fuzziness":            fuzziness,
+                    "operator":             "OR",                
+                    "minimum_should_match": "40%",              
+                },
+            }
+            
+            // Добавляем специальный запрос для поиска марки и модели одновременно
+            // Вариант, где первое слово - марка, второе - модель
+            for i := 0; i < len(words)-1; i++ {
+                for j := i + 1; j < len(words); j++ {
+                    firstWord := words[i]
+                    secondWord := words[j]
+                    
+                    // Вариант 1: words[i] это марка, words[j] это модель
+                    makeModelQuery1 := map[string]interface{}{
+                        "bool": map[string]interface{}{
+                            "must": []map[string]interface{}{
+                                {
+                                    "match": map[string]interface{}{
+                                        "make": map[string]interface{}{
+                                            "query": firstWord,
+                                            "boost": 10.0,
+                                        },
+                                    },
+                                },
+                                {
+                                    "match": map[string]interface{}{
+                                        "model": map[string]interface{}{
+                                            "query": secondWord,
+                                            "boost": 8.0,
+                                        },
+                                    },
+                                },
+                            },
+                            "boost": 20.0, // Высокий вес для точного совпадения марка+модель
+                        },
+                    }
+                    
+                    // Вариант 2: words[j] это марка, words[i] это модель
+                    makeModelQuery2 := map[string]interface{}{
+                        "bool": map[string]interface{}{
+                            "must": []map[string]interface{}{
+                                {
+                                    "match": map[string]interface{}{
+                                        "make": map[string]interface{}{
+                                            "query": secondWord,
+                                            "boost": 10.0,
+                                        },
+                                    },
+                                },
+                                {
+                                    "match": map[string]interface{}{
+                                        "model": map[string]interface{}{
+                                            "query": firstWord,
+                                            "boost": 8.0,
+                                        },
+                                    },
+                                },
+                            },
+                            "boost": 20.0,
+                        },
+                    }
+                    
+                    // Добавляем эти запросы в should-блок
+                    boolMap := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
+                    should := boolMap["should"].([]interface{})
+                    should = append(should, makeModelQuery1, makeModelQuery2)
+                    boolMap["should"] = should
+                }
+            }
+            
+            // Для каждого слова создаем отдельные запросы для атрибутов
             for _, word := range words {
-                if len(word) < 3 {
+                if len(word) < 2 {
                     continue // Пропускаем слишком короткие слова
                 }
-
-                // Проверяем каждое слово на соответствие важным атрибутам
-                autoAttributes := []struct {
-                    name  string
-                    boost float64
-                }{
-                    {"make", 5.0}, // Увеличиваем вес для make
-                    {"model", 4.0},
-                    {"color", 3.0},
-                    {"brand", 4.0},
-                    {"body_type", 2.5},
-                    {"year", 3.0},
-                    {"rooms", 3.0},
-                    {"property_type", 3.0},
-                    {"cpu", 3.0},
-                    {"gpu", 3.0},
-                    {"memory", 3.0},
-                    {"ram", 3.0},
-                    {"storage_capacity", 3.0},
-                    {"screen_size", 3.0},
-                }
-
-                for _, attr := range autoAttributes {
-                    nestedQuery := map[string]interface{}{
-                        "nested": map[string]interface{}{
-                            "path": "attributes",
-                            "query": map[string]interface{}{
-                                "bool": map[string]interface{}{
-                                    "must": []map[string]interface{}{
-                                        {
-                                            "term": map[string]interface{}{
-                                                "attributes.attribute_name": attr.name,
-                                            },
+                
+                // Добавляем запрос для поиска слова в поле make
+                multiWordQueries = append(multiWordQueries, map[string]interface{}{
+                    "match": map[string]interface{}{
+                        "make": map[string]interface{}{
+                            "query": word,
+                            "boost": 5.0,
+                        },
+                    },
+                })
+                
+                // Добавляем запрос для поиска слова в поле model
+                multiWordQueries = append(multiWordQueries, map[string]interface{}{
+                    "match": map[string]interface{}{
+                        "model": map[string]interface{}{
+                            "query": word,
+                            "boost": 4.0,
+                        },
+                    },
+                })
+                
+                // Добавляем запрос для атрибута make
+                multiWordQueries = append(multiWordQueries, map[string]interface{}{
+                    "nested": map[string]interface{}{
+                        "path": "attributes",
+                        "query": map[string]interface{}{
+                            "bool": map[string]interface{}{
+                                "must": []map[string]interface{}{
+                                    {
+                                        "term": map[string]interface{}{
+                                            "attributes.attribute_name": "make",
                                         },
-                                        {
-                                            "bool": map[string]interface{}{
-                                                "should": []map[string]interface{}{
-                                                    {
-                                                        "match": map[string]interface{}{
-                                                            "attributes.text_value": map[string]interface{}{
-                                                                "query":     word,
-                                                                "boost":     attr.boost,
-                                                                "fuzziness": "AUTO",
-                                                            },
-                                                        },
-                                                    },
-                                                    {
-                                                        "match": map[string]interface{}{
-                                                            "attributes.text_value_lowercase": map[string]interface{}{
-                                                                "query":     strings.ToLower(word),
-                                                                "boost":     attr.boost,
-                                                                "fuzziness": "AUTO",
-                                                            },
-                                                        },
-                                                    },
-                                                    {
-                                                        "match": map[string]interface{}{
-                                                            "attributes.display_value": map[string]interface{}{
-                                                                "query":     word,
-                                                                "boost":     attr.boost * 0.8,
-                                                                "fuzziness": "AUTO",
-                                                            },
-                                                        },
-                                                    },
-                                                },
-                                                "minimum_should_match": 1,
+                                    },
+                                    {
+                                        "match": map[string]interface{}{
+                                            "attributes.text_value": map[string]interface{}{
+                                                "query": word,
+                                                "boost": 5.0,
                                             },
                                         },
                                     },
                                 },
                             },
-                            "score_mode": "max",
-                            "boost":      attr.boost,
                         },
-                    }
-
-                    multiWordQueries = append(multiWordQueries, nestedQuery)
-                }
+                        "score_mode": "max",
+                    },
+                })
+                
+                // Добавляем запрос для атрибута model
+                multiWordQueries = append(multiWordQueries, map[string]interface{}{
+                    "nested": map[string]interface{}{
+                        "path": "attributes",
+                        "query": map[string]interface{}{
+                            "bool": map[string]interface{}{
+                                "must": []map[string]interface{}{
+                                    {
+                                        "term": map[string]interface{}{
+                                            "attributes.attribute_name": "model",
+                                        },
+                                    },
+                                    {
+                                        "match": map[string]interface{}{
+                                            "attributes.text_value": map[string]interface{}{
+                                                "query": word,
+                                                "boost": 4.0,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        "score_mode": "max",
+                    },
+                })
             }
-        }
-
-        // Создаем общий запрос для вложенных атрибутов
-        // Оптимизируем создание запросов для атрибутов, используя цикл вместо дублирования кода
-        attributes := []struct {
-            name  string
-            boost float64
-        }{
-            {"make", 5.0}, // Увеличиваем вес для make
-            {"model", 4.0},
-            {"color", 3.0},
-            {"brand", 4.0},
-            {"year", 3.0},
-            {"rooms", 3.0},
-            {"property_type", 3.0},
-            {"body_type", 3.0},
-            {"cpu", 3.0},
-            {"gpu", 3.0},
-            {"memory", 3.0},
-            {"ram", 3.0},
-            {"storage_capacity", 3.0},
-            {"screen_size", 3.0},
+        } else {
+            // Для однословных запросов оставляем исходные строгие параметры
+            multiMatch = map[string]interface{}{
+                "multi_match": map[string]interface{}{
+                    "query":                params.Query,
+                    "fields":               searchFields,
+                    "type":                 "best_fields",
+                    "fuzziness":            fuzziness,
+                    "operator":             "AND",
+                    "minimum_should_match": minimumShouldMatch,
+                },
+            }
         }
 
         // Добавляем прямые запросы к полям make и model в корне документа
@@ -1370,69 +1424,59 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
         boolMap["should"] = should
         boolMap["minimum_should_match"] = 1
         
-        // Создаем блоки поиска для каждого важного атрибута
-        attrQueries := make([]map[string]interface{}, 0, len(attributes))
-        for _, attr := range attributes {
-            attrQuery := map[string]interface{}{
-                "bool": map[string]interface{}{
-                    "must": []map[string]interface{}{
-                        {
-                            "term": map[string]interface{}{
-                                "attributes.attribute_name": attr.name,
-                            },
-                        },
-                        {
-                            "bool": map[string]interface{}{
-                                "should": []map[string]interface{}{
-                                    {
-                                        "match": map[string]interface{}{
-                                            "attributes.text_value": map[string]interface{}{
-                                                "query":     params.Query,
-                                                "boost":     attr.boost,
-                                                "fuzziness": "AUTO",
-                                            },
-                                        },
-                                    },
-                                    {
-                                        "match": map[string]interface{}{
-                                            "attributes.text_value_lowercase": map[string]interface{}{
-                                                "query":     strings.ToLower(params.Query),
-                                                "boost":     attr.boost,
-                                                "fuzziness": "AUTO",
-                                            },
-                                        },
-                                    },
-                                    {
-                                        "match": map[string]interface{}{
-                                            "attributes.display_value": map[string]interface{}{
-                                                "query":     params.Query,
-                                                "boost":     attr.boost * 0.8,
-                                                "fuzziness": "AUTO",
-                                            },
-                                        },
-                                    },
-                                },
-                                "minimum_should_match": 1,
-                            },
-                        },
-                    },
-                },
-            }
-            attrQueries = append(attrQueries, attrQuery)
-        }
-
-        // Создаем вложенный запрос с блоками атрибутов
+        // Создаем общий запрос для вложенных атрибутов
         nestedQuery := map[string]interface{}{
             "nested": map[string]interface{}{
                 "path": "attributes",
                 "query": map[string]interface{}{
                     "bool": map[string]interface{}{
-                        "should":               attrQueries,
+                        "should": []map[string]interface{}{
+                            {
+                                "bool": map[string]interface{}{
+                                    "must": []map[string]interface{}{
+                                        {
+                                            "term": map[string]interface{}{
+                                                "attributes.attribute_name": "make",
+                                            },
+                                        },
+                                        {
+                                            "match": map[string]interface{}{
+                                                "attributes.text_value": map[string]interface{}{
+                                                    "query": params.Query,
+                                                    "boost": 5.0,
+                                                    "fuzziness": "AUTO",
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            {
+                                "bool": map[string]interface{}{
+                                    "must": []map[string]interface{}{
+                                        {
+                                            "term": map[string]interface{}{
+                                                "attributes.attribute_name": "model",
+                                            },
+                                        },
+                                        {
+                                            "match": map[string]interface{}{
+                                                "attributes.text_value": map[string]interface{}{
+                                                    "query": params.Query,
+                                                    "boost": 4.0,
+                                                    "fuzziness": "AUTO",
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
                         "minimum_should_match": 1,
                     },
                 },
                 "score_mode": "max",
-                "boost":      3.0,
+                "boost": 3.0,
             },
         }
 
@@ -1456,12 +1500,292 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
         }
     }
     
-
+    // Добавляем фильтры категории, если указано
+    if params.CategoryID != nil && *params.CategoryID > 0 {
+        // Поиск по точному ID категории или родительской категории
+        categoryFilter := map[string]interface{}{
+            "bool": map[string]interface{}{
+                "should": []map[string]interface{}{
+                    {
+                        "term": map[string]interface{}{
+                            "category_id": *params.CategoryID,
+                        },
+                    },
+                    {
+                        "term": map[string]interface{}{
+                            "category_path_ids": *params.CategoryID,
+                        },
+                    },
+                },
+                "minimum_should_match": 1,
+            },
+        }
+        
+        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+        filter = append(filter, categoryFilter)
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+    }
+    
+    // Добавляем фильтр по цене, если указано
+    if params.PriceMin != nil && *params.PriceMin > 0 {
+        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+        filter = append(filter, map[string]interface{}{
+            "range": map[string]interface{}{
+                "price": map[string]interface{}{
+                    "gte": *params.PriceMin,
+                },
+            },
+        })
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+    }
+    
+    if params.PriceMax != nil && *params.PriceMax > 0 {
+        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+        filter = append(filter, map[string]interface{}{
+            "range": map[string]interface{}{
+                "price": map[string]interface{}{
+                    "lte": *params.PriceMax,
+                },
+            },
+        })
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+    }
+    
+    // Добавляем фильтр по состоянию товара (новый, б/у)
+    if params.Condition != "" {
+        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+        filter = append(filter, map[string]interface{}{
+            "term": map[string]interface{}{
+                "condition": params.Condition,
+            },
+        })
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+    }
+    
+    // Добавляем фильтр по городу и стране
+    if params.City != "" {
+        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+        filter = append(filter, map[string]interface{}{
+            "term": map[string]interface{}{
+                "city.keyword": params.City,
+            },
+        })
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+    }
+    
+    if params.Country != "" {
+        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+        filter = append(filter, map[string]interface{}{
+            "term": map[string]interface{}{
+                "country.keyword": params.Country,
+            },
+        })
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+    }
+    
+    // Добавляем фильтр по витрине
+    if params.StorefrontID != nil && *params.StorefrontID > 0 {
+        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+        filter = append(filter, map[string]interface{}{
+            "term": map[string]interface{}{
+                "storefront_id": *params.StorefrontID,
+            },
+        })
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+    }
+    
+    // Добавляем фильтр по статусу
+    if params.Status != "" {
+        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+        filter = append(filter, map[string]interface{}{
+            "term": map[string]interface{}{
+                "status": params.Status,
+            },
+        })
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+    }
+    
+    // Добавляем гео-фильтр для поиска по расстоянию
+    if params.Location != nil && params.Distance != "" {
+        geoFilter := map[string]interface{}{
+            "geo_distance": map[string]interface{}{
+                "distance": params.Distance,
+                "coordinates": map[string]interface{}{
+                    "lat": params.Location.Lat,
+                    "lon": params.Location.Lon,
+                },
+            },
+        }
+        
+        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+        filter = append(filter, geoFilter)
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+    }
+    
+    // Добавляем фильтры по атрибутам, если есть
+    if params.AttributeFilters != nil && len(params.AttributeFilters) > 0 {
+        for attrName, attrValue := range params.AttributeFilters {
+            // Пропускаем пустые значения
+            if attrValue == "" {
+                continue
+            }
+            
+            // Проверяем, содержит ли значение диапазон (для числовых значений)
+            if strings.Contains(attrValue, ",") {
+                parts := strings.Split(attrValue, ",")
+                if len(parts) == 2 {
+                    minVal, minErr := strconv.ParseFloat(parts[0], 64)
+                    maxVal, maxErr := strconv.ParseFloat(parts[1], 64)
+                    
+                    if minErr == nil && maxErr == nil {
+                        attrFilter := map[string]interface{}{
+                            "nested": map[string]interface{}{
+                                "path": "attributes",
+                                "query": map[string]interface{}{
+                                    "bool": map[string]interface{}{
+                                        "must": []map[string]interface{}{
+                                            {
+                                                "term": map[string]interface{}{
+                                                    "attributes.attribute_name": attrName,
+                                                },
+                                            },
+                                            {
+                                                "range": map[string]interface{}{
+                                                    "attributes.numeric_value": map[string]interface{}{
+                                                        "gte": minVal,
+                                                        "lte": maxVal,
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        }
+                        
+                        filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+                        filter = append(filter, attrFilter)
+                        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+                        
+                        continue
+                    }
+                }
+            }
+            
+            // Для обычных значений атрибутов
+            attrFilter := map[string]interface{}{
+                "nested": map[string]interface{}{
+                    "path": "attributes",
+                    "query": map[string]interface{}{
+                        "bool": map[string]interface{}{
+                            "must": []map[string]interface{}{
+                                {
+                                    "term": map[string]interface{}{
+                                        "attributes.attribute_name": attrName,
+                                    },
+                                },
+                                {
+                                    "bool": map[string]interface{}{
+                                        "should": []map[string]interface{}{
+                                            {
+                                                "match": map[string]interface{}{
+                                                    "attributes.text_value": map[string]interface{}{
+                                                        "query": attrValue,
+                                                        "fuzziness": "AUTO",
+                                                    },
+                                                },
+                                            },
+                                            {
+                                                "match": map[string]interface{}{
+                                                    "attributes.display_value": map[string]interface{}{
+                                                        "query": attrValue,
+                                                        "fuzziness": "AUTO",
+                                                    },
+                                                },
+                                            },
+                                        },
+                                        "minimum_should_match": 1,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            }
+            
+            filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+            filter = append(filter, attrFilter)
+            query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+        }
+    }
+    
+    // Настраиваем сортировку
+    if params.Sort != "" {
+        var sortField string
+        var sortOrder string
+        
+        if params.SortDirection != "" {
+            sortOrder = params.SortDirection
+        } else {
+            sortOrder = "desc" // По умолчанию по убыванию
+        }
+        
+        switch params.Sort {
+        case "date_desc":
+            sortField = "created_at"
+            sortOrder = "desc"
+        case "date_asc":
+            sortField = "created_at"
+            sortOrder = "asc"
+        case "price_desc":
+            sortField = "price"
+            sortOrder = "desc"
+        case "price_asc":
+            sortField = "price"
+            sortOrder = "asc"
+        case "distance":
+            if params.Location != nil {
+                query["sort"] = []interface{}{
+                    map[string]interface{}{
+                        "_geo_distance": map[string]interface{}{
+                            "coordinates": map[string]interface{}{
+                                "lat": params.Location.Lat,
+                                "lon": params.Location.Lon,
+                            },
+                            "order": sortOrder,
+                            "unit": "km",
+                        },
+                    },
+                }
+                return query
+            }
+            // Если нет координат, используем сортировку по умолчанию
+            sortField = "created_at"
+            sortOrder = "desc"
+        default:
+            sortField = params.Sort
+        }
+        
+        query["sort"] = []interface{}{
+            map[string]interface{}{
+                sortField: map[string]interface{}{
+                    "order": sortOrder,
+                },
+            },
+        }
+    } else {
+        // Сортировка по умолчанию - по дате создания
+        query["sort"] = []interface{}{
+            map[string]interface{}{
+                "created_at": map[string]interface{}{
+                    "order": "desc",
+                },
+            },
+        }
+    }
     
     return query
 }
-
-
 // parseSearchResponse обрабатывает ответ от OpenSearch
 func (r *Repository) parseSearchResponse(response map[string]interface{}, language string) (*search.SearchResult, error) {
 	result := &search.SearchResult{
