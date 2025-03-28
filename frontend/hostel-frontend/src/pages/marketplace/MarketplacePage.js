@@ -22,7 +22,8 @@ import {
     Fab,
     Tooltip,
     ToggleButtonGroup,
-    ToggleButton
+    ToggleButton,
+    Typography
 }
     from '@mui/material';
 import { Plus, Search, X, List, Grid as GridIcon } from 'lucide-react';
@@ -40,34 +41,78 @@ import axios from '../../api/axios';
 import InfiniteScroll from '../../components/marketplace/InfiniteScroll';
 import MarketplaceListingsList from '../../components/marketplace/MarketplaceListingsList';
 
-const MobileListingGrid = ({ listings }) => {
+const MobileListingGrid = ({ listings, viewMode = 'grid' }) => {
     const navigate = useNavigate();
+    const { t } = useTranslation('marketplace');
 
-    return (
-        <Box sx={{ px: 1 }}>
-            <Grid container spacing={1}>
+    // Проверяем, какой режим отображения выбран
+    if (viewMode === 'list') {
+        return (
+            <Box sx={{ px: 1 }}>
                 {listings.map((listing, index) => {
-                    // Создаем уникальный идентификатор из других полей, если ID = 0
                     const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
                     return (
-                        <Grid item xs={12} sm={6} md={4} key={effectiveId}>
-                            <div onClick={() => {
+                        <Box 
+                            key={effectiveId} 
+                            onClick={() => {
                                 if (listing.id) {
                                     navigate(`/marketplace/listings/${listing.id}`);
                                 } else {
-                                    // Используем стандартный поиск для получения объявления по другим параметрам
                                     const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
                                     console.log("Переход к объявлению с временным URL:", url);
-                                    // Можно показать уведомление пользователю, что фильтр применен
                                 }
-                            }}>
-                                <ListingCard listing={listing} />
-                            </div>
-                        </Grid>
+                            }}
+                            sx={{ mb: 1 }}
+                        >
+                            <MobileListingCard listing={listing} viewMode="list" />
+                        </Box>
                     );
                 })}
-            </Grid>
-        </Box>
+                
+                {listings.length === 0 && (
+                    <Box sx={{ py: 4, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary">
+                            {t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })}
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
+        );
+    }
+    
+    // Режим сетки (grid) - стандартное отображение
+    return (
+        <Grid container spacing={1}>
+            {listings.map((listing, index) => {
+                const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                return (
+                    <Grid item xs={6} key={effectiveId}>
+                        <Box 
+                            onClick={() => {
+                                if (listing.id) {
+                                    navigate(`/marketplace/listings/${listing.id}`);
+                                } else {
+                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                    console.log("Переход к объявлению с временным URL:", url);
+                                }
+                            }}
+                        >
+                            <ListingCard listing={listing} isMobile={true} />
+                        </Box>
+                    </Grid>
+                );
+            })}
+            
+            {listings.length === 0 && (
+                <Grid item xs={12}>
+                    <Box sx={{ py: 4, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary">
+                            {t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })}
+                        </Typography>
+                    </Box>
+                </Grid>
+            )}
+        </Grid>
     );
 };
 
@@ -735,10 +780,26 @@ const MarketplacePage = () => {
                         noMoreItemsText={t('listings.noMoreListings', { defaultValue: 'Больше нет объявлений' })}
                     >
                         {isMobile ? (
-                            <MobileListingGrid listings={listings} />
+                            <MobileListingGrid listings={listings} viewMode={viewMode} />
                         ) : viewMode === 'grid' ? (
                             <Grid container spacing={3}>
-                                {/* ... */}
+                                {listings.map((listing, index) => {
+                                    const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                                    return (
+                                        <Grid item xs={12} sm={6} md={4} key={effectiveId}>
+                                            <Box onClick={() => {
+                                                if (listing.id) {
+                                                    navigate(`/marketplace/listings/${listing.id}`);
+                                                } else {
+                                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                                    console.log("Переход к объявлению с временным URL:", url);
+                                                }
+                                            }}>
+                                                <ListingCard listing={listing} />
+                                            </Box>
+                                        </Grid>
+                                    );
+                                })}
                             </Grid>
                         ) : (
                             <MarketplaceListingsList
@@ -750,7 +811,6 @@ const MarketplacePage = () => {
                         )}
                     </InfiniteScroll>
                 )}
-
             </>
         );
     };
@@ -763,6 +823,15 @@ const MarketplacePage = () => {
                     filtersCount={getActiveFiltersCount()}
                     onSearch={(query) => handleFilterChange({ query })}
                     searchValue={filters.query}
+                    // Добавляем два новых пропса:
+                    viewMode={viewMode}
+                    onViewModeChange={(e, newMode) => {
+                        if (newMode !== null) {
+                            setViewMode(newMode);
+                            // Сохраняем предпочтение пользователя в localStorage
+                            localStorage.setItem('marketplace-view-mode', newMode);
+                        }
+                    }}
                 />
 
                 <Box sx={{

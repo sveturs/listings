@@ -144,7 +144,7 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
             {!isMapAvailable && filters.distance && (
                 <Box sx={{ px: 2, py: 1, color: 'warning.main' }}>
                     <Typography variant="caption">
-                        {t('listings.map.needLocation')}
+                        {t('listings.map.needLocation')} 
                     </Typography>
                 </Box>
             )}
