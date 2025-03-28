@@ -731,24 +731,24 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 
     // Преобразуем ServiceParams в SearchParams для передачи в репозиторий
     searchParams := &search.SearchParams{
-        Query:            params.Query,
-        Page:             params.Page,
-        Size:             params.Size,
-        Aggregations:     params.Aggregations,
-        Language:         params.Language,
-        AttributeFilters: params.AttributeFilters,
-        CategoryID:       nil,
-        PriceMin:         nil,
-        PriceMax:         nil,
-        Condition:        params.Condition,
-        City:             params.City,
-        Country:          params.Country,
-        StorefrontID:     nil,
-        Sort:             params.Sort,
-        SortDirection:    params.SortDirection,
-        Distance:         params.Distance,
-        CustomQuery:      nil, // Не используем CustomQuery, чтобы активировать buildSearchQuery
-    }
+		Query:            params.Query,
+		Page:             params.Page,
+		Size:             params.Size,
+		Aggregations:     params.Aggregations,
+		Language:         params.Language,
+		AttributeFilters: params.AttributeFilters,
+		CategoryID:       nil,
+		PriceMin:         nil,
+		PriceMax:         nil,
+		Condition:        params.Condition,
+		City:             params.City,
+		Country:          params.Country,
+		StorefrontID:     nil,
+		Sort:             params.Sort,          // Здесь передается поле sort_by
+		SortDirection:    params.SortDirection, // А здесь направление сортировки
+		Distance:         params.Distance,
+		CustomQuery:      nil,
+	}
 
     // Преобразуем числовые значения в указатели для SearchParams
     if params.CategoryID != "" {

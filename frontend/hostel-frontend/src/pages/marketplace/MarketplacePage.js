@@ -324,53 +324,65 @@ const MarketplacePage = () => {
         });
     }, [debouncedFetchListings, setSearchParams]);
 
-    // Обработчик сортировки
-    const handleSortChange = (field, direction) => {
-        console.log(`Sorting changed: ${field} ${direction}`);
-        setSortField(field);
-        setSortDirection(direction);
-
-        // Преобразуем поле сортировки в формат, понятный API
-        let apiSortField;
-        switch (field) {
-            case 'created_at':
-                apiSortField = 'date';
-                break;
-            case 'title':
-                apiSortField = 'title';
-                break;
-            case 'price':
-                apiSortField = 'price';
-                break;
-            case 'location':
-                apiSortField = 'location';
-                break;
-            default:
-                apiSortField = 'date';
-        }
-
-        // Создаем новый объект фильтров с обновленной сортировкой
-        const updatedFilters = {
-            ...filters,
-            sort_by: `${apiSortField}_${direction}`
-        };
-
-        // Обновляем URL-параметры
-        const nextParams = new URLSearchParams(searchParams);
-        nextParams.set('sort_by', `${apiSortField}_${direction}`);
-        setSearchParams(nextParams);
-
-        // Обновляем состояние фильтров
-        setFilters(updatedFilters);
-
-        // Сбрасываем данные для загрузки с первой страницы
-        setListings([]);
-        setPage(1);
-        setHasMoreListings(true);
-
-        // Выполняем запрос с новыми фильтрами
-        fetchListings(updatedFilters);
+// Обработчик сортировки
+const handleSortChange = (field, direction) => {
+    console.log(`Sorting changed: ${field} ${direction}`);
+    
+    // Сохраняем текущее состояние для отладки
+    console.log(`Предыдущее состояние - поле: ${sortField}, направление: ${sortDirection}`);
+    
+    // Обновляем состояние компонента
+    setSortField(field);
+    setSortDirection(direction);
+    
+    // Явное преобразование полей UI в поля API
+    let apiSortField;
+    switch (field) {
+        case 'created_at':
+            apiSortField = 'date';
+            break;
+        case 'title':
+            apiSortField = 'title';
+            break;
+        case 'price':
+            apiSortField = 'price';
+            break;
+        case 'reviews':
+            apiSortField = 'rating';
+            break;
+        default:
+            apiSortField = 'date';
+    }
+    
+    // Формируем параметр сортировки в формате API
+    const sortParam = `${apiSortField}_${direction}`;
+    console.log(`Итоговый параметр сортировки: ${sortParam}`);
+    
+    // Создаем обновленные фильтры
+    const updatedFilters = {
+        ...filters,
+        sort_by: sortParam  // Явно устанавливаем sort_by
     };
+    
+    console.log(`Обновленные фильтры:`, updatedFilters);
+    
+    // Обновляем URL
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('sort_by', sortParam);
+    setSearchParams(nextParams);
+    
+    // Обновляем фильтры в состоянии
+    setFilters(updatedFilters);
+    
+    // Сбрасываем состояние пагинации
+    setPage(1);
+    setListings([]);
+    setHasMoreListings(true);
+    
+    // Выполняем запрос с новыми фильтрами
+    // ВАЖНО: Передаем updatedFilters напрямую, а не ссылаемся на filters
+    fetchListings(updatedFilters);
+};
 
     // Обработчик сброса атрибутных фильтров
     const resetAttributeFilters = useCallback(() => {

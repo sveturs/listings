@@ -208,73 +208,74 @@ const runAnimation = (startPositions, endPositions, duration = 1500, afterComple
 };
 
 // Общая функция для анимации, используемая для hover и touch
-  const animateShuffle = () => {
-    setHovering(true);
-    
-    // Теперь все плитки имеют иконки, так что выбираем из всех
-    const tilesWithIcons = positions
-      .map((tile, index) => ({ tile, index }));
-    
-    // Выбираем случайную плитку
-    const randomIconTile = tilesWithIcons[Math.floor(Math.random() * tilesWithIcons.length)];
-    const randomIndex = randomIconTile.index;
-    
-    setRandomTile(randomIndex);
-    
-    // Создаем копию позиций и перемешиваем
-    const newPositions = [...positions].map(pos => ({...pos}));
-    
-    // Перемешиваем плитки, кроме выбранной
-    for (let i = newPositions.length - 1; i > 0; i--) {
-      if (i === randomIndex) continue; // Пропускаем выбранную плитку
-      
-      const j = Math.floor(Math.random() * (i + 1));
-      if (j === randomIndex) continue; // Пропускаем выбранную плитку
-      
-      // Меняем местами позиции x и y
-      const tempX = newPositions[i].x;
-      const tempY = newPositions[i].y;
-      newPositions[i].x = newPositions[j].x;
-      newPositions[i].y = newPositions[j].y;
-      newPositions[j].x = tempX;
-      newPositions[j].y = tempY;
-    }
-    
-    // Запоминаем начальное положение выбранной плитки
-    const selectedTileOriginalX = newPositions[randomIndex].x;
-    const selectedTileOriginalY = newPositions[randomIndex].y;
-    
-    // Перемещаем выбранную плитку в центр в целевой позиции
-    const centerX = 74;
-    const centerY = 74;
-    
-    // Находим плитку, которая оказалась в центре после перемешивания
-    const currentCenterTileIndex = newPositions.findIndex((tile, idx) => 
-      idx !== randomIndex && tile.x === centerX && tile.y === centerY
-    );
-    
-    // Если какая-то плитка уже в центре, перемещаем её на место выбранной
-    if (currentCenterTileIndex !== -1) {
-      newPositions[currentCenterTileIndex].x = selectedTileOriginalX;
-      newPositions[currentCenterTileIndex].y = selectedTileOriginalY;
-    }
-    
-    // Устанавливаем целевую позицию для выбранной плитки - центр
-    newPositions[randomIndex].x = centerX;
-    newPositions[randomIndex].y = centerY;
-    
-    // Увеличиваем выбранную плитку до 3.2
-    newPositions[randomIndex].scale = 3.2;
-    
-    // Сохраняем целевые позиции
-    setTargetPositions(newPositions);
-    
-    // Создаем начальные позиции для анимации
-    const startPositions = [...animatingPositions].map(pos => ({...pos}));
-    
-    // Запускаем анимацию
-    runAnimation(startPositions, newPositions);
-  };
+const animateShuffle = () => {
+  setHovering(true);
+
+  // Проверяем, что positions не пустой
+  if (!positions || positions.length === 0) {
+    console.warn("Positions array is not initialized yet.");
+    return;
+  }
+
+  const tilesWithIcons = positions
+    .map((tile, index) => ({ tile, index }));
+
+  // Выбираем случайную плитку
+  const randomIconTile = tilesWithIcons[Math.floor(Math.random() * tilesWithIcons.length)];
+  
+  // Проверяем, что randomIconTile определён
+  if (!randomIconTile) {
+    console.error("No valid tile selected for animation.");
+    return;
+  }
+
+  const randomIndex = randomIconTile.index;
+
+  setRandomTile(randomIndex);
+
+  // Создаем копию позиций и перемешиваем
+  const newPositions = [...positions].map(pos => ({ ...pos }));
+
+  // Перемешиваем плитки, кроме выбранной
+  for (let i = newPositions.length - 1; i > 0; i--) {
+    if (i === randomIndex) continue;
+
+    const j = Math.floor(Math.random() * (i + 1));
+    if (j === randomIndex) continue;
+
+    const tempX = newPositions[i].x;
+    const tempY = newPositions[i].y;
+    newPositions[i].x = newPositions[j].x;
+    newPositions[i].y = newPositions[j].y;
+    newPositions[j].x = tempX;
+    newPositions[j].y = tempY;
+  }
+
+  const selectedTileOriginalX = newPositions[randomIndex].x;
+  const selectedTileOriginalY = newPositions[randomIndex].y;
+
+  const centerX = 74;
+  const centerY = 74;
+
+  const currentCenterTileIndex = newPositions.findIndex((tile, idx) =>
+    idx !== randomIndex && tile.x === centerX && tile.y === centerY
+  );
+
+  if (currentCenterTileIndex !== -1) {
+    newPositions[currentCenterTileIndex].x = selectedTileOriginalX;
+    newPositions[currentCenterTileIndex].y = selectedTileOriginalY;
+  }
+
+  newPositions[randomIndex].x = centerX;
+  newPositions[randomIndex].y = centerY;
+  newPositions[randomIndex].scale = 3.2;
+
+  setTargetPositions(newPositions);
+
+  const startPositions = [...animatingPositions].map(pos => ({ ...pos }));
+
+  runAnimation(startPositions, newPositions);
+};
   
   // Возврат к исходному состоянию
   const resetAnimation = () => {

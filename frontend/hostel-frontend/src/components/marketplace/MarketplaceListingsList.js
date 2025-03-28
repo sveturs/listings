@@ -18,7 +18,8 @@ import {
   useMediaQuery,
   TableSortLabel
 } from '@mui/material';
-import { Edit, Trash2, Eye, MapPin, Calendar, Percent, ArrowUpDown } from 'lucide-react';
+import { Edit, Trash2, Eye, Calendar, Percent, ArrowUpDown, Star } from 'lucide-react';
+import axios from '../../api/axios';
 
 // Вспомогательные функции для форматирования
 const formatPrice = (price) => {
@@ -32,6 +33,12 @@ const formatPrice = (price) => {
 const formatDate = (dateString) => {
   if (!dateString) return '';
   return new Date(dateString).toLocaleDateString();
+};
+
+// Вспомогательная функция для форматирования числа отзывов
+const formatReviewCount = (count) => {
+  if (count === undefined || count === null) return '-';
+  return count.toString();
 };
 
 const getImageUrl = (listing) => {
@@ -73,10 +80,69 @@ const MarketplaceListingsList = ({
   const [order, setOrder] = useState(initialSortOrder);
   const [orderBy, setOrderBy] = useState(initialSortField);
   
+  // Состояние для хранения данных о рейтингах
+  const [listingsWithRatings, setListingsWithRatings] = useState([]);
+  const [loadingRatings, setLoadingRatings] = useState(false);
+  
+  // Загрузка рейтингов для объявлений
+  useEffect(() => {
+    if (!listings || listings.length === 0) {
+      setListingsWithRatings([]);
+      return;
+    }
+    
+    // Функция для загрузки рейтингов
+    const fetchRatings = async () => {
+      setLoadingRatings(true);
+      
+      try {
+        // Создаем копию списка объявлений
+        const enhancedListings = [...listings];
+        
+        // Получаем рейтинги для каждого объявления
+        const ratingPromises = listings.map(listing => 
+          axios.get(`/api/v1/entity/listing/${listing.id}/stats`)
+            .then(response => {
+              const stats = response.data?.data;
+              return {
+                id: listing.id, 
+                review_count: stats?.total_reviews || 0,
+                average_rating: stats?.average_rating || 0
+              };
+            })
+            .catch(() => ({ id: listing.id, review_count: 0, average_rating: 0 }))
+        );
+        
+        // Ждем завершения всех запросов
+        const ratingsResults = await Promise.all(ratingPromises);
+        
+        // Добавляем информацию о рейтингах к объявлениям
+        ratingsResults.forEach(ratingData => {
+          const listingIndex = enhancedListings.findIndex(l => l.id === ratingData.id);
+          if (listingIndex !== -1) {
+            enhancedListings[listingIndex] = {
+              ...enhancedListings[listingIndex],
+              review_count: ratingData.review_count,
+              average_rating: ratingData.average_rating
+            };
+          }
+        });
+        
+        setListingsWithRatings(enhancedListings);
+      } catch (error) {
+        console.error('Ошибка при загрузке рейтингов:', error);
+        setListingsWithRatings(listings); // Используем исходные данные без рейтингов
+      } finally {
+        setLoadingRatings(false);
+      }
+    };
+    
+    fetchRatings();
+  }, [listings]);
  
   // Синхронизация состояния сортировки с фильтрами
   // Извлекаем текущее направление сортировки из значения sort_by
-useEffect(() => {
+  useEffect(() => {
     // Если есть sort_by в формате field_direction
     if (filters && filters.sort_by) {
         const sortParts = filters.sort_by.split('_');
@@ -92,8 +158,8 @@ useEffect(() => {
                     break;
                 case 'price':
                 case 'title':
-                case 'location':
-                    setOrderBy(field);
+                case 'rating':
+                    setOrderBy(field === 'rating' ? 'reviews' : field);
                     break;
                 default:
                     setOrderBy('created_at');
@@ -104,12 +170,12 @@ useEffect(() => {
             }
         }
     }
-}, [filters]);
+  }, [filters]);
   
   // Адаптация для мобильных: скрываем некоторые колонки
   const columns = isMobile 
     ? ['image', 'title', 'price'] 
-    : ['image', 'title', 'price', 'location', 'date'];
+    : ['image', 'title', 'price', 'reviews', 'date'];
 
   // Проверяем, выбраны ли все элементы
   const isAllSelected = listings.length > 0 && selectedItems.length === listings.length;
@@ -126,11 +192,15 @@ useEffect(() => {
     setOrder(newOrder);
     setOrderBy(property);
     
+    // Оставляем это неизменным для консистентности UI
+    console.log(`Изменение сортировки: поле=${property}, порядок=${newOrder}`);
+    
     // Если предоставлен колбэк для внешней сортировки, вызываем его
     if (onSortChange) {
-      onSortChange(property, newOrder);
+        // Явно передаем нетронутые параметры в родительский компонент
+        onSortChange(property, newOrder);
     }
-  };
+};
   
   // Функция для создания props для заголовка с сортировкой
   const createSortHandler = (property) => () => {
@@ -154,6 +224,9 @@ useEffect(() => {
     }
     return null;
   };
+
+  // Используем листинги с рейтингами, если они загружены, иначе используем исходные листинги
+  const displayListings = listingsWithRatings.length > 0 ? listingsWithRatings : listings;
 
   return (
     <TableContainer component={Paper} elevation={0} variant="outlined">
@@ -198,14 +271,14 @@ useEffect(() => {
               </TableCell>
             )}
             
-            {columns.includes('location') && (
-              <TableCell>
+            {columns.includes('reviews') && (
+              <TableCell align="center">
                 <TableSortLabel
-                  active={orderBy === 'location'}
-                  direction={orderBy === 'location' ? order : 'asc'}
-                  onClick={createSortHandler('location')}
+                  active={orderBy === 'reviews'}
+                  direction={orderBy === 'reviews' ? order : 'asc'}
+                  onClick={createSortHandler('reviews')}
                 >
-                  {t('listings.table.location')}
+                  {t('listings.table.reviews', { defaultValue: 'Отзывы' })}
                 </TableSortLabel>
               </TableCell>
             )}
@@ -225,7 +298,7 @@ useEffect(() => {
         </TableHead>
         
         <TableBody>
-          {listings.map((listing) => {
+          {displayListings.map((listing) => {
             const isSelected = selectedItems.includes(listing.id);
             const discount = getDiscountInfo(listing);
             
@@ -298,13 +371,30 @@ useEffect(() => {
                   </TableCell>
                 )}
                 
-                {columns.includes('location') && (
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <MapPin size={16} />
-                      <Typography variant="body2">
-                        {listing.city || listing.location || t('listings.table.noLocation')}
-                      </Typography>
+                {columns.includes('reviews') && (
+                  <TableCell align="center">
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      {(listing.review_count !== undefined && listing.review_count > 0) ? (
+                        <>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Typography variant="body2" fontWeight="medium">
+                              {listing.average_rating !== undefined ? listing.average_rating.toFixed(1) : '-'}
+                            </Typography>
+                            <Star 
+                              size={16} 
+                              fill={listing.average_rating > 0 ? theme.palette.warning.main : 'none'} 
+                              color={listing.average_rating > 0 ? theme.palette.warning.main : theme.palette.text.disabled} 
+                            />
+                          </Box>
+                          <Typography variant="caption" color="text.secondary">
+                            {listing.review_count} {t('reviews.count', { defaultValue: 'отзывов', count: listing.review_count })}
+                          </Typography>
+                        </>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          {t('reviews.none', { defaultValue: 'Нет отзывов' })}
+                        </Typography>
+                      )}
                     </Box>
                   </TableCell>
                 )}
@@ -323,7 +413,7 @@ useEffect(() => {
             );
           })}
           
-          {listings.length === 0 && (
+          {displayListings.length === 0 && (
             <TableRow>
               <TableCell colSpan={showSelection ? columns.length + 1 : columns.length} align="center">
                 <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>

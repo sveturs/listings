@@ -1686,24 +1686,24 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
     log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
 
     params := &search.ServiceParams{
-        Query:            c.Query("q", ""),
-        CategoryID:       c.Query("category_id", ""),
-        Condition:        c.Query("condition", ""),
-        City:             c.Query("city", ""),
-        Country:          c.Query("country", ""),
-        StorefrontID:     c.Query("storefront_id", ""),
-        Sort:             c.Query("sort_by", ""),
-        SortDirection:    c.Query("sort_direction", "desc"),
-        Distance:         c.Query("distance", ""),
-        Page:             c.QueryInt("page", 1),
-        Size:             c.QueryInt("size", 20),
-        Language:         c.Query("language", ""),
-        AttributeFilters: attributeFilters,
-    }
+		Query:            c.Query("q", ""),
+		CategoryID:       c.Query("category_id", ""),
+		Condition:        c.Query("condition", ""),
+		City:             c.Query("city", ""),
+		Country:          c.Query("country", ""),
+		StorefrontID:     c.Query("storefront_id", ""),
+		Sort:             c.Query("sort_by", ""),
+		SortDirection:    c.Query("sort_direction", "desc"),
+		Distance:         c.Query("distance", ""),
+		Page:             c.QueryInt("page", 1),
+		Size:             c.QueryInt("size", 20),
+		Language:         c.Query("language", ""),
+		AttributeFilters: attributeFilters,
+	}
     
     // Проверяем и логируем параметры пагинации
     log.Printf("Параметры пагинации: page=%d, size=%d", params.Page, params.Size)
-    
+    log.Printf("Параметр сортировки получен из запроса: %s", params.Sort)
     // Устанавливаем разумные ограничения на параметры пагинации
     if params.Page < 1 {
         params.Page = 1
