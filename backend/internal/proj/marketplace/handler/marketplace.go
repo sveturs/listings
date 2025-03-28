@@ -207,194 +207,198 @@ var (
 
 // GetSimilarListings возвращает похожие объявления
 func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
-	listingID, err := c.ParamsInt("id")
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
-	}
+    listingID, err := c.ParamsInt("id")
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+    }
 
-	limit := c.QueryInt("limit", 8) // По умолчанию ограничиваем 8 похожими объявлениями
+    // Получаем параметры пагинации
+    page := c.QueryInt("page", 1)
+    limit := c.QueryInt("limit", 8) // По умолчанию ограничиваем 8 похожими объявлениями
+    
+    // Расчет смещения для пагинации
+    offset := (page - 1) * limit
 
-	// Получаем исходное объявление
-	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
-	if err != nil {
-		log.Printf("Ошибка при получении объявления: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить объявление")
-	}
+    // Получаем исходное объявление
+    listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+    if err != nil {
+        log.Printf("Ошибка при получении объявления: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить объявление")
+    }
 
-	// Формируем запрос для расширенного поиска в OpenSearch
-	// Используем multi-match для поиска по заголовку и описанию
-	matchQuery := make([]map[string]interface{}, 0)
+    // Формируем запрос для расширенного поиска в OpenSearch
+    // Используем multi-match для поиска по заголовку и описанию
+    matchQuery := make([]map[string]interface{}, 0)
 
-	// Добавляем поиск по названию объявления
-	if listing.Title != "" {
-		// Добавляем запрос на похожие названия с небольшой нечеткостью
-		matchQuery = append(matchQuery, map[string]interface{}{
-			"match": map[string]interface{}{
-				"title": map[string]interface{}{
-					"query":     listing.Title,
-					"boost":     3.0, // Высокий вес для названия
-					"fuzziness": "AUTO",
-				},
-			},
-		})
-	}
+    // Добавляем поиск по названию объявления
+    if listing.Title != "" {
+        // Добавляем запрос на похожие названия с небольшой нечеткостью
+        matchQuery = append(matchQuery, map[string]interface{}{
+            "match": map[string]interface{}{
+                "title": map[string]interface{}{
+                    "query":     listing.Title,
+                    "boost":     3.0, // Высокий вес для названия
+                    "fuzziness": "AUTO",
+                },
+            },
+        })
+    }
 
-	// Если есть описание, добавляем его в поиск
-	if len(listing.Description) > 20 {
-		// Берем только первые 200 символов для более точного соответствия
-		descriptionExcerpt := listing.Description
-		if len(descriptionExcerpt) > 200 {
-			descriptionExcerpt = descriptionExcerpt[:200]
-		}
+    // Если есть описание, добавляем его в поиск
+    if len(listing.Description) > 20 {
+        // Берем только первые 200 символов для более точного соответствия
+        descriptionExcerpt := listing.Description
+        if len(descriptionExcerpt) > 200 {
+            descriptionExcerpt = descriptionExcerpt[:200]
+        }
 
-		matchQuery = append(matchQuery, map[string]interface{}{
-			"match": map[string]interface{}{
-				"description": map[string]interface{}{
-					"query":     descriptionExcerpt,
-					"boost":     1.0,
-					"fuzziness": "AUTO",
-				},
-			},
-		})
-	}
+        matchQuery = append(matchQuery, map[string]interface{}{
+            "match": map[string]interface{}{
+                "description": map[string]interface{}{
+                    "query":     descriptionExcerpt,
+                    "boost":     1.0,
+                    "fuzziness": "AUTO",
+                },
+            },
+        })
+    }
 
-	// Строим сложный запрос для OpenSearch
-	query := map[string]interface{}{
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"should": matchQuery,
-				"must": []map[string]interface{}{
-					{
-						"term": map[string]interface{}{
-							"category_id": listing.CategoryID,
-						},
-					},
-					{
-						"term": map[string]interface{}{
-							"status": "active",
-						},
-					},
-				},
-				"must_not": []map[string]interface{}{
-					{
-						"term": map[string]interface{}{
-							"id": listingID, // Исключаем текущее объявление
-						},
-					},
-				},
-				"minimum_should_match": 1,
-			},
-		},
-		"size": limit,
-	}
+    // Строим сложный запрос для OpenSearch
+    query := map[string]interface{}{
+        "query": map[string]interface{}{
+            "bool": map[string]interface{}{
+                "should": matchQuery,
+                "must": []map[string]interface{}{
+                    {
+                        "term": map[string]interface{}{
+                            "category_id": listing.CategoryID,
+                        },
+                    },
+                    {
+                        "term": map[string]interface{}{
+                            "status": "active",
+                        },
+                    },
+                },
+                "must_not": []map[string]interface{}{
+                    {
+                        "term": map[string]interface{}{
+                            "id": listingID, // Исключаем текущее объявление
+                        },
+                    },
+                },
+                "minimum_should_match": 1,
+            },
+        },
+        "from": offset,
+        "size": limit,
+    }
 
-	// Добавляем ценовой диапазон если есть цена
-	if listing.Price > 0 {
-		// Определяем диапазон цен (например, ±30% от текущей цены)
-		minPrice := listing.Price * 0.7
-		maxPrice := listing.Price * 1.3
+    // Добавляем ценовой диапазон если есть цена
+    if listing.Price > 0 {
+        // Определяем диапазон цен (например, ±30% от текущей цены)
+        minPrice := listing.Price * 0.7
+        maxPrice := listing.Price * 1.3
 
-		priceQuery := map[string]interface{}{
-			"range": map[string]interface{}{
-				"price": map[string]interface{}{
-					"gte":   minPrice,
-					"lte":   maxPrice,
-					"boost": 1.5, // Придаем вес объявлениям с похожей ценой
-				},
-			},
-		}
+        priceQuery := map[string]interface{}{
+            "range": map[string]interface{}{
+                "price": map[string]interface{}{
+                    "gte":   minPrice,
+                    "lte":   maxPrice,
+                    "boost": 1.5, // Придаем вес объявлениям с похожей ценой
+                },
+            },
+        }
 
-		shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
-		shouldClause = append(shouldClause, priceQuery)
-		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
-	}
+        shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
+        shouldClause = append(shouldClause, priceQuery)
+        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
+    }
 
-	// Учитываем атрибуты для повышения релевантности
-	if len(listing.Attributes) > 0 {
-		for _, attr := range listing.Attributes {
-			// Выбираем только значимые атрибуты
-			if isSignificantAttribute(attr.AttributeName) && attr.DisplayValue != "" {
-				attrQuery := map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "attributes",
-						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"attributes.attribute_name": attr.AttributeName,
-										},
-									},
-									{
-										"match": map[string]interface{}{
-											"attributes.display_value": map[string]interface{}{
-												"query": attr.DisplayValue,
-												"boost": 2.0, // Высокий вес для совпадения по атрибутам
-											},
-										},
-									},
-								},
-							},
-						},
-						"boost": 2.5,
-					},
-				}
+    // Учитываем атрибуты для повышения релевантности
+    if len(listing.Attributes) > 0 {
+        for _, attr := range listing.Attributes {
+            // Выбираем только значимые атрибуты
+            if isSignificantAttribute(attr.AttributeName) && attr.DisplayValue != "" {
+                attrQuery := map[string]interface{}{
+                    "nested": map[string]interface{}{
+                        "path": "attributes",
+                        "query": map[string]interface{}{
+                            "bool": map[string]interface{}{
+                                "must": []map[string]interface{}{
+                                    {
+                                        "term": map[string]interface{}{
+                                            "attributes.attribute_name": attr.AttributeName,
+                                        },
+                                    },
+                                    {
+                                        "match": map[string]interface{}{
+                                            "attributes.display_value": map[string]interface{}{
+                                                "query": attr.DisplayValue,
+                                                "boost": 2.0, // Высокий вес для совпадения по атрибутам
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        "boost": 2.5,
+                    },
+                }
 
-				shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
-				shouldClause = append(shouldClause, attrQuery)
-				query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
-			}
-		}
-	}
+                shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
+                shouldClause = append(shouldClause, attrQuery)
+                query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
+            }
+        }
+    }
 
-	// Формируем параметры поиска для OpenSearch
-	searchParams := &search.SearchParams{
-		Page:        1,
-		Size:        limit,
-		CustomQuery: query,
-	}
+    // Формируем параметры поиска для OpenSearch
+    searchParams := &search.SearchParams{
+        Page:        page,
+        Size:        limit,
+        CustomQuery: query,
+    }
 
-	// Выполняем поиск с использованием OpenSearch
-	var similarListings []*models.MarketplaceListing
-	result, err := h.marketplaceService.Storage().SearchListings(c.Context(), searchParams)
+    // Выполняем поиск с использованием OpenSearch
+    var similarListings []*models.MarketplaceListing
+    result, err := h.marketplaceService.Storage().SearchListings(c.Context(), searchParams)
 
-	if err != nil {
-		log.Printf("Ошибка поиска похожих объявлений через OpenSearch: %v", err)
+    if err != nil {
+        log.Printf("Ошибка поиска похожих объявлений через OpenSearch: %v", err)
 
-		// Если OpenSearch поиск не удался, используем запасной вариант
-		// с простым поиском по категории
-		fallbackParams := &search.ServiceParams{
-			CategoryID: strconv.Itoa(listing.CategoryID),
-			Size:       limit + 1,
-			Page:       1,
-			Sort:       "date_desc",
-		}
+        // Если OpenSearch поиск не удался, используем запасной вариант
+        // с простым поиском по категории
+        fallbackParams := &search.ServiceParams{
+            CategoryID: strconv.Itoa(listing.CategoryID),
+            Size:       limit,
+            Page:       page,
+            Sort:       "date_desc",
+        }
 
-		fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
-		if fallbackErr != nil {
-			log.Printf("Ошибка запасного поиска: %v", fallbackErr)
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить похожие объявления")
-		}
+        fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
+        if fallbackErr != nil {
+            log.Printf("Ошибка запасного поиска: %v", fallbackErr)
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить похожие объявления")
+        }
 
-		// Фильтруем результаты, убирая исходное объявление
-		for _, item := range fallbackResult.Items {
-			if item.ID != listingID {
-				similarListings = append(similarListings, item)
-				if len(similarListings) >= limit {
-					break
-				}
-			}
-		}
-	} else {
-		// Используем результаты из OpenSearch
-		similarListings = result.Listings
-	}
+        // Фильтруем результаты, убирая исходное объявление
+        for _, item := range fallbackResult.Items {
+            if item.ID != listingID {
+                similarListings = append(similarListings, item)
+            }
+        }
+    } else {
+        // Используем результаты из OpenSearch
+        similarListings = result.Listings
+    }
 
-	log.Printf("Найдено %d похожих объявлений для объявления ID=%d", len(similarListings), listingID)
+    log.Printf("Найдено %d похожих объявлений для объявления ID=%d (страница %d, лимит %d)", 
+        len(similarListings), listingID, page, limit)
 
-	return utils.SuccessResponse(c, similarListings)
+    // Возвращаем данные с поддержкой пагинации
+    return utils.SuccessResponse(c, similarListings)
 }
-
 // isSignificantAttribute определяет, является ли атрибут значимым для поиска похожих объявлений
 func isSignificantAttribute(attrName string) bool {
 	// Список значимых атрибутов, влияющих на определение похожести
@@ -1660,197 +1664,196 @@ func (h *MarketplaceHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 		"data": results,
 	})
 }
+// Обновите метод в backend/internal/proj/marketplace/handler/marketplace.go
+
 func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
-	// Получаем параметры поиска
-	log.Printf("Все параметры запроса: %+v", c.Queries())
+    // Получаем параметры поиска
+    log.Printf("Все параметры запроса: %+v", c.Queries())
 
-	attributeFilters := make(map[string]string)
+    attributeFilters := make(map[string]string)
 
-	// Более надежный способ извлечения атрибутов - проходим по всем параметрам запроса
-	c.Context().QueryArgs().VisitAll(func(key, value []byte) {
-		keyStr := string(key)
-		if strings.HasPrefix(keyStr, "attr_") {
-			attrName := strings.TrimPrefix(keyStr, "attr_")
-			valueStr := string(value)
-			attributeFilters[attrName] = valueStr
-			log.Printf("Извлечен атрибут из запроса: %s = %s", attrName, valueStr)
-		}
-	})
+    // Более надежный способ извлечения атрибутов - проходим по всем параметрам запроса
+    c.Context().QueryArgs().VisitAll(func(key, value []byte) {
+        keyStr := string(key)
+        if strings.HasPrefix(keyStr, "attr_") {
+            attrName := strings.TrimPrefix(keyStr, "attr_")
+            valueStr := string(value)
+            attributeFilters[attrName] = valueStr
+            log.Printf("Извлечен атрибут из запроса: %s = %s", attrName, valueStr)
+        }
+    })
 
-	log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
+    log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
 
-	params := &search.ServiceParams{
-		Query:            c.Query("q", ""),
-		CategoryID:       c.Query("category_id", ""),
-		Condition:        c.Query("condition", ""),
-		City:             c.Query("city", ""),
-		Country:          c.Query("country", ""),
-		StorefrontID:     c.Query("storefront_id", ""),
-		Sort:             c.Query("sort_by", ""),
-		SortDirection:    c.Query("sort_direction", "desc"),
-		Distance:         c.Query("distance", ""),
-		Page:             c.QueryInt("page", 1),
-		Size:             c.QueryInt("size", 20),
-		Language:         c.Query("language", ""),
-		AttributeFilters: attributeFilters,
-	}
-	// Дополнительное логирование
-	log.Printf("Полные параметры поиска: %+v", params)
-	log.Printf("Атрибуты фильтров: %+v", attributeFilters)
+    params := &search.ServiceParams{
+        Query:            c.Query("q", ""),
+        CategoryID:       c.Query("category_id", ""),
+        Condition:        c.Query("condition", ""),
+        City:             c.Query("city", ""),
+        Country:          c.Query("country", ""),
+        StorefrontID:     c.Query("storefront_id", ""),
+        Sort:             c.Query("sort_by", ""),
+        SortDirection:    c.Query("sort_direction", "desc"),
+        Distance:         c.Query("distance", ""),
+        Page:             c.QueryInt("page", 1),
+        Size:             c.QueryInt("size", 20),
+        Language:         c.Query("language", ""),
+        AttributeFilters: attributeFilters,
+    }
+    
+    // Проверяем и логируем параметры пагинации
+    log.Printf("Параметры пагинации: page=%d, size=%d", params.Page, params.Size)
+    
+    // Устанавливаем разумные ограничения на параметры пагинации
+    if params.Page < 1 {
+        params.Page = 1
+    }
+    if params.Size < 1 {
+        params.Size = 20
+    } else if params.Size > 100 {
+        // Ограничиваем максимальный размер страницы
+        params.Size = 100
+    }
+    
+    // Дополнительное логирование
+    log.Printf("Полные параметры поиска: %+v", params)
+    log.Printf("Атрибуты фильтров: %+v", attributeFilters)
 
-	// ИСПРАВЛЕНИЕ: сначала проверяем наличие координат, потом устанавливаем distance
-	latParam := c.Query("latitude", "")
-	lonParam := c.Query("longitude", "")
+    // ИСПРАВЛЕНИЕ: сначала проверяем наличие координат, потом устанавливаем distance
+    latParam := c.Query("latitude", "")
+    lonParam := c.Query("longitude", "")
 
-	if latParam != "" && lonParam != "" {
-		lat, errLat := strconv.ParseFloat(latParam, 64)
-		lon, errLon := strconv.ParseFloat(lonParam, 64)
+    if latParam != "" && lonParam != "" {
+        lat, errLat := strconv.ParseFloat(latParam, 64)
+        lon, errLon := strconv.ParseFloat(lonParam, 64)
 
-		if errLat == nil && errLon == nil && (lat != 0 || lon != 0) {
-			params.Latitude = lat
-			params.Longitude = lon
-			log.Printf("Установлены координаты: lat=%.6f, lon=%.6f", lat, lon)
-		}
-	}
+        if errLat == nil && errLon == nil && (lat != 0 || lon != 0) {
+            params.Latitude = lat
+            params.Longitude = lon
+            log.Printf("Установлены координаты: lat=%.6f, lon=%.6f", lat, lon)
+        }
+    }
 
-	// Теперь, когда у нас есть координаты, проверяем параметр distance
-	if params.Distance != "" && params.Latitude != 0 && params.Longitude != 0 {
-		log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)",
-			params.Distance, params.Latitude, params.Longitude)
+    // Теперь, когда у нас есть координаты, проверяем параметр distance
+    if params.Distance != "" && params.Latitude != 0 && params.Longitude != 0 {
+        log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)",
+            params.Distance, params.Latitude, params.Longitude)
 
-		// Проверить наличие индекса перед установкой координат
-		if err := h.marketplaceService.Storage().PrepareIndex(c.Context()); err != nil {
-			log.Printf("Ошибка проверки индекса: %v", err)
-			// Но продолжаем выполнение, просто не используем гео-поиск
-			params.Distance = ""
-		}
-	} else if params.Distance != "" {
-		log.Printf("Параметр distance указан (%s), но координаты отсутствуют или равны нулю (%.6f, %.6f). "+
-			"Параметр distance будет проигнорирован.",
-			params.Distance, params.Latitude, params.Longitude)
-	}
+        // Проверить наличие индекса перед установкой координат
+        if err := h.marketplaceService.Storage().PrepareIndex(c.Context()); err != nil {
+            log.Printf("Ошибка проверки индекса: %v", err)
+            // Но продолжаем выполнение, просто не используем гео-поиск
+            params.Distance = ""
+        }
+    } else if params.Distance != "" {
+        log.Printf("Параметр distance указан (%s), но координаты отсутствуют или равны нулю (%.6f, %.6f). "+
+            "Параметр distance будет проигнорирован.",
+            params.Distance, params.Latitude, params.Longitude)
+    }
 
-	log.Printf("Полученный поисковый запрос: %s", params.Query)
-	// Обрабатываем числовые параметры
-	if priceMin := c.Query("min_price", ""); priceMin != "" {
-		if val, err := strconv.ParseFloat(priceMin, 64); err == nil && val >= 0 {
-			params.PriceMin = val
-		}
-	}
+    log.Printf("Полученный поисковый запрос: %s", params.Query)
+    // Обрабатываем числовые параметры
+    if priceMin := c.Query("min_price", ""); priceMin != "" {
+        if val, err := strconv.ParseFloat(priceMin, 64); err == nil && val >= 0 {
+            params.PriceMin = val
+        }
+    }
 
-	if priceMax := c.Query("max_price", ""); priceMax != "" {
-		if val, err := strconv.ParseFloat(priceMax, 64); err == nil && val >= 0 {
-			params.PriceMax = val
-		}
-	}
+    if priceMax := c.Query("max_price", ""); priceMax != "" {
+        if val, err := strconv.ParseFloat(priceMax, 64); err == nil && val >= 0 {
+            params.PriceMax = val
+        }
+    }
 
-	// Запрашиваемые агрегации
-	if aggs := c.Query("aggs", ""); aggs != "" {
-		params.Aggregations = strings.Split(aggs, ",")
-	}
+    // Запрашиваемые агрегации
+    if aggs := c.Query("aggs", ""); aggs != "" {
+        params.Aggregations = strings.Split(aggs, ",")
+    }
 
-	// Если не указан язык, берем из context
-	if params.Language == "" {
-		if lang, ok := c.Locals("language").(string); ok && lang != "" {
-			params.Language = lang
-		} else {
-			params.Language = "sr"
-		}
-	}
+    // Если не указан язык, берем из context
+    if params.Language == "" {
+        if lang, ok := c.Locals("language").(string); ok && lang != "" {
+            params.Language = lang
+        } else {
+            params.Language = "sr"
+        }
+    }
 
-	// Выполняем поиск
-	result, err := h.marketplaceService.SearchListingsAdvanced(c.Context(), params)
-	if err != nil {
-		log.Printf("Ошибка поиска: %v", err)
+    // Выполняем поиск
+    result, err := h.marketplaceService.SearchListingsAdvanced(c.Context(), params)
+    if err != nil {
+        log.Printf("Ошибка поиска: %v", err)
 
-		// Используем стандартный поиск
-		filters := map[string]string{
-			"category_id":   params.CategoryID,
-			"condition":     params.Condition,
-			"city":          params.City,
-			"country":       params.Country,
-			"storefront_id": params.StorefrontID,
-			"sort_by":       params.Sort,
-		}
+        // Используем стандартный поиск
+        filters := map[string]string{
+            "category_id":   params.CategoryID,
+            "condition":     params.Condition,
+            "city":          params.City,
+            "country":       params.Country,
+            "storefront_id": params.StorefrontID,
+            "sort_by":       params.Sort,
+        }
 
-		// Добавляем числовые фильтры, если они указаны
-		if params.PriceMin > 0 {
-			filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
-		}
-		if params.PriceMax > 0 {
-			filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
-		}
+        // Добавляем числовые фильтры, если они указаны
+        if params.PriceMin > 0 {
+            filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
+        }
+        if params.PriceMax > 0 {
+            filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
+        }
 
-		// Добавляем текстовый поиск
-		if params.Query != "" {
-			filters["query"] = params.Query
-		}
+        // Добавляем текстовый поиск
+        if params.Query != "" {
+            filters["query"] = params.Query
+        }
 
-		// Пробуем получить обычным методом
-		listings, total, err := h.marketplaceService.GetListings(c.Context(), filters, params.Size, (params.Page-1)*params.Size)
-		if err != nil {
-			log.Printf("Ошибка стандартного поиска: %v", err)
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка выполнения поиска")
-		}
+        // Определяем смещение для пагинации
+        offset := (params.Page - 1) * params.Size
+        
+        // Пробуем получить обычным методом
+        listings, total, err := h.marketplaceService.GetListings(c.Context(), filters, params.Size, offset)
+        if err != nil {
+            log.Printf("Ошибка стандартного поиска: %v", err)
+            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка выполнения поиска")
+        }
 
-		// Формируем такой же ответ, как от OpenSearch
-		return utils.SuccessResponse(c, fiber.Map{
-			"data": listings,
-			"meta": fiber.Map{
-				"total":       total,
-				"page":        params.Page,
-				"size":        params.Size,
-				"total_pages": (total + int64(params.Size) - 1) / int64(params.Size),
-			},
-		})
-	}
+        // Указываем метаданные пагинации в ответе
+        totalPages := int(math.Ceil(float64(total) / float64(params.Size)))
+        
+        // Формируем такой же ответ, как от OpenSearch
+        return utils.SuccessResponse(c, fiber.Map{
+            "data": listings,
+            "meta": fiber.Map{
+                "total":       total,
+                "page":        params.Page,
+                "size":        params.Size,
+                "total_pages": totalPages,
+                "has_more":    params.Page < totalPages,
+            },
+        })
+    }
 
-	// После получения результатов поиска
-	log.Printf("Результаты поиска: найдено %d объявлений", len(result.Items))
-	for i, listing := range result.Items {
-		log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
+    // После получения результатов поиска
+    log.Printf("Результаты поиска: найдено %d объявлений", len(result.Items))
+    
+    // Формируем информацию о пагинации
+    hasMore := result.Page < result.TotalPages
 
-		// Добавляем отладочную информацию об атрибутах
-		if len(listing.Attributes) > 0 {
-			log.Printf("  Атрибуты объявления %d:", listing.ID)
-			for _, attr := range listing.Attributes {
-				log.Printf("    Имя: %s, Тип: %s, Значение: %s",
-					attr.AttributeName, attr.AttributeType, attr.DisplayValue)
-			}
-		} else {
-			log.Printf("  Объявление %d не имеет атрибутов", listing.ID)
-		}
-	}
-		// Проверяем результаты на наличие скидок и метаданных
-
-	if result.Items != nil {
-		for _, item := range result.Items {
-			if item.ID == 18 { // Для нашего тестового объявления
-				log.Printf("DEBUG: Проверка объявления ID=18: Metadata=%+v", item.Metadata)
-				if item.Metadata != nil {
-					if discount, ok := item.Metadata["discount"].(map[string]interface{}); ok {
-						log.Printf("DEBUG: Найдена скидка для объявления 18: %+v", discount)
-					}
-				}
-			}
-		}
-	}
-	log.Printf("Извлечены атрибуты фильтров: %+v", attributeFilters)
-
-	// Если OpenSearch ответил успешно
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": result.Items,
-		"meta": fiber.Map{
-			"total":               result.Total,
-			"page":                result.Page,
-			"size":                result.Size,
-			"total_pages":         result.TotalPages,
-			"facets":              result.Facets,
-			"suggestions":         result.Suggestions,
-			"took_ms":             result.Took,
-			"spelling_suggestion": result.SpellingSuggestion,
-		},
-	})
+    // Если OpenSearch ответил успешно
+    return utils.SuccessResponse(c, fiber.Map{
+        "data": result.Items,
+        "meta": fiber.Map{
+            "total":               result.Total,
+            "page":                result.Page,
+            "size":                result.Size,
+            "total_pages":         result.TotalPages,
+            "has_more":            hasMore,
+            "facets":              result.Facets,
+            "suggestions":         result.Suggestions,
+            "took_ms":             result.Took,
+            "spelling_suggestion": result.SpellingSuggestion,
+        },
+    })
 }
 
 // GetSuggestions возвращает предложения автодополнения

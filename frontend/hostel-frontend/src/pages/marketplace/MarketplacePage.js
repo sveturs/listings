@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocation } from '../../contexts/LocationContext';
 import { debounce } from 'lodash';
+import InfiniteScroll from '../../components/marketplace/InfiniteScroll';
 
 import {
     Container,
@@ -74,7 +75,9 @@ const MarketplacePage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-
+    const [hasMoreListings, setHasMoreListings] = useState(true);
+    const [totalListings, setTotalListings] = useState(0);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [listings, setListings] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -84,7 +87,8 @@ const MarketplacePage = () => {
     const [mapViewActive, setMapViewActive] = useState(false);
     const [userLocationState, setUserLocationState] = useState(null);
     const [spellingSuggestion, setSpellingSuggestion] = useState(null);
-
+    const [page, setPage] = useState(1);
+    
     // Добавляем ref для отслеживания последнего запроса
     const lastQueryRef = useRef('');
 
@@ -101,21 +105,25 @@ const MarketplacePage = () => {
         attributeFilters: {}
     });
 
-    const fetchListings = useCallback(async (currentFilters = {}) => {
+    const fetchListings = useCallback(async (currentFilters = {}, isLoadMore = false) => {
         try {
             // Предотвращаем повторные запросы с теми же параметрами
             const queryString = JSON.stringify(currentFilters);
-            if (queryString === lastQueryRef.current) {
+            if (queryString === lastQueryRef.current && !isLoadMore) {
                 return;
             }
-            lastQueryRef.current = queryString;
-    
-            setLoading(true);
-            setError(null);
-            setSpellingSuggestion(null);
-    
+
+            if (!isLoadMore) {
+                lastQueryRef.current = queryString;
+                setLoading(true);
+                setError(null);
+                setSpellingSuggestion(null);
+            } else {
+                setLoadingMore(true);
+            }
+
             const params = {};
-    
+
             // Обрабатываем основные фильтры
             Object.entries(currentFilters).forEach(([key, value]) => {
                 if (value !== '' && key !== 'city' && key !== 'country' && key !== 'attributeFilters') {
@@ -126,7 +134,7 @@ const MarketplacePage = () => {
                     }
                 }
             });
-    
+
             // Добавляем атрибуты, если они есть
             if (currentFilters.attributeFilters && typeof currentFilters.attributeFilters === 'object') {
                 Object.entries(currentFilters.attributeFilters).forEach(([attrKey, attrValue]) => {
@@ -136,69 +144,71 @@ const MarketplacePage = () => {
                     }
                 });
             }
-    
+
+            // Добавляем параметры пагинации
+            params.page = isLoadMore ? page + 1 : 1;
+            params.size = 20; // Размер страницы
+
             console.log('Отправляем запрос поиска объявлений с параметрами:', params);
             const response = await axios.get('/api/v1/marketplace/search', { params });
             console.log('Получен ответ API:', response.data);
-    
+
             // Проверка на наличие данных
             if (!response.data) {
                 console.error('Ответ API не содержит данных');
                 setListings([]);
+                setHasMoreListings(false);
                 return;
             }
-    
-            // Улучшенная обработка данных с дополнительными проверками
-            if (response.data.data) {
-                if (Array.isArray(response.data.data)) {
-                    console.log('Найдено объявлений (массив):', response.data.data.length);
-                    setListings(response.data.data);
-                } else if (response.data.data.data && Array.isArray(response.data.data.data)) {
-                    console.log('Найдено объявлений (вложенный массив):', response.data.data.data.length);
-                    setListings(response.data.data.data);
-                } else if (response.data.data.items && Array.isArray(response.data.data.items)) {
-                    console.log('Найдено объявлений (items):', response.data.data.items.length);
-                    setListings(response.data.data.items);
-                } else {
-                    // Попытка найти массив в ответе
-                    let foundArray = null;
-                    Object.entries(response.data).forEach(([key, value]) => {
-                        if (Array.isArray(value) && value.length > 0 && value[0].id) {
-                            foundArray = value;
-                        } else if (typeof value === 'object' && value !== null) {
-                            Object.entries(value).forEach(([innerKey, innerValue]) => {
-                                if (Array.isArray(innerValue) && innerValue.length > 0 && innerValue[0].id) {
-                                    foundArray = innerValue;
-                                }
-                            });
-                        }
-                    });
-    
-                    if (foundArray) {
-                        console.log('Найден массив объявлений в нестандартном месте:', foundArray.length);
-                        setListings(foundArray);
-                    } else {
-                        console.error('Данные не являются массивом:', response.data);
-                        setListings([]);
-                    }
-                }
-            } else {
-                console.error('Ответ API не содержит ожидаемую структуру данных:', response.data);
-                setListings([]);
+
+            // Получаем данные о результатах и пагинации
+            let newListings = [];
+            let totalCount = 0;
+
+            if (response.data.data && Array.isArray(response.data.data)) {
+                newListings = response.data.data;
+                totalCount = response.data.meta?.total || newListings.length;
+            } else if (response.data.data?.data && Array.isArray(response.data.data.data)) {
+                newListings = response.data.data.data;
+                totalCount = response.data.data.meta?.total || newListings.length;
+            } else if (response.data.data?.items && Array.isArray(response.data.data.items)) {
+                newListings = response.data.data.items;
+                totalCount = response.data.data?.total || newListings.length;
             }
 
+            // Обновляем состояние списка объявлений
+            if (isLoadMore) {
+                setListings(prev => [...prev, ...newListings]);
+                setPage(prev => prev + 1);
+            } else {
+                setListings(newListings);
+                setPage(1);
+            }
+
+            setTotalListings(totalCount);
+
+            // Проверяем, есть ли еще объявления для загрузки
+            setHasMoreListings(listings.length + newListings.length < totalCount);
+
+            // Обработка подсказок для исправления опечаток
             if (response.data.meta && response.data.meta.spelling_suggestion) {
                 setSpellingSuggestion(response.data.meta.spelling_suggestion);
             }
+
         } catch (err) {
             console.error('Ошибка при получении объявлений:', err);
             setError('Не удалось загрузить объявления');
-            setListings([]);
+            setListings(isLoadMore ? [...listings] : []);
+            setHasMoreListings(false);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
-    }, []); // Пустой массив зависимостей, так как функция не зависит от внешних переменных
-
+    }, [listings, page]);
+    const handleLoadMore = () => {
+        if (loadingMore || !hasMoreListings) return;
+        fetchListings(filters, true);
+    };
     const debouncedFetchListings = useRef(
         debounce((filters) => {
             fetchListings(filters);
@@ -537,7 +547,7 @@ const MarketplacePage = () => {
                 resetAttributeFilters={resetAttributeFilters}
             />
         ) : null;
-    
+
         if (loading) {
             return (
                 <>
@@ -548,7 +558,7 @@ const MarketplacePage = () => {
                 </>
             );
         }
-    
+
         if (error) {
             return (
                 <>
@@ -559,7 +569,7 @@ const MarketplacePage = () => {
                 </>
             );
         }
-    
+
         // Если активен режим карты
         if (mapViewActive) {
             return (
@@ -572,7 +582,7 @@ const MarketplacePage = () => {
                 />
             );
         }
-    
+
         // Проверка, что listings - это массив
         if (!listings || !Array.isArray(listings) || listings.length === 0) {
             if (spellingSuggestion) {
@@ -600,7 +610,7 @@ const MarketplacePage = () => {
                     </>
                 );
             }
-            
+
             return (
                 <>
                     {categoryFilters}
@@ -610,34 +620,45 @@ const MarketplacePage = () => {
                 </>
             );
         }
-    
+
         return (
             <>
                 {categoryFilters}
-                
-                {/* Отображение листингов */}
-                {isMobile ? (
-                    <MobileListingGrid listings={listings} />
-                ) : (
-                    <Grid container spacing={3}>
-                        {listings.map((listing, index) => {
-                            const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
-                            return (
-                                <Grid item xs={12} sm={6} md={4} key={effectiveId}>
-                                    <div onClick={() => {
-                                        if (listing.id) {
-                                            navigate(`/marketplace/listings/${listing.id}`);
-                                        } else {
-                                            const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
-                                            console.log("Переход к объявлению с временным URL:", url);
-                                        }
-                                    }}>
-                                        <ListingCard listing={listing} />
-                                    </div>
-                                </Grid>
-                            );
-                        })}
-                    </Grid>
+
+                {!mapViewActive && (
+                    <InfiniteScroll
+                        hasMore={hasMoreListings}
+                        loading={loadingMore}
+                        onLoadMore={handleLoadMore}
+                        autoLoad={!isMobile} // Автозагрузка только на десктопе
+                        loadingMessage={t('listings.loading', { defaultValue: 'Загрузка...' })}
+                        loadMoreButtonText={t('listings.loadMore', { defaultValue: 'Показать ещё' })}
+                        noMoreItemsText={t('listings.noMoreListings', { defaultValue: 'Больше нет объявлений' })}
+                    >
+                        {isMobile ? (
+                            <MobileListingGrid listings={listings} />
+                        ) : (
+                            <Grid container spacing={3}>
+                                {listings.map((listing, index) => {
+                                    const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                                    return (
+                                        <Grid item xs={12} sm={6} md={4} key={effectiveId}>
+                                            <div onClick={() => {
+                                                if (listing.id) {
+                                                    navigate(`/marketplace/listings/${listing.id}`);
+                                                } else {
+                                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                                    console.log("Переход к объявлению с временным URL:", url);
+                                                }
+                                            }}>
+                                                <ListingCard listing={listing} />
+                                            </div>
+                                        </Grid>
+                                    );
+                                })}
+                            </Grid>
+                        )}
+                    </InfiniteScroll>
                 )}
             </>
         );

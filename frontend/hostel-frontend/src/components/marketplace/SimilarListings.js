@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
@@ -13,10 +13,12 @@ import {
     CardContent,
     CardMedia,
     Chip,
+    Button,
+    CircularProgress
 } from '@mui/material';
-import { MapPin, Percent } from 'lucide-react';
+import { MapPin, Percent, ChevronDown } from 'lucide-react';
 
-const SimilarListings = ({ listingId }) => {
+const SimilarListings = ({ listingId, initialLimit = 8 }) => {
     const { t } = useTranslation('marketplace');
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -25,27 +27,88 @@ const SimilarListings = ({ listingId }) => {
     const [similarListings, setSimilarListings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(initialLimit);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const loadMoreRef = useRef(null);
+    
+    const fetchSimilarListings = useCallback(async (isLoadMore = false) => {
+        try {
+            if (isLoadMore) {
+                setLoadingMore(true);
+            } else {
+                setLoading(true);
+            }
+            
+            // Загружаем данные с сервера с пагинацией
+            const response = await axios.get(`/api/v1/marketplace/listings/${listingId}/similar`, {
+                params: {
+                    limit: limit,
+                    page: page
+                }
+            });
+            
+            if (response.data && response.data.data) {
+                const newListings = response.data.data;
+                
+                // Проверяем, есть ли еще данные для загрузки
+                setHasMore(newListings.length >= limit);
+                
+                if (isLoadMore) {
+                    // Добавляем новые элементы к существующим
+                    setSimilarListings(prev => [...prev, ...newListings]);
+                } else {
+                    // Заменяем существующие элементы
+                    setSimilarListings(newListings);
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching similar listings:', err);
+            setError(t('listings.similar.error', { defaultValue: 'Не удалось загрузить похожие объявления' }));
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    }, [listingId, limit, page, t]);
     
     useEffect(() => {
-        const fetchSimilarListings = async () => {
-            try {
-                setLoading(true);
-                const response = await axios.get(`/api/v1/marketplace/listings/${listingId}/similar?limit=8`);
-                if (response.data && response.data.data) {
-                    setSimilarListings(response.data.data);
-                }
-            } catch (err) {
-                console.error('Error fetching similar listings:', err);
-                setError(t('listings.similar.error'));
-            } finally {
-                setLoading(false);
-            }
-        };
-        
         if (listingId) {
             fetchSimilarListings();
         }
-    }, [listingId, t]);
+    }, [listingId, fetchSimilarListings]);
+    
+    const handleLoadMore = () => {
+        if (!loadingMore && hasMore) {
+            setPage(prevPage => prevPage + 1);
+            fetchSimilarListings(true);
+        }
+    };
+    
+    // Опциональная функция для наблюдения за скроллом и автоматической подгрузки
+    // Раскомментируйте этот код, если нужна автоматическая подгрузка при прокрутке
+    /*
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loadingMore) {
+                    handleLoadMore();
+                }
+            },
+            { threshold: 0.5 }
+        );
+        
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+        
+        return () => {
+            if (loadMoreRef.current) {
+                observer.unobserve(loadMoreRef.current);
+            }
+        };
+    }, [loadMoreRef, hasMore, loadingMore]);
+    */
     
     const formatPrice = (price) => {
         return new Intl.NumberFormat('sr-RS', {
@@ -224,6 +287,22 @@ const SimilarListings = ({ listingId }) => {
                     </Grid>
                 ))}
             </Grid>
+            
+            {/* Кнопка "Загрузить еще" */}
+            {hasMore && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }} ref={loadMoreRef}>
+                    <Button 
+                        variant="outlined" 
+                        onClick={handleLoadMore}
+                        disabled={loadingMore}
+                        startIcon={loadingMore ? <CircularProgress size={16} /> : <ChevronDown />}
+                    >
+                        {loadingMore ? 
+                            t('listings.similar.loading', { defaultValue: 'Загрузка...' }) : 
+                            t('listings.similar.loadMore', { defaultValue: 'Показать ещё' })}
+                    </Button>
+                </Box>
+            )}
         </Box>
     );
 };

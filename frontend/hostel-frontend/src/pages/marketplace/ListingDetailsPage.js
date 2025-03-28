@@ -1108,7 +1108,7 @@ const ListingDetailsPage = () => {
                     </Box>
                 </Box>
             </Modal>
-            <SimilarListings listingId={id} />
+            <SimilarListings listingId={id} initialLimit={8} />
         </Container>
     );
 };

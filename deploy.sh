@@ -3,16 +3,15 @@ set -e # Останавливаем выполнение при ошибках
 echo "Начинаем деплой..."
 cd /opt/hostel-booking-system
 
-# Создаем директории для хранения данных, если их еще нет
-mkdir -p /opt/hostel-data/uploads
-mkdir -p /opt/hostel-data/db
-mkdir -p /opt/hostel-data/opensearch
+# Настраиваем git pull strategy
+git config pull.rebase false
+
+# Создаем необходимые директории
+mkdir -p backend/uploads
+mkdir -p frontend/hostel-frontend/build
 mkdir -p certbot/conf
 mkdir -p certbot/www
 mkdir -p /tmp/hostel-backup/db
-
-# Настраиваем git pull strategy
-git config pull.rebase false
 
 # Сохраняем важные файлы
 cp -f backend/.env /tmp/hostel-backup/backend.env 2>/dev/null || true
@@ -22,6 +21,9 @@ cp -f frontend/hostel-frontend/.env /tmp/hostel-backup/frontend.env 2>/dev/null 
 if [ -d "certbot/conf" ]; then
   cp -r certbot/conf /tmp/hostel-backup/ 2>/dev/null || true
 fi
+
+# Сохраняем загруженные изображения
+cp -r backend/uploads /tmp/hostel-backup/ 2>/dev/null || true
 
 # Делаем бэкап базы данных только если контейнер запущен
 echo "Пытаемся создать бэкап базы данных..."
@@ -37,29 +39,26 @@ else
   echo "База данных не запущена, пропускаем создание бэкапа"
 fi
 
-# Обеспечиваем чистое состояние git, но исключаем критические директории
+# Обеспечиваем чистое состояние git
 git fetch origin
 git reset --hard origin/main
-git clean -fdx -e "*.env*" -e "uploads/" -e "certbot/" -e "/opt/hostel-data/"
+git clean -fdx -e "*.env*" -e "uploads/" -e "certbot/"
 
-# Восстанавливаем файлы конфигурации
+# Восстанавливаем файлы
 cp -f /tmp/hostel-backup/backend.env backend/.env 2>/dev/null || true
 cp -f /tmp/hostel-backup/frontend.env frontend/hostel-frontend/.env 2>/dev/null || true
 if [ -d "/tmp/hostel-backup/conf" ]; then
+  rm -rf certbot/conf
   cp -r /tmp/hostel-backup/conf certbot/ 2>/dev/null || true
 fi
 
-# Удаляем старые образы и принудительно пересоздаем контейнеры
-echo "Останавливаем сервисы..."
-docker-compose -f docker-compose.prod.yml down --remove-orphans
+# Удаляем старые образы
+docker image prune -f
 
-# Принудительно удаляем все связанные контейнеры, но оставляем тома нетронутыми
-echo "Удаляем старые контейнеры, сохраняя тома с данными..."
-docker-compose -f docker-compose.prod.yml rm -f
-
-# Удаляем старые образы, чтобы принудительно пересобрать их
-echo "Удаляем старые образы для принудительной пересборки..."
-docker-compose -f docker-compose.prod.yml build --no-cache
+# Очищаем сети и осиротевшие контейнеры
+echo "Очищаем старые контейнеры и сети..."
+docker-compose -f docker-compose.prod.yml down -v --remove-orphans || true
+docker network prune -f || true
 
 # Собираем фронтенд
 echo "Собираем фронтенд..."
@@ -148,9 +147,9 @@ fi
 
 cd ../..
 
-# Запускаем с полностью обновленными образами
-echo "Запускаем сервисы с обновленными образами..."
-docker-compose -f docker-compose.prod.yml up --build -d
+# Запускаем только базу данных
+echo "Запускаем базу данных..."
+docker-compose -f docker-compose.prod.yml up --build -d db
 
 # Проверяем базу данных
 echo "Проверяем готовность базы данных..."
@@ -172,6 +171,24 @@ fi
 # Запускаем миграции
 echo "Запускаем миграции..."
 docker run --rm --network hostel-booking-system_hostel_network -v $(pwd)/backend/migrations:/migrations migrate/migrate -path=/migrations/ -database="postgres://postgres:c9XWc7Cm@db:5432/hostel_db?sslmode=disable" up
+
+# Восстанавливаем данные из бэкапа, если он есть
+if [ -n "$(ls -t /tmp/hostel-backup/db/*.sql 2>/dev/null | head -1)" ]; then
+  LATEST_BACKUP=$(ls -t /tmp/hostel-backup/db/*.sql | head -1)
+  echo "Восстанавливаем базу данных из $LATEST_BACKUP..."
+  cat "$LATEST_BACKUP" | docker-compose -f docker-compose.prod.yml exec -T db psql -U postgres
+  if [ $? -eq 0 ]; then
+    echo "База данных успешно восстановлена"
+  else
+    echo "Ошибка восстановления базы данных, но продолжаем деплой"
+  fi
+else
+  echo "Бэкап базы данных не найден, пропускаем восстановление"
+fi
+
+# Запускаем остальные сервисы
+echo "Запускаем остальные сервисы..."
+docker-compose -f docker-compose.prod.yml up --build -d
 
 # Сохраняем последние 5 бэкапов и удаляем более старые
 find /tmp/hostel-backup/db -name "*.sql" -type f | sort -r | tail -n +6 | xargs rm -f 2>/dev/null || true
