@@ -19,19 +19,36 @@ import {
     MenuItem,
     InputLabel,
     RadioGroup,
-    Radio
+    Radio,
+    ToggleButton,
+    ToggleButtonGroup
 } from '@mui/material';
+import { 
+    List, 
+    Grid as GridIcon
+} from 'lucide-react';
 import { useLocation } from '../../contexts/LocationContext';
 import VirtualizedCategoryTree from './VirtualizedCategoryTree';
 import AttributeFilters from './AttributeFilters';
 
-const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId, onToggleMapView, setSearchParams, fetchListings }) => {
+const CompactMarketplaceFilters = ({ 
+    filters, 
+    onFilterChange, 
+    selectedCategoryId, 
+    onToggleMapView, 
+    setSearchParams, 
+    fetchListings,
+    viewMode,
+    handleViewModeChange 
+}) => {
     const { t } = useTranslation('marketplace', 'common');
     const { userLocation, detectUserLocation } = useLocation();
     const [attributeFilters, setAttributeFilters] = useState({});
+    
     const handleSearchChange = useCallback((value) => {
         onFilterChange({ ...filters, query: value });
     }, [filters, onFilterChange]);
+    
     const handleCategorySelect = useCallback((id) => {
         console.log(`MarketplaceFilters: Выбрана категория с ID: ${id}`);
 
@@ -75,9 +92,11 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
             return updated;
         });
     }, [onFilterChange]);
+    
     const resetAttributeFilters = useCallback(() => {
         handleFilterChange({ attributeFilters: {} });
     }, [handleFilterChange]);
+    
     const handleDistanceChange = async (value) => {
         // Если выбрано расстояние, но нет координат, используем геолокацию
         if (value && (!filters.latitude || !filters.longitude)) {
@@ -102,12 +121,14 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
             onFilterChange({ ...filters, distance: value });
         }
     };
+    
     const isMapAvailable = useMemo(() => {
         // Карта доступна, если либо нет фильтра по расстоянию, либо есть координаты
         return !filters.distance || (userLocation?.lat && userLocation?.lon);
     }, [filters.distance, userLocation]);
 
     const isDistanceWithoutCoordinates = filters.distance && (!userLocation?.lat || !userLocation?.lon);
+    
     return (
         <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Поиск с автодополнением */}
@@ -127,24 +148,40 @@ const CompactMarketplaceFilters = ({ filters, onFilterChange, selectedCategoryId
                 />
             </Box>
 
-            {/* Кнопка просмотра на карте */}
-            <Box sx={{ px: 2, py: 1, display: 'flex', justifyContent: 'center' }}>
+            {/* Панель переключения режимов просмотра */}
+            <Box sx={{ px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
                 <Button
                     variant="outlined"
                     startIcon={<Map />}
-                    fullWidth
                     onClick={onToggleMapView}
                     disabled={!isMapAvailable && filters.distance}
+                    sx={{ flex: 1, mr: 1 }}
+                    size="medium"
                 >
-                    {t('listings.map.showOnMap')}
+                    {t('listings.map.map')}
                 </Button>
+                
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={handleViewModeChange}
+                    aria-label="view mode"
+                    size="small"
+                >
+                    <ToggleButton value="grid" aria-label="grid view">
+                        <GridIcon size={18} />
+                    </ToggleButton>
+                    <ToggleButton value="list" aria-label="list view">
+                        <List size={18} />
+                    </ToggleButton>
+                </ToggleButtonGroup>
             </Box>
 
             {/* Предупреждение о необходимости выбрать местоположение */}
             {!isMapAvailable && filters.distance && (
                 <Box sx={{ px: 2, py: 1, color: 'warning.main' }}>
                     <Typography variant="caption">
-                        {t('listings.map.needLocation')} 
+                        {t('listings.map.needLocation')}
                     </Typography>
                 </Box>
             )}

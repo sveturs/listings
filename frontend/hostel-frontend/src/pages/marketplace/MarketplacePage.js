@@ -52,8 +52,8 @@ const MobileListingGrid = ({ listings, viewMode = 'grid' }) => {
                 {listings.map((listing, index) => {
                     const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
                     return (
-                        <Box 
-                            key={effectiveId} 
+                        <Box
+                            key={effectiveId}
                             onClick={() => {
                                 if (listing.id) {
                                     navigate(`/marketplace/listings/${listing.id}`);
@@ -68,7 +68,7 @@ const MobileListingGrid = ({ listings, viewMode = 'grid' }) => {
                         </Box>
                     );
                 })}
-                
+
                 {listings.length === 0 && (
                     <Box sx={{ py: 4, textAlign: 'center' }}>
                         <Typography variant="body2" color="text.secondary">
@@ -79,7 +79,7 @@ const MobileListingGrid = ({ listings, viewMode = 'grid' }) => {
             </Box>
         );
     }
-    
+
     // Режим сетки (grid) - стандартное отображение
     return (
         <Grid container spacing={1}>
@@ -87,7 +87,7 @@ const MobileListingGrid = ({ listings, viewMode = 'grid' }) => {
                 const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
                 return (
                     <Grid item xs={6} key={effectiveId}>
-                        <Box 
+                        <Box
                             onClick={() => {
                                 if (listing.id) {
                                     navigate(`/marketplace/listings/${listing.id}`);
@@ -102,7 +102,7 @@ const MobileListingGrid = ({ listings, viewMode = 'grid' }) => {
                     </Grid>
                 );
             })}
-            
+
             {listings.length === 0 && (
                 <Grid item xs={12}>
                     <Box sx={{ py: 4, textAlign: 'center' }}>
@@ -754,22 +754,7 @@ const MarketplacePage = () => {
             <>
                 {categoryFilters}
 
-                <ToggleButtonGroup
-                    value={viewMode}
-                    exclusive
-                    onChange={handleViewModeChange}
-                    aria-label="view mode"
-                    size="small"
-                >
-                    <ToggleButton value="grid" aria-label="grid view">
-                        <GridIcon size={18} />
-                    </ToggleButton>
-                    <ToggleButton value="list" aria-label="list view">
-                        <List size={18} />
-                    </ToggleButton>
-                </ToggleButtonGroup>
-
-                {!mapViewActive && (
+                                {!mapViewActive && (
                     <InfiniteScroll
                         hasMore={hasMoreListings}
                         loading={loadingMore}
@@ -945,6 +930,8 @@ const MarketplacePage = () => {
                         onToggleMapView={handleToggleMapView}
                         setSearchParams={setSearchParams}
                         fetchListings={fetchListings}
+                        viewMode={viewMode}
+                        handleViewModeChange={handleViewModeChange}
                     />
                 </Grid>
                 <Grid item xs={12} md={9}>

@@ -11,3 +11,48 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.Container.maxWidth\:lg {
+  padding-top: 10px !important;  /* Было 4rem (64px), уменьшаем до 10px */
+  padding-bottom: 10px !important;
+}
+/* Уменьшение отступов у Box с Breadcrumbs */
+.Box-root:has(.Breadcrumbs) {
+  margin-bottom: 5px !important; /* Было 2rem (32px), уменьшаем до 5px */
+}
+/* Уменьшение отступов у Grid контейнера */
+.Grid.container.spacing\:3 {
+  gap: 10px !important; /* Было 24px (spacing:3), уменьшаем до 10px */
+}
+
+/* Уменьшение отступов у поля с поиском */
+.Box-root:has(.AutocompleteInput) {
+  padding: 10px !important; /* Уменьшаем отступы */
+}
+/* Уменьшение высоты шапки */
+.AppBar-root .Toolbar-root {
+  min-height: 48px !important; /* Было 56px, уменьшаем */
+  padding: 0 8px !important;
+}
+/* Если модифицируете Material UI компоненты, можно еще добавить: */
+.MuiContainer-root {
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+}
+.MuiBox-root:has(.MuiBreadcrumbs-root) {
+  margin-bottom: 5px !important;
+}
+
+.MuiGrid-container {
+  /* gap: 1px !important; */
+  padding-top: 1px !important;
+
+}
+
+
+
+
+
+
+
+
+
