@@ -35,8 +35,7 @@ if [ -f "$LOG_FILE" ] && [ -w "$LOG_FILE" ]; then
     if [ -w "$(dirname "$LOG_FILE")" ]; then
         cp -f "$LOG_FILE" "${LOG_FILE}.$(date +%Y%m%d)" 2>/dev/null || true
         find "$(dirname "$LOG_FILE")" -name "$(basename "$LOG_FILE").*" -type f -mtime +7 -delete 2>/dev/null || true
-        : > "$LOG_FILE" # Очищаем текущий лог-файл
-    else
+# : > "$LOG_FILE" 
         log "ВНИМАНИЕ: Нет прав на ротацию логов в директории $(dirname "$LOG_FILE")"
     fi
 fi
@@ -116,12 +115,7 @@ mkdir -p certbot/conf
 mkdir -p certbot/www
 mkdir -p /tmp/hostel-backup/db
 
-# Ротация логов деплоя
-if [ -f "/var/log/deploy.log" ]; then
-    log "Ротация логов деплоя..."
-    mv /var/log/deploy.log /var/log/deploy.log.$(date +%Y%m%d)
-    find /var/log -name "deploy.log.*" -type f -mtime +7 -delete
-fi
+
 
 # Настраиваем git pull strategy
 git config pull.rebase false
