@@ -6,7 +6,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocation } from '../../contexts/LocationContext';
 import { debounce } from 'lodash';
-import InfiniteScroll from '../../components/marketplace/InfiniteScroll';
 
 import {
     Container,
@@ -22,9 +21,11 @@ import {
     Chip,
     Fab,
     Tooltip,
+    ToggleButtonGroup,
+    ToggleButton
 }
     from '@mui/material';
-import { Plus, Search, X, List } from 'lucide-react';
+import { Plus, Search, X, List, Grid as GridIcon } from 'lucide-react';
 import ListingCard from '../../components/marketplace/ListingCard';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import {
@@ -36,6 +37,8 @@ import CompactMarketplaceFilters from '../../components/marketplace/MarketplaceF
 import CentralAttributeFilters from '../../components/marketplace/CentralAttributeFilters';
 import MapView from '../../components/marketplace/MapView';
 import axios from '../../api/axios';
+import InfiniteScroll from '../../components/marketplace/InfiniteScroll';
+import MarketplaceListingsList from '../../components/marketplace/MarketplaceListingsList';
 
 const MobileListingGrid = ({ listings }) => {
     const navigate = useNavigate();
@@ -75,9 +78,7 @@ const MarketplacePage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const [hasMoreListings, setHasMoreListings] = useState(true);
-    const [totalListings, setTotalListings] = useState(0);
-    const [loadingMore, setLoadingMore] = useState(false);
+
     const [listings, setListings] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -87,8 +88,18 @@ const MarketplacePage = () => {
     const [mapViewActive, setMapViewActive] = useState(false);
     const [userLocationState, setUserLocationState] = useState(null);
     const [spellingSuggestion, setSpellingSuggestion] = useState(null);
+    const [viewMode, setViewMode] = useState('grid');
+
+    // Состояния для пагинации и загрузки дополнительных объявлений
     const [page, setPage] = useState(1);
-    
+    const [hasMoreListings, setHasMoreListings] = useState(true);
+    const [totalListings, setTotalListings] = useState(0);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    // Состояния для сортировки
+    const [sortField, setSortField] = useState('created_at');
+    const [sortDirection, setSortDirection] = useState('desc');
+
     // Добавляем ref для отслеживания последнего запроса
     const lastQueryRef = useRef('');
 
@@ -134,6 +145,11 @@ const MarketplacePage = () => {
                     }
                 }
             });
+
+            // Явно передаем параметры сортировки
+            if (currentFilters.sort_by) {
+                params.sort_by = currentFilters.sort_by;
+            }
 
             // Добавляем атрибуты, если они есть
             if (currentFilters.attributeFilters && typeof currentFilters.attributeFilters === 'object') {
@@ -204,18 +220,15 @@ const MarketplacePage = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [listings, page]);
-    const handleLoadMore = () => {
-        if (loadingMore || !hasMoreListings) return;
-        fetchListings(filters, true);
-    };
+    }, [page, listings]);
+
     const debouncedFetchListings = useRef(
         debounce((filters) => {
             fetchListings(filters);
         }, 300)
     ).current;
 
-    // ВАЖНО: Сначала объявляем handleFilterChange, а затем resetAttributeFilters
+    // Обработчик изменения фильтров
     const handleFilterChange = useCallback((newFilters) => {
         console.log(`MarketplaceFilters: Выбраны фильтры:`, newFilters);
 
@@ -266,7 +279,55 @@ const MarketplacePage = () => {
         });
     }, [debouncedFetchListings, setSearchParams]);
 
-    // ТЕПЕРЬ объявляем resetAttributeFilters после handleFilterChange
+    // Обработчик сортировки
+    const handleSortChange = (field, direction) => {
+        console.log(`Sorting changed: ${field} ${direction}`);
+        setSortField(field);
+        setSortDirection(direction);
+
+        // Преобразуем поле сортировки в формат, понятный API
+        let apiSortField;
+        switch (field) {
+            case 'created_at':
+                apiSortField = 'date';
+                break;
+            case 'title':
+                apiSortField = 'title';
+                break;
+            case 'price':
+                apiSortField = 'price';
+                break;
+            case 'location':
+                apiSortField = 'location';
+                break;
+            default:
+                apiSortField = 'date';
+        }
+
+        // Создаем новый объект фильтров с обновленной сортировкой
+        const updatedFilters = {
+            ...filters,
+            sort_by: `${apiSortField}_${direction}`
+        };
+
+        // Обновляем URL-параметры
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('sort_by', `${apiSortField}_${direction}`);
+        setSearchParams(nextParams);
+
+        // Обновляем состояние фильтров
+        setFilters(updatedFilters);
+
+        // Сбрасываем данные для загрузки с первой страницы
+        setListings([]);
+        setPage(1);
+        setHasMoreListings(true);
+
+        // Выполняем запрос с новыми фильтрами
+        fetchListings(updatedFilters);
+    };
+
+    // Обработчик сброса атрибутных фильтров
     const resetAttributeFilters = useCallback(() => {
         handleFilterChange({ attributeFilters: {} });
     }, [handleFilterChange]);
@@ -307,6 +368,22 @@ const MarketplacePage = () => {
         setSearchParams(nextParams);
     }, [mapViewActive, searchParams, setSearchParams, filters, userLocation]);
 
+    // Обработчик переключения режима отображения (сетка/список)
+    const handleViewModeChange = (event, newMode) => {
+        if (newMode !== null) {
+            setViewMode(newMode);
+
+            // Опционально: сохраняем предпочтение пользователя в localStorage
+            localStorage.setItem('marketplace-view-mode', newMode);
+        }
+    };
+
+    // Обработчик загрузки дополнительных объявлений
+    const handleLoadMore = () => {
+        if (loadingMore || !hasMoreListings) return;
+        fetchListings(filters, true);
+    };
+
     const getActiveFiltersCount = () => {
         return Object.entries(filters).reduce((count, [key, value]) => {
             if (key !== 'sort_by' && value !== '') {
@@ -343,6 +420,14 @@ const MarketplacePage = () => {
     };
 
     useEffect(() => {
+        // Загружаем сохраненный режим просмотра из localStorage
+        const savedViewMode = localStorage.getItem('marketplace-view-mode');
+        if (savedViewMode && (savedViewMode === 'grid' || savedViewMode === 'list')) {
+            setViewMode(savedViewMode);
+        }
+    }, []);
+
+    useEffect(() => {
         if (userLocation) {
             // Обновляем состояние фильтров с учетом нового местоположения
             setFilters(prevFilters => ({
@@ -352,7 +437,6 @@ const MarketplacePage = () => {
                 latitude: userLocation.lat,
                 longitude: userLocation.lon
             }));
-
         }
     }, [userLocation]);
 
@@ -625,6 +709,21 @@ const MarketplacePage = () => {
             <>
                 {categoryFilters}
 
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={handleViewModeChange}
+                    aria-label="view mode"
+                    size="small"
+                >
+                    <ToggleButton value="grid" aria-label="grid view">
+                        <GridIcon size={18} />
+                    </ToggleButton>
+                    <ToggleButton value="list" aria-label="list view">
+                        <List size={18} />
+                    </ToggleButton>
+                </ToggleButtonGroup>
+
                 {!mapViewActive && (
                     <InfiniteScroll
                         hasMore={hasMoreListings}
@@ -637,29 +736,21 @@ const MarketplacePage = () => {
                     >
                         {isMobile ? (
                             <MobileListingGrid listings={listings} />
-                        ) : (
+                        ) : viewMode === 'grid' ? (
                             <Grid container spacing={3}>
-                                {listings.map((listing, index) => {
-                                    const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
-                                    return (
-                                        <Grid item xs={12} sm={6} md={4} key={effectiveId}>
-                                            <div onClick={() => {
-                                                if (listing.id) {
-                                                    navigate(`/marketplace/listings/${listing.id}`);
-                                                } else {
-                                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
-                                                    console.log("Переход к объявлению с временным URL:", url);
-                                                }
-                                            }}>
-                                                <ListingCard listing={listing} />
-                                            </div>
-                                        </Grid>
-                                    );
-                                })}
+                                {/* ... */}
                             </Grid>
+                        ) : (
+                            <MarketplaceListingsList
+                                listings={listings}
+                                showSelection={false}
+                                onSortChange={handleSortChange}
+                                filters={filters}
+                            />
                         )}
                     </InfiniteScroll>
                 )}
+
             </>
         );
     };
