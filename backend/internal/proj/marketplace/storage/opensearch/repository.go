@@ -423,6 +423,7 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		"id":                listing.ID,
 		"title":             listing.Title,
 		"description":       listing.Description,
+        "average_rating":    0.0,
 		"title_suggest":     listing.Title,
 		"title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
 		"price":             listing.Price,

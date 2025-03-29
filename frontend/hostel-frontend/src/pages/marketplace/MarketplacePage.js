@@ -754,13 +754,12 @@ const MarketplacePage = () => {
             console.log("Массив listings пуст или undefined");
         }
 
-        // Проверяем, что listings - это массив и он не пустой
-        // ВАЖНО: Изменили условие - инвертировали, чтобы сначала проверять наличие данных
-        if (listings && Array.isArray(listings) && listings.length > 0) {
+        // ИЗМЕНЕНО: сначала проверяем наличие данных
+        if (!loading && !error && listings && Array.isArray(listings) && listings.length > 0) {
+            // Если есть данные в listings, отображаем их
             return (
                 <>
                     {categoryFilters}
-
                     {!mapViewActive && (
                         <InfiniteScroll
                             hasMore={hasMoreListings}
@@ -806,30 +805,31 @@ const MarketplacePage = () => {
                 </>
             );
         }
-
+        if (!loading && !error) {
         // Если listings пустой или undefined - показываем сообщение
         return (
             <>
-                {categoryFilters}
-                <Alert severity="info" sx={{ m: 2 }}>
-                    {spellingSuggestion ? (
-                        <>
-                            {t('search.didyoumean')} <strong>{spellingSuggestion}</strong>?
-                            <Button
-                                color="inherit"
-                                size="small"
-                                onClick={() => handleFilterChange({ query: spellingSuggestion })}
-                                sx={{ ml: 2 }}
-                            >
-                                {t('search.usesuggestion')}
-                            </Button>
-                        </>
-                    ) : (
-                        t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })
-                    )}
-                </Alert>
+              {categoryFilters}
+              <Alert severity="info" sx={{ m: 2 }}>
+                {spellingSuggestion ? (
+                  <>
+                    {t('search.didyoumean')} <strong>{spellingSuggestion}</strong>?
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() => handleFilterChange({ query: spellingSuggestion })}
+                      sx={{ ml: 2 }}
+                    >
+                      {t('search.usesuggestion')}
+                    </Button>
+                  </>
+                ) : (
+                  t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })
+                )}
+              </Alert>
             </>
-        );
+          );
+        }
     };
 
     if (isMobile) {
