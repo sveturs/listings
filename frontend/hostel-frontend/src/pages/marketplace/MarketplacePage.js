@@ -222,6 +222,7 @@ const MarketplacePage = () => {
             console.log('Структура response.data:', Object.keys(response.data));
 
             // Проверка на наличие полей в ответе - КЛЮЧЕВОЕ ИЗМЕНЕНИЕ
+            // В функции fetchListings, где обрабатывается ответ от сервера
             if (response.data && response.data.data) {
                 // Проверяем, является ли response.data.data массивом или объектом с массивом внутри
                 let receivedListings;
@@ -255,8 +256,15 @@ const MarketplacePage = () => {
 
                 // Обновляем состояние
                 if (isLoadMore) {
-                    setListings(prevListings => [...prevListings, ...receivedListings]);
-                    setPage(page + 1);
+                    // ВАЖНОЕ ИЗМЕНЕНИЕ - проверяем, получены ли новые данные
+                    if (receivedListings.length === 0) {
+                        // Если не получено новых данных, устанавливаем hasMore в false
+                        setHasMoreListings(false);
+                        console.log('Больше нет объявлений для загрузки');
+                    } else {
+                        setListings(prevListings => [...prevListings, ...receivedListings]);
+                        setPage(page + 1);
+                    }
                 } else {
                     // Устанавливаем новые объявления
                     console.log('Устанавливаем новые объявления в state:', receivedListings.length);
@@ -267,10 +275,25 @@ const MarketplacePage = () => {
                 // Обновляем информацию о пагинации
                 if (response.data.meta) {
                     setTotalListings(response.data.meta.total || 0);
-                    setHasMoreListings(response.data.meta.has_more === true);
+
+                    // ВАЖНОЕ ИЗМЕНЕНИЕ - проверяем, есть ли еще страницы
+                    // Если больше нет страниц или если данных меньше, чем размер страницы, устанавливаем hasMore в false
+                    const hasMore = response.data.meta.has_more === true;
+                    if (!hasMore || receivedListings.length < params.size) {
+                        setHasMoreListings(false);
+                        console.log('Устанавливаем hasMoreListings = false, так как нет больше страниц или данных меньше размера страницы');
+                    } else {
+                        setHasMoreListings(true);
+                    }
 
                     if (response.data.meta.spelling_suggestion) {
                         setSpellingSuggestion(response.data.meta.spelling_suggestion);
+                    }
+                } else {
+                    // Если meta отсутствует, проверяем количество полученных данных
+                    if (receivedListings.length < params.size) {
+                        setHasMoreListings(false);
+                        console.log('Устанавливаем hasMoreListings = false, так как данных меньше размера страницы и meta отсутствует');
                     }
                 }
             } else {
@@ -278,6 +301,7 @@ const MarketplacePage = () => {
                 console.error('Неверный формат данных в ответе API:', response.data);
                 setListings(isLoadMore ? [...listings] : []);
                 setHasMoreListings(false);
+                console.log('Устанавливаем hasMoreListings = false, так как формат данных некорректный');
             }
         } catch (err) {
             console.error('Ошибка при получении объявлений:', err);
@@ -806,29 +830,29 @@ const MarketplacePage = () => {
             );
         }
         if (!loading && !error) {
-        // Если listings пустой или undefined - показываем сообщение
-        return (
-            <>
-              {categoryFilters}
-              <Alert severity="info" sx={{ m: 2 }}>
-                {spellingSuggestion ? (
-                  <>
-                    {t('search.didyoumean')} <strong>{spellingSuggestion}</strong>?
-                    <Button
-                      color="inherit"
-                      size="small"
-                      onClick={() => handleFilterChange({ query: spellingSuggestion })}
-                      sx={{ ml: 2 }}
-                    >
-                      {t('search.usesuggestion')}
-                    </Button>
-                  </>
-                ) : (
-                  t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })
-                )}
-              </Alert>
-            </>
-          );
+            // Если listings пустой или undefined - показываем сообщение
+            return (
+                <>
+                    {categoryFilters}
+                    <Alert severity="info" sx={{ m: 2 }}>
+                        {spellingSuggestion ? (
+                            <>
+                                {t('search.didyoumean')} <strong>{spellingSuggestion}</strong>?
+                                <Button
+                                    color="inherit"
+                                    size="small"
+                                    onClick={() => handleFilterChange({ query: spellingSuggestion })}
+                                    sx={{ ml: 2 }}
+                                >
+                                    {t('search.usesuggestion')}
+                                </Button>
+                            </>
+                        ) : (
+                            t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })
+                        )}
+                    </Alert>
+                </>
+            );
         }
     };
 
