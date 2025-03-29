@@ -1685,14 +1685,17 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 
     log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
 
-    params := &search.ServiceParams{
+
+	log.Printf("Исходные параметры сортировки из запроса: sort_by=%s", c.Query("sort_by", ""))
+
+	params := &search.ServiceParams{
 		Query:            c.Query("q", ""),
 		CategoryID:       c.Query("category_id", ""),
 		Condition:        c.Query("condition", ""),
 		City:             c.Query("city", ""),
 		Country:          c.Query("country", ""),
 		StorefrontID:     c.Query("storefront_id", ""),
-		Sort:             c.Query("sort_by", ""),
+		Sort:             c.Query("sort_by", ""),  // Поле sort_by становится Sort
 		SortDirection:    c.Query("sort_direction", "desc"),
 		Distance:         c.Query("distance", ""),
 		Page:             c.QueryInt("page", 1),
@@ -1700,6 +1703,9 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		Language:         c.Query("language", ""),
 		AttributeFilters: attributeFilters,
 	}
+	
+	// Добавьте этот код после инициализации params
+	log.Printf("Итоговый параметр сортировки в запросе к OpenSearch: %s", params.Sort)
     
     // Проверяем и логируем параметры пагинации
     log.Printf("Параметры пагинации: page=%d, size=%d", params.Page, params.Size)

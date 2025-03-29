@@ -328,14 +328,11 @@ const MarketplacePage = () => {
 const handleSortChange = (field, direction) => {
     console.log(`Sorting changed: ${field} ${direction}`);
     
-    // Сохраняем текущее состояние для отладки
-    console.log(`Предыдущее состояние - поле: ${sortField}, направление: ${sortDirection}`);
-    
-    // Обновляем состояние компонента
+    // Важно: сначала обновляем состояние компонента, а затем формируем параметры запроса
     setSortField(field);
     setSortDirection(direction);
     
-    // Явное преобразование полей UI в поля API
+    // Преобразуем поле UI в поле API
     let apiSortField;
     switch (field) {
         case 'created_at':
@@ -354,33 +351,32 @@ const handleSortChange = (field, direction) => {
             apiSortField = 'date';
     }
     
-    // Формируем параметр сортировки в формате API
+    // Формируем параметр сортировки для API
     const sortParam = `${apiSortField}_${direction}`;
-    console.log(`Итоговый параметр сортировки: ${sortParam}`);
+    console.log(`Параметр сортировки для API: ${sortParam}`);
     
-    // Создаем обновленные фильтры
+    // Создаем новый объект фильтров
     const updatedFilters = {
         ...filters,
-        sort_by: sortParam  // Явно устанавливаем sort_by
+        sort_by: sortParam
     };
     
     console.log(`Обновленные фильтры:`, updatedFilters);
     
-    // Обновляем URL
+    // Обновляем URL-параметры
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set('sort_by', sortParam);
     setSearchParams(nextParams);
     
-    // Обновляем фильтры в состоянии
+    // Обновляем состояние фильтров перед запросом
     setFilters(updatedFilters);
     
-    // Сбрасываем состояние пагинации
-    setPage(1);
+    // Сбрасываем состояние списка и пагинации перед новым запросом
     setListings([]);
+    setPage(1);
     setHasMoreListings(true);
     
     // Выполняем запрос с новыми фильтрами
-    // ВАЖНО: Передаем updatedFilters напрямую, а не ссылаемся на filters
     fetchListings(updatedFilters);
 };
 

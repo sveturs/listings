@@ -937,7 +937,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
         log.Printf("Объявление %d: ID=%d, Название=%s, Координаты=%v,%v, Статус=%s",
             i+1, listing.ID, listing.Title, listing.Latitude, listing.Longitude, listing.Status)
     }
-
+	log.Printf("Запрос поиска с параметрами сортировки: sort_by=%s, direction=%s", params.Sort, params.SortDirection)
     // ЗДЕСЬ ДОБАВЛЯЕМ ДОПОЛНИТЕЛЬНУЮ СОРТИРОВКУ РЕЗУЛЬТАТОВ
     // Особая обработка для многословных запросов (марка+модель)
     if len(searchResult.Listings) > 0 && strings.Contains(params.Query, " ") {

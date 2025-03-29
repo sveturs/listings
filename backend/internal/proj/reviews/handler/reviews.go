@@ -387,18 +387,23 @@ func (h *ReviewHandler) GetEntityRating(c *fiber.Ctx) error {
 }
 
 func (h *ReviewHandler) GetEntityStats(c *fiber.Ctx) error {
-	entityType := c.Params("type")
-	entityId, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID сущности")
-	}
-
-	stats, err := h.services.Review().GetReviewStats(c.Context(), entityType, entityId)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении статистики")
-	}
-
-	return utils.SuccessResponse(c, stats)
+    entityType := c.Params("type")
+    entityId, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID сущности")
+    }
+    
+    log.Printf("Запрос статистики для %s ID=%d", entityType, entityId)
+    
+    stats, err := h.services.Review().GetReviewStats(c.Context(), entityType, entityId)
+    if err != nil {
+        log.Printf("Ошибка при получении статистики для %s ID=%d: %v", entityType, entityId, err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении статистики")
+    }
+    
+    log.Printf("Получена статистика для %s ID=%d: %+v", entityType, entityId, stats)
+    
+    return utils.SuccessResponse(c, stats)
 }
 
 // GetUserReviews получает все отзывы для пользователя
