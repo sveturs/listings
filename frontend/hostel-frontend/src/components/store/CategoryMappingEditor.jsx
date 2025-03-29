@@ -1,43 +1,408 @@
-// frontend/hostel-frontend/src/pages/store/CategoryMappingEditor.jsx
-import React, { useState, useEffect } from 'react';
+// frontend/hostel-frontend/src/components/store/CategoryMappingEditor.jsx
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
-  Paper,
-  Button,
   TextField,
+  Button,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Divider,
   CircularProgress,
   Alert,
   InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  ListSubheader,
   Chip,
-  Tooltip
+  Tooltip,
+  Paper,
+  Collapse,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import {
-  Plus,
-  Edit2,
-  Trash2,
   Save,
   X,
   Search,
   RefreshCw,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  FolderClosed,
+  FolderOpen,
+  Tag,
+  Check,
+  Move,
+  Trash2
 } from 'lucide-react';
 import axios from '../../api/axios';
-import HierarchicalCategorySelect from '../../components/marketplace/HierarchicalCategorySelect';
 
+const DraggableSystemCategory = ({ category, onDragStart }) => {
+  // Используем встроенный HTML5 Drag and Drop API
+  const handleDragStart = (e) => {
+    // Передаем ID категории через dataTransfer
+    e.dataTransfer.setData('text/plain', category.id);
+    e.dataTransfer.setData('categoryName', category.name);
+    
+    // Добавляем эффект перемещения
+    e.dataTransfer.effectAllowed = 'move';
+    
+    // Вызываем колбэк onDragStart
+    onDragStart?.(category);
+  };
+
+  return (
+    <Box
+      draggable
+      onDragStart={handleDragStart}
+      sx={{
+        cursor: 'grab',
+        p: 1,
+        display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        borderRadius: 1,
+        '&:hover': {
+          bgcolor: 'action.hover'
+        }
+      }}
+    >
+      <Typography variant="body2">
+        {category.name}
+      </Typography>
+      
+      {/* Показываем полный путь, если он есть */}
+      {category.pathLabel && (
+        <Typography 
+          variant="caption" 
+          color="text.secondary"
+          sx={{ mt: 0.5, fontSize: '0.7rem' }}
+        >
+          {category.pathLabel}
+        </Typography>
+      )}
+    </Box>
+  );
+};
+
+
+// Компонент для целевой зоны перетаскивания (импортированная категория)
+const DroppableImportCategory = ({ sourceCategory, sourcePath, mappedTo, formatCategoryName, onDrop }) => {
+  const { t } = useTranslation(['marketplace', 'common']);
+  const [isOver, setIsOver] = useState(false);
+  
+  // Обрабатываем события перетаскивания
+  const handleDragOver = (e) => {
+    // Предотвращаем стандартное поведение, чтобы разрешить drop
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (!isOver) setIsOver(true);
+  };
+  
+  const handleDragLeave = () => {
+    setIsOver(false);
+  };
+  
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsOver(false);
+    
+    // Получаем ID категории из данных перетаскивания
+    const categoryId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (!isNaN(categoryId)) {
+      onDrop(sourcePath, categoryId);
+    }
+  };
+  
+  const handleRemoveMapping = (e) => {
+    e.stopPropagation();
+    onDrop(sourcePath, null);
+  };
+
+  return (
+    <Box
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      sx={{
+        p: 1.5,
+        borderRadius: 1,
+        bgcolor: isOver ? 'action.selected' : (mappedTo ? 'action.selected' : 'transparent'),
+        border: isOver ? '1px dashed' : '1px solid transparent',
+        borderColor: isOver ? 'primary.main' : 'divider',
+        transition: 'all 0.2s',
+        '&:hover': {
+          bgcolor: isOver ? 'action.selected' : (mappedTo ? 'action.selected' : 'action.hover')
+        }
+      }}
+    >
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Typography variant="body2" component="div">
+          {sourceCategory}
+        </Typography>
+        
+        {isOver && (
+          <Chip 
+            label={t('marketplace:store.categoryMapping.dropHere', { defaultValue: 'Перетащите сюда' })} 
+            color="primary" 
+            size="small"
+            variant="outlined"
+          />
+        )}
+      </Box>
+      
+      {mappedTo && (
+        <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center' }}>
+          <ChevronRight size={14} style={{ opacity: 0.6 }} />
+          <Typography variant="caption" color="primary" sx={{ fontWeight: 'medium' }}>
+            {formatCategoryName(mappedTo)}
+          </Typography>
+          <IconButton 
+            size="small"
+            sx={{ ml: 'auto' }}
+            onClick={handleRemoveMapping}
+          >
+            <X size={14} />
+          </IconButton>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+// Компонент для иерархического отображения категорий системы
+const SystemCategoryTree = ({ categories, onCategoryDragStart }) => {
+  const [expanded, setExpanded] = useState({});
+  const { t } = useTranslation(['marketplace', 'common']);
+
+  // Функция для построения дерева категорий
+  const buildCategoryTree = (categories) => {
+    // Создаем словарь категорий
+    const categoriesMap = {};
+    categories.forEach(cat => {
+      categoriesMap[cat.id] = { ...cat, children: [] };
+    });
+
+    // Строим древовидную структуру
+    const rootCategories = [];
+    categories.forEach(cat => {
+      if (cat.parent_id) {
+        if (categoriesMap[cat.parent_id]) {
+          categoriesMap[cat.parent_id].children.push(categoriesMap[cat.id]);
+        } else {
+          rootCategories.push(categoriesMap[cat.id]);
+        }
+      } else {
+        rootCategories.push(categoriesMap[cat.id]);
+      }
+    });
+
+    return rootCategories;
+  };
+
+  // Строим дерево категорий
+  const categoryTree = useMemo(() => buildCategoryTree(categories), [categories]);
+
+  // Функция для обработки клика по категории
+  const handleToggle = (categoryId, e) => {
+    e.stopPropagation();
+    setExpanded(prev => ({
+      ...prev,
+      [categoryId]: !prev[categoryId]
+    }));
+  };
+
+  // Рекурсивный рендер категорий и их потомков
+  const renderCategoryItem = (category, level = 0) => {
+    const isExpanded = expanded[category.id];
+    const hasChildren = category.children && category.children.length > 0;
+
+    return (
+      <React.Fragment key={category.id}>
+        <ListItem
+          disablePadding
+          sx={{
+            pl: level * 2,
+            borderRadius: 1,
+            mb: 0.5
+          }}
+        >
+          <ListItemButton
+            sx={{
+              py: 0.5,
+              borderRadius: 1
+            }}
+            dense
+          >
+            <ListItemIcon sx={{ minWidth: 36 }}>
+              {hasChildren ? (
+                <IconButton
+                  edge="start"
+                  size="small"
+                  onClick={(e) => handleToggle(category.id, e)}
+                  sx={{ mr: 1 }}
+                >
+                  {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                </IconButton>
+              ) : (
+                <Box sx={{ width: 18, mr: 1 }} /> // Пустой элемент для выравнивания
+              )}
+            </ListItemIcon>
+            
+            <DraggableSystemCategory 
+              category={category} 
+              onDragStart={onCategoryDragStart}
+            />
+          </ListItemButton>
+        </ListItem>
+        
+        {hasChildren && (
+          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+            <List disablePadding>
+              {category.children.map(child => renderCategoryItem(child, level + 1))}
+            </List>
+          </Collapse>
+        )}
+      </React.Fragment>
+    );
+  };
+
+  // Рендерим корневые категории
+  return (
+    <List disablePadding>
+      {categoryTree.map(category => renderCategoryItem(category))}
+    </List>
+  );
+};
+
+// Компонент для иерархического отображения импортированных категорий
+const ImportedCategoryTree = ({ categories, mappings, formatCategoryName, onDrop }) => {
+  const [expanded, setExpanded] = useState({});
+  const { t } = useTranslation(['marketplace', 'common']);
+
+  // Функция для обработки клика по категории
+  const handleToggle = (categoryKey, e) => {
+    e.stopPropagation();
+    setExpanded(prev => ({
+      ...prev,
+      [categoryKey]: !prev[categoryKey]
+    }));
+  };
+
+  if (Object.keys(categories).length === 0) {
+    return (
+      <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+        {t('marketplace:store.categoryMapping.noCategories')}
+      </Typography>
+    );
+  }
+
+  return (
+    <List disablePadding>
+      {Object.entries(categories).map(([parentCategory, parentData]) => (
+        <React.Fragment key={parentCategory}>
+          <ListItem
+            disablePadding
+            sx={{ mb: 0.5 }}
+          >
+            <ListItemButton 
+              dense
+              onClick={(e) => handleToggle(parentCategory, e)}
+              sx={{ py: 0.5, px: 1, borderRadius: 1 }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                {Object.keys(parentData.children).length > 0 ? (
+                  expanded[parentCategory] ? <FolderOpen size={18} /> : <FolderClosed size={18} />
+                ) : (
+                  <Tag size={18} />
+                )}
+              </ListItemIcon>
+              
+              <DroppableImportCategory 
+                sourceCategory={parentCategory} 
+                sourcePath={parentCategory}
+                mappedTo={parentData.mappedTo}
+                formatCategoryName={formatCategoryName}
+                onDrop={onDrop}
+              />
+            </ListItemButton>
+          </ListItem>
+          
+          {Object.keys(parentData.children).length > 0 && (
+            <Collapse in={expanded[parentCategory]} timeout="auto" unmountOnExit>
+              <List disablePadding sx={{ pl: 4 }}>
+                {Object.entries(parentData.children).map(([childCategory, childData]) => (
+                  <React.Fragment key={`${parentCategory}|${childCategory}`}>
+                    <ListItem
+                      disablePadding
+                      sx={{ mb: 0.5 }}
+                    >
+                      <ListItemButton 
+                        dense
+                        onClick={(e) => handleToggle(`${parentCategory}|${childCategory}`, e)}
+                        sx={{ py: 0.5, px: 1, borderRadius: 1 }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          {Object.keys(childData.children).length > 0 ? (
+                            expanded[`${parentCategory}|${childCategory}`] ? <FolderOpen size={16} /> : <FolderClosed size={16} />
+                          ) : (
+                            <Tag size={16} />
+                          )}
+                        </ListItemIcon>
+                        
+                        <DroppableImportCategory 
+                          sourceCategory={childCategory} 
+                          sourcePath={`${parentCategory}|${childCategory}`}
+                          mappedTo={childData.mappedTo}
+                          formatCategoryName={formatCategoryName}
+                          onDrop={onDrop}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                    
+                    {Object.keys(childData.children).length > 0 && (
+                      <Collapse in={expanded[`${parentCategory}|${childCategory}`]} timeout="auto" unmountOnExit>
+                        <List disablePadding sx={{ pl: 4 }}>
+                          {Object.entries(childData.children).map(([grandchildCategory, grandchildData]) => (
+                            <ListItem
+                              key={`${parentCategory}|${childCategory}|${grandchildCategory}`}
+                              disablePadding
+                              sx={{ mb: 0.5 }}
+                            >
+                              <ListItemButton 
+                                dense
+                                sx={{ py: 0.5, px: 1, borderRadius: 1 }}
+                              >
+                                <ListItemIcon sx={{ minWidth: 36 }}>
+                                  <Tag size={14} />
+                                </ListItemIcon>
+                                
+                                <DroppableImportCategory 
+                                  sourceCategory={grandchildCategory} 
+                                  sourcePath={`${parentCategory}|${childCategory}|${grandchildCategory}`}
+                                  mappedTo={grandchildData.mappedTo}
+                                  formatCategoryName={formatCategoryName}
+                                  onDrop={onDrop}
+                                />
+                              </ListItemButton>
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Collapse>
+                    )}
+                  </React.Fragment>
+                ))}
+              </List>
+            </Collapse>
+          )}
+        </React.Fragment>
+      ))}
+    </List>
+  );
+};
+
+// Основной компонент редактора сопоставления категорий
 const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
   const { t } = useTranslation(['marketplace', 'common']);
   const [loading, setLoading] = useState(true);
@@ -46,23 +411,22 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [currentMapping, setCurrentMapping] = useState({ source: '', target: 0 });
-  const [categoryExpansionState, setCategoryExpansionState] = useState({});
-
+  
   // Состояние для импортированных категорий
   const [importedCategories, setImportedCategories] = useState([]);
   const [organizedCategories, setOrganizedCategories] = useState({});
   const [importedCategoriesLoading, setImportedCategoriesLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchSystemTerm, setSearchSystemTerm] = useState('');
+  const [searchImportTerm, setSearchImportTerm] = useState('');
+  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [filteredImportCategories, setFilteredImportCategories] = useState({});
 
   // Состояние для применения сопоставлений
   const [applyingMappings, setApplyingMappings] = useState(false);
   const [applyResult, setApplyResult] = useState(null);
-
-  const updateCategoryExpansionState = (newState) => {
-    setCategoryExpansionState(newState);
-  };
+  
+  // Состояние для отслеживания перетаскивания
+  const [draggedCategory, setDraggedCategory] = useState(null);
 
   // Загружаем данные при инициализации
   useEffect(() => {
@@ -90,6 +454,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
             a.name.localeCompare(b.name)
           );
           setCategories(sortedCategories);
+          setFilteredCategories(sortedCategories);
         }
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -104,10 +469,11 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
 
   // Организуем импортированные категории в иерархию
   useEffect(() => {
-    if (importedCategories.length > 0 && Object.keys(mappings).length >= 0) {
+    if (importedCategories.length > 0) {
       const categoriesTree = organizeImportedCategories(importedCategories);
       const markedTree = markMappedCategories(categoriesTree, mappings);
       setOrganizedCategories(markedTree);
+      setFilteredImportCategories(markedTree);
     }
   }, [importedCategories, mappings]);
 
@@ -126,6 +492,125 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
       setImportedCategoriesLoading(false);
     }
   };
+
+  // Фильтрация системных категорий при поиске
+  useEffect(() => {
+    if (searchSystemTerm) {
+      // Расширенная фильтрация категорий с сохранением информации о пути
+      let filtered = [];
+      
+      // Построим полные пути для всех категорий
+      const buildCategoryPaths = (categories) => {
+        const categoryPaths = {};
+        const categoriesMap = {};
+        
+        // Создаем карту категорий по ID
+        categories.forEach(cat => {
+          categoriesMap[cat.id] = cat;
+        });
+        
+        // Рекурсивная функция для построения пути
+        const buildPath = (categoryId, path = []) => {
+          const category = categoriesMap[categoryId];
+          if (!category) return [...path];
+          
+          const newPath = [...path, category];
+          
+          // Если есть родитель, продолжаем строить путь
+          if (category.parent_id) {
+            return buildPath(category.parent_id, newPath);
+          }
+          
+          return newPath.reverse(); // Разворачиваем путь от корня к листу
+        };
+        
+        // Строим пути для всех категорий
+        categories.forEach(cat => {
+          categoryPaths[cat.id] = buildPath(cat.id);
+        });
+        
+        return categoryPaths;
+      };
+      
+      const categoryPaths = buildCategoryPaths(categories);
+      
+      // Фильтруем категории по поисковому запросу
+      categories.forEach(cat => {
+        if (cat.name.toLowerCase().includes(searchSystemTerm.toLowerCase())) {
+          // Добавляем элемент с полным путем
+          const pathWithLabels = categoryPaths[cat.id].map(c => c.name).join(' > ');
+          cat.pathLabel = pathWithLabels;
+          filtered.push(cat);
+        }
+      });
+      
+      setFilteredCategories(filtered);
+    } else {
+      // Если поиск пуст, сбрасываем состояние
+      setFilteredCategories(categories.map(cat => ({...cat, pathLabel: null})));
+    }
+  }, [searchSystemTerm, categories]);
+
+  // Фильтрация импортированных категорий при поиске
+  useEffect(() => {
+    if (!searchImportTerm || searchImportTerm === '') {
+      setFilteredImportCategories(organizedCategories);
+      return;
+    }
+    
+    const searchLower = searchImportTerm.toLowerCase();
+    const filtered = {};
+    
+    // Поиск по всем уровням категорий
+    Object.entries(organizedCategories).forEach(([parentKey, parentData]) => {
+      // Если родитель соответствует поиску
+      if (parentKey.toLowerCase().includes(searchLower)) {
+        filtered[parentKey] = { ...parentData };
+        return;
+      }
+      
+      // Поиск по дочерним категориям
+      const filteredChildren = {};
+      let hasMatchingChildren = false;
+      
+      Object.entries(parentData.children).forEach(([childKey, childData]) => {
+        // Если ребенок соответствует поиску
+        if (childKey.toLowerCase().includes(searchLower)) {
+          filteredChildren[childKey] = { ...childData };
+          hasMatchingChildren = true;
+          return;
+        }
+        
+        // Поиск по внукам
+        const filteredGrandchildren = {};
+        let hasMatchingGrandchildren = false;
+        
+        Object.entries(childData.children).forEach(([grandchildKey, grandchildData]) => {
+          if (grandchildKey.toLowerCase().includes(searchLower)) {
+            filteredGrandchildren[grandchildKey] = { ...grandchildData };
+            hasMatchingGrandchildren = true;
+          }
+        });
+        
+        if (hasMatchingGrandchildren) {
+          filteredChildren[childKey] = {
+            ...childData,
+            children: filteredGrandchildren
+          };
+          hasMatchingChildren = true;
+        }
+      });
+      
+      if (hasMatchingChildren) {
+        filtered[parentKey] = {
+          ...parentData,
+          children: filteredChildren
+        };
+      }
+    });
+    
+    setFilteredImportCategories(filtered);
+  }, [searchImportTerm, organizedCategories]);
 
   // Организуем категории по иерархии
   const organizeImportedCategories = (importedCategories) => {
@@ -201,6 +686,26 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     return result;
   };
 
+  // Обработка перетаскивания категории
+  const handleCategoryDrop = (sourcePath, targetCategoryId) => {
+    const newMappings = { ...mappings };
+    
+    if (targetCategoryId === null) {
+      // Если targetCategoryId === null, то это удаление сопоставления
+      delete newMappings[sourcePath];
+    } else {
+      // Добавляем или обновляем сопоставление
+      newMappings[sourcePath] = targetCategoryId;
+    }
+    
+    setMappings(newMappings);
+  };
+
+  // Отслеживаем начало перетаскивания категории
+  const handleCategoryDragStart = (category) => {
+    setDraggedCategory(category);
+  };
+
   // Сохранение сопоставлений
   const handleSave = async () => {
     setSaving(true);
@@ -267,71 +772,6 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     }
   };
 
-  // Открытие диалога для добавления нового сопоставления
-  const handleAddMapping = () => {
-    setCurrentMapping({ source: '', target: 0 });
-    setEditDialogOpen(true);
-  };
-
-  // Открытие диалога для редактирования существующего сопоставления
-  const handleEditMapping = (sourceCategory) => {
-    setCurrentMapping({
-      source: sourceCategory,
-      target: mappings[sourceCategory] || 0
-    });
-    setEditDialogOpen(true);
-  };
-  const buildCategoryTree = (flatCategories) => {
-    // Если категории уже имеют иерархическую структуру (с children),
-    // просто вернем их
-    if (flatCategories.some(c => c.children && c.children.length > 0)) {
-      return flatCategories;
-    }
-
-    // Создаем словарь категорий по ID
-    const categoryMap = {};
-    flatCategories.forEach(cat => {
-      categoryMap[cat.id] = { ...cat, children: [] };
-    });
-
-    // Формируем дерево категорий
-    const rootCategories = [];
-    flatCategories.forEach(cat => {
-      if (cat.parent_id) {
-        // Это дочерняя категория
-        if (categoryMap[cat.parent_id]) {
-          categoryMap[cat.parent_id].children.push(categoryMap[cat.id]);
-        } else {
-          // Если родительская категория не найдена, добавляем в корень
-          rootCategories.push(categoryMap[cat.id]);
-        }
-      } else {
-        // Это корневая категория
-        rootCategories.push(categoryMap[cat.id]);
-      }
-    });
-
-    return rootCategories;
-  };
-  // Удаление сопоставления
-  const handleDeleteMapping = (sourceCategory) => {
-    const newMappings = { ...mappings };
-    delete newMappings[sourceCategory];
-    setMappings(newMappings);
-  };
-
-  // Сохранение изменений в диалоге
-  const handleSaveMapping = () => {
-    if (!currentMapping.source.trim() || !currentMapping.target) {
-      return;
-    }
-
-    const newMappings = { ...mappings };
-    newMappings[currentMapping.source] = currentMapping.target;
-    setMappings(newMappings);
-    setEditDialogOpen(false);
-  };
-
   // Форматирование названия категории для отображения
   const formatCategoryName = (categoryId) => {
     const category = categories.find(c => c.id === categoryId);
@@ -380,7 +820,9 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
         </Typography>
 
         <Alert severity="info" sx={{ mb: 2 }}>
-          {t('marketplace:store.categoryMapping.info')}
+          {t('marketplace:store.categoryMapping.dragDropInfo', { 
+            defaultValue: 'Перетащите категорию из правой панели на импортированную категорию слева, чтобы создать сопоставление. Для удаления сопоставления нажмите на значок X рядом с сопоставленной категорией.' 
+          })}
         </Alert>
 
         {/* Статистика сопоставлений */}
@@ -412,240 +854,142 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
 
         <Divider sx={{ mb: 3 }} />
 
-        {/* Поиск по категориям (если необходимо) */}
-        <TextField
-          fullWidth
-          variant="outlined"
-          label={t('marketplace:store.categoryMapping.searchCategories')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ mb: 2 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={20} />
-              </InputAdornment>
-            ),
-            endAdornment: searchTerm ? (
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="clear search"
-                  onClick={() => setSearchTerm('')}
-                  edge="end"
-                >
-                  <X size={16} />
-                </IconButton>
-              </InputAdornment>
-            ) : null
-          }}
-        />
-
-        {/* Импортированные категории с иерархической структурой */}
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            {t('marketplace:store.categoryMapping.importedCategories', { defaultValue: 'Импортированные категории' })}
-          </Typography>
-
-          {importedCategoriesLoading ? (
-            <Box display="flex" alignItems="center" gap={1}>
-              <CircularProgress size={20} />
-              <Typography variant="body2">
-                {t('marketplace:store.categoryMapping.loadingImportedCategories', { defaultValue: 'Загрузка категорий...' })}
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+          {/* Левая колонка - импортированные категории */}
+          <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+            <Typography variant="subtitle2" gutterBottom>
+              {t('marketplace:store.categoryMapping.importedCategories', { defaultValue: 'Импортированные категории' })}
+              <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
+                ({t('marketplace:store.categoryMapping.dropTarget', { defaultValue: 'Целевая зона для перетаскивания' })})
               </Typography>
-            </Box>
-          ) : (
-            <>
-              {importedCategories.length === 0 ? (
-                <Alert severity="info">
-                  {t('marketplace:store.categoryMapping.noImportedCategories', { defaultValue: 'Нет импортированных категорий' })}
-                </Alert>
-              ) : (
-                <Paper variant="outlined" sx={{ maxHeight: 350, overflow: 'auto' }}>
-                  {/* Обработка организованных категорий */}
-                  {Object.entries(organizedCategories).map(([parentCategory, parentData]) => (
-                    <Box key={parentCategory} sx={{ mb: 0.5, borderBottom: '1px solid', borderColor: 'divider' }}>
-                      {/* Родительская категория первого уровня */}
-                      <Box
-                        sx={{
-                          p: 1.5,
-                          pl: 2,
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          bgcolor: parentData.mapped ? 'action.selected' : 'transparent'
-                        }}
-                      >
-                        <Box>
-                          <Typography variant="subtitle2" component="div">
-                            {parentCategory}
-                          </Typography>
-                          {parentData.mapped && (
-                            <Typography variant="caption" color="primary">
-                              → {formatCategoryName(parentData.mappedTo)} (ID: {parentData.mappedTo})
-                            </Typography>
-                          )}
-                        </Box>
+            </Typography>
 
-                        <Box>
-                          {parentData.mapped ? (
-                            <IconButton
-                              size="small"
-                              onClick={() => handleEditMapping(parentCategory)}
-                              aria-label="edit mapping"
-                            >
-                              <Edit2 size={18} />
-                            </IconButton>
-                          ) : (
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              onClick={() => handleEditMapping(parentCategory)}
-                              startIcon={<Plus size={16} />}
-                            >
-                              {t('marketplace:store.categoryMapping.mapCategory', { defaultValue: 'Сопоставить' })}
-                            </Button>
-                          )}
-                        </Box>
-                      </Box>
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              placeholder={t('marketplace:store.categoryMapping.searchImportedCategories')}
+              value={searchImportTerm}
+              onChange={(e) => setSearchImportTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={18} />
+                  </InputAdornment>
+                ),
+                endAdornment: searchImportTerm ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => setSearchImportTerm('')}
+                    >
+                      <X size={16} />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null
+              }}
+              sx={{ mb: 2 }}
+            />
 
-                      {/* Категории второго уровня */}
-                      {Object.keys(parentData.children).length > 0 && (
-                        <Box sx={{ pl: 4 }}>
-                          {Object.entries(parentData.children).map(([childCategory, childData]) => (
-                            <Box key={childCategory}>
-                              {/* Категория второго уровня */}
-                              <Box
-                                sx={{
-                                  p: 1,
-                                  borderTop: '1px dashed',
-                                  borderColor: 'divider',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  bgcolor: childData.mapped ? 'action.selected' : 'transparent'
-                                }}
-                              >
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  <ChevronRight size={16} style={{ marginRight: 8, opacity: 0.6 }} />
-                                  <Box>
-                                    <Typography variant="body2" component="div">
-                                      {childCategory}
-                                    </Typography>
-                                    {childData.mapped && (
-                                      <Typography variant="caption" color="primary">
-                                        → {formatCategoryName(childData.mappedTo)} (ID: {childData.mappedTo})
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                </Box>
+            {importedCategoriesLoading ? (
+              <Box display="flex" alignItems="center" gap={1}>
+                <CircularProgress size={20} />
+                <Typography variant="body2">
+                  {t('marketplace:store.categoryMapping.loadingImportedCategories', { defaultValue: 'Загрузка категорий...' })}
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                {importedCategories.length === 0 ? (
+                  <Alert severity="info">
+                    {t('marketplace:store.categoryMapping.noImportedCategories', { defaultValue: 'Нет импортированных категорий' })}
+                  </Alert>
+                ) : (
+                  <Paper 
+                    variant="outlined" 
+                    sx={{ 
+                      height: 400, 
+                      overflow: 'auto',
+                      p: 1,
+                      bgcolor: 'background.default'
+                    }}
+                  >
+                    <ImportedCategoryTree 
+                      categories={filteredImportCategories} 
+                      mappings={mappings}
+                      formatCategoryName={formatCategoryName}
+                      onDrop={handleCategoryDrop}
+                    />
+                  </Paper>
+                )}
+              </>
+            )}
+          </Box>
 
-                                <Box>
-                                  {childData.mapped ? (
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => handleEditMapping(`${parentCategory}|${childCategory}`)}
-                                      aria-label="edit mapping"
-                                    >
-                                      <Edit2 size={16} />
-                                    </IconButton>
-                                  ) : (
-                                    <Button
-                                      size="small"
-                                      variant="outlined"
-                                      onClick={() => handleEditMapping(`${parentCategory}|${childCategory}`)}
-                                      startIcon={<Plus size={14} />}
-                                    >
-                                      {t('marketplace:store.categoryMapping.mapCategory', { defaultValue: 'Сопоставить' })}
-                                    </Button>
-                                  )}
-                                </Box>
-                              </Box>
+          {/* Правая колонка - категории системы для перетаскивания */}
+          <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+            <Typography variant="subtitle2" gutterBottom>
+              {t('marketplace:store.categoryMapping.systemCategories', { defaultValue: 'Категории системы' })}
+              <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
+                ({t('marketplace:store.categoryMapping.dragSource', { defaultValue: 'Перетащите на импортированную категорию' })})
+              </Typography>
+            </Typography>
 
-                              {/* Категории третьего уровня */}
-                              {Object.keys(childData.children).length > 0 && (
-                                <Box sx={{ pl: 4 }}>
-                                  {Object.entries(childData.children).map(([grandchildCategory, grandchildData]) => (
-                                    <Box
-                                      key={grandchildCategory}
-                                      sx={{
-                                        p: 1,
-                                        borderTop: '1px dotted',
-                                        borderColor: 'divider',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        bgcolor: grandchildData.mapped ? 'action.selected' : 'transparent'
-                                      }}
-                                    >
-                                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <ChevronRight size={14} style={{ marginRight: 8, opacity: 0.5 }} />
-                                        <Box>
-                                          <Typography variant="body2" color="text.secondary" component="div">
-                                            {grandchildCategory}
-                                          </Typography>
-                                          {grandchildData.mapped && (
-                                            <Typography variant="caption" color="primary">
-                                              → {formatCategoryName(grandchildData.mappedTo)} (ID: {grandchildData.mappedTo})
-                                            </Typography>
-                                          )}
-                                        </Box>
-                                      </Box>
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              placeholder={t('marketplace:store.categoryMapping.searchCategories')}
+              value={searchSystemTerm}
+              onChange={(e) => setSearchSystemTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={18} />
+                  </InputAdornment>
+                ),
+                endAdornment: searchSystemTerm ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => setSearchSystemTerm('')}
+                    >
+                      <X size={16} />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null
+              }}
+              sx={{ mb: 2 }}
+            />
 
-                                      <Box>
-                                        {grandchildData.mapped ? (
-                                          <IconButton
-                                            size="small"
-                                            onClick={() => handleEditMapping(`${parentCategory}|${childCategory}|${grandchildCategory}`)}
-                                            aria-label="edit mapping"
-                                          >
-                                            <Edit2 size={14} />
-                                          </IconButton>
-                                        ) : (
-                                          <Button
-                                            size="small"
-                                            variant="outlined"
-                                            onClick={() => handleEditMapping(`${parentCategory}|${childCategory}|${grandchildCategory}`)}
-                                            startIcon={<Plus size={12} />}
-                                          >
-                                            {t('marketplace:store.categoryMapping.mapCategory', { defaultValue: 'Сопоставить' })}
-                                          </Button>
-                                        )}
-                                      </Box>
-                                    </Box>
-                                  ))}
-                                </Box>
-                              )}
-                            </Box>
-                          ))}
-                        </Box>
-                      )}
-                    </Box>
-                  ))}
-                </Paper>
-              )}
-            </>
-          )}
+            <Paper 
+              variant="outlined" 
+              sx={{ 
+                height: 400, 
+                overflow: 'auto',
+                p: 1,
+                bgcolor: 'background.default'
+              }}
+            >
+              <SystemCategoryTree 
+                categories={filteredCategories}
+                onCategoryDragStart={handleCategoryDragStart}
+              />
+            </Paper>
+          </Box>
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
           <Button
             variant="outlined"
-            startIcon={<Plus />}
-            onClick={handleAddMapping}
+            onClick={onClose}
+            sx={{ mr: 1 }}
+            disabled={saving || applyingMappings}
           >
-            {t('marketplace:store.categoryMapping.addMapping', { defaultValue: 'Добавить сопоставление' })}
+            {t('common:buttons.cancel', { defaultValue: 'Отмена' })}
           </Button>
 
           <Box>
-            <Button
-              variant="outlined"
-              onClick={onClose}
-              sx={{ mr: 1 }}
-              disabled={saving || applyingMappings}
-            >
-              {t('common:buttons.cancel', { defaultValue: 'Отмена' })}
-            </Button>
-
             <Tooltip
               title={t('marketplace:store.categoryMapping.applyHelp', {
                 defaultValue: 'Эта кнопка обновит категории всех товаров, которые были импортированы из этого источника, согласно настроенным сопоставлениям.'
@@ -678,72 +1022,6 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
           </Box>
         </Box>
       </Paper>
-
-      {/* Диалог добавления/редактирования сопоставления */}
-      <Dialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          {currentMapping.source ?
-            t('marketplace:store.categoryMapping.editMappingTitle', { defaultValue: 'Редактирование сопоставления' }) :
-            t('marketplace:store.categoryMapping.addMappingTitle', { defaultValue: 'Добавление сопоставления' })}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 1 }}>
-            <TextField
-              fullWidth
-              label={t('marketplace:store.categoryMapping.sourceCategory', { defaultValue: 'Категория источника' })}
-              value={currentMapping.source}
-              onChange={(e) => setCurrentMapping({ ...currentMapping, source: e.target.value })}
-              margin="dense"
-              helperText={t('marketplace:store.categoryMapping.sourceCategoryHelp', { defaultValue: 'Введите категорию из источника импорта' })}
-            />
-
-            <Box sx={{ mt: 3, mb: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                {t('marketplace:store.categoryMapping.targetCategoryLabel', { defaultValue: 'Выберите категорию для сопоставления:' })}
-              </Typography>
-
-              <HierarchicalCategorySelect
-                categories={buildCategoryTree(categories)}
-                value={currentMapping.target}
-                onChange={(value) => setCurrentMapping({ ...currentMapping, target: value })}
-                placeholder={t('marketplace:store.categoryMapping.selectCategory', { defaultValue: 'Выберите категорию' })}
-                expansionState={categoryExpansionState}
-                onExpansionChange={updateCategoryExpansionState}
-              />
-            </Box>
-
-            {/* Дополнительная опция для категории "Прочее" */}
-            <Box sx={{ mt: 2 }}>
-              <Button
-                variant="outlined"
-                color="primary"
-                size="small"
-                onClick={() => setCurrentMapping({ ...currentMapping, target: 9999 })}
-                startIcon={<Plus size={16} />}
-              >
-                {t('marketplace:store.categoryMapping.useDefaultCategory', { defaultValue: 'Использовать категорию "Прочее"' })}
-              </Button>
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>
-            {t('common:buttons.cancel', { defaultValue: 'Отмена' })}
-          </Button>
-          <Button
-            onClick={handleSaveMapping}
-            color="primary"
-            disabled={!currentMapping.source.trim() || !currentMapping.target}
-          >
-            {t('common:buttons.save', { defaultValue: 'Сохранить' })}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };
