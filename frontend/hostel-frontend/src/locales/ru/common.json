@@ -1,104 +1,104 @@
 {
    "buttons": {
-      "create": "Создать",
-      "edit": "Редактировать",
-      "delete": "Удалить",
-      "save": "Сохранить",
-      "cancel": "Отмена",
-      "close": "Закрыть",
-      "back": "Назад",
-      "search": "Поиск",
-      "share": "Поделиться",
-      "favorite": "В избранное",
-      "unfavorite": "Убрать из избранного"
+     "create": "Kreiraj",
+     "edit": "Uredi",
+     "delete": "Obriši",
+     "save": "Sačuvaj",
+     "cancel": "Otkaži",
+     "close": "Zatvori",
+     "back": "Nazad",
+     "search": "Pretraga",
+     "share": "Podeli",
+     "favorite": "Dodaj u omiljene",
+     "unfavorite": "Ukloni iz omiljenih"
    },
    "navigation": {
-      "home": "Главная",
-      "marketplace": "Маркетплейс",
-      "myListings": "Мои объявления",
-      "favorites": "Избранное",
-      "messages": "Сообщения",
-      "profile": "Профиль",
-      "notifications": "Уведомления",
-      "settings": "Настройки",
-      "balance": "Баланс",
-      "storefronts": "Мои витрины"
+     "home": "Početna",
+     "marketplace": "Prodavnica",
+     "myListings": "Moji oglasi",
+     "favorites": "Omiljeno",
+     "messages": "Poruke",
+     "profile": "Profil",
+     "notifications": "Obaveštenja",
+     "settings": "Podešavanja",
+     "balance": "Stanje",
+     "storefronts": "Moje prodavnice"
    },
    "balance": {
-      "title": "Баланс и транзакции",
-      "available": "Доступный баланс",
-      "deposit": "Пополнить",
-      "confirmDeposit": "Подтвердить пополнение",
-      "processing": "Обработка...",
-      "amount": "Сумма",
-      "paymentMethod": "Способ оплаты",
-      "date": "Дата",
-      "type": "Тип",
-      "description": "Описание",
-      "status": "Статус",
-      "fee": "Комиссия: {{fixed}} RSD + {{percent}}%",
-      "minAmount": "Минимальная сумма",
-      "maxAmount": "Максимальная сумма",
-      "paymentSuccess": "Оплата успешно проведена",
-      "paymentCanceled": "Оплата отменена",
-      "types": {
-         "deposit": "Пополнение",
-         "withdrawal": "Вывод",
-         "payment": "Оплата",
-         "transfer": "Перевод",
-         "service_payment": "Оплата услуги"
-      },
-      "statuses": {
-         "pending": "В обработке",
-         "completed": "Выполнено",
-         "failed": "Ошибка"
-      },
-      "errors": {
-         "loadFailed": "Не удалось загрузить данные баланса",
-         "depositFailed": "Ошибка пополнения баланса",
-         "loadPaymentMethods": "Не удалось загрузить методы оплаты"
-      },
-      "descriptions": {
-         "storeCreation": "Создание витрины магазина",
-         "listingTranslation": "Перевод {{count}} объявлений"
-      }
+     "title": "Stanje i transakcije",
+     "available": "Dostupno stanje",
+     "deposit": "Dopuni",
+     "confirmDeposit": "Potvrdi dopunu",
+     "processing": "Obrada...",
+     "amount": "Iznos",
+     "paymentMethod": "Način plaćanja",
+     "date": "Datum",
+     "type": "Tip",
+     "description": "Opis",
+     "status": "Status",
+     "fee": "Provizija: {{fixed}} RSD + {{percent}}%",
+     "minAmount": "Minimalni iznos",
+     "maxAmount": "Maksimalni iznos",
+     "paymentSuccess": "Plaćanje je uspešno obavljeno",
+     "paymentCanceled": "Plaćanje je otkazano",
+     "types": {
+       "deposit": "Dopuna",
+       "withdrawal": "Isplata",
+       "payment": "Plaćanje",
+       "transfer": "Transfer",
+       "service_payment": "Plaćanje usluge"
+     },
+     "statuses": {
+       "pending": "U obradi",
+       "completed": "Završeno",
+       "failed": "Greška"
+     },
+     "errors": {
+       "loadFailed": "Nije moguće učitati podatke o stanju",
+       "depositFailed": "Greška pri dopuni stanja",
+       "loadPaymentMethods": "Nije moguće učitati metode plaćanja"
+     },
+     "descriptions": {
+       "storeCreation": "Kreiranje prodavnice",
+       "listingTranslation": "Prevod {{count}} oglasa"
+     }
    },
    "auth": {
-      "signIn": "Войти",
-      "signOut": "Выйти",
-      "profile": "Профиль",
-      "needAuth": "Необходима авторизация",
-      "pleaseLogin": "Пожалуйста, войдите в систему"
+     "signIn": "Prijava",
+     "signOut": "Odjava",
+     "profile": "Profil",
+     "needAuth": "Potrebna je prijava",
+     "pleaseLogin": "Molimo vas da se prijavite"
    },
    "common": {
-      "loading": "Загрузка...",
-      "error": "Ошибка",
-      "success": "Успешно",
-      "notFound": "Не найдено",
-      "price": "Цена",
-      "condition": "Состояние",
-      "category": "Категория",
-      "location": "Местоположение",
-      "description": "Описание",
-      "photos": "Фотографии",
-      "new": "Новое",
-      "used": "Б/у",
-      "backToHome": "Вернуться на главную"
+     "loading": "Učitavanje...",
+     "error": "Greška",
+     "success": "Uspešno",
+     "notFound": "Nije pronađeno",
+     "price": "Cena",
+     "condition": "Stanje",
+     "category": "Kategorija",
+     "location": "Lokacija",
+     "description": "Opis",
+     "photos": "Fotografije",
+     "new": "Novo",
+     "used": "Korišćeno",
+     "backToHome": "Povratak na početnu"
    },
    "time": {
-      "today": "Сегодня",
-      "yesterday": "Вчера",
-      "ago": "назад",
-      "minute": "минуту",
-      "minutes": "минут",
-      "hour": "час",
-      "hours": "часов",
-      "day": "день",
-      "days": "дней"
+     "today": "Danas",
+     "yesterday": "Juče",
+     "ago": "pre",
+     "minute": "minut",
+     "minutes": "minuta",
+     "hour": "sat",
+     "hours": "sati",
+     "day": "dan",
+     "days": "dana"
    },
    "language": {
-      "ru": "Русский",
-      "en": "Английский",
-      "sr": "Сербский"
+     "ru": "Ruski",
+     "en": "Engleski",
+     "sr": "Srpski"
    }
-}
+  }

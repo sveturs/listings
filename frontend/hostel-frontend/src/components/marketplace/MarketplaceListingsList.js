@@ -300,7 +300,8 @@ const MarketplaceListingsList = ({
                                     direction={orderBy === 'reviews' ? order : 'asc'}
                                     onClick={createSortHandler('reviews')}
                                 >
-                                    {t('listings.table.reviews', { defaultValue: 'Отзывы' })}
+                                    {t('reviews.title', { defaultValue: 'reviews' })}
+
                                 </TableSortLabel>
                             </TableCell>
                         )}
@@ -409,12 +410,12 @@ const MarketplaceListingsList = ({
                                                         />
                                                     </Box>
                                                     <Typography variant="caption" color="text.secondary">
-                                                        {listing.review_count} {t('reviews.count', { defaultValue: 'отзывов', count: listing.review_count })}
+                                                    {listing.review_count} {t('reviews.info.reviews.count', { defaultValue: 'reviews', count: listing.review_count })}
                                                     </Typography>
                                                 </>
                                             ) : (
                                                 <Typography variant="caption" color="text.secondary">
-                                                    {t('reviews.none', { defaultValue: 'Нет отзывов' })}
+                                                    {t('reviews.noRatingsYet', { defaultValue: 'Нет отзывов' })}
                                                 </Typography>
                                             )}
                                         </Box>

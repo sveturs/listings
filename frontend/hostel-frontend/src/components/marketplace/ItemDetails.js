@@ -240,11 +240,11 @@ const ItemDetails = () => {
       {/* Отзывы */}
       <Box mt={4}>
         <Typography variant="h5" fontWeight="bold">
-          Отзывычччччччччччччччччччччччччччччччччччччччччччч
+          Отзывы
         </Typography>
         {/* Здесь можно добавить список отзывов */}
         <Typography variant="body2" color="text.secondary">
-          Пока нет отзывов.ччччччччччччччччччччччччччччччччччччччччч
+          Пока нет отзывов
         </Typography>
       </Box>
     </Container>

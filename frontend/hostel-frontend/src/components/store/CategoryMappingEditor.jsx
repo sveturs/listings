@@ -37,12 +37,23 @@ import {
 } from 'lucide-react';
 import axios from '../../api/axios';
 
-const DraggableSystemCategory = ({ category, onDragStart }) => {
+// Функция для получения локализованного имени категории
+const getLocalizedCategoryName = (category, language) => {
+  // Проверяем наличие переводов
+  if (category.translations && category.translations[language]) {
+    return category.translations[language];
+  }
+  // Возвращаем оригинальное имя, если перевод не найден
+  return category.name;
+};
+
+// Компонент для перетаскиваемой категории системы
+const DraggableSystemCategory = ({ category, onDragStart, language }) => {
   // Используем встроенный HTML5 Drag and Drop API
   const handleDragStart = (e) => {
     // Передаем ID категории через dataTransfer
     e.dataTransfer.setData('text/plain', category.id);
-    e.dataTransfer.setData('categoryName', category.name);
+    e.dataTransfer.setData('categoryName', getLocalizedCategoryName(category, language));
     
     // Добавляем эффект перемещения
     e.dataTransfer.effectAllowed = 'move';
@@ -50,6 +61,9 @@ const DraggableSystemCategory = ({ category, onDragStart }) => {
     // Вызываем колбэк onDragStart
     onDragStart?.(category);
   };
+
+  // Получаем локализованное имя категории
+  const categoryName = getLocalizedCategoryName(category, language);
 
   return (
     <Box
@@ -59,7 +73,6 @@ const DraggableSystemCategory = ({ category, onDragStart }) => {
         cursor: 'grab',
         p: 1,
         display: 'flex',
-        alignItems: 'center',
         flexDirection: 'column',
         alignItems: 'flex-start',
         borderRadius: 1,
@@ -69,7 +82,7 @@ const DraggableSystemCategory = ({ category, onDragStart }) => {
       }}
     >
       <Typography variant="body2">
-        {category.name}
+        {categoryName}
       </Typography>
       
       {/* Показываем полный путь, если он есть */}
@@ -85,7 +98,6 @@ const DraggableSystemCategory = ({ category, onDragStart }) => {
     </Box>
   );
 };
-
 
 // Компонент для целевой зоны перетаскивания (импортированная категория)
 const DroppableImportCategory = ({ sourceCategory, sourcePath, mappedTo, formatCategoryName, onDrop }) => {
@@ -172,7 +184,7 @@ const DroppableImportCategory = ({ sourceCategory, sourcePath, mappedTo, formatC
 };
 
 // Компонент для иерархического отображения категорий системы
-const SystemCategoryTree = ({ categories, onCategoryDragStart }) => {
+const SystemCategoryTree = ({ categories, onCategoryDragStart, language }) => {
   const [expanded, setExpanded] = useState({});
   const { t } = useTranslation(['marketplace', 'common']);
 
@@ -217,6 +229,9 @@ const SystemCategoryTree = ({ categories, onCategoryDragStart }) => {
   const renderCategoryItem = (category, level = 0) => {
     const isExpanded = expanded[category.id];
     const hasChildren = category.children && category.children.length > 0;
+    
+    // Получаем локализованное имя категории
+    const categoryName = getLocalizedCategoryName(category, language);
 
     return (
       <React.Fragment key={category.id}>
@@ -253,6 +268,7 @@ const SystemCategoryTree = ({ categories, onCategoryDragStart }) => {
             <DraggableSystemCategory 
               category={category} 
               onDragStart={onCategoryDragStart}
+              language={language}
             />
           </ListItemButton>
         </ListItem>
@@ -404,7 +420,7 @@ const ImportedCategoryTree = ({ categories, mappings, formatCategoryName, onDrop
 
 // Основной компонент редактора сопоставления категорий
 const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
-  const { t } = useTranslation(['marketplace', 'common']);
+  const { t, i18n } = useTranslation(['marketplace', 'common']);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [mappings, setMappings] = useState({});
@@ -498,6 +514,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     if (searchSystemTerm) {
       // Расширенная фильтрация категорий с сохранением информации о пути
       let filtered = [];
+      const currentLanguage = i18n.language;
       
       // Построим полные пути для всех категорий
       const buildCategoryPaths = (categories) => {
@@ -534,11 +551,14 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
       
       const categoryPaths = buildCategoryPaths(categories);
       
-      // Фильтруем категории по поисковому запросу
+      // Фильтруем категории по поисковому запросу - сравниваем с локализованными названиями
       categories.forEach(cat => {
-        if (cat.name.toLowerCase().includes(searchSystemTerm.toLowerCase())) {
+        const localizedName = getLocalizedCategoryName(cat, currentLanguage);
+        if (localizedName.toLowerCase().includes(searchSystemTerm.toLowerCase())) {
           // Добавляем элемент с полным путем
-          const pathWithLabels = categoryPaths[cat.id].map(c => c.name).join(' > ');
+          const pathWithLabels = categoryPaths[cat.id]
+            .map(c => getLocalizedCategoryName(c, currentLanguage))
+            .join(' > ');
           cat.pathLabel = pathWithLabels;
           filtered.push(cat);
         }
@@ -549,7 +569,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
       // Если поиск пуст, сбрасываем состояние
       setFilteredCategories(categories.map(cat => ({...cat, pathLabel: null})));
     }
-  }, [searchSystemTerm, categories]);
+  }, [searchSystemTerm, categories, i18n.language]);
 
   // Фильтрация импортированных категорий при поиске
   useEffect(() => {
@@ -706,6 +726,13 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     setDraggedCategory(category);
   };
 
+  // Форматирование названия категории для отображения с учетом локализации
+  const formatCategoryName = (categoryId) => {
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return t('marketplace:store.categoryMapping.unknownCategory');
+    return getLocalizedCategoryName(category, i18n.language);
+  };
+
   // Сохранение сопоставлений
   const handleSave = async () => {
     setSaving(true);
@@ -770,12 +797,6 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     } finally {
       setApplyingMappings(false);
     }
-  };
-
-  // Форматирование названия категории для отображения
-  const formatCategoryName = (categoryId) => {
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.name : t('marketplace:store.categoryMapping.unknownCategory');
   };
 
   // Отображение загрузки
@@ -974,6 +995,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
               <SystemCategoryTree 
                 categories={filteredCategories}
                 onCategoryDragStart={handleCategoryDragStart}
+                language={i18n.language}
               />
             </Paper>
           </Box>
