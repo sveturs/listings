@@ -148,4 +148,5 @@ type Rows interface {
 	Next() bool
 	Scan(dest ...interface{}) error
 	Close() error
+	Err() error  // Добавляем метод Err() для проверки ошибок после итерации
 }

@@ -1,4 +1,4 @@
-// frontend/hostel-frontend/src/components/store/CategoryMappingEditor.jsx
+// frontend/hostel-frontend/src/pages/store/CategoryMappingEditor.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -24,7 +24,9 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
+  Tooltip,
+  Chip
 } from '@mui/material';
 import {
   Plus,
@@ -33,7 +35,8 @@ import {
   Save,
   X,
   FileType,
-  Search
+  Search,
+  RefreshCw
 } from 'lucide-react';
 import axios from '../../api/axios';
 
@@ -53,6 +56,10 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
   const [importedCategoriesLoading, setImportedCategoriesLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCategories, setFilteredCategories] = useState([]);
+  
+  // Добавляем состояние для отслеживания процесса применения сопоставлений
+  const [applyingMappings, setApplyingMappings] = useState(false);
+  const [applyResult, setApplyResult] = useState(null);
 
   // Загружаем существующие сопоставления и категории системы
   useEffect(() => {
@@ -197,6 +204,45 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     return category ? category.name : t('marketplace:store.categoryMapping.unknownCategory');
   };
 
+  // Функция для применения сопоставлений к товарам
+  const handleApplyMappings = async () => {
+    if (Object.keys(mappings).length === 0) {
+      setError(t('marketplace:store.categoryMapping.noMappingsToApply'));
+      return;
+    }
+
+    setApplyingMappings(true);
+    setApplyResult(null);
+    setError(null);
+    
+    try {
+      const response = await axios.post(
+        `/api/v1/storefronts/import-sources/${sourceId}/apply-category-mappings`
+      );
+      
+      if (response.data.success) {
+        setApplyResult({
+          message: t('marketplace:store.categoryMapping.applySuccess', {
+            count: response.data.data.updated_count,
+            defaultValue: 'Successfully updated categories for {{count}} listings'
+          }),
+          count: response.data.data.updated_count
+        });
+        
+        if (onSave) {
+          onSave(mappings);
+        }
+      } else {
+        setError(t('marketplace:store.categoryMapping.applyError'));
+      }
+    } catch (err) {
+      console.error('Error applying mappings:', err);
+      setError(err.response?.data?.message || t('marketplace:store.categoryMapping.applyError'));
+    } finally {
+      setApplyingMappings(false);
+    }
+  };
+
   // Отображение загрузки
   if (loading) {
     return (
@@ -224,6 +270,12 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
       {success && (
         <Alert severity="success" sx={{ mb: 2 }}>
           {t('marketplace:store.categoryMapping.saveSuccess')}
+        </Alert>
+      )}
+      
+      {applyResult && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {applyResult.message}
         </Alert>
       )}
       
@@ -265,9 +317,31 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
         />
         
         {/* Текущие сопоставления */}
-        <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-          {t('marketplace:store.categoryMapping.currentMappings')}
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+          <Typography variant="subtitle2" gutterBottom>
+            {t('marketplace:store.categoryMapping.currentMappings')}
+          </Typography>
+          
+          <Box display="flex" gap={1}>
+            <Chip 
+              size="small" 
+              color="primary" 
+              label={t('marketplace:store.categoryMapping.mappingsCount', { 
+                count: Object.keys(mappings).length,
+                defaultValue: 'Mappings: {{count}}'
+              })}
+            />
+            
+            <Chip 
+              size="small" 
+              color="secondary" 
+              label={t('marketplace:store.categoryMapping.importedCategoriesCount', { 
+                count: importedCategories.length,
+                defaultValue: 'Imported categories: {{count}}'
+              })}
+            />
+          </Box>
+        </Box>
         
         {Object.keys(mappings).length === 0 ? (
           <Alert severity="warning" sx={{ mb: 2 }}>
@@ -373,16 +447,37 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
               variant="outlined"
               onClick={onClose}
               sx={{ mr: 1 }}
-              disabled={saving}
+              disabled={saving || applyingMappings}
             >
               {t('common:buttons.cancel')}
             </Button>
+            
+            <Tooltip 
+              title={t('marketplace:store.categoryMapping.applyHelp', { 
+                defaultValue: 'This button will update categories of all listings that were imported from this source, according to configured mappings.' 
+              })}
+              placement="top"
+            >
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={applyingMappings ? <CircularProgress size={20} /> : <RefreshCw />}
+                onClick={handleApplyMappings}
+                disabled={saving || applyingMappings || Object.keys(mappings).length === 0}
+                sx={{ mr: 1 }}
+              >
+                {applyingMappings 
+                  ? t('marketplace:store.categoryMapping.applyingMappings', { defaultValue: 'Applying mappings...' })
+                  : t('marketplace:store.categoryMapping.applyMappings', { defaultValue: 'Apply to listings' })
+                }
+              </Button>
+            </Tooltip>
             
             <Button
               variant="contained"
               startIcon={saving ? <CircularProgress size={20} /> : <Save />}
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || applyingMappings}
             >
               {t('common:buttons.save')}
             </Button>

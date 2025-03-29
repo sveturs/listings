@@ -29,6 +29,7 @@ type StorefrontServiceInterface interface {
 	RunImport(ctx context.Context, sourceID int, userID int) (*models.ImportHistory, error)
 	ImportCSV(ctx context.Context, sourceID int, reader io.Reader, zipFile io.Reader, userID int) (*models.ImportHistory, error)
 	GetImportHistory(ctx context.Context, sourceID int, userID int, limit, offset int) ([]models.ImportHistory, error)
+	ApplyCategoryMappings(ctx context.Context, sourceID int, userID int) (int, error)
 	
 	// Обработка изображений для импорта
 	ProcessImportImages(ctx context.Context, listingID int, imagesStr string, zipReader *zip.Reader) error

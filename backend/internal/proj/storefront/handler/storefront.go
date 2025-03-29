@@ -130,6 +130,26 @@ func (h *StorefrontHandler) GetImportedCategories(c *fiber.Ctx) error {
     
     return utils.SuccessResponse(c, categories)
 }
+
+// ApplyCategoryMappings применяет сопоставления категорий к импортированным товарам
+func (h *StorefrontHandler) ApplyCategoryMappings(c *fiber.Ctx) error {
+    userID := c.Locals("user_id").(int)
+    sourceID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid import source ID")
+    }
+    
+    updatedCount, err := h.services.Storefront().ApplyCategoryMappings(c.Context(), sourceID, userID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to apply category mappings: %s", err.Error()))
+    }
+    
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": fmt.Sprintf("Successfully updated categories for %d listings", updatedCount),
+        "updated_count": updatedCount,
+    })
+}
+
 // GetPublicStorefront возвращает публичные данные витрины по ID
 func (h *StorefrontHandler) GetPublicStorefront(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))

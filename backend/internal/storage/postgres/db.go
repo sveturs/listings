@@ -228,7 +228,9 @@ func (r *RowsWrapper) Close() error {
 	r.rows.Close()
 	return nil
 }
-
+func (r *RowsWrapper) Err() error {
+	return r.rows.Err()
+}
 func (db *Database) Query(ctx context.Context, sql string, args ...interface{}) (storage.Rows, error) {
 	rows, err := db.pool.Query(ctx, sql, args...)
 	if err != nil {

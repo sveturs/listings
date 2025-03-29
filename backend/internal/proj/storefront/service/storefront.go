@@ -109,7 +109,125 @@ type PriceHistoryServiceInterface interface {
 	AnalyzeDiscount(ctx context.Context, listingID int) (*models.DiscountInfo, error)
 	RecordPriceChange(ctx context.Context, listingID int, oldPrice, newPrice float64, source string) error
 }
+// ApplyCategoryMappings применяет настроенные сопоставления категорий ко всем товарам, 
+// которые были импортированы из указанного источника
+func (s *StorefrontService) ApplyCategoryMappings(ctx context.Context, sourceID int, userID int) (int, error) {
+    // Проверяем права доступа
+    source, err := s.storage.GetImportSourceByID(ctx, sourceID)
+    if err != nil {
+        return 0, fmt.Errorf("error getting import source: %w", err)
+    }
 
+    // Получаем информацию о витрине
+    storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
+    if err != nil {
+        return 0, fmt.Errorf("error getting storefront: %w", err)
+    }
+
+    if storefront.UserID != userID {
+        return 0, fmt.Errorf("access denied")
+    }
+
+    // Получаем сопоставления категорий
+    mappings, err := s.GetCategoryMappings(ctx, sourceID, userID)
+    if err != nil {
+        return 0, fmt.Errorf("error getting category mappings: %w", err)
+    }
+
+    if len(mappings) == 0 {
+        return 0, fmt.Errorf("no category mappings found")
+    }
+
+    // Получаем список всех импортированных товаров для этого источника
+    query := `
+        WITH source_listings AS (
+            SELECT DISTINCT ml.id, ml.title, ml.category_id, ml.external_id
+            FROM marketplace_listings ml
+            WHERE ml.storefront_id = $1 
+              AND ml.external_id IS NOT NULL AND ml.external_id != ''
+        ),
+        imported_categories_by_source AS (
+            SELECT source_category, category_id
+            FROM imported_categories
+            WHERE source_id = $2 AND category_id > 0
+        )
+        SELECT sl.id, sl.title, sl.category_id, ic.source_category, ic.category_id as mapped_category_id
+        FROM source_listings sl
+        JOIN imported_categories ic ON ic.source_category IN (
+            SELECT source_category 
+            FROM imported_categories 
+            WHERE source_id = $2
+        )
+        WHERE ic.category_id > 0
+    `
+
+    rows, err := s.storage.Query(ctx, query, storefront.ID, sourceID)
+    if err != nil {
+        return 0, fmt.Errorf("error querying listings: %w", err)
+    }
+    defer rows.Close()
+
+    type listingToUpdate struct {
+        ID              int
+        Title           string
+        CurrentCategory int
+        SourceCategory  string
+        MappedCategory  int
+    }
+
+    var listingsToUpdate []listingToUpdate
+    for rows.Next() {
+        var listing listingToUpdate
+        if err := rows.Scan(&listing.ID, &listing.Title, &listing.CurrentCategory, &listing.SourceCategory, &listing.MappedCategory); err != nil {
+            return 0, fmt.Errorf("error scanning listing: %w", err)
+        }
+
+        // Проверяем, изменилась ли категория
+        if listing.CurrentCategory != listing.MappedCategory {
+            listingsToUpdate = append(listingsToUpdate, listing)
+        }
+    }
+
+    if err := rows.Err(); err != nil {
+        return 0, fmt.Errorf("error iterating listings: %w", err)
+    }
+
+    // Обновляем категории товаров
+    updatedCount := 0
+    for _, listing := range listingsToUpdate {
+        categoryID, ok := mappings[listing.SourceCategory]
+        if !ok || categoryID == 0 {
+            continue // Пропускаем, если нет сопоставления
+        }
+
+        // Обновляем категорию товара
+        _, err := s.storage.Exec(ctx, `
+            UPDATE marketplace_listings
+            SET category_id = $1
+            WHERE id = $2
+        `, categoryID, listing.ID)
+
+        if err != nil {
+            log.Printf("Error updating category for listing %d: %v", listing.ID, err)
+            continue
+        }
+
+        updatedCount++
+
+        // Переиндексируем товар в поисковом движке
+        listing, err := s.storage.GetListingByID(ctx, listing.ID)
+        if err != nil {
+            log.Printf("Error getting listing %d for reindexing: %v", listing.ID, err)
+            continue
+        }
+
+        if err := s.storage.IndexListing(ctx, listing); err != nil {
+            log.Printf("Error reindexing listing %d: %v", listing.ID, err)
+        }
+    }
+
+    return updatedCount, nil
+}
 // GetImportedCategories возвращает список категорий, которые были импортированы этим источником
 func (s *StorefrontService) GetImportedCategories(ctx context.Context, sourceID int, userID int) ([]string, error) {
 	// Проверяем права доступа

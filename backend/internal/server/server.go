@@ -248,6 +248,7 @@ func (s *Server) setupRoutes() {
 	storefronts.Get("/import-sources/:id/category-mappings", s.storefront.Storefront.GetCategoryMappings)
 	storefronts.Put("/import-sources/:id/category-mappings", s.storefront.Storefront.UpdateCategoryMappings)
 	storefronts.Get("/import-sources/:id/imported-categories", s.storefront.Storefront.GetImportedCategories)
+	storefronts.Post("/import-sources/:id/apply-category-mappings", s.storefront.Storefront.ApplyCategoryMappings)
 	
 	// Маршруты для отзывов пользователей и витрин
 	api.Get("/users/:id/reviews", s.review.Review.GetUserReviews)
