@@ -17,6 +17,10 @@ import {
   Alert,
   InputAdornment,
   FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  ListSubheader,
   Chip,
   Tooltip
 } from '@mui/material';
@@ -32,7 +36,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import axios from '../../api/axios';
-import CategorySelect from '../../components/marketplace/CategorySelect';
+import HierarchicalCategorySelect from '../../components/marketplace/HierarchicalCategorySelect';
 
 const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
   const { t } = useTranslation(['marketplace', 'common']);
@@ -44,13 +48,13 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
   const [categories, setCategories] = useState([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [currentMapping, setCurrentMapping] = useState({ source: '', target: 0 });
-  
+
   // Состояние для импортированных категорий
   const [importedCategories, setImportedCategories] = useState([]);
   const [organizedCategories, setOrganizedCategories] = useState({});
   const [importedCategoriesLoading, setImportedCategoriesLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Состояние для применения сопоставлений
   const [applyingMappings, setApplyingMappings] = useState(false);
   const [applyResult, setApplyResult] = useState(null);
@@ -60,24 +64,24 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         // Получаем существующие сопоставления
         const mappingsResponse = await axios.get(`/api/v1/storefronts/import-sources/${sourceId}/category-mappings`);
-        
+
         // Получаем категории системы
         const categoriesResponse = await axios.get('/api/v1/marketplace/categories');
-        
+
         // Загружаем импортированные категории
         await fetchImportedCategories();
-        
+
         if (mappingsResponse.data.success) {
           setMappings(mappingsResponse.data.data || {});
         }
-        
+
         if (categoriesResponse.data.success) {
           // Сортируем категории по имени для удобства
-          const sortedCategories = [...categoriesResponse.data.data].sort((a, b) => 
+          const sortedCategories = [...categoriesResponse.data.data].sort((a, b) =>
             a.name.localeCompare(b.name)
           );
           setCategories(sortedCategories);
@@ -89,10 +93,10 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [sourceId, t]);
-  
+
   // Организуем импортированные категории в иерархию
   useEffect(() => {
     if (importedCategories.length > 0 && Object.keys(mappings).length >= 0) {
@@ -101,7 +105,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
       setOrganizedCategories(markedTree);
     }
   }, [importedCategories, mappings]);
-  
+
   // Получаем список импортированных категорий
   const fetchImportedCategories = async () => {
     setImportedCategoriesLoading(true);
@@ -117,18 +121,18 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
       setImportedCategoriesLoading(false);
     }
   };
-  
+
   // Организуем категории по иерархии
   const organizeImportedCategories = (importedCategories) => {
     const categoryTree = {};
-    
+
     // Сортируем категории для удобства
     const sortedCategories = [...importedCategories].sort();
-    
+
     sortedCategories.forEach(category => {
       // Разбиваем строку категории на уровни, разделенные "|"
       const levels = category.split('|');
-      
+
       if (levels.length === 1) {
         // Это одиночная категория верхнего уровня
         if (!categoryTree[levels[0]]) {
@@ -137,40 +141,40 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
       } else if (levels.length === 2) {
         // Это категория второго уровня с родителем
         const [parent, child] = levels;
-        
+
         if (!categoryTree[parent]) {
           categoryTree[parent] = { children: {}, mapped: false };
         }
-        
+
         categoryTree[parent].children[child] = { children: {}, mapped: false };
-        
+
       } else if (levels.length === 3) {
         // Это категория третьего уровня с двумя родителями
         const [grandparent, parent, child] = levels;
-        
+
         if (!categoryTree[grandparent]) {
           categoryTree[grandparent] = { children: {}, mapped: false };
         }
-        
+
         if (!categoryTree[grandparent].children[parent]) {
           categoryTree[grandparent].children[parent] = { children: {}, mapped: false };
         }
-        
+
         categoryTree[grandparent].children[parent].children[child] = { mapped: false };
       }
     });
-    
+
     return categoryTree;
   };
 
   // Отмечаем сопоставленные категории в дереве
   const markMappedCategories = (categoryTree, mappings) => {
     const result = { ...categoryTree };
-    
+
     // Проходимся по каждому отображению
     Object.keys(mappings).forEach(sourceCategory => {
       const levels = sourceCategory.split('|');
-      
+
       if (levels.length === 1 && result[levels[0]]) {
         result[levels[0]].mapped = true;
         result[levels[0]].mappedTo = mappings[sourceCategory];
@@ -188,7 +192,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
         }
       }
     });
-    
+
     return result;
   };
 
@@ -197,19 +201,19 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     setSaving(true);
     setError(null);
     setSuccess(false);
-    
+
     try {
       const response = await axios.put(
         `/api/v1/storefronts/import-sources/${sourceId}/category-mappings`,
         mappings
       );
-      
+
       if (response.data.success) {
         setSuccess(true);
         if (onSave) {
           onSave(mappings);
         }
-        
+
         // Закрываем окно через 2 секунды после успешного сохранения
         setTimeout(() => {
           onClose();
@@ -233,12 +237,12 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     setApplyingMappings(true);
     setApplyResult(null);
     setError(null);
-    
+
     try {
       const response = await axios.post(
         `/api/v1/storefronts/import-sources/${sourceId}/apply-category-mappings`
       );
-      
+
       if (response.data.success) {
         setApplyResult({
           message: t('marketplace:store.categoryMapping.applySuccess', {
@@ -272,7 +276,38 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     });
     setEditDialogOpen(true);
   };
-
+  const buildCategoryTree = (flatCategories) => {
+    // Если категории уже имеют иерархическую структуру (с children),
+    // просто вернем их
+    if (flatCategories.some(c => c.children && c.children.length > 0)) {
+      return flatCategories;
+    }
+    
+    // Создаем словарь категорий по ID
+    const categoryMap = {};
+    flatCategories.forEach(cat => {
+      categoryMap[cat.id] = { ...cat, children: [] };
+    });
+    
+    // Формируем дерево категорий
+    const rootCategories = [];
+    flatCategories.forEach(cat => {
+      if (cat.parent_id) {
+        // Это дочерняя категория
+        if (categoryMap[cat.parent_id]) {
+          categoryMap[cat.parent_id].children.push(categoryMap[cat.id]);
+        } else {
+          // Если родительская категория не найдена, добавляем в корень
+          rootCategories.push(categoryMap[cat.id]);
+        }
+      } else {
+        // Это корневая категория
+        rootCategories.push(categoryMap[cat.id]);
+      }
+    });
+    
+    return rootCategories;
+  };
   // Удаление сопоставления
   const handleDeleteMapping = (sourceCategory) => {
     const newMappings = { ...mappings };
@@ -285,7 +320,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     if (!currentMapping.source.trim() || !currentMapping.target) {
       return;
     }
-    
+
     const newMappings = { ...mappings };
     newMappings[currentMapping.source] = currentMapping.target;
     setMappings(newMappings);
@@ -315,63 +350,63 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
       <Typography variant="h5" gutterBottom>
         {t('marketplace:store.categoryMapping.title')}
       </Typography>
-      
+
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
-      
+
       {success && (
         <Alert severity="success" sx={{ mb: 2 }}>
           {t('marketplace:store.categoryMapping.saveSuccess')}
         </Alert>
       )}
-      
+
       {applyResult && (
         <Alert severity="success" sx={{ mb: 2 }}>
           {applyResult.message}
         </Alert>
       )}
-      
+
       <Paper sx={{ p: 2, mb: 3 }}>
         <Typography variant="subtitle1" gutterBottom>
           {t('marketplace:store.categoryMapping.description')}
         </Typography>
-        
+
         <Alert severity="info" sx={{ mb: 2 }}>
           {t('marketplace:store.categoryMapping.info')}
         </Alert>
-        
+
         {/* Статистика сопоставлений */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="subtitle2">
             {t('marketplace:store.categoryMapping.statistics', { defaultValue: 'Статистика сопоставлений:' })}
           </Typography>
-          
+
           <Box display="flex" gap={1}>
-            <Chip 
-              size="small" 
-              color="primary" 
-              label={t('marketplace:store.categoryMapping.mappingsCount', { 
+            <Chip
+              size="small"
+              color="primary"
+              label={t('marketplace:store.categoryMapping.mappingsCount', {
                 count: Object.keys(mappings).length,
                 defaultValue: 'Сопоставлений: {{count}}'
               })}
             />
-            
-            <Chip 
-              size="small" 
-              color="secondary" 
-              label={t('marketplace:store.categoryMapping.importedCategoriesCount', { 
+
+            <Chip
+              size="small"
+              color="secondary"
+              label={t('marketplace:store.categoryMapping.importedCategoriesCount', {
                 count: importedCategories.length,
                 defaultValue: 'Импортировано категорий: {{count}}'
               })}
             />
           </Box>
         </Box>
-        
+
         <Divider sx={{ mb: 3 }} />
-        
+
         {/* Поиск по категориям (если необходимо) */}
         <TextField
           fullWidth
@@ -399,13 +434,13 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
             ) : null
           }}
         />
-        
-{/* Импортированные категории с иерархической структурой */}
-<Box sx={{ mt: 3 }}>
+
+        {/* Импортированные категории с иерархической структурой */}
+        <Box sx={{ mt: 3 }}>
           <Typography variant="subtitle2" gutterBottom>
             {t('marketplace:store.categoryMapping.importedCategories', { defaultValue: 'Импортированные категории' })}
           </Typography>
-          
+
           {importedCategoriesLoading ? (
             <Box display="flex" alignItems="center" gap={1}>
               <CircularProgress size={20} />
@@ -425,9 +460,9 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
                   {Object.entries(organizedCategories).map(([parentCategory, parentData]) => (
                     <Box key={parentCategory} sx={{ mb: 0.5, borderBottom: '1px solid', borderColor: 'divider' }}>
                       {/* Родительская категория первого уровня */}
-                      <Box 
-                        sx={{ 
-                          p: 1.5, 
+                      <Box
+                        sx={{
+                          p: 1.5,
                           pl: 2,
                           display: 'flex',
                           justifyContent: 'space-between',
@@ -445,10 +480,10 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
                             </Typography>
                           )}
                         </Box>
-                        
+
                         <Box>
                           {parentData.mapped ? (
-                            <IconButton 
+                            <IconButton
                               size="small"
                               onClick={() => handleEditMapping(parentCategory)}
                               aria-label="edit mapping"
@@ -467,16 +502,16 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
                           )}
                         </Box>
                       </Box>
-                      
+
                       {/* Категории второго уровня */}
                       {Object.keys(parentData.children).length > 0 && (
                         <Box sx={{ pl: 4 }}>
                           {Object.entries(parentData.children).map(([childCategory, childData]) => (
                             <Box key={childCategory}>
                               {/* Категория второго уровня */}
-                              <Box 
-                                sx={{ 
-                                  p: 1, 
+                              <Box
+                                sx={{
+                                  p: 1,
                                   borderTop: '1px dashed',
                                   borderColor: 'divider',
                                   display: 'flex',
@@ -498,10 +533,10 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
                                     )}
                                   </Box>
                                 </Box>
-                                
+
                                 <Box>
                                   {childData.mapped ? (
-                                    <IconButton 
+                                    <IconButton
                                       size="small"
                                       onClick={() => handleEditMapping(`${parentCategory}|${childCategory}`)}
                                       aria-label="edit mapping"
@@ -520,15 +555,15 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
                                   )}
                                 </Box>
                               </Box>
-                              
+
                               {/* Категории третьего уровня */}
                               {Object.keys(childData.children).length > 0 && (
                                 <Box sx={{ pl: 4 }}>
                                   {Object.entries(childData.children).map(([grandchildCategory, grandchildData]) => (
-                                    <Box 
+                                    <Box
                                       key={grandchildCategory}
-                                      sx={{ 
-                                        p: 1, 
+                                      sx={{
+                                        p: 1,
                                         borderTop: '1px dotted',
                                         borderColor: 'divider',
                                         display: 'flex',
@@ -550,10 +585,10 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
                                           )}
                                         </Box>
                                       </Box>
-                                      
+
                                       <Box>
                                         {grandchildData.mapped ? (
-                                          <IconButton 
+                                          <IconButton
                                             size="small"
                                             onClick={() => handleEditMapping(`${parentCategory}|${childCategory}|${grandchildCategory}`)}
                                             aria-label="edit mapping"
@@ -586,7 +621,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
             </>
           )}
         </Box>
-        
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
           <Button
             variant="outlined"
@@ -595,7 +630,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
           >
             {t('marketplace:store.categoryMapping.addMapping', { defaultValue: 'Добавить сопоставление' })}
           </Button>
-          
+
           <Box>
             <Button
               variant="outlined"
@@ -605,10 +640,10 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
             >
               {t('common:buttons.cancel', { defaultValue: 'Отмена' })}
             </Button>
-            
-            <Tooltip 
-              title={t('marketplace:store.categoryMapping.applyHelp', { 
-                defaultValue: 'Эта кнопка обновит категории всех товаров, которые были импортированы из этого источника, согласно настроенным сопоставлениям.' 
+
+            <Tooltip
+              title={t('marketplace:store.categoryMapping.applyHelp', {
+                defaultValue: 'Эта кнопка обновит категории всех товаров, которые были импортированы из этого источника, согласно настроенным сопоставлениям.'
               })}
               placement="top"
             >
@@ -620,13 +655,13 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
                 disabled={saving || applyingMappings || Object.keys(mappings).length === 0}
                 sx={{ mr: 1 }}
               >
-                {applyingMappings 
+                {applyingMappings
                   ? t('marketplace:store.categoryMapping.applyingMappings', { defaultValue: 'Применение...' })
                   : t('marketplace:store.categoryMapping.applyMappings', { defaultValue: 'Применить к товарам' })
                 }
               </Button>
             </Tooltip>
-            
+
             <Button
               variant="contained"
               startIcon={saving ? <CircularProgress size={20} /> : <Save />}
@@ -638,16 +673,16 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
           </Box>
         </Box>
       </Paper>
-      
+
       {/* Диалог добавления/редактирования сопоставления */}
-      <Dialog 
-        open={editDialogOpen} 
+      <Dialog
+        open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         maxWidth="md"
         fullWidth
       >
         <DialogTitle>
-          {currentMapping.source ? 
+          {currentMapping.source ?
             t('marketplace:store.categoryMapping.editMappingTitle', { defaultValue: 'Редактирование сопоставления' }) :
             t('marketplace:store.categoryMapping.addMappingTitle', { defaultValue: 'Добавление сопоставления' })}
         </DialogTitle>
@@ -657,33 +692,31 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
               fullWidth
               label={t('marketplace:store.categoryMapping.sourceCategory', { defaultValue: 'Категория источника' })}
               value={currentMapping.source}
-              onChange={(e) => setCurrentMapping({...currentMapping, source: e.target.value})}
+              onChange={(e) => setCurrentMapping({ ...currentMapping, source: e.target.value })}
               margin="dense"
               helperText={t('marketplace:store.categoryMapping.sourceCategoryHelp', { defaultValue: 'Введите категорию из источника импорта' })}
             />
-            
+
             <Box sx={{ mt: 3, mb: 1 }}>
               <Typography variant="subtitle2" gutterBottom>
                 {t('marketplace:store.categoryMapping.targetCategoryLabel', { defaultValue: 'Выберите категорию для сопоставления:' })}
               </Typography>
-              
-              <FormControl fullWidth margin="dense">
-                <CategorySelect
-                  categories={categories}
-                  value={currentMapping.target}
-                  onChange={(value) => setCurrentMapping({...currentMapping, target: value})}
-                  placeholder={t('marketplace:store.categoryMapping.selectCategory', { defaultValue: 'Выберите категорию' })}
-                />
-              </FormControl>
+
+              <HierarchicalCategorySelect
+                categories={buildCategoryTree(categories)}
+                value={currentMapping.target}
+                onChange={(value) => setCurrentMapping({ ...currentMapping, target: value })}
+                placeholder={t('marketplace:store.categoryMapping.selectCategory', { defaultValue: 'Выберите категорию' })}
+              />
             </Box>
-            
+
             {/* Дополнительная опция для категории "Прочее" */}
             <Box sx={{ mt: 2 }}>
               <Button
                 variant="outlined"
                 color="primary"
                 size="small"
-                onClick={() => setCurrentMapping({...currentMapping, target: 9999})}
+                onClick={() => setCurrentMapping({ ...currentMapping, target: 9999 })}
                 startIcon={<Plus size={16} />}
               >
                 {t('marketplace:store.categoryMapping.useDefaultCategory', { defaultValue: 'Использовать категорию "Прочее"' })}
@@ -695,8 +728,8 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
           <Button onClick={() => setEditDialogOpen(false)}>
             {t('common:buttons.cancel', { defaultValue: 'Отмена' })}
           </Button>
-          <Button 
-            onClick={handleSaveMapping} 
+          <Button
+            onClick={handleSaveMapping}
             color="primary"
             disabled={!currentMapping.source.trim() || !currentMapping.target}
           >
