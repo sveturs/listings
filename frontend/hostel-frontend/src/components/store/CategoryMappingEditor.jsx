@@ -48,6 +48,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
   const [categories, setCategories] = useState([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [currentMapping, setCurrentMapping] = useState({ source: '', target: 0 });
+  const [categoryExpansionState, setCategoryExpansionState] = useState({});
 
   // Состояние для импортированных категорий
   const [importedCategories, setImportedCategories] = useState([]);
@@ -58,6 +59,10 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
   // Состояние для применения сопоставлений
   const [applyingMappings, setApplyingMappings] = useState(false);
   const [applyResult, setApplyResult] = useState(null);
+
+  const updateCategoryExpansionState = (newState) => {
+    setCategoryExpansionState(newState);
+  };
 
   // Загружаем данные при инициализации
   useEffect(() => {
@@ -282,13 +287,13 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
     if (flatCategories.some(c => c.children && c.children.length > 0)) {
       return flatCategories;
     }
-    
+
     // Создаем словарь категорий по ID
     const categoryMap = {};
     flatCategories.forEach(cat => {
       categoryMap[cat.id] = { ...cat, children: [] };
     });
-    
+
     // Формируем дерево категорий
     const rootCategories = [];
     flatCategories.forEach(cat => {
@@ -305,7 +310,7 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
         rootCategories.push(categoryMap[cat.id]);
       }
     });
-    
+
     return rootCategories;
   };
   // Удаление сопоставления
@@ -707,6 +712,8 @@ const CategoryMappingEditor = ({ sourceId, onClose, onSave }) => {
                 value={currentMapping.target}
                 onChange={(value) => setCurrentMapping({ ...currentMapping, target: value })}
                 placeholder={t('marketplace:store.categoryMapping.selectCategory', { defaultValue: 'Выберите категорию' })}
+                expansionState={categoryExpansionState}
+                onExpansionChange={updateCategoryExpansionState}
               />
             </Box>
 

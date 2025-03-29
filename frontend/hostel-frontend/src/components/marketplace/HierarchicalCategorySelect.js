@@ -1,6 +1,4 @@
 // frontend/hostel-frontend/src/components/marketplace/HierarchicalCategorySelect.jsx
-// Исправляем компонент, чтобы сохранить правильную иерархию категорий
-
 import React, { useState, useEffect } from 'react';
 import { 
   FormControl, 
@@ -9,12 +7,15 @@ import {
   MenuItem, 
   Box,
   Typography,
-  Divider
+  Divider,
+  IconButton,
+  ListSubheader
 } from '@mui/material';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 
 /**
  * Компонент для иерархического выбора категорий, позволяющий выбирать категории любого уровня
+ * с возможностью сворачивания/разворачивания категорий и сохранением состояния
  */
 const HierarchicalCategorySelect = ({ 
   categories, 
@@ -23,48 +24,57 @@ const HierarchicalCategorySelect = ({
   placeholder,
   label,
   error,
-  size = "medium"
+  size = "medium",
+  expansionState = {},
+  onExpansionChange
 }) => {
-  // Рекурсивная функция для рендеринга категорий с правильной иерархией
-  const renderCategories = (categories, level = 0) => {
-    return categories.map(category => (
-      <React.Fragment key={category.id}>
-        {/* Сама категория */}
-        <MenuItem 
-          value={category.id}
-          sx={{ 
-            pl: 2 + level * 2,
-            borderLeft: level > 0 ? '1px dashed rgba(0,0,0,0.1)' : 'none',
-            display: 'flex',
-            alignItems: 'center'
-          }}
-        >
-          {level > 0 && (
-            <ChevronRight size={14 + level} style={{ marginRight: 8, opacity: 0.4 + (0.1 * level) }} />
-          )}
-          <Box>
-            <Typography variant="body2">
-              {category.name}
-            </Typography>
-            {category.parent_name && (
-              <Typography variant="caption" color="text.secondary">
-                {category.parent_name}
-              </Typography>
-            )}
-          </Box>
-        </MenuItem>
-        
-        {/* Дочерние категории, если они есть */}
-        {category.children && category.children.length > 0 && 
-          renderCategories(category.children.map(child => ({
-            ...child,
-            parent_name: category.name
-          })), level + 1)
-        }
-      </React.Fragment>
-    ));
+  // Состояние для хранения развернутых категорий
+  const [expandedCategories, setExpandedCategories] = useState(expansionState);
+
+  // Эффект для синхронизации с внешним состоянием, если оно передано
+  useEffect(() => {
+    if (Object.keys(expansionState).length > 0) {
+      setExpandedCategories(expansionState);
+    }
+  }, [expansionState]);
+
+  // Обновляем внешнее состояние при изменении локального
+  useEffect(() => {
+    if (onExpansionChange) {
+      onExpansionChange(expandedCategories);
+    }
+  }, [expandedCategories, onExpansionChange]);
+
+  // Функция для переключения состояния категории (свернута/развернута)
+  const toggleCategory = (categoryId, event) => {
+    event.stopPropagation(); // Предотвращаем всплытие события, чтобы не выбрать категорию при клике на иконку
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryId]: !prev[categoryId]
+    }));
   };
-  
+
+  // Функция для переключения всех категорий верхнего уровня
+  const toggleAllTopCategories = (expandAll, event) => {
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    const topLevelIds = prepareCategories(categories)
+      .filter(cat => cat.children && cat.children.length > 0)
+      .map(cat => cat.id);
+    
+    const newExpandedState = {};
+    topLevelIds.forEach(id => {
+      newExpandedState[id] = expandAll;
+    });
+    
+    setExpandedCategories(prev => ({
+      ...prev,
+      ...newExpandedState
+    }));
+  };
+
   // Функция для подготовки древовидной структуры категорий, если она не существует
   const prepareCategories = (cats) => {
     // Если категории уже имеют иерархическую структуру (с children)
@@ -97,6 +107,87 @@ const HierarchicalCategorySelect = ({
   // Подготавливаем категории
   const preparedCategories = prepareCategories(categories);
   
+  // Рекурсивно формируем плоский список MenuItems для Select
+  // Вместо рендеринга с React.Fragment, создаем плоский массив MenuItem
+  const generateMenuItems = (categories, level = 0) => {
+    let items = [];
+    
+    categories.forEach(category => {
+      // Добавляем саму категорию
+      items.push(
+        <MenuItem 
+          key={`cat-${category.id}`}
+          value={category.id}
+          sx={{ 
+            pl: 2 + level * 2,
+            borderLeft: level > 0 ? '1px dashed rgba(0,0,0,0.1)' : 'none',
+            display: 'flex',
+            alignItems: 'center',
+            position: 'relative'
+          }}
+        >
+          {/* Иконка разворачивания/сворачивания только для категорий с дочерними элементами */}
+          {category.children && category.children.length > 0 && (
+            <Box 
+              sx={{ 
+                position: 'absolute', 
+                left: level === 0 ? 0 : level * 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                mr: 1,
+                zIndex: 1 // Убедимся, что иконка кликабельна
+              }}
+              onClick={(e) => toggleCategory(category.id, e)}
+            >
+              {expandedCategories[category.id] ? 
+                <ChevronDown size={14} /> : 
+                <ChevronRight size={14} />
+              }
+            </Box>
+          )}
+          
+          {level > 0 && (
+            <Box sx={{ width: 14, height: 14, mr: 1 }} /> // Пустое место для отступа у подкатегорий
+          )}
+          
+          <Box>
+            <Typography variant="body2">
+              {category.name}
+            </Typography>
+            {category.parent_name && (
+              <Typography variant="caption" color="text.secondary">
+                {category.parent_name}
+              </Typography>
+            )}
+          </Box>
+        </MenuItem>
+      );
+      
+      // Если у этой категории есть дочерние элементы и она развернута,
+      // рекурсивно добавляем и их
+      if (
+        category.children && 
+        category.children.length > 0 && 
+        expandedCategories[category.id]
+      ) {
+        // Добавляем дочерние элементы с информацией о родителе
+        const childItems = generateMenuItems(
+          category.children.map(child => ({
+            ...child,
+            parent_name: category.name
+          })),
+          level + 1
+        );
+        
+        // Добавляем в общий массив
+        items = [...items, ...childItems];
+      }
+    });
+    
+    return items;
+  };
+
   return (
     <FormControl fullWidth error={error} size={size}>
       <InputLabel>{label || placeholder || 'Выберите категорию'}</InputLabel>
@@ -119,8 +210,31 @@ const HierarchicalCategorySelect = ({
         
         <Divider />
         
-        {/* Отображаем категории в иерархическом виде */}
-        {renderCategories(preparedCategories)}
+        {/* Заголовок с кнопками управления */}
+        <ListSubheader sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="caption" color="text.secondary">
+            Категории
+          </Typography>
+          <Box>
+            <IconButton 
+              size="small" 
+              onClick={(e) => toggleAllTopCategories(true, e)}
+              aria-label="Развернуть все"
+            >
+              <ChevronDown size={14} />
+            </IconButton>
+            <IconButton 
+              size="small" 
+              onClick={(e) => toggleAllTopCategories(false, e)}
+              aria-label="Свернуть все"
+            >
+              <ChevronRight size={14} />
+            </IconButton>
+          </Box>
+        </ListSubheader>
+        
+        {/* Генерируем плоский список элементов меню вместо использования React.Fragment */}
+        {generateMenuItems(preparedCategories)}
       </Select>
     </FormControl>
   );
