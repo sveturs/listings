@@ -77,7 +77,59 @@ func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, storefront)
 }
+// GetCategoryMappings возвращает сопоставления категорий для источника импорта
+func (h *StorefrontHandler) GetCategoryMappings(c *fiber.Ctx) error {
+    userID := c.Locals("user_id").(int)
+    sourceID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid import source ID")
+    }
+    
+    mappings, err := h.services.Storefront().GetCategoryMappings(c.Context(), sourceID, userID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get category mappings")
+    }
+    
+    return utils.SuccessResponse(c, mappings)
+}
 
+// UpdateCategoryMappings обновляет сопоставления категорий для источника импорта
+func (h *StorefrontHandler) UpdateCategoryMappings(c *fiber.Ctx) error {
+    userID := c.Locals("user_id").(int)
+    sourceID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid import source ID")
+    }
+    
+    var mappings map[string]int
+    if err := c.BodyParser(&mappings); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid mappings format")
+    }
+    
+    err = h.services.Storefront().UpdateCategoryMappings(c.Context(), sourceID, userID, mappings)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update category mappings")
+    }
+    
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Category mappings updated successfully",
+    })
+}
+// GetImportedCategories возвращает список категорий, которые были импортированы этим источником
+func (h *StorefrontHandler) GetImportedCategories(c *fiber.Ctx) error {
+    userID := c.Locals("user_id").(int)
+    sourceID, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid import source ID")
+    }
+    
+    categories, err := h.services.Storefront().GetImportedCategories(c.Context(), sourceID, userID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get imported categories")
+    }
+    
+    return utils.SuccessResponse(c, categories)
+}
 // GetPublicStorefront возвращает публичные данные витрины по ID
 func (h *StorefrontHandler) GetPublicStorefront(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))

@@ -26,10 +26,12 @@ import {
     Clock,
     RefreshCw,
     Plus,
-    ExternalLink
+    ExternalLink,
+    Tag
 } from 'lucide-react';
 import AddImportSourceModal from './AddImportSourceModal';
 import ImportModal from './ImportModal';
+import CategoryMappingModal from './CategoryMappingModal';
 
 const ImportSourceList = ({ sources, storefrontId, onUpdate, onDelete, onFetchHistory, onRunDirectSync }) => {
 
@@ -37,6 +39,7 @@ const ImportSourceList = ({ sources, storefrontId, onUpdate, onDelete, onFetchHi
 
     const [openAddModal, setOpenAddModal] = useState(false);
     const [openImportModal, setOpenImportModal] = useState(false);
+    const [openMappingModal, setOpenMappingModal] = useState(false);
     const [selectedSource, setSelectedSource] = useState(null);
     const [editingSource, setEditingSource] = useState(null);
 
@@ -53,6 +56,15 @@ const ImportSourceList = ({ sources, storefrontId, onUpdate, onDelete, onFetchHi
     const handleImport = (source) => {
         setSelectedSource(source);
         setOpenImportModal(true);
+    };
+
+    const handleCategoryMapping = (source) => {
+        setSelectedSource(source);
+        setOpenMappingModal(true);
+    };
+
+    const handleMappingSave = () => {
+        onUpdate();
     };
 
     const handleDelete = async (sourceId) => {
@@ -223,6 +235,16 @@ const ImportSourceList = ({ sources, storefrontId, onUpdate, onDelete, onFetchHi
                                                 {t('marketplace:store.import.history')}
                                             </Button>
 
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                startIcon={<Tag />}
+                                                onClick={() => handleCategoryMapping(source)}
+                                                title={t('marketplace:store.categoryMapping.buttonTitle')}
+                                            >
+                                                {t('marketplace:store.categoryMapping.button')}
+                                            </Button>
+
                                             {source.url && (
                                                 <Button
                                                     variant="outlined"
@@ -276,6 +298,17 @@ const ImportSourceList = ({ sources, storefrontId, onUpdate, onDelete, onFetchHi
                         onFetchHistory(selectedSource.id);
                     }
                 }}
+            />
+
+            {/* Модальное окно сопоставления категорий */}
+            <CategoryMappingModal
+                open={openMappingModal && selectedSource !== null}
+                onClose={() => {
+                    setOpenMappingModal(false);
+                    setSelectedSource(null);
+                }}
+                sourceId={selectedSource?.id}
+                onSave={handleMappingSave}
             />
         </Box>
     );

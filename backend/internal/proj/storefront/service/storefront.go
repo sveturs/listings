@@ -43,9 +43,120 @@ func (s *StorefrontService) SetPriceHistoryService(priceHistoryService PriceHist
 	s.priceHistoryService = priceHistoryService
 }
 
+// GetCategoryMappings возвращает текущие сопоставления категорий для источника импорта
+func (s *StorefrontService) GetCategoryMappings(ctx context.Context, sourceID int, userID int) (map[string]int, error) {
+	// Проверяем права доступа
+	source, err := s.storage.GetImportSourceByID(ctx, sourceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Получаем информацию о витрине
+	storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
+	if err != nil {
+		return nil, err
+	}
+
+	if storefront.UserID != userID {
+		return nil, fmt.Errorf("access denied")
+	}
+
+	// Извлекаем сопоставления из поля Mapping
+	var mappings map[string]int
+	if len(source.Mapping) > 0 {
+		if err := json.Unmarshal(source.Mapping, &mappings); err != nil {
+			return nil, fmt.Errorf("error parsing mappings: %w", err)
+		}
+	} else {
+		mappings = make(map[string]int)
+	}
+
+	return mappings, nil
+}
+
+// UpdateCategoryMappings обновляет сопоставления категорий для источника импорта
+func (s *StorefrontService) UpdateCategoryMappings(ctx context.Context, sourceID int, userID int, mappings map[string]int) error {
+	// Проверяем права доступа
+	source, err := s.storage.GetImportSourceByID(ctx, sourceID)
+	if err != nil {
+		return err
+	}
+
+	// Получаем информацию о витрине
+	storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
+	if err != nil {
+		return err
+	}
+
+	if storefront.UserID != userID {
+		return fmt.Errorf("access denied")
+	}
+
+	// Сериализуем сопоставления в JSON
+	mappingJSON, err := json.Marshal(mappings)
+	if err != nil {
+		return fmt.Errorf("error serializing mappings: %w", err)
+	}
+
+	// Обновляем поле Mapping
+	source.Mapping = mappingJSON
+
+	// Сохраняем изменения
+	return s.storage.UpdateImportSource(ctx, source)
+}
+
 type PriceHistoryServiceInterface interface {
 	AnalyzeDiscount(ctx context.Context, listingID int) (*models.DiscountInfo, error)
 	RecordPriceChange(ctx context.Context, listingID int, oldPrice, newPrice float64, source string) error
+}
+
+// GetImportedCategories возвращает список категорий, которые были импортированы этим источником
+func (s *StorefrontService) GetImportedCategories(ctx context.Context, sourceID int, userID int) ([]string, error) {
+	// Проверяем права доступа
+	source, err := s.storage.GetImportSourceByID(ctx, sourceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Получаем информацию о витрине
+	storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
+	if err != nil {
+		return nil, err
+	}
+
+	if storefront.UserID != userID {
+		return nil, fmt.Errorf("access denied")
+	}
+
+	// Выполняем запрос к базе данных для получения уникальных категорий из истории импорта
+	query := `
+        WITH listing_categories AS (
+            SELECT DISTINCT h.source_category
+            FROM imported_categories h
+            WHERE h.source_id = $1
+            AND h.source_category IS NOT NULL
+            AND h.source_category != ''
+        )
+        SELECT source_category FROM listing_categories
+        ORDER BY source_category ASC
+    `
+
+	rows, err := s.storage.Query(ctx, query, sourceID)
+	if err != nil {
+		return nil, fmt.Errorf("error querying imported categories: %w", err)
+	}
+	defer rows.Close()
+
+	var categories []string
+	for rows.Next() {
+		var category string
+		if err := rows.Scan(&category); err != nil {
+			return nil, fmt.Errorf("error scanning category: %w", err)
+		}
+		categories = append(categories, category)
+	}
+
+	return categories, nil
 }
 
 // CreateStorefront создает новую витрину с проверкой баланса
@@ -186,7 +297,66 @@ func (s *StorefrontService) DeleteStorefront(ctx context.Context, id int, userID
 
 	return s.storage.DeleteStorefront(ctx, id)
 }
-func (s *StorefrontService) findOrCreateCategory(ctx context.Context, cat1, cat2, cat3 string) (int, error) {
+func (s *StorefrontService) findOrCreateCategory(ctx context.Context, sourceID int, cat1, cat2, cat3 string) (int, error) {
+    var categoryID int = 9999 // По умолчанию категория "Прочее"
+    
+    // Получаем источник импорта, чтобы прочитать пользовательские сопоставления
+    source, err := s.storage.GetImportSourceByID(ctx, sourceID)
+    if err != nil {
+        log.Printf("Ошибка получения источника импорта %d: %v", sourceID, err)
+        return categoryID, nil // Используем "Прочее" по умолчанию
+    }
+
+    // Пытаемся найти сопоставление в пользовательских настройках
+    if len(source.Mapping) > 0 {
+        var mappings map[string]int
+        if err := json.Unmarshal(source.Mapping, &mappings); err == nil {
+            // Проверяем все возможные комбинации категорий
+            if cat1 != "" && cat2 != "" && cat3 != "" {
+                key := fmt.Sprintf("%s|%s|%s", cat1, cat2, cat3)
+                if catID, ok := mappings[key]; ok && catID > 0 {
+                    // Сохраняем использованные категории для будущего использования
+                    s.saveImportedCategory(ctx, sourceID, key, catID)
+                    return catID, nil
+                }
+            }
+            
+            if cat1 != "" && cat2 != "" {
+                key := fmt.Sprintf("%s|%s", cat1, cat2)
+                if catID, ok := mappings[key]; ok && catID > 0 {
+                    s.saveImportedCategory(ctx, sourceID, key, catID)
+                    return catID, nil
+                }
+            }
+            
+            if cat1 != "" {
+                if catID, ok := mappings[cat1]; ok && catID > 0 {
+                    s.saveImportedCategory(ctx, sourceID, cat1, catID)
+                    return catID, nil
+                }
+            }
+            
+            if cat2 != "" {
+                if catID, ok := mappings[cat2]; ok && catID > 0 {
+                    s.saveImportedCategory(ctx, sourceID, cat2, catID)
+                    return catID, nil
+                }
+            }
+            
+            if cat3 != "" {
+                if catID, ok := mappings[cat3]; ok && catID > 0 {
+                    s.saveImportedCategory(ctx, sourceID, cat3, catID)
+                    return catID, nil
+                }
+            }
+        } else {
+            log.Printf("Ошибка при разборе сопоставлений категорий: %v", err)
+        }
+    }
+    
+    // Если пользовательских сопоставлений нет или они не сработали,
+    // используем встроенный маппинг
+    
     // Маппинг для комбинаций категорий (ключ - комбинация категории 1 и 2)
     combinedMapping := map[string]int{
         "OPREMA ZA MOBILNI|ALATI":           3127,  // Запчасти для телефонов
@@ -221,10 +391,25 @@ func (s *StorefrontService) findOrCreateCategory(ctx context.Context, cat1, cat2
         "KONEKTORI I VIDEO BALUNI": 10410, // Коннекторы и видео баллуны
     }
 
+    // Сохраняем все исходные категории в таблицу imported_categories
+    if cat1 != "" {
+        s.saveImportedCategory(ctx, sourceID, cat1, 0)
+    }
+    if cat2 != "" {
+        s.saveImportedCategory(ctx, sourceID, cat2, 0)
+    }
+    if cat3 != "" {
+        s.saveImportedCategory(ctx, sourceID, cat3, 0)
+    }
+    if cat1 != "" && cat2 != "" {
+        s.saveImportedCategory(ctx, sourceID, cat1+"|"+cat2, 0)
+    }
+
     // Сначала проверяем комбинацию cat1|cat2
     if cat1 != "" && cat2 != "" {
         combinedKey := cat1 + "|" + cat2
         if catID, ok := combinedMapping[combinedKey]; ok && catID != -1 {
+            s.saveImportedCategory(ctx, sourceID, combinedKey, catID)
             return catID, nil
         }
     }
@@ -232,6 +417,7 @@ func (s *StorefrontService) findOrCreateCategory(ctx context.Context, cat1, cat2
     // Если комбинация не найдена, проверяем kategorija2 как основной уровень
     if cat2 != "" {
         if catID, ok := simpleMapping[cat2]; ok && catID != -1 {
+            s.saveImportedCategory(ctx, sourceID, cat2, catID)
             return catID, nil
         }
     }
@@ -239,14 +425,35 @@ func (s *StorefrontService) findOrCreateCategory(ctx context.Context, cat1, cat2
     // Если нет, проверяем kategorija1
     if cat1 != "" {
         if catID, ok := simpleMapping[cat1]; ok && catID != -1 {
+            s.saveImportedCategory(ctx, sourceID, cat1, catID)
             return catID, nil
         }
     }
 
     // Если ничего не найдено, возвращаем "Прочее"
     log.Printf("Категория не найдена для %s > %s > %s, используется 'Прочее' (9999)", cat1, cat2, cat3)
-    return 9999, nil
+    
+    // Сохраняем информацию о несопоставленной категории
+    combinedCategory := ""
+    if cat1 != "" && cat2 != "" && cat3 != "" {
+        combinedCategory = fmt.Sprintf("%s|%s|%s", cat1, cat2, cat3)
+    } else if cat1 != "" && cat2 != "" {
+        combinedCategory = fmt.Sprintf("%s|%s", cat1, cat2)
+    } else if cat1 != "" {
+        combinedCategory = cat1
+    } else if cat2 != "" {
+        combinedCategory = cat2
+    } else if cat3 != "" {
+        combinedCategory = cat3
+    }
+    
+    if combinedCategory != "" {
+        s.saveImportedCategory(ctx, sourceID, combinedCategory, categoryID)
+    }
+    
+    return categoryID, nil
 }
+
 
 // CreateImportSource создает новый источник импорта
 func (s *StorefrontService) CreateImportSource(ctx context.Context, source *models.ImportSourceCreate, userID int) (*models.ImportSource, error) {
@@ -588,109 +795,109 @@ func (s *StorefrontService) RunImport(ctx context.Context, sourceID int, userID 
 
 // ImportCSV импортирует данные из CSV с опциональной поддержкой ZIP-архива для изображений
 func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader io.Reader, zipFile io.Reader, userID int) (*models.ImportHistory, error) {
-	// Получаем информацию об источнике
-	source, err := s.storage.GetImportSourceByID(ctx, sourceID)
-	if err != nil {
-		return nil, fmt.Errorf("error getting import source: %w", err)
-	}
+    // Получаем информацию об источнике
+    source, err := s.storage.GetImportSourceByID(ctx, sourceID)
+    if err != nil {
+        return nil, fmt.Errorf("error getting import source: %w", err)
+    }
 
-	// Проверяем права доступа
-	storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
-	if err != nil {
-		log.Printf("Ошибка получения информации о витрине для адресов: %v", err)
-		// Продолжаем выполнение, даже если не удалось получить витрину
-	}
+    // Проверяем права доступа
+    storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
+    if err != nil {
+        log.Printf("Ошибка получения информации о витрине для адресов: %v", err)
+        // Продолжаем выполнение, даже если не удалось получить витрину
+    }
 
-	if storefront.UserID != userID {
-		return nil, fmt.Errorf("access denied")
-	}
+    if storefront.UserID != userID {
+        return nil, fmt.Errorf("access denied")
+    }
 
-	// Создаем историю импорта
-	history := &models.ImportHistory{
-		SourceID:  sourceID,
-		Status:    "in_progress",
-		StartedAt: time.Now(),
-	}
+    // Создаем историю импорта
+    history := &models.ImportHistory{
+        SourceID:  sourceID,
+        Status:    "in_progress",
+        StartedAt: time.Now(),
+    }
 
-	historyID, err := s.storage.CreateImportHistory(ctx, history)
-	if err != nil {
-		return nil, fmt.Errorf("error creating import history: %w", err)
-	}
-	history.ID = historyID
+    historyID, err := s.storage.CreateImportHistory(ctx, history)
+    if err != nil {
+        return nil, fmt.Errorf("error creating import history: %w", err)
+    }
+    history.ID = historyID
 
-	// Инициализируем ZIP-архив, если он был предоставлен
-	var zipReader *zip.Reader
-	if zipFile != nil {
-		// Читаем все содержимое в буфер, так как zip.NewReader требует io.ReaderAt
-		zipData, err := ioutil.ReadAll(zipFile)
-		if err != nil {
-			history.Status = "failed"
-			history.Log = fmt.Sprintf("Failed to read ZIP archive: %v", err)
-			finishTime := time.Now()
-			history.FinishedAt = &finishTime
-			s.storage.UpdateImportHistory(ctx, history)
-			return history, fmt.Errorf("failed to read ZIP archive: %w", err)
-		}
+    // Инициализируем ZIP-архив, если он был предоставлен
+    var zipReader *zip.Reader
+    if zipFile != nil {
+        // Читаем все содержимое в буфер, так как zip.NewReader требует io.ReaderAt
+        zipData, err := ioutil.ReadAll(zipFile)
+        if err != nil {
+            history.Status = "failed"
+            history.Log = fmt.Sprintf("Failed to read ZIP archive: %v", err)
+            finishTime := time.Now()
+            history.FinishedAt = &finishTime
+            s.storage.UpdateImportHistory(ctx, history)
+            return history, fmt.Errorf("failed to read ZIP archive: %w", err)
+        }
 
-		// Создаем zip.Reader из буфера
-		zipReader, err = zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
-		if err != nil {
-			history.Status = "failed"
-			history.Log = fmt.Sprintf("Failed to parse ZIP archive: %v", err)
-			finishTime := time.Now()
-			history.FinishedAt = &finishTime
-			s.storage.UpdateImportHistory(ctx, history)
-			return history, fmt.Errorf("failed to parse ZIP archive: %w", err)
-		}
+        // Создаем zip.Reader из буфера
+        zipReader, err = zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+        if err != nil {
+            history.Status = "failed"
+            history.Log = fmt.Sprintf("Failed to parse ZIP archive: %v", err)
+            finishTime := time.Now()
+            history.FinishedAt = &finishTime
+            s.storage.UpdateImportHistory(ctx, history)
+            return history, fmt.Errorf("failed to parse ZIP archive: %w", err)
+        }
 
-		log.Printf("ZIP archive loaded successfully with %d files", len(zipReader.File))
-	}
+        log.Printf("ZIP archive loaded successfully with %d files", len(zipReader.File))
+    }
 
-	// Читаем CSV файл
-	csvReader := csv.NewReader(reader)
-	csvReader.Comma = ';'             // Используем точку с запятой как разделитель
-	csvReader.LazyQuotes = true       // Разрешаем нестрогие кавычки
-	csvReader.TrimLeadingSpace = true // Убираем начальные пробелы
+    // Читаем CSV файл
+    csvReader := csv.NewReader(reader)
+    csvReader.Comma = ';'             // Используем точку с запятой как разделитель
+    csvReader.LazyQuotes = true       // Разрешаем нестрогие кавычки
+    csvReader.TrimLeadingSpace = true // Убираем начальные пробелы
 
-	// Читаем заголовок
-	headers, err := csvReader.Read()
-	if err != nil {
-		history.Status = "failed"
-		history.Log = fmt.Sprintf("Failed to read CSV header: %v", err)
-		finishTime := time.Now()
-		history.FinishedAt = &finishTime
-		s.storage.UpdateImportHistory(ctx, history)
-		return history, fmt.Errorf("failed to read CSV header: %w", err)
-	}
+    // Читаем заголовок
+    headers, err := csvReader.Read()
+    if err != nil {
+        history.Status = "failed"
+        history.Log = fmt.Sprintf("Failed to read CSV header: %v", err)
+        finishTime := time.Now()
+        history.FinishedAt = &finishTime
+        s.storage.UpdateImportHistory(ctx, history)
+        return history, fmt.Errorf("failed to read CSV header: %w", err)
+    }
 
-	// Логируем заголовки
-	log.Printf("CSV Import: Headers received: %v", headers)
+    // Логируем заголовки
+    log.Printf("CSV Import: Headers received: %v", headers)
 
-	// Создаем маппинг колонок
-	columnMap := make(map[string]int)
-	for i, header := range headers {
-		header = strings.TrimSpace(header)
-		columnMap[header] = i
-	}
+    // Создаем маппинг колонок
+    columnMap := make(map[string]int)
+    for i, header := range headers {
+        header = strings.TrimSpace(header)
+        columnMap[header] = i
+    }
 
-	// Проверяем наличие обязательных полей
-	requiredFields := []string{"id", "title", "description", "price", "category_id"}
-	missing := []string{}
-	for _, field := range requiredFields {
-		if _, ok := columnMap[field]; !ok {
-			missing = append(missing, field)
-		}
-	}
+    // Проверяем наличие обязательных полей
+    requiredFields := []string{"id", "title", "description", "price", "category_id"}
+    missing := []string{}
+    for _, field := range requiredFields {
+        if _, ok := columnMap[field]; !ok {
+            missing = append(missing, field)
+        }
+    }
 
-	if len(missing) > 0 {
-		errMsg := fmt.Sprintf("Missing required fields: %s", strings.Join(missing, ", "))
-		history.Status = "failed"
-		history.Log = errMsg
-		finishTime := time.Now()
-		history.FinishedAt = &finishTime
-		s.storage.UpdateImportHistory(ctx, history)
-		return history, fmt.Errorf(errMsg)
-	}
+    if len(missing) > 0 {
+        errMsg := fmt.Sprintf("Missing required fields: %s", strings.Join(missing, ", "))
+        history.Status = "failed"
+        history.Log = errMsg
+        finishTime := time.Now()
+        history.FinishedAt = &finishTime
+        s.storage.UpdateImportHistory(ctx, history)
+        return history, fmt.Errorf(errMsg)
+    }
 
 	// Константа для ID категории "прочее"
 	const DefaultCategoryID = 9999
@@ -770,6 +977,7 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 			errorLog.WriteString("Row missing required 'category_id' field\n")
 			continue
 		}
+		// В методе ImportCSV после обработки категорий
 		categoryID, err := strconv.Atoi(strings.TrimSpace(row[catIdx]))
 		if err != nil {
 			// Если категория не является числом, используем категорию "прочее"
@@ -788,6 +996,13 @@ func (s *StorefrontService) ImportCSV(ctx context.Context, sourceID int, reader 
 		}
 		listingData.CategoryID = categoryID
 
+		// Сохраняем информацию о категории, если она указана в строке
+		if catNameIdx, ok := columnMap["category_name"]; ok && catNameIdx < len(row) {
+			categoryName := strings.TrimSpace(row[catNameIdx])
+			if categoryName != "" {
+				s.saveImportedCategory(ctx, sourceID, categoryName, categoryID)
+			}
+		}
 		// Получаем condition
 		if condIdx, ok := columnMap["condition"]; ok && condIdx < len(row) {
 			condition := strings.TrimSpace(row[condIdx])
@@ -1048,171 +1263,174 @@ func (s *StorefrontService) GetImportSourceByID(ctx context.Context, id int, use
 // backend/internal/proj/storefront/service/storefront.go
 
 // ImportXMLFromZip выполняет импорт данных из XML файла внутри ZIP-архива
+// Обновляем метод ImportXMLFromZip в файле backend/internal/proj/storefront/service/storefront.go
+
+// ImportXMLFromZip выполняет импорт данных из XML файла внутри ZIP-архива
 func (s *StorefrontService) ImportXMLFromZip(ctx context.Context, sourceID int, reader io.Reader, userID int) (*models.ImportHistory, error) {
-	// Проверяем права доступа
-	source, err := s.storage.GetImportSourceByID(ctx, sourceID)
-	if err != nil {
-		return nil, fmt.Errorf("error getting import source: %w", err)
-	}
+    // Проверяем права доступа
+    source, err := s.storage.GetImportSourceByID(ctx, sourceID)
+    if err != nil {
+        return nil, fmt.Errorf("error getting import source: %w", err)
+    }
 
-	// Получаем информацию о витрине
-	storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
-	if err != nil {
-		return nil, fmt.Errorf("error getting storefront: %w", err)
-	}
+    // Получаем информацию о витрине
+    storefront, err := s.storage.GetStorefrontByID(ctx, source.StorefrontID)
+    if err != nil {
+        return nil, fmt.Errorf("error getting storefront: %w", err)
+    }
 
-	if storefront.UserID != userID {
-		return nil, fmt.Errorf("access denied")
-	}
+    if storefront.UserID != userID {
+        return nil, fmt.Errorf("access denied")
+    }
 
-	// Создаем запись в истории импорта
-	history := &models.ImportHistory{
-		SourceID:  sourceID,
-		Status:    "in_progress",
-		StartedAt: time.Now(),
-	}
+    // Создаем запись в истории импорта
+    history := &models.ImportHistory{
+        SourceID:  sourceID,
+        Status:    "in_progress",
+        StartedAt: time.Now(),
+    }
 
-	historyID, err := s.storage.CreateImportHistory(ctx, history)
-	if err != nil {
-		return nil, fmt.Errorf("error creating import history: %w", err)
-	}
-	history.ID = historyID
+    historyID, err := s.storage.CreateImportHistory(ctx, history)
+    if err != nil {
+        return nil, fmt.Errorf("error creating import history: %w", err)
+    }
+    history.ID = historyID
 
-	// Читаем ZIP-архив
-	log.Printf("Reading ZIP archive from source ID %d", sourceID)
-	zipData, err := io.ReadAll(reader)
-	if err != nil {
-		history.Status = "failed"
-		history.Log = fmt.Sprintf("Failed to read ZIP archive: %v", err)
-		finishTime := time.Now()
-		history.FinishedAt = &finishTime
-		s.storage.UpdateImportHistory(ctx, history)
-		return history, fmt.Errorf("failed to read ZIP archive: %w", err)
-	}
+    // Читаем ZIP-архив
+    log.Printf("Reading ZIP archive from source ID %d", sourceID)
+    zipData, err := io.ReadAll(reader)
+    if err != nil {
+        history.Status = "failed"
+        history.Log = fmt.Sprintf("Failed to read ZIP archive: %v", err)
+        finishTime := time.Now()
+        history.FinishedAt = &finishTime
+        s.storage.UpdateImportHistory(ctx, history)
+        return history, fmt.Errorf("failed to read ZIP archive: %w", err)
+    }
 
-	log.Printf("Read %d bytes from ZIP archive", len(zipData))
+    log.Printf("Read %d bytes from ZIP archive", len(zipData))
 
-	// Создаем zip.Reader из буфера
-	zipReader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
-	if err != nil {
-		history.Status = "failed"
-		history.Log = fmt.Sprintf("Failed to parse ZIP archive: %v", err)
-		finishTime := time.Now()
-		history.FinishedAt = &finishTime
-		s.storage.UpdateImportHistory(ctx, history)
-		return history, fmt.Errorf("failed to parse ZIP archive: %w", err)
-	}
+    // Создаем zip.Reader из буфера
+    zipReader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+    if err != nil {
+        history.Status = "failed"
+        history.Log = fmt.Sprintf("Failed to parse ZIP archive: %v", err)
+        finishTime := time.Now()
+        history.FinishedAt = &finishTime
+        s.storage.UpdateImportHistory(ctx, history)
+        return history, fmt.Errorf("failed to parse ZIP archive: %w", err)
+    }
 
-	log.Printf("ZIP archive parsed successfully, contains %d files", len(zipReader.File))
+    log.Printf("ZIP archive parsed successfully, contains %d files", len(zipReader.File))
 
-	// Поиск XML файла в архиве
-	var xmlFile *zip.File
-	for _, file := range zipReader.File {
-		log.Printf("Found file in ZIP: %s", file.Name)
-		if strings.HasSuffix(strings.ToLower(file.Name), ".xml") {
-			xmlFile = file
-			log.Printf("Selected as XML file: %s", file.Name)
-			break
-		}
-	}
+    // Поиск XML файла в архиве
+    var xmlFile *zip.File
+    for _, file := range zipReader.File {
+        log.Printf("Found file in ZIP: %s", file.Name)
+        if strings.HasSuffix(strings.ToLower(file.Name), ".xml") {
+            xmlFile = file
+            log.Printf("Selected as XML file: %s", file.Name)
+            break
+        }
+    }
 
-	if xmlFile == nil {
-		history.Status = "failed"
-		history.Log = "No XML file found in the ZIP archive"
-		finishTime := time.Now()
-		history.FinishedAt = &finishTime
-		s.storage.UpdateImportHistory(ctx, history)
-		return history, fmt.Errorf("no XML file found in the ZIP archive")
-	}
+    if xmlFile == nil {
+        history.Status = "failed"
+        history.Log = "No XML file found in the ZIP archive"
+        finishTime := time.Now()
+        history.FinishedAt = &finishTime
+        s.storage.UpdateImportHistory(ctx, history)
+        return history, fmt.Errorf("no XML file found in the ZIP archive")
+    }
 
-	// Открываем XML файл
-	rc, err := xmlFile.Open()
-	if err != nil {
-		history.Status = "failed"
-		history.Log = fmt.Sprintf("Failed to open XML file: %v", err)
-		finishTime := time.Now()
-		history.FinishedAt = &finishTime
-		s.storage.UpdateImportHistory(ctx, history)
-		return history, fmt.Errorf("failed to open XML file: %w", err)
-	}
-	defer rc.Close()
+    // Открываем XML файл
+    rc, err := xmlFile.Open()
+    if err != nil {
+        history.Status = "failed"
+        history.Log = fmt.Sprintf("Failed to open XML file: %v", err)
+        finishTime := time.Now()
+        history.FinishedAt = &finishTime
+        s.storage.UpdateImportHistory(ctx, history)
+        return history, fmt.Errorf("failed to open XML file: %w", err)
+    }
+    defer rc.Close()
 
-	// Парсим XML
-	xmlContent, err := io.ReadAll(rc)
-	if err != nil {
-		history.Status = "failed"
-		history.Log = fmt.Sprintf("Failed to read XML content: %v", err)
-		finishTime := time.Now()
-		history.FinishedAt = &finishTime
-		s.storage.UpdateImportHistory(ctx, history)
-		return history, fmt.Errorf("failed to read XML content: %w", err)
-	}
+    // Парсим XML
+    xmlContent, err := io.ReadAll(rc)
+    if err != nil {
+        history.Status = "failed"
+        history.Log = fmt.Sprintf("Failed to read XML content: %v", err)
+        finishTime := time.Now()
+        history.FinishedAt = &finishTime
+        s.storage.UpdateImportHistory(ctx, history)
+        return history, fmt.Errorf("failed to read XML content: %w", err)
+    }
 
-	log.Printf("Read %d bytes of XML content", len(xmlContent))
+    log.Printf("Read %d bytes of XML content", len(xmlContent))
 
-	// Парсим содержимое XML
-	var itemsTotal, itemsImported, itemsFailed int
-	var errorLog strings.Builder
+    // Парсим содержимое XML
+    var itemsTotal, itemsImported, itemsFailed int
+    var errorLog strings.Builder
 
-	// Используем потоковый парсер XML вместо регулярных выражений
-	itemsTotal, itemsImported, itemsFailed, err = s.processXMLContentStream(ctx, bytes.NewReader(xmlContent), storefront.ID, userID, &errorLog)
-	if err != nil {
-		history.Status = "failed"
-		history.Log = fmt.Sprintf("Failed to process XML content: %v\n%s", err, errorLog.String())
-		finishTime := time.Now()
-		history.FinishedAt = &finishTime
-		s.storage.UpdateImportHistory(ctx, history)
-		return history, fmt.Errorf("failed to process XML content: %w", err)
-	}
+    // Используем потоковый парсер XML, передавая sourceID в функцию processXMLContentStream
+    itemsTotal, itemsImported, itemsFailed, err = s.processXMLContentStream(ctx, bytes.NewReader(xmlContent), storefront.ID, sourceID, userID, &errorLog)
+    if err != nil {
+        history.Status = "failed"
+        history.Log = fmt.Sprintf("Failed to process XML content: %v\n%s", err, errorLog.String())
+        finishTime := time.Now()
+        history.FinishedAt = &finishTime
+        s.storage.UpdateImportHistory(ctx, history)
+        return history, fmt.Errorf("failed to process XML content: %w", err)
+    }
 
-	// Обновляем историю импорта
-	finishTime := time.Now()
-	history.FinishedAt = &finishTime
-	history.ItemsTotal = itemsTotal
-	history.ItemsImported = itemsImported
-	history.ItemsFailed = itemsFailed
-	history.Log = errorLog.String()
+    // Обновляем историю импорта
+    finishTime := time.Now()
+    history.FinishedAt = &finishTime
+    history.ItemsTotal = itemsTotal
+    history.ItemsImported = itemsImported
+    history.ItemsFailed = itemsFailed
+    history.Log = errorLog.String()
 
-	if itemsFailed > 0 {
-		if itemsImported > 0 {
-			history.Status = "partial"
-		} else {
-			history.Status = "failed"
-		}
-	} else {
-		history.Status = "success"
-	}
+    if itemsFailed > 0 {
+        if itemsImported > 0 {
+            history.Status = "partial"
+        } else {
+            history.Status = "failed"
+        }
+    } else {
+        history.Status = "success"
+    }
 
-	log.Printf("Updating import history: Total=%d, Imported=%d, Failed=%d, Status=%s",
-		history.ItemsTotal, history.ItemsImported, history.ItemsFailed, history.Status)
+    log.Printf("Updating import history: Total=%d, Imported=%d, Failed=%d, Status=%s",
+        history.ItemsTotal, history.ItemsImported, history.ItemsFailed, history.Status)
 
-	err = s.storage.UpdateImportHistory(ctx, history)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update import history: %w", err)
-	}
+    err = s.storage.UpdateImportHistory(ctx, history)
+    if err != nil {
+        return nil, fmt.Errorf("failed to update import history: %w", err)
+    }
 
-	// Обновляем информацию об источнике
-	source.LastImportAt = &finishTime
-	source.LastImportStatus = history.Status
-	source.LastImportLog = errorLog.String()
-	s.storage.UpdateImportSource(ctx, source)
+    // Обновляем информацию об источнике
+    source.LastImportAt = &finishTime
+    source.LastImportStatus = history.Status
+    source.LastImportLog = errorLog.String()
+    s.storage.UpdateImportSource(ctx, source)
 
-	if history.Status == "success" || history.Status == "partial" {
-		log.Printf("Запуск переиндексации всех объявлений после XML импорта...")
-		go func() {
-			reindexCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-			defer cancel()
+    if history.Status == "success" || history.Status == "partial" {
+        log.Printf("Запуск переиндексации всех объявлений после XML импорта...")
+        go func() {
+            reindexCtx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+            defer cancel()
 
-			// Запускаем переиндексацию всех объявлений
-			if err := s.ReindexStorefrontListings(reindexCtx, source.StorefrontID); err != nil {
-				log.Printf("Ошибка при переиндексации объявлений витрины после импорта: %v", err)
-			} else {
-				log.Printf("Переиндексация объявлений витрины после импорта успешно завершена")
-			}
-		}()
-	}
+            // Запускаем переиндексацию всех объявлений
+            if err := s.ReindexStorefrontListings(reindexCtx, source.StorefrontID); err != nil {
+                log.Printf("Ошибка при переиндексации объявлений витрины после импорта: %v", err)
+            } else {
+                log.Printf("Переиндексация объявлений витрины после импорта успешно завершена")
+            }
+        }()
+    }
 
-	return history, nil
+    return history, nil
 }
 
 // Функция для сопоставления атрибутов из импорта с атрибутами в системе
@@ -1286,130 +1504,130 @@ func isSimilarAttributeName(attrName, importName string) bool {
 		strings.Contains(attrName, importName) ||
 		strings.Contains(importName, attrName)
 }
+func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader io.Reader, storefrontID int, sourceID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
+    var itemsTotal, itemsImported, itemsFailed, itemsUpdated int
 
-func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader io.Reader, storefrontID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
-	var itemsTotal, itemsImported, itemsFailed, itemsUpdated int
+    log.Printf("Starting streaming XML processing for storefront ID %d, source ID %d", storefrontID, sourceID)
+    storefront, err := s.storage.GetStorefrontByID(ctx, storefrontID)
+    if err != nil {
+        log.Printf("Ошибка получения информации о витрине для адресов: %v", err)
+        // Продолжаем выполнение, даже если не удалось получить витрину
+    }
+    const DefaultCategoryID = 9999
 
-	log.Printf("Starting streaming XML processing for storefront ID %d", storefrontID)
-	storefront, err := s.storage.GetStorefrontByID(ctx, storefrontID)
-	if err != nil {
-		log.Printf("Ошибка получения информации о витрине для адресов: %v", err)
-		// Продолжаем выполнение, даже если не удалось получить витрину
-	}
-	const DefaultCategoryID = 9999
+    decoder := xml.NewDecoder(reader)
 
-	decoder := xml.NewDecoder(reader)
+    var (
+        inArtikal   bool
+        inField     string
+        id          string
+        naziv       string
+        kategorija1 string
+        kategorija2 string
+        kategorija3 string
+        opis        string
+        mpCena      string
+        vpCena      string
+        dostupan    string
+        naAkciji    string
+        slike       []string
+        inSlike     bool
+    )
 
-	var (
-		inArtikal   bool
-		inField     string
-		id          string
-		naziv       string
-		kategorija1 string
-		kategorija2 string
-		kategorija3 string
-		opis        string
-		mpCena      string
-		vpCena      string
-		dostupan    string
-		naAkciji    string
-		slike       []string
-		inSlike     bool
-	)
+    for {
+        token, err := decoder.Token()
+        if err == io.EOF {
+            break
+        }
+        if err != nil {
+            return itemsTotal, itemsImported, itemsFailed, fmt.Errorf("error decoding XML: %w", err)
+        }
 
-	for {
-		token, err := decoder.Token()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return itemsTotal, itemsImported, itemsFailed, fmt.Errorf("error decoding XML: %w", err)
-		}
+        switch t := token.(type) {
+        case xml.StartElement:
+            if t.Name.Local == "artikal" {
+                inArtikal = true
+                id = ""
+                naziv = ""
+                kategorija1 = ""
+                kategorija2 = ""
+                kategorija3 = ""
+                opis = ""
+                mpCena = ""
+                vpCena = ""
+                dostupan = ""
+                naAkciji = ""
+                slike = nil
+            } else if inArtikal {
+                if t.Name.Local == "slike" {
+                    inSlike = true
+                } else if inSlike && t.Name.Local == "slika" {
+                    inField = "slika"
+                } else {
+                    inField = t.Name.Local
+                }
+            }
+        case xml.EndElement:
+            if t.Name.Local == "artikal" && inArtikal {
+                inArtikal = false
+                itemsTotal++
 
-		switch t := token.(type) {
-		case xml.StartElement:
-			if t.Name.Local == "artikal" {
-				inArtikal = true
-				id = ""
-				naziv = ""
-				kategorija1 = ""
-				kategorija2 = ""
-				kategorija3 = ""
-				opis = ""
-				mpCena = ""
-				vpCena = ""
-				dostupan = ""
-				naAkciji = ""
-				slike = nil
-			} else if inArtikal {
-				if t.Name.Local == "slike" {
-					inSlike = true
-				} else if inSlike && t.Name.Local == "slika" {
-					inField = "slika"
-				} else {
-					inField = t.Name.Local
-				}
-			}
-		case xml.EndElement:
-			if t.Name.Local == "artikal" && inArtikal {
-				inArtikal = false
-				itemsTotal++
+                if naziv == "" {
+                    itemsFailed++
+                    errorLog.WriteString(fmt.Sprintf("Item with ID %s skipped: no title\n", id))
+                    continue
+                }
 
-				if naziv == "" {
-					itemsFailed++
-					errorLog.WriteString(fmt.Sprintf("Item with ID %s skipped: no title\n", id))
-					continue
-				}
+                var price float64 = 0.0
+                mpCenaClean := strings.TrimSpace(mpCena)
+                if mpCenaClean != "" && mpCenaClean != ".0000" && mpCenaClean != "0.0000" {
+                    price, err = s.parsePrice(mpCena)
+                    if err != nil {
+                        price, err = s.parsePrice(vpCena)
+                        if err != nil || price == 0 {
+                            price = 1.00
+                            log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
+                        } else {
+                            price = price * 1.5
+                            log.Printf("For item ID %s: retail price invalid, using wholesale price with markup: %f", id, price)
+                        }
+                    }
+                } else {
+                    wholesalePrice, wpErr := s.parsePrice(vpCena)
+                    if wpErr == nil && wholesalePrice > 0 {
+                        price = wholesalePrice * 1.5
+                        log.Printf("For item ID %s: retail price not set, using wholesale price with markup: %f", id, price)
+                    } else {
+                        price = 1.00
+                        log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
+                    }
+                }
 
-				var price float64 = 0.0
-				mpCenaClean := strings.TrimSpace(mpCena)
-				if mpCenaClean != "" && mpCenaClean != ".0000" && mpCenaClean != "0.0000" {
-					price, err = s.parsePrice(mpCena)
-					if err != nil {
-						price, err = s.parsePrice(vpCena)
-						if err != nil || price == 0 {
-							price = 1.00
-							log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
-						} else {
-							price = price * 1.5
-							log.Printf("For item ID %s: retail price invalid, using wholesale price with markup: %f", id, price)
-						}
-					}
-				} else {
-					wholesalePrice, wpErr := s.parsePrice(vpCena)
-					if wpErr == nil && wholesalePrice > 0 {
-						price = wholesalePrice * 1.5
-						log.Printf("For item ID %s: retail price not set, using wholesale price with markup: %f", id, price)
-					} else {
-						price = 1.00
-						log.Printf("For item ID %s: both retail and wholesale prices are invalid, using minimal price: %f", id, price)
-					}
-				}
+                // Здесь изменяем вызов findOrCreateCategory, добавляя параметр sourceID
+                categoryID, err := s.findOrCreateCategory(ctx, sourceID, kategorija1, kategorija2, kategorija3)
+                if err != nil {
+                    errorLog.WriteString(fmt.Sprintf("Warning for item %s: %v. Using default category.\n", id, err))
+                    categoryID = DefaultCategoryID
+                }
 
-				categoryID, err := s.findOrCreateCategory(ctx, kategorija1, kategorija2, kategorija3)
-				if err != nil {
-					errorLog.WriteString(fmt.Sprintf("Warning for item %s: %v. Using default category.\n", id, err))
-					categoryID = DefaultCategoryID
-				}
+                var existingListing *models.MarketplaceListing
+                var existingListingID int
+                var existingPrice float64
 
-				var existingListing *models.MarketplaceListing
-				var existingListingID int
-				var existingPrice float64
-
-				sqlQuery := `
+                sqlQuery := `
                     SELECT id, price FROM marketplace_listings 
                     WHERE external_id = $1 AND storefront_id = $2 AND user_id = $3 
                     LIMIT 1
                 `
-				err = s.storage.QueryRow(ctx, sqlQuery, id, storefrontID, userID).Scan(&existingListingID, &existingPrice)
-				if err == nil {
-					existingListing, err = s.storage.GetListingByID(ctx, existingListingID)
-					if err != nil {
-						log.Printf("Failed to fetch existing listing %d: %v", existingListingID, err)
-					} else {
-						log.Printf("Found existing listing ID %d for external ID %s", existingListingID, id)
-					}
-				}
+                err = s.storage.QueryRow(ctx, sqlQuery, id, storefrontID, userID).Scan(&existingListingID, &existingPrice)
+                if err == nil {
+                    existingListing, err = s.storage.GetListingByID(ctx, existingListingID)
+                    if err != nil {
+                        log.Printf("Failed to fetch existing listing %d: %v", existingListingID, err)
+                    } else {
+                        log.Printf("Found existing listing ID %d for external ID %s", existingListingID, id)
+                    }
+                }
 
 				var discountInfo *models.DiscountInfo
 				if existingListing != nil && s.priceHistoryService != nil {
@@ -1445,7 +1663,24 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 						log.Printf("Ошибка при записи изменения цены для товара %s: %v", id, err)
 					}
 				}
+				if kategorija1 != "" || kategorija2 != "" || kategorija3 != "" {
+					// Сохраняем все непустые категории
+					if kategorija1 != "" {
+						s.saveImportedCategory(ctx, sourceID, kategorija1, categoryID)
+					}
+					if kategorija2 != "" {
+						s.saveImportedCategory(ctx, sourceID, kategorija2, categoryID)
+					}
+					if kategorija3 != "" {
+						s.saveImportedCategory(ctx, sourceID, kategorija3, categoryID)
+					}
 
+					// Если есть комбинация категорий, сохраняем и ее
+					if kategorija1 != "" && kategorija2 != "" {
+						combinedKey := kategorija1 + "|" + kategorija2
+						s.saveImportedCategory(ctx, sourceID, combinedKey, categoryID)
+					}
+				}
 				descriptionWithDiscount := discountLabel + opis
 
 				if existingListing != nil {
@@ -1628,9 +1863,28 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 
 	return itemsTotal, itemsImported + itemsUpdated, itemsFailed, nil
 }
-
+func (s *StorefrontService) saveImportedCategory(ctx context.Context, sourceID int, sourceCategory string, categoryID int) {
+    // Пропускаем пустые категории
+    if sourceCategory == "" {
+        return
+    }
+    
+    // Используем UPSERT для обновления или вставки записи
+    _, err := s.storage.Exec(ctx, `
+        INSERT INTO imported_categories (source_id, source_category, category_id)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (source_id, source_category) 
+        DO UPDATE SET 
+            category_id = $3,
+            created_at = CURRENT_TIMESTAMP
+    `, sourceID, sourceCategory, categoryID)
+    
+    if err != nil {
+        log.Printf("Ошибка при сохранении информации о категории: %v", err)
+    }
+}
 // processXMLContent обрабатывает содержимое XML и создает товары
-func (s *StorefrontService) processXMLContent(ctx context.Context, xmlContent string, storefrontID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
+func (s *StorefrontService) processXMLContent(ctx context.Context, xmlContent string, storefrontID int, sourceID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
 	var itemsTotal, itemsImported, itemsFailed int
 
 	// Добавим логирование для отладки
@@ -1713,7 +1967,7 @@ func (s *StorefrontService) processXMLContent(ctx context.Context, xmlContent st
 		// Находим или создаем категорию
 		categoryID := DefaultCategoryID
 		if kategorija1 != "" {
-			catID, err := s.findOrCreateCategory(ctx, kategorija1, kategorija2, kategorija3)
+			catID, err := s.findOrCreateCategory(ctx, sourceID, kategorija1, kategorija2, kategorija3)
 			if err == nil {
 				categoryID = catID
 			} else {
@@ -1721,7 +1975,6 @@ func (s *StorefrontService) processXMLContent(ctx context.Context, xmlContent st
 			}
 		}
 
-		// Определяем метку скидки, если товар на акции
 		// Определяем метку скидки, если товар на акции
 		var discountLabel string = ""
 		if naAkciji == "1" {

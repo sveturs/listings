@@ -244,9 +244,11 @@ func (s *Server) setupRoutes() {
 	// Маршруты для импорта данных
 	storefronts.Post("/import-sources/:id/run", s.storefront.Storefront.RunImport)
 	storefronts.Get("/import-sources/:id/history", s.storefront.Storefront.GetImportHistory)
-
-
-
+	// Маршруты для сопоставления категорий
+	storefronts.Get("/import-sources/:id/category-mappings", s.storefront.Storefront.GetCategoryMappings)
+	storefronts.Put("/import-sources/:id/category-mappings", s.storefront.Storefront.UpdateCategoryMappings)
+	storefronts.Get("/import-sources/:id/imported-categories", s.storefront.Storefront.GetImportedCategories)
+	
 	// Маршруты для отзывов пользователей и витрин
 	api.Get("/users/:id/reviews", s.review.Review.GetUserReviews)
 	api.Get("/users/:id/rating", s.review.Review.GetUserRatingSummary)

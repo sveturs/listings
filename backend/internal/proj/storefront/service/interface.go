@@ -32,4 +32,13 @@ type StorefrontServiceInterface interface {
 	
 	// Обработка изображений для импорта
 	ProcessImportImages(ctx context.Context, listingID int, imagesStr string, zipReader *zip.Reader) error
+
+	 // Методы для работы с сопоставлениями категорий
+	 GetCategoryMappings(ctx context.Context, sourceID int, userID int) (map[string]int, error)
+	 UpdateCategoryMappings(ctx context.Context, sourceID int, userID int, mappings map[string]int) error
+
+	 GetImportedCategories(ctx context.Context, sourceID int, userID int) ([]string, error)
+ 
+
+ 
 }
