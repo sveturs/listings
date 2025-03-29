@@ -73,6 +73,9 @@ const MarketplaceListingsList = ({
     initialSortField = 'created_at',
     initialSortOrder = 'desc'
 }) => {
+
+    console.log("MarketplaceListingsList: получены listings:", listings?.length || 0);
+    
     const { t } = useTranslation('marketplace');
     const navigate = useNavigate();
     const theme = useTheme();
@@ -84,7 +87,6 @@ const MarketplaceListingsList = ({
     const [listingsWithRatings, setListingsWithRatings] = useState([]);
     const [loadingRatings, setLoadingRatings] = useState(false);
 
-    // Загрузка рейтингов для объявлений
     // Загрузка рейтингов для объявлений
     useEffect(() => {
         if (!listings || listings.length === 0) {
@@ -202,14 +204,12 @@ const MarketplaceListingsList = ({
     const handleRequestSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
         const newOrder = isAsc ? 'desc' : 'asc';
-
-        console.log(`Изменение сортировки: поле=${property}, порядок=${newOrder}, предыдущий порядок=${order}`);
-
+    
         // Обновляем локальное состояние компонента
         setOrder(newOrder);
         setOrderBy(property);
-
-        // Если предоставлен колбэк для внешней сортировки, вызываем его
+    
+        // Если предоставлен колбэк для внешней сортировки, вызываем его с корректными параметрами
         if (onSortChange) {
             onSortChange(property, newOrder);
         }
@@ -217,10 +217,20 @@ const MarketplaceListingsList = ({
 
     // Функция для создания props для заголовка с сортировкой
     const createSortHandler = (property) => () => {
-        handleRequestSort(property);
+
+        const isAsc = orderBy === property && order === 'asc';
+        const newOrder = isAsc ? 'desc' : 'asc';
+
+        console.log(`SORT: Передаем в родительский компонент: поле=${property}, порядок=${newOrder}`);
+
+        if (onSortChange) {
+            onSortChange(property, newOrder);
+
+            setOrder(newOrder);
+            setOrderBy(property);
+        }
     };
 
-    // Получаем информацию о скидке
     const getDiscountInfo = (listing) => {
         if (listing.metadata && listing.metadata.discount) {
             return {
@@ -290,6 +300,14 @@ const MarketplaceListingsList = ({
                                     active={orderBy === 'reviews'}
                                     direction={orderBy === 'reviews' ? order : 'asc'}
                                     onClick={createSortHandler('reviews')}
+                                    IconComponent={(props) => (
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            {props.direction === 'asc' ?
+                                                <ArrowUpDown style={{ transform: 'rotate(0deg)' }} /> :
+                                                <ArrowUpDown style={{ transform: 'rotate(180deg)' }} />
+                                            }
+                                        </Box>
+                                    )}
                                 >
                                     {t('listings.table.reviews', { defaultValue: 'Отзывы' })}
                                 </TableSortLabel>

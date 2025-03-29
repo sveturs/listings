@@ -1742,43 +1742,55 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		case "price_asc":
 			sortField = "price"
 			sortOrder = "asc"
-        case "rating_desc", "rating_asc":
-            // Определяем направление сортировки
-            var order string
-            if params.Sort == "rating_asc" {
-                order = "asc"
-            } else {
-                order = "desc"
-            }
-            
-            log.Printf("Применяем комбинированную сортировку по рейтингу (%s) и популярности", order)
-            
-            // Используем комбинированную сортировку
+        case "rating_desc":
+            log.Printf("Применяем сортировку рейтинга по УБЫВАНИЮ")
             query["sort"] = []interface{}{
-                // Сначала по рейтингу
                 map[string]interface{}{
                     "_script": map[string]interface{}{
                         "type": "number",
                         "script": map[string]interface{}{
                             "source": "doc.containsKey('average_rating') ? doc['average_rating'].value : 0",
                         },
-                        "order": order,
+                        "order": "desc",
                     },
                 },
-                // Затем по количеству просмотров (популярность)
                 map[string]interface{}{
                     "views_count": map[string]interface{}{
-                        "order": "desc", // Всегда по убыванию для просмотров
+                        "order": "desc",
                     },
                 },
-                // Затем по дате создания
                 map[string]interface{}{
                     "created_at": map[string]interface{}{
-                        "order": "desc", // Всегда по убыванию для даты
+                        "order": "desc",
                     },
                 },
             }
             return query
+        case "rating_asc":
+            log.Printf("Применяем сортировку рейтинга по ВОЗРАСТАНИЮ")
+            query["sort"] = []interface{}{
+                map[string]interface{}{
+                    "_script": map[string]interface{}{
+                        "type": "number",
+                        "script": map[string]interface{}{
+                            "source": "doc.containsKey('average_rating') ? doc['average_rating'].value : 0",
+                        },
+                        "order": "asc",
+                    },
+                },
+                map[string]interface{}{
+                    "views_count": map[string]interface{}{
+                        "order": "desc",
+                    },
+                },
+                map[string]interface{}{
+                    "created_at": map[string]interface{}{
+                        "order": "desc",
+                    },
+                },
+            }
+            return query
+
 		default:
 			// Пытаемся использовать указанное поле сортировки напрямую
 			parts := strings.Split(params.Sort, "_")

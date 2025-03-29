@@ -749,7 +749,6 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		Distance:         params.Distance,
 		CustomQuery:      nil,
 	}
-
     // Преобразуем числовые значения в указатели для SearchParams
     if params.CategoryID != "" {
         if catID, err := strconv.Atoi(params.CategoryID); err == nil {
@@ -938,6 +937,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
             i+1, listing.ID, listing.Title, listing.Latitude, listing.Longitude, listing.Status)
     }
 	log.Printf("Запрос поиска с параметрами сортировки: sort_by=%s, direction=%s", params.Sort, params.SortDirection)
+	log.Printf("Итоговый параметр сортировки в запросе к OpenSearch: %s", params.Sort)
     // ЗДЕСЬ ДОБАВЛЯЕМ ДОПОЛНИТЕЛЬНУЮ СОРТИРОВКУ РЕЗУЛЬТАТОВ
     // Особая обработка для многословных запросов (марка+модель)
     if len(searchResult.Listings) > 0 && strings.Contains(params.Query, " ") {

@@ -161,22 +161,29 @@ const MarketplacePage = () => {
         attributeFilters: {}
     });
 
+    // Обновленная функция fetchListings:
     const fetchListings = useCallback(async (currentFilters = {}, isLoadMore = false) => {
         try {
             // Предотвращаем повторные запросы с теми же параметрами
             const queryString = JSON.stringify(currentFilters);
             if (queryString === lastQueryRef.current && !isLoadMore) {
+                console.log("Запрос пропущен - одинаковые параметры");
                 return;
             }
 
+            // Важно: сохраняем текущий запрос перед отправкой
+            lastQueryRef.current = queryString;
+
             if (!isLoadMore) {
-                lastQueryRef.current = queryString;
                 setLoading(true);
                 setError(null);
                 setSpellingSuggestion(null);
             } else {
                 setLoadingMore(true);
             }
+
+            // Вывод информации о параметрах запроса
+            console.log(`ЗАПРОС: isLoadMore=${isLoadMore}, params=`, currentFilters);
 
             const params = {};
 
@@ -191,17 +198,11 @@ const MarketplacePage = () => {
                 }
             });
 
-            // Явно передаем параметры сортировки
-            if (currentFilters.sort_by) {
-                params.sort_by = currentFilters.sort_by;
-            }
-
             // Добавляем атрибуты, если они есть
             if (currentFilters.attributeFilters && typeof currentFilters.attributeFilters === 'object') {
                 Object.entries(currentFilters.attributeFilters).forEach(([attrKey, attrValue]) => {
                     if (attrValue) {
                         params[`attr_${attrKey}`] = attrValue;
-                        console.log(`Добавлен атрибут в запрос: attr_${attrKey}=${attrValue}`);
                     }
                 });
             }
@@ -210,52 +211,74 @@ const MarketplacePage = () => {
             params.page = isLoadMore ? page + 1 : 1;
             params.size = 20; // Размер страницы
 
-            console.log('Отправляем запрос поиска объявлений с параметрами:', params);
+            // Явно показываем параметры запроса в консоли
+            console.log('Отправляем запрос поиска с параметрами:', params);
+            console.log('sort_by =', params.sort_by);
+
+            // Выполняем запрос
             const response = await axios.get('/api/v1/marketplace/search', { params });
-            console.log('Получен ответ API:', response.data);
+            console.log('Результат запроса:', response.data);
+            console.log('Тип данных response.data:', typeof response.data);
+            console.log('Структура response.data:', Object.keys(response.data));
 
-            // Проверка на наличие данных
-            if (!response.data) {
-                console.error('Ответ API не содержит данных');
-                setListings([]);
-                setHasMoreListings(false);
-                return;
-            }
+            // Проверка на наличие полей в ответе - КЛЮЧЕВОЕ ИЗМЕНЕНИЕ
+            if (response.data && response.data.data) {
+                // Проверяем, является ли response.data.data массивом или объектом с массивом внутри
+                let receivedListings;
 
-            // Получаем данные о результатах и пагинации
-            let newListings = [];
-            let totalCount = 0;
+                if (Array.isArray(response.data.data)) {
+                    // Если это массив, используем его напрямую
+                    receivedListings = response.data.data;
+                    console.log(`Получено ${receivedListings.length} объявлений (из массива)`);
+                } else if (typeof response.data.data === 'object' && Array.isArray(response.data.data.data)) {
+                    // Если это объект с массивом data внутри
+                    receivedListings = response.data.data.data;
+                    console.log(`Получено ${receivedListings.length} объявлений (из объекта.data)`);
+                } else {
+                    // Если это объект, но не содержит массив, создаем массив из значений объекта
+                    receivedListings = Object.values(response.data.data);
+                    console.log(`Получено ${receivedListings.length} объявлений (из значений объекта)`);
+                }
 
-            if (response.data.data && Array.isArray(response.data.data)) {
-                newListings = response.data.data;
-                totalCount = response.data.meta?.total || newListings.length;
-            } else if (response.data.data?.data && Array.isArray(response.data.data.data)) {
-                newListings = response.data.data.data;
-                totalCount = response.data.data.meta?.total || newListings.length;
-            } else if (response.data.data?.items && Array.isArray(response.data.data.items)) {
-                newListings = response.data.data.items;
-                totalCount = response.data.data?.total || newListings.length;
-            }
+                // ДОПОЛНИТЕЛЬНАЯ ОТЛАДКА
+                if (receivedListings && receivedListings.length > 0) {
+                    console.log('Первое объявление в массиве:', receivedListings[0]);
+                } else {
+                    console.log('Массив объявлений пуст после обработки');
+                }
 
-            // Обновляем состояние списка объявлений
-            if (isLoadMore) {
-                setListings(prev => [...prev, ...newListings]);
-                setPage(prev => prev + 1);
+                // ВАЖНОЕ ИЗМЕНЕНИЕ - принудительно преобразуем в массив, если это не массив
+                if (!Array.isArray(receivedListings)) {
+                    console.log('Принудительное преобразование данных в массив');
+                    receivedListings = Object.values(receivedListings || {});
+                }
+
+                // Обновляем состояние
+                if (isLoadMore) {
+                    setListings(prevListings => [...prevListings, ...receivedListings]);
+                    setPage(page + 1);
+                } else {
+                    // Устанавливаем новые объявления
+                    console.log('Устанавливаем новые объявления в state:', receivedListings.length);
+                    setListings(receivedListings);
+                    setPage(1);
+                }
+
+                // Обновляем информацию о пагинации
+                if (response.data.meta) {
+                    setTotalListings(response.data.meta.total || 0);
+                    setHasMoreListings(response.data.meta.has_more === true);
+
+                    if (response.data.meta.spelling_suggestion) {
+                        setSpellingSuggestion(response.data.meta.spelling_suggestion);
+                    }
+                }
             } else {
-                setListings(newListings);
-                setPage(1);
+                // Если данные не получены
+                console.error('Неверный формат данных в ответе API:', response.data);
+                setListings(isLoadMore ? [...listings] : []);
+                setHasMoreListings(false);
             }
-
-            setTotalListings(totalCount);
-
-            // Проверяем, есть ли еще объявления для загрузки
-            setHasMoreListings(listings.length + newListings.length < totalCount);
-
-            // Обработка подсказок для исправления опечаток
-            if (response.data.meta && response.data.meta.spelling_suggestion) {
-                setSpellingSuggestion(response.data.meta.spelling_suggestion);
-            }
-
         } catch (err) {
             console.error('Ошибка при получении объявлений:', err);
             setError('Не удалось загрузить объявления');
@@ -324,61 +347,64 @@ const MarketplacePage = () => {
         });
     }, [debouncedFetchListings, setSearchParams]);
 
-// Обработчик сортировки
-const handleSortChange = (field, direction) => {
-    console.log(`Sorting changed: ${field} ${direction}`);
-    
-    // Важно: сначала обновляем состояние компонента, а затем формируем параметры запроса
-    setSortField(field);
-    setSortDirection(direction);
-    
-    // Преобразуем поле UI в поле API
-    let apiSortField;
-    switch (field) {
-        case 'created_at':
-            apiSortField = 'date';
-            break;
-        case 'title':
-            apiSortField = 'title';
-            break;
-        case 'price':
-            apiSortField = 'price';
-            break;
-        case 'reviews':
-            apiSortField = 'rating';
-            break;
-        default:
-            apiSortField = 'date';
-    }
-    
-    // Формируем параметр сортировки для API
-    const sortParam = `${apiSortField}_${direction}`;
-    console.log(`Параметр сортировки для API: ${sortParam}`);
-    
-    // Создаем новый объект фильтров
-    const updatedFilters = {
-        ...filters,
-        sort_by: sortParam
+    // Переопределим handleSortChange полностью:
+    const handleSortChange = (field, direction) => {
+        console.log(`РОДИТЕЛЬ получил: поле=${field}, направление=${direction}`);
+
+        // Сначала сохраняем состояние
+        setSortField(field);
+        setSortDirection(direction);
+
+        // Формируем параметр сортировки для API
+        let apiSort;
+        switch (field) {
+            case 'created_at':
+                apiSort = `date_${direction}`;
+                break;
+            case 'title':
+                apiSort = `title_${direction}`;
+                break;
+            case 'price':
+                apiSort = `price_${direction}`;
+                break;
+            case 'reviews':
+                apiSort = `rating_${direction}`;
+                break;
+            default:
+                apiSort = `date_${direction}`;
+        }
+
+        console.log(`Итоговый параметр сортировки для API: ${apiSort}`);
+
+        // Создаем и используем клон фильтров вместо обновления состояния
+        const newFilters = {
+            ...filters,
+            sort_by: apiSort
+        };
+
+        // Обновляем URL и состояние
+        const urlParams = new URLSearchParams();
+        Object.entries(newFilters).forEach(([key, value]) => {
+            if (value) urlParams.set(key, value);
+        });
+
+        console.log(`Новые URL-параметры:`, Object.fromEntries(urlParams.entries()));
+        setSearchParams(urlParams);
+
+        // Устанавливаем новые фильтры
+        setFilters(newFilters);
+
+        // Сбрасываем все состояния
+        setListings([]);
+        setPage(1);
+        setHasMoreListings(true);
+
+        // Делаем небольшую задержку перед запросом, чтобы состояния успели обновиться
+        setTimeout(() => {
+            console.log(`Запрос с фильтрами:`, newFilters);
+            fetchListings(newFilters);
+        }, 50);
     };
-    
-    console.log(`Обновленные фильтры:`, updatedFilters);
-    
-    // Обновляем URL-параметры
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('sort_by', sortParam);
-    setSearchParams(nextParams);
-    
-    // Обновляем состояние фильтров перед запросом
-    setFilters(updatedFilters);
-    
-    // Сбрасываем состояние списка и пагинации перед новым запросом
-    setListings([]);
-    setPage(1);
-    setHasMoreListings(true);
-    
-    // Выполняем запрос с новыми фильтрами
-    fetchListings(updatedFilters);
-};
 
     // Обработчик сброса атрибутных фильтров
     const resetAttributeFilters = useCallback(() => {
@@ -720,90 +746,88 @@ const handleSortChange = (field, direction) => {
             );
         }
 
-        // Проверка, что listings - это массив
-        if (!listings || !Array.isArray(listings) || listings.length === 0) {
-            if (spellingSuggestion) {
-                return (
-                    <>
-                        {categoryFilters}
-                        <Alert
-                            severity="info"
-                            sx={{ m: 2 }}
-                            action={
-                                <Button
-                                    color="inherit"
-                                    size="small"
-                                    onClick={() => handleFilterChange({ query: spellingSuggestion })}
-                                >
-                                    {t('search.usesuggestion')}
-                                </Button>
-                            }
-                        >
-                            {t('search.didyoumean')} <strong>{spellingSuggestion}</strong>?
-                        </Alert>
-                        <Box sx={{ m: 2, textAlign: 'center' }}>
-                            {t('search.noresults')}
-                        </Box>
-                    </>
-                );
-            }
+        // Проверка на пустой массив listings с выводом в консоль для отладки
+        console.log("Количество объявлений в listings:", listings?.length || 0);
+        if (listings && listings.length > 0) {
+            console.log("Первое объявление:", listings[0]);
+        } else {
+            console.log("Массив listings пуст или undefined");
+        }
 
+        // Проверяем, что listings - это массив и он не пустой
+        // ВАЖНО: Изменили условие - инвертировали, чтобы сначала проверять наличие данных
+        if (listings && Array.isArray(listings) && listings.length > 0) {
             return (
                 <>
                     {categoryFilters}
-                    <Alert severity="info" sx={{ m: 2 }}>
-                        {t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })}
-                    </Alert>
+
+                    {!mapViewActive && (
+                        <InfiniteScroll
+                            hasMore={hasMoreListings}
+                            loading={loadingMore}
+                            onLoadMore={handleLoadMore}
+                            autoLoad={!isMobile} // Автозагрузка только на десктопе
+                            loadingMessage={t('listings.loading', { defaultValue: 'Загрузка...' })}
+                            loadMoreButtonText={t('listings.loadMore', { defaultValue: 'Показать ещё' })}
+                            noMoreItemsText={t('listings.noMoreListings', { defaultValue: 'Больше нет объявлений' })}
+                        >
+                            {isMobile ? (
+                                <MobileListingGrid listings={listings} viewMode={viewMode} />
+                            ) : viewMode === 'grid' ? (
+                                <Grid container spacing={3}>
+                                    {listings.map((listing, index) => {
+                                        const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                                        return (
+                                            <Grid item xs={12} sm={6} md={4} key={effectiveId}>
+                                                <Box onClick={() => {
+                                                    if (listing.id) {
+                                                        navigate(`/marketplace/listings/${listing.id}`);
+                                                    } else {
+                                                        const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                                        console.log("Переход к объявлению с временным URL:", url);
+                                                    }
+                                                }}>
+                                                    <ListingCard listing={listing} />
+                                                </Box>
+                                            </Grid>
+                                        );
+                                    })}
+                                </Grid>
+                            ) : (
+                                <MarketplaceListingsList
+                                    listings={listings}
+                                    showSelection={false}
+                                    onSortChange={handleSortChange}
+                                    filters={filters}
+                                />
+                            )}
+                        </InfiniteScroll>
+                    )}
                 </>
             );
         }
 
+        // Если listings пустой или undefined - показываем сообщение
         return (
             <>
                 {categoryFilters}
-
-                                {!mapViewActive && (
-                    <InfiniteScroll
-                        hasMore={hasMoreListings}
-                        loading={loadingMore}
-                        onLoadMore={handleLoadMore}
-                        autoLoad={!isMobile} // Автозагрузка только на десктопе
-                        loadingMessage={t('listings.loading', { defaultValue: 'Загрузка...' })}
-                        loadMoreButtonText={t('listings.loadMore', { defaultValue: 'Показать ещё' })}
-                        noMoreItemsText={t('listings.noMoreListings', { defaultValue: 'Больше нет объявлений' })}
-                    >
-                        {isMobile ? (
-                            <MobileListingGrid listings={listings} viewMode={viewMode} />
-                        ) : viewMode === 'grid' ? (
-                            <Grid container spacing={3}>
-                                {listings.map((listing, index) => {
-                                    const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
-                                    return (
-                                        <Grid item xs={12} sm={6} md={4} key={effectiveId}>
-                                            <Box onClick={() => {
-                                                if (listing.id) {
-                                                    navigate(`/marketplace/listings/${listing.id}`);
-                                                } else {
-                                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
-                                                    console.log("Переход к объявлению с временным URL:", url);
-                                                }
-                                            }}>
-                                                <ListingCard listing={listing} />
-                                            </Box>
-                                        </Grid>
-                                    );
-                                })}
-                            </Grid>
-                        ) : (
-                            <MarketplaceListingsList
-                                listings={listings}
-                                showSelection={false}
-                                onSortChange={handleSortChange}
-                                filters={filters}
-                            />
-                        )}
-                    </InfiniteScroll>
-                )}
+                <Alert severity="info" sx={{ m: 2 }}>
+                    {spellingSuggestion ? (
+                        <>
+                            {t('search.didyoumean')} <strong>{spellingSuggestion}</strong>?
+                            <Button
+                                color="inherit"
+                                size="small"
+                                onClick={() => handleFilterChange({ query: spellingSuggestion })}
+                                sx={{ ml: 2 }}
+                            >
+                                {t('search.usesuggestion')}
+                            </Button>
+                        </>
+                    ) : (
+                        t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })
+                    )}
+                </Alert>
             </>
         );
     };
