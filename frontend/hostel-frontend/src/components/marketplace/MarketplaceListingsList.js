@@ -71,7 +71,8 @@ const MarketplaceListingsList = ({
     onSortChange = null, // пропс для передачи информации о сортировке родительскому компоненту
     filters = {},
     initialSortField = 'created_at',
-    initialSortOrder = 'desc'
+    initialSortOrder = 'desc',
+    loading = false 
 }) => {
 
     console.log("MarketplaceListingsList: получены listings:", listings?.length || 0);
@@ -215,31 +216,20 @@ const MarketplaceListingsList = ({
         }
     };
 
- const createSortHandler = (property) => () => {
-     if (property === 'reviews') {
-         const newOrder = orderBy === property && order === 'desc' ? 'asc' : 'desc';
+    const createSortHandler = (property) => () => {
+        const isAsc = orderBy === property && order === 'asc';
+        const newOrder = isAsc ? 'desc' : 'asc';
         
-        console.log(`SORT: Передаем в родительский компонент (reviews): поле=${property}, порядок=${newOrder}`);
+        console.log(`SORT: Передаем в родительский компонент: поле=${property}, порядок=${newOrder}`);
         
         if (onSortChange) {
+            // Вызываем колбэк с параметрами сортировки
             onSortChange(property, newOrder);
+            // Обновляем локальное состояние
             setOrder(newOrder);
             setOrderBy(property);
         }
-        return;
-    }
-    
-     const isAsc = orderBy === property && order === 'asc';
-    const newOrder = isAsc ? 'desc' : 'asc';
-
-    console.log(`SORT: Передаем в родительский компонент: поле=${property}, порядок=${newOrder}`);
-
-    if (onSortChange) {
-        onSortChange(property, newOrder);
-        setOrder(newOrder);
-        setOrderBy(property);
-    }
-};
+    };
 
     const getDiscountInfo = (listing) => {
         if (listing.metadata && listing.metadata.discount) {

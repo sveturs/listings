@@ -727,10 +727,10 @@ func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation 
 	return err
 }
 func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
-    log.Printf("Запрос поиска с параметрами: %+v", params)
+	log.Printf("Запрос поиска с параметрами: %+v", params)
 
-    // Преобразуем ServiceParams в SearchParams для передачи в репозиторий
-    searchParams := &search.SearchParams{
+	// Преобразуем ServiceParams в SearchParams для передачи в репозиторий
+	searchParams := &search.SearchParams{
 		Query:            params.Query,
 		Page:             params.Page,
 		Size:             params.Size,
@@ -744,345 +744,345 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		City:             params.City,
 		Country:          params.Country,
 		StorefrontID:     nil,
-		Sort:             params.Sort,          // Здесь передается поле sort_by
-		SortDirection:    params.SortDirection, // А здесь направление сортировки
+		Sort:             params.Sort,
+		SortDirection:    params.SortDirection,
 		Distance:         params.Distance,
 		CustomQuery:      nil,
 	}
-    // Преобразуем числовые значения в указатели для SearchParams
-    if params.CategoryID != "" {
-        if catID, err := strconv.Atoi(params.CategoryID); err == nil {
-            searchParams.CategoryID = &catID
-        }
-    }
-    if params.PriceMin > 0 {
-        priceMin := params.PriceMin
-        searchParams.PriceMin = &priceMin
-    }
-    if params.PriceMax > 0 {
-        priceMax := params.PriceMax
-        searchParams.PriceMax = &priceMax
-    }
-    if params.StorefrontID != "" {
-        if storeID, err := strconv.Atoi(params.StorefrontID); err == nil {
-            searchParams.StorefrontID = &storeID
-        }
-    }
-    if params.Latitude != 0 && params.Longitude != 0 {
-        searchParams.Location = &search.GeoLocation{
-            Lat: params.Latitude,
-            Lon: params.Longitude,
-        }
-    }
-    
-    // Добавляем особую обработку для поисковых запросов марка+модель
-    if params.Query != "" && strings.Contains(params.Query, " ") {
-        words := strings.Fields(params.Query)
-        if len(words) > 1 {
-            log.Printf("Обнаружен многословный запрос (%s), включаем специальную обработку для марки+модели", params.Query)
-        }
-    }
-    
-    // Выполняем поиск через Repository.SearchListings (buildSearchQuery)
-    log.Printf("Выполняем поиск через Repository.SearchListings (buildSearchQuery)")
-    searchResult, err := s.storage.SearchListingsOpenSearch(ctx, searchParams)
-    if err != nil {
-        log.Printf("Ошибка поиска в OpenSearch: %v", err)
-        
-        // Запасной вариант - поиск через PostgreSQL
-        log.Printf("Выполняем запасной поиск через PostgreSQL")
-        filters := map[string]string{
-            "condition": params.Condition,
-            "city":      params.City,
-            "country":   params.Country,
-            "sort_by":   params.Sort,
-        }
-        if params.CategoryID != "" {
-            filters["category_id"] = params.CategoryID
-        }
-        if params.StorefrontID != "" {
-            filters["storefront_id"] = params.StorefrontID
-        }
-        if params.PriceMin > 0 {
-            filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
-        }
-        if params.PriceMax > 0 {
-            filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
-        }
-        if params.Query != "" {
-            filters["query"] = params.Query
-        }
-        
-        // Если запрос похож на поиск марки+модели, добавляем специальную обработку
-        words := strings.Fields(params.Query)
-        if len(words) > 1 {
-            log.Printf("Выполняем специальный запасной поиск для марки+модели: %v", words)
-            
-            // Пробуем найти совпадения для всех вариантов слов как марки/модели
-            var results []models.MarketplaceListing
-            var totalCount int64
-            
-            for i := range words {
-                makeWord := words[i]
-                
-                // Создаем запрос только с маркой
-                makeFilters := make(map[string]string)
-                for k, v := range filters {
-                    makeFilters[k] = v
-                }
-                // Заменяем запрос только на слово марки
-                makeFilters["query"] = makeWord
-                
-                // Находим по марке
-                makeResults, makeTotal, makeErr := s.GetListings(ctx, makeFilters, params.Size, 0)
-                if makeErr == nil && len(makeResults) > 0 {
-                    totalCount += makeTotal // Учитываем общее количество найденных
+	// Преобразуем числовые значения в указатели для SearchParams
+	if params.CategoryID != "" {
+		if catID, err := strconv.Atoi(params.CategoryID); err == nil {
+			searchParams.CategoryID = &catID
+		}
+	}
+	if params.PriceMin > 0 {
+		priceMin := params.PriceMin
+		searchParams.PriceMin = &priceMin
+	}
+	if params.PriceMax > 0 {
+		priceMax := params.PriceMax
+		searchParams.PriceMax = &priceMax
+	}
+	if params.StorefrontID != "" {
+		if storeID, err := strconv.Atoi(params.StorefrontID); err == nil {
+			searchParams.StorefrontID = &storeID
+		}
+	}
+	if params.Latitude != 0 && params.Longitude != 0 {
+		searchParams.Location = &search.GeoLocation{
+			Lat: params.Latitude,
+			Lon: params.Longitude,
+		}
+	}
 
-                    // Фильтруем результаты по модели (другие слова)
-                    for _, result := range makeResults {
-                        // Проверяем, содержится ли модель в атрибутах или названии
-                        matched := false
-                        
-                        // Проверяем в названии
-                        resultTitle := strings.ToLower(result.Title)
-                        
-                        // Проверяем все слова кроме текущего (makeWord)
-                        for j := range words {
-                            if i == j {
-                                continue // Пропускаем текущее слово (уже проверили как марку)
-                            }
-                            
-                            modelWord := strings.ToLower(words[j])
-                            // Если модель найдена в названии
-                            if strings.Contains(resultTitle, modelWord) {
-                                matched = true
-                                break
-                            }
-                            
-                            // Проверяем атрибуты
-                            for _, attr := range result.Attributes {
-                                if attr.AttributeName == "model" && attr.TextValue != nil {
-                                    attrValue := strings.ToLower(*attr.TextValue)
-                                    if strings.Contains(attrValue, modelWord) {
-                                        matched = true
-                                        break
-                                    }
-                                }
-                            }
-                            
-                            if matched {
-                                break
-                            }
-                        }
-                        
-                        // Если найдено совпадение, добавляем в результат
-                        if matched {
-                            results = append(results, result)
-                            if len(results) >= params.Size {
-                                break // Достигли лимита
-                            }
-                        }
-                    }
-                }
-                
-                // Если нашли достаточно результатов, прекращаем поиск
-                if len(results) >= params.Size {
-                    break
-                }
-            }
-            
-            // Если найдены результаты через специальный поиск
-            if len(results) > 0 {
-                // Преобразуем срез в указатели для результата
-                listingPtrs := make([]*models.MarketplaceListing, len(results))
-                for i := range results {
-                    listingPtrs[i] = &results[i]
-                }
-                
-                return &search.ServiceResult{
-                    Items:      listingPtrs,
-                    Total:      int(totalCount),
-                    Page:       params.Page,
-                    Size:       params.Size,
-                    TotalPages: (int(totalCount) + params.Size - 1) / params.Size,
-                }, nil
-            }
-            
-            // Если специальный поиск не дал результатов, пробуем обычный
-            log.Printf("Специальный поиск не дал результатов, пробуем обычный поиск")
-        }
-        
-        // Выполняем стандартный поиск через PostgreSQL
-        listings, total, err := s.GetListings(ctx, filters, params.Size, (params.Page-1)*params.Size)
-        if err != nil {
-            log.Printf("Ошибка стандартного поиска: %v", err)
-            return nil, fmt.Errorf("ошибка поиска: %w", err)
-        }
-        listingPtrs := make([]*models.MarketplaceListing, len(listings))
-        for i := range listings {
-            listingPtrs[i] = &listings[i]
-        }
-        return &search.ServiceResult{
-            Items:      listingPtrs,
-            Total:      int(total),
-            Page:       params.Page,
-            Size:       params.Size,
-            TotalPages: (int(total) + params.Size - 1) / params.Size,
-        }, nil
-    }
+	// Добавляем особую обработку для поисковых запросов марка+модель
+	if params.Query != "" && strings.Contains(params.Query, " ") {
+		words := strings.Fields(params.Query)
+		if len(words) > 1 {
+			log.Printf("Обнаружен многословный запрос (%s), включаем специальную обработку для марки+модели", params.Query)
+		}
+	}
 
-    log.Printf("Найдено %d объявлений", len(searchResult.Listings))
-    for i, listing := range searchResult.Listings {
-        log.Printf("Объявление %d: ID=%d, Название=%s, Координаты=%v,%v, Статус=%s",
-            i+1, listing.ID, listing.Title, listing.Latitude, listing.Longitude, listing.Status)
-    }
+	// Выполняем поиск через Repository.SearchListings (buildSearchQuery)
+	log.Printf("Выполняем поиск через Repository.SearchListings (buildSearchQuery)")
+	searchResult, err := s.storage.SearchListingsOpenSearch(ctx, searchParams)
+	if err != nil {
+		log.Printf("Ошибка поиска в OpenSearch: %v", err)
+
+		// Запасной вариант - поиск через PostgreSQL
+		log.Printf("Выполняем запасной поиск через PostgreSQL")
+		filters := map[string]string{
+			"condition": params.Condition,
+			"city":      params.City,
+			"country":   params.Country,
+			"sort_by":   params.Sort,
+		}
+		if params.CategoryID != "" {
+			filters["category_id"] = params.CategoryID
+		}
+		if params.StorefrontID != "" {
+			filters["storefront_id"] = params.StorefrontID
+		}
+		if params.PriceMin > 0 {
+			filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
+		}
+		if params.PriceMax > 0 {
+			filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
+		}
+		if params.Query != "" {
+			filters["query"] = params.Query
+		}
+
+		// Если запрос похож на поиск марки+модели, добавляем специальную обработку
+		words := strings.Fields(params.Query)
+		if len(words) > 1 {
+			log.Printf("Выполняем специальный запасной поиск для марки+модели: %v", words)
+
+			// Пробуем найти совпадения для всех вариантов слов как марки/модели
+			var results []models.MarketplaceListing
+			var totalCount int64
+
+			for i := range words {
+				makeWord := words[i]
+
+				// Создаем запрос только с маркой
+				makeFilters := make(map[string]string)
+				for k, v := range filters {
+					makeFilters[k] = v
+				}
+				// Заменяем запрос только на слово марки
+				makeFilters["query"] = makeWord
+
+				// Находим по марке
+				makeResults, makeTotal, makeErr := s.GetListings(ctx, makeFilters, params.Size, 0)
+				if makeErr == nil && len(makeResults) > 0 {
+					totalCount += makeTotal // Учитываем общее количество найденных
+
+					// Фильтруем результаты по модели (другие слова)
+					for _, result := range makeResults {
+						// Проверяем, содержится ли модель в атрибутах или названии
+						matched := false
+
+						// Проверяем в названии
+						resultTitle := strings.ToLower(result.Title)
+
+						// Проверяем все слова кроме текущего (makeWord)
+						for j := range words {
+							if i == j {
+								continue // Пропускаем текущее слово (уже проверили как марку)
+							}
+
+							modelWord := strings.ToLower(words[j])
+							// Если модель найдена в названии
+							if strings.Contains(resultTitle, modelWord) {
+								matched = true
+								break
+							}
+
+							// Проверяем атрибуты
+							for _, attr := range result.Attributes {
+								if attr.AttributeName == "model" && attr.TextValue != nil {
+									attrValue := strings.ToLower(*attr.TextValue)
+									if strings.Contains(attrValue, modelWord) {
+										matched = true
+										break
+									}
+								}
+							}
+
+							if matched {
+								break
+							}
+						}
+
+						// Если найдено совпадение, добавляем в результат
+						if matched {
+							results = append(results, result)
+							if len(results) >= params.Size {
+								break // Достигли лимита
+							}
+						}
+					}
+				}
+
+				// Если нашли достаточно результатов, прекращаем поиск
+				if len(results) >= params.Size {
+					break
+				}
+			}
+
+			// Если найдены результаты через специальный поиск
+			if len(results) > 0 {
+				// Преобразуем срез в указатели для результата
+				listingPtrs := make([]*models.MarketplaceListing, len(results))
+				for i := range results {
+					listingPtrs[i] = &results[i]
+				}
+
+				return &search.ServiceResult{
+					Items:      listingPtrs,
+					Total:      int(totalCount),
+					Page:       params.Page,
+					Size:       params.Size,
+					TotalPages: (int(totalCount) + params.Size - 1) / params.Size,
+				}, nil
+			}
+
+			// Если специальный поиск не дал результатов, пробуем обычный
+			log.Printf("Специальный поиск не дал результатов, пробуем обычный поиск")
+		}
+
+		// Выполняем стандартный поиск через PostgreSQL
+		listings, total, err := s.GetListings(ctx, filters, params.Size, (params.Page-1)*params.Size)
+		if err != nil {
+			log.Printf("Ошибка стандартного поиска: %v", err)
+			return nil, fmt.Errorf("ошибка поиска: %w", err)
+		}
+		listingPtrs := make([]*models.MarketplaceListing, len(listings))
+		for i := range listings {
+			listingPtrs[i] = &listings[i]
+		}
+		return &search.ServiceResult{
+			Items:      listingPtrs,
+			Total:      int(total),
+			Page:       params.Page,
+			Size:       params.Size,
+			TotalPages: (int(total) + params.Size - 1) / params.Size,
+		}, nil
+	}
+
+	log.Printf("Найдено %d объявлений", len(searchResult.Listings))
+	for i, listing := range searchResult.Listings {
+		log.Printf("Объявление %d: ID=%d, Название=%s, Координаты=%v,%v, Статус=%s",
+			i+1, listing.ID, listing.Title, listing.Latitude, listing.Longitude, listing.Status)
+	}
 	log.Printf("Запрос поиска с параметрами сортировки: sort_by=%s, direction=%s", params.Sort, params.SortDirection)
 	log.Printf("Итоговый параметр сортировки в запросе к OpenSearch: %s", params.Sort)
-    // ЗДЕСЬ ДОБАВЛЯЕМ ДОПОЛНИТЕЛЬНУЮ СОРТИРОВКУ РЕЗУЛЬТАТОВ
-    // Особая обработка для многословных запросов (марка+модель)
-    if len(searchResult.Listings) > 0 && strings.Contains(params.Query, " ") {
-        words := strings.Fields(params.Query)
-        if len(words) > 1 {
-            log.Printf("Выполняем дополнительную сортировку для многословного запроса '%s'", params.Query)
-            
-            // Преобразуем слова запроса в нижний регистр для сравнения
-            lowerWords := make([]string, len(words))
-            for i, word := range words {
-                lowerWords[i] = strings.ToLower(word)
-            }
-            
-            // Создаем функцию для вычисления оценки релевантности
-            getRelevanceScore := func(listing *models.MarketplaceListing) int {
-                score := 0
-                
-                // Получаем значения атрибутов make и model
-                var makeValue, modelValue string
-                for _, attr := range listing.Attributes {
-                    if attr.AttributeName == "make" && attr.TextValue != nil {
-                        makeValue = strings.ToLower(*attr.TextValue)
-                    }
-                    if attr.AttributeName == "model" && attr.TextValue != nil {
-                        modelValue = strings.ToLower(*attr.TextValue)
-                    }
-                }
-                
-                // Добавляем логирование для отладки
-                log.Printf("Листинг %d: make='%s', model='%s'", listing.ID, makeValue, modelValue)
-                
-                // Проверяем каждую пару слов как потенциальные марка+модель
-                for _, word1 := range lowerWords {
-                    for _, word2 := range lowerWords {
-                        if word1 == word2 {
-                            continue
-                        }
-                        
-                        // Проверяем точное совпадение марка+модель (в любом порядке)
-                        if (word1 == makeValue && word2 == modelValue) || 
-                           (word2 == makeValue && word1 == modelValue) {
-                            // Очень высокий балл за точное совпадение обоих слов
-                            score += 1000
-                            log.Printf("  Точное совпадение марка+модель для '%s %s': +1000", word1, word2)
-                            break
-                        }
-                        
-                        // Проверяем модель на точное вхождение запроса
-                        if modelValue != "" && (modelValue == word1 || modelValue == word2) {
-                            score += 500
-                            log.Printf("  Точное совпадение модели для '%s': +500", modelValue)
-                        }
-                        
-                        // Проверяем точное совпадение только марки
-                        if word1 == makeValue || word2 == makeValue {
-                            score += 100
-                            log.Printf("  Точное совпадение марки для '%s': +100", makeValue)
-                        }
-                        
-                        // Проверяем частичное совпадение модели
-                        if modelValue != "" && (strings.Contains(modelValue, word1) || 
-                                               strings.Contains(modelValue, word2)) {
-                            score += 20
-                            log.Printf("  Частичное совпадение модели для '%s': +20", modelValue)
-                        }
-                    }
-                }
-                
-                // Проверяем наличие слов в заголовке
-                title := strings.ToLower(listing.Title)
-                for _, word := range lowerWords {
-                    if strings.Contains(title, word) {
-                        score += 10
-                        log.Printf("  Совпадение слова '%s' в заголовке: +10", word)
-                    }
-                }
-                
-                log.Printf("  Финальный рейтинг для объявления %d: %d", listing.ID, score)
-                return score
-            }
-            
-            // Сортируем результаты по релевантности
-            sort.Slice(searchResult.Listings, func(i, j int) bool {
-                scoreI := getRelevanceScore(searchResult.Listings[i])
-                scoreJ := getRelevanceScore(searchResult.Listings[j])
-                return scoreI > scoreJ // Сортировка по убыванию релевантности
-            })
-            
-            log.Printf("Выполнена дополнительная сортировка результатов по релевантности")
-            
-            // Выводим отсортированные результаты для проверки
-            log.Printf("Отсортированные результаты:")
-            for i, listing := range searchResult.Listings {
-                var makeValue, modelValue string
-                for _, attr := range listing.Attributes {
-                    if attr.AttributeName == "make" && attr.TextValue != nil {
-                        makeValue = *attr.TextValue
-                    }
-                    if attr.AttributeName == "model" && attr.TextValue != nil {
-                        modelValue = *attr.TextValue
-                    }
-                }
-                log.Printf("  %d. ID=%d, Название=%s, Марка=%s, Модель=%s",
-                    i+1, listing.ID, listing.Title, makeValue, modelValue)
-            }
-        }
-    }
+	// ЗДЕСЬ ДОБАВЛЯЕМ ДОПОЛНИТЕЛЬНУЮ СОРТИРОВКУ РЕЗУЛЬТАТОВ
+	// Особая обработка для многословных запросов (марка+модель)
+	if len(searchResult.Listings) > 0 && strings.Contains(params.Query, " ") {
+		words := strings.Fields(params.Query)
+		if len(words) > 1 {
+			log.Printf("Выполняем дополнительную сортировку для многословного запроса '%s'", params.Query)
 
-    result := &search.ServiceResult{
-        Items:      searchResult.Listings,
-        Total:      searchResult.Total,
-        Page:       params.Page,
-        Size:       params.Size,
-        TotalPages: (searchResult.Total + params.Size - 1) / params.Size,
-        Took:       searchResult.Took,
-    }
+			// Преобразуем слова запроса в нижний регистр для сравнения
+			lowerWords := make([]string, len(words))
+			for i, word := range words {
+				lowerWords[i] = strings.ToLower(word)
+			}
 
-    if len(searchResult.Aggregations) > 0 {
-        result.Facets = make(map[string][]search.Bucket)
-        for key, buckets := range searchResult.Aggregations {
-            result.Facets[key] = buckets
-        }
-    }
+			// Создаем функцию для вычисления оценки релевантности
+			getRelevanceScore := func(listing *models.MarketplaceListing) int {
+				score := 0
 
-    if len(searchResult.Suggestions) > 0 {
-        result.Suggestions = searchResult.Suggestions
-    }
-    
-    log.Printf("Результаты поиска для атрибутов %v:", params.AttributeFilters)
-    for i, listing := range searchResult.Listings {
-        log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
+				// Получаем значения атрибутов make и model
+				var makeValue, modelValue string
+				for _, attr := range listing.Attributes {
+					if attr.AttributeName == "make" && attr.TextValue != nil {
+						makeValue = strings.ToLower(*attr.TextValue)
+					}
+					if attr.AttributeName == "model" && attr.TextValue != nil {
+						modelValue = strings.ToLower(*attr.TextValue)
+					}
+				}
 
-        // Добавляем отладочную информацию о атрибутах
-        if len(listing.Attributes) > 0 {
-            log.Printf("  Объявление %d имеет %d атрибутов:", listing.ID, len(listing.Attributes))
-            for _, attr := range listing.Attributes {
-                log.Printf("  Атрибут: name=%s, type=%s, value=%s",
-                    attr.AttributeName, attr.AttributeType, attr.DisplayValue)
-            }
-        } else {
-            log.Printf("  Объявление %d не имеет атрибутов", listing.ID)
-        }
-    }
-    
-    return result, nil
+				// Добавляем логирование для отладки
+				log.Printf("Листинг %d: make='%s', model='%s'", listing.ID, makeValue, modelValue)
+
+				// Проверяем каждую пару слов как потенциальные марка+модель
+				for _, word1 := range lowerWords {
+					for _, word2 := range lowerWords {
+						if word1 == word2 {
+							continue
+						}
+
+						// Проверяем точное совпадение марка+модель (в любом порядке)
+						if (word1 == makeValue && word2 == modelValue) ||
+							(word2 == makeValue && word1 == modelValue) {
+							// Очень высокий балл за точное совпадение обоих слов
+							score += 1000
+							log.Printf("  Точное совпадение марка+модель для '%s %s': +1000", word1, word2)
+							break
+						}
+
+						// Проверяем модель на точное вхождение запроса
+						if modelValue != "" && (modelValue == word1 || modelValue == word2) {
+							score += 500
+							log.Printf("  Точное совпадение модели для '%s': +500", modelValue)
+						}
+
+						// Проверяем точное совпадение только марки
+						if word1 == makeValue || word2 == makeValue {
+							score += 100
+							log.Printf("  Точное совпадение марки для '%s': +100", makeValue)
+						}
+
+						// Проверяем частичное совпадение модели
+						if modelValue != "" && (strings.Contains(modelValue, word1) ||
+							strings.Contains(modelValue, word2)) {
+							score += 20
+							log.Printf("  Частичное совпадение модели для '%s': +20", modelValue)
+						}
+					}
+				}
+
+				// Проверяем наличие слов в заголовке
+				title := strings.ToLower(listing.Title)
+				for _, word := range lowerWords {
+					if strings.Contains(title, word) {
+						score += 10
+						log.Printf("  Совпадение слова '%s' в заголовке: +10", word)
+					}
+				}
+
+				log.Printf("  Финальный рейтинг для объявления %d: %d", listing.ID, score)
+				return score
+			}
+
+			// Сортируем результаты по релевантности
+			sort.Slice(searchResult.Listings, func(i, j int) bool {
+				scoreI := getRelevanceScore(searchResult.Listings[i])
+				scoreJ := getRelevanceScore(searchResult.Listings[j])
+				return scoreI > scoreJ // Сортировка по убыванию релевантности
+			})
+
+			log.Printf("Выполнена дополнительная сортировка результатов по релевантности")
+
+			// Выводим отсортированные результаты для проверки
+			log.Printf("Отсортированные результаты:")
+			for i, listing := range searchResult.Listings {
+				var makeValue, modelValue string
+				for _, attr := range listing.Attributes {
+					if attr.AttributeName == "make" && attr.TextValue != nil {
+						makeValue = *attr.TextValue
+					}
+					if attr.AttributeName == "model" && attr.TextValue != nil {
+						modelValue = *attr.TextValue
+					}
+				}
+				log.Printf("  %d. ID=%d, Название=%s, Марка=%s, Модель=%s",
+					i+1, listing.ID, listing.Title, makeValue, modelValue)
+			}
+		}
+	}
+
+	result := &search.ServiceResult{
+		Items:      searchResult.Listings,
+		Total:      searchResult.Total,
+		Page:       params.Page,
+		Size:       params.Size,
+		TotalPages: (searchResult.Total + params.Size - 1) / params.Size,
+		Took:       searchResult.Took,
+	}
+
+	if len(searchResult.Aggregations) > 0 {
+		result.Facets = make(map[string][]search.Bucket)
+		for key, buckets := range searchResult.Aggregations {
+			result.Facets[key] = buckets
+		}
+	}
+
+	if len(searchResult.Suggestions) > 0 {
+		result.Suggestions = searchResult.Suggestions
+	}
+
+	log.Printf("Результаты поиска для атрибутов %v:", params.AttributeFilters)
+	for i, listing := range searchResult.Listings {
+		log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
+
+		// Добавляем отладочную информацию о атрибутах
+		if len(listing.Attributes) > 0 {
+			log.Printf("  Объявление %d имеет %d атрибутов:", listing.ID, len(listing.Attributes))
+			for _, attr := range listing.Attributes {
+				log.Printf("  Атрибут: name=%s, type=%s, value=%s",
+					attr.AttributeName, attr.AttributeType, attr.DisplayValue)
+			}
+		} else {
+			log.Printf("  Объявление %d не имеет атрибутов", listing.ID)
+		}
+	}
+
+	return result, nil
 }
 
 // GetSuggestions возвращает предложения автодополнения

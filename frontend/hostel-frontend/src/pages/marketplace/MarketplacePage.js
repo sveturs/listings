@@ -191,7 +191,9 @@ const MarketplacePage = () => {
             Object.entries(currentFilters).forEach(([key, value]) => {
                 if (value !== '' && key !== 'city' && key !== 'country' && key !== 'attributeFilters') {
                     if (key === 'query') {
+                        // Отправляем параметр запроса как q и query для совместимости
                         params['q'] = value;
+                        params['query'] = value;
                     } else {
                         params[key] = value;
                     }
@@ -374,11 +376,11 @@ const MarketplacePage = () => {
     // Переопределим handleSortChange полностью:
     const handleSortChange = (field, direction) => {
         console.log(`РОДИТЕЛЬ получил: поле=${field}, направление=${direction}`);
-
+        
         // Сначала сохраняем состояние
         setSortField(field);
         setSortDirection(direction);
-
+        
         // Формируем параметр сортировки для API
         let apiSort;
         switch (field) {
@@ -397,37 +399,31 @@ const MarketplacePage = () => {
             default:
                 apiSort = `date_${direction}`;
         }
-
+        
         console.log(`Итоговый параметр сортировки для API: ${apiSort}`);
-
+        
         // Создаем и используем клон фильтров вместо обновления состояния
         const newFilters = {
             ...filters,
             sort_by: apiSort
         };
-
+        
         // Обновляем URL и состояние
         const urlParams = new URLSearchParams();
         Object.entries(newFilters).forEach(([key, value]) => {
             if (value) urlParams.set(key, value);
         });
-
-        console.log(`Новые URL-параметры:`, Object.fromEntries(urlParams.entries()));
+        
         setSearchParams(urlParams);
-
-        // Устанавливаем новые фильтры
         setFilters(newFilters);
-
-        // Сбрасываем все состояния
+        
+        // Сбрасываем состояния
         setListings([]);
         setPage(1);
         setHasMoreListings(true);
-
-        // Делаем небольшую задержку перед запросом, чтобы состояния успели обновиться
-        setTimeout(() => {
-            console.log(`Запрос с фильтрами:`, newFilters);
-            fetchListings(newFilters);
-        }, 50);
+        
+        // Делаем запрос с новыми параметрами сортировки
+        fetchListings(newFilters);
     };
 
     // Обработчик сброса атрибутных фильтров

@@ -439,9 +439,9 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		"category_id":       listing.CategoryID,
 		"user_id":           listing.UserID,
 		"translations":      listing.Translations,
-        "average_rating": listing.AverageRating,
-        "review_count":   listing.ReviewCount,
-    }
+		"average_rating":    listing.AverageRating,
+		"review_count":      listing.ReviewCount,
+	}
 
 	// Логирование информации о местоположении для отладки
 	log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
@@ -1098,6 +1098,17 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		},
 	}
 
+	// Добавляем фильтр по статусу "active" по умолчанию, если не указан явно другой статус
+	if params.Status == "" {
+		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+		filter = append(filter, map[string]interface{}{
+			"term": map[string]interface{}{
+				"status": "active",
+			},
+		})
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+	}
+
 	// Изменить раздел с текстовым поиском в функции buildSearchQuery
 	if params.Query != "" {
 		log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
@@ -1108,11 +1119,10 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"title.sr^4", "description.sr", "translations.sr.title^4", "translations.sr.description",
 			"title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
 			"title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
-			// Добавляем поля с атрибутами для поиска
 			"all_attributes_text^2",
 			"attributes.display_value^1.5",
 			"attributes.text_value^1.5",
-			"attributes.text_value_lowercase^1.5", // Добавляем текст в нижнем регистре
+			"attributes.text_value_lowercase^1.5",
 			"attributes.boolean_text^1.5",
 			// Специальные поля для важных атрибутов (расширенный список)
 			"make^5", // Увеличиваем вес поля make для лучшего поиска по марке
@@ -1173,7 +1183,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			)
 		}
 
-		minimumShouldMatch := "60%" // Понижаем с 70% до 60%, чтобы обеспечить более гибкий поиск
+		minimumShouldMatch := "30%" // Снижаем еще больше с 60% до 30% для более гибкого поиска
 		if params.MinimumShouldMatch != "" {
 			minimumShouldMatch = params.MinimumShouldMatch
 		}
@@ -1182,165 +1192,134 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		if params.Fuzziness != "" {
 			fuzziness = params.Fuzziness
 		}
-
-		// Объявляем multiMatch заранее
-		var multiMatch map[string]interface{}
-
-		// Создаем запросы по атрибутам для отдельных слов
-		words := strings.Fields(params.Query)
-		multiWordQueries := []map[string]interface{}{}
-
-		if len(words) > 1 {
-			// Для многословных запросов используем основной запрос с OR
-			multiMatch = map[string]interface{}{
-				"multi_match": map[string]interface{}{
-					"query":                params.Query,
-					"fields":               searchFields,
-					"type":                 "best_fields",
-					"fuzziness":            fuzziness,
-					"operator":             "OR",
-					"minimum_should_match": "40%",
+		
+		// Добавляем прямые запросы в should-блок для основных полей
+		boolMap := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
+		should := boolMap["should"].([]interface{})
+		
+		// Добавляем запрос для поиска по заголовку с высоким весом и нечетким поиском
+		should = append(should, map[string]interface{}{
+			"match": map[string]interface{}{
+				"title": map[string]interface{}{
+					"query":     params.Query,
+					"boost":     5.0,
+					"fuzziness": fuzziness,
 				},
-			}
+			},
+		})
+		
+		// Добавляем запрос для поиска по описанию
+		should = append(should, map[string]interface{}{
+			"match": map[string]interface{}{
+				"description": map[string]interface{}{
+					"query":     params.Query,
+					"boost":     2.0,
+					"fuzziness": fuzziness,
+				},
+			},
+		})
+		
+		// Добавляем запрос для переводов заголовка
+		should = append(should, map[string]interface{}{
+			"match": map[string]interface{}{
+				"translations.sr.title": map[string]interface{}{
+					"query":     params.Query,
+					"boost":     4.0,
+					"fuzziness": fuzziness,
+				},
+			},
+		})
+		
+		// Добавляем запрос для переводов описания
+		should = append(should, map[string]interface{}{
+			"match": map[string]interface{}{
+				"translations.sr.description": map[string]interface{}{
+					"query":     params.Query,
+					"boost":     1.5,
+					"fuzziness": fuzziness,
+				},
+			},
+		})
+		
+		// Обновляем should-блок
+		boolMap["should"] = should
+		boolMap["minimum_should_match"] = 1 // Достаточно соответствия одному полю
 
-			// Добавляем специальный запрос для поиска марки и модели одновременно
-			// Вариант, где первое слово - марка, второе - модель
-			for i := 0; i < len(words)-1; i++ {
-				for j := i + 1; j < len(words); j++ {
-					firstWord := words[i]
-					secondWord := words[j]
+		// Создаем общий multi_match запрос для всех полей
+		multiMatch := map[string]interface{}{
+			"multi_match": map[string]interface{}{
+				"query":                params.Query,
+				"fields":               searchFields,
+				"type":                 "best_fields",
+				"fuzziness":            fuzziness,
+				"operator":             "OR", // Используем OR вместо AND для более гибкого поиска
+				"minimum_should_match": minimumShouldMatch,
+			},
+		}
+		
+		// Добавляем multi_match в must-блок
+		must := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{})
+		must = append(must, multiMatch)
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = must
 
-					// Вариант 1: words[i] это марка, words[j] это модель
-					makeModelQuery1 := map[string]interface{}{
-						"bool": map[string]interface{}{
-							"must": []map[string]interface{}{
-								{
-									"match": map[string]interface{}{
-										"make": map[string]interface{}{
-											"query": firstWord,
-											"boost": 10.0,
-										},
-									},
-								},
-								{
-									"match": map[string]interface{}{
-										"model": map[string]interface{}{
-											"query": secondWord,
-											"boost": 8.0,
-										},
-									},
-								},
-							},
-							"boost": 20.0, // Высокий вес для точного совпадения марка+модель
-						},
-					}
-
-					// Вариант 2: words[j] это марка, words[i] это модель
-					makeModelQuery2 := map[string]interface{}{
-						"bool": map[string]interface{}{
-							"must": []map[string]interface{}{
-								{
-									"match": map[string]interface{}{
-										"make": map[string]interface{}{
-											"query": secondWord,
-											"boost": 10.0,
-										},
-									},
-								},
-								{
-									"match": map[string]interface{}{
-										"model": map[string]interface{}{
-											"query": firstWord,
-											"boost": 8.0,
-										},
-									},
-								},
-							},
-							"boost": 20.0,
-						},
-					}
-
-					// Добавляем эти запросы в should-блок
-					boolMap := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
-					should := boolMap["should"].([]interface{})
-					should = append(should, makeModelQuery1, makeModelQuery2)
-					boolMap["should"] = should
-				}
-			}
-
-			// Для каждого слова создаем отдельные запросы для атрибутов
+		// Обрабатываем случай многословного запроса
+		words := strings.Fields(params.Query)
+		if len(words) > 1 {
+			// Для каждого слова создаем отдельные поисковые запросы
 			for _, word := range words {
 				if len(word) < 2 {
 					continue // Пропускаем слишком короткие слова
 				}
-
-				// Добавляем запрос для поиска слова в поле make
-				multiWordQueries = append(multiWordQueries, map[string]interface{}{
+				
+				// Добавляем запрос для поиска по заголовку только с этим словом
+				should = append(should, map[string]interface{}{
 					"match": map[string]interface{}{
-						"make": map[string]interface{}{
-							"query": word,
-							"boost": 5.0,
+						"title": map[string]interface{}{
+							"query":     word,
+							"boost":     2.0,
+							"fuzziness": fuzziness,
 						},
 					},
 				})
-
-				// Добавляем запрос для поиска слова в поле model
-				multiWordQueries = append(multiWordQueries, map[string]interface{}{
+				
+				// Добавляем запрос для поиска по описанию только с этим словом
+				should = append(should, map[string]interface{}{
 					"match": map[string]interface{}{
-						"model": map[string]interface{}{
-							"query": word,
-							"boost": 4.0,
+						"description": map[string]interface{}{
+							"query":     word,
+							"boost":     1.0,
+							"fuzziness": fuzziness,
 						},
 					},
 				})
-
-				// Добавляем запрос для атрибута make
-				multiWordQueries = append(multiWordQueries, map[string]interface{}{
+				
+				// Поиск по атрибутам
+				should = append(should, map[string]interface{}{
 					"nested": map[string]interface{}{
 						"path": "attributes",
 						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"attributes.attribute_name": "make",
-										},
-									},
-									{
-										"match": map[string]interface{}{
-											"attributes.text_value": map[string]interface{}{
-												"query": word,
-												"boost": 5.0,
-											},
-										},
-									},
+							"match": map[string]interface{}{
+								"attributes.text_value": map[string]interface{}{
+									"query":     word,
+									"boost":     2.0,
+									"fuzziness": fuzziness,
 								},
 							},
 						},
 						"score_mode": "max",
 					},
 				})
-
-				// Добавляем запрос для атрибута model
-				multiWordQueries = append(multiWordQueries, map[string]interface{}{
+				
+				// Поиск по отображаемым значениям атрибутов
+				should = append(should, map[string]interface{}{
 					"nested": map[string]interface{}{
 						"path": "attributes",
 						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"attributes.attribute_name": "model",
-										},
-									},
-									{
-										"match": map[string]interface{}{
-											"attributes.text_value": map[string]interface{}{
-												"query": word,
-												"boost": 4.0,
-											},
-										},
-									},
+							"match": map[string]interface{}{
+								"attributes.display_value": map[string]interface{}{
+									"query":     word,
+									"boost":     1.5,
+									"fuzziness": fuzziness,
 								},
 							},
 						},
@@ -1348,18 +1327,9 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					},
 				})
 			}
-		} else {
-			// Для однословных запросов оставляем исходные строгие параметры
-			multiMatch = map[string]interface{}{
-				"multi_match": map[string]interface{}{
-					"query":                params.Query,
-					"fields":               searchFields,
-					"type":                 "best_fields",
-					"fuzziness":            fuzziness,
-					"operator":             "AND",
-					"minimum_should_match": minimumShouldMatch,
-				},
-			}
+			
+			// Обновляем should-блок с новыми запросами
+			boolMap["should"] = should
 		}
 
 		// Добавляем прямые запросы к полям make и model в корне документа
@@ -1415,90 +1385,11 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		}
 
 		// Добавим эти запросы в should-блок основного запроса
-		boolMap := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
-		should := boolMap["should"].([]interface{})
-
+		should = boolMap["should"].([]interface{})
 		for _, q := range shouldQueries {
 			should = append(should, q)
 		}
-
 		boolMap["should"] = should
-		boolMap["minimum_should_match"] = 1
-
-		// Создаем общий запрос для вложенных атрибутов
-		nestedQuery := map[string]interface{}{
-			"nested": map[string]interface{}{
-				"path": "attributes",
-				"query": map[string]interface{}{
-					"bool": map[string]interface{}{
-						"should": []map[string]interface{}{
-							{
-								"bool": map[string]interface{}{
-									"must": []map[string]interface{}{
-										{
-											"term": map[string]interface{}{
-												"attributes.attribute_name": "make",
-											},
-										},
-										{
-											"match": map[string]interface{}{
-												"attributes.text_value": map[string]interface{}{
-													"query":     params.Query,
-													"boost":     5.0,
-													"fuzziness": "AUTO",
-												},
-											},
-										},
-									},
-								},
-							},
-							{
-								"bool": map[string]interface{}{
-									"must": []map[string]interface{}{
-										{
-											"term": map[string]interface{}{
-												"attributes.attribute_name": "model",
-											},
-										},
-										{
-											"match": map[string]interface{}{
-												"attributes.text_value": map[string]interface{}{
-													"query":     params.Query,
-													"boost":     4.0,
-													"fuzziness": "AUTO",
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"minimum_should_match": 1,
-					},
-				},
-				"score_mode": "max",
-				"boost":      3.0,
-			},
-		}
-
-		// Добавляем основные запросы в must-блок
-		must := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{})
-		must = append(must, multiMatch, nestedQuery)
-		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = must
-
-		// Добавляем запросы по отдельным словам в should-блок
-		if len(multiWordQueries) > 0 {
-			// Обновляем should блок
-			should := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]interface{})
-
-			// Добавляем все запросы из multiWordQueries
-			for _, q := range multiWordQueries {
-				should = append(should, q)
-			}
-
-			// Устанавливаем обновленный should блок
-			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = should
-		}
 	}
 
 	// Добавляем фильтры категории, если указано
@@ -1744,55 +1635,54 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		case "price_asc":
 			sortField = "price"
 			sortOrder = "asc"
-        case "rating_desc":
-            log.Printf("Применяем сортировку рейтинга по УБЫВАНИЮ")
-            query["sort"] = []interface{}{
-                map[string]interface{}{
-                    "_script": map[string]interface{}{
-                        "type": "number",
-                        "script": map[string]interface{}{
-                            "source": "doc.containsKey('average_rating') ? doc['average_rating'].value : 0",
-                        },
-                        "order": "desc",
-                    },
-                },
-                map[string]interface{}{
-                    "views_count": map[string]interface{}{
-                        "order": "desc",
-                    },
-                },
-                map[string]interface{}{
-                    "created_at": map[string]interface{}{
-                        "order": "desc",
-                    },
-                },
-            }
-            return query
-        case "rating_asc":
-            log.Printf("Применяем сортировку рейтинга по ВОЗРАСТАНИЮ")
-            query["sort"] = []interface{}{
-                map[string]interface{}{
-                    "_script": map[string]interface{}{
-                        "type": "number",
-                        "script": map[string]interface{}{
-                            "source": "doc.containsKey('average_rating') ? doc['average_rating'].value : 0",
-                        },
-                        "order": "asc",
-                    },
-                },
-                map[string]interface{}{
-                    "views_count": map[string]interface{}{
-                        "order": "desc",
-                    },
-                },
-                map[string]interface{}{
-                    "created_at": map[string]interface{}{
-                        "order": "desc",
-                    },
-                },
-            }
-            return query
-
+		case "rating_desc":
+			log.Printf("Применяем сортировку рейтинга по УБЫВАНИЮ")
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"_script": map[string]interface{}{
+						"type": "number",
+						"script": map[string]interface{}{
+							"source": "doc.containsKey('average_rating') ? doc['average_rating'].value : 0",
+						},
+						"order": "desc",
+					},
+				},
+				map[string]interface{}{
+					"views_count": map[string]interface{}{
+						"order": "desc",
+					},
+				},
+				map[string]interface{}{
+					"created_at": map[string]interface{}{
+						"order": "desc",
+					},
+				},
+			}
+			return query
+		case "rating_asc":
+			log.Printf("Применяем сортировку рейтинга по ВОЗРАСТАНИЮ")
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"_script": map[string]interface{}{
+						"type": "number",
+						"script": map[string]interface{}{
+							"source": "doc.containsKey('average_rating') ? doc['average_rating'].value : 0",
+						},
+						"order": "asc",
+					},
+				},
+				map[string]interface{}{
+					"views_count": map[string]interface{}{
+						"order": "desc",
+					},
+				},
+				map[string]interface{}{
+					"created_at": map[string]interface{}{
+						"order": "desc",
+					},
+				},
+			}
+			return query
 		default:
 			// Пытаемся использовать указанное поле сортировки напрямую
 			parts := strings.Split(params.Sort, "_")
@@ -1827,7 +1717,6 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	return query
 }
-
 // parseSearchResponse обрабатывает ответ от OpenSearch
 func (r *Repository) parseSearchResponse(response map[string]interface{}, language string) (*search.SearchResult, error) {
 	result := &search.SearchResult{
@@ -1872,14 +1761,14 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 							log.Printf("Ошибка преобразования документа: %v", err)
 							continue
 						}
-                        if avgRating, ok := source["average_rating"].(float64); ok {
-                            listing.AverageRating = avgRating
-                        }
-                        
-                        if reviewCount, ok := source["review_count"].(float64); ok {
-                            listing.ReviewCount = int(reviewCount)
-                        }
-                        
+						if avgRating, ok := source["average_rating"].(float64); ok {
+							listing.AverageRating = avgRating
+						}
+
+						if reviewCount, ok := source["review_count"].(float64); ok {
+							listing.ReviewCount = int(reviewCount)
+						}
+
 						// Если ID всё еще равен 0, пытаемся восстановить его из базы данных
 						if listing.ID == 0 {
 							// Пытаемся найти по комбинации полей
@@ -1995,7 +1884,6 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 	return result, nil
 }
 
- 
 func (r *Repository) docToListing(doc map[string]interface{}, language string) (*models.MarketplaceListing, error) {
 	listing := &models.MarketplaceListing{
 		User:     &models.User{},
@@ -2284,7 +2172,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
     if avgRating, ok := doc["average_rating"].(float64); ok {
         listing.AverageRating = avgRating
     }
-
+    
     if reviewCount, ok := doc["review_count"].(float64); ok {
         listing.ReviewCount = int(reviewCount)
     }

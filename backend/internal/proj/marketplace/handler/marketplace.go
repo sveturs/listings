@@ -1772,7 +1772,7 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	log.Printf("Исходные параметры сортировки из запроса: sort_by=%s", c.Query("sort_by", ""))
 
 	params := &search.ServiceParams{
-		Query:            c.Query("q", ""),
+		Query:            c.Query("q", c.Query("query", "")),  // Проверяем оба параметра q и query
 		CategoryID:       c.Query("category_id", ""),
 		Condition:        c.Query("condition", ""),
 		City:             c.Query("city", ""),
