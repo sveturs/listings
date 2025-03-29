@@ -30,7 +30,8 @@ const InfiniteScroll = ({
   useEffect(() => {
     const currentRef = loadMoreRef.current;
     
-    if (currentRef) {
+    // Основное изменение: подключаем observer только если hasMore = true
+    if (currentRef && hasMore) {
       observer.current = new IntersectionObserver(handleObserver, {
         root: null,
         rootMargin: '0px',
@@ -41,11 +42,14 @@ const InfiniteScroll = ({
     }
     
     return () => {
-      if (currentRef && observer.current) {
-        observer.current.unobserve(currentRef);
+      if (observer.current) {
+        if (currentRef) {
+          observer.current.unobserve(currentRef);
+        }
+        observer.current.disconnect(); // Полностью отключаем observer при размонтировании
       }
     };
-  }, [handleObserver]);
+  }, [handleObserver, hasMore]); // Важно добавить hasMore в массив зависимостей
 
   return (
     <>

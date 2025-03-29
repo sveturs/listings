@@ -37,7 +37,8 @@ type Server struct {
 	balance       *balanceHandler.Handler
 	payments      paymentService.PaymentServiceInterface
 	storefront    *storefrontHandler.Handler
-    geocode       *geocodeHandler.GeocodeHandler }
+	geocode       *geocodeHandler.GeocodeHandler
+}
 
 // Обновить функцию NewServer:
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -79,7 +80,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	balanceHandler := balanceHandler.NewHandler(services)
 	storefrontHandler := storefrontHandler.NewHandler(services)
 	middleware := middleware.NewMiddleware(cfg, services)
-    geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
+	geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
@@ -101,8 +102,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		balance:       balanceHandler,
 		storefront:    storefrontHandler,
 		payments:      services.Payment(),
-		geocode: geocodeHandler,
-
+		geocode:       geocodeHandler,
 	}
 
 	// Инициализируем webhooks для телеграма
@@ -152,7 +152,7 @@ func (s *Server) setupRoutes() {
 	s.app.Get("/ws/chat", websocket.New(s.marketplace.Chat.HandleWebSocket, websocket.Config{
 		HandshakeTimeout: 10 * time.Second,
 	}))
-	s.app.Post("/reindex-ratings-public", s.marketplace.Marketplace.ReindexRatings)  /////////////////////////////  УБРАТЬ!!!!!!!!
+	s.app.Post("/reindex-ratings-public", s.marketplace.Marketplace.ReindexRatings) /////////////////////////////  УБРАТЬ!!!!!!!!
 	// Telegram webhook
 	s.app.Post("/api/v1/notifications/telegram/webhook", func(c *fiber.Ctx) error {
 		log.Printf("Received webhook request: %s", string(c.Body()))
@@ -180,7 +180,7 @@ func (s *Server) setupRoutes() {
 
 		return c.SendStatus(fiber.StatusOK)
 	})
- 
+
 	// Public marketplace routes
 	marketplace := s.app.Group("/api/v1/marketplace")
 	marketplace.Get("/listings", s.marketplace.Marketplace.GetListings)
@@ -192,16 +192,19 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced) // маршрут поиска
 	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)    // маршрут автодополнения
 	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
-    marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
+	marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", s.marketplace.Marketplace.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", s.marketplace.Marketplace.GetSimilarListings)
-
 
 	// Public review routes
 	review := s.app.Group("/api/v1/reviews")
 	review.Get("/", s.review.Review.GetReviews)
 	review.Get("/:id", s.review.Review.GetReviewByID)
 	review.Get("/stats", s.review.Review.GetStats)
+
+	entityStats := s.app.Group("/api/v1/entity")
+	entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating)
+	entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)
 
 	// Auth routes
 	auth := s.app.Group("/auth")
@@ -214,7 +217,7 @@ func (s *Server) setupRoutes() {
 	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
 	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
 	api.Post("/admin/sync-discounts", s.middleware.AdminRequired, s.marketplace.Marketplace.SynchronizeDiscounts)
-	api.Post("/admin/reindex-ratings", s.marketplace.Marketplace.ReindexRatings)	
+	api.Post("/admin/reindex-ratings", s.marketplace.Marketplace.ReindexRatings)
 	// api.Post("/admin/reindex-ratings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexRatings)
 	// Protected reviews routes
 	protectedReviews := api.Group("/reviews")
@@ -242,10 +245,7 @@ func (s *Server) setupRoutes() {
 	storefronts.Post("/import-sources/:id/run", s.storefront.Storefront.RunImport)
 	storefronts.Get("/import-sources/:id/history", s.storefront.Storefront.GetImportHistory)
 
-	// Entity stats routes
-	entityStats := api.Group("/entity")
-	entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating)
-	entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)
+
 
 	// Маршруты для отзывов пользователей и витрин
 	api.Get("/users/:id/reviews", s.review.Review.GetUserReviews)
@@ -311,7 +311,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	// Останавливаем все сервисы
 	services := globalService.NewService(nil, nil, nil)
 	services.Shutdown()
-	
+
 	// Завершаем работу сервера
 	return s.app.Shutdown()
 }
