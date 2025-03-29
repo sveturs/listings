@@ -14,7 +14,25 @@ const AdminPage = () => {
   const [syncResult, setSyncResult] = useState(null);
   const [error, setError] = useState(null);
   const [syncError, setSyncError] = useState(null);
-
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+  const [ratingsResult, setRatingsResult] = useState(null);
+  const [ratingsError, setRatingsError] = useState(null);
+  
+  const handleReindexRatings = async () => {
+    setRatingsLoading(true);
+    setRatingsResult(null);
+    setRatingsError(null);
+  
+    try {
+      const response = await axios.post('/api/v1/admin/reindex-ratings');
+      setRatingsResult(response.data);
+    } catch (err) {
+      console.error('Ошибка при обновлении рейтингов:', err);
+      setRatingsError(err.response?.data?.message || err.message || 'Произошла ошибка при обновлении рейтингов');
+    } finally {
+      setRatingsLoading(false);
+    }
+  };
   const handleReindex = async () => {
     setLoading(true);
     setResult(null);
@@ -126,8 +144,44 @@ const AdminPage = () => {
             </Alert>
           )}
         </Box>
+        
       </Paper>
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h5" gutterBottom>
+      <Box sx={{ mt: 4 }}>
+  <Typography variant="h5" gutterBottom>
+    Переиндексация рейтингов
+  </Typography>
+  <Typography variant="body2" paragraph color="text.secondary">
+    Нажмите кнопку ниже, чтобы запустить обновление рейтингов объявлений.
+    Это обеспечит корректную сортировку объявлений по рейтингу.
+  </Typography>
 
+  <Button 
+    variant="contained" 
+    color="primary" 
+    onClick={handleReindexRatings} // Добавим новую функцию
+    disabled={ratingsLoading}
+    startIcon={ratingsLoading && <CircularProgress size={20} color="inherit" />}
+    sx={{ mt: 2 }}
+  >
+    {ratingsLoading ? 'Обновление рейтингов...' : 'Обновить рейтинги'}
+  </Button>
+
+  {ratingsResult && (
+    <Alert severity="success" sx={{ mt: 2 }}>
+      Обновление рейтингов успешно запущено! {ratingsResult.message}
+    </Alert>
+  )}
+
+  {ratingsError && (
+    <Alert severity="error" sx={{ mt: 2 }}>
+      {ratingsError}
+    </Alert>
+  )}
+</Box>
+        </Typography>
+</Paper>
       <Paper sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
           Информация о системе
@@ -140,6 +194,7 @@ const AdminPage = () => {
         </Typography>
       </Paper>
     </Box>
+    
   );
 };
 

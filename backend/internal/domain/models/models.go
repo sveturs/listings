@@ -61,6 +61,9 @@ type MarketplaceListing struct {
 	OldPrice          float64                 `json:"old_price,omitempty"`
 	HasDiscount       bool                    `json:"has_discount"`
 	Metadata          map[string]interface{}  `json:"metadata,omitempty"` // Для хранения дополнительной информации, включая данные о скидке
+
+	    AverageRating float64 `json:"average_rating,omitempty"`
+    ReviewCount   int     `json:"review_count,omitempty"`
 }
 
 type MarketplaceCategory struct {

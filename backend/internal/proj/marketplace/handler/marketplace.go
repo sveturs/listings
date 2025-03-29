@@ -701,6 +701,89 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 		"images":  uploadedImages,
 	})
 }
+// ReindexRatings переиндексирует рейтинги всех объявлений
+// ReindexRatings переиндексирует рейтинги всех объявлений
+func (h *MarketplaceHandler) ReindexRatings(c *fiber.Ctx) error {
+    // Проверяем административные права
+    userID, ok := c.Locals("user_id").(int)
+    if !ok || userID == 0 {
+        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+    }
+
+    // Запускаем процесс переиндексации в фоне
+    go func() {
+        ctx := context.Background()
+        
+        // Получаем все активные объявления
+        rows, err := h.services.Storage().Query(ctx, `
+            SELECT id FROM marketplace_listings 
+            WHERE status = 'active'
+        `)
+        
+        if err != nil {
+            log.Printf("Ошибка при получении списка объявлений: %v", err)
+            return
+        }
+        defer rows.Close()
+        
+        var listingIDs []int
+        for rows.Next() {
+            var id int
+            if err := rows.Scan(&id); err != nil {
+                log.Printf("Ошибка при сканировании ID: %v", err)
+                continue
+            }
+            listingIDs = append(listingIDs, id)
+        }
+        
+        log.Printf("Начинаем обновление рейтингов для %d объявлений", len(listingIDs))
+        
+        // Для каждого объявления получаем рейтинг и обновляем
+        for _, id := range listingIDs {
+            // Получаем объявление
+            listing, err := h.marketplaceService.GetListingByID(ctx, id)
+            if err != nil {
+                log.Printf("Ошибка получения объявления %d: %v", id, err)
+                continue
+            }
+            
+            // Получаем статистику отзывов напрямую из базы данных
+            var reviewCount int
+            var averageRating float64
+            
+            err = h.services.Storage().QueryRow(ctx, `
+                SELECT COUNT(*), COALESCE(AVG(rating), 0)
+                FROM reviews
+                WHERE entity_type = 'listing' AND entity_id = $1 AND status = 'published'
+            `, id).Scan(&reviewCount, &averageRating)
+            
+            if err != nil {
+                log.Printf("Ошибка получения статистики отзывов для объявления %d: %v", id, err)
+                // Если не удалось получить статистику, устанавливаем нулевые значения
+                reviewCount = 0
+                averageRating = 0
+            }
+            
+            // Обновляем рейтинг в объекте
+            listing.AverageRating = averageRating
+            listing.ReviewCount = reviewCount
+            
+            // Переиндексируем объявление
+            if err := h.marketplaceService.Storage().IndexListing(ctx, listing); err != nil {
+                log.Printf("Ошибка индексации объявления %d: %v", id, err)
+            } else {
+                log.Printf("Обновлен рейтинг для объявления %d: %.2f (%d отзывов)", 
+                    id, averageRating, reviewCount)
+            }
+        }
+        
+        log.Println("Переиндексация рейтингов успешно завершена")
+    }()
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Запущена переиндексация рейтингов всех объявлений",
+    })
+}
 
 func (h *MarketplaceHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 	// Проверяем административные права

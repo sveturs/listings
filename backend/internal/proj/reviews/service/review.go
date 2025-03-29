@@ -22,28 +22,85 @@ func NewReviewService(storage storage.Storage) ReviewServiceInterface { //  Revi
         storage: storage,
     }
 }
+// UpdateEntityRatingInSearch обновляет рейтинг объекта в поисковом индексе
+// UpdateEntityRatingInSearch обновляет рейтинг объекта в поисковом индексе
+func (s *ReviewService) UpdateEntityRatingInSearch(ctx context.Context, entityType string, entityID int, avgRating float64) error {
+    // Обновляем только для листингов
+    if entityType != "listing" {
+        return nil
+    }
 
+    // Получаем текущий объект листинга из базы данных
+    listing, err := s.storage.GetListingByID(ctx, entityID)
+    if err != nil {
+        return fmt.Errorf("ошибка получения объявления для обновления рейтинга: %w", err)
+    }
+
+    // Получаем статистику отзывов
+    var reviewCount int
+    var averageRating float64
+    
+    // Запрашиваем данные из базы
+    err = s.storage.QueryRow(ctx, `
+        SELECT COUNT(*), COALESCE(AVG(rating), 0)
+        FROM reviews
+        WHERE entity_type = $1 AND entity_id = $2 AND status = 'published'
+    `, entityType, entityID).Scan(&reviewCount, &averageRating)
+    
+    if err != nil {
+        // Если не удалось получить статистику, используем переданное значение
+        averageRating = avgRating
+        log.Printf("Ошибка получения статистики отзывов: %v, используем переданное значение рейтинга: %f", err, avgRating)
+    }
+
+    // Обновляем рейтинг в объекте листинга
+    listing.AverageRating = averageRating
+    listing.ReviewCount = reviewCount
+
+    // Переиндексируем объявление с обновленным рейтингом
+    err = s.storage.IndexListing(ctx, listing)
+    if err != nil {
+        return fmt.Errorf("ошибка переиндексации объявления с обновленным рейтингом: %w", err)
+    }
+
+    log.Printf("Успешно обновлен рейтинг в индексе для %s ID=%d: %.2f (%d отзывов)", 
+        entityType, entityID, averageRating, reviewCount)
+    return nil
+}
+
+// Исправленная версия метода CreateReview
 func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *models.CreateReviewRequest) (*models.Review, error) {
     review := &models.Review{
-        UserID:     userId,
-        EntityType: req.EntityType,
-        EntityID:   req.EntityID,
-        Rating:     req.Rating,
-        Comment:    req.Comment,
-        Pros:       req.Pros,
-        Cons:       req.Cons,
-        Photos:     req.Photos,
-        Status:     "published",
-        OriginalLanguage: req.OriginalLanguage, 
+        UserID:         userId,
+        EntityType:     req.EntityType,
+        EntityID:       req.EntityID,
+        Rating:         req.Rating,
+        Comment:        req.Comment,
+        Pros:           req.Pros,
+        Cons:           req.Cons,
+        Photos:         req.Photos,
+        Status:         "published",
+        OriginalLanguage: req.OriginalLanguage,
     }
     
     // Проверяем, является ли покупка верифицированной
     review.IsVerifiedPurchase = s.checkVerifiedPurchase(ctx, userId, req.EntityType, req.EntityID)
     
-    // Сохраняем отзыв
+    // Создаем отзыв в базе
     createdReview, err := s.storage.CreateReview(ctx, review)
     if err != nil {
         return nil, err
+    }
+    
+    // Используем ID из возвращенного отзыва
+    // или просто возвращаем сам createdReview, если он уже содержит ID
+    
+    // После успешного создания отзыва
+    // Обновляем рейтинг в поисковом индексе
+    err = s.UpdateEntityRatingInSearch(ctx, review.EntityType, review.EntityID, float64(review.Rating))
+    if err != nil {
+        // Логируем ошибку, но не возвращаем ее, чтобы не блокировать создание отзыва
+        log.Printf("Ошибка обновления рейтинга в индексе: %v", err)
     }
     
     return createdReview, nil

@@ -119,6 +119,12 @@ const ListingMapping = `
           }
         }
       },
+      "average_rating": {
+        "type": "double"
+      },
+      "review_count": {
+        "type": "integer"
+      },
       "title_suggest": {
         "type": "completion",
         "analyzer": "autocomplete"

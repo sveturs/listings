@@ -423,7 +423,6 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		"id":                listing.ID,
 		"title":             listing.Title,
 		"description":       listing.Description,
-        "average_rating":    0.0,
 		"title_suggest":     listing.Title,
 		"title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
 		"price":             listing.Price,
@@ -440,7 +439,9 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		"category_id":       listing.CategoryID,
 		"user_id":           listing.UserID,
 		"translations":      listing.Translations,
-	}
+        "average_rating": listing.AverageRating,
+        "review_count":   listing.ReviewCount,
+    }
 
 	// Логирование информации о местоположении для отладки
 	log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
@@ -1871,7 +1872,14 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 							log.Printf("Ошибка преобразования документа: %v", err)
 							continue
 						}
-
+                        if avgRating, ok := source["average_rating"].(float64); ok {
+                            listing.AverageRating = avgRating
+                        }
+                        
+                        if reviewCount, ok := source["review_count"].(float64); ok {
+                            listing.ReviewCount = int(reviewCount)
+                        }
+                        
 						// Если ID всё еще равен 0, пытаемся восстановить его из базы данных
 						if listing.ID == 0 {
 							// Пытаемся найти по комбинации полей
@@ -1987,8 +1995,7 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 	return result, nil
 }
 
-// Замените существующую функцию docToListing в файле backend/internal/proj/marketplace/storage/opensearch/repository.go
-
+ 
 func (r *Repository) docToListing(doc map[string]interface{}, language string) (*models.MarketplaceListing, error) {
 	listing := &models.MarketplaceListing{
 		User:     &models.User{},
@@ -2274,7 +2281,13 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 			}
 		}
 	}
+    if avgRating, ok := doc["average_rating"].(float64); ok {
+        listing.AverageRating = avgRating
+    }
 
+    if reviewCount, ok := doc["review_count"].(float64); ok {
+        listing.ReviewCount = int(reviewCount)
+    }
 	// Убедимся, что HasDiscount установлен корректно на основе OldPrice
 	if listing.OldPrice > 0 && listing.OldPrice > listing.Price {
 		listing.HasDiscount = true

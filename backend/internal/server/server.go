@@ -152,7 +152,7 @@ func (s *Server) setupRoutes() {
 	s.app.Get("/ws/chat", websocket.New(s.marketplace.Chat.HandleWebSocket, websocket.Config{
 		HandshakeTimeout: 10 * time.Second,
 	}))
-
+	s.app.Post("/reindex-ratings-public", s.marketplace.Marketplace.ReindexRatings)  /////////////////////////////  УБРАТЬ!!!!!!!!
 	// Telegram webhook
 	s.app.Post("/api/v1/notifications/telegram/webhook", func(c *fiber.Ctx) error {
 		log.Printf("Received webhook request: %s", string(c.Body()))
@@ -214,7 +214,8 @@ func (s *Server) setupRoutes() {
 	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
 	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
 	api.Post("/admin/sync-discounts", s.middleware.AdminRequired, s.marketplace.Marketplace.SynchronizeDiscounts)
-
+	api.Post("/admin/reindex-ratings", s.marketplace.Marketplace.ReindexRatings)	
+	// api.Post("/admin/reindex-ratings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexRatings)
 	// Protected reviews routes
 	protectedReviews := api.Group("/reviews")
 	protectedReviews.Post("/", s.review.Review.CreateReview)
