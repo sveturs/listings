@@ -23,18 +23,20 @@ const CategoryMappingModal = ({ open, onClose, sourceId, onSave }) => {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: { xs: '90%', sm: '80%', md: '70%' },
+          width: { xs: '95%', sm: '90%', md: '80%', lg: '70%' },
+          maxWidth: '1000px',
           bgcolor: 'background.paper',
           boxShadow: 24,
-          p: 4,
+          p: { xs: 2, sm: 3, md: 4 },
           maxHeight: '90vh',
-          overflow: 'auto'
+          overflow: 'auto',
+          borderRadius: 2
         }}
       >
-        <CategoryMappingEditor 
-          sourceId={sourceId} 
-          onClose={onClose} 
-          onSave={onSave} 
+        <CategoryMappingEditor
+          sourceId={sourceId}
+          onClose={onClose}
+          onSave={onSave}
         />
       </Paper>
     </Modal>

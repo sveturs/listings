@@ -1101,19 +1101,50 @@ func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, 
 			log.Printf("Ошибка при получении подсказок из OpenSearch: %v", err)
 		}
 
+		// Улучшенный SQL-запрос, включающий атрибуты
 		query := `
-    SELECT DISTINCT title,
-           CASE WHEN LOWER(title) = LOWER($2) THEN 0
-                WHEN LOWER(title) LIKE LOWER($2 || '%') THEN 1
-                ELSE 2
-           END as relevance,
-           length(title) as title_length
-    FROM marketplace_listings 
-    WHERE LOWER(title) LIKE LOWER($1) 
-    AND status = 'active'
-    ORDER BY relevance, title_length
-    LIMIT $3
-`
+        WITH attribute_suggestions AS (
+            -- Подсказки из атрибутов текстового типа
+            SELECT DISTINCT lav.text_value as value, 1 as priority
+            FROM listing_attribute_values lav
+            JOIN category_attributes ca ON lav.attribute_id = ca.id
+            WHERE lav.text_value IS NOT NULL
+              AND LOWER(lav.text_value) LIKE LOWER($1)
+              AND ca.attribute_type IN ('text', 'select')
+            
+            UNION ALL
+            
+            -- Подсказки из атрибутов числового типа (преобразованные в строку)
+            SELECT DISTINCT CAST(lav.numeric_value AS TEXT) as value, 2 as priority
+            FROM listing_attribute_values lav
+            JOIN category_attributes ca ON lav.attribute_id = ca.id
+            WHERE lav.numeric_value IS NOT NULL
+              AND CAST(lav.numeric_value AS TEXT) LIKE $1 || '%'
+              AND ca.attribute_type = 'number'
+        ),
+        title_suggestions AS (
+            -- Подсказки из заголовков объявлений
+            SELECT DISTINCT title as value,
+                   CASE WHEN LOWER(title) = LOWER($2) THEN 0
+                        WHEN LOWER(title) LIKE LOWER($2 || '%') THEN 1
+                        ELSE 2
+                   END as priority,
+                   length(title) as title_length
+            FROM marketplace_listings 
+            WHERE LOWER(title) LIKE LOWER($1) 
+              AND status = 'active'
+        )
+        
+        -- Объединяем все подсказки и отбираем лучшие
+        SELECT value 
+        FROM (
+            SELECT value, priority, 0 as title_length FROM attribute_suggestions
+            UNION ALL
+            SELECT value, priority, title_length FROM title_suggestions
+        ) combined
+        ORDER BY priority, title_length
+        LIMIT $3
+        `
 		rows, err := s.storage.Query(ctx, query, "%"+prefix+"%", prefix, size)
 		if err != nil {
 			log.Printf("Ошибка запасного SQL-запроса: %v", err)
@@ -1123,12 +1154,14 @@ func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, 
 
 		var results []string
 		for rows.Next() {
-			var title string
-			if err := rows.Scan(&title); err != nil {
+			var value string
+			if err := rows.Scan(&value); err != nil {
 				log.Printf("Ошибка сканирования строки: %v", err)
 				continue
 			}
-			results = append(results, title)
+			if value != "" && !contains(results, value) {
+				results = append(results, value)
+			}
 		}
 
 		log.Printf("Получено %d подсказок из базы данных", len(results))
@@ -1138,6 +1171,17 @@ func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, 
 	log.Printf("Получено %d подсказок из OpenSearch", len(suggestions))
 	return suggestions, nil
 }
+
+// Вспомогательная функция для проверки наличия элемента в срезе
+func contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *MarketplaceService) ReindexAllListings(ctx context.Context) error {
 	return s.storage.ReindexAllListings(ctx)
 }

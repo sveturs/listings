@@ -197,6 +197,9 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 }
 
 // SuggestListings предлагает автодополнение для поиска
+// Модифицировать файл: /data/hostel-booking-system/backend/internal/proj/marketplace/storage/opensearch/repository.go
+// Заменить метод SuggestListings на:
+
 func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
 	if prefix == "" {
 		return []string{}, nil
@@ -212,6 +215,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{
 				"should": []map[string]interface{}{
+					// Поиск по заголовку
 					{
 						"match_phrase_prefix": map[string]interface{}{
 							"title": map[string]interface{}{
@@ -221,6 +225,16 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 							},
 						},
 					},
+					// Поиск по описанию
+					{
+						"match_phrase_prefix": map[string]interface{}{
+							"description": map[string]interface{}{
+								"query":          prefix,
+								"max_expansions": 10,
+							},
+						},
+					},
+					// Поиск по вариациям заголовка
 					{
 						"match_phrase_prefix": map[string]interface{}{
 							"title_variations": map[string]interface{}{
@@ -229,11 +243,82 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 							},
 						},
 					},
+					// Нечеткий поиск по заголовку
 					{
 						"fuzzy": map[string]interface{}{
 							"title": map[string]interface{}{
 								"value":     prefix,
 								"fuzziness": "AUTO",
+							},
+						},
+					},
+					// Поиск по атрибутам (ДОБАВЛЕНО)
+					{
+						"nested": map[string]interface{}{
+							"path": "attributes",
+							"query": map[string]interface{}{
+								"bool": map[string]interface{}{
+									"should": []map[string]interface{}{
+										{
+											"match_phrase_prefix": map[string]interface{}{
+												"attributes.text_value": map[string]interface{}{
+													"query":          prefix,
+													"max_expansions": 10,
+												},
+											},
+										},
+										{
+											"match_phrase_prefix": map[string]interface{}{
+												"attributes.display_value": map[string]interface{}{
+													"query":          prefix,
+													"max_expansions": 10,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					// Поиск по важным атрибутам в корне документа (ДОБАВЛЕНО)
+					{
+						"match_phrase_prefix": map[string]interface{}{
+							"make": map[string]interface{}{
+								"query":          prefix,
+								"max_expansions": 10,
+							},
+						},
+					},
+					{
+						"match_phrase_prefix": map[string]interface{}{
+							"model": map[string]interface{}{
+								"query":          prefix,
+								"max_expansions": 10,
+							},
+						},
+					},
+					{
+						"match_phrase_prefix": map[string]interface{}{
+							"brand": map[string]interface{}{
+								"query":          prefix,
+								"max_expansions": 10,
+							},
+						},
+					},
+					{
+						"match_phrase_prefix": map[string]interface{}{
+							"color": map[string]interface{}{
+								"query":          prefix,
+								"max_expansions": 10,
+							},
+						},
+					},
+					// Поиск по значениям атрибутов выбора (select_values)
+					{
+						"match_phrase_prefix": map[string]interface{}{
+							"select_values": map[string]interface{}{
+								"query":          prefix,
+								"max_expansions": 10,
 							},
 						},
 					},
@@ -296,6 +381,60 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 							}
 						}
 					}
+				}
+			}
+		}
+	}
+
+	// Дополнительно проверяем, не нашлось ли подсказок в атрибутах
+	// и если их нет в заголовках, добавляем их
+	if len(suggestions) < size {
+		// Получаем значения атрибутов из результатов поиска
+		attrValues := make(map[string]bool)
+		if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
+			if hitsArray, ok := hits["hits"].([]interface{}); ok {
+				for _, hit := range hitsArray {
+					if hitObj, ok := hit.(map[string]interface{}); ok {
+						if source, ok := hitObj["_source"].(map[string]interface{}); ok {
+							// Проверяем атрибуты make, model и другие важные
+							for _, field := range []string{"make", "model", "brand", "color"} {
+								if value, ok := source[field].(string); ok && value != "" {
+									attrValues[value] = true
+								}
+							}
+							
+							// Проверяем вложенные атрибуты
+							if attributes, ok := source["attributes"].([]interface{}); ok {
+								for _, attrI := range attributes {
+									if attr, ok := attrI.(map[string]interface{}); ok {
+										// Проверяем text_value
+										if textValue, ok := attr["text_value"].(string); ok && textValue != "" {
+											if strings.HasPrefix(strings.ToLower(textValue), strings.ToLower(prefix)) {
+												attrValues[textValue] = true
+											}
+										}
+										
+										// Проверяем display_value
+										if displayValue, ok := attr["display_value"].(string); ok && displayValue != "" {
+											if strings.HasPrefix(strings.ToLower(displayValue), strings.ToLower(prefix)) {
+												attrValues[displayValue] = true
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		// Добавляем значения атрибутов в подсказки
+		for value := range attrValues {
+			if !contains(suggestions, value) {
+				suggestions = append(suggestions, value)
+				if len(suggestions) >= size {
+					break
 				}
 			}
 		}
