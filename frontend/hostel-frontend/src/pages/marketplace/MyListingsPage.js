@@ -387,9 +387,15 @@ const MyListingsPage = () => {
             
             // Последовательно обновляем статус каждого выбранного объявления
             const updatePromises = selectedListings.map(listingId => {
-                return axios.put(`/api/v1/marketplace/listings/${listingId}`, {
-                    status: status
-                });
+                // Сначала получаем текущее объявление, чтобы сохранить его категорию
+                return axios.get(`/api/v1/marketplace/listings/${listingId}`)
+                    .then(response => {
+                        const listing = response.data;
+                        return axios.put(`/api/v1/marketplace/listings/${listingId}`, {
+                            status: status,
+                            category_id: listing.category_id // Явно отправляем ID категории
+                        });
+                    });
             });
             
             await Promise.all(updatePromises);
@@ -766,7 +772,7 @@ const MyListingsPage = () => {
                                             to={`/marketplace/listings/${listing.id}`}
                                             style={{ textDecoration: 'none' }}
                                         >
-                                            <ListingCard listing={listing} />
+                                            <ListingCard listing={listing} showStatus={true} />
                                         </Link>
                                     </Box>
                                 </Grid>

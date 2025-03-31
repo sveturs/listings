@@ -1785,22 +1785,23 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 
 	log.Printf("Исходные параметры сортировки из запроса: sort_by=%s", c.Query("sort_by", ""))
 
-	params := &search.ServiceParams{
-		Query:            c.Query("q", c.Query("query", "")),  // Проверяем оба параметра q и query
-		CategoryID:       c.Query("category_id", ""),
-		Condition:        c.Query("condition", ""),
-		City:             c.Query("city", ""),
-		Country:          c.Query("country", ""),
-		StorefrontID:     c.Query("storefront_id", ""),
-		Sort:             c.Query("sort_by", ""),  // Поле sort_by становится Sort
-		SortDirection:    c.Query("sort_direction", "desc"),
-		Distance:         c.Query("distance", ""),
-		Page:             c.QueryInt("page", 1),
-		Size:             c.QueryInt("size", 20),
-		Language:         c.Query("language", ""),
-		AttributeFilters: attributeFilters,
-	}
-	
+    params := &search.ServiceParams{
+        Query:            c.Query("q", c.Query("query", "")),
+        CategoryID:       c.Query("category_id", ""),
+        Condition:        c.Query("condition", ""),
+        City:             c.Query("city", ""),
+        Country:          c.Query("country", ""),
+        StorefrontID:     c.Query("storefront_id", ""),
+        Sort:             c.Query("sort_by", ""),
+        SortDirection:    c.Query("sort_direction", "desc"),
+        Distance:         c.Query("distance", ""),
+        Page:             c.QueryInt("page", 1),
+        Size:             c.QueryInt("size", 20),
+        Language:         c.Query("language", ""),
+        AttributeFilters: attributeFilters,
+    }
+	// Всегда устанавливаем статус "active" для всех публичных запросов
+    params.Status = "active"
 	// Добавьте этот код после инициализации params
 	log.Printf("Итоговый параметр сортировки в запросе к OpenSearch: %s", params.Sort)
     

@@ -22,7 +22,7 @@ import PriceHistoryChart from './PriceHistoryChart';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
-const ListingCard = ({ listing, isMobile, onClick }) => {
+const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
     const { t, i18n } = useTranslation('marketplace');
     const [storeName, setStoreName] = useState(t('listings.details.seller.title')); // Заменено 'Магазин' на перевод
     const navigate = useNavigate();
@@ -340,6 +340,36 @@ const ListingCard = ({ listing, isMobile, onClick }) => {
                                 {formatDate(listing.created_at)}
                             </Typography>
                         </Box>
+                        
+                        {showStatus && (
+                            <Box sx={{ mt: 1 }}>
+                                <Chip
+                                    label={listing.status === 'active' 
+                                        ? t('listings.status.active')
+                                        : t('listings.status.inactive')
+                                    }
+                                    color={listing.status === 'active' ? 'success' : 'default'}
+                                    size="small"
+                                    variant={listing.status === 'active' ? "filled" : "outlined"}
+                                    sx={{ minWidth: 80 }}
+                                />
+                                
+                                {listing.metadata && listing.metadata.promotions && Object.keys(listing.metadata.promotions).length > 0 && (
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                                        {Object.entries(listing.metadata.promotions).map(([type, data]) => (
+                                            <Chip
+                                                key={type}
+                                                label={t(`listings.promotions.${type}`, { defaultValue: type })}
+                                                color="primary"
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{ fontSize: '0.7rem', height: 20 }}
+                                            />
+                                        ))}
+                                    </Box>
+                                )}
+                            </Box>
+                        )}
 
                         <Button
                             id="detailsButton"

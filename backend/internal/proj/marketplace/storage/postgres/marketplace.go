@@ -955,6 +955,23 @@ func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 }
 
 func (s *Storage) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
+	// Проверяем, не равен ли category_id нулю
+	if listing.CategoryID == 0 {
+		// Если category_id = 0, запрашиваем текущее значение из базы
+		var currentCategoryID int
+		err := s.pool.QueryRow(ctx, `
+			SELECT category_id FROM marketplace_listings WHERE id = $1
+		`, listing.ID).Scan(&currentCategoryID)
+		
+		if err != nil {
+			log.Printf("Ошибка при получении текущей категории: %v", err)
+		} else if currentCategoryID > 0 {
+			// Используем текущую категорию, если она не нулевая
+			log.Printf("Заменяем нулевую категорию текущей категорией %d для объявления %d", currentCategoryID, listing.ID)
+			listing.CategoryID = currentCategoryID
+		}
+	}
+
 	result, err := s.pool.Exec(ctx, `
         UPDATE marketplace_listings
         SET 

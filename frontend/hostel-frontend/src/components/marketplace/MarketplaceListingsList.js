@@ -88,6 +88,9 @@ const MarketplaceListingsList = ({
     // Состояние для хранения данных о рейтингах
     const [listingsWithRatings, setListingsWithRatings] = useState([]);
     const [loadingRatings, setLoadingRatings] = useState(false);
+    
+    // Определяем колонки таблицы
+    const [columns, setColumns] = useState(['image', 'title', 'price', 'reviews', 'date', 'status', 'promotions']);
 
     // Функция для получения локализованного текста
     const getLocalizedText = (listing, field) => {
@@ -213,9 +216,7 @@ const MarketplaceListingsList = ({
     }, [filters]);
 
     // Адаптация для мобильных: скрываем некоторые колонки
-    const columns = isMobile
-        ? ['image', 'title', 'price']
-        : ['image', 'title', 'price', 'reviews', 'date'];
+
 
     // Проверяем, выбраны ли все элементы
     const isAllSelected = listings.length > 0 && selectedItems.length === listings.length;
@@ -341,6 +342,18 @@ const MarketplaceListingsList = ({
                                 </TableSortLabel>
                             </TableCell>
                         )}
+                        
+                        {columns.includes('status') && (
+                            <TableCell align="center">
+                                {t('listings.table.status')}
+                            </TableCell>
+                        )}
+                        
+                        {columns.includes('promotions') && (
+                            <TableCell align="center">
+                                {t('listings.table.promotions')}
+                            </TableCell>
+                        )}
                     </TableRow>
                 </TableHead>
 
@@ -457,6 +470,44 @@ const MarketplaceListingsList = ({
                                             <Typography variant="body2">
                                                 {formatDate(listing.created_at)}
                                             </Typography>
+                                        </Box>
+                                    </TableCell>
+                                )}
+                                
+                                {columns.includes('status') && (
+                                    <TableCell align="center">
+                                        <Chip
+                                            label={listing.status === 'active' 
+                                                ? t('listings.status.active')
+                                                : t('listings.status.inactive')
+                                            }
+                                            color={listing.status === 'active' ? 'success' : 'default'}
+                                            size="small"
+                                            variant={listing.status === 'active' ? "filled" : "outlined"}
+                                            sx={{ minWidth: 80 }}
+                                        />
+                                    </TableCell>
+                                )}
+                                
+                                {columns.includes('promotions') && (
+                                    <TableCell align="center">
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
+                                            {listing.metadata && listing.metadata.promotions ? (
+                                                Object.entries(listing.metadata.promotions).map(([type, data]) => (
+                                                    <Chip
+                                                        key={type}
+                                                        label={t(`listings.promotions.${type}`, { defaultValue: type })}
+                                                        color="primary"
+                                                        size="small"
+                                                        variant="outlined"
+                                                        sx={{ fontSize: '0.7rem', height: 20 }}
+                                                    />
+                                                ))
+                                            ) : (
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {t('listings.promotions.none', { defaultValue: 'Нет' })}
+                                                </Typography>
+                                            )}
                                         </Box>
                                     </TableCell>
                                 )}
