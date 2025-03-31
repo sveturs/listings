@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/components/marketplace/ListingCard.js
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapPin as LocationIcon, Clock as AccessTime, Camera, Store } from 'lucide-react';

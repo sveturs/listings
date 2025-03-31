@@ -18,45 +18,207 @@ import {
     Avatar,
     Button,
     Chip,
-    Stack
+    Stack,
+    ToggleButtonGroup,
+    ToggleButton,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
-import { Store, Phone, Mail, Globe, MapPin } from 'lucide-react';
+import { Store, Phone, Mail, Globe, MapPin, Grid as GridIcon, List } from 'lucide-react';
 import axios from '../../api/axios';
 import ListingCard from '../../components/marketplace/ListingCard';
+import MarketplaceListingsList from '../../components/marketplace/MarketplaceListingsList';
 import MiniMap from '../../components/maps/MiniMap';
+import InfiniteScroll from '../../components/marketplace/InfiniteScroll';
 
 const PublicStorefrontPage = () => {
     const { t } = useTranslation(['common', 'marketplace']);
     const { id } = useParams();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     const [loading, setLoading] = useState(true);
     const [storefront, setStorefront] = useState(null);
     const [storeListings, setStoreListings] = useState([]);
     const [error, setError] = useState(null);
+    
+    // Добавляем состояния для пагинации и бесконечной прокрутки
+    const [page, setPage] = useState(1);
+    const [hasMoreListings, setHasMoreListings] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [totalListings, setTotalListings] = useState(0);
+    
+    // Состояния для сортировки
+    const [sortField, setSortField] = useState('created_at');
+    const [sortDirection, setSortDirection] = useState('desc');
+    
+    // Состояние для режима отображения (grid/list)
+    const [viewMode, setViewMode] = useState(() => {
+        // Загружаем сохраненный режим просмотра из localStorage
+        const savedViewMode = localStorage.getItem('storefront-view-mode');
+        return savedViewMode === 'list' ? 'list' : 'grid';
+    });
+
+    // Функция для загрузки начальных данных с учетом сортировки
+    const fetchInitialData = async (sortParams = {}) => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // Формируем параметры API сортировки
+            let apiSort = '';
+            const currentSortField = sortParams.field || sortField;
+            const currentSortDirection = sortParams.direction || sortDirection;
+            
+            switch (currentSortField) {
+                case 'created_at':
+                    apiSort = `date_${currentSortDirection}`;
+                    break;
+                case 'title':
+                    apiSort = `title_${currentSortDirection}`;
+                    break;
+                case 'price':
+                    apiSort = `price_${currentSortDirection}`;
+                    break;
+                case 'reviews':
+                    apiSort = `rating_${currentSortDirection}`;
+                    break;
+                default:
+                    apiSort = `date_${currentSortDirection}`;
+            }
+            
+            console.log(`Запрос с сортировкой: ${apiSort}, поле=${currentSortField}, направление=${currentSortDirection}`);
+            
+            const [storefrontResponse, listingsResponse] = await Promise.all([
+                axios.get(`/api/v1/public/storefronts/${id}`),
+                axios.get('/api/v1/marketplace/listings', {
+                    params: { 
+                        storefront_id: id,
+                        page: 1,
+                        size: 20,
+                        sort_by: apiSort // Добавляем параметр сортировки
+                    }
+                })
+            ]);
+
+            setStorefront(storefrontResponse.data.data);
+            
+            // Обрабатываем результаты первой страницы
+            const listings = listingsResponse.data.data?.data || [];
+            setStoreListings(listings);
+            
+            // Обновляем информацию о пагинации
+            if (listingsResponse.data.data?.meta) {
+                setTotalListings(listingsResponse.data.data.meta.total || 0);
+                setHasMoreListings(listings.length < listingsResponse.data.data.meta.total);
+            } else {
+                setHasMoreListings(listings.length >= 20); // Если размер страницы - 20 элементов
+            }
+            
+            // Обновляем состояние сортировки если переданы новые параметры
+            if (sortParams.field) setSortField(sortParams.field);
+            if (sortParams.direction) setSortDirection(sortParams.direction);
+            
+            setPage(1);
+        } catch (err) {
+            console.error('Error fetching storefront data:', err);
+            setError(t('marketplace:listings.errors.loadFailed'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Функция для загрузки дополнительных объявлений
+    const fetchMoreListings = async () => {
+        if (!hasMoreListings || loadingMore) return;
+        
+        try {
+            setLoadingMore(true);
+            const nextPage = page + 1;
+            
+            // Формируем параметры API сортировки
+            let apiSort = '';
+            switch (sortField) {
+                case 'created_at':
+                    apiSort = `date_${sortDirection}`;
+                    break;
+                case 'title':
+                    apiSort = `title_${sortDirection}`;
+                    break;
+                case 'price':
+                    apiSort = `price_${sortDirection}`;
+                    break;
+                case 'reviews':
+                    apiSort = `rating_${sortDirection}`;
+                    break;
+                default:
+                    apiSort = `date_${sortDirection}`;
+            }
+            
+            console.log(`Загрузка дополнительных объявлений с сортировкой: ${apiSort}`);
+            
+            const listingsResponse = await axios.get('/api/v1/marketplace/listings', {
+                params: { 
+                    storefront_id: id,
+                    page: nextPage,
+                    size: 20,
+                    sort_by: apiSort // Добавляем параметр сортировки
+                }
+            });
+            
+            const newListings = listingsResponse.data.data?.data || [];
+            
+            if (newListings.length > 0) {
+                setStoreListings(prev => [...prev, ...newListings]);
+                setPage(nextPage);
+                
+                // Проверяем, есть ли еще объявления для загрузки
+                if (listingsResponse.data.data?.meta) {
+                    const total = listingsResponse.data.data.meta.total || 0;
+                    setHasMoreListings(storeListings.length + newListings.length < total);
+                } else {
+                    setHasMoreListings(newListings.length >= 20);
+                }
+            } else {
+                setHasMoreListings(false);
+            }
+        } catch (err) {
+            console.error('Error fetching more listings:', err);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [storefrontResponse, listingsResponse] = await Promise.all([
-                    axios.get(`/api/v1/public/storefronts/${id}`),
-                    axios.get('/api/v1/marketplace/listings', {
-                        params: { storefront_id: id }
-                    })
-                ]);
-
-                setStorefront(storefrontResponse.data.data);
-                setStoreListings(listingsResponse.data.data?.data || []);
-            } catch (err) {
-                console.error('Error fetching storefront data:', err);
-                setError(t('marketplace:listings.errors.loadFailed'));
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
+        fetchInitialData();
     }, [id, t]);
+
+    // Обработчик для бесконечной прокрутки
+    const handleLoadMore = () => {
+        fetchMoreListings();
+    };
+    
+    // Обработчик переключения режима отображения (сетка/список)
+    const handleViewModeChange = (event, newMode) => {
+        if (newMode !== null) {
+            setViewMode(newMode);
+            // Сохраняем предпочтение пользователя в localStorage
+            localStorage.setItem('storefront-view-mode', newMode);
+        }
+    };
+    
+    // Обработчик изменения сортировки
+    const handleSortChange = (field, direction) => {
+        console.log(`Обработчик сортировки получил: поле=${field}, направление=${direction}`);
+        
+        // Сбрасываем предыдущие объявления и состояние пагинации
+        setStoreListings([]);
+        setPage(1);
+        setHasMoreListings(true);
+        
+        // Запрашиваем данные с новыми параметрами сортировки
+        fetchInitialData({ field, direction });
+    };
 
     if (loading) {
         return (
@@ -201,27 +363,65 @@ const PublicStorefrontPage = () => {
                 </Box>
             </Paper>
 
-            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
-                {t('marketplace:store.storeProducts')}
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" component="h2">
+                    {t('marketplace:store.storeProducts')}
+                </Typography>
+                
+                {/* Добавляем переключатель режима отображения */}
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={handleViewModeChange}
+                    aria-label="view mode"
+                    size="small"
+                >
+                    <ToggleButton value="grid" aria-label="grid view">
+                        <GridIcon size={18} />
+                    </ToggleButton>
+                    <ToggleButton value="list" aria-label="list view">
+                        <List size={18} />
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Box>
 
             {storeListings.length === 0 ? (
                 <Alert severity="info">
                     {t('marketplace:store.noProductsMessage')}
                 </Alert>
             ) : (
-                <Grid container spacing={3}>
-                    {storeListings.map((listing) => (
-                        <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                            <Link
-                                to={`/marketplace/listings/${listing.id}`}
-                                style={{ textDecoration: 'none' }}
-                            >
-                                <ListingCard listing={listing} />
-                            </Link>
+                <InfiniteScroll
+                    hasMore={hasMoreListings}
+                    loading={loadingMore}
+                    onLoadMore={handleLoadMore}
+                    autoLoad={!isMobile} // Автозагрузка только на десктопе
+                    loadingMessage={t('marketplace:listings.loading', { defaultValue: 'Загрузка...' })}
+                    loadMoreButtonText={t('marketplace:listings.loadMore', { defaultValue: 'Показать ещё' })}
+                    noMoreItemsText={t('marketplace:store.noMoreProducts', { defaultValue: 'Больше нет товаров' })}
+                >
+                    {viewMode === 'grid' ? (
+                        <Grid container spacing={3}>
+                            {storeListings.map((listing) => (
+                                <Grid item xs={12} sm={6} md={4} key={listing.id}>
+                                    <Link
+                                        to={`/marketplace/listings/${listing.id}`}
+                                        style={{ textDecoration: 'none' }}
+                                    >
+                                        <ListingCard listing={listing} />
+                                    </Link>
+                                </Grid>
+                            ))}
                         </Grid>
-                    ))}
-                </Grid>
+                    ) : (
+                        <MarketplaceListingsList
+                            listings={storeListings}
+                            showSelection={false}
+                            initialSortField={sortField}
+                            initialSortOrder={sortDirection}
+                            onSortChange={handleSortChange}
+                        />
+                    )}
+                </InfiniteScroll>
             )}
         </Container>
     );
