@@ -68,7 +68,7 @@ const MarketplaceListingsList = ({
     onSelectItem = null,
     onSelectAll = null,
     showSelection = false,
-    onSortChange = null, // пропс для передачи информации о сортировке родительскому компоненту
+    onSortChange = null,
     filters = {},
     initialSortField = 'created_at',
     initialSortOrder = 'desc',
@@ -77,7 +77,7 @@ const MarketplaceListingsList = ({
 
     console.log("MarketplaceListingsList: получены listings:", listings?.length || 0);
 
-    const { t } = useTranslation('marketplace');
+    const { t, i18n } = useTranslation('marketplace');
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -87,6 +87,29 @@ const MarketplaceListingsList = ({
     // Состояние для хранения данных о рейтингах
     const [listingsWithRatings, setListingsWithRatings] = useState([]);
     const [loadingRatings, setLoadingRatings] = useState(false);
+
+    // Функция для получения локализованного текста
+    const getLocalizedText = (listing, field) => {
+        if (!listing) return '';
+        
+        // Получаем перевод для текущего языка интерфейса
+        const currentLanguage = i18n.language;
+        
+        // Проверяем, совпадает ли текущий язык с оригинальным языком объявления
+        if (currentLanguage === listing.original_language) {
+            return listing[field];
+        }
+        
+        // Проверяем наличие перевода
+        if (listing.translations && 
+            listing.translations[currentLanguage] && 
+            listing.translations[currentLanguage][field]) {
+            return listing.translations[currentLanguage][field];
+        }
+        
+        // Если перевода нет, возвращаем оригинальный текст
+        return listing[field];
+    };
 
     // Загрузка рейтингов для объявлений
     useEffect(() => {
@@ -156,8 +179,8 @@ const MarketplaceListingsList = ({
 
         fetchRatings();
     }, [listings]);
+    
     // Синхронизация состояния сортировки с фильтрами
-    // Извлекаем текущее направление сортировки из значения sort_by
     useEffect(() => {
         // Если есть sort_by в формате field_direction
         if (filters && filters.sort_by) {
@@ -248,7 +271,7 @@ const MarketplaceListingsList = ({
         return null;
     };
 
-     const displayListings = listingsWithRatings.length > 0 ? listingsWithRatings : listings;
+    const displayListings = listingsWithRatings.length > 0 ? listingsWithRatings : listings;
 
     return (
         <TableContainer component={Paper} elevation={0} variant="outlined">
@@ -325,6 +348,10 @@ const MarketplaceListingsList = ({
                         const isSelected = selectedItems.includes(listing.id);
                         const discount = getDiscountInfo(listing);
 
+                        // Применяем локализацию текста
+                        const localizedTitle = getLocalizedText(listing, 'title');
+                        const localizedDescription = getLocalizedText(listing, 'description');
+
                         return (
                             <TableRow
                                 key={listing.id}
@@ -350,7 +377,7 @@ const MarketplaceListingsList = ({
                                         <Box
                                             component="img"
                                             src={getImageUrl(listing)}
-                                            alt={listing.title}
+                                            alt={localizedTitle}
                                             sx={{
                                                 width: 60,
                                                 height: 60,
@@ -364,7 +391,7 @@ const MarketplaceListingsList = ({
 
                                 {columns.includes('title') && (
                                     <TableCell>
-                                        <Typography variant="subtitle2">{listing.title}</Typography>
+                                        <Typography variant="subtitle2">{localizedTitle}</Typography>
                                         {discount && (
                                             <Chip
                                                 icon={<Percent size={12} />}

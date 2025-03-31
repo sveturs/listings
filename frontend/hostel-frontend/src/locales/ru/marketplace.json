@@ -268,7 +268,7 @@
     "sellerRating": "Рейтинг продавца",
     "storeRating": "Рейтинг магазина",
     "basedOn": "На основе {{count}} отзывов",
-    "noRatingsYet": "Пока нет отзывов",
+    "noRatingsYet": "нет отзывов",
     "seeAllReviews": "Смотреть все отзывы",
     "seeAllUserReviews": "Смотреть все отзывы о пользователе",
     "hideReviews": "Скрыть отзывы",

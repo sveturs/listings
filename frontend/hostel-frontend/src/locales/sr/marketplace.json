@@ -267,7 +267,7 @@
     "sellerRating": "Ocena prodavca",
     "storeRating": "Ocena prodavnice",
     "basedOn": "Na osnovu {{count}} recenzija",
-    "noRatingsYet": "Još uvek nema ocena",
+    "noRatingsYet": "nema ocena",
     "seeAllReviews": "Pogledaj sve recenzije",
     "seeAllUserReviews": "Pogledaj sve recenzije korisnika",
     "hideReviews": "Sakrij recenzije",

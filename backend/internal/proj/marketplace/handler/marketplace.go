@@ -1458,106 +1458,120 @@ func (h *MarketplaceHandler) BatchTranslateListings(c *fiber.Ctx) error {
 	failedCount := 0
 
 	// Обрабатываем каждое объявление
-	for _, listingID := range request.ListingIDs {
-		// Проверяем, принадлежит ли объявление пользователю
-		listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
-		if err != nil {
-			// Пропускаем объявления, которые не найдены или недоступны
-			log.Printf("Error getting listing %d: %v", listingID, err)
-			results[listingID] = map[string]string{"error": err.Error()}
+for _, listingID := range request.ListingIDs {
+	// Проверяем, принадлежит ли объявление пользователю
+	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+	if err != nil {
+		// Пропускаем объявления, которые не найдены или недоступны
+		log.Printf("Error getting listing %d: %v", listingID, err)
+		results[listingID] = map[string]string{"error": err.Error()}
+		failedCount++
+		continue
+	}
+
+	// Проверяем права доступа
+	if listing.UserID != userID && listing.StorefrontID == nil {
+		// Пропускаем объявления, которые не принадлежат пользователю
+		results[listingID] = map[string]string{"error": "Access denied"}
+		failedCount++
+		continue
+	}
+
+	// Если объявление принадлежит витрине, проверяем права доступа к витрине
+	if listing.StorefrontID != nil {
+		storefront, err := h.services.Storefront().GetStorefrontByID(c.Context(), *listing.StorefrontID, userID)
+		if err != nil || storefront.UserID != userID {
+			results[listingID] = map[string]string{"error": "Access denied to storefront"}
 			failedCount++
 			continue
-		}
-
-		// Проверяем права доступа
-		if listing.UserID != userID && listing.StorefrontID == nil {
-			// Пропускаем объявления, которые не принадлежат пользователю
-			results[listingID] = map[string]string{"error": "Access denied"}
-			failedCount++
-			continue
-		}
-
-		// Если объявление принадлежит витрине, проверяем права доступа к витрине
-		if listing.StorefrontID != nil {
-			storefront, err := h.services.Storefront().GetStorefrontByID(c.Context(), *listing.StorefrontID, userID)
-			if err != nil || storefront.UserID != userID {
-				results[listingID] = map[string]string{"error": "Access denied to storefront"}
-				failedCount++
-				continue
-			}
-		}
-
-		// Источниковый язык
-		sourceLanguage := listing.OriginalLanguage
-		if sourceLanguage == "" {
-			sourceLanguage = "sr" // По умолчанию
-		}
-
-		// Переводим на каждый целевой язык
-		var listingSuccess bool = false
-		for _, targetLang := range request.TargetLanguages {
-			// Пропускаем язык оригинала
-			if targetLang == sourceLanguage {
-				continue
-			}
-
-			// Переводим заголовок
-			translatedTitle, err := h.services.Translation().Translate(c.Context(), listing.Title, sourceLanguage, targetLang)
-			if err != nil {
-				log.Printf("Error translating title for listing %d: %v", listingID, err)
-				continue
-			}
-
-			// Переводим описание
-			translatedDesc, err := h.services.Translation().Translate(c.Context(), listing.Description, sourceLanguage, targetLang)
-			if err != nil {
-				log.Printf("Error translating description for listing %d: %v", listingID, err)
-				continue
-			}
-
-			// Сохраняем переводы
-			translationData := &models.Translation{
-				EntityType:          "listing",
-				EntityID:            listingID,
-				Language:            targetLang,
-				FieldName:           "title",
-				TranslatedText:      translatedTitle,
-				IsMachineTranslated: true,
-				IsVerified:          false,
-			}
-			err = h.marketplaceService.UpdateTranslation(c.Context(), translationData)
-			if err != nil {
-				log.Printf("Error saving title translation for listing %d: %v", listingID, err)
-			}
-
-			descTranslation := &models.Translation{
-				EntityType:          "listing",
-				EntityID:            listingID,
-				Language:            targetLang,
-				FieldName:           "description",
-				TranslatedText:      translatedDesc,
-				IsMachineTranslated: true,
-				IsVerified:          false,
-			}
-			err = h.marketplaceService.UpdateTranslation(c.Context(), descTranslation)
-			if err != nil {
-				log.Printf("Error saving description translation for listing %d: %v", listingID, err)
-			}
-
-			// Записываем результаты для ответа
-			if results[listingID] == nil {
-				results[listingID] = make(map[string]string)
-			}
-			results[listingID][targetLang] = "translated"
-			listingSuccess = true
-		}
-
-		if listingSuccess {
-			successCount++
-		} else {
-			failedCount++
 		}
 	}
+
+	// Источниковый язык
+	sourceLanguage := listing.OriginalLanguage
+	if sourceLanguage == "" {
+		sourceLanguage = "sr" // По умолчанию
+	}
+
+	// Переводим на каждый целевой язык
+	var listingSuccess bool = false
+	for _, targetLang := range request.TargetLanguages {
+		// Пропускаем язык оригинала
+		if targetLang == sourceLanguage {
+			continue
+		}
+
+		// Переводим заголовок
+		translatedTitle, err := h.services.Translation().Translate(c.Context(), listing.Title, sourceLanguage, targetLang)
+		if err != nil {
+			log.Printf("Error translating title for listing %d: %v", listingID, err)
+			continue
+		}
+
+		// Переводим описание
+		translatedDesc, err := h.services.Translation().Translate(c.Context(), listing.Description, sourceLanguage, targetLang)
+		if err != nil {
+			log.Printf("Error translating description for listing %d: %v", listingID, err)
+			continue
+		}
+
+		// Сохраняем переводы
+		translationData := &models.Translation{
+			EntityType:          "listing",
+			EntityID:            listingID,
+			Language:            targetLang,
+			FieldName:           "title",
+			TranslatedText:      translatedTitle,
+			IsMachineTranslated: true,
+			IsVerified:          false,
+		}
+		err = h.marketplaceService.UpdateTranslation(c.Context(), translationData)
+		if err != nil {
+			log.Printf("Error saving title translation for listing %d: %v", listingID, err)
+		}
+
+		descTranslation := &models.Translation{
+			EntityType:          "listing",
+			EntityID:            listingID,
+			Language:            targetLang,
+			FieldName:           "description",
+			TranslatedText:      translatedDesc,
+			IsMachineTranslated: true,
+			IsVerified:          false,
+		}
+		err = h.marketplaceService.UpdateTranslation(c.Context(), descTranslation)
+		if err != nil {
+			log.Printf("Error saving description translation for listing %d: %v", listingID, err)
+		}
+
+		// Записываем результаты для ответа
+		if results[listingID] == nil {
+			results[listingID] = make(map[string]string)
+		}
+		results[listingID][targetLang] = "translated"
+		listingSuccess = true
+	}
+
+	if listingSuccess {
+		successCount++
+		
+		// Переиндексируем объявление после успешного перевода
+		// Сначала получаем свежую версию объявления с переводами
+		updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+		if err != nil {
+			log.Printf("Warning: Failed to get listing %d for reindexing after translation: %v", listingID, err)
+		} else {
+			// Переиндексируем объявление в OpenSearch
+			if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
+				log.Printf("Warning: Failed to reindex listing %d after translation: %v", listingID, err)
+			} else {
+				log.Printf("Successfully reindexed listing %d after translation", listingID)
+			}
+		}
+	} else {
+		failedCount++
+	}
+}
 
 	// Фиксируем транзакцию в БД
 	if err = tx.Commit(); err != nil {
