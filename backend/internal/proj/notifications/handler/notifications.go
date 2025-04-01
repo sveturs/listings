@@ -306,21 +306,40 @@ func (h *NotificationHandler) UpdateSettings(c *fiber.Ctx) error {
 }
 
 // GetTelegramStatus проверяет статус подключения Telegram
+// Нужно добавить проверку на nil в метод GetTelegramStatus
+// в файле /app/internal/proj/notifications/handler/notifications.go
+
+// GetTelegramStatus проверяет статус подключения Telegram
 func (h *NotificationHandler) GetTelegramStatus(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
-	connection, err := h.notificationService.GetTelegramConnection(c.Context(), userID)
-	// log.Printf("Checking Telegram status for user %d: connection=%v, err=%v", userID, connection, err)
+    // Добавить безопасное получение userID и проверку на авторизацию
+    var userID int
+    if uidVal := c.Locals("user_id"); uidVal != nil {
+        if uid, ok := uidVal.(int); ok {
+            userID = uid
+        } else {
+            // Если user_id есть, но неверного типа, возвращаем ошибку авторизации
+            return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Unauthorized")
+        }
+    } else {
+        // Для неавторизованных запросов просто возвращаем отсутствие подключения
+        return utils.SuccessResponse(c, fiber.Map{
+            "connected": false,
+        })
+    }
 
-	if err != nil {
-		return utils.SuccessResponse(c, fiber.Map{
-			"connected": false,
-		})
-	}
+    connection, err := h.notificationService.GetTelegramConnection(c.Context(), userID)
+    // log.Printf("Checking Telegram status for user %d: connection=%v, err=%v", userID, connection, err)
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"connected": true,
-		"username":  connection.TelegramUsername,
-	})
+    if err != nil {
+        return utils.SuccessResponse(c, fiber.Map{
+            "connected": false,
+        })
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "connected": true,
+        "username":  connection.TelegramUsername,
+    })
 }
 
 // ConnectTelegram связывает аккаунт Telegram

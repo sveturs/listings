@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const instance = axios.create({
   baseURL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000',
-  withCredentials: true,
+    withCredentials: true,
   headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json'

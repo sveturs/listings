@@ -160,7 +160,7 @@ func (s *Server) setupRoutes() {
 	})
 	// маршрут для витрин
 	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
-
+	s.app.Get("/v1/notifications/telegram", s.notifications.Notification.GetTelegramStatus)
 	// Balance routes
 	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequired)
 	balanceRoutes.Get("/", s.balance.Balance.GetBalance) // Добавляем .Balance
@@ -296,14 +296,16 @@ func (s *Server) setupRoutes() {
 	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
 
 	// Notification routes
-	notifications := api.Group("/notifications")
-	notifications.Get("/", s.notifications.Notification.GetNotifications)
-	notifications.Get("/settings", s.notifications.Notification.GetSettings)
-	notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
-	notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
-	notifications.Get("/telegram/token", s.notifications.Notification.GetTelegramToken)
-	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
-	notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
+// Notification routes
+notifications := api.Group("/notifications")
+notifications.Get("/", s.notifications.Notification.GetNotifications)
+notifications.Get("/settings", s.notifications.Notification.GetSettings)
+notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
+notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
+notifications.Get("/telegram/token", s.notifications.Notification.GetTelegramToken)
+notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
+notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
+
 }
 
 func (s *Server) Start() error {
