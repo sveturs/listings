@@ -1814,9 +1814,17 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
     }
     if params.Size < 1 {
         params.Size = 20
-    } else if params.Size > 100 {
-        // Ограничиваем максимальный размер страницы
-        params.Size = 100
+    } else if params.Size > 1000 {
+        // Ограничиваем максимальный размер страницы, но увеличиваем для карты
+        // Проверяем, предназначен ли запрос для отображения на карте
+        viewMode := c.Query("view_mode", "")
+        if viewMode == "map" {
+            // Для карты разрешаем больший размер страницы
+            params.Size = 1000
+        } else {
+            // Для обычного списка оставляем прежнее ограничение для производительности
+            params.Size = 100
+        }
     }
     
     // Дополнительное логирование

@@ -211,7 +211,7 @@ const MarketplacePage = () => {
 
             // Добавляем параметры пагинации
             params.page = isLoadMore ? page + 1 : 1;
-            params.size = 20; // Размер страницы
+            params.size = currentFilters.size || 1000; // Размер страницы - используем из параметров или по умолчанию 20
 
             // Явно показываем параметры запроса в консоли
             console.log('Отправляем запрос поиска с параметрами:', params);
@@ -462,10 +462,14 @@ const MarketplacePage = () => {
                 nextParams.set('longitude', filters.longitude);
                 nextParams.set('distance', filters.distance || '5km');
             }
+            
+            // При переключении на карту загружаем все объявления (большой размер страницы)
+            const mapFilters = {...filters, size: 1000, view_mode: 'map'};
+            fetchListings(mapFilters);
         }
 
         setSearchParams(nextParams);
-    }, [mapViewActive, searchParams, setSearchParams, filters, userLocation]);
+    }, [mapViewActive, searchParams, setSearchParams, filters, userLocation, fetchListings]);
 
     // Обработчик переключения режима отображения (сетка/список)
     const handleViewModeChange = (event, newMode) => {

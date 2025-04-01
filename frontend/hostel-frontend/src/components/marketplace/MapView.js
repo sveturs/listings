@@ -76,7 +76,7 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
   };
 
   const imageUrl = getImageUrl(listing.images);
-
+  
   // Определяем, показываем ли мы карточку витрины или объявления
   const isStorefrontCard = listing.isPartOfStorefront;
 
@@ -109,8 +109,8 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
         </IconButton>
 
         {isStorefrontCard && (
-          <Box
-            sx={{
+          <Box 
+            sx={{ 
               position: 'absolute',
               top: 0,
               left: 0,
@@ -136,7 +136,7 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
             height={isStorefrontCard ? 160 : 140}
             image={imageUrl}
             alt={listing.title}
-            sx={{
+            sx={{ 
               pt: isStorefrontCard ? '24px' : 0
             }}
           />
@@ -244,9 +244,6 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
       });
     }
   }, [userLocation]);
-
-  // Варианты радиуса поиска
-
 
   // Инициализация карты
   useEffect(() => {
@@ -407,110 +404,195 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
       // Создаем группу маркеров для автомасштабирования
       const markerGroup = L.featureGroup();
 
-      // Группировка объявлений по витринам
-      const storefrontListings = new Map(); // Map для хранения объявлений по витринам
+      // Группировка объявлений по витринам и определение уникальных местоположений
+      const storefrontListings = new Map(); // Map для хранения объявлений по витринам по основному адресу
+      const storefrontUniqueLocations = new Map(); // Map для хранения объявлений витрин с уникальными адресами
       const individualListings = []; // Объявления без витрины
 
-      // Группируем объявления по витринам
+      // Функция для проверки, являются ли координаты уникальными
+      const isUniqueLocation = (storefrontId, lat, lng) => {
+        // Если у нас нет записи о главном местоположении витрины, то считаем уникальным
+        if (!storefrontListings.has(storefrontId)) return true;
+        
+        const mainLocation = storefrontListings.get(storefrontId).location;
+        
+        // Проверяем, отличаются ли координаты от основного местоположения витрины
+        // Используем небольшую погрешность, чтобы избежать проблем с точностью
+        const threshold = 0.0001; // примерно 10 метров
+        const isDifferent = Math.abs(mainLocation[0] - lat) > threshold || 
+                           Math.abs(mainLocation[1] - lng) > threshold;
+        
+        // Выводим отладочную информацию при обнаружении уникальных координат
+        if (isDifferent) {
+          console.log(`Обнаружены уникальные координаты для объявления витрины ${storefrontId}: [${lat}, ${lng}] отличаются от основных [${mainLocation[0]}, ${mainLocation[1]}]`);
+        }
+        
+        return isDifferent;
+      };
+
+      // Сначала проходим по всем объявлениям для сбора основной информации о витринах
       validListings.forEach(listing => {
         if (listing.storefront_id) {
           if (!storefrontListings.has(listing.storefront_id)) {
+            // Создаем новую запись о витрине
             storefrontListings.set(listing.storefront_id, {
               listings: [],
               name: listing.storefront_name || t('listings.map.storefront'),
-              location: [listing.latitude, listing.longitude]
+              location: [listing.latitude, listing.longitude],
+              address: listing.location || listing.address
             });
           }
+          
+          // Добавляем объявление в общий список витрины
           storefrontListings.get(listing.storefront_id).listings.push(listing);
+        } else {
+          // Объявления без витрины сразу добавляем в список индивидуальных
+          individualListings.push(listing);
         }
-
       });
 
-      // Отладочная информация о найденных витринах
+      // Теперь проходим по всем объявлениям снова для определения уникальных местоположений
+      console.log("Начинаем поиск объявлений с уникальными местоположениями...");
+      validListings.forEach(listing => {
+        if (listing.storefront_id && listing.latitude && listing.longitude) {
+          // Логируем информацию о каждом объявлении витрины
+          console.log(`Проверка объявления: ID=${listing.id}, storefront_id=${listing.storefront_id}, координаты=[${listing.latitude}, ${listing.longitude}]`);
+          
+          // Проверяем, уникально ли местоположение для данной витрины
+          if (isUniqueLocation(listing.storefront_id, listing.latitude, listing.longitude)) {
+            // Создаем уникальный ключ для этого местоположения
+            const locationKey = `${listing.storefront_id}_${listing.latitude}_${listing.longitude}`;
+            console.log(`НАЙДЕНО УНИКАЛЬНОЕ МЕСТОПОЛОЖЕНИЕ: key=${locationKey}`);
+            
+            if (!storefrontUniqueLocations.has(locationKey)) {
+              // Если это первое объявление с такими координатами, создаем новую запись
+              const storefrontName = listing.storefront_name || 
+                                    (storefrontListings.has(listing.storefront_id) ? 
+                                     storefrontListings.get(listing.storefront_id).name : 
+                                     t('listings.map.storefront'));
+              
+              storefrontUniqueLocations.set(locationKey, {
+                listings: [],
+                storefront_id: listing.storefront_id,
+                name: storefrontName,
+                location: [listing.latitude, listing.longitude],
+                address: listing.location || listing.address
+              });
+              
+              console.log(`Создана новая запись уникального местоположения: ${storefrontName}, координаты=[${listing.latitude}, ${listing.longitude}]`);
+            }
+            
+            // Добавляем объявление в список уникальных местоположений
+            storefrontUniqueLocations.get(locationKey).listings.push(listing);
+            console.log(`Объявление ID=${listing.id} добавлено в список уникальных местоположений, всего: ${storefrontUniqueLocations.get(locationKey).listings.length}`);
+            
+            // И удаляем его из основного списка витрины, чтобы избежать дублирования
+            if (storefrontListings.has(listing.storefront_id)) {
+              const mainStorefrontListings = storefrontListings.get(listing.storefront_id).listings;
+              const index = mainStorefrontListings.findIndex(item => item.id === listing.id);
+              if (index >= 0) {
+                mainStorefrontListings.splice(index, 1);
+                console.log(`Объявление ID=${listing.id} удалено из основного списка витрины, оставшихся: ${mainStorefrontListings.length}`);
+              } else {
+                console.log(`Объявление ID=${listing.id} не найдено в основном списке витрины`);
+              }
+            } else {
+              console.log(`Витрина ID=${listing.storefront_id} не найдена в списке основных витрин`);
+            }
+          }
+        }
+      });
+
+      // Отладочная информация
       console.log(`Найдено ${storefrontListings.size} витрин на карте`);
       storefrontListings.forEach((storefront, id) => {
         console.log(`Витрина ID ${id}: ${storefront.name}, объявлений: ${storefront.listings.length}`);
       });
 
-      // Добавляем маркеры для витрин независимо от количества объявлений
+      console.log(`Найдено ${storefrontUniqueLocations.size} уникальных местоположений товаров витрин`);
+      storefrontUniqueLocations.forEach((location, key) => {
+        console.log(`Уникальное местоположение: ${key}, витрина ID: ${location.storefront_id}, объявлений: ${location.listings.length}`);
+      });
+
+      // Добавляем маркеры для витрин
       storefrontListings.forEach((storefront, storefrontId) => {
         try {
           // Создаем маркер для витрины в виде магазина
           const storeMarker = L.marker(storefront.location, {
             icon: L.divIcon({
               html: `
-          <div style="
-            width: 42px;
-            height: 42px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-          ">
-            <div style="
-              background-color: ${theme.palette.primary.main};
-              color: white;
-              width: 40px;
-              height: 32px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border-radius: 4px;
-              position: relative;
-              border: 2px solid white;
-              box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            ">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-              </svg>
-              <div style="
-                position: absolute;
-                top: -10px;
-                right: -10px;
-                background-color: ${theme.palette.error.main};
-                color: white;
-                border-radius: 50%;
-                width: 22px;
-                height: 22px;
-                font-size: 12px;
-                font-weight: bold;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 1px solid white;
-              ">${storefront.listings.length > 99 ? '99+' : storefront.listings.length}</div>
-            </div>
-            <div style="
-              width: 0;
-              height: 0;
-              border-left: 8px solid transparent;
-              border-right: 8px solid transparent;
-              border-top: 10px solid ${theme.palette.primary.main};
-              margin-top: -2px;
-            "></div>
-          </div>
-        `,
+                <div style="
+                  width: 42px;
+                  height: 42px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                ">
+                  <div style="
+                    background-color: ${theme.palette.primary.main};
+                    color: white;
+                    width: 40px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                    position: relative;
+                    border: 2px solid white;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                  ">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <div style="
+                      position: absolute;
+                      top: -10px;
+                      right: -10px;
+                      background-color: ${theme.palette.error.main};
+                      color: white;
+                      border-radius: 50%;
+                      width: 22px;
+                      height: 22px;
+                      font-size: 12px;
+                      font-weight: bold;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border: 1px solid white;
+                    ">${storefront.listings.length > 99 ? '99+' : storefront.listings.length}</div>
+                  </div>
+                  <div style="
+                    width: 0;
+                    height: 0;
+                    border-left: 8px solid transparent;
+                    border-right: 8px solid transparent;
+                    border-top: 10px solid ${theme.palette.primary.main};
+                    margin-top: -2px;
+                  "></div>
+                </div>
+              `,
               className: 'storefront-marker',
               iconSize: [42, 42],
               iconAnchor: [21, 42]
             })
           })
-            .bindTooltip(`${storefront.name} (${storefront.listings.length} ${t('common:map.items')})`)
-            .on('click', () => {
-              // При клике показываем первое объявление из витрины с меткой витрины
-              if (storefront.listings.length > 0) {
-                const firstListing = storefront.listings[0];
-                // Добавляем информацию о том, что это часть витрины
-                firstListing.isPartOfStorefront = true;
-                firstListing.storefrontName = storefront.name;
-                firstListing.storefrontItemCount = storefront.listings.length;
-                firstListing.storefront_id = storefrontId; // Добавляем ID витрины для перехода
-                // Добавляем ID объявления для выделения при переходе на страницу витрины
-                firstListing.id = firstListing.id || storefront.listings[0].id;
-                setSelectedListing(firstListing);
-              }
-            });
+          .bindTooltip(`${storefront.name} (${storefront.listings.length} ${t('common:map.items')})`)
+          .on('click', () => {
+            // При клике показываем первое объявление из витрины с меткой витрины
+            if (storefront.listings.length > 0) {
+              const firstListing = storefront.listings[0];
+              // Добавляем информацию о том, что это часть витрины
+              firstListing.isPartOfStorefront = true;
+              firstListing.storefrontName = storefront.name;
+              firstListing.storefrontItemCount = storefront.listings.length;
+              firstListing.storefront_id = storefrontId; // Добавляем ID витрины для перехода
+              // Добавляем ID объявления для выделения при переходе на страницу витрины
+              firstListing.id = firstListing.id || storefront.listings[0].id;
+              setSelectedListing(firstListing);
+            }
+          });
 
           storeMarker.addTo(mapRef.current);
           markerGroup.addLayer(storeMarker);
@@ -520,22 +602,95 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         }
       });
 
-      // Добавляем маркеры ТОЛЬКО для тех объявлений, которые НЕ принадлежат витринам
-      individualListings.forEach(listing => {
+      // Добавляем маркеры для уникальных местоположений объявлений витрины
+      storefrontUniqueLocations.forEach((location, locationKey) => {
         try {
-          const marker = L.marker([listing.latitude, listing.longitude])
-            .bindTooltip(`${listing.price.toLocaleString()} RSD`)
-            .on('click', () => {
-              setSelectedListing(listing);
-            });
+          // Создаем маркер с индикацией, что это часть витрины, но с уникальным местоположением
+          const uniqueStoreMarker = L.marker(location.location, {
+            icon: L.divIcon({
+              html: `
+                <div style="
+                  width: 36px;
+                  height: 36px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                ">
+                  <div style="
+                    background-color: ${theme.palette.secondary.main};
+                    color: white;
+                    width: 34px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                    position: relative;
+                    border: 2px solid white;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                  ">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <div style="
+                      position: absolute;
+                      top: -8px;
+                      right: -8px;
+                      background-color: ${theme.palette.error.main};
+                      color: white;
+                      border-radius: 50%;
+                      width: 20px;
+                      height: 20px;
+                      font-size: 10px;
+                      font-weight: bold;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border: 1px solid white;
+                    ">${location.listings.length > 99 ? '99+' : location.listings.length}</div>
+                  </div>
+                  <div style="
+                    width: 0;
+                    height: 0;
+                    border-left: 7px solid transparent;
+                    border-right: 7px solid transparent;
+                    border-top: 8px solid ${theme.palette.secondary.main};
+                    margin-top: -2px;
+                  "></div>
+                </div>
+              `,
+              className: 'storefront-unique-marker',
+              iconSize: [36, 36],
+              iconAnchor: [18, 36]
+            })
+          })
+          .bindTooltip(`${location.name} (${t('common:map.uniqueLocation')}) - ${location.listings.length} ${t('common:map.items')}`)
+          .on('click', () => {
+            // При клике показываем первое объявление с этого уникального местоположения
+            if (location.listings.length > 0) {
+              const firstListing = location.listings[0];
+              // Добавляем информацию о том, что это часть витрины
+              firstListing.isPartOfStorefront = true;
+              firstListing.storefrontName = location.name;
+              firstListing.storefrontItemCount = location.listings.length;
+              firstListing.storefront_id = location.storefront_id;
+              // Добавляем ID объявления для выделения при переходе на страницу витрины
+              setSelectedListing(firstListing);
+            }
+          });
 
-          marker.addTo(mapRef.current);
-          markerGroup.addLayer(marker);
-          markersRef.current.push(marker);
+          uniqueStoreMarker.addTo(mapRef.current);
+          markerGroup.addLayer(uniqueStoreMarker);
+          markersRef.current.push(uniqueStoreMarker);
+          
+          console.log(`Добавлен маркер для товаров с уникальным местоположением: ${location.name}, координаты=[${location.location[0]}, ${location.location[1]}], объявлений: ${location.listings.length}`);
         } catch (error) {
-          console.error("Error adding marker:", error);
+          console.error("Error adding unique location storefront marker:", error);
         }
       });
+
       // Добавляем маркеры для индивидуальных объявлений
       individualListings.forEach(listing => {
         try {
@@ -601,292 +756,323 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
     let center = null;
 
     // Первый случай: выбранное объявление
-    if (selectedListing && selectedListing.latitude && selectedListing.longitude) {
-      center = {
-        latitude: selectedListing.latitude,
-        longitude: selectedListing.longitude,
-        title: selectedListing.title
-      };
-      console.log("Используем координаты выбранного объявления:", center);
-    }
-    // Второй случай: местоположение пользователя
-    else if (userLocation && userLocation.lat && userLocation.lon) {
-      center = {
-        latitude: userLocation.lat,
-        longitude: userLocation.lon,
-        title: t('listings.map.yourLocation')
-      };
-      console.log("Используем координаты пользователя:", center);
-    }
-    // Третий случай: текущий центр карты
-    else if (mapRef.current) {
-      try {
-        const mapCenter = mapRef.current.getCenter();
-        center = {
-          latitude: mapCenter.lat,
-          longitude: mapCenter.lng,
-          title: t('listings.map.mapCenter')
-        };
-        console.log("Используем текущий центр карты:", center);
-      } catch (error) {
-        console.error("Ошибка при получении центра карты:", error);
-      }
-    }
-    // Четвертый случай: первое объявление из списка
-    else if (validListings.length > 0) {
-      const firstListing = validListings[0];
-      center = {
-        latitude: firstListing.latitude,
-        longitude: firstListing.longitude,
-        title: firstListing.title
-      };
-      console.log("Используем координаты первого объявления:", center);
-    }
-    // Пятый случай: фиксированные координаты по умолчанию (Нови-Сад)
-    else {
-      center = {
-        latitude: 45.2671,
-        longitude: 19.8335,
-        title: "Нови-Сад"
-      };
-      console.log("Используем координаты по умолчанию:", center);
-    }
-
-    // Дополнительная проверка перед установкой состояния
-    if (!center || !center.latitude || !center.longitude) {
-      console.error("Не удалось определить координаты для карты:", center);
-      // Устанавливаем координаты по умолчанию
-      center = {
-        latitude: 45.2671,
-        longitude: 19.8335,
-        title: "Нови-Сад"
-      };
-    }
-
-    // Проверяем, что у нас есть числовые значения для координат
-    center.latitude = Number(center.latitude);
-    center.longitude = Number(center.longitude);
-
-    console.log("Итоговые координаты для полноэкранной карты:", center);
-
-    // Устанавливаем состояние и открываем модальное окно
-    setExpandedMapCenter(center);
-    setExpandedMapMarkers(markersForFullscreen);
-    setExpandedMapOpen(true);
+if (selectedListing && selectedListing.latitude && selectedListing.longitude) {
+  center = {
+    latitude: selectedListing.latitude,
+    longitude: selectedListing.longitude,
+    title: selectedListing.title
   };
-
-  // Функция для определения местоположения пользователя
-  const handleDetectLocation = async () => {
-    try {
-      // Используем функцию из контекста местоположения
-      const locationData = await detectUserLocation();
-
-      // Если успешно получили местоположение, обновляем фильтры
-      onFilterChange({
-        ...filters,
-        latitude: locationData.lat,
-        longitude: locationData.lon,
-        distance: filters.distance || '5km'
-      });
-
-      // Центрируем карту на новых координатах
-      if (mapRef.current) {
-        mapRef.current.setView([locationData.lat, locationData.lon], 13);
-      }
-    } catch (error) {
-      console.error("Error getting location:", error);
-      alert(t('listings.map.locationError'));
-    }
+  console.log("Используем координаты выбранного объявления:", center);
+}
+// Второй случай: местоположение пользователя
+else if (userLocation && userLocation.lat && userLocation.lon) {
+  center = {
+    latitude: userLocation.lat,
+    longitude: userLocation.lon,
+    title: t('listings.map.yourLocation')
   };
+  console.log("Используем координаты пользователя:", center);
+}
+// Третий случай: текущий центр карты
+else if (mapRef.current) {
+  try {
+    const mapCenter = mapRef.current.getCenter();
+    center = {
+      latitude: mapCenter.lat,
+      longitude: mapCenter.lng,
+      title: t('listings.map.mapCenter')
+    };
+    console.log("Используем текущий центр карты:", center);
+  } catch (error) {
+    console.error("Ошибка при получении центра карты:", error);
+  }
+}
+// Четвертый случай: первое объявление из списка
+else if (validListings.length > 0) {
+  const firstListing = validListings[0];
+  center = {
+    latitude: firstListing.latitude,
+    longitude: firstListing.longitude,
+    title: firstListing.title
+  };
+  console.log("Используем координаты первого объявления:", center);
+}
+// Пятый случай: фиксированные координаты по умолчанию (Нови-Сад)
+else {
+  center = {
+    latitude: 45.2671,
+    longitude: 19.8335,
+    title: "Нови-Сад"
+  };
+  console.log("Используем координаты по умолчанию:", center);
+}
 
-  // Определяем, доступна ли карта (не используется в запросе distance без координат)
-  const isMapAvailable = useMemo(() => {
-    return !filters.distance || (filters.latitude && filters.longitude);
-  }, [filters.distance, filters.latitude, filters.longitude]);
+// Дополнительная проверка перед установкой состояния
+if (!center || !center.latitude || !center.longitude) {
+  console.error("Не удалось определить координаты для карты:", center);
+  // Устанавливаем координаты по умолчанию
+  center = {
+    latitude: 45.2671,
+    longitude: 19.8335,
+    title: "Нови-Сад"
+  };
+}
 
-  const isDistanceWithoutCoordinates = filters.distance && (!filters.latitude || !filters.longitude);
+// Проверяем, что у нас есть числовые значения для координат
+center.latitude = Number(center.latitude);
+center.longitude = Number(center.longitude);
 
-  return (
-    <Box
-      sx={{
-        position: 'relative',
-        height: isMobile ? 'calc(100vh - 120px)' : '90vh',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
-      {/* Панель инструментов карты */}
-      <Paper
-        elevation={3}
-        sx={{
-          p: 2,
-          mb: 2,
-          zIndex: 1000,
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 2
-        }}
+console.log("Итоговые координаты для полноэкранной карты:", center);
+
+// Устанавливаем состояние и открываем модальное окно
+setExpandedMapCenter(center);
+setExpandedMapMarkers(markersForFullscreen);
+setExpandedMapOpen(true);
+};
+
+// Функция для определения местоположения пользователя
+const handleDetectLocation = async () => {
+try {
+  // Используем функцию из контекста местоположения
+  const locationData = await detectUserLocation();
+
+  // Если успешно получили местоположение, обновляем фильтры
+  onFilterChange({
+    ...filters,
+    latitude: locationData.lat,
+    longitude: locationData.lon,
+    distance: filters.distance || '5km'
+  });
+
+  // Центрируем карту на новых координатах
+  if (mapRef.current) {
+    mapRef.current.setView([locationData.lat, locationData.lon], 13);
+  }
+} catch (error) {
+  console.error("Error getting location:", error);
+  alert(t('listings.map.locationError'));
+}
+};
+
+// Определяем, доступна ли карта (не используется в запросе distance без координат)
+const isMapAvailable = useMemo(() => {
+return !filters.distance || (filters.latitude && filters.longitude);
+}, [filters.distance, filters.latitude, filters.longitude]);
+
+const isDistanceWithoutCoordinates = filters.distance && (!filters.latitude || !filters.longitude);
+
+return (
+<Box
+  sx={{
+    position: 'relative',
+    height: isMobile ? 'calc(100vh - 120px)' : '90vh',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column'
+  }}
+>
+  {/* Панель инструментов карты */}
+  <Paper
+    elevation={3}
+    sx={{
+      p: 2,
+      mb: 2,
+      zIndex: 1000,
+      display: 'flex',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 2
+    }}
+  >
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+
+
+      {/* Показываем информацию о количестве объявлений и витрин на карте */}
+      {(() => {
+        // Фильтруем объявления с координатами и флагом show_on_map
+        const validListings = listings.filter(l => l.latitude && l.longitude && l.show_on_map !== false);
+        
+        // Подсчитываем количество уникальных витрин
+        const storefrontsSet = new Set();
+        validListings.forEach(l => {
+          if (l.storefront_id) {
+            storefrontsSet.add(l.storefront_id);
+          }
+        });
+        
+        // Подсчитываем количество частных объявлений (без витрины)
+        const individualListingsCount = validListings.filter(l => !l.storefront_id).length;
+        
+        return (
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Chip
+              label={`${validListings.length} ${t('listings.map.itemsOnMap')}`}
+              color="primary"
+              variant="outlined"
+            />
+            <Chip
+              label={`${storefrontsSet.size} ${t('listings.map.storefrontsOnMap', { defaultValue: 'витрин' })}`}
+              color="secondary"
+              variant="outlined"
+            />
+            <Chip
+              label={`${individualListingsCount} ${t('listings.map.individualItemsOnMap', { defaultValue: 'объявлений' })}`}
+              color="info"
+              variant="outlined"
+            />
+          </Box>
+        );
+      })()}
+    </Box>
+
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+
+
+      <Button
+        variant="outlined"
+        startIcon={<List />}
+        onClick={onMapClose}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        {isMobile ? t('listings.map.list') : t('listings.map.backToList')}
+      </Button>
+    </Box>
+  </Paper>
 
+  {/* Контейнер карты */}
+  <Box
+    sx={{
+      flex: 1,
+      borderRadius: 1,
+      overflow: 'hidden',
+      position: 'relative'
+    }}
+  >
+    {/* Добавляем кнопку "Развернуть" в стиле MiniMap */}
+    <IconButton
+      onClick={handleExpandMap}
+      sx={{
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        bgcolor: 'background.paper',
+        '&:hover': {
+          bgcolor: 'background.paper',
+        },
+        zIndex: 1000,
+        boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+      }}
+      size="small"
+    >
+      <Maximize2 size={20} />
+    </IconButton>
 
-          <Chip
-            label={`${listings.filter(l => l.latitude && l.longitude && l.show_on_map !== false).length} ${t('listings.map.itemsOnMap')}`}
-            color="primary"
-            variant="outlined"
-          />
-        </Box>
+    <div
+      ref={mapContainerRef}
+      style={{ width: '100%', height: '100%' }}
+    />
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-
-
-          <Button
-            variant="outlined"
-            startIcon={<List />}
-            onClick={onMapClose}
-          >
-            {isMobile ? t('listings.map.list') : t('listings.map.backToList')}
-          </Button>
-        </Box>
-      </Paper>
-
-      {/* Контейнер карты */}
+    {!mapReady && (
       <Box
         sx={{
-          flex: 1,
-          borderRadius: 1,
-          overflow: 'hidden',
-          position: 'relative'
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'background.paper',
+          zIndex: 999
         }}
       >
-        {/* Добавляем кнопку "Развернуть" в стиле MiniMap */}
+        <Typography variant="h6">
+          {t('listings.map.loadingMap', { defaultValue: 'Загрузка карты...' })}
+        </Typography>
+      </Box>
+    )}
+  </Box>
+
+  {/* Информация о выбранном объявлении */}
+  {selectedListing && (
+    <ListingPreview
+      listing={selectedListing}
+      onClose={() => setSelectedListing(null)}
+      onNavigate={handleNavigateToListing}
+    />
+  )}
+
+  {/* Кнопка определения местоположения */}
+  {!userLocation && (
+    <Button
+      variant="contained"
+      color="primary"
+      startIcon={<Navigation />}
+      sx={{
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+        zIndex: 1000
+      }}
+      onClick={handleDetectLocation}
+    >
+      {t('listings.map.useMyLocation')}
+    </Button>
+  )}
+
+  {/* Модальное окно с полноэкранной картой */}
+  <Modal
+    open={expandedMapOpen}
+    onClose={() => setExpandedMapOpen(false)}
+    aria-labelledby="expanded-map-modal"
+    aria-describedby="expanded-map-view"
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      p: 3
+    }}
+  >
+    <Paper
+      sx={{
+        width: '90%',
+        maxWidth: 1200,
+        maxHeight: '90vh',
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        boxShadow: 24,
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1050 }}>
         <IconButton
-          onClick={handleExpandMap}
+          onClick={() => setExpandedMapOpen(false)}
           sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
             bgcolor: 'background.paper',
             '&:hover': {
               bgcolor: 'background.paper',
             },
-            zIndex: 1000,
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+            boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
           }}
-          size="small"
         >
-          <Maximize2 size={20} />
+          <X size={20} />
         </IconButton>
-
-        <div
-          ref={mapContainerRef}
-          style={{ width: '100%', height: '100%' }}
-        />
-
-        {!mapReady && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: 'background.paper',
-              zIndex: 999
-            }}
-          >
-            <Typography variant="h6">
-              {t('listings.map.loadingMap', { defaultValue: 'Загрузка карты...' })}
-            </Typography>
-          </Box>
-        )}
       </Box>
 
-      {/* Информация о выбранном объявлении */}
-      {selectedListing && (
-        <ListingPreview
-          listing={selectedListing}
-          onClose={() => setSelectedListing(null)}
-          onNavigate={handleNavigateToListing}
+      {expandedMapCenter && (
+        <FullscreenMap
+          latitude={expandedMapCenter.latitude}
+          longitude={expandedMapCenter.longitude}
+          title={expandedMapCenter.title}
+          markers={expandedMapMarkers}
         />
       )}
-
-      {/* Кнопка определения местоположения */}
-      {!userLocation && (
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Navigation />}
-          sx={{
-            position: 'absolute',
-            bottom: 16,
-            right: 16,
-            zIndex: 1000
-          }}
-          onClick={handleDetectLocation}
-        >
-          {t('listings.map.useMyLocation')}
-        </Button>
-      )}
-
-      {/* Модальное окно с полноэкранной картой */}
-      <Modal
-        open={expandedMapOpen}
-        onClose={() => setExpandedMapOpen(false)}
-        aria-labelledby="expanded-map-modal"
-        aria-describedby="expanded-map-view"
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: 3
-        }}
-      >
-        <Paper
-          sx={{
-            width: '90%',
-            maxWidth: 1200,
-            maxHeight: '90vh',
-            bgcolor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: 24,
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-        >
-          <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1050 }}>
-            <IconButton
-              onClick={() => setExpandedMapOpen(false)}
-              sx={{
-                bgcolor: 'background.paper',
-                '&:hover': {
-                  bgcolor: 'background.paper',
-                },
-                boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-              }}
-            >
-              <X size={20} />
-            </IconButton>
-          </Box>
-
-          {expandedMapCenter && (
-            <FullscreenMap
-              latitude={expandedMapCenter.latitude}
-              longitude={expandedMapCenter.longitude}
-              title={expandedMapCenter.title}
-              markers={expandedMapMarkers}
-            />
-          )}
-        </Paper>
-      </Modal>
-    </Box>
-  );
+    </Paper>
+  </Modal>
+</Box>
+);
 };
 
 export default MapView;

@@ -102,8 +102,9 @@ const PublicStorefrontPage = () => {
                     params: { 
                         storefront_id: id,
                         page: 1,
-                        size: 20,
-                        sort_by: apiSort // Добавляем параметр сортировки
+                        size: 1000, // Увеличиваем размер, чтобы загружать все объявления для отображения на карте
+                        sort_by: apiSort, // Добавляем параметр сортировки
+                        view_mode: 'map' // Указываем, что данные нужны для карты
                     }
                 })
             ];
@@ -205,8 +206,9 @@ const PublicStorefrontPage = () => {
                 params: { 
                     storefront_id: id,
                     page: nextPage,
-                    size: 20,
-                    sort_by: apiSort // Добавляем параметр сортировки
+                    size: 1000, // Увеличиваем размер для загрузки большего количества объявлений
+                    sort_by: apiSort, // Добавляем параметр сортировки
+                    view_mode: 'map' // Указываем, что данные нужны для карты
                 }
             });
             
