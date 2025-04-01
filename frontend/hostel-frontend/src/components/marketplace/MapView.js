@@ -1,7 +1,7 @@
 // frontend/hostel-frontend/src/components/marketplace/MapView.js
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigation, X, List, Maximize2 } from 'lucide-react';
+import { Navigation, X, List, Maximize2, Store } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -31,9 +31,10 @@ import { useLocation } from '../../contexts/LocationContext';
 
 // Компонент для предпросмотра объявления при клике по маркеру
 const ListingPreview = ({ listing, onClose, onNavigate }) => {
-  const { t } = useTranslation('marketplace');
+  const { t } = useTranslation(['marketplace', 'common']);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
 
   if (!listing) return null;
 
@@ -75,6 +76,9 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
   };
 
   const imageUrl = getImageUrl(listing.images);
+  
+  // Определяем, показываем ли мы карточку витрины или объявления
+  const isStorefrontCard = listing.isPartOfStorefront;
 
   return (
     <Card
@@ -97,25 +101,64 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
             right: 8,
             bgcolor: 'background.paper',
             opacity: 0.8,
-            '&:hover': { bgcolor: 'background.paper', opacity: 1 }
+            '&:hover': { bgcolor: 'background.paper', opacity: 1 },
+            zIndex: 10
           }}
         >
           <X size={16} />
         </IconButton>
 
+        {isStorefrontCard && (
+          <Box 
+            sx={{ 
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: theme.palette.primary.main,
+              color: 'white',
+              padding: '4px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              zIndex: 5
+            }}
+          >
+            <Store size={16} style={{ marginRight: 6 }} />
+            <Typography variant="subtitle2" fontWeight="bold">
+              {listing.storefrontName || t('common:map.storefront')}
+            </Typography>
+          </Box>
+        )}
+
         {imageUrl && (
           <CardMedia
             component="img"
-            height="140"
+            height={isStorefrontCard ? 160 : 140}
             image={imageUrl}
             alt={listing.title}
+            sx={{ 
+              pt: isStorefrontCard ? '24px' : 0
+            }}
           />
         )}
 
         <CardContent>
-          <Typography variant="subtitle1" noWrap gutterBottom>
-            {listing.title}
-          </Typography>
+          {isStorefrontCard && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                {t('common:map.items', { count: listing.storefrontItemCount })}
+              </Typography>
+              <Typography variant="h6" fontWeight="bold" sx={{ mt: 0.5 }}>
+                {listing.title}
+              </Typography>
+            </Box>
+          )}
+
+          {!isStorefrontCard && (
+            <Typography variant="subtitle1" noWrap gutterBottom>
+              {listing.title}
+            </Typography>
+          )}
 
           <Typography variant="h6" color="primary" gutterBottom>
             {formatPrice(listing.price)}
@@ -128,13 +171,26 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
               color={listing.condition === 'new' ? 'success' : 'default'}
             />
 
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => onNavigate(listing.id)}
-            >
-              {t('listings.details.viewDetails')}
-            </Button>
+            {isStorefrontCard ? (
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                fullWidth
+                sx={{ ml: 1 }}
+                onClick={() => navigate(`/shop/${listing.storefront_id}?highlightedListingId=${listing.id}`)}
+              >
+                {t('common:map.viewStorefront')}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => onNavigate(listing.id)}
+              >
+                {t('listings.details.viewDetails')}
+              </Button>
+            )}
           </Box>
         </CardContent>
       </Box>
@@ -351,8 +407,133 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
       // Создаем группу маркеров для автомасштабирования
       const markerGroup = L.featureGroup();
 
-      // Добавляем новые маркеры
+      // Группировка объявлений по витринам
+      const storefrontListings = new Map(); // Map для хранения объявлений по витринам
+      const individualListings = []; // Объявления без витрины или с малым количеством в витрине
+
+      // Сначала группируем объявления по витринам
       validListings.forEach(listing => {
+        if (listing.storefront_id) {
+          if (!storefrontListings.has(listing.storefront_id)) {
+            storefrontListings.set(listing.storefront_id, {
+              listings: [],
+              name: listing.storefront_name || t('listings.map.storefront'),
+              location: [listing.latitude, listing.longitude]
+            });
+          }
+          storefrontListings.get(listing.storefront_id).listings.push(listing);
+        } else {
+          individualListings.push(listing);
+        }
+      });
+      
+      // Отладочная информация о найденных витринах
+      console.log(`Найдено ${storefrontListings.size} витрин на карте`);
+      storefrontListings.forEach((storefront, id) => {
+        console.log(`Витрина ID ${id}: ${storefront.name}, объявлений: ${storefront.listings.length}`);
+      });
+
+      // Добавляем маркеры для витрин независимо от количества объявлений (для отладки)
+      storefrontListings.forEach((storefront, storefrontId) => {
+        // Временно убираем условие на количество объявлений для тестирования
+        if (true) {
+          try {
+            // Создаем маркер для витрины в виде магазина
+            const storeMarker = L.marker(storefront.location, {
+              icon: L.divIcon({
+                html: `
+                  <div style="
+                    width: 42px;
+                    height: 42px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                  ">
+                    <div style="
+                      background-color: ${theme.palette.primary.main};
+                      color: white;
+                      width: 40px;
+                      height: 32px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border-radius: 4px;
+                      position: relative;
+                      border: 2px solid white;
+                      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                    ">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                      </svg>
+                      <div style="
+                        position: absolute;
+                        top: -10px;
+                        right: -10px;
+                        background-color: ${theme.palette.error.main};
+                        color: white;
+                        border-radius: 50%;
+                        width: 22px;
+                        height: 22px;
+                        font-size: 12px;
+                        font-weight: bold;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 1px solid white;
+                      ">${storefront.listings.length > 99 ? '99+' : storefront.listings.length}</div>
+                    </div>
+                    <div style="
+                      width: 0;
+                      height: 0;
+                      border-left: 8px solid transparent;
+                      border-right: 8px solid transparent;
+                      border-top: 10px solid ${theme.palette.primary.main};
+                      margin-top: -2px;
+                    "></div>
+                  </div>
+                `,
+                className: 'storefront-marker',
+                iconSize: [42, 42],
+                iconAnchor: [21, 42]
+              })
+            })
+            .bindTooltip(`${storefront.name} (${storefront.listings.length} ${t('common:map.items')})`)
+            .on('click', () => {
+              // При клике показываем первое объявление из витрины с меткой витрины
+              if (storefront.listings.length > 0) {
+                const firstListing = storefront.listings[0];
+                // Добавляем информацию о том, что это часть витрины
+                firstListing.isPartOfStorefront = true;
+                firstListing.storefrontName = storefront.name;
+                firstListing.storefrontItemCount = storefront.listings.length;
+                firstListing.storefront_id = storefrontId; // Добавляем ID витрины для перехода
+                // Добавляем ID объявления для выделения при переходе на страницу витрины
+                firstListing.id = firstListing.id || storefront.listings[0].id;
+                setSelectedListing(firstListing);
+              }
+            });
+
+            storeMarker.addTo(mapRef.current);
+            markerGroup.addLayer(storeMarker);
+            markersRef.current.push(storeMarker);
+          } catch (error) {
+            console.error("Error adding storefront marker:", error);
+          }
+
+          // Для витрин с большим количеством товаров не добавляем отдельные маркеры
+          // Это предотвращает захламление карты, когда витрина имеет много товаров
+        } else {
+          // Для витрин с малым количеством товаров добавляем все товары как отдельные маркеры
+          storefront.listings.forEach(listing => {
+            individualListings.push(listing);
+          });
+        }
+      });
+
+      // Добавляем маркеры для индивидуальных объявлений
+      individualListings.forEach(listing => {
         try {
           const marker = L.marker([listing.latitude, listing.longitude])
             .bindTooltip(`${listing.price.toLocaleString()} RSD`)
@@ -383,7 +564,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
     } catch (error) {
       console.error("Error updating markers:", error);
     }
-  }, [listings, mapReady, userLocation]);
+  }, [listings, mapReady, userLocation, t, theme]);
 
   // Обработчик изменения радиуса поиска
   const handleRadiusChange = (event) => {
