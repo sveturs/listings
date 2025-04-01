@@ -76,7 +76,7 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
   };
 
   const imageUrl = getImageUrl(listing.images);
-  
+
   // Определяем, показываем ли мы карточку витрины или объявления
   const isStorefrontCard = listing.isPartOfStorefront;
 
@@ -109,8 +109,8 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
         </IconButton>
 
         {isStorefrontCard && (
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               position: 'absolute',
               top: 0,
               left: 0,
@@ -136,7 +136,7 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
             height={isStorefrontCard ? 160 : 140}
             image={imageUrl}
             alt={listing.title}
-            sx={{ 
+            sx={{
               pt: isStorefrontCard ? '24px' : 0
             }}
           />
@@ -409,9 +409,9 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
 
       // Группировка объявлений по витринам
       const storefrontListings = new Map(); // Map для хранения объявлений по витринам
-      const individualListings = []; // Объявления без витрины или с малым количеством в витрине
+      const individualListings = []; // Объявления без витрины
 
-      // Сначала группируем объявления по витринам
+      // Группируем объявления по витринам
       validListings.forEach(listing => {
         if (listing.storefront_id) {
           if (!storefrontListings.has(listing.storefront_id)) {
@@ -422,83 +422,80 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
             });
           }
           storefrontListings.get(listing.storefront_id).listings.push(listing);
-        } else {
-          individualListings.push(listing);
         }
+
       });
-      
+
       // Отладочная информация о найденных витринах
       console.log(`Найдено ${storefrontListings.size} витрин на карте`);
       storefrontListings.forEach((storefront, id) => {
         console.log(`Витрина ID ${id}: ${storefront.name}, объявлений: ${storefront.listings.length}`);
       });
 
-      // Добавляем маркеры для витрин независимо от количества объявлений (для отладки)
+      // Добавляем маркеры для витрин независимо от количества объявлений
       storefrontListings.forEach((storefront, storefrontId) => {
-        // Временно убираем условие на количество объявлений для тестирования
-        if (true) {
-          try {
-            // Создаем маркер для витрины в виде магазина
-            const storeMarker = L.marker(storefront.location, {
-              icon: L.divIcon({
-                html: `
-                  <div style="
-                    width: 42px;
-                    height: 42px;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                  ">
-                    <div style="
-                      background-color: ${theme.palette.primary.main};
-                      color: white;
-                      width: 40px;
-                      height: 32px;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      border-radius: 4px;
-                      position: relative;
-                      border: 2px solid white;
-                      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-                    ">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                      </svg>
-                      <div style="
-                        position: absolute;
-                        top: -10px;
-                        right: -10px;
-                        background-color: ${theme.palette.error.main};
-                        color: white;
-                        border-radius: 50%;
-                        width: 22px;
-                        height: 22px;
-                        font-size: 12px;
-                        font-weight: bold;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        border: 1px solid white;
-                      ">${storefront.listings.length > 99 ? '99+' : storefront.listings.length}</div>
-                    </div>
-                    <div style="
-                      width: 0;
-                      height: 0;
-                      border-left: 8px solid transparent;
-                      border-right: 8px solid transparent;
-                      border-top: 10px solid ${theme.palette.primary.main};
-                      margin-top: -2px;
-                    "></div>
-                  </div>
-                `,
-                className: 'storefront-marker',
-                iconSize: [42, 42],
-                iconAnchor: [21, 42]
-              })
+        try {
+          // Создаем маркер для витрины в виде магазина
+          const storeMarker = L.marker(storefront.location, {
+            icon: L.divIcon({
+              html: `
+          <div style="
+            width: 42px;
+            height: 42px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          ">
+            <div style="
+              background-color: ${theme.palette.primary.main};
+              color: white;
+              width: 40px;
+              height: 32px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 4px;
+              position: relative;
+              border: 2px solid white;
+              box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            ">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              <div style="
+                position: absolute;
+                top: -10px;
+                right: -10px;
+                background-color: ${theme.palette.error.main};
+                color: white;
+                border-radius: 50%;
+                width: 22px;
+                height: 22px;
+                font-size: 12px;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid white;
+              ">${storefront.listings.length > 99 ? '99+' : storefront.listings.length}</div>
+            </div>
+            <div style="
+              width: 0;
+              height: 0;
+              border-left: 8px solid transparent;
+              border-right: 8px solid transparent;
+              border-top: 10px solid ${theme.palette.primary.main};
+              margin-top: -2px;
+            "></div>
+          </div>
+        `,
+              className: 'storefront-marker',
+              iconSize: [42, 42],
+              iconAnchor: [21, 42]
             })
+          })
             .bindTooltip(`${storefront.name} (${storefront.listings.length} ${t('common:map.items')})`)
             .on('click', () => {
               // При клике показываем первое объявление из витрины с меткой витрины
@@ -515,23 +512,30 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
               }
             });
 
-            storeMarker.addTo(mapRef.current);
-            markerGroup.addLayer(storeMarker);
-            markersRef.current.push(storeMarker);
-          } catch (error) {
-            console.error("Error adding storefront marker:", error);
-          }
-
-          // Для витрин с большим количеством товаров не добавляем отдельные маркеры
-          // Это предотвращает захламление карты, когда витрина имеет много товаров
-        } else {
-          // Для витрин с малым количеством товаров добавляем все товары как отдельные маркеры
-          storefront.listings.forEach(listing => {
-            individualListings.push(listing);
-          });
+          storeMarker.addTo(mapRef.current);
+          markerGroup.addLayer(storeMarker);
+          markersRef.current.push(storeMarker);
+        } catch (error) {
+          console.error("Error adding storefront marker:", error);
         }
       });
 
+      // Добавляем маркеры ТОЛЬКО для тех объявлений, которые НЕ принадлежат витринам
+      individualListings.forEach(listing => {
+        try {
+          const marker = L.marker([listing.latitude, listing.longitude])
+            .bindTooltip(`${listing.price.toLocaleString()} RSD`)
+            .on('click', () => {
+              setSelectedListing(listing);
+            });
+
+          marker.addTo(mapRef.current);
+          markerGroup.addLayer(marker);
+          markersRef.current.push(marker);
+        } catch (error) {
+          console.error("Error adding marker:", error);
+        }
+      });
       // Добавляем маркеры для индивидуальных объявлений
       individualListings.forEach(listing => {
         try {
