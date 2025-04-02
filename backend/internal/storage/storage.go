@@ -128,6 +128,9 @@ type Storage interface {
 	CreateImportHistory(ctx context.Context, history *models.ImportHistory) (int, error)
 	GetImportHistory(ctx context.Context, sourceID int, limit, offset int) ([]models.ImportHistory, error)
 	UpdateImportHistory(ctx context.Context, history *models.ImportHistory) error
+	
+	// Translation methods
+	GetTranslationsForEntity(ctx context.Context, entityType string, entityID int) ([]models.Translation, error)
 
 	// Database connection
 	Close()

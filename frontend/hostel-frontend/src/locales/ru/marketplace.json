@@ -373,6 +373,13 @@
     }
   },
   "store": {
+    "listings": {
+      "selectTranslationProvider": "Сервис перевода",
+      "freeWithinLimits": "Бесплатно в пределах лимита",
+      "higherQuality": "Высокое качество",
+      "googleTranslate": "Google Translate",
+      "openaiTranslate": "OpenAI (GPT)"
+    },
     "seeAllReviews": "Все отзывы о магазине",
     "backToStore": "Вернуться в магазин",
     "createdAt": "Создан {{date}}",

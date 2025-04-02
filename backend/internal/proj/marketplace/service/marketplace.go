@@ -21,16 +21,23 @@ import (
 )
 
 type MarketplaceService struct {
-	storage storage.Storage
+	storage           storage.Storage
+	translationService TranslationServiceInterface
 }
 
-func NewMarketplaceService(storage storage.Storage) MarketplaceServiceInterface {
+func NewMarketplaceService(storage storage.Storage, translationService TranslationServiceInterface) MarketplaceServiceInterface {
 	return &MarketplaceService{
-		storage: storage,
+		storage:           storage,
+		translationService: translationService,
 	}
 }
 func (s *MarketplaceService) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
 	return s.storage.GetUserFavorites(ctx, userID)
+}
+
+// SetTranslationService allows injecting a translation service after creation
+func (s *MarketplaceService) SetTranslationService(svc TranslationServiceInterface) {
+	s.translationService = svc
 }
 func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
 	listing.Status = "active"
@@ -702,27 +709,58 @@ func (s *MarketplaceService) RemoveFromFavorites(ctx context.Context, userID int
 	return s.storage.RemoveFromFavorites(ctx, userID, listingID)
 }
 func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation *models.Translation) error {
+	// Используем сервис перевода по умолчанию (Google Translate)
+	return s.UpdateTranslationWithProvider(ctx, translation, GoogleTranslate)
+}
+
+// UpdateTranslationWithProvider обновляет перевод с использованием указанного провайдера
+func (s *MarketplaceService) UpdateTranslationWithProvider(ctx context.Context, translation *models.Translation, provider TranslationProvider) error {
+	// Проверяем, есть ли фабрика сервисов перевода
+	if factory, ok := s.translationService.(TranslationFactoryInterface); ok {
+		// Используем фабрику для обновления перевода с информацией о провайдере
+		return factory.UpdateTranslation(ctx, translation, provider)
+	}
+	
+	// Если фабрики нет, используем прямой запрос к базе данных
+	// Подготавливаем метаданные
+	var metadataJSON []byte
+	var err error
+	
+	if translation.Metadata == nil {
+		translation.Metadata = map[string]interface{}{"provider": string(provider)}
+	} else if _, exists := translation.Metadata["provider"]; !exists {
+		translation.Metadata["provider"] = string(provider)
+	}
+	
+	metadataJSON, err = json.Marshal(translation.Metadata)
+	if err != nil {
+		log.Printf("Ошибка сериализации метаданных: %v", err)
+		metadataJSON = []byte("{}")
+	}
+	
 	query := `
         INSERT INTO translations (
             entity_type, entity_id, language, field_name,
-            translated_text, is_machine_translated, is_verified
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            translated_text, is_machine_translated, is_verified, metadata
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT (entity_type, entity_id, language, field_name)
         DO UPDATE SET
             translated_text = EXCLUDED.translated_text,
             is_machine_translated = EXCLUDED.is_machine_translated,
             is_verified = EXCLUDED.is_verified,
+            metadata = EXCLUDED.metadata,
             updated_at = CURRENT_TIMESTAMP
     `
 
-	_, err := s.storage.Exec(ctx, query,
+	_, err = s.storage.Exec(ctx, query,
 		translation.EntityType,
 		translation.EntityID,
 		translation.Language,
 		translation.FieldName,
 		translation.TranslatedText,
 		translation.IsMachineTranslated,
-		translation.IsVerified)
+		translation.IsVerified,
+		metadataJSON)
 
 	return err
 }

@@ -372,6 +372,13 @@
     }
   },
   "store": {
+    "listings": {
+      "selectTranslationProvider": "Servis za prevod",
+      "freeWithinLimits": "Besplatno u okviru limita",
+      "higherQuality": "Bolji kvalitet",
+      "googleTranslate": "Google Translate",
+      "openaiTranslate": "OpenAI (GPT)"
+    },
     "seeAllReviews": "Sve recenzije prodavnice",
     "backToStore": "Nazad u prodavnicu",
     "createdAt": "Kreirano {{date}}",

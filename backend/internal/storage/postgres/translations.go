@@ -40,7 +40,7 @@ func (db *Database) SaveTranslation(ctx context.Context, translation *models.Tra
     return nil
 }
 
-func (db *Database) GetTranslations(ctx context.Context, entityType string, entityID int) ([]models.Translation, error) {
+func (db *Database) GetTranslationsForEntity(ctx context.Context, entityType string, entityID int) ([]models.Translation, error) {
     query := `
         SELECT 
             id, entity_type, entity_id, field_name, language,

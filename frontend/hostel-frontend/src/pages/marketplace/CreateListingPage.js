@@ -19,7 +19,9 @@ import {
     MenuItem,
     Paper,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    Tooltip,
+    CircularProgress
 } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
@@ -30,7 +32,7 @@ import axios from "../../api/axios";
 import { useLanguage } from '../../contexts/LanguageContext';
 import ImageUploader from '../../components/marketplace/ImageUploader';
 import CategorySelect from '../../components/marketplace/CategorySelect';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Info } from 'lucide-react';
 import { useLocation } from '../../contexts/LocationContext';
 import AttributeFields from '../../components/marketplace/AttributeFields';
 
@@ -53,7 +55,7 @@ const CreateListing = () => {
         country: "",
         show_on_map: true,
         latitude: null,
-        original_language: 'sr',
+        original_language: i18n.language, // Устанавливаем текущий язык интерфейса как язык оригинала
         longitude: null
     });
 
@@ -65,6 +67,11 @@ const CreateListing = () => {
     const [showExpandedMap, setShowExpandedMap] = useState(false);
     const [locationWarning, setLocationWarning] = useState(false);
     const [attributeValues, setAttributeValues] = useState([]);
+    const [googleTranslateInfo, setGoogleTranslateInfo] = useState({ used: 0, limit: 100 });
+    const [loadingLimits, setLoadingLimits] = useState(false);
+    const [translationProvider, setTranslationProvider] = useState(
+        localStorage.getItem('preferredTranslationProvider') || 'google'
+    );
     const getTranslatedText = (field) => {
         if (!listing) return '';
 
@@ -124,6 +131,25 @@ const CreateListing = () => {
             }
         };
         fetchCategories();
+        
+        // Получаем информацию о лимитах Google Translate
+        setLoadingLimits(true);
+        axios.get('/api/v1/translation/limits')
+            .then(response => {
+                const { google } = response.data.data;
+                setGoogleTranslateInfo({
+                    used: google.used,
+                    limit: google.limit
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка при получении лимитов перевода:', error);
+                // В случае ошибки используем значения по умолчанию
+                setGoogleTranslateInfo({ used: 0, limit: 100 });
+            })
+            .finally(() => {
+                setLoadingLimits(false);
+            });
     }, [t]);
 
     const handleImageChange = (e) => {
@@ -262,6 +288,9 @@ const CreateListing = () => {
             // Преобразуем атрибуты перед отправкой
             const processedAttributes = prepareAttributesForSubmission(attributeValues);
 
+            // Используем провайдер перевода из состояния компонента
+            console.log(`Используем провайдер перевода: ${translationProvider}`);
+            
             // Логируем данные для отладки
             console.log("Отправляемое объявление:", {
                 ...listing,
@@ -272,7 +301,7 @@ const CreateListing = () => {
                 country: userCountry || listing.country
             });
 
-            const response = await axios.post("/api/v1/marketplace/listings", {
+            const response = await axios.post(`/api/v1/marketplace/listings?translation_provider=${translationProvider}`, {
                 ...listing,
                 price: parseFloat(listing.price),
                 original_language: i18n.language,
@@ -379,6 +408,65 @@ const CreateListing = () => {
                             </Grid>
 
                             <Grid item xs={12}>
+                                <Alert severity="info" sx={{ mb: 2 }}>
+                                  {t('listings.create.languageInfo', {
+                                    language: i18n.language === 'ru' ? 'русском' : 
+                                              i18n.language === 'en' ? 'английском' : 'сербском',
+                                    defaultValue: 'Вы создаете объявление на {{language}} языке. Система автоматически переведет его на другие поддерживаемые языки.'
+                                  })}
+                                </Alert>
+                                
+                                {/* Выбор провайдера перевода */}
+                                <FormControl 
+                                    fullWidth 
+                                    sx={{ mb: 2 }}
+                                    size={isMobile ? "small" : "medium"}
+                                >
+                                    <InputLabel>{t('store.listings.selectTranslationProvider', 'Сервис перевода')}</InputLabel>
+                                    <Select
+                                        value={translationProvider}
+                                        onChange={(e) => {
+                                            setTranslationProvider(e.target.value);
+                                            localStorage.setItem('preferredTranslationProvider', e.target.value);
+                                        }}
+                                    >
+                                        <MenuItem value="google">
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Typography>{t('store.listings.googleTranslate', 'Google Translate')}</Typography>
+                                                <Typography variant="caption" color="success.main">
+                                                    ({t('store.listings.freeWithinLimits', 'Бесплатно в пределах лимита')})
+                                                </Typography>
+                                            </Box>
+                                        </MenuItem>
+                                        <MenuItem value="openai">
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Typography>{t('store.listings.openaiTranslate', 'OpenAI (GPT)')}</Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    ({t('store.listings.higherQuality', 'Высокое качество')})
+                                                </Typography>
+                                            </Box>
+                                        </MenuItem>
+                                    </Select>
+                                </FormControl>
+                                
+                                {/* Информация о лимитах Google Translate */}
+                                {translationProvider === 'google' && (
+                                    <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Info size={16} color={theme.palette.info.main} />
+                                        <Typography variant="caption" color="text.secondary">
+                                            {loadingLimits ? (
+                                                <CircularProgress size={12} />
+                                            ) : (
+                                                t('store.listings.googleTranslateLimits', {
+                                                    used: googleTranslateInfo.used,
+                                                    limit: googleTranslateInfo.limit,
+                                                    defaultValue: 'Использовано {{used}} из {{limit}} в этом месяце.'
+                                                })
+                                            )}
+                                        </Typography>
+                                    </Box>
+                                )}
+                                
                                 <TextField
                                     label={t('listings.create.name')}
                                     fullWidth

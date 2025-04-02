@@ -24,6 +24,7 @@ type MarketplaceServiceInterface interface {
     GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error)
     GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error)
     UpdateTranslation(ctx context.Context, translation *models.Translation) error
+    UpdateTranslationWithProvider(ctx context.Context, translation *models.Translation, provider TranslationProvider) error
     GetSubcategories(ctx context.Context, parentID string, limit int, offset int) ([]models.CategoryTreeNode, error)
     RefreshCategoryListingCounts(ctx context.Context) error
     GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error)

@@ -3,9 +3,8 @@ package service
 
 import (
     "backend/internal/storage"
-)
-import (
     "backend/internal/proj/notifications/service"
+    "context"
 )
 
 type Service struct {
@@ -14,8 +13,43 @@ type Service struct {
 }
 
 func NewService(storage storage.Storage, notifService service.NotificationServiceInterface) *Service {
+    // Create a minimal translation service for internal use
+    // Note: The actual translation service will be injected later by the global service
+    // This is a temporary service to satisfy the interface requirement
+    dummyTranslation := &dummyTranslationService{}
+    
     return &Service{
-        Marketplace: NewMarketplaceService(storage),
+        Marketplace: NewMarketplaceService(storage, dummyTranslation),
         Chat:       NewChatService(storage, notifService),
     }
+}
+
+// dummyTranslationService is a minimal implementation that does nothing
+// It serves as a placeholder until the real translation service is injected
+type dummyTranslationService struct{}
+
+func (d *dummyTranslationService) Translate(ctx context.Context, text string, sourceLanguage string, targetLanguage string) (string, error) {
+    return text, nil
+}
+
+func (d *dummyTranslationService) DetectLanguage(ctx context.Context, text string) (string, float64, error) {
+    return "auto", 1.0, nil
+}
+
+func (d *dummyTranslationService) TranslateToAllLanguages(ctx context.Context, text string) (map[string]string, error) {
+    return map[string]string{"auto": text}, nil
+}
+
+func (d *dummyTranslationService) TranslateEntityFields(ctx context.Context, sourceLanguage string, targetLanguages []string, fields map[string]string) (map[string]map[string]string, error) {
+    result := make(map[string]map[string]string)
+    result[sourceLanguage] = fields
+    return result, nil
+}
+
+func (d *dummyTranslationService) ModerateText(ctx context.Context, text string, language string) (string, error) {
+    return text, nil
+}
+
+func (d *dummyTranslationService) TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error) {
+    return text, nil
 }

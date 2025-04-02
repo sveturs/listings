@@ -77,6 +77,12 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 		processAttributesFromRequest(requestBody, &listing)
 	}
 	if listing.StorefrontID == nil {
+		// Получаем провайдер перевода из запроса или используем Google по умолчанию
+		provider := c.Query("translation_provider", "google")
+		// Здесь не используем translationProvider, так как нам нужно только решить использовать модерацию или нет
+
+		log.Printf("Using translation provider: %s for new listing", provider)
+
 		fullText := listing.Title + "\n" + listing.Description
 		detectedLanguage, confidence, err := h.services.Translation().DetectLanguage(c.Context(), fullText)
 		if err != nil || confidence < 0.8 {
@@ -91,20 +97,55 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 		}
 		listing.OriginalLanguage = detectedLanguage
 
-		// Модерируем текст перед сохранением
-		moderatedTitle, err := h.services.Translation().ModerateText(c.Context(), listing.Title, listing.OriginalLanguage)
-		if err != nil {
-			log.Printf("Failed to moderate title: %v", err)
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка модерации заголовка")
-		}
-		listing.Title = moderatedTitle
+		// Модерируем текст только если используем OpenAI
+		if provider == "openai" {
+			// Модерируем текст перед сохранением
+			log.Printf("Using OpenAI for moderation")
+			translationFactory, isFactory := h.services.Translation().(service.TranslationFactoryInterface)
 
-		moderatedDesc, err := h.services.Translation().ModerateText(c.Context(), listing.Description, listing.OriginalLanguage)
-		if err != nil {
-			log.Printf("Failed to moderate description: %v", err)
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка модерации описания")
+			// Модерация заголовка
+			if isFactory {
+				openAIService, err := translationFactory.GetTranslationService(service.OpenAI)
+				if err == nil {
+					moderatedTitle, err := openAIService.ModerateText(c.Context(), listing.Title, listing.OriginalLanguage)
+					if err == nil {
+						listing.Title = moderatedTitle
+					} else {
+						log.Printf("Failed to moderate title with OpenAI: %v", err)
+					}
+				}
+			} else {
+				// Для совместимости используем обычный сервис
+				moderatedTitle, err := h.services.Translation().ModerateText(c.Context(), listing.Title, listing.OriginalLanguage)
+				if err != nil {
+					log.Printf("Failed to moderate title: %v", err)
+					return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка модерации заголовка")
+				}
+				listing.Title = moderatedTitle
+			}
+
+			// Модерация описания
+			if isFactory {
+				openAIService, err := translationFactory.GetTranslationService(service.OpenAI)
+				if err == nil {
+					moderatedDesc, err := openAIService.ModerateText(c.Context(), listing.Description, listing.OriginalLanguage)
+					if err == nil {
+						listing.Description = moderatedDesc
+					} else {
+						log.Printf("Failed to moderate description with OpenAI: %v", err)
+					}
+				}
+			} else {
+				moderatedDesc, err := h.services.Translation().ModerateText(c.Context(), listing.Description, listing.OriginalLanguage)
+				if err != nil {
+					log.Printf("Failed to moderate description: %v", err)
+					return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка модерации описания")
+				}
+				listing.Description = moderatedDesc
+			}
+		} else {
+			log.Printf("Using Google Translate - skipping moderation")
 		}
-		listing.Description = moderatedDesc
 	}
 	// Создаем объявление
 	listingID, err := h.marketplaceService.CreateListing(c.Context(), &listing)
@@ -141,6 +182,15 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 			log.Printf("Error saving original description translation: %v", err)
 		}
 
+		// Получаем провайдер перевода из запроса или используем Google по умолчанию
+		provider := c.Query("translation_provider", "google")
+		translationProvider := service.GoogleTranslate
+		if provider == "openai" {
+			translationProvider = service.OpenAI
+		}
+
+		log.Printf("Using translation provider: %s for translations", provider)
+
 		// Переводим на другие языки
 		targetLanguages := []string{"en", "ru", "sr"}
 		for _, targetLang := range targetLanguages {
@@ -148,10 +198,22 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 				continue
 			}
 
+			// Проверяем, используем ли фабрику переводов
+			translationFactory, isFactory := h.services.Translation().(service.TranslationFactoryInterface)
+
+			var translatedTitle, translatedDesc string
+
 			// Переводим заголовок
-			translatedTitle, err := h.services.Translation().Translate(c.Context(), listing.Title, listing.OriginalLanguage, targetLang)
+			if isFactory {
+				log.Printf("Using translation factory with provider %s", provider)
+				translatedTitle, err = translationFactory.TranslateWithProvider(c.Context(), listing.Title, listing.OriginalLanguage, targetLang, translationProvider)
+			} else {
+				log.Printf("Using default translation service")
+				translatedTitle, err = h.services.Translation().Translate(c.Context(), listing.Title, listing.OriginalLanguage, targetLang)
+			}
+
 			if err == nil {
-				err = h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
+				titleTranslation := &models.Translation{
 					EntityType:          "listing",
 					EntityID:            listingID,
 					Language:            targetLang,
@@ -159,18 +221,32 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 					TranslatedText:      translatedTitle,
 					IsMachineTranslated: true,
 					IsVerified:          false,
-				})
+					Metadata:            map[string]interface{}{"provider": provider},
+				}
+
+				// Используем UpdateTranslationWithProvider если доступно
+				if isFactory {
+					err = h.marketplaceService.UpdateTranslationWithProvider(c.Context(), titleTranslation, translationProvider)
+				} else {
+					err = h.marketplaceService.UpdateTranslation(c.Context(), titleTranslation)
+				}
+
 				if err != nil {
 					log.Printf("Error saving %s title translation: %v", targetLang, err)
 				}
 			} else {
-				log.Printf("Error translating title to %s: %v", targetLang, err)
+				log.Printf("Error translating title to %s with provider %s: %v", targetLang, provider, err)
 			}
 
 			// Переводим описание
-			translatedDesc, err := h.services.Translation().Translate(c.Context(), listing.Description, listing.OriginalLanguage, targetLang)
+			if isFactory {
+				translatedDesc, err = translationFactory.TranslateWithProvider(c.Context(), listing.Description, listing.OriginalLanguage, targetLang, translationProvider)
+			} else {
+				translatedDesc, err = h.services.Translation().Translate(c.Context(), listing.Description, listing.OriginalLanguage, targetLang)
+			}
+
 			if err == nil {
-				err = h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
+				descTranslation := &models.Translation{
 					EntityType:          "listing",
 					EntityID:            listingID,
 					Language:            targetLang,
@@ -178,13 +254,61 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 					TranslatedText:      translatedDesc,
 					IsMachineTranslated: true,
 					IsVerified:          false,
-				})
+					Metadata:            map[string]interface{}{"provider": provider},
+				}
+
+				// Используем UpdateTranslationWithProvider если доступно
+				if isFactory {
+					err = h.marketplaceService.UpdateTranslationWithProvider(c.Context(), descTranslation, translationProvider)
+				} else {
+					err = h.marketplaceService.UpdateTranslation(c.Context(), descTranslation)
+				}
+
 				if err != nil {
 					log.Printf("Error saving %s description translation: %v", targetLang, err)
 				}
 			} else {
-				log.Printf("Error translating description to %s: %v", targetLang, err)
+				log.Printf("Error translating description to %s with provider %s: %v", targetLang, provider, err)
 			}
+		}
+	}
+
+	// После выполнения всех переводов делаем небольшую задержку 
+	// чтобы гарантировать, что все транзакции с переводами завершились
+	time.Sleep(500 * time.Millisecond)
+
+	// Получаем обновленное объявление со всеми переводами для переиндексации
+	updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+	if err != nil {
+		log.Printf("Warning: Failed to get listing %d for reindexing after translations: %v", listingID, err)
+	} else {
+		// Дополнительная проверка наличия переводов перед индексацией
+		if updatedListing.Translations == nil || len(updatedListing.Translations) == 0 {
+			log.Printf("Warning: Listing %d has no translations before reindexing, will try to load them explicitly", listingID)
+			
+			// Пытаемся явно загрузить переводы
+			translations, err := h.marketplaceService.Storage().GetTranslationsForEntity(c.Context(), "listing", listingID)
+			if err != nil {
+				log.Printf("Error loading translations for listing %d: %v", listingID, err)
+			} else if len(translations) > 0 {
+				// Организуем переводы в структуру TranslationMap
+				transMap := make(models.TranslationMap)
+				for _, t := range translations {
+					if _, ok := transMap[t.Language]; !ok {
+						transMap[t.Language] = make(map[string]string)
+					}
+					transMap[t.Language][t.FieldName] = t.TranslatedText
+				}
+				updatedListing.Translations = transMap
+				log.Printf("Explicitly loaded %d translations for listing %d", len(translations), listingID)
+			}
+		}
+		
+		// Переиндексируем объявление в OpenSearch, чтобы поиск работал по всем языкам
+		if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
+			log.Printf("Warning: Failed to reindex listing %d after translations: %v", listingID, err)
+		} else {
+			log.Printf("Successfully reindexed listing %d with all translations", listingID)
 		}
 	}
 
@@ -207,198 +331,199 @@ var (
 
 // GetSimilarListings возвращает похожие объявления
 func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
-    listingID, err := c.ParamsInt("id")
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
-    }
+	listingID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+	}
 
-    // Получаем параметры пагинации
-    page := c.QueryInt("page", 1)
-    limit := c.QueryInt("limit", 8) // По умолчанию ограничиваем 8 похожими объявлениями
-    
-    // Расчет смещения для пагинации
-    offset := (page - 1) * limit
+	// Получаем параметры пагинации
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 8) // По умолчанию ограничиваем 8 похожими объявлениями
 
-    // Получаем исходное объявление
-    listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
-    if err != nil {
-        log.Printf("Ошибка при получении объявления: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить объявление")
-    }
+	// Расчет смещения для пагинации
+	offset := (page - 1) * limit
 
-    // Формируем запрос для расширенного поиска в OpenSearch
-    // Используем multi-match для поиска по заголовку и описанию
-    matchQuery := make([]map[string]interface{}, 0)
+	// Получаем исходное объявление
+	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+	if err != nil {
+		log.Printf("Ошибка при получении объявления: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить объявление")
+	}
 
-    // Добавляем поиск по названию объявления
-    if listing.Title != "" {
-        // Добавляем запрос на похожие названия с небольшой нечеткостью
-        matchQuery = append(matchQuery, map[string]interface{}{
-            "match": map[string]interface{}{
-                "title": map[string]interface{}{
-                    "query":     listing.Title,
-                    "boost":     3.0, // Высокий вес для названия
-                    "fuzziness": "AUTO",
-                },
-            },
-        })
-    }
+	// Формируем запрос для расширенного поиска в OpenSearch
+	// Используем multi-match для поиска по заголовку и описанию
+	matchQuery := make([]map[string]interface{}, 0)
 
-    // Если есть описание, добавляем его в поиск
-    if len(listing.Description) > 20 {
-        // Берем только первые 200 символов для более точного соответствия
-        descriptionExcerpt := listing.Description
-        if len(descriptionExcerpt) > 200 {
-            descriptionExcerpt = descriptionExcerpt[:200]
-        }
+	// Добавляем поиск по названию объявления
+	if listing.Title != "" {
+		// Добавляем запрос на похожие названия с небольшой нечеткостью
+		matchQuery = append(matchQuery, map[string]interface{}{
+			"match": map[string]interface{}{
+				"title": map[string]interface{}{
+					"query":     listing.Title,
+					"boost":     3.0, // Высокий вес для названия
+					"fuzziness": "AUTO",
+				},
+			},
+		})
+	}
 
-        matchQuery = append(matchQuery, map[string]interface{}{
-            "match": map[string]interface{}{
-                "description": map[string]interface{}{
-                    "query":     descriptionExcerpt,
-                    "boost":     1.0,
-                    "fuzziness": "AUTO",
-                },
-            },
-        })
-    }
+	// Если есть описание, добавляем его в поиск
+	if len(listing.Description) > 20 {
+		// Берем только первые 200 символов для более точного соответствия
+		descriptionExcerpt := listing.Description
+		if len(descriptionExcerpt) > 200 {
+			descriptionExcerpt = descriptionExcerpt[:200]
+		}
 
-    // Строим сложный запрос для OpenSearch
-    query := map[string]interface{}{
-        "query": map[string]interface{}{
-            "bool": map[string]interface{}{
-                "should": matchQuery,
-                "must": []map[string]interface{}{
-                    {
-                        "term": map[string]interface{}{
-                            "category_id": listing.CategoryID,
-                        },
-                    },
-                    {
-                        "term": map[string]interface{}{
-                            "status": "active",
-                        },
-                    },
-                },
-                "must_not": []map[string]interface{}{
-                    {
-                        "term": map[string]interface{}{
-                            "id": listingID, // Исключаем текущее объявление
-                        },
-                    },
-                },
-                "minimum_should_match": 1,
-            },
-        },
-        "from": offset,
-        "size": limit,
-    }
+		matchQuery = append(matchQuery, map[string]interface{}{
+			"match": map[string]interface{}{
+				"description": map[string]interface{}{
+					"query":     descriptionExcerpt,
+					"boost":     1.0,
+					"fuzziness": "AUTO",
+				},
+			},
+		})
+	}
 
-    // Добавляем ценовой диапазон если есть цена
-    if listing.Price > 0 {
-        // Определяем диапазон цен (например, ±30% от текущей цены)
-        minPrice := listing.Price * 0.7
-        maxPrice := listing.Price * 1.3
+	// Строим сложный запрос для OpenSearch
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"should": matchQuery,
+				"must": []map[string]interface{}{
+					{
+						"term": map[string]interface{}{
+							"category_id": listing.CategoryID,
+						},
+					},
+					{
+						"term": map[string]interface{}{
+							"status": "active",
+						},
+					},
+				},
+				"must_not": []map[string]interface{}{
+					{
+						"term": map[string]interface{}{
+							"id": listingID, // Исключаем текущее объявление
+						},
+					},
+				},
+				"minimum_should_match": 1,
+			},
+		},
+		"from": offset,
+		"size": limit,
+	}
 
-        priceQuery := map[string]interface{}{
-            "range": map[string]interface{}{
-                "price": map[string]interface{}{
-                    "gte":   minPrice,
-                    "lte":   maxPrice,
-                    "boost": 1.5, // Придаем вес объявлениям с похожей ценой
-                },
-            },
-        }
+	// Добавляем ценовой диапазон если есть цена
+	if listing.Price > 0 {
+		// Определяем диапазон цен (например, ±30% от текущей цены)
+		minPrice := listing.Price * 0.7
+		maxPrice := listing.Price * 1.3
 
-        shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
-        shouldClause = append(shouldClause, priceQuery)
-        query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
-    }
+		priceQuery := map[string]interface{}{
+			"range": map[string]interface{}{
+				"price": map[string]interface{}{
+					"gte":   minPrice,
+					"lte":   maxPrice,
+					"boost": 1.5, // Придаем вес объявлениям с похожей ценой
+				},
+			},
+		}
 
-    // Учитываем атрибуты для повышения релевантности
-    if len(listing.Attributes) > 0 {
-        for _, attr := range listing.Attributes {
-            // Выбираем только значимые атрибуты
-            if isSignificantAttribute(attr.AttributeName) && attr.DisplayValue != "" {
-                attrQuery := map[string]interface{}{
-                    "nested": map[string]interface{}{
-                        "path": "attributes",
-                        "query": map[string]interface{}{
-                            "bool": map[string]interface{}{
-                                "must": []map[string]interface{}{
-                                    {
-                                        "term": map[string]interface{}{
-                                            "attributes.attribute_name": attr.AttributeName,
-                                        },
-                                    },
-                                    {
-                                        "match": map[string]interface{}{
-                                            "attributes.display_value": map[string]interface{}{
-                                                "query": attr.DisplayValue,
-                                                "boost": 2.0, // Высокий вес для совпадения по атрибутам
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        "boost": 2.5,
-                    },
-                }
+		shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
+		shouldClause = append(shouldClause, priceQuery)
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
+	}
 
-                shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
-                shouldClause = append(shouldClause, attrQuery)
-                query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
-            }
-        }
-    }
+	// Учитываем атрибуты для повышения релевантности
+	if len(listing.Attributes) > 0 {
+		for _, attr := range listing.Attributes {
+			// Выбираем только значимые атрибуты
+			if isSignificantAttribute(attr.AttributeName) && attr.DisplayValue != "" {
+				attrQuery := map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "attributes",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"attributes.attribute_name": attr.AttributeName,
+										},
+									},
+									{
+										"match": map[string]interface{}{
+											"attributes.display_value": map[string]interface{}{
+												"query": attr.DisplayValue,
+												"boost": 2.0, // Высокий вес для совпадения по атрибутам
+											},
+										},
+									},
+								},
+							},
+						},
+						"boost": 2.5,
+					},
+				}
 
-    // Формируем параметры поиска для OpenSearch
-    searchParams := &search.SearchParams{
-        Page:        page,
-        Size:        limit,
-        CustomQuery: query,
-    }
+				shouldClause := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{})
+				shouldClause = append(shouldClause, attrQuery)
+				query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClause
+			}
+		}
+	}
 
-    // Выполняем поиск с использованием OpenSearch
-    var similarListings []*models.MarketplaceListing
-    result, err := h.marketplaceService.Storage().SearchListings(c.Context(), searchParams)
+	// Формируем параметры поиска для OpenSearch
+	searchParams := &search.SearchParams{
+		Page:        page,
+		Size:        limit,
+		CustomQuery: query,
+	}
 
-    if err != nil {
-        log.Printf("Ошибка поиска похожих объявлений через OpenSearch: %v", err)
+	// Выполняем поиск с использованием OpenSearch
+	var similarListings []*models.MarketplaceListing
+	result, err := h.marketplaceService.Storage().SearchListings(c.Context(), searchParams)
 
-        // Если OpenSearch поиск не удался, используем запасной вариант
-        // с простым поиском по категории
-        fallbackParams := &search.ServiceParams{
-            CategoryID: strconv.Itoa(listing.CategoryID),
-            Size:       limit,
-            Page:       page,
-            Sort:       "date_desc",
-        }
+	if err != nil {
+		log.Printf("Ошибка поиска похожих объявлений через OpenSearch: %v", err)
 
-        fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
-        if fallbackErr != nil {
-            log.Printf("Ошибка запасного поиска: %v", fallbackErr)
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить похожие объявления")
-        }
+		// Если OpenSearch поиск не удался, используем запасной вариант
+		// с простым поиском по категории
+		fallbackParams := &search.ServiceParams{
+			CategoryID: strconv.Itoa(listing.CategoryID),
+			Size:       limit,
+			Page:       page,
+			Sort:       "date_desc",
+		}
 
-        // Фильтруем результаты, убирая исходное объявление
-        for _, item := range fallbackResult.Items {
-            if item.ID != listingID {
-                similarListings = append(similarListings, item)
-            }
-        }
-    } else {
-        // Используем результаты из OpenSearch
-        similarListings = result.Listings
-    }
+		fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
+		if fallbackErr != nil {
+			log.Printf("Ошибка запасного поиска: %v", fallbackErr)
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить похожие объявления")
+		}
 
-    log.Printf("Найдено %d похожих объявлений для объявления ID=%d (страница %d, лимит %d)", 
-        len(similarListings), listingID, page, limit)
+		// Фильтруем результаты, убирая исходное объявление
+		for _, item := range fallbackResult.Items {
+			if item.ID != listingID {
+				similarListings = append(similarListings, item)
+			}
+		}
+	} else {
+		// Используем результаты из OpenSearch
+		similarListings = result.Listings
+	}
 
-    // Возвращаем данные с поддержкой пагинации
-    return utils.SuccessResponse(c, similarListings)
+	log.Printf("Найдено %d похожих объявлений для объявления ID=%d (страница %d, лимит %d)",
+		len(similarListings), listingID, page, limit)
+
+	// Возвращаем данные с поддержкой пагинации
+	return utils.SuccessResponse(c, similarListings)
 }
+
 // isSignificantAttribute определяет, является ли атрибут значимым для поиска похожих объявлений
 func isSignificantAttribute(attrName string) bool {
 	// Список значимых атрибутов, влияющих на определение похожести
@@ -701,88 +826,89 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 		"images":  uploadedImages,
 	})
 }
+
 // ReindexRatings переиндексирует рейтинги всех объявлений
 // ReindexRatings переиндексирует рейтинги всех объявлений
 func (h *MarketplaceHandler) ReindexRatings(c *fiber.Ctx) error {
-    // Проверяем административные права
-    userID, ok := c.Locals("user_id").(int)
-    if !ok || userID == 0 {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
-    }
+	// Проверяем административные права
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
 
-    // Запускаем процесс переиндексации в фоне
-    go func() {
-        ctx := context.Background()
-        
-        // Получаем все активные объявления
-        rows, err := h.services.Storage().Query(ctx, `
+	// Запускаем процесс переиндексации в фоне
+	go func() {
+		ctx := context.Background()
+
+		// Получаем все активные объявления
+		rows, err := h.services.Storage().Query(ctx, `
             SELECT id FROM marketplace_listings 
             WHERE status = 'active'
         `)
-        
-        if err != nil {
-            log.Printf("Ошибка при получении списка объявлений: %v", err)
-            return
-        }
-        defer rows.Close()
-        
-        var listingIDs []int
-        for rows.Next() {
-            var id int
-            if err := rows.Scan(&id); err != nil {
-                log.Printf("Ошибка при сканировании ID: %v", err)
-                continue
-            }
-            listingIDs = append(listingIDs, id)
-        }
-        
-        log.Printf("Начинаем обновление рейтингов для %d объявлений", len(listingIDs))
-        
-        // Для каждого объявления получаем рейтинг и обновляем
-        for _, id := range listingIDs {
-            // Получаем объявление
-            listing, err := h.marketplaceService.GetListingByID(ctx, id)
-            if err != nil {
-                log.Printf("Ошибка получения объявления %d: %v", id, err)
-                continue
-            }
-            
-            // Получаем статистику отзывов напрямую из базы данных
-            var reviewCount int
-            var averageRating float64
-            
-            err = h.services.Storage().QueryRow(ctx, `
+
+		if err != nil {
+			log.Printf("Ошибка при получении списка объявлений: %v", err)
+			return
+		}
+		defer rows.Close()
+
+		var listingIDs []int
+		for rows.Next() {
+			var id int
+			if err := rows.Scan(&id); err != nil {
+				log.Printf("Ошибка при сканировании ID: %v", err)
+				continue
+			}
+			listingIDs = append(listingIDs, id)
+		}
+
+		log.Printf("Начинаем обновление рейтингов для %d объявлений", len(listingIDs))
+
+		// Для каждого объявления получаем рейтинг и обновляем
+		for _, id := range listingIDs {
+			// Получаем объявление
+			listing, err := h.marketplaceService.GetListingByID(ctx, id)
+			if err != nil {
+				log.Printf("Ошибка получения объявления %d: %v", id, err)
+				continue
+			}
+
+			// Получаем статистику отзывов напрямую из базы данных
+			var reviewCount int
+			var averageRating float64
+
+			err = h.services.Storage().QueryRow(ctx, `
                 SELECT COUNT(*), COALESCE(AVG(rating), 0)
                 FROM reviews
                 WHERE entity_type = 'listing' AND entity_id = $1 AND status = 'published'
             `, id).Scan(&reviewCount, &averageRating)
-            
-            if err != nil {
-                log.Printf("Ошибка получения статистики отзывов для объявления %d: %v", id, err)
-                // Если не удалось получить статистику, устанавливаем нулевые значения
-                reviewCount = 0
-                averageRating = 0
-            }
-            
-            // Обновляем рейтинг в объекте
-            listing.AverageRating = averageRating
-            listing.ReviewCount = reviewCount
-            
-            // Переиндексируем объявление
-            if err := h.marketplaceService.Storage().IndexListing(ctx, listing); err != nil {
-                log.Printf("Ошибка индексации объявления %d: %v", id, err)
-            } else {
-                log.Printf("Обновлен рейтинг для объявления %d: %.2f (%d отзывов)", 
-                    id, averageRating, reviewCount)
-            }
-        }
-        
-        log.Println("Переиндексация рейтингов успешно завершена")
-    }()
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Запущена переиндексация рейтингов всех объявлений",
-    })
+			if err != nil {
+				log.Printf("Ошибка получения статистики отзывов для объявления %d: %v", id, err)
+				// Если не удалось получить статистику, устанавливаем нулевые значения
+				reviewCount = 0
+				averageRating = 0
+			}
+
+			// Обновляем рейтинг в объекте
+			listing.AverageRating = averageRating
+			listing.ReviewCount = reviewCount
+
+			// Переиндексируем объявление
+			if err := h.marketplaceService.Storage().IndexListing(ctx, listing); err != nil {
+				log.Printf("Ошибка индексации объявления %d: %v", id, err)
+			} else {
+				log.Printf("Обновлен рейтинг для объявления %d: %.2f (%d отзывов)",
+					id, averageRating, reviewCount)
+			}
+		}
+
+		log.Println("Переиндексация рейтингов успешно завершена")
+	}()
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Запущена переиндексация рейтингов всех объявлений",
+	})
 }
 
 func (h *MarketplaceHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
@@ -1341,15 +1467,28 @@ func (h *MarketplaceHandler) UpdateTranslations(c *fiber.Ctx) error {
 		Language     string            `json:"language"`
 		Translations map[string]string `json:"translations"`
 		IsVerified   bool              `json:"is_verified"`
+		Provider     string            `json:"provider"`
 	}
 
 	if err := c.BodyParser(&updateData); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
 	}
 
+	// Получаем провайдер из запроса или из параметра запроса
+	provider := updateData.Provider
+	if provider == "" {
+		provider = c.Query("translation_provider", "google")
+	}
+
+	// Проверяем корректность провайдера и приводим к типу TranslationProvider
+	translationProvider := service.GoogleTranslate
+	if provider == "openai" {
+		translationProvider = service.OpenAI
+	}
+
 	// Обновляем каждый переведенный field
 	for fieldName, translatedText := range updateData.Translations {
-		err := h.marketplaceService.UpdateTranslation(c.Context(), &models.Translation{
+		translation := &models.Translation{
 			EntityType:          "listing",
 			EntityID:            listingID,
 			Language:            updateData.Language,
@@ -1357,7 +1496,11 @@ func (h *MarketplaceHandler) UpdateTranslations(c *fiber.Ctx) error {
 			TranslatedText:      translatedText,
 			IsVerified:          updateData.IsVerified,
 			IsMachineTranslated: false,
-		})
+			Metadata:            map[string]interface{}{"provider": provider},
+		}
+
+		// Передаем информацию о провайдере в сервис
+		err := h.marketplaceService.UpdateTranslationWithProvider(c.Context(), translation, translationProvider)
 		if err != nil {
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating translation")
 		}
@@ -1458,120 +1601,162 @@ func (h *MarketplaceHandler) BatchTranslateListings(c *fiber.Ctx) error {
 	failedCount := 0
 
 	// Обрабатываем каждое объявление
-for _, listingID := range request.ListingIDs {
-	// Проверяем, принадлежит ли объявление пользователю
-	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
-	if err != nil {
-		// Пропускаем объявления, которые не найдены или недоступны
-		log.Printf("Error getting listing %d: %v", listingID, err)
-		results[listingID] = map[string]string{"error": err.Error()}
-		failedCount++
-		continue
-	}
-
-	// Проверяем права доступа
-	if listing.UserID != userID && listing.StorefrontID == nil {
-		// Пропускаем объявления, которые не принадлежат пользователю
-		results[listingID] = map[string]string{"error": "Access denied"}
-		failedCount++
-		continue
-	}
-
-	// Если объявление принадлежит витрине, проверяем права доступа к витрине
-	if listing.StorefrontID != nil {
-		storefront, err := h.services.Storefront().GetStorefrontByID(c.Context(), *listing.StorefrontID, userID)
-		if err != nil || storefront.UserID != userID {
-			results[listingID] = map[string]string{"error": "Access denied to storefront"}
+	for _, listingID := range request.ListingIDs {
+		// Проверяем, принадлежит ли объявление пользователю
+		listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+		if err != nil {
+			// Пропускаем объявления, которые не найдены или недоступны
+			log.Printf("Error getting listing %d: %v", listingID, err)
+			results[listingID] = map[string]string{"error": err.Error()}
 			failedCount++
 			continue
 		}
-	}
 
-	// Источниковый язык
-	sourceLanguage := listing.OriginalLanguage
-	if sourceLanguage == "" {
-		sourceLanguage = "sr" // По умолчанию
-	}
-
-	// Переводим на каждый целевой язык
-	var listingSuccess bool = false
-	for _, targetLang := range request.TargetLanguages {
-		// Пропускаем язык оригинала
-		if targetLang == sourceLanguage {
+		// Проверяем права доступа
+		if listing.UserID != userID && listing.StorefrontID == nil {
+			// Пропускаем объявления, которые не принадлежат пользователю
+			results[listingID] = map[string]string{"error": "Access denied"}
+			failedCount++
 			continue
 		}
 
-		// Переводим заголовок
-		translatedTitle, err := h.services.Translation().Translate(c.Context(), listing.Title, sourceLanguage, targetLang)
-		if err != nil {
-			log.Printf("Error translating title for listing %d: %v", listingID, err)
-			continue
-		}
-
-		// Переводим описание
-		translatedDesc, err := h.services.Translation().Translate(c.Context(), listing.Description, sourceLanguage, targetLang)
-		if err != nil {
-			log.Printf("Error translating description for listing %d: %v", listingID, err)
-			continue
-		}
-
-		// Сохраняем переводы
-		translationData := &models.Translation{
-			EntityType:          "listing",
-			EntityID:            listingID,
-			Language:            targetLang,
-			FieldName:           "title",
-			TranslatedText:      translatedTitle,
-			IsMachineTranslated: true,
-			IsVerified:          false,
-		}
-		err = h.marketplaceService.UpdateTranslation(c.Context(), translationData)
-		if err != nil {
-			log.Printf("Error saving title translation for listing %d: %v", listingID, err)
-		}
-
-		descTranslation := &models.Translation{
-			EntityType:          "listing",
-			EntityID:            listingID,
-			Language:            targetLang,
-			FieldName:           "description",
-			TranslatedText:      translatedDesc,
-			IsMachineTranslated: true,
-			IsVerified:          false,
-		}
-		err = h.marketplaceService.UpdateTranslation(c.Context(), descTranslation)
-		if err != nil {
-			log.Printf("Error saving description translation for listing %d: %v", listingID, err)
-		}
-
-		// Записываем результаты для ответа
-		if results[listingID] == nil {
-			results[listingID] = make(map[string]string)
-		}
-		results[listingID][targetLang] = "translated"
-		listingSuccess = true
-	}
-
-	if listingSuccess {
-		successCount++
-		
-		// Переиндексируем объявление после успешного перевода
-		// Сначала получаем свежую версию объявления с переводами
-		updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
-		if err != nil {
-			log.Printf("Warning: Failed to get listing %d for reindexing after translation: %v", listingID, err)
-		} else {
-			// Переиндексируем объявление в OpenSearch
-			if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
-				log.Printf("Warning: Failed to reindex listing %d after translation: %v", listingID, err)
-			} else {
-				log.Printf("Successfully reindexed listing %d after translation", listingID)
+		// Если объявление принадлежит витрине, проверяем права доступа к витрине
+		if listing.StorefrontID != nil {
+			storefront, err := h.services.Storefront().GetStorefrontByID(c.Context(), *listing.StorefrontID, userID)
+			if err != nil || storefront.UserID != userID {
+				results[listingID] = map[string]string{"error": "Access denied to storefront"}
+				failedCount++
+				continue
 			}
 		}
-	} else {
-		failedCount++
+
+		// Источниковый язык
+		sourceLanguage := listing.OriginalLanguage
+		if sourceLanguage == "" {
+			sourceLanguage = "sr" // По умолчанию
+		}
+
+		// Получаем провайдер перевода из запроса или используем Google по умолчанию
+		provider := c.Query("translation_provider", "google")
+		translationProvider := service.GoogleTranslate
+		if provider == "openai" {
+			translationProvider = service.OpenAI
+		}
+
+		log.Printf("Using translation provider: %s for batch translations", provider)
+
+		// Переводим на каждый целевой язык
+		var listingSuccess bool = false
+		for _, targetLang := range request.TargetLanguages {
+			// Пропускаем язык оригинала
+			if targetLang == sourceLanguage {
+				continue
+			}
+
+			// Проверяем, используем ли фабрику переводов
+			translationFactory, isFactory := h.services.Translation().(service.TranslationFactoryInterface)
+
+			var translatedTitle, translatedDesc string
+			var err error
+
+			// Если фабрика доступна, используем её для перевода с указанием провайдера
+			if isFactory {
+				log.Printf("Using translation factory with provider %s for batch translation", provider)
+				translatedTitle, err = translationFactory.TranslateWithProvider(c.Context(), listing.Title, sourceLanguage, targetLang, translationProvider)
+			} else {
+				translatedTitle, err = h.services.Translation().Translate(c.Context(), listing.Title, sourceLanguage, targetLang)
+			}
+
+			if err != nil {
+				log.Printf("Error translating title for listing %d: %v", listingID, err)
+				continue
+			}
+
+			// Переводим описание
+			if isFactory {
+				translatedDesc, err = translationFactory.TranslateWithProvider(c.Context(), listing.Description, sourceLanguage, targetLang, translationProvider)
+			} else {
+				translatedDesc, err = h.services.Translation().Translate(c.Context(), listing.Description, sourceLanguage, targetLang)
+			}
+
+			if err != nil {
+				log.Printf("Error translating description for listing %d: %v", listingID, err)
+				continue
+			}
+
+			// Сохраняем переводы
+			titleTranslation := &models.Translation{
+				EntityType:          "listing",
+				EntityID:            listingID,
+				Language:            targetLang,
+				FieldName:           "title",
+				TranslatedText:      translatedTitle,
+				IsMachineTranslated: true,
+				IsVerified:          false,
+				Metadata:            map[string]interface{}{"provider": provider},
+			}
+
+			// Используем UpdateTranslationWithProvider если доступно
+			if isFactory {
+				err = h.marketplaceService.UpdateTranslationWithProvider(c.Context(), titleTranslation, translationProvider)
+			} else {
+				err = h.marketplaceService.UpdateTranslation(c.Context(), titleTranslation)
+			}
+
+			if err != nil {
+				log.Printf("Error saving title translation for listing %d: %v", listingID, err)
+			}
+
+			descTranslation := &models.Translation{
+				EntityType:          "listing",
+				EntityID:            listingID,
+				Language:            targetLang,
+				FieldName:           "description",
+				TranslatedText:      translatedDesc,
+				IsMachineTranslated: true,
+				IsVerified:          false,
+				Metadata:            map[string]interface{}{"provider": provider},
+			}
+
+			// Используем UpdateTranslationWithProvider если доступно
+			if isFactory {
+				err = h.marketplaceService.UpdateTranslationWithProvider(c.Context(), descTranslation, translationProvider)
+			} else {
+				err = h.marketplaceService.UpdateTranslation(c.Context(), descTranslation)
+			}
+
+			if err != nil {
+				log.Printf("Error saving description translation for listing %d: %v", listingID, err)
+			}
+
+			// Записываем результаты для ответа
+			if results[listingID] == nil {
+				results[listingID] = make(map[string]string)
+			}
+			results[listingID][targetLang] = "translated"
+			listingSuccess = true
+		}
+
+		if listingSuccess {
+			successCount++
+
+			// Переиндексируем объявление после успешного перевода
+			// Сначала получаем свежую версию объявления с переводами
+			updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+			if err != nil {
+				log.Printf("Warning: Failed to get listing %d for reindexing after translation: %v", listingID, err)
+			} else {
+				// Переиндексируем объявление в OpenSearch
+				if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
+					log.Printf("Warning: Failed to reindex listing %d after translation: %v", listingID, err)
+				} else {
+					log.Printf("Successfully reindexed listing %d after translation", listingID)
+				}
+			}
+		} else {
+			failedCount++
+		}
 	}
-}
 
 	// Фиксируем транзакцию в БД
 	if err = tx.Commit(); err != nil {
@@ -1761,252 +1946,253 @@ func (h *MarketplaceHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 		"data": results,
 	})
 }
+
 // Обновите метод в backend/internal/proj/marketplace/handler/marketplace.go
 
 func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
-    // Получаем параметры поиска
-    log.Printf("Все параметры запроса: %+v", c.Queries())
+	// Получаем параметры поиска
+	log.Printf("Все параметры запроса: %+v", c.Queries())
 
-    attributeFilters := make(map[string]string)
+	attributeFilters := make(map[string]string)
 
-    // Более надежный способ извлечения атрибутов - проходим по всем параметрам запроса
-    c.Context().QueryArgs().VisitAll(func(key, value []byte) {
-        keyStr := string(key)
-        if strings.HasPrefix(keyStr, "attr_") {
-            attrName := strings.TrimPrefix(keyStr, "attr_")
-            valueStr := string(value)
-            attributeFilters[attrName] = valueStr
-            log.Printf("Извлечен атрибут из запроса: %s = %s", attrName, valueStr)
-        }
-    })
+	// Более надежный способ извлечения атрибутов - проходим по всем параметрам запроса
+	c.Context().QueryArgs().VisitAll(func(key, value []byte) {
+		keyStr := string(key)
+		if strings.HasPrefix(keyStr, "attr_") {
+			attrName := strings.TrimPrefix(keyStr, "attr_")
+			valueStr := string(value)
+			attributeFilters[attrName] = valueStr
+			log.Printf("Извлечен атрибут из запроса: %s = %s", attrName, valueStr)
+		}
+	})
 
-    log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
+	log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
 
-    log.Printf("Исходные параметры сортировки из запроса: sort_by=%s", c.Query("sort_by", ""))
+	log.Printf("Исходные параметры сортировки из запроса: sort_by=%s", c.Query("sort_by", ""))
 
-    // ВАЖНОЕ ИЗМЕНЕНИЕ: Получаем параметр view_mode и добавляем его в логи
-    viewMode := c.Query("view_mode", "")
-    log.Printf("Параметр режима просмотра из URL: view_mode=%s", viewMode)
+	// ВАЖНОЕ ИЗМЕНЕНИЕ: Получаем параметр view_mode и добавляем его в логи
+	viewMode := c.Query("view_mode", "")
+	log.Printf("Параметр режима просмотра из URL: view_mode=%s", viewMode)
 
-    // Логирование всех параметров запроса для отладки
-    log.Printf("Все параметры запроса: %+v", c.Queries())
+	// Логирование всех параметров запроса для отладки
+	log.Printf("Все параметры запроса: %+v", c.Queries())
 
-    params := &search.ServiceParams{
-        Query:            c.Query("q", c.Query("query", "")),
-        CategoryID:       c.Query("category_id", ""),
-        Condition:        c.Query("condition", ""),
-        City:             c.Query("city", ""),
-        Country:          c.Query("country", ""),
-        StorefrontID:     c.Query("storefront_id", ""),
-        Sort:             c.Query("sort_by", ""),
-        SortDirection:    c.Query("sort_direction", "desc"),
-        Distance:         c.Query("distance", ""),
-        Page:             c.QueryInt("page", 1),
-        Size:             c.QueryInt("size", 20),
-        Language:         c.Query("language", ""),
-        AttributeFilters: attributeFilters,
-    }
-    
-    // Обязательные параметры для публичных запросов
-    params.Status = "active"
-    
-    // УЛУЧШЕНИЕ: Детальное логирование параметров запроса
-    log.Printf("Параметры пагинации: page=%d, size=%d, view_mode=%s", 
-        params.Page, params.Size, viewMode)
-    
-    // Установка размера в зависимости от режима просмотра
-    if params.Page < 1 {
-        params.Page = 1
-    }
-    
-    // УЛУЧШЕНИЕ: Принимаем решение о размере выборки на основе viewMode
-    if viewMode == "map" {
-        // Для режима карты устанавливаем очень большой размер страницы
-        // независимо от запрошенного размера
-        log.Printf("Обнаружен режим просмотра 'map'. Устанавливаем большой размер страницы.")
-        params.Size = 5000 // Устанавливаем максимальное значение для карты
-    } else if params.Size < 1 {
-        // Для обычного просмотра используем стандартные ограничения
-        params.Size = 20
-    } else if params.Size > 1000 {
-        // Ограничиваем максимальный размер для обычного просмотра
-        params.Size = 100
-    }
+	params := &search.ServiceParams{
+		Query:            c.Query("q", c.Query("query", "")),
+		CategoryID:       c.Query("category_id", ""),
+		Condition:        c.Query("condition", ""),
+		City:             c.Query("city", ""),
+		Country:          c.Query("country", ""),
+		StorefrontID:     c.Query("storefront_id", ""),
+		Sort:             c.Query("sort_by", ""),
+		SortDirection:    c.Query("sort_direction", "desc"),
+		Distance:         c.Query("distance", ""),
+		Page:             c.QueryInt("page", 1),
+		Size:             c.QueryInt("size", 20),
+		Language:         c.Query("language", ""),
+		AttributeFilters: attributeFilters,
+	}
 
-    // Логирование финальных параметров поиска
-    log.Printf("Итоговые параметры поиска: size=%d, view_mode=%s", params.Size, viewMode)
-	    
-    // Добавьте этот код после инициализации params
-    log.Printf("Итоговый параметр сортировки в запросе к OpenSearch: %s", params.Sort)
-    
-    // Проверяем и логируем параметры пагинации
-    log.Printf("Параметры пагинации: page=%d, size=%d", params.Page, params.Size)
-    log.Printf("Параметр сортировки получен из запроса: %s", params.Sort)
-    
-    // ВАЖНОЕ ИЗМЕНЕНИЕ: Добавляем view_mode в логи
-    log.Printf("Параметры пагинации: page=%d, size=%d, view_mode=%s", 
-        params.Page, params.Size, viewMode)
-    
-    // Устанавливаем разумные ограничения на параметры пагинации
-    if params.Page < 1 {
-        params.Page = 1
-    }
-    if params.Size < 1 {
-        params.Size = 20
-    } else if params.Size > 1000 {
-        // Ограничиваем максимальный размер страницы, но увеличиваем для карты
-        // ВАЖНОЕ ИЗМЕНЕНИЕ: Проверяем, предназначен ли запрос для отображения на карте
-        if viewMode == "map" {
-            // Для карты разрешаем больший размер страницы
-            params.Size = 5000
-            log.Printf("Установлен максимальный размер для режима карты: %d", params.Size)
-        } else {
-            // Для обычного списка оставляем прежнее ограничение для производительности
-            params.Size = 100
-            log.Printf("Установлен стандартный максимальный размер для списка: %d", params.Size)
-        }
-    }
-    log.Printf("Параметры пагинации: page=%d, size=%d, view_mode=%s", 
-    params.Page, params.Size, c.Query("view_mode", ""));
-    // Дополнительное логирование
-    log.Printf("Полные параметры поиска: %+v", params)
-    log.Printf("Атрибуты фильтров: %+v", attributeFilters)
+	// Обязательные параметры для публичных запросов
+	params.Status = "active"
 
-    // ИСПРАВЛЕНИЕ: сначала проверяем наличие координат, потом устанавливаем distance
-    latParam := c.Query("latitude", "")
-    lonParam := c.Query("longitude", "")
+	// УЛУЧШЕНИЕ: Детальное логирование параметров запроса
+	log.Printf("Параметры пагинации: page=%d, size=%d, view_mode=%s",
+		params.Page, params.Size, viewMode)
 
-    if latParam != "" && lonParam != "" {
-        lat, errLat := strconv.ParseFloat(latParam, 64)
-        lon, errLon := strconv.ParseFloat(lonParam, 64)
+	// Установка размера в зависимости от режима просмотра
+	if params.Page < 1 {
+		params.Page = 1
+	}
 
-        if errLat == nil && errLon == nil && (lat != 0 || lon != 0) {
-            params.Latitude = lat
-            params.Longitude = lon
-            log.Printf("Установлены координаты: lat=%.6f, lon=%.6f", lat, lon)
-        }
-    }
+	// УЛУЧШЕНИЕ: Принимаем решение о размере выборки на основе viewMode
+	if viewMode == "map" {
+		// Для режима карты устанавливаем очень большой размер страницы
+		// независимо от запрошенного размера
+		log.Printf("Обнаружен режим просмотра 'map'. Устанавливаем большой размер страницы.")
+		params.Size = 5000 // Устанавливаем максимальное значение для карты
+	} else if params.Size < 1 {
+		// Для обычного просмотра используем стандартные ограничения
+		params.Size = 20
+	} else if params.Size > 1000 {
+		// Ограничиваем максимальный размер для обычного просмотра
+		params.Size = 100
+	}
 
-    // Теперь, когда у нас есть координаты, проверяем параметр distance
-    if params.Distance != "" && params.Latitude != 0 && params.Longitude != 0 {
-        log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)",
-            params.Distance, params.Latitude, params.Longitude)
+	// Логирование финальных параметров поиска
+	log.Printf("Итоговые параметры поиска: size=%d, view_mode=%s", params.Size, viewMode)
 
-        // Проверить наличие индекса перед установкой координат
-        if err := h.marketplaceService.Storage().PrepareIndex(c.Context()); err != nil {
-            log.Printf("Ошибка проверки индекса: %v", err)
-            // Но продолжаем выполнение, просто не используем гео-поиск
-            params.Distance = ""
-        }
-    } else if params.Distance != "" {
-        log.Printf("Параметр distance указан (%s), но координаты отсутствуют или равны нулю (%.6f, %.6f). "+
-            "Параметр distance будет проигнорирован.",
-            params.Distance, params.Latitude, params.Longitude)
-    }
+	// Добавьте этот код после инициализации params
+	log.Printf("Итоговый параметр сортировки в запросе к OpenSearch: %s", params.Sort)
 
-    log.Printf("Полученный поисковый запрос: %s", params.Query)
-    // Обрабатываем числовые параметры
-    if priceMin := c.Query("min_price", ""); priceMin != "" {
-        if val, err := strconv.ParseFloat(priceMin, 64); err == nil && val >= 0 {
-            params.PriceMin = val
-        }
-    }
+	// Проверяем и логируем параметры пагинации
+	log.Printf("Параметры пагинации: page=%d, size=%d", params.Page, params.Size)
+	log.Printf("Параметр сортировки получен из запроса: %s", params.Sort)
 
-    if priceMax := c.Query("max_price", ""); priceMax != "" {
-        if val, err := strconv.ParseFloat(priceMax, 64); err == nil && val >= 0 {
-            params.PriceMax = val
-        }
-    }
+	// ВАЖНОЕ ИЗМЕНЕНИЕ: Добавляем view_mode в логи
+	log.Printf("Параметры пагинации: page=%d, size=%d, view_mode=%s",
+		params.Page, params.Size, viewMode)
 
-    // Запрашиваемые агрегации
-    if aggs := c.Query("aggs", ""); aggs != "" {
-        params.Aggregations = strings.Split(aggs, ",")
-    }
+	// Устанавливаем разумные ограничения на параметры пагинации
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.Size < 1 {
+		params.Size = 20
+	} else if params.Size > 1000 {
+		// Ограничиваем максимальный размер страницы, но увеличиваем для карты
+		// ВАЖНОЕ ИЗМЕНЕНИЕ: Проверяем, предназначен ли запрос для отображения на карте
+		if viewMode == "map" {
+			// Для карты разрешаем больший размер страницы
+			params.Size = 5000
+			log.Printf("Установлен максимальный размер для режима карты: %d", params.Size)
+		} else {
+			// Для обычного списка оставляем прежнее ограничение для производительности
+			params.Size = 100
+			log.Printf("Установлен стандартный максимальный размер для списка: %d", params.Size)
+		}
+	}
+	log.Printf("Параметры пагинации: page=%d, size=%d, view_mode=%s",
+		params.Page, params.Size, c.Query("view_mode", ""))
+	// Дополнительное логирование
+	log.Printf("Полные параметры поиска: %+v", params)
+	log.Printf("Атрибуты фильтров: %+v", attributeFilters)
 
-    // Если не указан язык, берем из context
-    if params.Language == "" {
-        if lang, ok := c.Locals("language").(string); ok && lang != "" {
-            params.Language = lang
-        } else {
-            params.Language = "sr"
-        }
-    }
+	// ИСПРАВЛЕНИЕ: сначала проверяем наличие координат, потом устанавливаем distance
+	latParam := c.Query("latitude", "")
+	lonParam := c.Query("longitude", "")
 
-    // Выполняем поиск
-    result, err := h.marketplaceService.SearchListingsAdvanced(c.Context(), params)
-    if err != nil {
-        log.Printf("Ошибка поиска: %v", err)
+	if latParam != "" && lonParam != "" {
+		lat, errLat := strconv.ParseFloat(latParam, 64)
+		lon, errLon := strconv.ParseFloat(lonParam, 64)
 
-        // Используем стандартный поиск
-        filters := map[string]string{
-            "category_id":   params.CategoryID,
-            "condition":     params.Condition,
-            "city":          params.City,
-            "country":       params.Country,
-            "storefront_id": params.StorefrontID,
-            "sort_by":       params.Sort,
-        }
+		if errLat == nil && errLon == nil && (lat != 0 || lon != 0) {
+			params.Latitude = lat
+			params.Longitude = lon
+			log.Printf("Установлены координаты: lat=%.6f, lon=%.6f", lat, lon)
+		}
+	}
 
-        // Добавляем числовые фильтры, если они указаны
-        if params.PriceMin > 0 {
-            filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
-        }
-        if params.PriceMax > 0 {
-            filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
-        }
+	// Теперь, когда у нас есть координаты, проверяем параметр distance
+	if params.Distance != "" && params.Latitude != 0 && params.Longitude != 0 {
+		log.Printf("Установлен фильтр по расстоянию: %s от координат (%.6f, %.6f)",
+			params.Distance, params.Latitude, params.Longitude)
 
-        // Добавляем текстовый поиск
-        if params.Query != "" {
-            filters["query"] = params.Query
-        }
+		// Проверить наличие индекса перед установкой координат
+		if err := h.marketplaceService.Storage().PrepareIndex(c.Context()); err != nil {
+			log.Printf("Ошибка проверки индекса: %v", err)
+			// Но продолжаем выполнение, просто не используем гео-поиск
+			params.Distance = ""
+		}
+	} else if params.Distance != "" {
+		log.Printf("Параметр distance указан (%s), но координаты отсутствуют или равны нулю (%.6f, %.6f). "+
+			"Параметр distance будет проигнорирован.",
+			params.Distance, params.Latitude, params.Longitude)
+	}
 
-        // Определяем смещение для пагинации
-        offset := (params.Page - 1) * params.Size
-        
-        // Пробуем получить обычным методом
-        listings, total, err := h.marketplaceService.GetListings(c.Context(), filters, params.Size, offset)
-        if err != nil {
-            log.Printf("Ошибка стандартного поиска: %v", err)
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка выполнения поиска")
-        }
+	log.Printf("Полученный поисковый запрос: %s", params.Query)
+	// Обрабатываем числовые параметры
+	if priceMin := c.Query("min_price", ""); priceMin != "" {
+		if val, err := strconv.ParseFloat(priceMin, 64); err == nil && val >= 0 {
+			params.PriceMin = val
+		}
+	}
 
-        // Указываем метаданные пагинации в ответе
-        totalPages := int(math.Ceil(float64(total) / float64(params.Size)))
-        
-        // Формируем такой же ответ, как от OpenSearch
-        return utils.SuccessResponse(c, fiber.Map{
-            "data": listings,
-            "meta": fiber.Map{
-                "total":       total,
-                "page":        params.Page,
-                "size":        params.Size,
-                "total_pages": totalPages,
-                "has_more":    params.Page < totalPages,
-            },
-        })
-    }
+	if priceMax := c.Query("max_price", ""); priceMax != "" {
+		if val, err := strconv.ParseFloat(priceMax, 64); err == nil && val >= 0 {
+			params.PriceMax = val
+		}
+	}
 
-    // После получения результатов поиска
-    log.Printf("Результаты поиска: найдено %d объявлений", len(result.Items))
-    
-    // Формируем информацию о пагинации
-    hasMore := result.Page < result.TotalPages
+	// Запрашиваемые агрегации
+	if aggs := c.Query("aggs", ""); aggs != "" {
+		params.Aggregations = strings.Split(aggs, ",")
+	}
 
-    // Если OpenSearch ответил успешно
-    return utils.SuccessResponse(c, fiber.Map{
-        "data": result.Items,
-        "meta": fiber.Map{
-            "total":               result.Total,
-            "page":                result.Page,
-            "size":                result.Size,
-            "total_pages":         result.TotalPages,
-            "has_more":            hasMore,
-            "facets":              result.Facets,
-            "suggestions":         result.Suggestions,
-            "took_ms":             result.Took,
-            "spelling_suggestion": result.SpellingSuggestion,
-        },
-    })
+	// Если не указан язык, берем из context
+	if params.Language == "" {
+		if lang, ok := c.Locals("language").(string); ok && lang != "" {
+			params.Language = lang
+		} else {
+			params.Language = "sr"
+		}
+	}
+
+	// Выполняем поиск
+	result, err := h.marketplaceService.SearchListingsAdvanced(c.Context(), params)
+	if err != nil {
+		log.Printf("Ошибка поиска: %v", err)
+
+		// Используем стандартный поиск
+		filters := map[string]string{
+			"category_id":   params.CategoryID,
+			"condition":     params.Condition,
+			"city":          params.City,
+			"country":       params.Country,
+			"storefront_id": params.StorefrontID,
+			"sort_by":       params.Sort,
+		}
+
+		// Добавляем числовые фильтры, если они указаны
+		if params.PriceMin > 0 {
+			filters["min_price"] = fmt.Sprintf("%g", params.PriceMin)
+		}
+		if params.PriceMax > 0 {
+			filters["max_price"] = fmt.Sprintf("%g", params.PriceMax)
+		}
+
+		// Добавляем текстовый поиск
+		if params.Query != "" {
+			filters["query"] = params.Query
+		}
+
+		// Определяем смещение для пагинации
+		offset := (params.Page - 1) * params.Size
+
+		// Пробуем получить обычным методом
+		listings, total, err := h.marketplaceService.GetListings(c.Context(), filters, params.Size, offset)
+		if err != nil {
+			log.Printf("Ошибка стандартного поиска: %v", err)
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка выполнения поиска")
+		}
+
+		// Указываем метаданные пагинации в ответе
+		totalPages := int(math.Ceil(float64(total) / float64(params.Size)))
+
+		// Формируем такой же ответ, как от OpenSearch
+		return utils.SuccessResponse(c, fiber.Map{
+			"data": listings,
+			"meta": fiber.Map{
+				"total":       total,
+				"page":        params.Page,
+				"size":        params.Size,
+				"total_pages": totalPages,
+				"has_more":    params.Page < totalPages,
+			},
+		})
+	}
+
+	// После получения результатов поиска
+	log.Printf("Результаты поиска: найдено %d объявлений", len(result.Items))
+
+	// Формируем информацию о пагинации
+	hasMore := result.Page < result.TotalPages
+
+	// Если OpenSearch ответил успешно
+	return utils.SuccessResponse(c, fiber.Map{
+		"data": result.Items,
+		"meta": fiber.Map{
+			"total":               result.Total,
+			"page":                result.Page,
+			"size":                result.Size,
+			"total_pages":         result.TotalPages,
+			"has_more":            hasMore,
+			"facets":              result.Facets,
+			"suggestions":         result.Suggestions,
+			"took_ms":             result.Took,
+			"spelling_suggestion": result.SpellingSuggestion,
+		},
+	})
 }
 
 // GetSuggestions возвращает предложения автодополнения

@@ -15,7 +15,10 @@ type TranslationServiceInterface interface {
     
     // Перевод конкретных полей сущности
     TranslateEntityFields(ctx context.Context, sourceLanguage string, targetLanguages []string, fields map[string]string) (map[string]map[string]string, error)
-    ModerateText(ctx context.Context, text string, language string) (string, error)  // Обратите внимание на заглавную M
-
-
+    
+    // Модерация текста
+    ModerateText(ctx context.Context, text string, language string) (string, error)
+    
+    // Перевод с учетом контекста
+    TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error)
 }

@@ -375,13 +375,17 @@ const EditListingPage = () => {
 
             // Если язык не совпадает с оригиналом, также обновляем переводы
             if (i18n.language !== listing.original_language) {
-                await axios.put(`/api/v1/marketplace/translations/${id}`, {
+                // Получаем провайдер перевода из локального хранилища или используем значение по умолчанию
+                const translationProvider = localStorage.getItem('preferredTranslationProvider') || 'google';
+                
+                await axios.put(`/api/v1/marketplace/translations/${id}?translation_provider=${translationProvider}`, {
                     language: i18n.language,
                     translations: {
                         title: listing.title,
                         description: listing.description
                     },
-                    is_verified: true
+                    is_verified: true,
+                    provider: translationProvider // Добавляем информацию о провайдере перевода
                 });
             }
 
@@ -427,16 +431,25 @@ const EditListingPage = () => {
         <Container maxWidth="md">
             <Box sx={{ mt: 4, mb: 4 }}>
                 <Typography variant="h4" gutterBottom>
-                    {t('listings.edit.title')} ({i18n.language.toUpperCase()})
+                    {t('listings.edit.title')}
                 </Typography>
-                {i18n.language !== listing?.original_language && (
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                        {t('listings.edit.translationNote')}
-                        {listing?.original_language === 'ru' && " Русский"}
-                        {listing?.original_language === 'en' && " English"}
-                        {listing?.original_language === 'sr' && " Српски"}
-                    </Alert>
-                )}
+
+                {/* Новый информационный блок о языке редактирования */}
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  {t('listings.edit.languageInfo', {
+                    currentLanguage: i18n.language === 'ru' ? 'русском' : 
+                                     i18n.language === 'en' ? 'английском' : 'сербском',
+                    originalLanguage: listing?.original_language === 'ru' ? 'русском' :
+                                      listing?.original_language === 'en' ? 'английском' : 'сербском',
+                    defaultValue: 'Вы редактируете объявление на {{currentLanguage}} языке. Оригинал объявления на {{originalLanguage}} языке.'
+                  })}
+                  <br />
+                  {i18n.language !== listing?.original_language && (
+                    t('listings.edit.translationNote', {
+                      defaultValue: 'Изменения будут сохранены как перевод, оригинал останется без изменений.'
+                    })
+                  )}
+                </Alert>
                 {error && (
                     <Alert severity="error" sx={{ mb: 2 }}>
                         {error}

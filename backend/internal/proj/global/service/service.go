@@ -46,11 +46,20 @@ scheduleService := storefrontService.NewScheduleService(storage, storefrontSvc)
 		balanceSvc,
 	)
     scheduleService.Start()
+	// Create services
+	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification)
+	
+	// Here we need to set the real translation service to the marketplace service
+	if ms, ok := marketplaceSvc.Marketplace.(*marketplaceService.MarketplaceService); ok && translationSvc != nil {
+		// Inject the real translation service
+		ms.SetTranslationService(translationSvc)
+	}
+	
 	return &Service{
 		users:        userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
-		marketplace:  marketplaceService.NewService(storage, notificationSvc.Notification),
+		marketplace:  marketplaceSvc,
 		review:       reviewService.NewService(storage),
-		chat:         marketplaceService.NewService(storage, notificationSvc.Notification),
+		chat:         marketplaceSvc, // Reuse the same service for chat
 		config:       cfg,
 		notification: notificationSvc,
 		translation:  translationSvc,

@@ -2,13 +2,14 @@
 package service
 
 import (
+	"backend/internal/storage"
 	"context"
 	"fmt"
 	"log"
-		"regexp"
+	"regexp"
 	"strings"
 	"sync"
-		"html"
+	"html"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -17,6 +18,7 @@ type TranslationService struct {
 	client             *openai.Client
 	cache              *sync.Map
 	supportedLanguages []string
+	storage            storage.Storage
 }
 
 func NewTranslationService(apiKey string) (*TranslationService, error) {

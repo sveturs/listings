@@ -7,17 +7,18 @@ import (
 )
 
 type Config struct {
-	Port                string
-	DatabaseURL         string
-	GoogleClientID      string
-	GoogleClientSecret  string
-	GoogleRedirectURL   string
-	FrontendURL         string
-	Environment         string
-	OpenAIAPIKey        string
-	StripeAPIKey        string
-	StripeWebhookSecret string
-	OpenSearch          OpenSearchConfig `yaml:"opensearch"`
+	Port                 string
+	DatabaseURL          string
+	GoogleClientID       string
+	GoogleClientSecret   string
+	GoogleRedirectURL    string
+	FrontendURL          string
+	Environment          string
+	OpenAIAPIKey         string
+	GoogleTranslateAPIKey string
+	StripeAPIKey         string
+	StripeWebhookSecret  string
+	OpenSearch           OpenSearchConfig `yaml:"opensearch"`
 }
 type OpenSearchConfig struct {
     URL             string `yaml:"url"`
@@ -67,6 +68,9 @@ func NewConfig() (*Config, error) {
 	}
 	config.StripeAPIKey = os.Getenv("STRIPE_API_KEY")
 	config.StripeWebhookSecret = os.Getenv("STRIPE_WEBHOOK_SECRET")
+	
+	// Получаем ключ Google Translate API (необязательный)
+	config.GoogleTranslateAPIKey = os.Getenv("GOOGLE_TRANSLATE_API_KEY")
 
     config.OpenSearch = OpenSearchConfig{
         URL:              os.Getenv("OPENSEARCH_URL"),
@@ -81,16 +85,17 @@ func NewConfig() (*Config, error) {
 }
 
 return &Config{
-	Port:                port,
-	DatabaseURL:         dbURL,
-	GoogleClientID:      googleClientID,
-	GoogleClientSecret:  googleClientSecret,
-	GoogleRedirectURL:   googleRedirectURL,
-	FrontendURL:         frontendURL,
-	Environment:         environment,
-	OpenAIAPIKey:        openAIAPIKey,
-	StripeAPIKey:        config.StripeAPIKey,
-	StripeWebhookSecret: config.StripeWebhookSecret,
-	OpenSearch:          config.OpenSearch, 
+	Port:                 port,
+	DatabaseURL:          dbURL,
+	GoogleClientID:       googleClientID,
+	GoogleClientSecret:   googleClientSecret,
+	GoogleRedirectURL:    googleRedirectURL,
+	FrontendURL:          frontendURL,
+	Environment:          environment,
+	OpenAIAPIKey:         openAIAPIKey,
+	GoogleTranslateAPIKey: config.GoogleTranslateAPIKey,
+	StripeAPIKey:         config.StripeAPIKey,
+	StripeWebhookSecret:  config.StripeWebhookSecret,
+	OpenSearch:           config.OpenSearch, 
 }, nil
 }

@@ -38,6 +38,7 @@ type Server struct {
 	payments      paymentService.PaymentServiceInterface
 	storefront    *storefrontHandler.Handler
 	geocode       *geocodeHandler.GeocodeHandler
+	translation   *marketplaceHandler.TranslationHandler // Новое поле для TranslationHandler
 }
 
 // Обновить функцию NewServer:
@@ -66,9 +67,33 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	translationService, err := marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create translation service: %w", err)
+	// Пытаемся создать фабрику сервисов перевода
+	var translationService marketplaceService.TranslationServiceInterface
+	if cfg.GoogleTranslateAPIKey != "" && cfg.OpenAIAPIKey != "" {
+		// Если доступны оба API, создаем фабрику с доступом к хранилищу
+		translationFactory, err := marketplaceService.NewTranslationServiceFactory(cfg.GoogleTranslateAPIKey, cfg.OpenAIAPIKey, db)
+		if err != nil {
+			log.Printf("Ошибка создания фабрики перевода: %v, будет использован только OpenAI", err)
+			// Если не удалось создать фабрику, пробуем создать только OpenAI сервис
+			translationService, err = marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create translation service: %w", err)
+			}
+		} else {
+			// Если фабрика создана успешно, используем ее
+			translationService = translationFactory
+			log.Printf("Создана фабрика сервисов перевода с поддержкой Google Translate и OpenAI")
+		}
+	} else if cfg.OpenAIAPIKey != "" {
+		// Если доступен только OpenAI
+		var err error
+		translationService, err = marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create translation service: %w", err)
+		}
+		log.Printf("Создан сервис перевода на базе OpenAI")
+	} else {
+		return nil, fmt.Errorf("не указан ни один API ключ для перевода")
 	}
 
 	services := globalService.NewService(db, cfg, translationService)
@@ -81,6 +106,8 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	storefrontHandler := storefrontHandler.NewHandler(services)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
+	
+	// Обработчик перевода уже создан в marketplaceHandler
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
@@ -103,6 +130,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		storefront:    storefrontHandler,
 		payments:      services.Payment(),
 		geocode:       geocodeHandler,
+		translation:   marketplaceHandler.Translation, // Используем Translation из marketplaceHandler
 	}
 
 	// Инициализируем webhooks для телеграма
@@ -195,6 +223,11 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", s.marketplace.Marketplace.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", s.marketplace.Marketplace.GetSimilarListings)
+
+	// Маршруты для API перевода
+	translation := s.app.Group("/api/v1/translation")
+	translation.Get("/limits", s.translation.GetTranslationLimits)
+	translation.Post("/provider", s.translation.SetTranslationProvider)
 
 	// Public review routes
 	review := s.app.Group("/api/v1/reviews")
@@ -296,15 +329,15 @@ func (s *Server) setupRoutes() {
 	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
 
 	// Notification routes
-// Notification routes
-notifications := api.Group("/notifications")
-notifications.Get("/", s.notifications.Notification.GetNotifications)
-notifications.Get("/settings", s.notifications.Notification.GetSettings)
-notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
-notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
-notifications.Get("/telegram/token", s.notifications.Notification.GetTelegramToken)
-notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
-notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
+    // Notification routes
+    notifications := api.Group("/notifications")
+    notifications.Get("/", s.notifications.Notification.GetNotifications)
+    notifications.Get("/settings", s.notifications.Notification.GetSettings)
+    notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
+    notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
+    notifications.Get("/telegram/token", s.notifications.Notification.GetTelegramToken)
+    notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
+    notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
 
 }
 
