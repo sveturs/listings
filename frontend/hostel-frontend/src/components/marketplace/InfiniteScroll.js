@@ -1,13 +1,14 @@
+// frontend/hostel-frontend/src/components/marketplace/InfiniteScroll.js
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
 
-const InfiniteScroll = ({ 
-  hasMore, 
-  loading, 
-  onLoadMore, 
-  children, 
+const InfiniteScroll = ({
+  hasMore,
+  loading,
+  onLoadMore,
+  children,
   autoLoad = false,
   loadingMessage = 'Loading...',
   loadMoreButtonText = 'Show more',
@@ -17,7 +18,7 @@ const InfiniteScroll = ({
   const observer = useRef(null);
   const loadMoreRef = useRef(null);
   const [requestSent, setRequestSent] = useState(false);
-  
+
   // Сбрасываем флаг requestSent когда изменяется hasMore или loading
   useEffect(() => {
     if (!loading && hasMore) {
@@ -49,34 +50,29 @@ const InfiniteScroll = ({
 
   useEffect(() => {
     const currentRef = loadMoreRef.current;
-    
-    // Подключаем observer только если hasMore = true и !requestSent
-    if (currentRef && hasMore && !requestSent) {
+    // Подключаем observer только если hasMore = true и !requestSent и !loading
+    if (currentRef && hasMore && !requestSent && !loading) {
       console.log('InfiniteScroll: Setting up intersection observer, hasMore =', hasMore);
-      
       // Очищаем предыдущий observer если он существует
       if (observer.current) {
         observer.current.disconnect();
       }
-      
       observer.current = new IntersectionObserver(handleObserver, {
         root: null,
-        rootMargin: '100px', // Увеличиваем margin для раннего срабатывания
+        rootMargin: '200px', // Увеличиваем margin для более раннего срабатывания
         threshold: 0.1
       });
-      
       observer.current.observe(currentRef);
-    } else if (!hasMore && observer.current) {
-      console.log('InfiniteScroll: No more items, disconnecting observer');
+    } else if ((!hasMore || loading || requestSent) && observer.current) {
+      console.log('InfiniteScroll: Disconnecting observer, hasMore =', hasMore, 'loading =', loading, 'requestSent =', requestSent);
       observer.current.disconnect();
     }
-    
     return () => {
       if (observer.current) {
         observer.current.disconnect();
       }
     };
-  }, [handleObserver, hasMore, requestSent]);
+  }, [handleObserver, hasMore, requestSent, loading]);
 
   // Отладочное логирование
   useEffect(() => {
@@ -86,9 +82,8 @@ const InfiniteScroll = ({
   return (
     <>
       {children}
-      
-      <Box 
-        ref={loadMoreRef} 
+      <Box
+        ref={loadMoreRef}
         sx={{
           display: 'flex',
           justifyContent: 'center',

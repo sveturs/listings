@@ -189,7 +189,11 @@ const MarketplacePage = () => {
 
             // Обрабатываем основные фильтры
             Object.entries(currentFilters).forEach(([key, value]) => {
-                if (value !== '' && key !== 'city' && key !== 'country' && key !== 'attributeFilters') {
+                // ИСПРАВЛЕНИЕ: разрешаем передачу параметра view_mode
+                if (value !== '' &&
+                    key !== 'city' &&
+                    key !== 'country' &&
+                    key !== 'attributeFilters') {
                     if (key === 'query') {
                         // Отправляем параметр запроса как q и query для совместимости
                         params['q'] = value;
@@ -211,11 +215,24 @@ const MarketplacePage = () => {
 
             // Добавляем параметры пагинации
             params.page = isLoadMore ? page + 1 : 1;
-            params.size = currentFilters.size || 1000; // Размер страницы - используем из параметров или по умолчанию 20
+
+            // ИСПРАВЛЕНИЕ: Явно устанавливаем параметр view_mode для карты
+            if (currentFilters.view_mode === 'map' || mapViewActive) {
+                params.view_mode = 'map';
+
+                // Для режима карты устанавливаем большой размер страницы
+                params.size = 5000;
+                console.log('Установлен большой размер для режима карты:', params.size);
+            } else {
+                // Для обычного просмотра используем меньший размер для плавной пагинации
+                params.size = currentFilters.size || 21;
+                console.log('Установлен стандартный размер для списка:', params.size);
+            }
 
             // Явно показываем параметры запроса в консоли
             console.log('Отправляем запрос поиска с параметрами:', params);
             console.log('sort_by =', params.sort_by);
+            console.log('view_mode =', params.view_mode);
 
             // Выполняем запрос
             const response = await axios.get('/api/v1/marketplace/search', { params });
@@ -223,8 +240,7 @@ const MarketplacePage = () => {
             console.log('Тип данных response.data:', typeof response.data);
             console.log('Структура response.data:', Object.keys(response.data));
 
-            // Проверка на наличие полей в ответе - КЛЮЧЕВОЕ ИЗМЕНЕНИЕ
-            // В функции fetchListings, где обрабатывается ответ от сервера
+            // Проверка на наличие полей в ответе
             if (response.data && response.data.data) {
                 // Проверяем, является ли response.data.data массивом или объектом с массивом внутри
                 let receivedListings;
@@ -314,7 +330,7 @@ const MarketplacePage = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [page, listings]);
+    }, [page, listings, mapViewActive]);
 
     const debouncedFetchListings = useRef(
         debounce((filters) => {
@@ -376,11 +392,11 @@ const MarketplacePage = () => {
     // Переопределим handleSortChange полностью:
     const handleSortChange = (field, direction) => {
         console.log(`РОДИТЕЛЬ получил: поле=${field}, направление=${direction}`);
-        
+
         // Сначала сохраняем состояние
         setSortField(field);
         setSortDirection(direction);
-        
+
         // Формируем параметр сортировки для API
         let apiSort;
         switch (field) {
@@ -399,29 +415,29 @@ const MarketplacePage = () => {
             default:
                 apiSort = `date_${direction}`;
         }
-        
+
         console.log(`Итоговый параметр сортировки для API: ${apiSort}`);
-        
+
         // Создаем и используем клон фильтров вместо обновления состояния
         const newFilters = {
             ...filters,
             sort_by: apiSort
         };
-        
+
         // Обновляем URL и состояние
         const urlParams = new URLSearchParams();
         Object.entries(newFilters).forEach(([key, value]) => {
             if (value) urlParams.set(key, value);
         });
-        
+
         setSearchParams(urlParams);
         setFilters(newFilters);
-        
+
         // Сбрасываем состояния
         setListings([]);
         setPage(1);
         setHasMoreListings(true);
-        
+
         // Делаем запрос с новыми параметрами сортировки
         fetchListings(newFilters);
     };
@@ -437,7 +453,7 @@ const MarketplacePage = () => {
 
         if (mapViewActive) {
             // Переключаемся на список
-            nextParams.set('viewMode', 'list');
+            nextParams.delete('viewMode');
             setMapViewActive(false);
         } else {
             // Переключаемся на карту
@@ -462,10 +478,22 @@ const MarketplacePage = () => {
                 nextParams.set('longitude', filters.longitude);
                 nextParams.set('distance', filters.distance || '5km');
             }
-            
-            // При переключении на карту загружаем все объявления (большой размер страницы)
-            const mapFilters = {...filters, size: 1000, view_mode: 'map'};
+
+            // ИСПРАВЛЕНИЕ: Создаем копию фильтров с явно заданным параметром view_mode
+            const mapFilters = {
+                ...filters,
+                view_mode: 'map',
+                size: 5000  // Явно устанавливаем большой размер для режима карты
+            };
+
+            console.log('Переключение на режим карты с параметрами:', mapFilters);
+
+            // Обновляем URL-параметры перед выполнением запроса
+            setSearchParams(nextParams);
+
+            // Делаем запрос с новыми фильтрами
             fetchListings(mapFilters);
+            return; // Прерываем выполнение, т.к. setSearchParams уже вызвана выше
         }
 
         setSearchParams(nextParams);
@@ -607,58 +635,74 @@ const MarketplacePage = () => {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                // Загрузка категорий
-                const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
-                if (categoriesResponse.data?.data) {
-                    setCategories(categoriesResponse.data.data);
+              // Загрузка категорий
+              const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
+              if (categoriesResponse.data?.data) {
+                setCategories(categoriesResponse.data.data);
+              }
+        
+              // Извлекаем атрибуты из URL
+              const attributeFilters = {};
+              searchParams.forEach((value, key) => {
+                if (key.startsWith('attr_')) {
+                  const attrName = key.substring(5); // Удаляем префикс 'attr_'
+                  attributeFilters[attrName] = value;
                 }
-
-                // Извлекаем атрибуты из URL
-                const attributeFilters = {};
-                searchParams.forEach((value, key) => {
-                    if (key.startsWith('attr_')) {
-                        const attrName = key.substring(5); // Удаляем префикс 'attr_'
-                        attributeFilters[attrName] = value;
-                    }
-                });
-
-                // Создаем объект с начальными фильтрами
-                const initialFilters = {
-                    query: searchParams.get('query') || '',
-                    category_id: searchParams.get('category_id') || '',
-                    min_price: searchParams.get('min_price') || '',
-                    max_price: searchParams.get('max_price') || '',
-                    city: searchParams.get('city') || '',
-                    country: searchParams.get('country') || '',
-                    condition: searchParams.get('condition') || '',
-                    sort_by: searchParams.get('sort_by') || 'date_desc',
-                    distance: searchParams.get('distance') || '',
-                    latitude: searchParams.get('latitude') ? parseFloat(searchParams.get('latitude')) : null,
-                    longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')) : null
-                };
-
-                // Добавляем атрибуты, только если они есть
-                if (Object.keys(attributeFilters).length > 0) {
-                    initialFilters.attributeFilters = attributeFilters;
-                }
-
-                console.log('Начальные фильтры с атрибутами:', initialFilters);
-
-                // Устанавливаем начальные фильтры
-                setFilters(initialFilters);
-
-                // Выполняем первоначальный запрос данных
-                await fetchListings(initialFilters);
+              });
+        
+              // ВАЖНОЕ ИЗМЕНЕНИЕ: Проверяем режим просмотра из URL
+              const viewModeFromURL = searchParams.get('viewMode');
+              
+              // Если включен режим карты, устанавливаем соответствующее состояние
+              if (viewModeFromURL === 'map') {
+                setMapViewActive(true);
+                console.log('Обнаружен режим карты в URL-параметрах');
+              }
+        
+              // Создаем объект с начальными фильтрами
+              const initialFilters = {
+                query: searchParams.get('query') || '',
+                category_id: searchParams.get('category_id') || '',
+                min_price: searchParams.get('min_price') || '',
+                max_price: searchParams.get('max_price') || '',
+                city: searchParams.get('city') || '',
+                country: searchParams.get('country') || '',
+                condition: searchParams.get('condition') || '',
+                sort_by: searchParams.get('sort_by') || 'date_desc',
+                distance: searchParams.get('distance') || '',
+                latitude: searchParams.get('latitude') ? parseFloat(searchParams.get('latitude')) : null,
+                longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')) : null,
+                // ВАЖНОЕ ИЗМЕНЕНИЕ: Добавляем параметр view_mode если активен режим карты
+                view_mode: viewModeFromURL === 'map' ? 'map' : undefined
+              };
+        
+              // Добавляем атрибуты, только если они есть
+              if (Object.keys(attributeFilters).length > 0) {
+                initialFilters.attributeFilters = attributeFilters;
+              }
+        
+              console.log('Начальные фильтры с атрибутами:', initialFilters);
+        
+              // Устанавливаем начальные фильтры
+              setFilters(initialFilters);
+        
+              // ВАЖНОЕ ИЗМЕНЕНИЕ: Если включен режим карты, устанавливаем большой размер
+              if (viewModeFromURL === 'map') {
+                initialFilters.size = 5000;
+              }
+        
+              // Выполняем первоначальный запрос данных
+              await fetchListings(initialFilters);
             } catch (err) {
-                console.error('Error fetching initial data:', err);
-                setError('Произошла ошибка при загрузке данных');
+              console.error('Error fetching initial data:', err);
+              setError('Произошла ошибка при загрузке данных');
             }
-        };
-
-        fetchInitialData();
-
-        // Важно! Не добавляем fetchListings в зависимости
-    }, [searchParams, setSearchParams]);
+          };
+        
+          fetchInitialData();
+        
+          // Важно! Не добавляем fetchListings в зависимости
+        }, [searchParams, setSearchParams]);
 
     useEffect(() => {
         if (!window.location.pathname.includes('/marketplace')) {

@@ -1782,8 +1782,14 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 
     log.Printf("Извлеченные атрибуты фильтров: %+v", attributeFilters)
 
+    log.Printf("Исходные параметры сортировки из запроса: sort_by=%s", c.Query("sort_by", ""))
 
-	log.Printf("Исходные параметры сортировки из запроса: sort_by=%s", c.Query("sort_by", ""))
+    // ВАЖНОЕ ИЗМЕНЕНИЕ: Получаем параметр view_mode и добавляем его в логи
+    viewMode := c.Query("view_mode", "")
+    log.Printf("Параметр режима просмотра из URL: view_mode=%s", viewMode)
+
+    // Логирование всех параметров запроса для отладки
+    log.Printf("Все параметры запроса: %+v", c.Queries())
 
     params := &search.ServiceParams{
         Query:            c.Query("q", c.Query("query", "")),
@@ -1800,14 +1806,47 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
         Language:         c.Query("language", ""),
         AttributeFilters: attributeFilters,
     }
-	// Всегда устанавливаем статус "active" для всех публичных запросов
+    
+    // Обязательные параметры для публичных запросов
     params.Status = "active"
-	// Добавьте этот код после инициализации params
-	log.Printf("Итоговый параметр сортировки в запросе к OpenSearch: %s", params.Sort)
+    
+    // УЛУЧШЕНИЕ: Детальное логирование параметров запроса
+    log.Printf("Параметры пагинации: page=%d, size=%d, view_mode=%s", 
+        params.Page, params.Size, viewMode)
+    
+    // Установка размера в зависимости от режима просмотра
+    if params.Page < 1 {
+        params.Page = 1
+    }
+    
+    // УЛУЧШЕНИЕ: Принимаем решение о размере выборки на основе viewMode
+    if viewMode == "map" {
+        // Для режима карты устанавливаем очень большой размер страницы
+        // независимо от запрошенного размера
+        log.Printf("Обнаружен режим просмотра 'map'. Устанавливаем большой размер страницы.")
+        params.Size = 5000 // Устанавливаем максимальное значение для карты
+    } else if params.Size < 1 {
+        // Для обычного просмотра используем стандартные ограничения
+        params.Size = 20
+    } else if params.Size > 1000 {
+        // Ограничиваем максимальный размер для обычного просмотра
+        params.Size = 100
+    }
+
+    // Логирование финальных параметров поиска
+    log.Printf("Итоговые параметры поиска: size=%d, view_mode=%s", params.Size, viewMode)
+	    
+    // Добавьте этот код после инициализации params
+    log.Printf("Итоговый параметр сортировки в запросе к OpenSearch: %s", params.Sort)
     
     // Проверяем и логируем параметры пагинации
     log.Printf("Параметры пагинации: page=%d, size=%d", params.Page, params.Size)
     log.Printf("Параметр сортировки получен из запроса: %s", params.Sort)
+    
+    // ВАЖНОЕ ИЗМЕНЕНИЕ: Добавляем view_mode в логи
+    log.Printf("Параметры пагинации: page=%d, size=%d, view_mode=%s", 
+        params.Page, params.Size, viewMode)
+    
     // Устанавливаем разумные ограничения на параметры пагинации
     if params.Page < 1 {
         params.Page = 1
@@ -1816,17 +1855,19 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
         params.Size = 20
     } else if params.Size > 1000 {
         // Ограничиваем максимальный размер страницы, но увеличиваем для карты
-        // Проверяем, предназначен ли запрос для отображения на карте
-        viewMode := c.Query("view_mode", "")
+        // ВАЖНОЕ ИЗМЕНЕНИЕ: Проверяем, предназначен ли запрос для отображения на карте
         if viewMode == "map" {
             // Для карты разрешаем больший размер страницы
-            params.Size = 1000
+            params.Size = 5000
+            log.Printf("Установлен максимальный размер для режима карты: %d", params.Size)
         } else {
             // Для обычного списка оставляем прежнее ограничение для производительности
             params.Size = 100
+            log.Printf("Установлен стандартный максимальный размер для списка: %d", params.Size)
         }
     }
-    
+    log.Printf("Параметры пагинации: page=%d, size=%d, view_mode=%s", 
+    params.Page, params.Size, c.Query("view_mode", ""));
     // Дополнительное логирование
     log.Printf("Полные параметры поиска: %+v", params)
     log.Printf("Атрибуты фильтров: %+v", attributeFilters)
