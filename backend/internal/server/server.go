@@ -316,9 +316,9 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Put("/translations/:id", s.marketplace.Marketplace.UpdateTranslations)
 	marketplaceProtected.Post("/translations/batch", s.marketplace.Marketplace.BatchTranslateListings)
 
-	// Административный маршрут для переиндексации
-
+	// Административные маршруты для переиндексации
 	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
+	api.Post("/admin/reindex-listings-with-translations", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAllWithTranslations)
 	// Chat routes
 	chat := api.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)

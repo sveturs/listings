@@ -1401,15 +1401,40 @@ func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
 	}
-	// Переиндексируем объявление в OpenSearch
+	// Переиндексируем объявление в OpenSearch с переводами
+	// Даём небольшую задержку для завершения транзакций
+	time.Sleep(500 * time.Millisecond)
+	
 	updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listing.ID)
 	if err != nil {
 		log.Printf("Failed to get updated listing for reindexing: %v", err)
 	} else {
+		// Проверяем наличие переводов
+		if updatedListing.Translations == nil || len(updatedListing.Translations) == 0 {
+			log.Printf("Warning: Listing %d has no translations before reindexing, will try to load them explicitly", listing.ID)
+			
+			// Пытаемся явно загрузить переводы
+			translations, err := h.marketplaceService.Storage().GetTranslationsForEntity(c.Context(), "listing", listing.ID)
+			if err != nil {
+				log.Printf("Error loading translations for listing %d: %v", listing.ID, err)
+			} else if len(translations) > 0 {
+				// Организуем переводы в структуру TranslationMap
+				transMap := make(models.TranslationMap)
+				for _, t := range translations {
+					if _, ok := transMap[t.Language]; !ok {
+						transMap[t.Language] = make(map[string]string)
+					}
+					transMap[t.Language][t.FieldName] = t.TranslatedText
+				}
+				updatedListing.Translations = transMap
+				log.Printf("Explicitly loaded %d translations for listing %d", len(translations), listing.ID)
+			}
+		}
+		
 		if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
 			log.Printf("Failed to reindex listing %d: %v", listing.ID, err)
 		} else {
-			log.Printf("Successfully reindexed listing %d", listing.ID)
+			log.Printf("Successfully reindexed listing %d with all translations", listing.ID)
 		}
 	}
 	// Проверяем изменение цены
@@ -2268,6 +2293,92 @@ func (h *MarketplaceHandler) ReindexAll(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, fiber.Map{
 		"message": "Запущена переиндексация всех объявлений",
+	})
+}
+
+// ReindexAllWithTranslations переиндексирует все объявления с явной загрузкой переводов
+func (h *MarketplaceHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
+	// Проверяем административные права
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
+
+	// Запускаем реиндексацию в фоне
+	go func() {
+		ctx := context.Background()
+		
+		// Получаем все ID объявлений
+		rows, err := h.services.Storage().Query(ctx, `
+			SELECT id FROM marketplace_listings 
+			WHERE status = 'active'
+			ORDER BY id
+		`)
+		
+		if err != nil {
+			log.Printf("Error getting listing IDs for reindex: %v", err)
+			return
+		}
+		defer rows.Close()
+		
+		var listingIDs []int
+		for rows.Next() {
+			var id int
+			if err := rows.Scan(&id); err != nil {
+				log.Printf("Error scanning listing ID: %v", err)
+				continue
+			}
+			listingIDs = append(listingIDs, id)
+		}
+		
+		log.Printf("Starting reindex of %d listings with translations...", len(listingIDs))
+		
+		// Реиндексируем каждое объявление с явной загрузкой переводов
+		count := 0
+		for _, id := range listingIDs {
+			// Получаем объявление с базовыми данными
+			listing, err := h.marketplaceService.GetListingByID(ctx, id)
+			if err != nil {
+				log.Printf("Error getting listing %d: %v", id, err)
+				continue
+			}
+			
+			// Проверяем наличие переводов
+			if listing.Translations == nil || len(listing.Translations) == 0 {
+				// Явно загружаем переводы
+				translations, err := h.marketplaceService.Storage().GetTranslationsForEntity(ctx, "listing", id)
+				if err != nil {
+					log.Printf("Error loading translations for listing %d: %v", id, err)
+				} else if len(translations) > 0 {
+					// Организуем переводы в структуру TranslationMap
+					transMap := make(models.TranslationMap)
+					for _, t := range translations {
+						if _, ok := transMap[t.Language]; !ok {
+							transMap[t.Language] = make(map[string]string)
+						}
+						transMap[t.Language][t.FieldName] = t.TranslatedText
+					}
+					listing.Translations = transMap
+					log.Printf("Loaded %d translations for listing %d", len(translations), id)
+				}
+			}
+			
+			// Индексируем объявление
+			if err := h.marketplaceService.Storage().IndexListing(ctx, listing); err != nil {
+				log.Printf("Error indexing listing %d: %v", id, err)
+			} else {
+				count++
+				if count%50 == 0 {
+					log.Printf("Progress: indexed %d/%d listings", count, len(listingIDs))
+				}
+			}
+		}
+		
+		log.Printf("Successfully reindexed %d listings with translations", count)
+	}()
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Переиндексация всех объявлений с переводами запущена...",
 	})
 }
 func (h *MarketplaceHandler) GetPriceHistory(c *fiber.Ctx) error {
