@@ -495,7 +495,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
       const limitedStorefrontIds = Array.from(storefrontListings.keys()).slice(0, MAX_STOREFRONTS);
 
       // Ограничиваем количество объявлений в одной витрине
-      const MAX_ITEMS_PER_STOREFRONT = 50;
+      const MAX_ITEMS_PER_STOREFRONT = 10000000;
 
       console.log(`Обрабатываем ${limitedStorefrontIds.length} витрин из ${storefrontListings.size}`);
       console.log(`Обрабатываем ${limitedIndividualListings.length} индивидуальных объявлений (лимит: ${MAX_INDIVIDUAL_LISTINGS})`);
@@ -568,7 +568,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         try {
           const storefront = storefrontListings.get(storefrontId);
           // Ограничиваем количество товаров в одной витрине до разумного предела
-          const limitedStorefrontListings = storefront.listings.slice(0, MAX_ITEMS_PER_STOREFRONT);
+          const limitedStorefrontListings = storefront.listings;
 
           // Создаем маркер для витрины в виде магазина
           const storeMarker = L.marker(storefront.location, {
@@ -614,7 +614,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
                       align-items: center;
                       justify-content: center;
                       border: 1px solid white;
-                    ">${limitedStorefrontListings.length > 99 ? '99+' : limitedStorefrontListings.length}</div>
+                    ">${storefront.listings.length > 999 ? '999+' : storefront.listings.length}</div>
                   </div>
                   <div style="
                     width: 0;
@@ -631,7 +631,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
               iconAnchor: [21, 42]
             })
           })
-            .bindTooltip(`${storefront.name} (${limitedStorefrontListings.length} ${t('common:map.items')})`)
+          .bindTooltip(`${storefront.name} (${storefront.listings.length} ${t('common:map.items')})`)
             .on('click', () => {
               // При клике показываем первое объявление из витрины с меткой витрины
               if (limitedStorefrontListings.length > 0) {
@@ -639,7 +639,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
                 // Добавляем информацию о том, что это часть витрины
                 firstListing.isPartOfStorefront = true;
                 firstListing.storefrontName = storefront.name;
-                firstListing.storefrontItemCount = limitedStorefrontListings.length;
+                firstListing.storefrontItemCount = storefront.listings.length;
                 firstListing.storefront_id = storefrontId; // Добавляем ID витрины для перехода
                 // Добавляем ID объявления для выделения при переходе на страницу витрины
                 firstListing.id = firstListing.id || limitedStorefrontListings[0].id;
