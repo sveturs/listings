@@ -112,6 +112,16 @@ const StorefrontPage = () => {
       </Container>
     );
   }
+  const handleLocationSelect = (location) => {
+    setCreateForm(prev => ({
+      ...prev,
+      address: location.formatted_address,
+      city: location.address_components?.city || '',
+      country: location.address_components?.country || '',
+      latitude: location.latitude,
+      longitude: location.longitude
+    }));
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -266,25 +276,24 @@ const StorefrontPage = () => {
               onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
               disabled={creationLoading}
             />
-<Box mb={3}>
-  <Typography variant="subtitle1" gutterBottom>
-    {t('marketplace:store.settings.location')}
-  </Typography>
-  
-  <LocationPicker 
-    onLocationSelect={(location) => {
-      setCreateForm({
-        ...createForm,
-        address: location.formatted_address,
-        city: location.address_components?.city || '',
-        country: location.address_components?.country || '',
-        latitude: location.latitude,
-        longitude: location.longitude
-      });
-    }}
-  />
-</Box>
-            {/* Добавить новые поля для контактной информации */}
+            <Box mb={3}>
+              <Typography variant="subtitle1" gutterBottom>
+                {t('marketplace:store.settings.location')}
+              </Typography>
+
+              <LocationPicker
+                onLocationSelect={handleLocationSelect}
+                initialLocation={{
+                  latitude: createForm.latitude,
+                  longitude: createForm.longitude,
+                  formatted_address: createForm.address,
+                  address_components: {
+                    city: createForm.city,
+                    country: createForm.country
+                  }
+                }}
+              />
+            </Box>
             <TextField
               label={t('marketplace:store.settings.phone')}
               fullWidth

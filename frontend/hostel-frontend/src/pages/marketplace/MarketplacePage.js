@@ -225,7 +225,7 @@ const MarketplacePage = () => {
                 console.log('Установлен большой размер для режима карты:', params.size);
             } else {
                 // Для обычного просмотра используем меньший размер для плавной пагинации
-                params.size = currentFilters.size || 21;
+                params.size = currentFilters.size || 25;
                 console.log('Установлен стандартный размер для списка:', params.size);
             }
 

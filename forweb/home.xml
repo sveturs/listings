@@ -1,0 +1,1302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artikli>
+    <!-- Квартира 1 -->
+    <artikal>
+        <id>200001</id>
+        <sifra>APT-2025-001</sifra>
+        <naziv><![CDATA[Современная 2-комнатная квартира в центре Нови-Сада]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Real Estate Agency NS</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>90000</vpCena>
+        <mpCena>100000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Просторная и светлая квартира в самом сердце Нови-Сада.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 65 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня с современной техникой</li>
+        <li>Ванная комната с душевой кабиной</li>
+        <li>Балкон с видом на город</li>
+        <li>Этаж: 3 из 5</li>
+        <li>Лифт в здании</li>
+        <li>Парковочное место во дворе</li>
+      </ul>
+      <p>Квартира полностью меблирована и готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250001</barKod>
+        <location>Нови-Сад, улица Змай Йовина, 12</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2560</latitude>
+        <longitude>19.8450</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>3</floor>
+        <total_floors>5</total_floors>
+        <area>65</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2015</year_built>
+        <renovation_year>2023</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment1_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment1_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment1_bedroom.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 2 -->
+    <artikal>
+        <id>200002</id>
+        <sifra>APT-2025-002</sifra>
+        <naziv><![CDATA[Уютная студия рядом с университетом]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>NS Properties</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>45000</vpCena>
+        <mpCena>50000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Идеальный вариант для студентов, рядом с университетом.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 35 кв.м.</li>
+        <li>Студия с зонированной спальней и гостиной</li>
+        <li>Кухня с необходимой техникой</li>
+        <li>Ванная комната с душем</li>
+        <li>Этаж: 2 из 4</li>
+        <li>Без лифта</li>
+        <li>Общественная парковка рядом</li>
+      </ul>
+      <p>Квартира меблирована, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250002</barKod>
+        <location>Нови-Сад, улица Др Симе Милошевича, 8</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2435</latitude>
+        <longitude>19.8490</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>1</rooms>
+        <floor>2</floor>
+        <total_floors>4</total_floors>
+        <area>35</area>
+        <building_type><![CDATA[Панельный]]></building_type>
+        <has_balcony>0</has_balcony>
+        <has_elevator>0</has_elevator>
+        <has_parking>0</has_parking>
+        <year_built>2010</year_built>
+        <renovation_year>2022</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_studio1_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_studio1_kitchen.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_studio1_bathroom.jpg]]></slika>
+        </slike>
+    </artikal>
+
+
+
+
+    <!-- Квартира 3 -->
+    <artikal>
+        <id>200003</id>
+        <sifra>APT-2025-003</sifra>
+        <naziv><![CDATA[Просторная 3-комнатная квартира с видом на Дунай]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Danube Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>150000</vpCena>
+        <mpCena>165000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Квартира с потрясающим видом на реку Дунай, расположенная в престижном районе.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 95 кв.м.</li>
+        <li>3 комнаты: 2 спальни и просторная гостиная</li>
+        <li>Кухня оборудована современной техникой</li>
+        <li>2 ванные комнаты</li>
+        <li>Большая терраса с видом на реку</li>
+        <li>Этаж: 5 из 7</li>
+        <li>Лифт в здании</li>
+        <li>Подземный паркинг</li>
+      </ul>
+      <p>Квартира продается с мебелью, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250003</barKod>
+        <location>Нови-Сад, набережная Дуная, 15</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2515</latitude>
+        <longitude>19.8610</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>3</rooms>
+        <floor>5</floor>
+        <total_floors>7</total_floors>
+        <area>95</area>
+        <building_type><![CDATA[Монолитный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2018</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment3_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment3_view.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment3_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 4 -->
+    <artikal>
+        <id>200004</id>
+        <sifra>APT-2025-004</sifra>
+        <naziv><![CDATA[Новая квартира в жилом комплексе "Солнечный берег"]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Sunshine Homes</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>110000</vpCena>
+        <mpCena>120000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Современная квартира в новом жилом комплексе с развитой инфраструктурой.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 70 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня открытого типа</li>
+        <li>Ванная комната с ванной</li>
+        <li>Лоджия</li>
+        <li>Этаж: 4 из 10</li>
+        <li>Два лифта в подъезде</li>
+        <li>Охраняемая территория</li>
+      </ul>
+      <p>Квартира сдается с чистовой отделкой, возможна покупка с мебелью.</p>
+    ]]>        </opis>
+        <barKod>APT20250004</barKod>
+        <location>Нови-Сад, бульвар Европа, 22</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2600</latitude>
+        <longitude>19.8300</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>4</floor>
+        <total_floors>10</total_floors>
+        <area>70</area>
+        <building_type><![CDATA[Монолитный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>0</has_parking>
+        <year_built>2023</year_built>
+        <renovation_year>2025</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment4_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment4_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment4_bedroom.jpg]]></slika>
+        </slike>
+    </artikal>
+
+
+    <!-- Квартира 5 -->
+    <artikal>
+        <id>200005</id>
+        <sifra>APT-2025-005</sifra>
+        <naziv><![CDATA[Стильная квартира-лофт в историческом центре]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Urban Living NS</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>130000</vpCena>
+        <mpCena>140000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Уникальная квартира-лофт в самом сердце исторического центра Нови-Сада.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 85 кв.м.</li>
+        <li>Открытая планировка с возможностью зонирования</li>
+        <li>Высокие потолки 4 м</li>
+        <li>Кухня с островом и встроенной техникой</li>
+        <li>Ванная комната с дизайнерской отделкой</li>
+        <li>Этаж: 2 из 3</li>
+        <li>Без лифта</li>
+        <li>Парковка на улице</li>
+      </ul>
+      <p>Квартира полностью отремонтирована в 2024 году, использованы качественные материалы.</p>
+    ]]>        </opis>
+        <barKod>APT20250005</barKod>
+        <location>Нови-Сад, улица Дунавска, 10</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2550</latitude>
+        <longitude>19.8480</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>1</rooms>
+        <floor>2</floor>
+        <total_floors>3</total_floors>
+        <area>85</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>0</has_balcony>
+        <has_elevator>0</has_elevator>
+        <has_parking>0</has_parking>
+        <year_built>1900</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment5_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment5_interior.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment5_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 6 -->
+    <artikal>
+        <id>200006</id>
+        <sifra>APT-2025-006</sifra>
+        <naziv><![CDATA[Светлая квартира с панорамными окнами в районе Грбавица]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>NS Home Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>95000</vpCena>
+        <mpCena>105000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Современная квартира с большими панорамными окнами, обеспечивающими много света.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 60 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня открытого типа</li>
+        <li>Ванная комната с душевой кабиной</li>
+        <li>Балкон</li>
+        <li>Этаж: 6 из 8</li>
+        <li>Лифт</li>
+        <li>Подземный паркинг</li>
+      </ul>
+      <p>Квартира продается с мебелью и техникой, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250006</barKod>
+        <location>Нови-Сад, улица Булевар ослобођења, 45</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2470</latitude>
+        <longitude>19.8350</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>6</floor>
+        <total_floors>8</total_floors>
+        <area>60</area>
+        <building_type><![CDATA[Монолитный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2020</year_built>
+        <renovation_year>2025</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment6_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment6_livingroom.jpg]]></slika>
+        </slike>
+    </artikal>
+
+
+    <!-- Квартира 7 -->
+    <artikal>
+        <id>200007</id>
+        <sifra>APT-2025-007</sifra>
+        <naziv><![CDATA[Уютная квартира с одной спальней в районе Лиман III]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>NS Real Estate</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>85000</vpCena>
+        <mpCena>90000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Уютная квартира с одной спальней, расположенная в популярном районе Лиман III.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 50 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня с обеденной зоной</li>
+        <li>Ванная комната с ванной</li>
+        <li>Балкон</li>
+        <li>Этаж: 2 из 5</li>
+        <li>Лифт</li>
+        <li>Парковка перед зданием</li>
+      </ul>
+      <p>Квартира продается с мебелью, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250007</barKod>
+        <location>Нови-Сад, улица Народног фронта, 25</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2450</latitude>
+        <longitude>19.8300</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>2</floor>
+        <total_floors>5</total_floors>
+        <area>50</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2012</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment7_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment7_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment7_bedroom.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 8 -->
+    <artikal>
+        <id>200008</id>
+        <sifra>APT-2025-008</sifra>
+        <naziv><![CDATA[Современная квартира-студия в новостройке]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Future Homes NS</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>60000</vpCena>
+        <mpCena>65000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Современная квартира-студия в новом жилом комплексе с развитой инфраструктурой.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 40 кв.м.</li>
+        <li>Открытая планировка</li>
+        <li>Кухня с встроенной техникой</li>
+        <li>Ванная комната с душевой кабиной</li>
+        <li>Балкон</li>
+        <li>Этаж: 3 из 6</li>
+        <li>Лифт</li>
+        <li>Парковочное место в подземном гараже</li>
+      </ul>
+      <p>Квартира сдается с чистовой отделкой, возможна покупка с мебелью.</p>
+    ]]>        </opis>
+        <barKod>APT20250008</barKod>
+        <location>Нови-Сад, улица Бранка Бајића, 14</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2500</latitude>
+        <longitude>19.8200</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>1</rooms>
+        <floor>3</floor>
+        <total_floors>6</total_floors>
+        <area>40</area>
+        <building_type><![CDATA[Монолитный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2024</year_built>
+        <renovation_year>2025</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment8_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment8_interior.jpg]]></slika>
+        </slike>
+    </artikal>
+
+
+
+    <!-- Квартира 9 -->
+    <artikal>
+        <id>200009</id>
+        <sifra>APT-2025-009</sifra>
+        <naziv><![CDATA[Просторная квартира с двумя спальнями в центре города]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>City Center Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>120000</vpCena>
+        <mpCena>130000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Просторная квартира с двумя спальнями, расположенная в самом центре Нови-Сада.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 85 кв.м.</li>
+        <li>3 комнаты: 2 спальни и гостиная</li>
+        <li>Кухня с обеденной зоной</li>
+        <li>Ванная комната с ванной</li>
+        <li>Балкон с видом на город</li>
+        <li>Этаж: 4 из 6</li>
+        <li>Лифт</li>
+        <li>Парковка во дворе</li>
+      </ul>
+      <p>Квартира продается с мебелью, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250009</barKod>
+        <location>Нови-Сад, улица Змај Јовина, 12</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2555</latitude>
+        <longitude>19.8450</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>3</rooms>
+        <floor>4</floor>
+        <total_floors>6</total_floors>
+        <area>85</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2015</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment9_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment9_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment9_bedroom.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 10 -->
+    <artikal>
+        <id>200010</id>
+        <sifra>APT-2025-010</sifra>
+        <naziv><![CDATA[Современная квартира с одной спальней в районе Подбара]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Podbara Living</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>75000</vpCena>
+        <mpCena>80000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Современная квартира с одной спальней, расположенная в тихом районе Подбара.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 55 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня с современной техникой</li>
+        <li>Ванная комната с душевой кабиной</li>
+        <li>Балкон</li>
+        <li>Этаж: 2 из 4</li>
+        <li>Без лифта</li>
+        <li>Парковка перед зданием</li>
+      </ul>
+      <p>Квартира сдается с мебелью и техникой, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250010</barKod>
+        <location>Нови-Сад, улица Александра Тишме, 8</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2580</latitude>
+        <longitude>19.8500</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>2</floor>
+        <total_floors>4</total_floors>
+        <area>55</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>0</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2010</year_built>
+        <renovation_year>2023</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment10_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment10_livingroom.jpg]]></slika>
+        </slike>
+
+
+
+    </artikal>
+    <!-- Квартира 11 -->
+    <artikal>
+        <id>200011</id>
+        <sifra>APT-2025-011</sifra>
+        <naziv><![CDATA[Стильная квартира-студия в районе Грбавица]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Urban Living NS</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>70000</vpCena>
+        <mpCena>75000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Современная квартира-студия в популярном районе Грбавица, идеально подходит для молодых специалистов или студентов.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 42 кв.м.</li>
+        <li>Открытая планировка</li>
+        <li>Кухня с современной техникой</li>
+        <li>Ванная комната с душевой кабиной</li>
+        <li>Балкон</li>
+        <li>Этаж: 3 из 5</li>
+        <li>Лифт</li>
+        <li>Парковка перед зданием</li>
+      </ul>
+      <p>Квартира полностью меблирована и готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250011</barKod>
+        <location>Нови-Сад, улица Булевар ослобођења, 98</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2475</latitude>
+        <longitude>19.8355</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>1</rooms>
+        <floor>3</floor>
+        <total_floors>5</total_floors>
+        <area>42</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2018</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment11_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment11_interior.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment11_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 12 -->
+    <artikal>
+        <id>200012</id>
+        <sifra>APT-2025-012</sifra>
+        <naziv><![CDATA[Просторная квартира с тремя спальнями в районе Подбара]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Family Homes NS</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>150000</vpCena>
+        <mpCena>160000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Просторная квартира с тремя спальнями, идеально подходит для семьи, расположена в тихом районе Подбара.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 120 кв.м.</li>
+        <li>4 комнаты: 3 спальни и гостиная</li>
+        <li>Кухня с обеденной зоной</li>
+        <li>Две ванные комнаты</li>
+        <li>Два балкона</li>
+        <li>Этаж: 2 из 4</li>
+        <li>Без лифта</li>
+        <li>Гараж включен</li>
+      </ul>
+      <p>Квартира продается с мебелью и техникой, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250012</barKod>
+        <location>Нови-Сад, улица Александра Невског, 15</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2585</latitude>
+        <longitude>19.8510</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>4</rooms>
+        <floor>2</floor>
+        <total_floors>4</total_floors>
+        <area>120</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>0</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2010</year_built>
+        <renovation_year>2023</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment12_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment12_livingroom.jpg]]></slika>
+        </slike>
+
+    </artikal>
+    <!-- Квартира 13 -->
+    <artikal>
+        <id>200013</id>
+        <sifra>APT-2025-013</sifra>
+        <naziv><![CDATA[Уютная квартира с одной спальней в районе Лиман]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Liman Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>85000</vpCena>
+        <mpCena>90000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Уютная квартира с одной спальней, расположенная в популярном районе Лиман, рядом с парком и набережной Дуная.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 50 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня с современной техникой</li>
+        <li>Ванная комната с душевой кабиной</li>
+        <li>Балкон с видом на парк</li>
+        <li>Этаж: 3 из 5</li>
+        <li>Лифт</li>
+        <li>Парковка перед зданием</li>
+      </ul>
+      <p>Квартира полностью меблирована и готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250013</barKod>
+        <location>Нови-Сад, улица Народног фронта, 45</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2425</latitude>
+        <longitude>19.8500</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>3</floor>
+        <total_floors>5</total_floors>
+        <area>50</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2012</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment13_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment13_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment13_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 14 -->
+    <artikal>
+        <id>200014</id>
+        <sifra>APT-2025-014</sifra>
+        <naziv><![CDATA[Современная квартира с двумя спальнями в районе Детелинара]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Detelinara Homes</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>110000</vpCena>
+        <mpCena>115000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Современная квартира с двумя спальнями, расположенная в районе Детелинара, рядом с торговыми центрами и школами.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 70 кв.м.</li>
+        <li>3 комнаты: 2 спальни и гостиная</li>
+        <li>Кухня с обеденной зоной</li>
+        <li>Ванная комната с ванной</li>
+        <li>Балкон</li>
+        <li>Этаж: 4 из 6</li>
+        <li>Лифт</li>
+        <li>Подземный паркинг</li>
+      </ul>
+      <p>Квартира продается с мебелью и техникой, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250014</barKod>
+        <location>Нови-Сад, улица Корнелија Станковића, 20</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2650</latitude>
+        <longitude>19.8100</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>3</rooms>
+        <floor>4</floor>
+        <total_floors>6</total_floors>
+        <area>70</area>
+        <building_type><![CDATA[Монолитный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2015</year_built>
+        <renovation_year>2023</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment14_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment14_livingroom.jpg]]></slika>
+        </slike>
+
+
+    </artikal>
+    <!-- Квартира 15 -->
+    <artikal>
+        <id>200015</id>
+        <sifra>APT-2025-015</sifra>
+        <naziv><![CDATA[Современная квартира с одной спальней в центре города]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>City Center Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>95000</vpCena>
+        <mpCena>100000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Современная квартира с одной спальней, расположенная в самом сердце Нови-Сада, рядом с главными достопримечательностями и удобствами.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 55 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня с современной техникой</li>
+        <li>Ванная комната с ванной</li>
+        <li>Балкон с видом на город</li>
+        <li>Этаж: 2 из 6</li>
+        <li>Лифт</li>
+        <li>Подземный паркинг</li>
+      </ul>
+      <p>Квартира полностью меблирована и готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250015</barKod>
+        <location>Нови-Сад, улица Змај Јовина, 12</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2560</latitude>
+        <longitude>19.8450</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>2</floor>
+        <total_floors>6</total_floors>
+        <area>55</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2017</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment15_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment15_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment15_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 16 -->
+    <artikal>
+        <id>200016</id>
+        <sifra>APT-2025-016</sifra>
+        <naziv><![CDATA[Просторная квартира с двумя спальнями в районе Роткварија]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Rotkvarija Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>120000</vpCena>
+        <mpCena>125000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Просторная квартира с двумя спальнями, расположенная в районе Роткварија, рядом с парками и магазинами.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 85 кв.м.</li>
+        <li>3 комнаты: 2 спальни и гостиная</li>
+        <li>Кухня с обеденной зоной</li>
+        <li>Две ванные комнаты</li>
+        <li>Два балкона</li>
+        <li>Этаж: 5 из 7</li>
+        <li>Лифт</li>
+        <li>Гараж включен</li>
+      </ul>
+      <p>Квартира продается с мебелью и техникой, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250016</barKod>
+        <location>Нови-Сад, улица Јеврејска, 45</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2540</latitude>
+        <longitude>19.8420</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>3</rooms>
+        <floor>5</floor>
+        <total_floors>7</total_floors>
+        <area>85</area>
+        <building_type><![CDATA[Монолитный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2019</year_built>
+        <renovation_year>2023</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment16_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment16_livingroom.jpg]]></slika>
+        </slike>
+    </artikal>
+    <!-- Квартира 15 -->
+    <artikal>
+        <id>200015</id>
+        <sifra>APT-2025-015</sifra>
+        <naziv><![CDATA[Современная квартира с одной спальней в центре города]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>City Center Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>95000</vpCena>
+        <mpCena>100000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Современная квартира с одной спальней, расположенная в самом сердце Нови-Сада, рядом с главными достопримечательностями и удобствами.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 55 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня с современной техникой</li>
+        <li>Ванная комната с ванной</li>
+        <li>Балкон с видом на город</li>
+        <li>Этаж: 2 из 6</li>
+        <li>Лифт</li>
+        <li>Подземный паркинг</li>
+      </ul>
+      <p>Квартира полностью меблирована и готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250015</barKod>
+        <location>Нови-Сад, улица Змај Јовина, 12</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2560</latitude>
+        <longitude>19.8450</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>2</floor>
+        <total_floors>6</total_floors>
+        <area>55</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2017</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment15_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment15_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment15_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 16 -->
+    <artikal>
+        <id>200016</id>
+        <sifra>APT-2025-016</sifra>
+        <naziv><![CDATA[Просторная квартира с двумя спальнями в районе Роткварија]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Rotkvarija Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>120000</vpCena>
+        <mpCena>125000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Просторная квартира с двумя спальнями, расположенная в районе Роткварија, рядом с парками и магазинами.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 85 кв.м.</li>
+        <li>3 комнаты: 2 спальни и гостиная</li>
+        <li>Кухня с обеденной зоной</li>
+        <li>Две ванные комнаты</li>
+        <li>Два балкона</li>
+        <li>Этаж: 5 из 7</li>
+        <li>Лифт</li>
+        <li>Гараж включен</li>
+      </ul>
+      <p>Квартира продается с мебелью и техникой, готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250016</barKod>
+        <location>Нови-Сад, улица Јеврејска, 45</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2540</latitude>
+        <longitude>19.8420</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>3</rooms>
+        <floor>5</floor>
+        <total_floors>7</total_floors>
+        <area>85</area>
+        <building_type><![CDATA[Монолитный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2019</year_built>
+        <renovation_year>2023</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment16_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment16_livingroom.jpg]]></slika>
+        </slike>
+
+
+
+
+    </artikal>
+    <!-- Квартира 17 -->
+    <artikal>
+        <id>200017</id>
+        <sifra>APT-2025-017</sifra>
+        <naziv><![CDATA[Стильная квартира-студия в районе Грбавица]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Grbavica Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>70000</vpCena>
+        <mpCena>75000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Стильная и современная квартира-студия, расположенная в популярном районе Грбавица, рядом с кафе и магазинами.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 40 кв.м.</li>
+        <li>Открытая планировка: зона спальни, гостиная и кухня</li>
+        <li>Современная ванная комната с душем</li>
+        <li>Балкон с видом на город</li>
+        <li>Этаж: 2 из 5</li>
+        <li>Лифт</li>
+        <li>Парковка во дворе</li>
+      </ul>
+      <p>Квартира полностью меблирована и оборудована всей необходимой техникой.</p>
+    ]]>        </opis>
+        <barKod>APT20250017</barKod>
+        <location>Нови-Сад, улица Булевар ослобођења, 30</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2510</latitude>
+        <longitude>19.8300</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>1</rooms>
+        <floor>2</floor>
+        <total_floors>5</total_floors>
+        <area>40</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2018</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment17_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment17_interior.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment17_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 18 -->
+    <artikal>
+        <id>200018</id>
+        <sifra>APT-2025-018</sifra>
+        <naziv><![CDATA[Просторная квартира с тремя спальнями в районе Подбара]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Podbara Homes</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>130000</vpCena>
+        <mpCena>135000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Просторная квартира с тремя спальнями, расположенная в историческом районе Подбара, рядом с набережной Дуная.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 100 кв.м.</li>
+        <li>4 комнаты: 3 спальни и гостиная</li>
+        <li>Кухня с обеденной зоной</li>
+        <li>Две ванные комнаты</li>
+        <li>Два балкона</li>
+        <li>Этаж: 3 из 4</li>
+        <li>Без лифта</li>
+        <li>Гараж включен</li>
+      </ul>
+      <p>Квартира частично меблирована, возможна продажа с мебелью по договоренности.</p>
+    ]]>        </opis>
+        <barKod>APT20250018</barKod>
+        <location>Нови-Сад, улица Дунавска, 15</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2530</latitude>
+        <longitude>19.8480</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>4</rooms>
+        <floor>3</floor>
+        <total_floors>4</total_floors>
+        <area>100</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>0</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2010</year_built>
+        <renovation_year>2023</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment18_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment18_livingroom.jpg]]></slika>
+        </slike>
+
+
+    </artikal>
+
+    <!-- Квартира 18 -->
+    <artikal>
+        <id>200018</id>
+        <sifra>APT-2025-018</sifra>
+        <naziv><![CDATA[Просторная квартира с тремя спальнями в районе Подбара]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Podbara Homes</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>130000</vpCena>
+        <mpCena>135000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Просторная квартира с тремя спальнями, расположенная в историческом районе Подбара, рядом с набережной Дуная.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 100 кв.м.</li>
+        <li>4 комнаты: 3 спальни и гостиная</li>
+        <li>Кухня с обеденной зоной</li>
+        <li>Две ванные комнаты</li>
+        <li>Два балкона</li>
+        <li>Этаж: 3 из 4</li>
+        <li>Без лифта</li>
+        <li>Гараж включен</li>
+      </ul>
+      <p>Квартира частично меблирована, возможна продажа с мебелью по договоренности.</p>
+    ]]>        </opis>
+        <barKod>APT20250018</barKod>
+        <location>Нови-Сад, улица Дунавска, 15</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2530</latitude>
+        <longitude>19.8480</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>4</rooms>
+        <floor>3</floor>
+        <total_floors>4</total_floors>
+        <area>100</area>
+        <building_type><![CDATA[Кирпичный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>0</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2010</year_built>
+        <renovation_year>2023</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment18_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment18_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment18_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 19 -->
+    <artikal>
+        <id>200019</id>
+        <sifra>APT-2025-019</sifra>
+        <naziv><![CDATA[Уютная квартира с одной спальней в районе Лиман]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Liman Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>85000</vpCena>
+        <mpCena>90000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Уютная квартира с одной спальней, расположенная в зеленом районе Лиман, рядом с парком и университетом.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 50 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня с современной техникой</li>
+        <li>Ванная комната с душем</li>
+        <li>Балкон с видом на парк</li>
+        <li>Этаж: 4 из 5</li>
+        <li>Лифт</li>
+        <li>Парковка перед зданием</li>
+      </ul>
+      <p>Квартира полностью меблирована и готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250019</barKod>
+        <location>Нови-Сад, улица Народног фронта, 25</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2400</latitude>
+        <longitude>19.8300</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>4</floor>
+        <total_floors>5</total_floors>
+        <area>50</area>
+        <building_type><![CDATA[Панельный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2015</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment19_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment19_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment19_kitchen.jpg]]></slika>
+        </slike>
+
+
+    </artikal>
+    <!-- Квартира 19 -->
+    <artikal>
+        <id>200019</id>
+        <sifra>APT-2025-019</sifra>
+        <naziv><![CDATA[Уютная квартира с одной спальней в районе Лиман]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>Liman Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>85000</vpCena>
+        <mpCena>90000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis><![CDATA[
+      <p>Уютная квартира с одной спальней, расположенная в зеленом районе Лиман, рядом с парком и университетом.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 50 кв.м.</li>
+        <li>2 комнаты: спальня и гостиная</li>
+        <li>Кухня с современной техникой</li>
+        <li>Ванная комната с душем</li>
+        <li>Балкон с видом на парк</li>
+        <li>Этаж: 4 из 5</li>
+        <li>Лифт</li>
+        <li>Парковка перед зданием</li>
+      </ul>
+      <p>Квартира полностью меблирована и готова к заселению.</p>
+    ]]>        </opis>
+        <barKod>APT20250019</barKod>
+        <location>Нови-Сад, улица Народног фронта, 25</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2400</latitude>
+        <longitude>19.8300</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>2</rooms>
+        <floor>4</floor>
+        <total_floors>5</total_floors>
+        <area>50</area>
+        <building_type><![CDATA[Панельный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2015</year_built>
+        <renovation_year>2024</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment19_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment19_livingroom.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment19_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+
+    <!-- Квартира 20 -->
+    <artikal>
+        <id>200020</id>
+        <sifra>APT-2025-020</sifra>
+        <naziv><![CDATA[Современная квартира-студия в центре города]]></naziv>
+        <kategorija1><![CDATA[НЕДВИЖИМОСТЬ]]></kategorija1>
+        <kategorija2><![CDATA[КВАРТИРА]]></kategorija2>
+        <uvoznik>City Center Realty</uvoznik>
+        <godinaUvoza>2025</godinaUvoza>
+        <zemljaPorekla>Сербия</zemljaPorekla>
+        <vpCena>75000</vpCena>
+        <mpCena>80000.0000</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis><![CDATA[
+      <p>Современная квартира-студия, расположенная в самом сердце Нови-Сада, в шаговой доступности от главных достопримечательностей.</p>
+      <p><strong>Характеристики:</strong></p>
+      <ul>
+        <li>Площадь: 45 кв.м.</li>
+        <li>Открытая планировка: зона спальни, гостиная и кухня</li>
+        <li>Совмещенный санузел с душевой кабиной</li>
+        <li>Балкон с видом на город</li>
+        <li>Этаж: 3 из 6</li>
+        <li>Лифт</li>
+        <li>Подземный паркинг</li>
+      </ul>
+      <p>Квартира полностью меблирована и оснащена современной техникой.</p>
+    ]]>        </opis>
+        <barKod>APT20250020</barKod>
+        <location>Нови-Сад, улица Змай Јовина, 10</location>
+        <address_city>Нови-Сад</address_city>
+        <address_country>Сербия</address_country>
+        <latitude>45.2550</latitude>
+        <longitude>19.8450</longitude>
+        <show_on_map>1</show_on_map>
+        <property_type><![CDATA[Квартира]]></property_type>
+        <rooms>1</rooms>
+        <floor>3</floor>
+        <total_floors>6</total_floors>
+        <area>45</area>
+        <building_type><![CDATA[Монолитный]]></building_type>
+        <has_balcony>1</has_balcony>
+        <has_elevator>1</has_elevator>
+        <has_parking>1</has_parking>
+        <year_built>2020</year_built>
+        <renovation_year>2025</renovation_year>
+        <slike>
+            <slika><![CDATA[https://example.com/images/novisad_apartment20_main.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment20_interior.jpg]]></slika>
+            <slika><![CDATA[https://example.com/images/novisad_apartment20_kitchen.jpg]]></slika>
+        </slike>
+    </artikal>
+</artikli>

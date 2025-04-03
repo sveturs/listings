@@ -402,7 +402,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 									attrValues[value] = true
 								}
 							}
-							
+
 							// Проверяем вложенные атрибуты
 							if attributes, ok := source["attributes"].([]interface{}); ok {
 								for _, attrI := range attributes {
@@ -413,7 +413,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 												attrValues[textValue] = true
 											}
 										}
-										
+
 										// Проверяем display_value
 										if displayValue, ok := attr["display_value"].(string); ok && displayValue != "" {
 											if strings.HasPrefix(strings.ToLower(displayValue), strings.ToLower(prefix)) {
@@ -428,7 +428,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 				}
 			}
 		}
-		
+
 		// Добавляем значения атрибутов в подсказки
 		for value := range attrValues {
 			if !contains(suggestions, value) {
@@ -585,6 +585,83 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	// Логирование информации о местоположении для отладки
 	log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
 		listing.ID, listing.City, listing.Country, listing.Location)
+	// В методе listingToDoc добавьте следующий блок кода после обработки атрибутов
+	// Примерно после строки 1660, где обрабатываются атрибуты
+
+	// Добавляем специфические атрибуты недвижимости в корень документа для лучшего поиска
+	realEstateAttrs := map[string]bool{
+		"rooms":            true,
+		"area":             true,
+		"floor":            true,
+		"total_floors":     true,
+		"property_type":    true,
+		"land_area":        true,
+		"year_built":       true,
+		"bathrooms":        true,
+		"condition":        true,
+		"amenities":        true,
+		"heating_type":     true,
+		"parking":          true,
+		"balcony":          true,
+		"furnished":        true,
+		"air_conditioning": true,
+	}
+
+	// Добавляем атрибуты в специальное поле для недвижимости
+	realEstateText := make([]string, 0)
+
+	// Проверяем наличие атрибутов недвижимости и добавляем их в документ
+	for _, attr := range listing.Attributes {
+		if realEstateAttrs[attr.AttributeName] {
+			var attrValue string
+
+			// Получаем значение в зависимости от типа атрибута
+			if attr.TextValue != nil && *attr.TextValue != "" {
+				attrValue = *attr.TextValue
+				doc[attr.AttributeName] = attrValue
+				doc[attr.AttributeName+"_facet"] = attrValue
+				realEstateText = append(realEstateText, attrValue)
+			} else if attr.NumericValue != nil {
+				numValue := *attr.NumericValue
+				doc[attr.AttributeName] = numValue
+
+				// Добавляем строковое представление для поиска
+				strValue := fmt.Sprintf("%g", numValue)
+				realEstateText = append(realEstateText, strValue)
+
+				// Для комнат добавляем также текстовое представление (например "2 комнаты")
+				if attr.AttributeName == "rooms" {
+					roomsText := fmt.Sprintf("%g %s", numValue, getLocalizedRoomText(numValue))
+					realEstateText = append(realEstateText, roomsText)
+				}
+			} else if attr.BooleanValue != nil {
+				boolValue := *attr.BooleanValue
+				doc[attr.AttributeName] = boolValue
+
+				// Добавляем строковое представление для поиска
+				if boolValue {
+					strValue := "да"
+					realEstateText = append(realEstateText, strValue)
+					doc[attr.AttributeName+"_text"] = strValue
+				} else {
+					strValue := "нет"
+					realEstateText = append(realEstateText, strValue)
+					doc[attr.AttributeName+"_text"] = strValue
+				}
+			}
+
+			log.Printf("Добавлен атрибут недвижимости %s в документ для объявления %d",
+				attr.AttributeName, listing.ID)
+		}
+	}
+
+	// Добавляем все тексты атрибутов недвижимости в специальное поле
+	if len(realEstateText) > 0 {
+		doc["real_estate_attributes_text"] = realEstateText
+
+		// Объединяем в одну строку для полнотекстового поиска
+		doc["real_estate_attributes_combined"] = strings.Join(realEstateText, " ")
+	}
 
 	doc["has_discount"] = listing.HasDiscount
 	if listing.OldPrice > 0 {
@@ -1099,7 +1176,17 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	}
 	return doc
 }
-
+func getLocalizedRoomText(rooms float64) string {
+    // По умолчанию используем русский язык
+    switch int(rooms) {
+    case 1:
+        return "комната"
+    case 2, 3, 4:
+        return "комнаты"
+    default:
+        return "комнат"
+    }
+}
 func getMileageRange(mileage int) string {
 	switch {
 	case mileage <= 5000:
@@ -1259,10 +1346,6 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"title.ru^4", "description.ru", "translations.ru.title^4", "translations.ru.description",
 			"title.en^4", "description.en", "translations.en.title^4", "translations.en.description",
 			"all_attributes_text^2",
-			"attributes.display_value^1.5",
-			"attributes.text_value^1.5",
-			"attributes.text_value_lowercase^1.5",
-			"attributes.boolean_text^1.5",
 			// Специальные поля для важных атрибутов (расширенный список)
 			"make^5", // Увеличиваем вес поля make для лучшего поиска по марке
 			"model^4",
@@ -1292,6 +1375,28 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"attr_ram_text^3",
 			"attr_storage_capacity_text^3",
 			"attr_screen_size_text^3",
+			// Поля для атрибутов недвижимости
+			"real_estate_attributes_text^3",
+			"real_estate_attributes_combined^3",
+			"rooms^4",
+			"area^3",
+			"floor^3",
+			"total_floors^3",
+			"property_type^4",
+			"land_area^3",
+			"year_built^3",
+			"bathrooms^3",
+			"heating_type^3",
+			"parking^3",
+			"balcony^3",
+			"furnished^3",
+			"air_conditioning^3",
+			// Поля для текстовых представлений
+			"rooms_text^4",
+			"property_type_text^4",
+			"heating_type_text^3",
+			"parking_text^3",
+			"furnished_text^3",
 		}
 
 		// Определяем язык запроса для приоритизации полей
@@ -1331,11 +1436,11 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		if params.Fuzziness != "" {
 			fuzziness = params.Fuzziness
 		}
-		
+
 		// Добавляем прямые запросы в should-блок для основных полей
 		boolMap := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
 		should := boolMap["should"].([]interface{})
-		
+
 		// Добавляем запрос для поиска по заголовку с высоким весом и нечетким поиском
 		should = append(should, map[string]interface{}{
 			"match": map[string]interface{}{
@@ -1346,7 +1451,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				},
 			},
 		})
-		
+
 		// Добавляем запрос для поиска по описанию
 		should = append(should, map[string]interface{}{
 			"match": map[string]interface{}{
@@ -1357,7 +1462,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				},
 			},
 		})
-		
+
 		// Добавляем запрос для переводов заголовка
 		should = append(should, map[string]interface{}{
 			"match": map[string]interface{}{
@@ -1368,7 +1473,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				},
 			},
 		})
-		
+
 		// Добавляем запрос для переводов описания
 		should = append(should, map[string]interface{}{
 			"match": map[string]interface{}{
@@ -1379,7 +1484,67 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				},
 			},
 		})
-		
+
+		// Проверяем, содержит ли запрос ключевые слова недвижимости
+		realEstateKeywords := []string{
+			"квартира", "комната", "комнат", "дом", "этаж",
+			"площадь", "м2", "кв.м", "квм", "кв м",
+			"студия", "однокомнатная", "двухкомнатная", "трехкомнатная", 
+			"однушка", "двушка", "трешка", "участок", "сотка",
+			"гараж", "паркинг", "балкон", "лоджия", "терраса",
+			"ремонт", "новостройка", "вторичка", "жилье", "недвижимость",
+			"аренда", "съем", "снять", "купить", "продажа",
+		}
+
+		isRealEstateQuery := false
+		for _, keyword := range realEstateKeywords {
+			if strings.Contains(strings.ToLower(params.Query), keyword) {
+				isRealEstateQuery = true
+				break
+			}
+		}
+
+		// Если запрос связан с недвижимостью, увеличиваем значимость соответствующих полей
+		if isRealEstateQuery {
+			log.Printf("Обнаружен запрос о недвижимости: '%s'", params.Query)
+			
+			// Добавляем дополнительные поля в запрос с повышенным весом
+			realEstateBoost := []map[string]interface{}{
+				{
+					"match": map[string]interface{}{
+						"real_estate_attributes_combined": map[string]interface{}{
+							"query":     params.Query,
+							"boost":     5.0,
+							"fuzziness": fuzziness,
+						},
+					},
+				},
+				{
+					"match": map[string]interface{}{
+						"property_type": map[string]interface{}{
+							"query":     params.Query,
+							"boost":     4.0,
+							"fuzziness": fuzziness,
+						},
+					},
+				},
+				{
+					"match": map[string]interface{}{
+						"rooms_text": map[string]interface{}{
+							"query":     params.Query,
+							"boost":     4.0,
+							"fuzziness": fuzziness,
+						},
+					},
+				},
+			}
+			
+			// Добавляем эти запросы в should-блок основного запроса
+			for _, q := range realEstateBoost {
+				should = append(should, q)
+			}
+		}
+
 		// Обновляем should-блок
 		boolMap["should"] = should
 		boolMap["minimum_should_match"] = 1 // Достаточно соответствия одному полю
@@ -1395,7 +1560,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				"minimum_should_match": minimumShouldMatch,
 			},
 		}
-		
+
 		// Добавляем multi_match в must-блок
 		must := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{})
 		must = append(must, multiMatch)
@@ -1409,7 +1574,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				if len(word) < 2 {
 					continue // Пропускаем слишком короткие слова
 				}
-				
+
 				// Добавляем запрос для поиска по заголовку только с этим словом
 				should = append(should, map[string]interface{}{
 					"match": map[string]interface{}{
@@ -1420,7 +1585,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 						},
 					},
 				})
-				
+
 				// Добавляем запрос для поиска по описанию только с этим словом
 				should = append(should, map[string]interface{}{
 					"match": map[string]interface{}{
@@ -1431,42 +1596,44 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 						},
 					},
 				})
-				
-				// Поиск по атрибутам
+
+				// ВАЖНО: Убираем nested запросы, т.к. они вызывают ошибку
+				// Вместо этого добавляем поиск по всем атрибутам в корне документа
 				should = append(should, map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "attributes",
-						"query": map[string]interface{}{
-							"match": map[string]interface{}{
-								"attributes.text_value": map[string]interface{}{
-									"query":     word,
-									"boost":     2.0,
-									"fuzziness": fuzziness,
-								},
-							},
+					"match": map[string]interface{}{
+						"all_attributes_text": map[string]interface{}{
+							"query":     word,
+							"boost":     2.0,
+							"fuzziness": fuzziness,
 						},
-						"score_mode": "max",
 					},
 				})
 				
-				// Поиск по отображаемым значениям атрибутов
-				should = append(should, map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "attributes",
-						"query": map[string]interface{}{
-							"match": map[string]interface{}{
-								"attributes.display_value": map[string]interface{}{
-									"query":     word,
-									"boost":     1.5,
-									"fuzziness": fuzziness,
-								},
+				// Добавляем поиск по специфическим полям недвижимости для каждого слова
+				if isRealEstateQuery {
+					should = append(should, map[string]interface{}{
+						"match": map[string]interface{}{
+							"real_estate_attributes_combined": map[string]interface{}{
+								"query":     word,
+								"boost":     3.0,
+								"fuzziness": fuzziness,
 							},
 						},
-						"score_mode": "max",
-					},
-				})
+					})
+					
+					// Поиск по полю комнат
+					should = append(should, map[string]interface{}{
+						"match": map[string]interface{}{
+							"rooms_text": map[string]interface{}{
+								"query":     word,
+								"boost":     2.5,
+								"fuzziness": fuzziness,
+							},
+						},
+					})
+				}
 			}
-			
+
 			// Обновляем should-блок с новыми запросами
 			boolMap["should"] = should
 		}
@@ -1655,99 +1822,73 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	// Добавляем фильтры по атрибутам, если есть
 	if params.AttributeFilters != nil && len(params.AttributeFilters) > 0 {
+		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+		
+		// Список атрибутов недвижимости
+		realEstateAttrs := map[string]bool{
+			"property_type": true, "rooms": true, "floor": true, "total_floors": true,
+			"area": true, "land_area": true, "building_type": true, 
+			"has_balcony": true, "has_elevator": true, "has_parking": true,
+			"year_built": true, "bathrooms": true,
+		}
+		
 		for attrName, attrValue := range params.AttributeFilters {
-			// Пропускаем пустые значения
 			if attrValue == "" {
 				continue
 			}
-
-			// Проверяем, содержит ли значение диапазон (для числовых значений)
-			if strings.Contains(attrValue, ",") {
-				parts := strings.Split(attrValue, ",")
-				if len(parts) == 2 {
-					minVal, minErr := strconv.ParseFloat(parts[0], 64)
-					maxVal, maxErr := strconv.ParseFloat(parts[1], 64)
-
-					if minErr == nil && maxErr == nil {
-						attrFilter := map[string]interface{}{
-							"nested": map[string]interface{}{
-								"path": "attributes",
-								"query": map[string]interface{}{
-									"bool": map[string]interface{}{
-										"must": []map[string]interface{}{
-											{
-												"term": map[string]interface{}{
-													"attributes.attribute_name": attrName,
-												},
-											},
-											{
-												"range": map[string]interface{}{
-													"attributes.numeric_value": map[string]interface{}{
-														"gte": minVal,
-														"lte": maxVal,
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						}
-
-						filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
-						filter = append(filter, attrFilter)
-						query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
-
-						continue
-					}
-				}
-			}
-
-			// Для обычных значений атрибутов
-			attrFilter := map[string]interface{}{
-				"nested": map[string]interface{}{
-					"path": "attributes",
-					"query": map[string]interface{}{
-						"bool": map[string]interface{}{
-							"must": []map[string]interface{}{
-								{
-									"term": map[string]interface{}{
-										"attributes.attribute_name": attrName,
-									},
-								},
-								{
-									"bool": map[string]interface{}{
-										"should": []map[string]interface{}{
-											{
-												"match": map[string]interface{}{
-													"attributes.text_value": map[string]interface{}{
-														"query":     attrValue,
-														"fuzziness": "AUTO",
-													},
-												},
-											},
-											{
-												"match": map[string]interface{}{
-													"attributes.display_value": map[string]interface{}{
-														"query":     attrValue,
-														"fuzziness": "AUTO",
-													},
-												},
-											},
-										},
-										"minimum_should_match": 1,
-									},
-								},
-							},
+			
+			// Проверяем, является ли атрибут атрибутом недвижимости
+			if realEstateAttrs[attrName] {
+				// Создаем простой term-запрос вместо nested для атрибутов недвижимости
+				if attrValue == "true" || attrValue == "false" {
+					// Для булевых атрибутов
+					boolVal := attrValue == "true"
+					filter = append(filter, map[string]interface{}{
+						"term": map[string]interface{}{
+							attrName: boolVal,
 						},
+					})
+					log.Printf("Добавлен фильтр по атрибуту недвижимости (boolean): %s = %v", attrName, boolVal)
+				} else if strings.Contains(attrValue, ",") {
+					// Для числовых диапазонов
+					parts := strings.Split(attrValue, ",")
+					if len(parts) == 2 {
+						minVal, minErr := strconv.ParseFloat(parts[0], 64)
+						maxVal, maxErr := strconv.ParseFloat(parts[1], 64)
+						
+						if minErr == nil && maxErr == nil {
+							filter = append(filter, map[string]interface{}{
+								"range": map[string]interface{}{
+									attrName: map[string]interface{}{
+										"gte": minVal,
+										"lte": maxVal,
+									},
+								},
+							})
+							log.Printf("Добавлен фильтр по атрибуту недвижимости (range): %s = %v-%v", attrName, minVal, maxVal)
+						}
+					}
+				} else {
+					// Для текстовых атрибутов
+					filter = append(filter, map[string]interface{}{
+						"term": map[string]interface{}{
+							attrName: attrValue,
+						},
+					})
+					log.Printf("Добавлен фильтр по атрибуту недвижимости (text): %s = %s", attrName, attrValue)
+				}
+			} else {
+				// Для обычных атрибутов, используем term-запрос по всем типам значений
+				filter = append(filter, map[string]interface{}{
+					"term": map[string]interface{}{
+						"attr_" + attrName: attrValue,
 					},
-				},
+				})
+				log.Printf("Добавлен фильтр по обычному атрибуту: %s = %s", attrName, attrValue)
 			}
-
-			filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
-			filter = append(filter, attrFilter)
-			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 		}
+		
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
 
 	// Настраиваем сортировку
@@ -1856,6 +1997,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 	return query
 }
+
 // parseSearchResponse обрабатывает ответ от OpenSearch
 func (r *Repository) parseSearchResponse(response map[string]interface{}, language string) (*search.SearchResult, error) {
 	result := &search.SearchResult{
@@ -2308,13 +2450,13 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 			}
 		}
 	}
-    if avgRating, ok := doc["average_rating"].(float64); ok {
-        listing.AverageRating = avgRating
-    }
-    
-    if reviewCount, ok := doc["review_count"].(float64); ok {
-        listing.ReviewCount = int(reviewCount)
-    }
+	if avgRating, ok := doc["average_rating"].(float64); ok {
+		listing.AverageRating = avgRating
+	}
+
+	if reviewCount, ok := doc["review_count"].(float64); ok {
+		listing.ReviewCount = int(reviewCount)
+	}
 	// Убедимся, что HasDiscount установлен корректно на основе OldPrice
 	if listing.OldPrice > 0 && listing.OldPrice > listing.Price {
 		listing.HasDiscount = true

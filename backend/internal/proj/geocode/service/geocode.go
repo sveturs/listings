@@ -24,6 +24,9 @@ func NewGeocodeService(storage storage.Storage) GeocodeServiceInterface {
 }
 
 // ReverseGeocode получает адрес по координатам
+// Исправленная функция ReverseGeocode в файле backend/internal/service/geocode.go
+
+// ReverseGeocode получает адрес по координатам
 func (s *GeocodeService) ReverseGeocode(ctx context.Context, lat, lon float64) (*models.GeoLocation, error) {
     // Используем Nominatim API (OpenStreetMap)
     nominatimURL := fmt.Sprintf(
@@ -60,27 +63,47 @@ func (s *GeocodeService) ReverseGeocode(ctx context.Context, lat, lon float64) (
     // Извлекаем данные из ответа
     address, ok := result["address"].(map[string]interface{})
     if !ok {
-        return nil, fmt.Errorf("address not found in response")
+        // Вместо возврата ошибки используем значения по умолчанию
+        return &models.GeoLocation{
+            City:    "Unknown City",
+            Country: "Unknown Country",
+            Lat:     lat,
+            Lon:     lon,
+        }, nil
     }
 
     // Пытаемся найти город
     var city, country string
     
     // Проверяем разные поля, так как структура зависит от региона
-    for _, field := range []string{"city", "town", "village", "hamlet"} {
+    for _, field := range []string{"city", "town", "village", "hamlet", "county", "state", "region"} {
         if value, ok := address[field].(string); ok && value != "" {
             city = value
             break
         }
     }
 
+    // Если город не найден, используем display_name
+    if city == "" && result["display_name"] != nil {
+        displayName, ok := result["display_name"].(string)
+        if ok {
+            parts := strings.Split(displayName, ",")
+            if len(parts) > 0 {
+                city = strings.TrimSpace(parts[0])
+            }
+        }
+    }
+
+    // Если город всё еще не найден, используем значение по умолчанию
+    if city == "" {
+        city = "Unknown City"
+    }
+
     // Определяем страну
     if value, ok := address["country"].(string); ok {
         country = value
-    }
-
-    if city == "" {
-        return nil, fmt.Errorf("city not found in response")
+    } else {
+        country = "Unknown Country"
     }
 
     // Создаем модель локации

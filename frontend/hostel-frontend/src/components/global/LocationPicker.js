@@ -41,7 +41,7 @@ const reverseGeocode = async (lat, lng) => {
             if (response.data && response.data.data) {
                 const data = response.data.data;
                 return {
-                    formatted_address: `${data.city}, ${data.country}`,
+                    formatted_address: data.city && data.country ? `${data.city}, ${data.country}` : "Unknown Location",
                     address_components: {
                         city: data.city || '',
                         country: data.country || '',
@@ -52,6 +52,7 @@ const reverseGeocode = async (lat, lng) => {
             }
         } catch (err) {
             console.log('Ошибка нашего API геокодирования, используем OSM:', err);
+            // Не прерываем выполнение функции при ошибке, переходим к запасному методу OSM
         }
         
         // В случае ошибки используем Nominatim OSM
@@ -60,26 +61,83 @@ const reverseGeocode = async (lat, lng) => {
                 'User-Agent': 'HostelBookingApp/1.0'
             }
         });
-        const data = await response.json();
         
-        if (data && data.display_name) {
+        if (!response.ok) {
+            // Если OSM тоже не удался, возвращаем данные по умолчанию
             return {
-                formatted_address: data.display_name,
+                formatted_address: "Unknown Location",
                 address_components: {
-                    street: data.address.road || data.address.pedestrian || '',
-                    city: data.address.city || data.address.town || data.address.village || '',
-                    state: data.address.state || '',
-                    country: data.address.country || '',
-                    postal_code: data.address.postcode || ''
+                    city: "",
+                    country: "",
                 },
                 latitude: lat,
                 longitude: lng
             };
         }
-        return null;
+        
+        const data = await response.json();
+        
+        if (data && data.display_name) {
+            // Извлекаем город и страну
+            let city = "";
+            let country = "";
+            
+            if (data.address) {
+                // Пытаемся найти город в различных полях
+                for (const field of ['city', 'town', 'village', 'hamlet', 'county', 'state']) {
+                    if (data.address[field]) {
+                        city = data.address[field];
+                        break;
+                    }
+                }
+                
+                country = data.address.country || "";
+            }
+            
+            // Если город не найден, используем первую часть display_name
+            if (!city && data.display_name) {
+                const parts = data.display_name.split(',');
+                if (parts.length > 0) {
+                    city = parts[0].trim();
+                }
+            }
+            
+            return {
+                formatted_address: data.display_name,
+                address_components: {
+                    street: data.address?.road || data.address?.pedestrian || '',
+                    city: city,
+                    state: data.address?.state || '',
+                    country: country,
+                    postal_code: data.address?.postcode || ''
+                },
+                latitude: lat,
+                longitude: lng
+            };
+        }
+        
+        // Если не удалось получить адрес, возвращаем данные по умолчанию
+        return {
+            formatted_address: "Unknown Location",
+            address_components: {
+                city: "",
+                country: "",
+            },
+            latitude: lat,
+            longitude: lng
+        };
     } catch (error) {
         console.error("Error in reverse geocoding:", error);
-        return null;
+        // Возвращаем данные по умолчанию в случае ошибки
+        return {
+            formatted_address: "Unknown Location",
+            address_components: {
+                city: "",
+                country: "",
+            },
+            latitude: lat,
+            longitude: lng
+        };
     }
 };
 
@@ -269,20 +327,20 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
                     handleMarkerDragEnd({ target: marker });
                 });
         }
-
+    
         // Получаем адрес по координатам
         const locationInfo = await reverseGeocode(lat, lng);
-        if (locationInfo) {
-            setAddress(locationInfo.formatted_address);
-            
-            // Передаем информацию о местоположении родительскому компоненту
-            onLocationSelect({
-                latitude: lat,
-                longitude: lng,
-                formatted_address: locationInfo.formatted_address,
-                address_components: locationInfo.address_components
-            });
-        }
+        // locationInfo будет содержать данные даже в случае ошибки
+        
+        setAddress(locationInfo.formatted_address);
+        
+        // Передаем информацию о местоположении родительскому компоненту
+        onLocationSelect({
+            latitude: lat,
+            longitude: lng,
+            formatted_address: locationInfo.formatted_address,
+            address_components: locationInfo.address_components
+        });
     };
 
     // Обработчик изменения адреса с автодополнением
@@ -523,7 +581,7 @@ const handleSearch = async () => {
                                 handleMarkerDragEnd({ target: marker });
                             });
                     }
-
+    
                     // Получаем адрес по координатам
                     const locationInfo = await reverseGeocode(latitude, longitude);
                     if (locationInfo) {
@@ -558,7 +616,7 @@ const handleSearch = async () => {
             lat,
             lng
         });
-
+    
         // Получаем адрес по координатам
         const locationInfo = await reverseGeocode(lat, lng);
         if (locationInfo) {

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+
 import {
     Container,
     Typography,
@@ -21,7 +22,7 @@ const EditStorefrontPage = () => {
     const { t } = useTranslation(['common', 'marketplace']);
     const { id } = useParams();
     const navigate = useNavigate();
-    
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [storefront, setStorefront] = useState({
@@ -45,7 +46,7 @@ const EditStorefrontPage = () => {
             try {
                 setLoading(true);
                 const response = await axios.get(`/api/v1/storefronts/${id}`);
-                
+
                 if (response.data?.data) {
                     setStorefront(response.data.data);
                 }
@@ -62,12 +63,12 @@ const EditStorefrontPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         try {
             setSaving(true);
-            
+
             await axios.put(`/api/v1/storefronts/${id}`, storefront);
-            
+
             setSuccess(true);
             setTimeout(() => {
                 navigate(`/storefronts/${id}`);
@@ -88,16 +89,7 @@ const EditStorefrontPage = () => {
         }));
     };
 
-    const handleLocationSelect = (location) => {
-        setStorefront(prev => ({
-            ...prev,
-            address: location.formatted_address || '',
-            city: location.address_components?.city || '',
-            country: location.address_components?.country || '',
-            latitude: location.latitude,
-            longitude: location.longitude
-        }));
-    };
+
 
     if (loading) {
         return (
@@ -107,7 +99,16 @@ const EditStorefrontPage = () => {
             </Container>
         );
     }
-
+    const handleLocationSelect = (location) => {
+        setStorefront(prev => ({
+            ...prev,
+            address: location.formatted_address,
+            city: location.address_components?.city || '',
+            country: location.address_components?.country || '',
+            latitude: location.latitude,
+            longitude: location.longitude
+        }));
+    };
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom>
@@ -134,7 +135,7 @@ const EditStorefrontPage = () => {
                                 {t('marketplace:store.settings.basic')}
                             </Typography>
                         </Grid>
-                        
+
                         <Grid item xs={12}>
                             <TextField
                                 name="name"
@@ -171,14 +172,14 @@ const EditStorefrontPage = () => {
                                 disabled={saving}
                             />
                         </Grid>
-                        
+
                         <Grid item xs={12}>
                             <Divider sx={{ my: 2 }} />
                             <Typography variant="h6" gutterBottom>
                                 {t('marketplace:store.settings.contactInfo')}
                             </Typography>
                         </Grid>
-                        
+
                         <Grid item xs={12} md={6}>
                             <TextField
                                 name="phone"
@@ -189,7 +190,7 @@ const EditStorefrontPage = () => {
                                 disabled={saving}
                             />
                         </Grid>
-                        
+
                         <Grid item xs={12} md={6}>
                             <TextField
                                 name="email"
@@ -200,7 +201,7 @@ const EditStorefrontPage = () => {
                                 disabled={saving}
                             />
                         </Grid>
-                        
+
                         <Grid item xs={12}>
                             <TextField
                                 name="website"
@@ -212,16 +213,16 @@ const EditStorefrontPage = () => {
                                 placeholder="https://"
                             />
                         </Grid>
-                        
+
                         <Grid item xs={12}>
                             <Divider sx={{ my: 2 }} />
                             <Typography variant="h6" gutterBottom>
                                 {t('marketplace:store.settings.location')}
                             </Typography>
                         </Grid>
-                        
+
                         <Grid item xs={12}>
-                            <LocationPicker 
+                            <LocationPicker
                                 onLocationSelect={handleLocationSelect}
                                 initialLocation={{
                                     latitude: storefront.latitude,
