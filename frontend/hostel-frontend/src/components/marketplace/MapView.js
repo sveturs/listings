@@ -28,6 +28,7 @@ import { TILE_LAYER_URL, TILE_LAYER_ATTRIBUTION } from '../maps/map-constants';
 import '../maps/leaflet-icons'; // Для исправления иконок Leaflet
 import FullscreenMap from '../maps/FullscreenMap';
 import { useLocation } from '../../contexts/LocationContext';
+import CentralAttributeFilters from './CentralAttributeFilters';
 
 // Компонент для предпросмотра объявления при клике по маркеру
 const ListingPreview = ({ listing, onClose, onNavigate }) => {
@@ -265,6 +266,26 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
 
   // Убедимся, что у нас всегда есть userLocationState
   const [userLocationState, setUserLocationState] = useState(locationCoordinates);
+  const handleAttributeFilterChange = (newAttrFilters) => {
+    console.log("MapView: получены новые атрибутные фильтры:", newAttrFilters);
+    if (onFilterChange) {
+      onFilterChange({ 
+        ...filters, 
+        attributeFilters: newAttrFilters
+      });
+    }
+  };
+
+  // Обработчик сброса атрибутных фильтров
+  const resetAttributeFilters = () => {
+    if (onFilterChange) {
+      onFilterChange({ 
+        ...filters, 
+        attributeFilters: {} 
+      });
+    }
+  };
+
 
   // Обновляем userLocationState при изменении userLocation
   useEffect(() => {
@@ -838,9 +859,7 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         longitude: selectedListing.longitude,
         title: selectedListing.title
       };
-      console.log("Используем координаты выбранного объявления:", center);
     }
-
     // Второй случай: местоположение пользователя
     else if (userLocation && userLocation.lat && userLocation.lon) {
       center = {
@@ -848,7 +867,6 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         longitude: userLocation.lon,
         title: t('listings.map.yourLocation')
       };
-      console.log("Используем координаты пользователя:", center);
     }
     // Третий случай: текущий центр карты
     else if (mapRef.current) {
@@ -859,7 +877,6 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
           longitude: mapCenter.lng,
           title: t('listings.map.mapCenter')
         };
-        console.log("Используем текущий центр карты:", center);
       } catch (error) {
         console.error("Ошибка при получении центра карты:", error);
       }
@@ -872,7 +889,6 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         longitude: firstListing.longitude,
         title: firstListing.title
       };
-      console.log("Используем координаты первого объявления:", center);
     }
     // Пятый случай: фиксированные координаты по умолчанию (Нови-Сад)
     else {
@@ -881,13 +897,10 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         longitude: 19.8335,
         title: "Нови-Сад"
       };
-      console.log("Используем координаты по умолчанию:", center);
     }
 
     // Дополнительная проверка перед установкой состояния
     if (!center || !center.latitude || !center.longitude) {
-      console.error("Не удалось определить координаты для карты:", center);
-      // Устанавливаем координаты по умолчанию
       center = {
         latitude: 45.2671,
         longitude: 19.8335,
@@ -898,8 +911,6 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
     // Проверяем, что у нас есть числовые значения для координат
     center.latitude = Number(center.latitude);
     center.longitude = Number(center.longitude);
-
-    console.log("Итоговые координаты для полноэкранной карты:", center);
 
     // Устанавливаем состояние и открываем модальное окно
     setExpandedMapCenter(center);
@@ -942,10 +953,10 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
     <Box
       sx={{
         position: 'relative',
-        height: isMobile ? 'calc(100vh - 120px)' : '90vh',
         width: '100%',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        minHeight: isMobile ? 'calc(100vh - 120px)' : 'auto'
       }}
     >
       {/* Панель инструментов карты */}
@@ -963,8 +974,6 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-
-
           {/* Показываем информацию о количестве объявлений и витрин на карте */}
           {(() => {
             // Фильтруем объявления с координатами и флагом show_on_map
@@ -1004,8 +1013,6 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-
-
           <Button
             variant="outlined"
             startIcon={<List />}
@@ -1016,16 +1023,18 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         </Box>
       </Paper>
 
-      {/* Контейнер карты */}
+      {/* Контейнер карты - важно! Фиксированная высота и остальные свойства */}
       <Box
         sx={{
-          flex: 1,
+          position: 'relative',
+          width: '100%',
+          height: isMobile ? '50vh' : '60vh', // Фиксированная высота
           borderRadius: 1,
           overflow: 'hidden',
-          position: 'relative'
+          marginBottom: 3
         }}
       >
-        {/* Добавляем кнопку "Развернуть" в стиле MiniMap */}
+        {/* Кнопка "Развернуть" в стиле MiniMap */}
         <IconButton
           onClick={handleExpandMap}
           sx={{
@@ -1044,9 +1053,16 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
           <Maximize2 size={20} />
         </IconButton>
 
+        {/* Контейнер для карты должен иметь явные размеры */}
         <div
           ref={mapContainerRef}
-          style={{ width: '100%', height: '100%' }}
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }}
         />
 
         {!mapReady && (
@@ -1069,7 +1085,37 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
             </Typography>
           </Box>
         )}
+
+        {/* Кнопка определения местоположения */}
+        {!userLocation && (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<Navigation />}
+            sx={{
+              position: 'absolute',
+              bottom: 16,
+              right: 16,
+              zIndex: 1000
+            }}
+            onClick={handleDetectLocation}
+          >
+            {t('listings.map.useMyLocation')}
+          </Button>
+        )}
       </Box>
+
+      {/* Блок с атрибутными фильтрами ПОД картой - важно! */}
+      {filters.category_id && (
+        <Box sx={{ width: '100%', marginBottom: 3 }}>
+          <CentralAttributeFilters
+            categoryId={filters.category_id}
+            onFilterChange={handleAttributeFilterChange}
+            filters={filters.attributeFilters || {}}
+            resetAttributeFilters={resetAttributeFilters}
+          />
+        </Box>
+      )}
 
       {/* Информация о выбранном объявлении */}
       {selectedListing && (
@@ -1078,24 +1124,6 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
           onClose={() => setSelectedListing(null)}
           onNavigate={handleNavigateToListing}
         />
-      )}
-
-      {/* Кнопка определения местоположения */}
-      {!userLocation && (
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Navigation />}
-          sx={{
-            position: 'absolute',
-            bottom: 16,
-            right: 16,
-            zIndex: 1000
-          }}
-          onClick={handleDetectLocation}
-        >
-          {t('listings.map.useMyLocation')}
-        </Button>
       )}
 
       {/* Модальное окно с полноэкранной картой */}
