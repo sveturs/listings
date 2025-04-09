@@ -30,6 +30,14 @@ fi
 # Сохраняем загруженные изображения
 cp -r backend/uploads /tmp/hostel-backup/ 2>/dev/null || true
 
+# Сохраняем данные почтового сервера
+if [ -d "mailserver" ]; then
+  mkdir -p /tmp/hostel-backup/mailserver
+  cp -r mailserver/mail-data /tmp/hostel-backup/mailserver/ 2>/dev/null || true
+  cp -r mailserver/mail-state /tmp/hostel-backup/mailserver/ 2>/dev/null || true
+  cp -r mailserver/config /tmp/hostel-backup/mailserver/ 2>/dev/null || true
+fi
+
 # Делаем бэкап базы данных только если контейнер запущен
 echo "Пытаемся создать бэкап базы данных..."
 if docker-compose -f docker-compose.prod.yml ps | grep -q "db.*Up"; then
@@ -47,7 +55,7 @@ fi
 # Обеспечиваем чистое состояние git
 git fetch origin
 git reset --hard origin/main
-git clean -fdx -e "*.env*" -e "uploads/" -e "certbot/"
+git clean -fdx -e "*.env*" -e "uploads/" -e "certbot/" -e "mailserver/"
 
 # Восстанавливаем файлы
 cp -f /tmp/hostel-backup/backend.env backend/.env 2>/dev/null || true
@@ -55,6 +63,13 @@ cp -f /tmp/hostel-backup/frontend.env frontend/hostel-frontend/.env 2>/dev/null 
 if [ -d "/tmp/hostel-backup/conf" ]; then
   rm -rf certbot/conf
   cp -r /tmp/hostel-backup/conf certbot/ 2>/dev/null || true
+fi
+
+# Восстанавливаем данные почтового сервера
+if [ -d "/tmp/hostel-backup/mailserver" ]; then
+  cp -r /tmp/hostel-backup/mailserver/mail-data mailserver/ 2>/dev/null || true
+  cp -r /tmp/hostel-backup/mailserver/mail-state mailserver/ 2>/dev/null || true
+  cp -r /tmp/hostel-backup/mailserver/config mailserver/ 2>/dev/null || true
 fi
 
 # Удаляем старые образы

@@ -38,7 +38,7 @@ services:
       - hostel_network
     restart: unless-stopped
   mailserver:
-    image: docker-mailserver/docker-mailserver:latest
+    image: mailserver/docker-mailserver:latest
     container_name: mailserver
     hostname: mail.svetu.rs
     domainname: svetu.rs
@@ -65,7 +65,7 @@ services:
       - PERMIT_DOCKER=network
       - ONE_DIR=1
       - DMS_DEBUG=0
-      - ENABLE_AMAVIS=0
+      - ENABLE_AMAVIS=1
       - POSTMASTER_ADDRESS=postmaster@svetu.rs
       - SSL_CERT_PATH=/etc/letsencrypt/live/svetu.rs/fullchain.pem
       - SSL_KEY_PATH=/etc/letsencrypt/live/svetu.rs/privkey.pem
