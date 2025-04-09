@@ -12,6 +12,11 @@ mkdir -p frontend/hostel-frontend/build
 mkdir -p certbot/conf
 mkdir -p certbot/www
 mkdir -p /tmp/hostel-backup/db
+# Создаем директории для почтового сервера
+mkdir -p mailserver/mail-data
+mkdir -p mailserver/mail-state
+mkdir -p mailserver/mail-logs
+mkdir -p mailserver/config
 
 # Сохраняем важные файлы
 cp -f backend/.env /tmp/hostel-backup/backend.env 2>/dev/null || true

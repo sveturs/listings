@@ -37,7 +37,43 @@ services:
     networks:
       - hostel_network
     restart: unless-stopped
-
+  mailserver:
+    image: docker-mailserver/docker-mailserver:latest
+    container_name: mailserver
+    hostname: mail.svetu.rs
+    domainname: svetu.rs
+    ports:
+      - "25:25"      # SMTP
+      - "587:587"    # SMTP с шифрованием
+      - "465:465"    # SMTPS
+      - "143:143"    # IMAP
+      - "993:993"    # IMAPS
+      - "110:110"    # POP3
+      - "995:995"    # POP3S
+    volumes:
+      - ./mailserver/mail-data:/var/mail
+      - ./mailserver/mail-state:/var/mail-state
+      - ./mailserver/mail-logs:/var/log/mail
+      - ./mailserver/config:/tmp/docker-mailserver
+      - ./certbot/conf:/etc/letsencrypt
+    environment:
+      - ENABLE_SPAMASSASSIN=1
+      - ENABLE_CLAMAV=0
+      - ENABLE_FAIL2BAN=1
+      - ENABLE_POSTGREY=1
+      - SSL_TYPE=letsencrypt
+      - PERMIT_DOCKER=network
+      - ONE_DIR=1
+      - DMS_DEBUG=0
+      - ENABLE_AMAVIS=0
+      - POSTMASTER_ADDRESS=postmaster@svetu.rs
+      - SSL_CERT_PATH=/etc/letsencrypt/live/svetu.rs/fullchain.pem
+      - SSL_KEY_PATH=/etc/letsencrypt/live/svetu.rs/privkey.pem
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - hostel_network
+    restart: unless-stopped
 #  opensearch-dashboards:
 #    image: opensearchproject/opensearch-dashboards:2.11.0
 #    container_name: opensearch-dashboards
