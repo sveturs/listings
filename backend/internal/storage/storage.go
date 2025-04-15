@@ -64,6 +64,8 @@ type Storage interface {
 	GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error)
 	DeleteListingImage(ctx context.Context, imageID string) (string, error)
 	GetAttributeOptionTranslations(ctx context.Context, attributeName, optionValue string) (map[string]string, error)
+	GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error)
+
 
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
 	GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error)

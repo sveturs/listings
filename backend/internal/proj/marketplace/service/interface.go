@@ -40,6 +40,8 @@ type MarketplaceServiceInterface interface {
     //атрибуты
     GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
     SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
+    GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error)
+
 
 
 }

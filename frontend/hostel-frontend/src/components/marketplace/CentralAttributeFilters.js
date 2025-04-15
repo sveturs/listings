@@ -96,17 +96,18 @@ const CentralAttributeFilters = ({
     }, [categoryId]);
 
     // Функция getCategoryTitle всегда возвращает правильный заголовок по categoryId
+
     const getCategoryTitle = () => {
         // В соответствии с данными API и базы данных:
         switch (catId) {
-            case '1100': return t('listings.filters.property_attributes', { defaultValue: 'Параметры недвижимости' });
-            case '2000': return t('listings.filters.auto_attributes', { defaultValue: 'Параметры автомобиля' });
-            case '3110': return t('listings.filters.phone_attributes', { defaultValue: 'Параметры телефона' });
-            case '3810': return t('listings.filters.tablet_attributes', { defaultValue: 'Параметры планшета' });
-            case '3310': return t('listings.filters.desktop_attributes', { defaultValue: 'Параметры компьютера' });
-            case '3320': return t('listings.filters.laptop_attributes', { defaultValue: 'Параметры ноутбука' });
-            case '3600': return t('listings.filters.tech_attributes', { defaultValue: 'Параметры техники' });
-            default: return t('listings.filters.specific_attributes', { defaultValue: 'Параметры' });
+            case '1100': return t('listings.filters.property_attributes', { defaultValue: 'Parametri nekretnine' });
+            case '2000': return t('listings.filters.auto_attributes', { defaultValue: 'Parametri automobila' });
+            case '3110': return t('listings.filters.phone_attributes', { defaultValue: 'Parametri telefona' });
+            case '3810': return t('listings.filters.tablet_attributes', { defaultValue: 'Parametri tableta' });
+            case '3310': return t('listings.filters.desktop_attributes', { defaultValue: 'Parametri računara' });
+            case '3320': return t('listings.filters.laptop_attributes', { defaultValue: 'Parametri laptopa' });
+            case '3600': return t('listings.filters.tech_attributes', { defaultValue: 'Parametri tehnike' });
+            default: return t('listings.filters.specific_attributes', { defaultValue: 'Parametri' });
         }
     };
 

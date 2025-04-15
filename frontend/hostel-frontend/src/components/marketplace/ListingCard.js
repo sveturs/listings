@@ -123,6 +123,28 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
         return translation || listing[field];
     };
 
+    // Функция для получения переведенного имени атрибута
+    const getTranslatedName = (attr) => {
+        if (!attr) return '';
+        
+        // Поиск перевода
+        if (attr.translations && attr.translations[i18n.language]) {
+            return attr.translations[i18n.language];
+        }
+        
+        // Стандартные переводы для атрибутов недвижимости
+        const defaultTranslations = {
+            rooms: t('listings.attributes.rooms', { defaultValue: 'Комнаты' }),
+            floor: t('listings.attributes.floor', { defaultValue: 'Этаж' }),
+            total_floors: t('listings.attributes.total_floors', { defaultValue: 'Этажей' }),
+            area: t('listings.attributes.area', { defaultValue: 'Площадь' }),
+            land_area: t('listings.attributes.land_area', { defaultValue: 'Участок' }),
+            property_type: t('listings.attributes.property_type', { defaultValue: 'Тип' })
+        };
+        
+        return defaultTranslations[attr.attribute_name] || attr.display_name || attr.attribute_name;
+    };
+
     const formatPrice = (price) => {
         return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
@@ -216,6 +238,50 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
                         {formatPrice(discount.oldPrice)}
                     </Typography>
                 )}
+            </Box>
+        );
+    };
+
+    const renderAttributes = () => {
+        if (!listing.attributes || listing.attributes.length === 0) {
+            return null;
+        }
+        // Получаем важные атрибуты недвижимости
+        const realEstateAttrs = listing.attributes.filter(attr => 
+            ['rooms', 'floor', 'total_floors', 'area', 'land_area', 'property_type'].includes(attr.attribute_name)
+        );
+        if (realEstateAttrs.length === 0) {
+            return null;
+        }
+        return (
+            <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {realEstateAttrs.map(attr => {
+                    // Форматируем отображение атрибута
+                    let displayValue = attr.display_value || '';
+                    
+                    // Добавляем единицы измерения, если их нет
+                    if (attr.attribute_name === 'area' && !displayValue.includes('м²')) {
+                        displayValue = `${displayValue} м²`;
+                    } else if (attr.attribute_name === 'land_area' && !displayValue.includes('сот')) {
+                        displayValue = `${displayValue} сот`;
+                    } else if (attr.attribute_name === 'rooms' && attr.numeric_value) {
+                        // Форматируем комнаты правильно
+                        const numRooms = attr.numeric_value;
+                        const roomWord = numRooms === 1 ? 'комната' : 
+                                        (numRooms >= 2 && numRooms <= 4) ? 'комнаты' : 'комнат';
+                        displayValue = `${numRooms} ${roomWord}`;
+                    }
+                    
+                    return (
+                        <Chip
+                            key={attr.attribute_id}
+                            label={`${getTranslatedName(attr)}: ${displayValue}`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontSize: '0.75rem', height: 24 }}
+                        />
+                    );
+                })}
             </Box>
         );
     };
@@ -324,6 +390,9 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
                 )}
 
                 {renderPriceSection()}
+
+                {/* Отображение атрибутов недвижимости */}
+                {renderAttributes()}
 
                 {!isMobile && (
                     <>

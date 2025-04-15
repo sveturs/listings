@@ -210,7 +210,9 @@ func (s *MarketplaceService) GetFavoritedUsers(ctx context.Context, listingID in
 func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
 	return s.storage.GetListingByID(ctx, id)
 }
-
+func (s *MarketplaceService) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
+    return s.storage.GetAttributeRanges(ctx, categoryID)
+}
 // GetCategoryAttributes получает атрибуты для указанной категории
 func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
 	attributes, err := s.storage.GetCategoryAttributes(ctx, categoryID)
@@ -653,6 +655,7 @@ func (s *MarketplaceService) RefreshCategoryListingCounts(ctx context.Context) e
 	_, err := s.storage.Exec(ctx, "REFRESH MATERIALIZED VIEW CONCURRENTLY category_listing_counts")
 	return err
 }
+
 func (s *MarketplaceService) DeleteListing(ctx context.Context, id int, userID int) error {
 	// Вызываем существующий метод для удаления объявления из БД
 	if err := s.storage.DeleteListing(ctx, id, userID); err != nil {

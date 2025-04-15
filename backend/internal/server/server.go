@@ -223,6 +223,8 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", s.marketplace.Marketplace.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", s.marketplace.Marketplace.GetSimilarListings)
+	marketplace.Get("/categories/:id/attribute-ranges", s.marketplace.Marketplace.GetAttributeRanges)
+
 
 	// Маршруты для API перевода
 	translation := s.app.Group("/api/v1/translation")
@@ -248,8 +250,7 @@ func (s *Server) setupRoutes() {
 
 	// Protected routes
 	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
-	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
-	api.Post("/admin/sync-discounts", s.middleware.AdminRequired, s.marketplace.Marketplace.SynchronizeDiscounts)
+ 	api.Post("/admin/sync-discounts", s.middleware.AdminRequired, s.marketplace.Marketplace.SynchronizeDiscounts)
 	api.Post("/admin/reindex-ratings", s.marketplace.Marketplace.ReindexRatings)
 	// api.Post("/admin/reindex-ratings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexRatings)
 	// Protected reviews routes

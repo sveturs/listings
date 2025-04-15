@@ -339,8 +339,10 @@ const MarketplacePage = () => {
     ).current;
 
     // Обработчик изменения фильтров
+    // В функции handleFilterChange в MarketplacePage.js
+
     const handleFilterChange = useCallback((newFilters) => {
-        console.log(`MarketplaceFilters: Выбраны фильтры:`, newFilters);
+        console.log(`MarketplacePage: Обновление фильтров:`, newFilters);
 
         setFilters(prev => {
             // Создаем обновленные фильтры
@@ -765,39 +767,23 @@ const MarketplacePage = () => {
         }
     }, [filters.category_id, categories]);
 
+    // Функция renderContent в файле MarketplacePage.js
     const renderContent = () => {
-        // Отображаем фильтры атрибутов до проверки наличия объявлений
-        const categoryFilters = filters.category_id ? (
-            <CentralAttributeFilters
-                categoryId={filters.category_id}
-                onFilterChange={(newAttrFilters) => {
-                    console.log("CentralAttributeFilters вызвал onFilterChange с:", newAttrFilters);
-                    handleFilterChange({ attributeFilters: newAttrFilters });
-                }}
-                filters={filters.attributeFilters || {}}
-                resetAttributeFilters={resetAttributeFilters}
-            />
-        ) : null;
+        // Удаляем ссылки на categoryFilters, которые мы раньше создавали
 
         if (loading) {
             return (
-                <>
-                    {categoryFilters}
-                    <Box display="flex" justifyContent="center" p={4}>
-                        <CircularProgress />
-                    </Box>
-                </>
+                <Box display="flex" justifyContent="center" p={4}>
+                    <CircularProgress />
+                </Box>
             );
         }
 
         if (error) {
             return (
-                <>
-                    {categoryFilters}
-                    <Alert severity="error" sx={{ m: 2 }}>
-                        {error}
-                    </Alert>
-                </>
+                <Alert severity="error" sx={{ m: 2 }}>
+                    {error}
+                </Alert>
             );
         }
 
@@ -829,7 +815,6 @@ const MarketplacePage = () => {
             // Если есть данные в listings, отображаем их
             return (
                 <>
-                    {categoryFilters}
                     {!mapViewActive && (
                         <InfiniteScroll
                             hasMore={hasMoreListings}
@@ -879,7 +864,6 @@ const MarketplacePage = () => {
             // Если listings пустой или undefined - показываем сообщение
             return (
                 <>
-                    {categoryFilters}
                     <Alert severity="info" sx={{ m: 2 }}>
                         {spellingSuggestion ? (
                             <>
@@ -902,114 +886,112 @@ const MarketplacePage = () => {
         }
     };
 
-    if (isMobile) {
-        return (
-            <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-                <MobileHeader
-                    onOpenFilters={() => setIsFilterOpen(true)}
-                    filtersCount={getActiveFiltersCount()}
-                    onSearch={(query) => handleFilterChange({ query })}
-                    searchValue={filters.query}
-                    // Добавляем два новых пропса:
-                    viewMode={viewMode}
-                    onViewModeChange={(e, newMode) => {
-                        if (newMode !== null) {
-                            setViewMode(newMode);
-                            // Сохраняем предпочтение пользователя в localStorage
-                            localStorage.setItem('marketplace-view-mode', newMode);
-                        }
-                    }}
-                />
+    // Ничего не меняем в мобильной версии в основном return
+if (isMobile) {
+    return (
+        <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <MobileHeader
+                onOpenFilters={() => setIsFilterOpen(true)}
+                filtersCount={getActiveFiltersCount()}
+                onSearch={(query) => handleFilterChange({ query })}
+                searchValue={filters.query}
+                viewMode={viewMode}
+                onViewModeChange={(e, newMode) => {
+                    if (newMode !== null) {
+                        setViewMode(newMode);
+                        localStorage.setItem('marketplace-view-mode', newMode);
+                    }
+                }}
+            />
 
-                <Box sx={{
-                    position: 'sticky',
-                    top: 104,
-                    zIndex: 1,
-                    bgcolor: 'background.paper',
-                    borderBottom: 1,
-                    borderColor: 'divider'
-                }}>
-                    {/* Активные фильтры */}
-                    {Object.entries(filters).some(([key, value]) => value && key !== 'sort_by') && (
-                        <Box sx={{ px: 2, py: 1, display: 'flex', gap: 1, overflowX: 'auto', alignItems: 'center' }}>
-                            {Object.entries(filters).map(([key, value]) => {
-                                if (!value || key === 'sort_by' || key === 'latitude' || key === 'longitude' || key === 'attributeFilters') return null;
+            <Box sx={{
+                position: 'sticky',
+                top: 104,
+                zIndex: 1,
+                bgcolor: 'background.paper',
+                borderBottom: 1,
+                borderColor: 'divider'
+            }}>
+                {/* Активные фильтры */}
+                {Object.entries(filters).some(([key, value]) => value && key !== 'sort_by') && (
+                    <Box sx={{ px: 2, py: 1, display: 'flex', gap: 1, overflowX: 'auto', alignItems: 'center' }}>
+                        {Object.entries(filters).map(([key, value]) => {
+                            if (!value || key === 'sort_by' || key === 'latitude' || key === 'longitude' || key === 'attributeFilters') return null;
 
-                                let label = '';
+                            let label = '';
 
-                                // Преобразуем значение в строку с учетом специфики каждого поля
-                                if (key === 'category_id') {
-                                    const category = categories.find(c => String(c.id) === String(value));
-                                    label = category ? category.name : String(value);
-                                } else if (key === 'distance') {
-                                    label = `Радиус: ${value}`;
-                                } else {
-                                    // Убедимся, что любое другое значение преобразуется в строку
-                                    label = String(value);
-                                }
+                            // Преобразуем значение в строку с учетом специфики каждого поля
+                            if (key === 'category_id') {
+                                const category = categories.find(c => String(c.id) === String(value));
+                                label = category ? category.name : String(value);
+                            } else if (key === 'distance') {
+                                label = `Радиус: ${value}`;
+                            } else {
+                                // Убедимся, что любое другое значение преобразуется в строку
+                                label = String(value);
+                            }
 
-                                return (
-                                    <Chip
-                                        key={key}
-                                        label={label}
-                                        size="small"
-                                        onDelete={() => handleFilterChange({ [key]: '' })}
-                                    />
-                                );
-                            })}
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                size="small"
-                                onClick={resetAllFilters}
-                                sx={{ ml: 'auto', whiteSpace: 'nowrap' }}
-                            >
-                                {t('listings.filters.resetAll', { defaultValue: 'Сбросить всё' })}
-                            </Button>
-                        </Box>
-                    )}
-                </Box>
-
-                <Box sx={{ flex: 1, bgcolor: mapViewActive ? 'transparent' : 'grey.50' }}>
-                    {/* Добавляем CentralAttributeFilters здесь для мобильной версии */}
-                    {filters.category_id && !mapViewActive && (
-                        <Box sx={{ px: 2, pt: 2 }}>
-                            <CentralAttributeFilters
-                                categoryId={filters.category_id}
-                                onFilterChange={(newAttrFilters) => {
-                                    console.log("CentralAttributeFilters вызвал onFilterChange с:", newAttrFilters);
-                                    handleFilterChange({ attributeFilters: newAttrFilters });
-                                }}
-                                filters={filters.attributeFilters || {}}  // Гарантированно передаем объект
-                                resetAttributeFilters={resetAttributeFilters}
-                            />
-                        </Box>
-                    )}
-
-                    {renderContent()}
-                </Box>
-
-
-                {/* Плавающая кнопка переключения режима просмотра */}
-                <Fab
-                    color={mapViewActive ? "default" : "primary"}
-                    sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 1050 }}
-                    onClick={handleToggleMapView}
-                >
-                    {mapViewActive ? <List /> : <MapIcon />}
-                </Fab>
-
-                <MobileFilters
-                    open={isFilterOpen}
-                    onClose={() => setIsFilterOpen(false)}
-                    filters={filters}
-                    onFilterChange={handleFilterChange}
-                    categories={categories}
-                    onToggleMapView={handleToggleMapView}
-                />
+                            return (
+                                <Chip
+                                    key={key}
+                                    label={label}
+                                    size="small"
+                                    onDelete={() => handleFilterChange({ [key]: '' })}
+                                />
+                            );
+                        })}
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            onClick={resetAllFilters}
+                            sx={{ ml: 'auto', whiteSpace: 'nowrap' }}
+                        >
+                            {t('listings.filters.resetAll', { defaultValue: 'Сбросить всё' })}
+                        </Button>
+                    </Box>
+                )}
             </Box>
-        );
-    }
+
+            <Box sx={{ flex: 1, bgcolor: mapViewActive ? 'transparent' : 'grey.50' }}>
+                {/* Добавляем CentralAttributeFilters здесь для мобильной версии */}
+                {filters.category_id && !mapViewActive && (
+                    <Box sx={{ px: 2, pt: 2 }}>
+                        <CentralAttributeFilters
+                            categoryId={filters.category_id}
+                            onFilterChange={(newAttrFilters) => {
+                                console.log("CentralAttributeFilters вызвал onFilterChange с:", newAttrFilters);
+                                handleFilterChange({ attributeFilters: newAttrFilters });
+                            }}
+                            filters={filters.attributeFilters || {}}
+                            resetAttributeFilters={resetAttributeFilters}
+                        />
+                    </Box>
+                )}
+
+                {renderContent()}
+            </Box>
+
+            {/* Плавающая кнопка переключения режима просмотра */}
+            <Fab
+                color={mapViewActive ? "default" : "primary"}
+                sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 1050 }}
+                onClick={handleToggleMapView}
+            >
+                {mapViewActive ? <List /> : <MapIcon />}
+            </Fab>
+
+            <MobileFilters
+                open={isFilterOpen}
+                onClose={() => setIsFilterOpen(false)}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                categories={categories}
+                onToggleMapView={handleToggleMapView}
+            />
+        </Box>
+    );
+}
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -1037,11 +1019,24 @@ const MarketplacePage = () => {
                     />
                 </Grid>
                 <Grid item xs={12} md={9}>
+                    {/* Атрибуты категории в центральной части */}
+                    {filters.category_id && !mapViewActive && (
+                        <CentralAttributeFilters
+                            categoryId={filters.category_id}
+                            onFilterChange={(newAttrFilters) => {
+                                console.log("CentralAttributeFilters вызвал onFilterChange с:", newAttrFilters);
+                                handleFilterChange({ attributeFilters: newAttrFilters });
+                            }}
+                            filters={filters.attributeFilters || {}}
+                            resetAttributeFilters={resetAttributeFilters}
+                        />
+                    )}
                     {renderContent()}
                 </Grid>
             </Grid>
         </Container>
     );
+
 };
 
 export default MarketplacePage;

@@ -60,38 +60,24 @@ const CompactMarketplaceFilters = ({
         });
     }, [filters, onFilterChange]);
 
+    // Обновленная функция handleFilterChange
+    // Измените функцию handleFilterChange в MarketplaceFilters.js:
 
-    // В функции handleFilterChange добавьте обработку атрибутов
-    const handleFilterChange = useCallback((newFilters) => {
-        console.log(`MarketplaceFilters: Выбраны фильтры:`, newFilters);
-
-        // Заменяем setFilters на onFilterChange
-        // Также делаем деструктуризацию newFilters для управления attributeFilters
+    const handleFilterChange = useCallback((attributeFilters) => {
+        console.log(`MarketplaceFilters: Выбраны фильтры:`, attributeFilters);
+        
+        // ВАЖНО: Теперь мы полностью игнорируем атрибуты недвижимости в боковой панели
+        // Они будут обрабатываться только через CentralAttributeFilters
+        const nonRealEstateAttrs = { ...attributeFilters };
+        
+        // Вызываем родительский обработчик только с базовыми фильтрами
         onFilterChange(prev => {
-            // Создаем обновленные фильтры
             const updated = { ...prev };
-
-            // Обрабатываем особым образом attributeFilters
-            if (newFilters.attributeFilters) {
-                updated.attributeFilters = {
-                    ...(prev.attributeFilters || {}),
-                    ...newFilters.attributeFilters
-                };
-
-                // Удаляем attributeFilters из newFilters, чтобы избежать дублирования
-                const { attributeFilters, ...restFilters } = newFilters;
-                Object.assign(updated, restFilters);
-            } else {
-                // Если обычное обновление фильтров
-                Object.assign(updated, newFilters);
-            }
-            onFilterChange(newFilters);
-            // Обновляем URL, если setSearchParams доступен
-
-            console.log("Обновленные фильтры:", updated);
+            Object.assign(updated, nonRealEstateAttrs);
             return updated;
         });
     }, [onFilterChange]);
+    
     
     const resetAttributeFilters = useCallback(() => {
         handleFilterChange({ attributeFilters: {} });
@@ -266,6 +252,9 @@ const CompactMarketplaceFilters = ({
                             />
                         </RadioGroup>
                     </Box>
+
+                    {/* Добавляем компонент AttributeFilters если выбрана категория */}
+
                 </Stack>
             </Box>
 
@@ -279,7 +268,7 @@ const CompactMarketplaceFilters = ({
                 borderColor: 'divider'
             }}>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    {t('listings.create.сategories')}
+                    {t('listings.create.сategories')}                     {selectedCategoryId }
                 </Typography>
                 <VirtualizedCategoryTree
                     selectedId={selectedCategoryId}

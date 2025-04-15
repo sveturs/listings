@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"math"
+		"regexp"
 	"os"
 	"sort"
 	"strconv"
@@ -552,124 +553,151 @@ func isSignificantAttribute(attrName string) bool {
 	return significantAttrs[attrName]
 }
 
-// processAttributesFromRequest обрабатывает атрибуты из запроса и добавляет их в объявление
+// Функция processAttributesFromRequest обрабатывает атрибуты из запроса и добавляет их в объявление
+// Обновим функцию processAttributesFromRequest для лучшей обработки атрибутов недвижимости
 func processAttributesFromRequest(requestBody map[string]interface{}, listing *models.MarketplaceListing) {
-	if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
-		log.Printf("DEBUG: Found %d attributes in request", len(attributesRaw))
+    if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
+        log.Printf("DEBUG: Found %d attributes in request", len(attributesRaw))
 
-		for _, attrRaw := range attributesRaw {
-			if attrMap, ok := attrRaw.(map[string]interface{}); ok {
-				var attr models.ListingAttributeValue
+        for _, attrRaw := range attributesRaw {
+            if attrMap, ok := attrRaw.(map[string]interface{}); ok {
+                var attr models.ListingAttributeValue
 
-				// ID атрибута
-				if attrID, ok := attrMap["attribute_id"].(float64); ok {
-					attr.AttributeID = int(attrID)
-				}
+                // ID атрибута
+                if attrID, ok := attrMap["attribute_id"].(float64); ok {
+                    attr.AttributeID = int(attrID)
+                }
 
-				// Имя атрибута для отладки
-				if attrName, ok := attrMap["attribute_name"].(string); ok {
-					attr.AttributeName = attrName
-				}
+                // Имя атрибута для отладки
+                if attrName, ok := attrMap["attribute_name"].(string); ok {
+                    attr.AttributeName = attrName
+                }
 
-				// Имя для отображения
-				if displayName, ok := attrMap["display_name"].(string); ok {
-					attr.DisplayName = displayName
-				}
+                // Имя для отображения
+                if displayName, ok := attrMap["display_name"].(string); ok {
+                    attr.DisplayName = displayName
+                }
 
-				// Тип атрибута
-				if attrType, ok := attrMap["attribute_type"].(string); ok {
-					attr.AttributeType = attrType
+                // Тип атрибута
+                if attrType, ok := attrMap["attribute_type"].(string); ok {
+                    attr.AttributeType = attrType
 
-					// Обработка значения в зависимости от типа
-					switch attrType {
-					case "text", "select":
-						if value, ok := attrMap["value"].(string); ok && value != "" {
-							attr.TextValue = &value
-							log.Printf("DEBUG: Attribute %d (%s) text value: %s", attr.AttributeID, attr.AttributeName, value)
-						}
-					case "number":
-						// Универсальная обработка числовых значений
-						var numValue float64
-						var isSet bool
+                    // Список числовых атрибутов
+                    isNumericAttr := attr.AttributeName == "rooms" || 
+                                 attr.AttributeName == "floor" || 
+                                 attr.AttributeName == "total_floors" || 
+                                 attr.AttributeName == "area" || 
+                                 attr.AttributeName == "land_area" ||
+                                 attr.AttributeName == "mileage" ||
+                                 attr.AttributeName == "year" ||
+                                 attr.AttributeName == "engine_capacity" ||
+                                 attr.AttributeName == "power" ||
+                                 attr.AttributeName == "screen_size"
 
-						if value, ok := attrMap["value"].(float64); ok {
-							numValue = value
-							isSet = true
-							log.Printf("DEBUG: Получено числовое значение value: %f для атрибута %s", value, attr.AttributeName)
-						} else if value, ok := attrMap["numeric_value"].(float64); ok {
-							numValue = value
-							isSet = true
-							log.Printf("DEBUG: Получено числовое значение numeric_value: %f для атрибута %s", value, attr.AttributeName)
-						} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
-							// Используем ParseFloat с 64-битной точностью
-							parsedValue, parseErr := strconv.ParseFloat(strValue, 64)
-							if parseErr == nil {
-								numValue = parsedValue
-								isSet = true
-								log.Printf("DEBUG: Преобразовано строковое значение '%s' в число %f для атрибута %s", strValue, parsedValue, attr.AttributeName)
-							} else {
-								// Пробуем удалить запятые/пробелы
-								cleanValue := strings.ReplaceAll(strings.ReplaceAll(strValue, ",", ""), " ", "")
-								if parsedClean, err := strconv.ParseFloat(cleanValue, 64); err == nil {
-									numValue = parsedClean
-									isSet = true
-									log.Printf("DEBUG: Успешно преобразовано очищенное значение '%s' в число %f для атрибута %s", cleanValue, parsedClean, attr.AttributeName)
-								}
-							}
-						}
+                    if isNumericAttr {
+                        // Обрабатываем как числовой атрибут, независимо от указанного типа
+                        var numValue float64
+                        var isSet bool
 
-						// Если значение установлено, обрабатываем особые случаи
-						if isSet {
-							// Проверка и корректировка для особых атрибутов
-							if attr.AttributeName == "year" {
-								currentYear := time.Now().Year()
-								if numValue < 1900 || numValue > float64(currentYear+1) {
-									if numValue > 0 {
-										log.Printf("Keeping year value %f as is", numValue)
-									} else {
-										numValue = float64(currentYear)
-										log.Printf("Setting year to current year: %f", numValue)
-									}
-								}
-								// Округляем год до целого числа
-								numValue = math.Floor(numValue)
-							} else if attr.AttributeName == "engine_capacity" {
-								// Округляем до 1 знака после запятой
-								numValue = math.Round(numValue*10) / 10
-							}
+                        if value, ok := attrMap["value"].(float64); ok {
+                            numValue = value
+                            isSet = true
+                        } else if value, ok := attrMap["numeric_value"].(float64); ok {
+                            numValue = value
+                            isSet = true
+                        } else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
+                            // Удаляем все, кроме цифр, точки и минуса
+                            clean := regexp.MustCompile(`[^\d\.-]`).ReplaceAllString(strValue, "")
+                            if parsedValue, parseErr := strconv.ParseFloat(clean, 64); parseErr == nil {
+                                numValue = parsedValue
+                                isSet = true
+                            }
+                        }
 
-							attr.NumericValue = &numValue
-						}
-					case "boolean":
-						if value, ok := attrMap["value"].(bool); ok {
-							attr.BooleanValue = &value
-						} else if strValue, ok := attrMap["value"].(string); ok {
-							boolValue := strValue == "true" || strValue == "1"
-							attr.BooleanValue = &boolValue
-						}
-					}
-				}
+                        if isSet {
+                            attr.NumericValue = &numValue
+                            attr.AttributeType = "number" // Принудительно устанавливаем тип как числовой
+                            
+                            // Устанавливаем отображаемое значение с единицами измерения
+                            var displayValue string
+                            switch attr.AttributeName {
+                            case "area":
+                                displayValue = fmt.Sprintf("%g м²", numValue)
+                            case "land_area":
+                                displayValue = fmt.Sprintf("%g сот", numValue)
+                            case "mileage":
+                                displayValue = fmt.Sprintf("%g км", numValue)
+                            case "engine_capacity":
+                                displayValue = fmt.Sprintf("%g л", numValue)
+                            case "power":
+                                displayValue = fmt.Sprintf("%g л.с.", numValue)
+                            case "screen_size":
+                                displayValue = fmt.Sprintf("%g\"", numValue)
+                            case "year":
+                                displayValue = fmt.Sprintf("%d", int(numValue))
+                            default:
+                                displayValue = fmt.Sprintf("%g", numValue)
+                            }
+                            attr.DisplayValue = displayValue
+                        }
+                    } else {
+                        // Обычная обработка для других атрибутов
+                        if attr.AttributeType == "text" || attr.AttributeType == "select" {
+                            if value, ok := attrMap["value"].(string); ok && value != "" {
+                                strValue := value
+                                attr.TextValue = &strValue
+                                attr.DisplayValue = strValue
+                            } else if value, ok := attrMap["text_value"].(string); ok && value != "" {
+                                strValue := value
+                                attr.TextValue = &strValue
+                                attr.DisplayValue = strValue
+                            }
+                        } else if attr.AttributeType == "boolean" {
+                            if value, ok := attrMap["value"].(bool); ok {
+                                boolValue := value
+                                attr.BooleanValue = &boolValue
+                                
+                                if boolValue {
+                                    attr.DisplayValue = "Да"
+                                } else {
+                                    attr.DisplayValue = "Нет"
+                                }
+                            } else if strValue, ok := attrMap["value"].(string); ok {
+                                boolValue := strValue == "true" || strValue == "да" || strValue == "1"
+                                attr.BooleanValue = &boolValue
+                                
+                                if boolValue {
+                                    attr.DisplayValue = "Да"
+                                } else {
+                                    attr.DisplayValue = "Нет"
+                                }
+                            }
+                        }
+                    }
+                }
 
-				// Устанавливаем display_value для любого типа атрибута
-				if attr.TextValue != nil {
-					attr.DisplayValue = *attr.TextValue
-				} else if attr.NumericValue != nil {
-					attr.DisplayValue = fmt.Sprintf("%g", *attr.NumericValue)
-				} else if attr.BooleanValue != nil {
-					if *attr.BooleanValue {
-						attr.DisplayValue = "Да"
-					} else {
-						attr.DisplayValue = "Нет"
-					}
-				}
-
-				// Добавляем атрибут только если есть какое-то значение
-				if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
-					listing.Attributes = append(listing.Attributes, attr)
-				}
-			}
-		}
-	}
+                // Добавляем атрибут только если есть какое-то значение
+                if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
+                    listing.Attributes = append(listing.Attributes, attr)
+                }
+            }
+        }
+    }
+}
+// GetAttributeRanges возвращает минимальные и максимальные значения для числовых атрибутов категории
+func (h *MarketplaceHandler) GetAttributeRanges(c *fiber.Ctx) error {
+    categoryID, err := c.ParamsInt("id")
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+    }
+    
+    ranges, err := h.marketplaceService.Storage().GetAttributeRanges(c.Context(), categoryID)
+    if err != nil {
+        log.Printf("Error fetching attribute ranges: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch attribute ranges")
+    }
+    
+    return utils.SuccessResponse(c, ranges)
 }
 
 // GetCategoryAttributes возвращает атрибуты для указанной категории
@@ -980,7 +1008,27 @@ func (h *MarketplaceHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 		"message": "Запущена синхронизация данных о скидках",
 	})
 }
+func (h *MarketplaceHandler) ReindexAllListings(c *fiber.Ctx) error {
+    // Проверяем административные права
+    userID, ok := c.Locals("user_id").(int)
+    if !ok || userID == 0 {
+        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+    }
 
+    // Запускаем процесс переиндексации в фоне
+    go func() {
+        ctx := context.Background()
+        if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
+            log.Printf("Ошибка переиндексации объявлений: %v", err)
+        } else {
+            log.Println("Переиндексация успешно завершена")
+        }
+    }()
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Запущена переиндексация всех объявлений. Процесс может занять некоторое время.",
+    })
+}
 func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	prefix := c.Query("q", "")
 	size := c.QueryInt("size", 8)

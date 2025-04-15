@@ -132,6 +132,9 @@ func (db *Database) GetCategoryAttributes(ctx context.Context, categoryID int) (
 func (db *Database) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
     return db.marketplaceDB.SaveListingAttributes(ctx, listingID, attributes)
 }
+func (db *Database) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
+    return db.marketplaceDB.GetAttributeRanges(ctx, categoryID)
+}
 
 // GetListingAttributes получает значения атрибутов для объявления
 func (db *Database) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {

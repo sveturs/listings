@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/components/marketplace/AttributeFields.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { debounce } from 'lodash';
@@ -38,7 +39,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
     const prevCategoryIdRef = useRef(null);
     // Отслеживаем, были ли установлены внешние значения
     const hasSetExternalValues = useRef(false);
-    
+
     // Функция для получения переведенного значения опции атрибута
     const getTranslatedOptionValue = (attribute, value) => {
         // Если у нас нет значения, просто возвращаем пустую строку
@@ -76,20 +77,20 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
 
                 if (response.data?.data) {
                     console.log(`Получено ${response.data.data.length} атрибутов для категории ${categoryId}`);
-                    
+
                     // Отладка: проверяем переводы опций для каждого атрибута
                     response.data.data.forEach(attr => {
                         if (attr.option_translations) {
                             console.log(`Атрибут ${attr.name} имеет переводы опций:`, attr.option_translations);
                             if (attr.option_translations[i18n.language]) {
-                                console.log(`  Доступны переводы для языка ${i18n.language}:`, 
+                                console.log(`  Доступны переводы для языка ${i18n.language}:`,
                                     attr.option_translations[i18n.language]);
                             }
                         } else {
                             console.log(`Атрибут ${attr.name} не имеет переводов опций`);
                         }
                     });
-                    
+
                     setAttributes(response.data.data);
 
                     // Проверяем, нужно ли сбросить значения атрибутов
@@ -200,7 +201,6 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
     }, [categoryId, i18n.language]);
 
     // Обработка внешних значений value
-    // Проверяем, есть ли входящие данные и отличаются ли они от текущих
     useEffect(() => {
         // Проверяем, есть ли входящие данные и отличаются ли они от текущих
         if (value && value.length > 0) {
@@ -241,7 +241,6 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
             console.log("AttributeFields: Обработанные значения атрибутов:", processedValues);
             setValues(processedValues);
             hasSetExternalValues.current = true;
-            // }
         }
     }, [value]);
 
@@ -261,8 +260,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
         }
     };
 
-    // Обработчик изменения значения атрибута
-    const handleAttributeChange = (attributeId, newValue) => {
+    const handleAttributeChange = useCallback((attributeId, newValue) => {
         console.log(`AttributeFields: handleAttributeChange вызван для атрибута ${attributeId}, новое значение:`, newValue);
 
         const updatedValues = values.map(attr => {
@@ -285,7 +283,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                         if (attribute.name === 'year') {
                             // Проверяем, что год в разумных пределах
                             const currentYear = new Date().getFullYear();
-                            if (parsedValue < 1900 || parsedValue > currentYear + 1) {
+                            if (parsedValue < 1980 || parsedValue > currentYear + 1) {
                                 parsedValue = currentYear;
                                 updatedAttr.numeric_value = parsedValue;
                                 updatedAttr.value = parsedValue;
@@ -326,6 +324,16 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                         updatedAttr.display_value += ' л';
                     } else if (attribute.name === 'power') {
                         updatedAttr.display_value += ' л.с.';
+                    } else if (attribute.name === 'area') {
+                        updatedAttr.display_value += ' м²';
+                    } else if (attribute.name === 'land_area') {
+                        updatedAttr.display_value += ' сот';
+                    } else if (attribute.name === 'rooms') {
+                        // Добавляем информативное отображение для комнат
+                        const numRooms = updatedAttr.numeric_value;
+                        const roomWord = numRooms === 1 ? 'комната' : 
+                                        (numRooms >= 2 && numRooms <= 4) ? 'комнаты' : 'комнат';
+                        updatedAttr.display_value += ` ${roomWord}`;
                     }
                 } else {
                     updatedAttr.display_value = String(newValue || '');
@@ -340,7 +348,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
         // Сохраняем обновленные значения
         setValues(updatedValues);
         if (onChange) onChange(updatedValues);
-    };
+    }, [values, attributes, onChange]);
 
     // Получение переведенного имени атрибута
     const getTranslatedName = (attribute) => {
@@ -376,8 +384,6 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
         }
         const displayName = getTranslatedName(attr);
         const isRequired = attr.is_required;
-
-        // Получаем текущее значение
 
         switch (attr.attribute_type) {
             case 'text':
@@ -431,10 +437,10 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 }
 
                 // Определяем, нужен ли слайдер
-                // Для некоторых атрибутов слайдер не удобен
-                const useSlider = attr.name === 'year' ||
-                    (max - min <= 100) || // Только для небольших диапазонов
-                    attr.name === 'engine_capacity';
+                // Для атрибута year всегда используем специальный компонент без слайдера
+                const useSlider = attr.name !== 'year' && 
+                    ((max - min <= 100) || // Только для небольших диапазонов
+                    attr.name === 'engine_capacity');
 
                 // Определяем специфические форматы полей
                 let inputAdornment = null;
@@ -449,6 +455,39 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                 } else if (attr.name === 'power') {
                     inputAdornment = "л.с.";
                     valueSuffix = ' л.с.';
+                }
+                
+                // Если это атрибут "year" (год выпуска) - используем специальный компонент
+                if (attr.name === 'year') {
+                    const currentYear = new Date().getFullYear();
+                    const yearMin = 1980;
+                    const yearMax = currentYear + 1;
+                    
+                    // Создаем массив годов для выбора
+                    const years = [];
+                    for (let y = yearMax; y >= yearMin; y--) {
+                        years.push(y);
+                    }
+                    
+                    return (
+                        <FormControl fullWidth required={isRequired}>
+                            <InputLabel>{displayName}</InputLabel>
+                            <Select
+                                value={parseInt(attrValue) || currentYear}
+                                onChange={(e) => handleAttributeChange(attr.id, parseInt(e.target.value))}
+                                label={displayName}
+                            >
+                                {years.map((year) => (
+                                    <MenuItem key={year} value={year}>
+                                        {year}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            <FormHelperText>
+                                Выберите год выпуска автомобиля
+                            </FormHelperText>
+                        </FormControl>
+                    );
                 }
 
                 return (
@@ -534,7 +573,7 @@ const AttributeFields = ({ categoryId, value = [], onChange, error }) => {
                     }
 
                     console.log(`Итоговые опции для ${attr.name}:`, options);
-                    
+
                     // Отладка переводов опций
                     options.forEach(option => {
                         const translated = getTranslatedOptionValue(attr, option);

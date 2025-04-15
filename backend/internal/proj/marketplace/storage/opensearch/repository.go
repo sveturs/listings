@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"log"
+	"math"
 
 	"net/http"
 	"net/url"
@@ -148,57 +149,31 @@ func (r *Repository) extractDocumentID(hit map[string]interface{}) (int, error) 
 
 // SearchListings выполняет поиск объявлений
 func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	var query map[string]interface{}
-	if params.CustomQuery != nil {
-		// Используем переданный готовый запрос
-		query = params.CustomQuery
-	} else {
-		// Строим запрос к OpenSearch, если CustomQuery не указан
-		query = r.buildSearchQuery(params)
-	}
+	// Строим запрос
+	query := r.buildSearchQuery(params)
 
-	// Дополнительное логирование
+	// Логирование запроса
 	queryJSON, _ := json.MarshalIndent(query, "", "  ")
-	log.Printf("Поисковый запрос: %s", string(queryJSON))
+	log.Printf("OpenSearch запрос: %s", string(queryJSON))
 
-	// Выполняем поиск
-	responseBytes, err := r.client.Search(r.indexName, query)
+	// Выполняем запрос
+	response, err := r.client.Search(r.indexName, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
 	}
 
-	// Разбираем ответ
+	// Парсим ответ
 	var searchResponse map[string]interface{}
-	if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
+	if err := json.Unmarshal(response, &searchResponse); err != nil {
 		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
 	}
 
-	// Извлекаем результаты
-	result, err := r.parseSearchResponse(searchResponse, params.Language)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка обработки результатов: %w", err)
-	}
-	log.Printf("Результаты поиска для атрибутов %v:", params.AttributeFilters)
-	for i, listing := range result.Listings {
-		log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
+	// Логирование для отладки
+	log.Printf("OpenSearch ответил успешно. Анализируем результаты...")
 
-		// Добавляем отладочную информацию о атрибутах
-		if len(listing.Attributes) > 0 {
-			log.Printf("  Объявление %d имеет %d атрибутов:", listing.ID, len(listing.Attributes))
-			for _, attr := range listing.Attributes {
-				log.Printf("  Атрибут: name=%s, type=%s, value=%s",
-					attr.AttributeName, attr.AttributeType, attr.DisplayValue)
-			}
-		} else {
-			log.Printf("  Объявление %d не имеет атрибутов", listing.ID)
-		}
-	}
-	return result, nil
+	// Парсим результаты
+	return r.parseSearchResponse(searchResponse, params.Language)
 }
-
-// SuggestListings предлагает автодополнение для поиска
-// Модифицировать файл: /data/hostel-booking-system/backend/internal/proj/marketplace/storage/opensearch/repository.go
-// Заменить метод SuggestListings на:
 
 func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
 	if prefix == "" {
@@ -585,392 +560,97 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	// Логирование информации о местоположении для отладки
 	log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
 		listing.ID, listing.City, listing.Country, listing.Location)
-	// В методе listingToDoc добавьте следующий блок кода после обработки атрибутов
-	// Примерно после строки 1660, где обрабатываются атрибуты
 
-	// Добавляем специфические атрибуты недвижимости в корень документа для лучшего поиска
-	realEstateAttrs := map[string]bool{
-		"rooms":            true,
-		"area":             true,
-		"floor":            true,
-		"total_floors":     true,
-		"property_type":    true,
-		"land_area":        true,
-		"year_built":       true,
-		"bathrooms":        true,
-		"condition":        true,
-		"amenities":        true,
-		"heating_type":     true,
-		"parking":          true,
-		"balcony":          true,
-		"furnished":        true,
-		"air_conditioning": true,
+	// Специальные поля для атрибутов недвижимости
+	realEstateFields := map[string]bool{
+		"rooms": true, "floor": true, "total_floors": true,
+		"area": true, "land_area": true, "property_type": true,
+		"year_built": true, "bathrooms": true, "condition": true,
+		"amenities": true, "heating_type": true, "parking": true,
+		"balcony": true, "furnished": true, "air_conditioning": true,
+	}
+
+	// Специальные поля для атрибутов автомобилей
+	carFields := map[string]bool{
+		"make": true, "model": true, "year": true,
+		"mileage": true, "engine_capacity": true, "fuel_type": true,
+		"transmission": true, "body_type": true,
 	}
 
 	// Добавляем атрибуты в специальное поле для недвижимости
 	realEstateText := make([]string, 0)
 
-	// Проверяем наличие атрибутов недвижимости и добавляем их в документ
-	for _, attr := range listing.Attributes {
-		if realEstateAttrs[attr.AttributeName] {
-			var attrValue string
-
-			// Получаем значение в зависимости от типа атрибута
-			if attr.TextValue != nil && *attr.TextValue != "" {
-				attrValue = *attr.TextValue
-				doc[attr.AttributeName] = attrValue
-				doc[attr.AttributeName+"_facet"] = attrValue
-				realEstateText = append(realEstateText, attrValue)
-			} else if attr.NumericValue != nil {
-				numValue := *attr.NumericValue
-				doc[attr.AttributeName] = numValue
-
-				// Добавляем строковое представление для поиска
-				strValue := fmt.Sprintf("%g", numValue)
-				realEstateText = append(realEstateText, strValue)
-
-				// Для комнат добавляем также текстовое представление (например "2 комнаты")
-				if attr.AttributeName == "rooms" {
-					roomsText := fmt.Sprintf("%g %s", numValue, getLocalizedRoomText(numValue))
-					realEstateText = append(realEstateText, roomsText)
-				}
-			} else if attr.BooleanValue != nil {
-				boolValue := *attr.BooleanValue
-				doc[attr.AttributeName] = boolValue
-
-				// Добавляем строковое представление для поиска
-				if boolValue {
-					strValue := "да"
-					realEstateText = append(realEstateText, strValue)
-					doc[attr.AttributeName+"_text"] = strValue
-				} else {
-					strValue := "нет"
-					realEstateText = append(realEstateText, strValue)
-					doc[attr.AttributeName+"_text"] = strValue
-				}
-			}
-
-			log.Printf("Добавлен атрибут недвижимости %s в документ для объявления %d",
-				attr.AttributeName, listing.ID)
-		}
-	}
-
-	// Добавляем все тексты атрибутов недвижимости в специальное поле
-	if len(realEstateText) > 0 {
-		doc["real_estate_attributes_text"] = realEstateText
-
-		// Объединяем в одну строку для полнотекстового поиска
-		doc["real_estate_attributes_combined"] = strings.Join(realEstateText, " ")
-	}
-
-	doc["has_discount"] = listing.HasDiscount
-	if listing.OldPrice > 0 {
-		doc["old_price"] = listing.OldPrice
-	}
-
-	// Добавляем поля для скидок напрямую из текста описания
-	if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
-		// Ищем процент скидки в описании с помощью регулярного выражения
-		discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
-		matches := discountRegex.FindStringSubmatch(listing.Description)
-
-		// Ищем старую цену с помощью регулярного выражения
-		priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
-		priceMatches := priceRegex.FindStringSubmatch(listing.Description)
-
-		if len(matches) > 1 && len(priceMatches) > 1 {
-			discountPercent, _ := strconv.Atoi(matches[1])
-			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
-			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
-
-			// Если у объекта нет метаданных, создаем их
-			if listing.Metadata == nil {
-				listing.Metadata = make(map[string]interface{})
-			}
-
-			// Создаем информацию о скидке
-			discount := map[string]interface{}{
-				"discount_percent":  discountPercent,
-				"previous_price":    oldPrice,
-				"effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339), // Примерная дата начала скидки
-				"has_price_history": true,
-			}
-
-			// Добавляем информацию о скидке в метаданные
-			listing.Metadata["discount"] = discount
-
-			// Добавляем OldPrice в документ
-			doc["old_price"] = oldPrice
-			doc["has_discount"] = true
-
-			log.Printf("Извлечена скидка из описания для объявления %d: %v", listing.ID, discount)
-		}
-	}
-
-	// Добавляем метаданные если они есть
-	if listing.Metadata != nil {
-		// Копируем метаданные
-		doc["metadata"] = listing.Metadata
-
-		// Если есть информация о скидке, проверяем и пересчитываем процент
-		if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
-			if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
-				// Пересчитываем актуальный процент скидки
-				if prevPrice > listing.Price {
-					discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
-					discount["discount_percent"] = discountPercent
-
-					// Обновляем метаданные в документе
-					listing.Metadata["discount"] = discount
-					doc["metadata"] = listing.Metadata
-
-					doc["has_discount"] = true
-					doc["old_price"] = prevPrice
-
-					log.Printf("Пересчитан процент скидки для OpenSearch: %d%% (объявление %d)",
-						discountPercent, listing.ID)
-				}
-			}
-		}
-	}
-
-	// Пытаемся получить и применить адресную информацию из витрины если она отсутствует в объявлении
-	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-		needStorefrontInfo := false
-
-		// Проверяем, нужно ли получать информацию о витрине
-		if listing.City == "" || listing.Country == "" || listing.Location == "" ||
-			listing.Latitude == nil || listing.Longitude == nil {
-			needStorefrontInfo = true
-		}
-
-		if needStorefrontInfo {
-			log.Printf("Получаем данные о витрине %d для заполнения адресной информации для объявления %d",
-				*listing.StorefrontID, listing.ID)
-
-			// Получаем информацию о витрине для заполнения адресных данных
-			var storefront models.Storefront
-			err := r.storage.QueryRow(context.Background(), `
-                SELECT name, city, address, country, latitude, longitude
-                FROM user_storefronts 
-                WHERE id = $1
-            `, *listing.StorefrontID).Scan(
-				&storefront.Name,
-				&storefront.City,
-				&storefront.Address,
-				&storefront.Country,
-				&storefront.Latitude,
-				&storefront.Longitude,
-			)
-
-			if err == nil {
-				// Применяем информацию о витрине
-				if listing.City == "" && storefront.City != "" {
-					doc["city"] = storefront.City
-					log.Printf("Применен город витрины '%s' для объявления %d", storefront.City, listing.ID)
-				}
-
-				if listing.Country == "" && storefront.Country != "" {
-					doc["country"] = storefront.Country
-					log.Printf("Применена страна витрины '%s' для объявления %d", storefront.Country, listing.ID)
-				}
-
-				if listing.Location == "" && storefront.Address != "" {
-					doc["location"] = storefront.Address
-					log.Printf("Применен адрес витрины '%s' для объявления %d", storefront.Address, listing.ID)
-				}
-
-				// Если у объявления нет координат, но они есть у витрины
-				if (listing.Latitude == nil || listing.Longitude == nil ||
-					*listing.Latitude == 0 || *listing.Longitude == 0) &&
-					storefront.Latitude != nil && storefront.Longitude != nil &&
-					*storefront.Latitude != 0 && *storefront.Longitude != 0 {
-
-					// Создаем объект с полями lat и lon для geo_point
-					doc["coordinates"] = map[string]interface{}{
-						"lat": *storefront.Latitude,
-						"lon": *storefront.Longitude,
-					}
-
-					log.Printf("Применены координаты витрины для объявления %d: lat=%f, lon=%f",
-						listing.ID, *storefront.Latitude, *storefront.Longitude)
-
-					// Устанавливаем показ на карте для координат витрины
-					doc["show_on_map"] = true
-				}
-			} else {
-				log.Printf("Не удалось получить информацию о витрине %d: %v", *listing.StorefrontID, err)
-			}
-		}
-	}
-
-	// Добавляем координаты, если они есть в объявлении
-	if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
-		// Создаем объект с полями lat и lon для geo_point
-		doc["coordinates"] = map[string]interface{}{
-			"lat": *listing.Latitude,
-			"lon": *listing.Longitude,
-		}
-
-		log.Printf("Добавлены координаты из объявления для листинга %d: lat=%f, lon=%f",
-			listing.ID, *listing.Latitude, *listing.Longitude)
-	} else if _, ok := doc["coordinates"]; !ok { // Если координаты все еще не добавлены
-		// Если координаты отсутствуют, но есть город, попробуем геокодировать
-		if cityVal, ok := doc["city"].(string); ok && cityVal != "" {
-			countryVal := ""
-			if c, ok := doc["country"].(string); ok {
-				countryVal = c
-			}
-
-			geocoded, err := r.geocodeCity(cityVal, countryVal)
-			if err == nil && geocoded != nil {
-				// Добавляем найденные координаты
-				doc["coordinates"] = map[string]interface{}{
-					"lat": geocoded.Lat,
-					"lon": geocoded.Lon,
-				}
-				log.Printf("Добавлены геокодированные координаты для листинга %d (город %s): lat=%f, lon=%f",
-					listing.ID, cityVal, geocoded.Lat, geocoded.Lon)
-
-				// Устанавливаем показ на карте для геокодированных координат
-				doc["show_on_map"] = true
-			} else {
-				log.Printf("Не удалось геокодировать город %s для листинга %d: %v",
-					cityVal, listing.ID, err)
-			}
-		} else {
-			log.Printf("У листинга %d нет координат и не указан город", listing.ID)
-		}
-	}
-
-	// Добавляем storefront_id, если есть
-	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-		doc["storefront_id"] = *listing.StorefrontID
-		log.Printf("Добавлен storefront_id: %d для объявления %d в индекс", *listing.StorefrontID, listing.ID)
-	} else {
-		log.Printf("Нет storefront_id для объявления %d или значение некорректно", listing.ID)
-	}
-
-	// Добавляем путь категорий, если есть
-	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
-		doc["category_path_ids"] = listing.CategoryPathIds
-	} else {
-		// Если путь категорий не задан, нужно его создать
-		// Для этого выполним дополнительный запрос к базе данных
-		parentID := listing.CategoryID
-		pathIDs := []int{parentID}
-
-		for parentID > 0 {
-			var cat models.MarketplaceCategory
-			err := r.storage.QueryRow(context.Background(),
-				"SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
-				Scan(&cat.ParentID)
-
-			if err != nil || cat.ParentID == nil {
-				break
-			}
-
-			parentID = *cat.ParentID
-			pathIDs = append([]int{parentID}, pathIDs...)
-		}
-
-		doc["category_path_ids"] = pathIDs
-		log.Printf("Сгенерирован путь категорий для объявления %d: %v", listing.ID, pathIDs)
-	}
-
-	// Добавляем информацию о категории, если есть
-	if listing.Category != nil {
-		doc["category"] = map[string]interface{}{
-			"id":   listing.Category.ID,
-			"name": listing.Category.Name,
-			"slug": listing.Category.Slug,
-		}
-	}
-
-	// Добавляем информацию о пользователе, если есть
-	if listing.User != nil {
-		doc["user"] = map[string]interface{}{
-			"id":    listing.User.ID,
-			"name":  listing.User.Name,
-			"email": listing.User.Email,
-		}
-	}
-
-	// Добавляем изображения, если есть
-	if listing.Images != nil && len(listing.Images) > 0 {
-		log.Printf("Найдено %d изображений для объявления %d", len(listing.Images), listing.ID)
-		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
-
-		for i, img := range listing.Images {
-			// Логирование деталей каждого изображения для отладки
-			log.Printf("  Изображение %d: ID=%d, Путь=%s, IsMain=%v",
-				i+1, img.ID, img.FilePath, img.IsMain)
-
-			imagesDoc = append(imagesDoc, map[string]interface{}{
-				"id":        img.ID,
-				"file_path": img.FilePath,
-				"is_main":   img.IsMain,
-			})
-		}
-
-		// Проверяем, что у нас есть хотя бы одно изображение с указанным путем
-		hasValidImage := false
-		for _, img := range imagesDoc {
-			if path, ok := img["file_path"].(string); ok && path != "" {
-				hasValidImage = true
-				break
-			}
-		}
-
-		if hasValidImage {
-			doc["images"] = imagesDoc
-			log.Printf("  Добавлено %d изображений в индекс", len(imagesDoc))
-		} else {
-			log.Printf("  ВНИМАНИЕ: У объявления %d нет изображений с корректным путем", listing.ID)
-		}
-	} else {
-		// Пытаемся загрузить изображения из базы данных, если их нет в объекте
-		images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
-		if err != nil {
-			log.Printf("  Ошибка при загрузке изображений для объявления %d: %v", listing.ID, err)
-		} else if len(images) > 0 {
-			log.Printf("  Загружено %d изображений из базы данных для объявления %d", len(images), listing.ID)
-
-			imagesDoc := make([]map[string]interface{}, 0, len(images))
-			for i, img := range images {
-				log.Printf("    Изображение %d: ID=%d, Путь=%s, IsMain=%v",
-					i+1, img.ID, img.FilePath, img.IsMain)
-
-				imagesDoc = append(imagesDoc, map[string]interface{}{
-					"id":        img.ID,
-					"file_path": img.FilePath,
-					"is_main":   img.IsMain,
-				})
-			}
-
-			doc["images"] = imagesDoc
-			log.Printf("  Добавлено %d изображений из базы данных в индекс", len(imagesDoc))
-		} else {
-			log.Printf("  Объявление %d не имеет изображений", listing.ID)
-		}
-	}
-
-	// Изменить раздел с атрибутами для добавления атрибутов в корень документа
+	// Сначала проходим по атрибутам и явно добавляем важные поля в корень документа
 	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+		// Создаем специальные списки для хранения важных атрибутов
+		var makeValue, modelValue string
+
+		// Первый проход: собираем важные значения
+		for _, attr := range listing.Attributes {
+			// Пропускаем атрибуты без значений
+			if attr.TextValue == nil && attr.NumericValue == nil &&
+				attr.BooleanValue == nil && attr.JSONValue == nil &&
+				attr.DisplayValue == "" {
+				continue
+			}
+
+			// Обработка текстовых атрибутов
+			if attr.TextValue != nil && *attr.TextValue != "" {
+				switch attr.AttributeName {
+				case "make":
+					makeValue = *attr.TextValue
+					// Сразу добавляем марку в корень документа
+					doc["make"] = makeValue
+					doc["make_lowercase"] = strings.ToLower(makeValue)
+					log.Printf("FIRST PASS: Добавлена марка '%s' в корень документа для объявления %d", 
+						makeValue, listing.ID)
+
+				case "model":
+					modelValue = *attr.TextValue
+					// Сразу добавляем модель в корень документа
+					doc["model"] = modelValue
+					doc["model_lowercase"] = strings.ToLower(modelValue)
+					log.Printf("FIRST PASS: Добавлена модель '%s' в корень документа для объявления %d", 
+						modelValue, listing.ID)
+
+				case "brand", "color", "fuel_type", "transmission", "body_type", "property_type":
+					// Другие важные атрибуты
+					val := *attr.TextValue
+					doc[attr.AttributeName] = val
+					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(val)
+					log.Printf("FIRST PASS: Добавлен важный атрибут %s = '%s' в корень документа для объявления %d", 
+						attr.AttributeName, val, listing.ID)
+				}
+			}
+
+			// Обработка числовых атрибутов
+			if attr.NumericValue != nil {
+				numVal := *attr.NumericValue
+				
+				// Проверка на NaN и Inf
+				if math.IsNaN(numVal) || math.IsInf(numVal, 0) {
+					log.Printf("FIRST PASS: Пропуск некорректного числового значения для атрибута %s в объявлении %d", 
+						attr.AttributeName, listing.ID)
+					continue
+				}
+
+				// Добавляем важные числовые атрибуты в корень
+				switch attr.AttributeName {
+				case "year", "mileage", "engine_capacity", "power", 
+					 "rooms", "floor", "total_floors", "area", "land_area":
+					doc[attr.AttributeName] = numVal
+					log.Printf("FIRST PASS: Добавлен числовой атрибут %s = %f в корень документа для объявления %d", 
+						attr.AttributeName, numVal, listing.ID)
+				}
+			}
+		}
+
+		// Второй проход: создаем полные структуры атрибутов для вложенных полей
 		attributes := make([]map[string]interface{}, 0, len(listing.Attributes))
-
-		// Создаем карту для отслеживания добавленных атрибутов
 		addedAttributes := make(map[string]bool)
-
-		// Используем map для отслеживания уникальных значений атрибутов
 		uniqueTextValues := make(map[string]bool)
 		attributeTextValues := make(map[string][]string)
-
-		// Массив для select_values
 		selectValues := []string{}
-
-		// Явно определяем переменные для марки и модели автомобиля
-		var makeValue, modelValue string
 
 		for _, attr := range listing.Attributes {
 			// Проверяем, что атрибут имеет хотя бы одно значение
@@ -980,44 +660,7 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 				continue
 			}
 
-			// Извлекаем значения make и model для последующего использования
-			if attr.AttributeName == "make" && attr.TextValue != nil && *attr.TextValue != "" {
-				makeValue = *attr.TextValue
-			}
-			if attr.AttributeName == "model" && attr.TextValue != nil && *attr.TextValue != "" {
-				modelValue = *attr.TextValue
-			}
-
-			// Для атрибутов select и text, явно добавляем их в корень документа
-			if attr.AttributeType == "select" || attr.AttributeType == "text" {
-				var attrValue string
-				if attr.TextValue != nil && *attr.TextValue != "" {
-					attrValue = *attr.TextValue
-				} else if attr.DisplayValue != "" {
-					attrValue = attr.DisplayValue
-				}
-
-				if attrValue != "" {
-					// Добавляем в корень документа, независимо от важности
-					doc[attr.AttributeName] = attrValue
-					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(attrValue)
-
-					// Улучшаем поиск для select-значений, добавляя варианты
-					if attr.AttributeType == "select" {
-						if doc["select_values"] == nil {
-							doc["select_values"] = []string{}
-						}
-						selectValues := doc["select_values"].([]string)
-						doc["select_values"] = append(selectValues, attrValue, strings.ToLower(attrValue))
-					}
-
-					// Ведем лог для проверки
-					log.Printf("Добавлен атрибут %s = %s в корень документа для объявления %d",
-						attr.AttributeName, attrValue, listing.ID)
-				}
-			}
-
-			// Для избежания дубликатов атрибутов с одинаковым именем
+			// Для избежания дубликатов атрибутов
 			attrKey := fmt.Sprintf("%s_%d", attr.AttributeName, attr.AttributeID)
 			if addedAttributes[attrKey] {
 				continue
@@ -1032,44 +675,105 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 				"display_value":  attr.DisplayValue,
 			}
 
-			// Добавляем типизированные значения в зависимости от типа атрибута
+			// Обработка текстовых значений
 			if attr.TextValue != nil && *attr.TextValue != "" {
-				attrDoc["text_value"] = *attr.TextValue
-				attrDoc["text_value_lowercase"] = strings.ToLower(*attr.TextValue)
-
-				// Для uniqueness tracking
 				textValue := *attr.TextValue
-				lowerTextValue := strings.ToLower(textValue)
+				attrDoc["text_value"] = textValue
+				attrDoc["text_value_lowercase"] = strings.ToLower(textValue)
 
-				// Добавляем уникальные значения в attributeTextValues
-				if _, ok := attributeTextValues[attr.AttributeName]; !ok {
-					attributeTextValues[attr.AttributeName] = []string{}
-				}
-
-				// Проверяем уникальность перед добавлением
 				if !uniqueTextValues[textValue] {
 					attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], textValue)
 					uniqueTextValues[textValue] = true
 				}
-
-				if !uniqueTextValues[lowerTextValue] {
-					attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], lowerTextValue)
-					uniqueTextValues[lowerTextValue] = true
+				if !uniqueTextValues[strings.ToLower(textValue)] {
+					attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], strings.ToLower(textValue))
+					uniqueTextValues[strings.ToLower(textValue)] = true
 				}
 
-				// Добавляем в корень документа
+				// Еще раз явно добавляем важные атрибуты в корень документа 
+				// (для подстраховки, если они не были добавлены в первом проходе)
 				if isImportantAttribute(attr.AttributeName) {
 					doc[attr.AttributeName] = textValue
 					doc[attr.AttributeName+"_facet"] = textValue
-					doc[attr.AttributeName+"_lowercase"] = lowerTextValue
+					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(textValue)
+					log.Printf("SECOND PASS: Проверка добавления важного атрибута %s = '%s' в корень документа", 
+						attr.AttributeName, textValue)
 				}
 
-				// Добавляем в select_values если это select атрибут
 				if attr.AttributeType == "select" {
-					selectValues = append(selectValues, textValue, lowerTextValue)
+					selectValues = append(selectValues, textValue, strings.ToLower(textValue))
 				}
 			}
 
+			// Обработка числовых значений
+			if attr.NumericValue != nil {
+				numVal := *attr.NumericValue
+
+				// Проверка на NaN и Inf
+				if math.IsNaN(numVal) || math.IsInf(numVal, 0) {
+					log.Printf("Invalid numeric value for attribute %s in listing %d, skipping", attr.AttributeName, listing.ID)
+					continue
+				}
+
+				// Добавляем числовое значение в вложенный документ
+				attrDoc["numeric_value"] = numVal
+
+				// Добавляем числовое значение в корень документа для важных атрибутов
+				if realEstateFields[attr.AttributeName] || carFields[attr.AttributeName] || isImportantAttribute(attr.AttributeName) {
+					// Проверяем, было ли уже добавлено это поле в первом проходе
+					if _, exists := doc[attr.AttributeName]; !exists {
+						doc[attr.AttributeName] = numVal
+						log.Printf("SECOND PASS: Добавлен числовой атрибут %s = %f в корень документа", 
+							attr.AttributeName, numVal)
+					}
+
+					// Добавляем текстовое представление для поиска
+					displayValue := fmt.Sprintf("%g", numVal)
+
+					// Специальное форматирование для определенных атрибутов
+					unitMap := map[string]string{
+						"area":            "м²",
+						"land_area":       "сот",
+						"mileage":         "км",
+						"engine_capacity": "л",
+						"power":           "л.с.",
+						"screen_size":     "дюйм",
+						"rooms":           "комн",
+					}
+
+					if unit, hasUnit := unitMap[attr.AttributeName]; hasUnit {
+						displayValue = fmt.Sprintf("%g %s", numVal, unit)
+					}
+
+					if attr.AttributeName == "year" {
+						displayValue = fmt.Sprintf("%d", int(numVal))
+					}
+
+					doc[attr.AttributeName+"_text"] = displayValue
+					realEstateText = append(realEstateText, displayValue)
+
+					// Для фасетной навигации добавляем диапазоны
+					if attr.AttributeName == "price" {
+						doc["price_range"] = getPriceRange(int(numVal))
+					} else if attr.AttributeName == "mileage" {
+						doc["mileage_range"] = getMileageRange(int(numVal))
+					} else if attr.AttributeName == "area" {
+						if numVal <= 30 {
+							doc["area_range"] = "до 30 м²"
+						} else if numVal <= 50 {
+							doc["area_range"] = "30-50 м²"
+						} else if numVal <= 80 {
+							doc["area_range"] = "50-80 м²"
+						} else if numVal <= 120 {
+							doc["area_range"] = "80-120 м²"
+						} else {
+							doc["area_range"] = "более 120 м²"
+						}
+					}
+				}
+			}
+
+			// Обработка JSON значений
 			if attr.JSONValue != nil {
 				jsonStr := string(attr.JSONValue)
 				if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
@@ -1078,11 +782,6 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 					if err := json.Unmarshal(attr.JSONValue, &jsonData); err == nil {
 						if strArray, ok := jsonData.([]string); ok {
 							attrDoc["json_array"] = strArray
-
-							// Добавляем значения для поиска
-							if _, ok := attributeTextValues[attr.AttributeName]; !ok {
-								attributeTextValues[attr.AttributeName] = []string{}
-							}
 							attributeTextValues[attr.AttributeName] = append(
 								attributeTextValues[attr.AttributeName],
 								strArray...,
@@ -1092,9 +791,28 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 				}
 			}
 
-			// Получаем переводы значений атрибутов, если это select или другое поле с переводимыми значениями
+			// Обработка булевых значений
+			if attr.BooleanValue != nil {
+				boolValue := *attr.BooleanValue
+				attrDoc["boolean_value"] = boolValue
+				
+				// Добавляем булево значение в корень документа для важных атрибутов
+				if isImportantAttribute(attr.AttributeName) {
+					doc[attr.AttributeName] = boolValue
+					log.Printf("SECOND PASS: Добавлен булев атрибут %s = %v в корень документа", 
+						attr.AttributeName, boolValue)
+				}
+				
+				strValue := "нет"
+				if boolValue {
+					strValue = "да"
+				}
+				doc[attr.AttributeName+"_text"] = strValue
+				realEstateText = append(realEstateText, strValue)
+			}
+
+			// Получаем переводы значений атрибутов
 			if attr.AttributeType == "select" && (attr.TextValue != nil || attr.DisplayValue != "") {
-				// Запрашиваем переводы из таблицы attribute_option_translations
 				value := ""
 				if attr.TextValue != nil {
 					value = *attr.TextValue
@@ -1106,8 +824,6 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 					translations, err := r.getAttributeOptionTranslations(attr.AttributeName, value)
 					if err == nil && len(translations) > 0 {
 						attrDoc["translations"] = translations
-
-						// Добавляем переведенные значения для поиска
 						for lang, translation := range translations {
 							if _, ok := attributeTextValues[attr.AttributeName+"_"+lang]; !ok {
 								attributeTextValues[attr.AttributeName+"_"+lang] = []string{}
@@ -1125,44 +841,40 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 			attributes = append(attributes, attrDoc)
 		}
 
-		// Явно добавляем марку и модель в корень документа, если они были найдены
-		if makeValue != "" {
+		// Финальная проверка важных атрибутов make и model
+		if makeValue != "" && doc["make"] == nil {
 			doc["make"] = makeValue
 			doc["make_lowercase"] = strings.ToLower(makeValue)
-			log.Printf("Явно добавлена марка автомобиля '%s' в корень документа для объявления %d",
+			log.Printf("FINAL CHECK: Добавлена марка '%s' в корень документа для объявления %d", 
 				makeValue, listing.ID)
 		}
-
-		if modelValue != "" {
+		
+		if modelValue != "" && doc["model"] == nil {
 			doc["model"] = modelValue
 			doc["model_lowercase"] = strings.ToLower(modelValue)
-			log.Printf("Явно добавлена модель автомобиля '%s' в корень документа для объявления %d",
+			log.Printf("FINAL CHECK: Добавлена модель '%s' в корень документа для объявления %d", 
 				modelValue, listing.ID)
 		}
 
 		// Добавляем select_values в документ
 		if len(selectValues) > 0 {
-			// Удаляем дубликаты из selectValues
 			uniqueSelectValues := make([]string, 0)
 			selectValuesMap := make(map[string]bool)
-
 			for _, val := range selectValues {
 				if !selectValuesMap[val] {
 					selectValuesMap[val] = true
 					uniqueSelectValues = append(uniqueSelectValues, val)
 				}
 			}
-
 			doc["select_values"] = uniqueSelectValues
 		}
 
 		// Добавляем атрибуты в документ
 		doc["attributes"] = attributes
 
-		// Добавляем all_attributes_text без дублирования
+		// Добавляем all_attributes_text
 		allAttrsSet := make(map[string]bool)
 		allAttrs := []string{}
-
 		for _, values := range attributeTextValues {
 			for _, value := range values {
 				if !allAttrsSet[value] {
@@ -1171,21 +883,219 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 				}
 			}
 		}
-
 		doc["all_attributes_text"] = allAttrs
 	}
+
+	// Добавляем все тексты атрибутов недвижимости
+	if len(realEstateText) > 0 {
+		doc["real_estate_attributes_text"] = realEstateText
+		doc["real_estate_attributes_combined"] = strings.Join(realEstateText, " ")
+	}
+
+	// Обработка скидок
+	doc["has_discount"] = listing.HasDiscount
+	if listing.OldPrice > 0 {
+		doc["old_price"] = listing.OldPrice
+	}
+
+	// Обработка скидок из описания
+	if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
+		discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
+		matches := discountRegex.FindStringSubmatch(listing.Description)
+		priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
+		priceMatches := priceRegex.FindStringSubmatch(listing.Description)
+
+		if len(matches) > 1 && len(priceMatches) > 1 {
+			discountPercent, _ := strconv.Atoi(matches[1])
+			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
+
+			if listing.Metadata == nil {
+				listing.Metadata = make(map[string]interface{})
+			}
+
+			discount := map[string]interface{}{
+				"discount_percent":  discountPercent,
+				"previous_price":    oldPrice,
+				"effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339),
+				"has_price_history": true,
+			}
+
+			listing.Metadata["discount"] = discount
+			doc["old_price"] = oldPrice
+			doc["has_discount"] = true
+
+			log.Printf("Extracted discount from description for listing %d: %v", listing.ID, discount)
+		}
+	}
+
+	// Обработка метаданных
+	if listing.Metadata != nil {
+		doc["metadata"] = listing.Metadata
+		if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
+			if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+				discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
+				discount["discount_percent"] = discountPercent
+				listing.Metadata["discount"] = discount
+				doc["metadata"] = listing.Metadata
+				doc["has_discount"] = true
+				doc["old_price"] = prevPrice
+
+				log.Printf("Recalculated discount percent for OpenSearch: %d%% (listing %d)",
+					discountPercent, listing.ID)
+			}
+		}
+	}
+
+	// Обработка storefront_id
+	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+		needStorefrontInfo := listing.City == "" || listing.Country == "" || listing.Location == "" ||
+			listing.Latitude == nil || listing.Longitude == nil
+
+		if needStorefrontInfo {
+			log.Printf("Fetching storefront %d data for listing %d address info", *listing.StorefrontID, listing.ID)
+			var storefront models.Storefront
+			err := r.storage.QueryRow(context.Background(), `
+                SELECT name, city, address, country, latitude, longitude
+                FROM user_storefronts 
+                WHERE id = $1
+            `, *listing.StorefrontID).Scan(
+				&storefront.Name,
+				&storefront.City,
+				&storefront.Address,
+				&storefront.Country,
+				&storefront.Latitude,
+				&storefront.Longitude,
+			)
+
+			if err == nil {
+				if listing.City == "" && storefront.City != "" {
+					doc["city"] = storefront.City
+				}
+				if listing.Country == "" && storefront.Country != "" {
+					doc["country"] = storefront.Country
+				}
+				if listing.Location == "" && storefront.Address != "" {
+					doc["location"] = storefront.Address
+				}
+				if (listing.Latitude == nil || listing.Longitude == nil ||
+					*listing.Latitude == 0 || *listing.Longitude == 0) &&
+					storefront.Latitude != nil && storefront.Longitude != nil &&
+					*storefront.Latitude != 0 && *storefront.Longitude != 0 {
+					doc["coordinates"] = map[string]interface{}{
+						"lat": *storefront.Latitude,
+						"lon": *storefront.Longitude,
+					}
+					doc["show_on_map"] = true
+				}
+			}
+		}
+		doc["storefront_id"] = *listing.StorefrontID
+	}
+
+	// Обработка координат
+	if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
+		doc["coordinates"] = map[string]interface{}{
+			"lat": *listing.Latitude,
+			"lon": *listing.Longitude,
+		}
+	} else if _, ok := doc["coordinates"]; !ok {
+		if cityVal, ok := doc["city"].(string); ok && cityVal != "" {
+			countryVal := ""
+			if c, ok := doc["country"].(string); ok {
+				countryVal = c
+			}
+			geocoded, err := r.geocodeCity(cityVal, countryVal)
+			if err == nil && geocoded != nil {
+				doc["coordinates"] = map[string]interface{}{
+					"lat": geocoded.Lat,
+					"lon": geocoded.Lon,
+				}
+				doc["show_on_map"] = true
+			}
+		}
+	}
+
+	// Обработка пути категорий
+	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
+		doc["category_path_ids"] = listing.CategoryPathIds
+	} else {
+		parentID := listing.CategoryID
+		pathIDs := []int{parentID}
+		for parentID > 0 {
+			var cat models.MarketplaceCategory
+			err := r.storage.QueryRow(context.Background(),
+				"SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
+				Scan(&cat.ParentID)
+			if err != nil || cat.ParentID == nil {
+				break
+			}
+			parentID = *cat.ParentID
+			pathIDs = append([]int{parentID}, pathIDs...)
+		}
+		doc["category_path_ids"] = pathIDs
+	}
+
+	// Обработка категории
+	if listing.Category != nil {
+		doc["category"] = map[string]interface{}{
+			"id":   listing.Category.ID,
+			"name": listing.Category.Name,
+			"slug": listing.Category.Slug,
+		}
+	}
+
+	// Обработка пользователя
+	if listing.User != nil {
+		doc["user"] = map[string]interface{}{
+			"id":    listing.User.ID,
+			"name":  listing.User.Name,
+			"email": listing.User.Email,
+		}
+	}
+
+	// Обработка изображений
+	if listing.Images != nil && len(listing.Images) > 0 {
+		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
+		for _, img := range listing.Images {
+			imagesDoc = append(imagesDoc, map[string]interface{}{
+				"id":        img.ID,
+				"file_path": img.FilePath,
+				"is_main":   img.IsMain,
+			})
+		}
+		doc["images"] = imagesDoc
+	} else {
+		images, err := r.storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
+		if err == nil && len(images) > 0 {
+			imagesDoc := make([]map[string]interface{}, 0, len(images))
+			for _, img := range images {
+				imagesDoc = append(imagesDoc, map[string]interface{}{
+					"id":        img.ID,
+					"file_path": img.FilePath,
+					"is_main":   img.IsMain,
+				})
+			}
+			doc["images"] = imagesDoc
+		}
+	}
+
+	// Логирование финального документа перед отправкой
+	docJSON, _ := json.MarshalIndent(doc, "", "  ")
+	log.Printf("FINAL DOC for listing %d [size=%d bytes]: %s", listing.ID, len(docJSON), string(docJSON))
+
 	return doc
 }
 func getLocalizedRoomText(rooms float64) string {
-    // По умолчанию используем русский язык
-    switch int(rooms) {
-    case 1:
-        return "комната"
-    case 2, 3, 4:
-        return "комнаты"
-    default:
-        return "комнат"
-    }
+	// По умолчанию используем русский язык
+	switch int(rooms) {
+	case 1:
+		return "комната"
+	case 2, 3, 4:
+		return "комнаты"
+	default:
+		return "комнат"
+	}
 }
 func getMileageRange(mileage int) string {
 	switch {
@@ -1335,7 +1245,6 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
 
-	// Изменить раздел с текстовым поиском в функции buildSearchQuery
 	if params.Query != "" {
 		log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
 
@@ -1351,10 +1260,9 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"model^4",
 			"color^3",
 			"brand^4",
-			"year^3",
-			"rooms^3",
-			"property_type^3",
+			"property_type^3", 
 			"body_type^3",
+			"rooms^3",
 			"cpu^3",
 			"gpu^3",
 			"memory^3",
@@ -1489,7 +1397,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		realEstateKeywords := []string{
 			"квартира", "комната", "комнат", "дом", "этаж",
 			"площадь", "м2", "кв.м", "квм", "кв м",
-			"студия", "однокомнатная", "двухкомнатная", "трехкомнатная", 
+			"студия", "однокомнатная", "двухкомнатная", "трехкомнатная",
 			"однушка", "двушка", "трешка", "участок", "сотка",
 			"гараж", "паркинг", "балкон", "лоджия", "терраса",
 			"ремонт", "новостройка", "вторичка", "жилье", "недвижимость",
@@ -1507,7 +1415,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		// Если запрос связан с недвижимостью, увеличиваем значимость соответствующих полей
 		if isRealEstateQuery {
 			log.Printf("Обнаружен запрос о недвижимости: '%s'", params.Query)
-			
+
 			// Добавляем дополнительные поля в запрос с повышенным весом
 			realEstateBoost := []map[string]interface{}{
 				{
@@ -1538,7 +1446,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					},
 				},
 			}
-			
+
 			// Добавляем эти запросы в should-блок основного запроса
 			for _, q := range realEstateBoost {
 				should = append(should, q)
@@ -1555,9 +1463,11 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				"query":                params.Query,
 				"fields":               searchFields,
 				"type":                 "best_fields",
-				"fuzziness":            fuzziness,
-				"operator":             "OR", // Используем OR вместо AND для более гибкого поиска
+				"operator":             "OR",
 				"minimum_should_match": minimumShouldMatch,
+				// Применяем fuzziness только для текстовых полей
+				"fuzziness": "AUTO",
+				// Можно добавить условие: применять fuzziness только для определенных полей
 			},
 		}
 
@@ -1608,7 +1518,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 						},
 					},
 				})
-				
+
 				// Добавляем поиск по специфическим полям недвижимости для каждого слова
 				if isRealEstateQuery {
 					should = append(should, map[string]interface{}{
@@ -1620,7 +1530,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 							},
 						},
 					})
-					
+
 					// Поиск по полю комнат
 					should = append(should, map[string]interface{}{
 						"match": map[string]interface{}{
@@ -1823,40 +1733,31 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 	// Добавляем фильтры по атрибутам, если есть
 	if params.AttributeFilters != nil && len(params.AttributeFilters) > 0 {
 		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
-		
+
 		// Список атрибутов недвижимости
 		realEstateAttrs := map[string]bool{
 			"property_type": true, "rooms": true, "floor": true, "total_floors": true,
-			"area": true, "land_area": true, "building_type": true, 
+			"area": true, "land_area": true, "building_type": true,
 			"has_balcony": true, "has_elevator": true, "has_parking": true,
-			"year_built": true, "bathrooms": true,
 		}
-		
+
 		for attrName, attrValue := range params.AttributeFilters {
 			if attrValue == "" {
 				continue
 			}
-			
+
 			// Проверяем, является ли атрибут атрибутом недвижимости
 			if realEstateAttrs[attrName] {
-				// Создаем простой term-запрос вместо nested для атрибутов недвижимости
-				if attrValue == "true" || attrValue == "false" {
-					// Для булевых атрибутов
-					boolVal := attrValue == "true"
-					filter = append(filter, map[string]interface{}{
-						"term": map[string]interface{}{
-							attrName: boolVal,
-						},
-					})
-					log.Printf("Добавлен фильтр по атрибуту недвижимости (boolean): %s = %v", attrName, boolVal)
-				} else if strings.Contains(attrValue, ",") {
-					// Для числовых диапазонов
+				// Для атрибутов недвижимости проверяем тип значения
+				if strings.Contains(attrValue, ",") {
+					// Диапазон значений, например "10,50" для площади
 					parts := strings.Split(attrValue, ",")
 					if len(parts) == 2 {
 						minVal, minErr := strconv.ParseFloat(parts[0], 64)
 						maxVal, maxErr := strconv.ParseFloat(parts[1], 64)
-						
+
 						if minErr == nil && maxErr == nil {
+							// Создаем запрос на диапазон для числового поля в корне документа
 							filter = append(filter, map[string]interface{}{
 								"range": map[string]interface{}{
 									attrName: map[string]interface{}{
@@ -1865,29 +1766,122 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 									},
 								},
 							})
-							log.Printf("Добавлен фильтр по атрибуту недвижимости (range): %s = %v-%v", attrName, minVal, maxVal)
+							log.Printf("Added range filter for real estate attribute %s: %f-%f",
+								attrName, minVal, maxVal)
 						}
 					}
-				} else {
-					// Для текстовых атрибутов
+				} else if attrName == "property_type" || attrName == "building_type" {
+					// Для текстовых атрибутов недвижимости
 					filter = append(filter, map[string]interface{}{
 						"term": map[string]interface{}{
 							attrName: attrValue,
 						},
 					})
-					log.Printf("Добавлен фильтр по атрибуту недвижимости (text): %s = %s", attrName, attrValue)
+					log.Printf("Added term filter for text real estate attribute %s = %s",
+						attrName, attrValue)
+				} else if attrValue == "true" || attrValue == "false" {
+					// Булевый атрибут
+					boolVal := attrValue == "true"
+					filter = append(filter, map[string]interface{}{
+						"term": map[string]interface{}{
+							attrName: boolVal,
+						},
+					})
+					log.Printf("Added boolean filter for real estate attribute %s = %v",
+						attrName, boolVal)
+				} else {
+					// Числовой атрибут с одним значением
+					if numVal, err := strconv.ParseFloat(attrValue, 64); err == nil {
+						filter = append(filter, map[string]interface{}{
+							"term": map[string]interface{}{
+								attrName: numVal,
+							},
+						})
+						log.Printf("Added numeric filter for real estate attribute %s = %f",
+							attrName, numVal)
+					} else {
+						// Если не удалось преобразовать, ищем как текст
+						filter = append(filter, map[string]interface{}{
+							"match": map[string]interface{}{
+								attrName + "_text": attrValue,
+							},
+						})
+						log.Printf("Added text filter for real estate attribute %s = %s",
+							attrName, attrValue)
+					}
 				}
 			} else {
-				// Для обычных атрибутов, используем term-запрос по всем типам значений
-				filter = append(filter, map[string]interface{}{
-					"term": map[string]interface{}{
-						"attr_" + attrName: attrValue,
+				// Для обычных атрибутов используем nested query
+				nestedQuery := map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "attributes",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"attributes.attribute_name": attrName,
+										},
+									},
+								},
+							},
+						},
 					},
-				})
-				log.Printf("Добавлен фильтр по обычному атрибуту: %s = %s", attrName, attrValue)
+				}
+
+				// Получаем внутренний bool запрос
+				innerBool := nestedQuery["nested"].(map[string]interface{})["query"].(map[string]interface{})["bool"].(map[string]interface{})
+				innerMust := innerBool["must"].([]map[string]interface{})
+
+				// Проверяем тип значения
+				if strings.Contains(attrValue, ",") {
+					// Диапазон
+					parts := strings.Split(attrValue, ",")
+					if len(parts) == 2 {
+						minVal, minErr := strconv.ParseFloat(parts[0], 64)
+						maxVal, maxErr := strconv.ParseFloat(parts[1], 64)
+
+						if minErr == nil && maxErr == nil {
+							innerMust = append(innerMust, map[string]interface{}{
+								"range": map[string]interface{}{
+									"attributes.numeric_value": map[string]interface{}{
+										"gte": minVal,
+										"lte": maxVal,
+									},
+								},
+							})
+						}
+					}
+				} else if attrValue == "true" || attrValue == "false" {
+					// Булево значение
+					boolVal := attrValue == "true"
+					innerMust = append(innerMust, map[string]interface{}{
+						"term": map[string]interface{}{
+							"attributes.boolean_value": boolVal,
+						},
+					})
+				} else if numVal, err := strconv.ParseFloat(attrValue, 64); err == nil {
+					// Числовое значение
+					innerMust = append(innerMust, map[string]interface{}{
+						"term": map[string]interface{}{
+							"attributes.numeric_value": numVal,
+						},
+					})
+				} else {
+					// Текстовое значение
+					innerMust = append(innerMust, map[string]interface{}{
+						"term": map[string]interface{}{
+							"attributes.text_value.keyword": attrValue,
+						},
+					})
+				}
+
+				// Обновляем запрос с дополненным условием must
+				innerBool["must"] = innerMust
+				filter = append(filter, nestedQuery)
 			}
 		}
-		
+
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
 

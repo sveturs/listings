@@ -13,6 +13,7 @@ import (
 	"log"
 	"strings"
 	"math"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	//"time"
@@ -1053,7 +1054,7 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
     // Карта для отслеживания уникальных attribute_id
     seen := make(map[int]bool)
     valueStrings := make([]string, 0, len(attributes))
-    valueArgs := make([]interface{}, 0, len(attributes)*6) // Увеличиваем до 6, так как добавляем все поля
+    valueArgs := make([]interface{}, 0, len(attributes)*7) // Увеличиваем до 7, добавляя unit
     counter := 1
 
     for _, attr := range attributes {
@@ -1061,6 +1062,47 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
         if attr.AttributeID <= 0 {
             log.Printf("Storage: Invalid attribute ID: %d, skipping", attr.AttributeID)
             continue
+        }
+
+        // Определяем единицу измерения на основе имени атрибута
+        var unit string
+        switch attr.AttributeName {
+        case "area":
+            unit = "m²"
+        case "land_area":
+            unit = "ar"
+        case "mileage":
+            unit = "km"
+        case "engine_capacity":
+            unit = "l"
+        case "power":
+            unit = "ks"
+        case "screen_size":
+            unit = "inč"
+        case "rooms":
+            unit = "soba"
+        case "floor", "total_floors":
+            unit = "sprat"
+        }
+
+        // Числовые атрибуты - дополнительная обработка
+        if attr.NumericValue == nil && attr.TextValue != nil && *attr.TextValue != "" {
+            // Список числовых атрибутов для конвертации
+            numericAttrs := map[string]bool{
+                "rooms": true, "floor": true, "total_floors": true, "area": true, 
+                "land_area": true, "mileage": true, "year": true, "engine_capacity": true,
+                "power": true, "screen_size": true,
+            }
+            
+            if numericAttrs[attr.AttributeName] {
+                // Преобразуем текст в число
+                clean := regexp.MustCompile(`[^\d\.-]`).ReplaceAllString(*attr.TextValue, "")
+                if numVal, err := strconv.ParseFloat(clean, 64); err == nil {
+                    attr.NumericValue = &numVal
+                    log.Printf("Converted text value '%s' to numeric: %f for attribute %s", 
+                              *attr.TextValue, numVal, attr.AttributeName)
+                }
+            }
         }
 
         // Проверка на дубликаты по attribute_id
@@ -1071,7 +1113,7 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
         seen[attr.AttributeID] = true
 
         // Логирование значений атрибута
-        log.Printf("Attribute: ID=%d, Name=%s, Type=%s", attr.AttributeID, attr.AttributeName, attr.AttributeType)
+        log.Printf("Attribute: ID=%d, Name=%s, Type=%s, Unit=%s", attr.AttributeID, attr.AttributeName, attr.AttributeType, unit)
         if attr.TextValue != nil {
             log.Printf("  Text value: %s", *attr.TextValue)
         }
@@ -1095,9 +1137,9 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
             continue
         }
 
-        // Подготавливаем часть запроса для этого атрибута
-        valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d)",
-            counter, counter+1, counter+2, counter+3, counter+4, counter+5))
+        // Подготавливаем часть запроса для этого атрибута, добавляя unit
+        valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+            counter, counter+1, counter+2, counter+3, counter+4, counter+5, counter+6))
 
         // Добавляем параметры
         valueArgs = append(valueArgs, listingID, attr.AttributeID)
@@ -1109,14 +1151,16 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
             valueArgs = append(valueArgs, nil)
         }
 
-        // Числовое значение
+        // Числовое значение с проверками
         if attr.NumericValue != nil {
             numericVal := *attr.NumericValue
-            // Проверка больших значений для mileage
-            if attr.AttributeName == "mileage" && numericVal > 10000000 {
-                log.Printf("Storage: High mileage value detected: %f", numericVal)
+            // Проверка больших значений
+            if (attr.AttributeName == "mileage" && numericVal > 10000000) ||
+               (attr.AttributeName == "price" && numericVal > 1000000000) ||
+               (attr.AttributeName == "area" && numericVal > 10000) {
+                log.Printf("Storage: High value detected for %s: %f", attr.AttributeName, numericVal)
                 if numericVal > 999999999999.99999 {
-                    log.Printf("Storage: Mileage value too large, capping at max allowed")
+                    log.Printf("Storage: Value too large, capping at max allowed")
                     numericVal = 999999999999.99999
                 }
             }
@@ -1144,7 +1188,10 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
             valueArgs = append(valueArgs, nil)
         }
 
-        counter += 6
+        // Добавляем единицу измерения
+        valueArgs = append(valueArgs, unit)
+
+        counter += 7
     }
 
     // Если нет атрибутов для вставки, завершаем транзакцию
@@ -1156,13 +1203,14 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
     // Составляем запрос для множественной вставки
     query := fmt.Sprintf(`
         INSERT INTO listing_attribute_values (
-            listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value
+            listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit
         ) VALUES %s
         ON CONFLICT (listing_id, attribute_id) DO UPDATE SET
             text_value = EXCLUDED.text_value,
             numeric_value = EXCLUDED.numeric_value,
             boolean_value = EXCLUDED.boolean_value,
-            json_value = EXCLUDED.json_value
+            json_value = EXCLUDED.json_value,
+            unit = EXCLUDED.unit
     `, strings.Join(valueStrings, ","))
 
     // Выполняем запрос
@@ -1182,9 +1230,9 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
     log.Printf("Storage: Successfully saved %d unique attributes for listing %d", len(valueStrings), listingID)
     return nil
 }
+
 // GetListingAttributes получает значения атрибутов для объявления без дублирования
 func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
-    // Улучшенный запрос с явным DISTINCT ON для удаления дубликатов
     query := `
         SELECT DISTINCT ON (a.id) 
             v.listing_id,
@@ -1195,7 +1243,8 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             v.text_value,
             v.numeric_value,
             v.boolean_value,
-            v.json_value
+            v.json_value,
+            v.unit
         FROM listing_attribute_values v
         JOIN category_attributes a ON v.attribute_id = a.id
         WHERE v.listing_id = $1
@@ -1221,6 +1270,7 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
         var numericValue sql.NullFloat64
         var boolValue sql.NullBool
         var jsonValue sql.NullString
+        var unit sql.NullString
 
         if err := rows.Scan(
             &attr.ListingID,
@@ -1232,6 +1282,7 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             &numericValue,
             &boolValue,
             &jsonValue,
+            &unit,
         ); err != nil {
             log.Printf("Error scanning attribute: %v", err)
             return nil, fmt.Errorf("error scanning listing attribute: %w", err)
@@ -1252,12 +1303,45 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             log.Printf("DEBUG: Attribute %d (%s) has text value: %s",
                 attr.AttributeID, attr.AttributeName, textValue.String)
         }
+        
         if numericValue.Valid {
             attr.NumericValue = &numericValue.Float64
-            attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
-            log.Printf("DEBUG: Attribute %d (%s) has numeric value: %f",
-                attr.AttributeID, attr.AttributeName, numericValue.Float64)
+            
+            // Создаем отображаемое значение с учетом единиц измерения
+            unitStr := ""
+            if unit.Valid {
+                unitStr = unit.String
+            } else {
+                // Определяем единицу измерения на основе имени атрибута
+                switch attr.AttributeName {
+                case "area":
+                    unitStr = "m²"
+                case "land_area":
+                    unitStr = "ar"
+                case "mileage":
+                    unitStr = "km"
+                case "engine_capacity":
+                    unitStr = "l"
+                case "power":
+                    unitStr = "ks"
+                case "screen_size":
+                    unitStr = "inč"
+                }
+            }
+            
+            // Форматируем отображаемое значение с учетом типа
+            if attr.AttributeName == "year" {
+                attr.DisplayValue = fmt.Sprintf("%d", int(numericValue.Float64))
+            } else if unitStr != "" {
+                attr.DisplayValue = fmt.Sprintf("%g %s", numericValue.Float64, unitStr)
+            } else {
+                attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
+            }
+            
+            log.Printf("DEBUG: Attribute %d (%s) has numeric value: %f, display: %s",
+                attr.AttributeID, attr.AttributeName, numericValue.Float64, attr.DisplayValue)
         }
+        
         if boolValue.Valid {
             attr.BooleanValue = &boolValue.Bool
             if boolValue.Bool {
@@ -1268,6 +1352,7 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             log.Printf("DEBUG: Attribute %d (%s) has boolean value: %t",
                 attr.AttributeID, attr.AttributeName, boolValue.Bool)
         }
+        
         if jsonValue.Valid {
             attr.JSONValue = json.RawMessage(jsonValue.String)
             // Для multiselect можно форматировать массив значений
@@ -1294,7 +1379,122 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 
     return allAttributes, nil
 }
-// Исправленная версия функции GetCategoryAttributes
+
+// GetAttributeRanges получает минимальные и максимальные значения для числовых атрибутов
+func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
+    // Получаем ID всех подкатегорий заданной категории
+    query := `
+    WITH RECURSIVE category_tree AS (
+        SELECT id FROM marketplace_categories WHERE id = $1
+        UNION ALL
+        SELECT c.id FROM marketplace_categories c
+        JOIN category_tree t ON c.parent_id = t.id
+    )
+    SELECT string_agg(id::text, ',') FROM category_tree
+    `
+    
+    var categoryIDs string
+    err := s.pool.QueryRow(ctx, query, categoryID).Scan(&categoryIDs)
+    if err != nil {
+        return nil, fmt.Errorf("error getting category tree: %w", err)
+    }
+    
+    if categoryIDs == "" {
+        categoryIDs = strconv.Itoa(categoryID)
+    }
+    
+    // Запрос для получения границ числовых атрибутов
+    rangesQuery := `
+    SELECT 
+        a.name,
+        MIN(v.numeric_value) as min_value,
+        MAX(v.numeric_value) as max_value,
+        COUNT(DISTINCT v.numeric_value) as value_count
+    FROM listing_attribute_values v
+    JOIN category_attributes a ON v.attribute_id = a.id
+    JOIN marketplace_listings l ON v.listing_id = l.id
+    WHERE 
+        l.category_id IN (` + categoryIDs + `)
+        AND l.status = 'active'
+        AND v.numeric_value IS NOT NULL
+        AND a.attribute_type = 'number'
+    GROUP BY a.name
+    `
+    
+    rows, err := s.pool.Query(ctx, rangesQuery)
+    if err != nil {
+        return nil, fmt.Errorf("error querying attribute ranges: %w", err)
+    }
+    defer rows.Close()
+    
+    // Формируем результат
+    ranges := make(map[string]map[string]interface{})
+    
+    for rows.Next() {
+        var attrName string
+        var minValue, maxValue float64
+        var valueCount int
+        
+        if err := rows.Scan(&attrName, &minValue, &maxValue, &valueCount); err != nil {
+            return nil, fmt.Errorf("error scanning attribute range: %w", err)
+        }
+        
+        // Для года и других целочисленных параметров округляем границы
+        if attrName == "year" || attrName == "rooms" || attrName == "floor" || attrName == "total_floors" {
+            minValue = float64(int(minValue))
+            maxValue = float64(int(maxValue))
+        }
+        
+        // Для "year" добавляем запас +1 год для новых автомобилей
+        if attrName == "year" && maxValue >= float64(time.Now().Year()-1) {
+            maxValue = float64(time.Now().Year() + 1)
+        }
+        
+        // Установка разумных шагов в зависимости от диапазона
+        var step float64 = 1.0
+        if attrName == "engine_capacity" {
+            step = 0.1
+        } else if attrName == "area" || attrName == "land_area" {
+            step = 0.5
+        }
+        
+        // Создаем информацию о границах
+        ranges[attrName] = map[string]interface{}{
+            "min": minValue,
+            "max": maxValue,
+            "step": step,
+            "count": valueCount,
+        }
+        
+        log.Printf("Attribute %s range: min=%.2f, max=%.2f, values=%d", 
+                  attrName, minValue, maxValue, valueCount)
+    }
+    
+    // Если нет данных, устанавливаем разумные значения по умолчанию
+    defaultRanges := map[string]map[string]interface{}{
+        "year": {"min": float64(time.Now().Year() - 30), "max": float64(time.Now().Year() + 1), "step": 1.0},
+        "mileage": {"min": 0.0, "max": 500000.0, "step": 1000.0},
+        "engine_capacity": {"min": 0.5, "max": 8.0, "step": 0.1},
+        "power": {"min": 50.0, "max": 500.0, "step": 10.0},
+        "rooms": {"min": 1.0, "max": 10.0, "step": 1.0},
+        "floor": {"min": 1.0, "max": 25.0, "step": 1.0},
+        "total_floors": {"min": 1.0, "max": 30.0, "step": 1.0},
+        "area": {"min": 10.0, "max": 300.0, "step": 0.5},
+        "land_area": {"min": 1.0, "max": 100.0, "step": 0.5},
+    }
+    
+    // Заполняем отсутствующие атрибуты значениями по умолчанию
+    for attr, defaultRange := range defaultRanges {
+        if _, exists := ranges[attr]; !exists {
+            ranges[attr] = defaultRange
+            log.Printf("No data for attribute %s, using defaults: min=%.2f, max=%.2f",
+                      attr, defaultRange["min"], defaultRange["max"])
+        }
+    }
+    
+    return ranges, nil
+}
+
 // Исправленная версия функции GetCategoryAttributes
 func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
     // Добавляем логирование для отладки
@@ -1425,6 +1625,48 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
     if err := rows.Err(); err != nil {
         log.Printf("GetCategoryAttributes: Ошибка при итерации результатов: %v", err)
         return nil, fmt.Errorf("error iterating category attributes: %w", err)
+    }
+    
+    // Получаем актуальные диапазоны для атрибутов
+    attributeRanges, err := s.GetAttributeRanges(ctx, categoryID)
+    if err != nil {
+        log.Printf("GetCategoryAttributes: Ошибка получения диапазонов атрибутов: %v", err)
+        // Продолжаем работу без диапазонов
+    } else {
+        // Обновляем опции атрибутов с учетом реальных диапазонов
+        for i, attr := range attributes {
+            // Обрабатываем только числовые атрибуты
+            if attr.AttributeType == "number" {
+                if ranges, ok := attributeRanges[attr.Name]; ok {
+                    // Создаем или обновляем объект options
+                    var options map[string]interface{}
+                    
+                    // Пытаемся использовать существующие options
+                    if attr.Options != nil && len(attr.Options) > 0 {
+                        err := json.Unmarshal(attr.Options, &options)
+                        if err != nil {
+                            options = make(map[string]interface{})
+                        }
+                    } else {
+                        options = make(map[string]interface{})
+                    }
+                    
+                    // Обновляем значения диапазонов
+                    options["min"] = ranges["min"]
+                    options["max"] = ranges["max"]
+                    options["step"] = ranges["step"]
+                    options["real_data"] = true
+                    
+                    // Сериализуем обратно в JSON
+                    optionsJSON, err := json.Marshal(options)
+                    if err == nil {
+                        attributes[i].Options = optionsJSON
+                        log.Printf("GetCategoryAttributes: Обновлены диапазоны для атрибута %s: min=%.2f, max=%.2f",
+                                attr.Name, ranges["min"], ranges["max"])
+                    }
+                }
+            }
+        }
     }
 
     log.Printf("GetCategoryAttributes: Успешно получено %d атрибутов для категории %d", len(attributes), categoryID)

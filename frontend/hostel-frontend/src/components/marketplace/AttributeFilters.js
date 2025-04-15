@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/components/marketplace/AttributeFilters.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { debounce } from 'lodash';
@@ -27,6 +28,8 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
     const [attributeFilters, setAttributeFilters] = useState({ ...filters });
     const [error, setError] = useState(null);
     const isFirstRender = useRef(true);
+    // Добавляем состояние для диапазонов атрибутов
+    const [attributeRanges, setAttributeRanges] = useState({});
 
     // Создаем отложенную функцию обновления фильтров
     const debouncedFilterChange = useCallback(
@@ -67,21 +70,72 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
     const handleFilterChange = useCallback((attributeName, value) => {
         console.log(`Изменение атрибута ${attributeName}: ${value}`);
 
-        // Обновляем локальное состояние сразу для отзывчивого UI
-        setAttributeFilters(prev => {
-            const updatedFilters = { ...prev };
-
-            if (value === undefined || value === null || value === '') {
-                delete updatedFilters[attributeName];
-            } else {
-                updatedFilters[attributeName] = value;
+        // Специальная обработка для атрибутов недвижимости
+        if (['rooms', 'floor', 'total_floors', 'area', 'land_area', 'property_type'].includes(attributeName)) {
+            // Если это пустая строка или undefined, удаляем фильтр
+            if (value === '' || value === undefined) {
+                setAttributeFilters(prev => {
+                    const updated = { ...prev };
+                    delete updated[attributeName];
+                    debouncedFilterChange(updated);
+                    return updated;
+                });
+                return;
             }
 
-            // Вызываем отложенное обновление родительского компонента
-            debouncedFilterChange(updatedFilters);
+            // Проверяем, является ли значение строкой с запятой (диапазон)
+            if (typeof value === 'string' && value.includes(',')) {
+                // Это уже диапазон, просто обновляем
+                setAttributeFilters(prev => {
+                    const updated = { ...prev, [attributeName]: value };
+                    debouncedFilterChange(updated);
+                    return updated;
+                });
+            } else {
+                // Пытаемся конвертировать в число
+                let numericValue = parseFloat(value);
+                if (!isNaN(numericValue)) {
+                    // Это число, добавляем его без диапазона
+                    setAttributeFilters(prev => {
+                        const updated = { ...prev, [attributeName]: String(numericValue) };
+                        debouncedFilterChange(updated);
+                        return updated;
+                    });
+                } else {
+                    // Это текст, пытаемся удалить все не-числовые символы
+                    const cleanValue = value.replace(/[^\d.,\-]/g, '').replace(',', '.');
+                    numericValue = parseFloat(cleanValue);
+                    if (!isNaN(numericValue)) {
+                        setAttributeFilters(prev => {
+                            const updated = { ...prev, [attributeName]: String(numericValue) };
+                            debouncedFilterChange(updated);
+                            return updated;
+                        });
+                    } else {
+                        // Не удалось преобразовать, добавляем как текст
+                        setAttributeFilters(prev => {
+                            const updated = { ...prev, [attributeName]: value };
+                            debouncedFilterChange(updated);
+                            return updated;
+                        });
+                    }
+                }
+            }
+        } else {
+            // Обычная обработка для других атрибутов
+            setAttributeFilters(prev => {
+                const updated = { ...prev };
 
-            return updatedFilters;
-        });
+                if (value === undefined || value === null || value === '') {
+                    delete updated[attributeName];
+                } else {
+                    updated[attributeName] = value;
+                }
+
+                debouncedFilterChange(updated);
+                return updated;
+            });
+        }
     }, [debouncedFilterChange]);
 
     // Обработчик изменения для диапазонных фильтров
@@ -111,10 +165,28 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
         // Сбрасываем состояние перед новым запросом
         setLoading(true);
         setError(null);
-
+        
+        // Загружаем диапазоны атрибутов
+        const fetchAttributeRanges = async () => {
+            try {
+                const response = await axios.get(`/api/v1/marketplace/categories/${categoryId}/attribute-ranges`);
+                console.log("Получены диапазоны атрибутов:", response.data);
+                if (response.data?.data) {
+                    setAttributeRanges(response.data.data);
+                }
+            } catch (error) {
+                console.error("Ошибка при загрузке диапазонов атрибутов:", error);
+            }
+        };
+        
+        // Загружаем атрибуты
         const fetchAttributes = async () => {
             try {
                 console.log(`Запрос атрибутов для категории ${categoryId}`);
+                
+                // Параллельно загружаем диапазоны
+                fetchAttributeRanges();
+                
                 const response = await axios.get(`/api/v1/marketplace/categories/${categoryId}/attributes`);
 
                 if (response.status === 200 && response.data?.data) {
@@ -179,6 +251,96 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
 
         fetchAttributes();
     }, [categoryId, i18n.language, onAttributesLoaded, filters]);
+
+    useEffect(() => {
+        // Дополнительная обработка для правильного отображения фильтров недвижимости
+        attributes.forEach(attr => {
+            if (['rooms', 'floor', 'total_floors', 'area', 'land_area', 'property_type'].includes(attr.name)) {
+                console.log(`Обрабатываем атрибут недвижимости: ${attr.name}`);
+                
+                // Обработка для numeric-атрибутов
+                if (['rooms', 'floor', 'total_floors', 'area', 'land_area'].includes(attr.name)) {
+                    // Если тип не number, меняем его
+                    if (attr.attribute_type !== "number") {
+                        console.warn(`Атрибут ${attr.name} имеет тип ${attr.attribute_type}, но должен быть 'number'`);
+                        attr.attribute_type = "number";
+                    }
+                    
+                    // Проверяем наличие диапазонов из реальных данных
+                    if (attributeRanges[attr.name]) {
+                        console.log(`Используем реальные диапазоны для ${attr.name}:`, attributeRanges[attr.name]);
+                        
+                        // Создаем или обновляем options
+                        let options = {};
+                        try {
+                            if (attr.options) {
+                                options = typeof attr.options === 'string' ?
+                                    JSON.parse(attr.options) : attr.options;
+                            }
+                        } catch (e) {
+                            options = {};
+                        }
+                        
+                        // Обновляем значения из реальных данных
+                        options.min = attributeRanges[attr.name].min;
+                        options.max = attributeRanges[attr.name].max;
+                        options.step = attributeRanges[attr.name].step;
+                        
+                        // Сохраняем обновленные options
+                        attr.options = JSON.stringify(options);
+                        console.log(`Обновлены опции для ${attr.name}: ${attr.options}`);
+                    } else {
+                        // Устанавливаем опции по умолчанию, если нет реальных данных
+                        let defaultOptions = {};
+                        
+                        if (attr.name === 'rooms') {
+                            defaultOptions = { min: 1, max: 10, step: 1 };
+                        } else if (attr.name === 'floor' || attr.name === 'total_floors') {
+                            defaultOptions = { min: 1, max: 50, step: 1 };
+                        } else if (attr.name === 'area') {
+                            defaultOptions = { min: 1, max: 500, step: 0.5 };
+                        } else if (attr.name === 'land_area') {
+                            defaultOptions = { min: 1, max: 1000, step: 0.5 };
+                        }
+                        
+                        attr.options = JSON.stringify(defaultOptions);
+                        console.log(`Установлены значения по умолчанию для атрибута ${attr.name}: ${attr.options}`);
+                    }
+                } 
+                // Специальная обработка для property_type
+                else if (attr.name === "property_type") {
+                    // Всегда устанавливаем тип select
+                    if (attr.attribute_type !== "select") {
+                        console.warn(`Атрибут ${attr.name} имеет тип ${attr.attribute_type}, устанавливаем 'select'`);
+                        attr.attribute_type = "select";
+                    }
+                    
+                    // Всегда устанавливаем options для property_type
+                    const propertyTypes = {
+                        values: [
+                            "квартира", 
+                            "дом", 
+                            "комната",
+                            "земельный участок",
+                            "гараж",
+                            "коммерческая"
+                        ]
+                    };
+                    attr.options = JSON.stringify(propertyTypes);
+                    console.log(`Установлены значения для типа недвижимости: ${attr.options}`);
+                }
+                
+                // Для атрибута rooms, если он select, а не number
+                if (attr.name === "rooms" && attr.attribute_type === "select") {
+                    const roomOptions = {
+                        values: ["1", "2", "3", "4", "5+"]
+                    };
+                    attr.options = JSON.stringify(roomOptions);
+                    console.log(`Установлены значения для комнат: ${attr.options}`);
+                }
+            }
+        });
+    }, [attributes, attributeRanges]);
 
     // Обновление локального состояния при изменении входных фильтров
     useEffect(() => {
@@ -266,38 +428,80 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                     options = {};
                 }
 
-                // Задаем адекватные значения по умолчанию в зависимости от типа атрибута
-                let min, max;
+                // Проверяем наличие диапазонов из реальных данных
+                if (attributeRanges[attribute.name]) {
+                    console.log(`Используем реальные диапазоны для ${attribute.name}:`, attributeRanges[attribute.name]);
+                    options.min = attributeRanges[attribute.name].min;
+                    options.max = attributeRanges[attribute.name].max;
+                    options.step = attributeRanges[attribute.name].step;
+                }
 
-                switch (attribute.name) {
-                    case 'year':
-                        min = options.min !== undefined ? Number(options.min) : 1900;
-                        max = options.max !== undefined ? Number(options.max) : new Date().getFullYear() + 1;
-                        break;
-                    case 'mileage':
-                        min = options.min !== undefined ? Number(options.min) : 0;
-                        max = options.max !== undefined ? Number(options.max) : 500000;
-                        break;
-                    case 'engine_capacity':
-                        min = options.min !== undefined ? Number(options.min) : 0.1;
-                        max = options.max !== undefined ? Number(options.max) : 10;
-                        break;
-                    case 'power':
-                        min = options.min !== undefined ? Number(options.min) : 0;
-                        max = options.max !== undefined ? Number(options.max) : 1000;
-                        break;
-                    case 'price':
-                        min = options.min !== undefined ? Number(options.min) : 0;
-                        max = options.max !== undefined ? Number(options.max) : 1000000;
-                        break;
-                    case 'area':
-                    case 'land_area':
-                        min = options.min !== undefined ? Number(options.min) : 0;
-                        max = options.max !== undefined ? Number(options.max) : 10000;
-                        break;
-                    default:
-                        min = options.min !== undefined ? Number(options.min) : 0;
-                        max = options.max !== undefined ? Number(options.max) : 100;
+                // Задаем адекватные значения по умолчанию в зависимости от типа атрибута
+                let min, max, step = options.step || 1;
+                let valueSuffix = '';
+                let inputAdornment = null;
+
+                // Специальная обработка для атрибутов недвижимости
+                if (['rooms', 'floor', 'total_floors', 'area', 'land_area'].includes(attribute.name)) {
+                    switch (attribute.name) {
+                        case 'rooms':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 10;
+                            break;
+                        case 'floor':
+                        case 'total_floors':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 100;
+                            break;
+                        case 'area':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 500;
+                            step = options.step || 0.5;
+                            valueSuffix = ' м²';
+                            inputAdornment = "м²";
+                            break;
+                        case 'land_area':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 1000;
+                            step = options.step || 0.5;
+                            valueSuffix = ' сот';
+                            inputAdornment = "сот";
+                            break;
+                    }
+                } else {
+                    // Обработка других числовых атрибутов
+                    switch (attribute.name) {
+                        case 'year':
+                            min = options.min !== undefined ? Number(options.min) : 1900;
+                            max = options.max !== undefined ? Number(options.max) : new Date().getFullYear() + 1;
+                            break;
+                        case 'mileage':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 500000;
+                            valueSuffix = ' км';
+                            inputAdornment = "км";
+                            break;
+                        case 'engine_capacity':
+                            min = options.min !== undefined ? Number(options.min) : 0.1;
+                            max = options.max !== undefined ? Number(options.max) : 10;
+                            valueSuffix = ' л';
+                            inputAdornment = "л";
+                            step = 0.1;
+                            break;
+                        case 'power':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 1000;
+                            valueSuffix = ' л.с.';
+                            inputAdornment = "л.с.";
+                            break;
+                        case 'price':
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 1000000;
+                            break;
+                        default:
+                            min = options.min !== undefined ? Number(options.min) : 0;
+                            max = options.max !== undefined ? Number(options.max) : 100;
+                    }
                 }
 
                 // Парсим текущее значение из currentValue
@@ -311,19 +515,6 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                     } catch (e) {
                         console.error("Ошибка при парсинге значения диапазона:", e);
                     }
-                }
-
-                // Определяем специфические форматы полей
-                let valueSuffix = '';
-                let step = options.step || 1;
-
-                if (attribute.name === 'mileage') {
-                    valueSuffix = ' км';
-                } else if (attribute.name === 'engine_capacity') {
-                    valueSuffix = ' л';
-                    step = 0.1;
-                } else if (attribute.name === 'power') {
-                    valueSuffix = ' л.с.';
                 }
 
                 return (
@@ -354,6 +545,10 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                             min={min}
                             max={max}
                             step={step}
+                            marks={['rooms', 'floor', 'total_floors', 'area', 'land_area'].includes(attribute.name) ? [
+                                { value: min, label: min.toString() + valueSuffix },
+                                { value: max, label: max.toString() + valueSuffix }
+                            ] : undefined}
                         />
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
@@ -366,13 +561,18 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                                     handleRangeFilter(attributeName, newValue[0], newValue[1]);
                                 }}
                                 InputProps={{
-                                    endAdornment: valueSuffix ? (
+                                    endAdornment: inputAdornment ? (
                                         <InputAdornment position="end">
-                                            {valueSuffix}
+                                            {inputAdornment}
                                         </InputAdornment>
                                     ) : null,
                                 }}
                                 sx={{ width: '45%' }}
+                                inputProps={{
+                                    min,
+                                    max,
+                                    step,
+                                }}
                             />
                             <TextField
                                 size="small"
@@ -383,35 +583,45 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                                     handleRangeFilter(attributeName, newValue[0], newValue[1]);
                                 }}
                                 InputProps={{
-                                    endAdornment: valueSuffix ? (
+                                    endAdornment: inputAdornment ? (
                                         <InputAdornment position="end">
-                                            {valueSuffix}
+                                            {inputAdornment}
                                         </InputAdornment>
                                     ) : null,
                                 }}
                                 sx={{ width: '45%' }}
+                                inputProps={{
+                                    min,
+                                    max,
+                                    step,
+                                }}
                             />
                         </Box>
                     </Box>
                 );
             }
 
+
             case 'select': {
                 let options = [];
                 try {
                     console.log(`Парсинг опций для ${attribute.name}, исходные данные:`, attribute.options);
 
-                    // Проверяем формат options
+                    // Улучшенная проверка формата options
                     if (typeof attribute.options === 'string') {
                         // Если options - строка JSON
-                        const parsedOptions = JSON.parse(attribute.options);
-                        console.log("Распарсенные опции из строки:", parsedOptions);
+                        try {
+                            const parsedOptions = JSON.parse(attribute.options);
+                            console.log("Распарсенные опции из строки:", parsedOptions);
 
-                        if (Array.isArray(parsedOptions.values)) {
-                            options = parsedOptions.values;
-                        } else if (parsedOptions.values) {
-                            // Если values существует, но не массив
-                            options = [String(parsedOptions.values)];
+                            if (Array.isArray(parsedOptions.values)) {
+                                options = parsedOptions.values;
+                            } else if (parsedOptions.values) {
+                                // Если values существует, но не массив
+                                options = [String(parsedOptions.values)];
+                            }
+                        } catch (parseError) {
+                            console.error(`Ошибка при разборе JSON options для ${attribute.name}:`, parseError);
                         }
                     } else if (attribute.options && typeof attribute.options === 'object') {
                         // Если options уже объект
@@ -427,17 +637,32 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                         }
                     }
 
-                    console.log(`Итоговые опции для ${attribute.name}:`, options);
+                    // Специальная обработка для типа недвижимости, если опции всё еще пусты
+                    if (options.length === 0 && attribute.name === 'property_type') {
+                        options = ["квартира", "дом", "комната", "земельный участок", "гараж", "коммерческая"];
+                        console.log(`Установлены значения по умолчанию для типа недвижимости:`, options);
+                    }
 
-                    // Отладка переводов опций
-                    options.forEach(option => {
-                        const translated = getTranslatedOptionValue(attribute, option);
-                        console.log(`Опция ${option} -> ${translated} (${option === translated ? 'не переведено' : 'переведено'})`);
-                    });
+                    // Специальная обработка для комнат, если опции всё еще пусты
+                    if (options.length === 0 && attribute.name === 'rooms') {
+                        options = ["1", "2", "3", "4", "5+"];
+                        console.log(`Установлены значения по умолчанию для комнат:`, options);
+                    }
+
+                    console.log(`Итоговые опции для ${attribute.name}:`, options);
                 } catch (e) {
                     console.error(`Ошибка при обработке опций для ${attribute.name}:`, e);
-                    options = [];
+                    // Устанавливаем значения по умолчанию для известных атрибутов
+                    if (attribute.name === 'property_type') {
+                        options = ["квартира", "дом", "комната", "земельный участок", "гараж", "коммерческая"];
+                    } else if (attribute.name === 'rooms') {
+                        options = ["1", "2", "3", "4", "5+"];
+                    } else {
+                        options = [];
+                    }
                 }
+
+
 
                 // Отображаем варианты или сообщение о их отсутствии
                 return (
