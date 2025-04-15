@@ -1054,7 +1054,7 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
     // Карта для отслеживания уникальных attribute_id
     seen := make(map[int]bool)
     valueStrings := make([]string, 0, len(attributes))
-    valueArgs := make([]interface{}, 0, len(attributes)*7) // Увеличиваем до 7, добавляя unit
+    valueArgs := make([]interface{}, 0, len(attributes)*7) // 7 параметров включая unit
     counter := 1
 
     for _, attr := range attributes {
@@ -1064,25 +1064,29 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
             continue
         }
 
-        // Определяем единицу измерения на основе имени атрибута
+        // Определяем единицу измерения на основе имени атрибута или используем указанную
         var unit string
-        switch attr.AttributeName {
-        case "area":
-            unit = "m²"
-        case "land_area":
-            unit = "ar"
-        case "mileage":
-            unit = "km"
-        case "engine_capacity":
-            unit = "l"
-        case "power":
-            unit = "ks"
-        case "screen_size":
-            unit = "inč"
-        case "rooms":
-            unit = "soba"
-        case "floor", "total_floors":
-            unit = "sprat"
+        if attr.Unit != "" {
+            unit = attr.Unit
+        } else {
+            switch attr.AttributeName {
+            case "area":
+                unit = "m²"
+            case "land_area":
+                unit = "ar"
+            case "mileage":
+                unit = "km"
+            case "engine_capacity":
+                unit = "l"
+            case "power":
+                unit = "ks"
+            case "screen_size":
+                unit = "inč"
+            case "rooms":
+                unit = "soba"
+            case "floor", "total_floors":
+                unit = "sprat"
+            }
         }
 
         // Числовые атрибуты - дополнительная обработка
@@ -1112,22 +1116,6 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
         }
         seen[attr.AttributeID] = true
 
-        // Логирование значений атрибута
-        log.Printf("Attribute: ID=%d, Name=%s, Type=%s, Unit=%s", attr.AttributeID, attr.AttributeName, attr.AttributeType, unit)
-        if attr.TextValue != nil {
-            log.Printf("  Text value: %s", *attr.TextValue)
-        }
-        if attr.NumericValue != nil {
-            log.Printf("  Numeric value: %f", *attr.NumericValue)
-        }
-        if attr.BooleanValue != nil {
-            log.Printf("  Boolean value: %t", *attr.BooleanValue)
-        }
-        if attr.JSONValue != nil {
-            log.Printf("  JSON value: %s", string(attr.JSONValue))
-        }
-        log.Printf("  Display value: %s", attr.DisplayValue)
-
         // Проверяем, что есть хотя бы одно значение для сохранения
         hasValue := attr.TextValue != nil || attr.NumericValue != nil ||
                     attr.BooleanValue != nil || attr.JSONValue != nil ||
@@ -1154,16 +1142,6 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
         // Числовое значение с проверками
         if attr.NumericValue != nil {
             numericVal := *attr.NumericValue
-            // Проверка больших значений
-            if (attr.AttributeName == "mileage" && numericVal > 10000000) ||
-               (attr.AttributeName == "price" && numericVal > 1000000000) ||
-               (attr.AttributeName == "area" && numericVal > 10000) {
-                log.Printf("Storage: High value detected for %s: %f", attr.AttributeName, numericVal)
-                if numericVal > 999999999999.99999 {
-                    log.Printf("Storage: Value too large, capping at max allowed")
-                    numericVal = 999999999999.99999
-                }
-            }
             // Проверка на NaN или Inf
             if math.IsNaN(numericVal) || math.IsInf(numericVal, 0) {
                 log.Printf("Storage: Invalid numeric value (NaN/Inf) for attribute %d, using 0", attr.AttributeID)
@@ -1231,7 +1209,8 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
     return nil
 }
 
-// GetListingAttributes получает значения атрибутов для объявления без дублирования
+
+// GetListingAttributes получает значения атрибутов для объявления
 func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
     query := `
         SELECT DISTINCT ON (a.id) 
@@ -1257,7 +1236,6 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
     }
     defer rows.Close()
 
-    // Добавим дополнительное логирование для отладки
     log.Printf("Запрос атрибутов для объявления %d", listingID)
     var allAttributes []models.ListingAttributeValue
     
@@ -1296,6 +1274,11 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
         }
         seen[attr.AttributeID] = true
 
+        // Сохраняем единицу измерения
+        if unit.Valid {
+            attr.Unit = unit.String
+        }
+
         // Заполняем значения в зависимости от типа
         if textValue.Valid {
             attr.TextValue = &textValue.String
@@ -1308,10 +1291,8 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             attr.NumericValue = &numericValue.Float64
             
             // Создаем отображаемое значение с учетом единиц измерения
-            unitStr := ""
-            if unit.Valid {
-                unitStr = unit.String
-            } else {
+            unitStr := attr.Unit // Используем сохраненную единицу или определяем по имени атрибута
+            if unitStr == "" {
                 // Определяем единицу измерения на основе имени атрибута
                 switch attr.AttributeName {
                 case "area":

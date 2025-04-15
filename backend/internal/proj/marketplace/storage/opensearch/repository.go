@@ -708,16 +708,45 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 			// Обработка числовых значений
 			if attr.NumericValue != nil {
 				numVal := *attr.NumericValue
-
 				// Проверка на NaN и Inf
 				if math.IsNaN(numVal) || math.IsInf(numVal, 0) {
 					log.Printf("Invalid numeric value for attribute %s in listing %d, skipping", attr.AttributeName, listing.ID)
 					continue
 				}
-
+				
 				// Добавляем числовое значение в вложенный документ
 				attrDoc["numeric_value"] = numVal
-
+				
+				// Получаем единицу измерения если указана
+				unitStr := attr.Unit
+				
+				// Если единица не указана, определяем по имени атрибута
+				if unitStr == "" {
+					switch attr.AttributeName {
+					case "area":
+						unitStr = "m²"
+					case "land_area":
+						unitStr = "ar"
+					case "mileage":
+						unitStr = "km"
+					case "engine_capacity":
+						unitStr = "l"
+					case "power":
+						unitStr = "ks"
+					case "screen_size":
+						unitStr = "inč"
+					case "rooms":
+						unitStr = "soba"
+					case "floor", "total_floors":
+						unitStr = "sprat"
+					}
+				}
+				
+				// Добавляем единицу измерения в документ
+				if unitStr != "" {
+					attrDoc["unit"] = unitStr
+				}
+				
 				// Добавляем числовое значение в корень документа для важных атрибутов
 				if realEstateFields[attr.AttributeName] || carFields[attr.AttributeName] || isImportantAttribute(attr.AttributeName) {
 					// Проверяем, было ли уже добавлено это поле в первом проходе
@@ -726,32 +755,23 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 						log.Printf("SECOND PASS: Добавлен числовой атрибут %s = %f в корень документа", 
 							attr.AttributeName, numVal)
 					}
-
+					
 					// Добавляем текстовое представление для поиска
 					displayValue := fmt.Sprintf("%g", numVal)
-
+					
+					// Если есть единица измерения, добавляем её
+					if unitStr != "" {
+						displayValue = fmt.Sprintf("%g %s", numVal, unitStr)
+					}
+					
 					// Специальное форматирование для определенных атрибутов
-					unitMap := map[string]string{
-						"area":            "м²",
-						"land_area":       "сот",
-						"mileage":         "км",
-						"engine_capacity": "л",
-						"power":           "л.с.",
-						"screen_size":     "дюйм",
-						"rooms":           "комн",
-					}
-
-					if unit, hasUnit := unitMap[attr.AttributeName]; hasUnit {
-						displayValue = fmt.Sprintf("%g %s", numVal, unit)
-					}
-
 					if attr.AttributeName == "year" {
 						displayValue = fmt.Sprintf("%d", int(numVal))
 					}
-
+					
 					doc[attr.AttributeName+"_text"] = displayValue
 					realEstateText = append(realEstateText, displayValue)
-
+					
 					// Для фасетной навигации добавляем диапазоны
 					if attr.AttributeName == "price" {
 						doc["price_range"] = getPriceRange(int(numVal))
@@ -759,20 +779,20 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 						doc["mileage_range"] = getMileageRange(int(numVal))
 					} else if attr.AttributeName == "area" {
 						if numVal <= 30 {
-							doc["area_range"] = "до 30 м²"
+							doc["area_range"] = "do 30 m²"
 						} else if numVal <= 50 {
-							doc["area_range"] = "30-50 м²"
+							doc["area_range"] = "30-50 m²"
 						} else if numVal <= 80 {
-							doc["area_range"] = "50-80 м²"
+							doc["area_range"] = "50-80 m²"
 						} else if numVal <= 120 {
-							doc["area_range"] = "80-120 м²"
+							doc["area_range"] = "80-120 m²"
 						} else {
-							doc["area_range"] = "более 120 м²"
+							doc["area_range"] = "od 120 m²"
 						}
 					}
 				}
 			}
-
+			
 			// Обработка JSON значений
 			if attr.JSONValue != nil {
 				jsonStr := string(attr.JSONValue)

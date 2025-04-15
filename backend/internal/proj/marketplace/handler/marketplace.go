@@ -553,7 +553,6 @@ func isSignificantAttribute(attrName string) bool {
 	return significantAttrs[attrName]
 }
 
-// Функция processAttributesFromRequest обрабатывает атрибуты из запроса и добавляет их в объявление
 // Обновим функцию processAttributesFromRequest для лучшей обработки атрибутов недвижимости
 func processAttributesFromRequest(requestBody map[string]interface{}, listing *models.MarketplaceListing) {
     if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
@@ -618,27 +617,37 @@ func processAttributesFromRequest(requestBody map[string]interface{}, listing *m
                             attr.NumericValue = &numValue
                             attr.AttributeType = "number" // Принудительно устанавливаем тип как числовой
                             
-                            // Устанавливаем отображаемое значение с единицами измерения
-                            var displayValue string
+                            // Устанавливаем единицу измерения
                             switch attr.AttributeName {
                             case "area":
-                                displayValue = fmt.Sprintf("%g м²", numValue)
+                                attr.Unit = "m²"
+                                attr.DisplayValue = fmt.Sprintf("%g м²", numValue)
                             case "land_area":
-                                displayValue = fmt.Sprintf("%g сот", numValue)
+                                attr.Unit = "ar"
+                                attr.DisplayValue = fmt.Sprintf("%g сот", numValue)
                             case "mileage":
-                                displayValue = fmt.Sprintf("%g км", numValue)
+                                attr.Unit = "km"
+                                attr.DisplayValue = fmt.Sprintf("%g км", numValue)
                             case "engine_capacity":
-                                displayValue = fmt.Sprintf("%g л", numValue)
+                                attr.Unit = "l"
+                                attr.DisplayValue = fmt.Sprintf("%g л", numValue)
                             case "power":
-                                displayValue = fmt.Sprintf("%g л.с.", numValue)
+                                attr.Unit = "ks"
+                                attr.DisplayValue = fmt.Sprintf("%g л.с.", numValue)
                             case "screen_size":
-                                displayValue = fmt.Sprintf("%g\"", numValue)
+                                attr.Unit = "inč"
+                                attr.DisplayValue = fmt.Sprintf("%g\"", numValue)
+                            case "rooms":
+                                attr.Unit = "soba"
+                                attr.DisplayValue = fmt.Sprintf("%g", numValue)
+                            case "floor", "total_floors":
+                                attr.Unit = "sprat"
+                                attr.DisplayValue = fmt.Sprintf("%g", numValue)
                             case "year":
-                                displayValue = fmt.Sprintf("%d", int(numValue))
+                                attr.DisplayValue = fmt.Sprintf("%d", int(numValue))
                             default:
-                                displayValue = fmt.Sprintf("%g", numValue)
+                                attr.DisplayValue = fmt.Sprintf("%g", numValue)
                             }
-                            attr.DisplayValue = displayValue
                         }
                     } else {
                         // Обычная обработка для других атрибутов
@@ -676,6 +685,11 @@ func processAttributesFromRequest(requestBody map[string]interface{}, listing *m
                     }
                 }
 
+                // Проверка есть ли единица измерения в запросе
+                if unit, ok := attrMap["unit"].(string); ok && unit != "" {
+                    attr.Unit = unit
+                }
+
                 // Добавляем атрибут только если есть какое-то значение
                 if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
                     listing.Attributes = append(listing.Attributes, attr)
@@ -684,6 +698,7 @@ func processAttributesFromRequest(requestBody map[string]interface{}, listing *m
         }
     }
 }
+
 // GetAttributeRanges возвращает минимальные и максимальные значения для числовых атрибутов категории
 func (h *MarketplaceHandler) GetAttributeRanges(c *fiber.Ctx) error {
     categoryID, err := c.ParamsInt("id")

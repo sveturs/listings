@@ -2141,182 +2141,208 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 // Новая функция для сохранения атрибутов недвижимости
 
 func (s *StorefrontService) savePropertyAttributes(ctx context.Context, listingID int, propertyType, rooms, floor, totalFloors, area, landArea, buildingType, hasBalcony, hasElevator, hasParking, yearBuilt string) {
-	log.Printf("Сохранение атрибутов недвижимости для листинга ID=%d", listingID)
-	
-	// Получаем атрибуты категории "Недвижимость"
-	var attributeValues []models.ListingAttributeValue
-	
-	// Обрабатываем тип недвижимости
-	if propertyType != "" {
-		var propTypeAttrID int
-		err := s.storage.QueryRow(ctx, `
-			SELECT id FROM category_attributes WHERE name = 'property_type' LIMIT 1
-		`).Scan(&propTypeAttrID)
-		
-		if err == nil {
-			textVal := propertyType
-			attributeValues = append(attributeValues, models.ListingAttributeValue{
-				ListingID:    listingID,
-				AttributeID:  propTypeAttrID,
-				TextValue:    &textVal,
-				DisplayValue: textVal,
-			})
-		}
-	}
-	
-	// Обрабатываем количество комнат
-	if rooms != "" {
-		var roomsAttrID int
-		err := s.storage.QueryRow(ctx, `
-			SELECT id FROM category_attributes WHERE name = 'rooms' LIMIT 1
-		`).Scan(&roomsAttrID)
-		
-		if err == nil {
-			textVal := rooms
-			attributeValues = append(attributeValues, models.ListingAttributeValue{
-				ListingID:    listingID,
-				AttributeID:  roomsAttrID,
-				TextValue:    &textVal,
-				DisplayValue: textVal,
-			})
-		}
-	}
-	
-	// Обрабатываем этаж
-	if floor != "" {
-		var floorAttrID int
-		err := s.storage.QueryRow(ctx, `
-			SELECT id FROM category_attributes WHERE name = 'floor' LIMIT 1
-		`).Scan(&floorAttrID)
-		
-		if err == nil {
-			floorInt, err := strconv.Atoi(floor)
-			if err == nil {
-				floorFloat := float64(floorInt)
-				textVal := floor
-				attributeValues = append(attributeValues, models.ListingAttributeValue{
-					ListingID:     listingID,
-					AttributeID:   floorAttrID,
-					NumericValue:  &floorFloat,
-					TextValue:     &textVal,
-					DisplayValue:  textVal,
-				})
-			}
-		}
-	}
-	
-	// Обрабатываем всего этажей в доме
-	if totalFloors != "" {
-		var totalFloorsAttrID int
-		err := s.storage.QueryRow(ctx, `
-			SELECT id FROM category_attributes WHERE name = 'total_floors' LIMIT 1
-		`).Scan(&totalFloorsAttrID)
-		
-		if err == nil {
-			floorsInt, err := strconv.Atoi(totalFloors)
-			if err == nil {
-				floorsFloat := float64(floorsInt)
-				textVal := totalFloors
-				attributeValues = append(attributeValues, models.ListingAttributeValue{
-					ListingID:     listingID,
-					AttributeID:   totalFloorsAttrID,
-					NumericValue:  &floorsFloat,
-					TextValue:     &textVal,
-					DisplayValue:  textVal,
-				})
-			}
-		}
-	}
-	
-	// Обрабатываем площадь
-	if area != "" {
-		var areaAttrID int
-		err := s.storage.QueryRow(ctx, `
-			SELECT id FROM category_attributes WHERE name = 'area' LIMIT 1
-		`).Scan(&areaAttrID)
-		
-		if err == nil {
-			areaFloat, err := strconv.ParseFloat(area, 64)
-			if err == nil {
-				textVal := area
-				displayVal := fmt.Sprintf("%s м²", area)
-				attributeValues = append(attributeValues, models.ListingAttributeValue{
-					ListingID:     listingID,
-					AttributeID:   areaAttrID,
-					NumericValue:  &areaFloat,
-					TextValue:     &textVal,
-					DisplayValue:  displayVal,
-				})
-			}
-		}
-	}
-	
-	// Обрабатываем площадь участка
-	if landArea != "" {
-		var landAreaAttrID int
-		err := s.storage.QueryRow(ctx, `
-			SELECT id FROM category_attributes WHERE name = 'land_area' LIMIT 1
-		`).Scan(&landAreaAttrID)
-		
-		if err == nil {
-			landAreaFloat, err := strconv.ParseFloat(landArea, 64)
-			if err == nil {
-				textVal := landArea
-				displayVal := fmt.Sprintf("%s сот.", landArea)
-				attributeValues = append(attributeValues, models.ListingAttributeValue{
-					ListingID:     listingID,
-					AttributeID:   landAreaAttrID,
-					NumericValue:  &landAreaFloat,
-					TextValue:     &textVal,
-					DisplayValue:  displayVal,
-				})
-			}
-		}
-	}
-	
-	// Обрабатываем тип здания
-	if buildingType != "" {
-		var buildingTypeAttrID int
-		err := s.storage.QueryRow(ctx, `
-			SELECT id FROM category_attributes WHERE name = 'building_type' LIMIT 1
-		`).Scan(&buildingTypeAttrID)
-		
-		if err == nil {
-			textVal := buildingType
-			attributeValues = append(attributeValues, models.ListingAttributeValue{
-				ListingID:    listingID,
-				AttributeID:  buildingTypeAttrID,
-				TextValue:    &textVal,
-				DisplayValue: textVal,
-			})
-		}
-	}
-	
-	// Обрабатываем наличие балкона
-	if hasBalcony != "" {
-		var balconyAttrID int
-		err := s.storage.QueryRow(ctx, `
-			SELECT id FROM category_attributes WHERE name = 'has_balcony' LIMIT 1
-		`).Scan(&balconyAttrID)
-		
-		if err == nil {
-			boolVal := hasBalcony == "1" || strings.ToLower(hasBalcony) == "true"
-			textVal := hasBalcony
-			var displayVal string
-			if boolVal {
-				displayVal = "Да"
-			} else {
-				displayVal = "Нет"
-			}
-			attributeValues = append(attributeValues, models.ListingAttributeValue{
-				ListingID:     listingID,
-				AttributeID:   balconyAttrID,
-				BooleanValue:  &boolVal,
-				TextValue:     &textVal,
-				DisplayValue:  displayVal,
-			})
-		}
-	}
+    log.Printf("Сохранение атрибутов недвижимости для листинга ID=%d", listingID)
+    
+    // Получаем атрибуты категории "Недвижимость"
+    var attributeValues []models.ListingAttributeValue
+    
+    // Обрабатываем тип недвижимости
+    if propertyType != "" {
+        var propTypeAttrID int
+        err := s.storage.QueryRow(ctx, `
+            SELECT id FROM category_attributes WHERE name = 'property_type' LIMIT 1
+        `).Scan(&propTypeAttrID)
+        
+        if err == nil {
+            textVal := propertyType
+            attributeValues = append(attributeValues, models.ListingAttributeValue{
+                ListingID:    listingID,
+                AttributeID:  propTypeAttrID,
+                TextValue:    &textVal,
+                DisplayValue: textVal,
+                AttributeName: "property_type",
+                AttributeType: "select",
+            })
+        }
+    }
+    
+    // Обрабатываем количество комнат
+    if rooms != "" {
+        var roomsAttrID int
+        err := s.storage.QueryRow(ctx, `
+            SELECT id FROM category_attributes WHERE name = 'rooms' LIMIT 1
+        `).Scan(&roomsAttrID)
+        
+        if err == nil {
+            roomsInt, err := strconv.Atoi(rooms)
+            if err == nil {
+                roomsFloat := float64(roomsInt)
+                textVal := rooms
+                attributeValues = append(attributeValues, models.ListingAttributeValue{
+                    ListingID:     listingID,
+                    AttributeID:   roomsAttrID,
+                    NumericValue:  &roomsFloat,
+                    TextValue:     &textVal,
+                    DisplayValue:  textVal,
+                    AttributeName: "rooms",
+                    AttributeType: "number",
+                    Unit:          "soba",
+                })
+            }
+        }
+    }
+    
+    // Обрабатываем этаж
+    if floor != "" {
+        var floorAttrID int
+        err := s.storage.QueryRow(ctx, `
+            SELECT id FROM category_attributes WHERE name = 'floor' LIMIT 1
+        `).Scan(&floorAttrID)
+        
+        if err == nil {
+            floorInt, err := strconv.Atoi(floor)
+            if err == nil {
+                floorFloat := float64(floorInt)
+                textVal := floor
+                attributeValues = append(attributeValues, models.ListingAttributeValue{
+                    ListingID:     listingID,
+                    AttributeID:   floorAttrID,
+                    NumericValue:  &floorFloat,
+                    TextValue:     &textVal,
+                    DisplayValue:  textVal,
+                    AttributeName: "floor",
+                    AttributeType: "number",
+                    Unit:          "sprat",
+                })
+            }
+        }
+    }
+    
+    // Обрабатываем всего этажей в доме
+    if totalFloors != "" {
+        var totalFloorsAttrID int
+        err := s.storage.QueryRow(ctx, `
+            SELECT id FROM category_attributes WHERE name = 'total_floors' LIMIT 1
+        `).Scan(&totalFloorsAttrID)
+        
+        if err == nil {
+            floorsInt, err := strconv.Atoi(totalFloors)
+            if err == nil {
+                floorsFloat := float64(floorsInt)
+                textVal := totalFloors
+                attributeValues = append(attributeValues, models.ListingAttributeValue{
+                    ListingID:     listingID,
+                    AttributeID:   totalFloorsAttrID,
+                    NumericValue:  &floorsFloat,
+                    TextValue:     &textVal,
+                    DisplayValue:  textVal,
+                    AttributeName: "total_floors",
+                    AttributeType: "number",
+                    Unit:          "sprat",
+                })
+            }
+        }
+    }
+    
+    // Обрабатываем площадь
+    if area != "" {
+        var areaAttrID int
+        err := s.storage.QueryRow(ctx, `
+            SELECT id FROM category_attributes WHERE name = 'area' LIMIT 1
+        `).Scan(&areaAttrID)
+        
+        if err == nil {
+            areaFloat, err := strconv.ParseFloat(area, 64)
+            if err == nil {
+                textVal := area
+                displayVal := fmt.Sprintf("%s м²", area)
+                attributeValues = append(attributeValues, models.ListingAttributeValue{
+                    ListingID:     listingID,
+                    AttributeID:   areaAttrID,
+                    NumericValue:  &areaFloat,
+                    TextValue:     &textVal,
+                    DisplayValue:  displayVal,
+                    AttributeName: "area",
+                    AttributeType: "number",
+                    Unit:          "m²",
+                })
+            }
+        }
+    }
+    
+    // Обрабатываем площадь участка
+    if landArea != "" {
+        var landAreaAttrID int
+        err := s.storage.QueryRow(ctx, `
+            SELECT id FROM category_attributes WHERE name = 'land_area' LIMIT 1
+        `).Scan(&landAreaAttrID)
+        
+        if err == nil {
+            landAreaFloat, err := strconv.ParseFloat(landArea, 64)
+            if err == nil {
+                textVal := landArea
+                displayVal := fmt.Sprintf("%s сот.", landArea)
+                attributeValues = append(attributeValues, models.ListingAttributeValue{
+                    ListingID:     listingID,
+                    AttributeID:   landAreaAttrID,
+                    NumericValue:  &landAreaFloat,
+                    TextValue:     &textVal,
+                    DisplayValue:  displayVal,
+                    AttributeName: "land_area",
+                    AttributeType: "number",
+                    Unit:          "ar",
+                })
+            }
+        }
+    }
+    
+    // Обрабатываем тип здания
+    if buildingType != "" {
+        var buildingTypeAttrID int
+        err := s.storage.QueryRow(ctx, `
+            SELECT id FROM category_attributes WHERE name = 'building_type' LIMIT 1
+        `).Scan(&buildingTypeAttrID)
+        
+        if err == nil {
+            textVal := buildingType
+            attributeValues = append(attributeValues, models.ListingAttributeValue{
+                ListingID:    listingID,
+                AttributeID:  buildingTypeAttrID,
+                TextValue:    &textVal,
+                DisplayValue: textVal,
+                AttributeName: "building_type",
+                AttributeType: "select",
+            })
+        }
+    }
+    
+    // Обрабатываем булевы атрибуты (с переработкой отображения и обработки)
+    // Добавляем наличие балкона
+    if hasBalcony != "" {
+        var balconyAttrID int
+        err := s.storage.QueryRow(ctx, `
+            SELECT id FROM category_attributes WHERE name = 'has_balcony' LIMIT 1
+        `).Scan(&balconyAttrID)
+        
+        if err == nil {
+            boolVal := hasBalcony == "1" || strings.ToLower(hasBalcony) == "true"
+            var displayVal string
+            if boolVal {
+                displayVal = "Да"
+            } else {
+                displayVal = "Нет"
+            }
+            attributeValues = append(attributeValues, models.ListingAttributeValue{
+                ListingID:     listingID,
+                AttributeID:   balconyAttrID,
+                BooleanValue:  &boolVal,
+                DisplayValue:  displayVal,
+                AttributeName: "has_balcony",
+                AttributeType: "boolean",
+            })
+        }
+    }
+    
 	
 	// Обрабатываем наличие лифта
 	if hasElevator != "" {
@@ -2340,6 +2366,8 @@ func (s *StorefrontService) savePropertyAttributes(ctx context.Context, listingI
 				BooleanValue:  &boolVal,
 				TextValue:     &textVal,
 				DisplayValue:  displayVal,
+				AttributeName: "has_elevator",
+				AttributeType: "boolean",
 			})
 		}
 	}
@@ -2366,85 +2394,87 @@ func (s *StorefrontService) savePropertyAttributes(ctx context.Context, listingI
 				BooleanValue:  &boolVal,
 				TextValue:     &textVal,
 				DisplayValue:  displayVal,
+				AttributeName: "has_parking",
+				AttributeType: "boolean",
 			})
 		}
 	}
 	
-	// Обрабатываем год постройки
-	if yearBuilt != "" {
-		var yearBuiltAttrID int
-		// Для года постройки может не быть соответствующего атрибута в системе,
-		// поэтому мы можем добавить его вручную или использовать другие атрибуты
-		err := s.storage.QueryRow(ctx, `
-			SELECT id FROM category_attributes WHERE name = 'year_built' LIMIT 1
-		`).Scan(&yearBuiltAttrID)
-		
-		if err == nil {
-			yearInt, err := strconv.Atoi(yearBuilt)
-			if err == nil {
-				yearFloat := float64(yearInt)
-				textVal := yearBuilt
-				attributeValues = append(attributeValues, models.ListingAttributeValue{
-					ListingID:     listingID,
-					AttributeID:   yearBuiltAttrID,
-					NumericValue:  &yearFloat,
-					TextValue:     &textVal,
-					DisplayValue:  yearBuilt,
-				})
-			}
-		}
-	}
+    if yearBuilt != "" {
+        var yearBuiltAttrID int
+        err := s.storage.QueryRow(ctx, `
+            SELECT id FROM category_attributes WHERE name = 'year_built' LIMIT 1
+        `).Scan(&yearBuiltAttrID)
+        
+        if err == nil {
+            yearInt, err := strconv.Atoi(yearBuilt)
+            if err == nil {
+                yearFloat := float64(yearInt)
+                textVal := yearBuilt
+                attributeValues = append(attributeValues, models.ListingAttributeValue{
+                    ListingID:     listingID,
+                    AttributeID:   yearBuiltAttrID,
+                    NumericValue:  &yearFloat,
+                    TextValue:     &textVal,
+                    DisplayValue:  yearBuilt,
+                    AttributeName: "year_built",
+                    AttributeType: "number",
+                })
+            }
+        }
+    }
 	
 	// Сохраняем все атрибуты в базу данных
-	if len(attributeValues) > 0 {
-		log.Printf("Сохранение %d атрибутов для объявления ID=%d", len(attributeValues), listingID)
-		
-		// Очищаем существующие атрибуты для данного объявления
-		_, err := s.storage.Exec(ctx, `
-			DELETE FROM listing_attribute_values WHERE listing_id = $1
-		`, listingID)
-		
-		if err != nil {
-			log.Printf("Ошибка при очистке существующих атрибутов для объявления ID=%d: %v", listingID, err)
-		}
-		
-		// Вставляем новые атрибуты
-		for _, attr := range attributeValues {
-			var valueText, valueNum, valueBool interface{}
-			
-			if attr.TextValue != nil {
-				valueText = *attr.TextValue
-			}
-			
-			if attr.NumericValue != nil {
-				valueNum = *attr.NumericValue
-			}
-			
-			if attr.BooleanValue != nil {
-				valueBool = *attr.BooleanValue
-			}
-			
-			_, err := s.storage.Exec(ctx, `
-				INSERT INTO listing_attribute_values (
-					listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value
-				) VALUES ($1, $2, $3, $4, $5, NULL)
-				ON CONFLICT (listing_id, attribute_id) DO UPDATE SET
-					text_value = $3,
-					numeric_value = $4,
-					boolean_value = $5
-			`, listingID, attr.AttributeID, valueText, valueNum, valueBool)
-			
-			if err != nil {
-				log.Printf("Ошибка при сохранении атрибута ID=%d для объявления ID=%d: %v", 
-					attr.AttributeID, listingID, err)
-			} else {
-				log.Printf("Успешно сохранен атрибут ID=%d для объявления ID=%d", 
-					attr.AttributeID, listingID)
-			}
-		}
-	} else {
-		log.Printf("Нет атрибутов для сохранения для объявления ID=%d", listingID)
-	}
+    if len(attributeValues) > 0 {
+        log.Printf("Сохранение %d атрибутов для объявления ID=%d", len(attributeValues), listingID)
+        
+        // Очищаем существующие атрибуты для данного объявления
+        _, err := s.storage.Exec(ctx, `
+            DELETE FROM listing_attribute_values WHERE listing_id = $1
+        `, listingID)
+        
+        if err != nil {
+            log.Printf("Ошибка при очистке существующих атрибутов для объявления ID=%d: %v", listingID, err)
+        }
+        
+        // Вставляем новые атрибуты с учетом unit
+        for _, attr := range attributeValues {
+            var valueText, valueNum, valueBool interface{}
+            
+            if attr.TextValue != nil {
+                valueText = *attr.TextValue
+            }
+            
+            if attr.NumericValue != nil {
+                valueNum = *attr.NumericValue
+            }
+            
+            if attr.BooleanValue != nil {
+                valueBool = *attr.BooleanValue
+            }
+            
+            _, err := s.storage.Exec(ctx, `
+                INSERT INTO listing_attribute_values (
+                    listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit
+                ) VALUES ($1, $2, $3, $4, $5, NULL, $6)
+                ON CONFLICT (listing_id, attribute_id) DO UPDATE SET
+                    text_value = $3,
+                    numeric_value = $4,
+                    boolean_value = $5,
+                    unit = $6
+            `, listingID, attr.AttributeID, valueText, valueNum, valueBool, attr.Unit)
+            
+            if err != nil {
+                log.Printf("Ошибка при сохранении атрибута ID=%d для объявления ID=%d: %v", 
+                    attr.AttributeID, listingID, err)
+            } else {
+                log.Printf("Успешно сохранен атрибут ID=%d для объявления ID=%d", 
+                    attr.AttributeID, listingID)
+            }
+        }
+    } else {
+        log.Printf("Нет атрибутов для сохранения для объявления ID=%d", listingID)
+    }
 }
 
 

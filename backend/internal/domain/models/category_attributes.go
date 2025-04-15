@@ -33,18 +33,21 @@ type AttributeOptions struct {
 
 // ListingAttributeValue содержит значение атрибута для объявления
 type ListingAttributeValue struct {
-	ListingID     int             `json:"listing_id"`
-	AttributeID   int             `json:"attribute_id"`
-	AttributeName string          `json:"attribute_name"`
-	DisplayName   string          `json:"display_name"`
-	AttributeType string          `json:"attribute_type"`
-	TextValue     *string         `json:"text_value,omitempty"`
-	NumericValue  *float64        `json:"numeric_value,omitempty"`
-	BooleanValue  *bool           `json:"boolean_value,omitempty"`
-	JSONValue     json.RawMessage `json:"json_value,omitempty"`
-	// Вспомогательное поле для вывода значения любого типа в строковом виде
-	DisplayValue  string          `json:"display_value"`
+    ListingID     int             `json:"listing_id"`
+    AttributeID   int             `json:"attribute_id"`
+    AttributeName string          `json:"attribute_name"`
+    DisplayName   string          `json:"display_name"`
+    AttributeType string          `json:"attribute_type"`
+    TextValue     *string         `json:"text_value,omitempty"`
+    NumericValue  *float64        `json:"numeric_value,omitempty"`
+    BooleanValue  *bool           `json:"boolean_value,omitempty"`
+    JSONValue     json.RawMessage `json:"json_value,omitempty"`
+    // Вспомогательное поле для вывода значения любого типа в строковом виде
+    DisplayValue  string          `json:"display_value"`
+    // Добавляем поле для единиц измерения
+    Unit          string          `json:"unit,omitempty"`
 }
+
 
 // CategoryAttributeMapping связывает атрибуты с категориями
 type CategoryAttributeMapping struct {
