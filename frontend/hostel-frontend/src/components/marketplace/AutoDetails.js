@@ -138,7 +138,7 @@ const AutoDetails = ({ autoProperties }) => {
 
                 {renderDetailItem(
                     <Droplet size={24} />,
-                    t('auto.properties.fuel_type', { defaultValue: 'Тип топлива' }),
+                    t('auto.properties.fuel_type', { defaultValue: 'Тип топлива^' }),
                     translateFuelType(autoProperties.fuel_type)
                 )}
 

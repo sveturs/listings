@@ -14,12 +14,30 @@ import (
 	"strings"
 	"math"
 	"time"
+    "sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	//"time"
 	// "github.com/jackc/pgx/v5"
 )
+var (
+    attributeCacheMutex sync.RWMutex
+    attributeCache      map[int][]models.CategoryAttribute
+    attributeCacheTime  map[int]time.Time
+    
+    rangesCacheMutex sync.RWMutex
+    rangesCache      map[int]map[string]map[string]interface{}
+    rangesCacheTime  map[int]time.Time
+    
+    cacheTTL = 30 * time.Minute
+)
 
+func init() {
+    attributeCache = make(map[int][]models.CategoryAttribute)
+    attributeCacheTime = make(map[int]time.Time)
+    rangesCache = make(map[int]map[string]map[string]interface{})
+    rangesCacheTime = make(map[int]time.Time)
+}
 type Storage struct {
 	pool               *pgxpool.Pool
 	translationService service.TranslationServiceInterface
@@ -956,24 +974,24 @@ func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 }
 
 func (s *Storage) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	// Проверяем, не равен ли category_id нулю
-	if listing.CategoryID == 0 {
-		// Если category_id = 0, запрашиваем текущее значение из базы
-		var currentCategoryID int
-		err := s.pool.QueryRow(ctx, `
-			SELECT category_id FROM marketplace_listings WHERE id = $1
-		`, listing.ID).Scan(&currentCategoryID)
-		
-		if err != nil {
-			log.Printf("Ошибка при получении текущей категории: %v", err)
-		} else if currentCategoryID > 0 {
-			// Используем текущую категорию, если она не нулевая
-			log.Printf("Заменяем нулевую категорию текущей категорией %d для объявления %d", currentCategoryID, listing.ID)
-			listing.CategoryID = currentCategoryID
-		}
-	}
+    // Проверяем, не равен ли category_id нулю
+    if listing.CategoryID == 0 {
+        // Если category_id = 0, запрашиваем текущее значение из базы
+        var currentCategoryID int
+        err := s.pool.QueryRow(ctx, `
+            SELECT category_id FROM marketplace_listings WHERE id = $1
+        `, listing.ID).Scan(&currentCategoryID)
+        
+        if err != nil {
+            log.Printf("Ошибка при получении текущей категории: %v", err)
+        } else if currentCategoryID > 0 {
+            // Используем текущую категорию, если она не нулевая
+            log.Printf("Заменяем нулевую категорию текущей категорией %d для объявления %d", currentCategoryID, listing.ID)
+            listing.CategoryID = currentCategoryID
+        }
+    }
 
-	result, err := s.pool.Exec(ctx, `
+    result, err := s.pool.Exec(ctx, `
         UPDATE marketplace_listings
         SET 
             title = $1,
@@ -992,41 +1010,104 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $14 AND user_id = $15
     `,
-		listing.Title,
-		listing.Description,
-		listing.Price,
-		listing.Condition,
-		listing.Status,
-		listing.Location,
-		listing.Latitude,
-		listing.Longitude,
-		listing.City,
-		listing.Country,
-		listing.ShowOnMap,
-		listing.CategoryID,
-		listing.OriginalLanguage,
-		listing.ID,
-		listing.UserID,
-	)
+        listing.Title,
+        listing.Description,
+        listing.Price,
+        listing.Condition,
+        listing.Status,
+        listing.Location,
+        listing.Latitude,
+        listing.Longitude,
+        listing.City,
+        listing.Country,
+        listing.ShowOnMap,
+        listing.CategoryID,
+        listing.OriginalLanguage,
+        listing.ID,
+        listing.UserID,
+    )
 
-	if err != nil {
-		return fmt.Errorf("error updating listing: %w", err)
-	}
+    if err != nil {
+        return fmt.Errorf("error updating listing: %w", err)
+    }
 
-	rowsAffected := result.RowsAffected()
-	if rowsAffected == 0 {
-		return fmt.Errorf("listing not found or you don't have permission to update it")
-	}
+    rowsAffected := result.RowsAffected()
+    if rowsAffected == 0 {
+        return fmt.Errorf("listing not found or you don't have permission to update it")
+    }
 
-	if listing.Attributes != nil {
-		if err := s.SaveListingAttributes(ctx, listing.ID, listing.Attributes); err != nil {
-			log.Printf("Error updating attributes for listing %d: %v", listing.ID, err)
-			// Не прерываем обновление объявления из-за ошибки с атрибутами
-		}
-	}
+    // Проверяем, переданы ли атрибуты в запросе
+    if listing.Attributes != nil {
+        // Атрибуты переданы, обновляем их
+        if err := s.SaveListingAttributes(ctx, listing.ID, listing.Attributes); err != nil {
+            log.Printf("Error updating attributes for listing %d: %v", listing.ID, err)
+            // Продолжаем выполнение даже при ошибке с атрибутами
+        }
+    } else {
+        // Атрибуты не переданы, логируем информацию
+        log.Printf("No attributes provided in update for listing %d, existing attributes preserved", listing.ID)
+    }
 
-	return nil
+    return nil
 }
+
+
+// Добавить эту функцию перед SaveListingAttributes
+func sanitizeAttributeValue(attr *models.ListingAttributeValue) {
+    // Ограничение длины текстовых атрибутов
+    if attr.TextValue != nil {
+        if len(*attr.TextValue) > 1000 {
+            truncated := (*attr.TextValue)[:1000]
+            attr.TextValue = &truncated
+            log.Printf("Attribute value truncated for attribute %s (ID: %d)", 
+                      attr.AttributeName, attr.AttributeID)
+        }
+    }
+    
+    // Проверка на NaN и Inf для числовых атрибутов
+    if attr.NumericValue != nil {
+        numVal := *attr.NumericValue
+        if math.IsNaN(numVal) || math.IsInf(numVal, 0) {
+            defaultVal := 0.0
+            attr.NumericValue = &defaultVal
+            log.Printf("Invalid numeric value (NaN/Inf) replaced with 0 for attribute %s (ID: %d)",
+                      attr.AttributeName, attr.AttributeID)
+        }
+    }
+    
+    // Стандартизация обработки пустых значений
+    if attr.TextValue != nil && *attr.TextValue == "" {
+        attr.TextValue = nil // Пустые строки -> NULL
+    }
+
+    if attr.NumericValue != nil && *attr.NumericValue == 0 {
+        // Для некоторых атрибутов нуль может быть валидным значением
+        // Проверяем название атрибута
+        if !isZeroValidValue(attr.AttributeName) {
+            attr.NumericValue = nil
+        }
+    }
+
+    // Если все значения NULL, устанавливаем DisplayValue в пустую строку
+    if attr.TextValue == nil && attr.NumericValue == nil && 
+       attr.BooleanValue == nil && attr.JSONValue == nil {
+        attr.DisplayValue = ""
+    }
+}
+
+// Функция определяет, является ли нулевое значение допустимым для атрибута
+func isZeroValidValue(attrName string) bool {
+    // Для этих атрибутов ноль - допустимое значение
+    zeroValidAttrs := map[string]bool{
+        "floor": true,       // Например, цокольный этаж
+        "mileage": true,     // Для новых автомобилей
+        "price": true,       // Для бесплатных объявлений
+    }
+    return zeroValidAttrs[attrName]
+}
+
+
+
 
 // SaveListingAttributes сохраняет значения атрибутов для объявления
 func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
@@ -1057,7 +1138,11 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
     valueArgs := make([]interface{}, 0, len(attributes)*7) // 7 параметров включая unit
     counter := 1
 
-    for _, attr := range attributes {
+    for i, attr := range attributes {
+        // Санитизация значений атрибутов
+        sanitizeAttributeValue(&attr)
+        attributes[i] = attr
+        
         // Проверка на нулевые или некорректные attribute_id
         if attr.AttributeID <= 0 {
             log.Printf("Storage: Invalid attribute ID: %d, skipping", attr.AttributeID)
@@ -1210,6 +1295,30 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
 }
 
 
+// Добавить в файле marketplace.go
+func (s *Storage) GetFormattedAttributeValue(ctx context.Context, attr models.ListingAttributeValue, language string) string {
+    // Для числовых атрибутов с единицей измерения
+    if attr.NumericValue != nil && attr.Unit != "" {
+        // Получаем перевод единицы измерения
+        var displayFormat string
+        err := s.pool.QueryRow(ctx, `
+            SELECT display_format FROM unit_translations 
+            WHERE unit = $1 AND language = $2
+        `, attr.Unit, language).Scan(&displayFormat)
+        
+        if err == nil && displayFormat != "" {
+            // Используем формат для отображения
+            return fmt.Sprintf(displayFormat, *attr.NumericValue)
+        }
+        
+        // Если не нашли перевод, используем стандартный формат
+        return fmt.Sprintf("%g %s", *attr.NumericValue, attr.Unit)
+    }
+    
+    // Для других типов атрибутов возвращаем DisplayValue
+    return attr.DisplayValue
+}
+
 // GetListingAttributes получает значения атрибутов для объявления
 func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
     query := `
@@ -1223,10 +1332,41 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             v.numeric_value,
             v.boolean_value,
             v.json_value,
-            v.unit
+            v.unit,
+            COALESCE(
+                jsonb_object_agg(
+                    t.language, 
+                    t.translated_text
+                ) FILTER (WHERE t.language IS NOT NULL),
+                '{}'::jsonb
+            ) as translations,
+            COALESCE(
+                (SELECT jsonb_object_agg(
+                    o.language, 
+                    o.field_translations
+                ) 
+                FROM (
+                    SELECT 
+                        language,
+                        jsonb_object_agg(field_name, translated_text) as field_translations
+                    FROM translations
+                    WHERE entity_type = 'attribute_option'
+                    AND entity_id = a.id
+                    GROUP BY language
+                ) o),
+                '{}'::jsonb
+            ) as option_translations
         FROM listing_attribute_values v
         JOIN category_attributes a ON v.attribute_id = a.id
+        LEFT JOIN translations t ON 
+            t.entity_type = 'attribute' 
+            AND t.entity_id = a.id 
+            AND t.field_name = 'display_name'
         WHERE v.listing_id = $1
+        GROUP BY 
+            v.listing_id, v.attribute_id, a.id, a.name, a.display_name, 
+            a.attribute_type, v.text_value, v.numeric_value, v.boolean_value, 
+            v.json_value, v.unit
         ORDER BY a.id, a.sort_order, a.display_name
     `
 
@@ -1249,6 +1389,8 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
         var boolValue sql.NullBool
         var jsonValue sql.NullString
         var unit sql.NullString
+        var translationsJson []byte
+        var optionTranslationsJson []byte
 
         if err := rows.Scan(
             &attr.ListingID,
@@ -1261,9 +1403,23 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             &boolValue,
             &jsonValue,
             &unit,
+            &translationsJson,
+            &optionTranslationsJson,
         ); err != nil {
             log.Printf("Error scanning attribute: %v", err)
             return nil, fmt.Errorf("error scanning listing attribute: %w", err)
+        }
+
+        // Добавляем переводы атрибута
+        if err := json.Unmarshal(translationsJson, &attr.Translations); err != nil {
+            log.Printf("Error unmarshal attribute translations: %v", err)
+            attr.Translations = make(map[string]string)
+        }
+
+        // Добавляем переводы опций атрибута
+        if err := json.Unmarshal(optionTranslationsJson, &attr.OptionTranslations); err != nil {
+            log.Printf("Error unmarshal option translations: %v", err)
+            attr.OptionTranslations = make(map[string]map[string]string)
         }
 
         // Проверяем, не добавляли ли мы уже этот атрибут
@@ -1363,6 +1519,18 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 
 // GetAttributeRanges получает минимальные и максимальные значения для числовых атрибутов
 func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
+    // Проверяем наличие в кеше
+    rangesCacheMutex.RLock()
+    cachedRanges, hasCached := rangesCache[categoryID]
+    cacheTime, hasTime := rangesCacheTime[categoryID]
+    rangesCacheMutex.RUnlock()
+    
+    // Если данные в кеше и они не устарели
+    if hasCached && hasTime && time.Since(cacheTime) < cacheTTL {
+        log.Printf("Using cached attribute ranges for category %d", categoryID)
+        return cachedRanges, nil
+    }
+    
     // Получаем ID всех подкатегорий заданной категории
     query := `
     WITH RECURSIVE category_tree AS (
@@ -1473,11 +1641,45 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
         }
     }
     
+    // Кешируем результат
+    rangesCacheMutex.Lock()
+    rangesCache[categoryID] = ranges
+    rangesCacheTime[categoryID] = time.Now()
+    rangesCacheMutex.Unlock()
+    
     return ranges, nil
 }
 
+// Добавим метод для очистки кеша атрибутов
+func (s *Storage) InvalidateAttributesCache(categoryID int) {
+    attributeCacheMutex.Lock()
+    delete(attributeCache, categoryID)
+    delete(attributeCacheTime, categoryID)
+    attributeCacheMutex.Unlock()
+    
+    rangesCacheMutex.Lock()
+    delete(rangesCache, categoryID)
+    delete(rangesCacheTime, categoryID)
+    rangesCacheMutex.Unlock()
+    
+    log.Printf("Invalidated attributes cache for category %d", categoryID)
+}
+
+
 // Исправленная версия функции GetCategoryAttributes
 func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
+    // Проверяем наличие в кеше
+    attributeCacheMutex.RLock()
+    cachedAttrs, hasCached := attributeCache[categoryID]
+    cacheTime, hasTime := attributeCacheTime[categoryID]
+    attributeCacheMutex.RUnlock()
+    
+    // Если данные в кеше и они не устарели
+    if hasCached && hasTime && time.Since(cacheTime) < cacheTTL {
+        log.Printf("Using cached attributes for category %d", categoryID)
+        return cachedAttrs, nil
+    }
+    
     // Добавляем логирование для отладки
     log.Printf("GetCategoryAttributes: Получение атрибутов для категории %d", categoryID)
     
@@ -1650,9 +1852,16 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
         }
     }
 
+    // Кешируем результат
+    attributeCacheMutex.Lock()
+    attributeCache[categoryID] = attributes
+    attributeCacheTime[categoryID] = time.Now()
+    attributeCacheMutex.Unlock()
+
     log.Printf("GetCategoryAttributes: Успешно получено %d атрибутов для категории %d", len(attributes), categoryID)
     return attributes, nil
 }
+
 
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
 	log.Printf("GetCategories: starting to fetch categories")

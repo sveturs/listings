@@ -1,4 +1,48 @@
 {
+  "auto": {
+    "details": {
+      "title": "Характеристики автомобиля.",
+      "not_specified": "Не указано"
+    },
+    "properties": {
+      "brand_model": "Марка и модель",
+      "year": "Год выпуска",
+      "mileage": "Пробег",
+      "fuel_type": "Тип топлива",
+      "transmission": "Трансмиссия",
+      "engine": "Двигатель",
+      "color": "Цвет",
+      "body_type": "Тип кузова",
+      "drive_type": "Привод",
+      "doors": "Двери",
+      "seats": "Места",
+      "features": "Дополнительные особенности",
+      "fuel_types": {
+        "petrol": "Бензин1",
+        "diesel": "Дизель",
+        "electric": "Электрический",
+        "hybrid": "Гибрид"
+      },
+      "transmissions": {
+        "manual": "Механическая",
+        "automatic": "Автоматическая",
+        "semi-automatic": "Полуавтоматическая"
+      },
+      "body_types": {
+        "sedan": "Седан",
+        "suv": "Внедорожник",
+        "hatchback": "Хэтчбек",
+        "coupe": "Купе",
+        "wagon": "Универсал"
+      },
+      "drive_types": {
+        "front": "Передний",
+        "rear": "Задний",
+        "all": "Полный",
+        "4wd": "4WD"
+      }
+    }
+  },
   "favorites": {
     "title": "Избранные объявления",
     "empty": "У вас пока нет избранных объявлений",

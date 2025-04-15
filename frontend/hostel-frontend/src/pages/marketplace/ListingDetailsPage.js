@@ -174,55 +174,144 @@ const ListingDetailsPage = () => {
         );
     };
     const CAR_CATEGORY_ID = 2100;
-    // Функция форматирования значения атрибута
     const formatAttributeValue = (attr) => {
-        // Если атрибут не имеет значения - возвращаем "Не указано"
+        // Логирование для отладки
+        console.log(`Атрибут: ${attr.attribute_name} (${attr.attribute_id})`);
+        console.log(`Значение: ${attr.display_value}`);
+        console.log(`Тип атрибута: ${attr.attribute_type}`);
+        
+        if (attr.text_value) {
+            console.log(`text_value: ${attr.text_value}`);
+        }
+        if (attr.numeric_value !== undefined) {
+            console.log(`numeric_value: ${attr.numeric_value}`);
+        }
+        console.log(`Переводы атрибута:`, attr.translations);
+        console.log(`Переводы опций:`, attr.option_translations);
+        console.log(`Единица измерения: ${attr.unit}`);
+        
+        // Если атрибут не имеет значения
         if (!attr.display_value && attr.display_value !== 0 && attr.display_value !== false) {
             return t('common.not_specified', { defaultValue: 'Не указано' });
         }
-
+        
+        // Для булевых атрибутов возвращаем "Да"/"Нет"
         if (attr.attribute_type === 'boolean') {
             return attr.display_value === 'true' || attr.display_value === true ?
                 t('common.yes') : t('common.no');
         }
-
-        if (attr.attribute_name === 'price') {
-            return formatPrice(attr.display_value);
+        
+        // Проверяем текущий язык интерфейса
+        const currentLang = i18n.language;
+        
+        // Если язык русский - возвращаем оригинальное значение без перевода
+        if (currentLang === 'ru') {
+            return attr.display_value;
         }
-
-        // Особая обработка для некоторых числовых атрибутов
-        if (attr.attribute_type === 'number') {
+        
+        // Для атрибутов типа select и text с текстовым значением
+        if ((attr.attribute_type === 'select' || attr.attribute_type === 'text') && 
+            attr.text_value) {
+            
+            // Получаем значение для перевода и формируем ключ
+            const valueToTranslate = attr.text_value;
+            const optionKey = `option_${valueToTranslate}`;
+            
+            // Проверяем наличие переводов опций для данного языка
+            if (attr.option_translations && 
+                attr.option_translations[currentLang]) {
+                
+                console.log(`Ищем перевод для ${optionKey} в`, attr.option_translations[currentLang]);
+                
+                // Проверяем наличие конкретного ключа в переводах
+                if (attr.option_translations[currentLang][optionKey]) {
+                    console.log(`Найден перевод: ${attr.option_translations[currentLang][optionKey]}`);
+                    return attr.option_translations[currentLang][optionKey];
+                }
+            }
+        }
+    
+        // Для числовых атрибутов с единицами измерения
+        if ((attr.attribute_type === 'number' || attr.numeric_value !== undefined) && attr.unit) {
             let numValue;
-
-            // Проверяем и преобразуем любое числовое значение
-            if (typeof attr.display_value === 'string') {
-                numValue = parseFloat(attr.display_value);
+            
+            // Получаем числовое значение
+            if (typeof attr.numeric_value === 'number') {
+                numValue = attr.numeric_value;
             } else if (typeof attr.display_value === 'number') {
                 numValue = attr.display_value;
-            } else if (attr.numeric_value !== undefined && attr.numeric_value !== null) {
-                numValue = attr.numeric_value;
+            } else if (typeof attr.display_value === 'string' && !isNaN(parseFloat(attr.display_value))) {
+                numValue = parseFloat(attr.display_value);
             } else {
-                return t('common.not_specified', { defaultValue: 'Не указано' });
+                return attr.display_value;
             }
-
-            if (!isNaN(numValue)) {
-                if (attr.attribute_name === 'year') {
-                    return Math.round(numValue).toString(); // Убираем десятичные части для года
-                }
-                if (attr.attribute_name === 'mileage') {
-                    return `${Math.round(numValue).toLocaleString()} км`; // Форматируем пробег с разделителями тысяч
-                }
-                if (attr.attribute_name === 'engine_capacity') {
-                    return `${numValue.toFixed(1)} л`; // Форматируем объем с одним знаком после запятой
-                }
-                if (attr.attribute_name === 'power') {
-                    return `${Math.round(numValue)} л.с.`; // Форматируем мощность двигателя
-                }
+    
+            // Форматируем числа с единицами измерения
+            if (attr.attribute_name === 'year') {
+                return Math.round(numValue).toString();
+            }
+            
+            // Базовые переводы единиц измерения
+            const unitTranslations = {
+                'km': { 'en': 'km', 'ru': 'км', 'sr': 'km' },
+                'l': { 'en': 'l', 'ru': 'л', 'sr': 'l' },
+                'm²': { 'en': 'sq.m.', 'ru': 'м²', 'sr': 'm²' },
+                'ar': { 'en': 'acres', 'ru': 'сот.', 'sr': 'ar' },
+                'ks': { 'en': 'hp', 'ru': 'л.с.', 'sr': 'ks' },
+                'inč': { 'en': 'inch', 'ru': 'дюйм', 'sr': 'inč' },
+                'soba': { 'en': 'room', 'ru': 'комн.', 'sr': 'soba' },
+                'sprat': { 'en': 'floor', 'ru': 'эт.', 'sr': 'sprat' }
+            };
+            
+            // Получаем переведенную единицу измерения
+            const translatedUnit = unitTranslations[attr.unit]?.[currentLang] || attr.unit;
+            
+            // Применяем форматирование в зависимости от типа атрибута
+            if (attr.attribute_name === 'mileage') {
+                return `${Math.round(numValue).toLocaleString()} ${translatedUnit}`;
+            } else if (attr.attribute_name === 'engine_capacity') {
+                return `${numValue.toFixed(1)} ${translatedUnit}`;
+            } else if (attr.attribute_name === 'power') {
+                return `${Math.round(numValue)} ${translatedUnit}`;
+            } else if (attr.attribute_name === 'screen_size') {
+                return `${numValue.toFixed(1)}"`;
+            } else {
+                return `${numValue} ${translatedUnit}`;
             }
         }
-
+        
+        // Если никакие правила не сработали, возвращаем display_value
         return attr.display_value;
     };
+// Добавьте эту функцию перед определением ListingDetailsPage
+const debugAttribute = (attr) => {
+    console.group(`Атрибут: ${attr.attribute_name} (${attr.attribute_id})`);
+    console.log('Значение:', attr.display_value);
+    console.log('Тип атрибута:', attr.attribute_type);
+    console.log('Полная структура переводов для атрибута fuel_type:', 
+        JSON.stringify(attr.option_translations, null, 2));
+    if (attr.text_value !== undefined) console.log('text_value:', attr.text_value);
+    if (attr.numeric_value !== undefined) console.log('numeric_value:', attr.numeric_value);
+    if (attr.boolean_value !== undefined) console.log('boolean_value:', attr.boolean_value);
+    
+    console.log('Переводы атрибута:', attr.translations);
+    console.log('Переводы опций:', attr.option_translations);
+    console.log('Единица измерения:', attr.unit);
+    console.groupEnd();
+};
+
+// Вспомогательная функция для перевода известных значений
+const translateKnownValue = (value, translations) => {
+    if (!value) return value;
+    
+    // Если есть перевод для текущего языка и этого значения
+    if (translations[value] && translations[value][i18n.language]) {
+        return translations[value][i18n.language];
+    }
+    
+    // Если язык русский или перевода нет, возвращаем оригинальное значение
+    return i18n.language === 'ru' ? value : value;
+};
 
     // Преобразование атрибутов в формат для AutoDetails компонента
     const convertAttributesToAutoProps = (attributes) => {
@@ -360,21 +449,31 @@ const ListingDetailsPage = () => {
                 axios.get(`/api/v1/marketplace/listings/${id}`),
                 axios.get('/api/v1/marketplace/favorites')
             ]);
-
+    
             const listingData = listingResponse.data.data;
-
+    
             if (!listingData.images) {
                 listingData.images = [];
             }
-
+    
+            // Отладка атрибутов
+            if (listingData.attributes && listingData.attributes.length > 0) {
+                console.group('Атрибуты объявления с сервера:');
+                listingData.attributes.forEach(attr => {
+                    debugAttribute(attr);
+                });
+                console.groupEnd();
+            } else {
+                console.warn('Объявление не имеет атрибутов!');
+            }
+    
             setListing({
                 ...listingData,
                 is_favorite: favoritesResponse.data?.data?.some?.(
                     item => item.id === Number(id)
                 ) || false,
                 images: listingData.images || [],
-                // Убедитесь, что metadata сохраняется здесь
-                metadata: listingData.metadata // Добавьте эту строку, если её нет
+                metadata: listingData.metadata
             });
             
             console.log("Listing data:", listingData);

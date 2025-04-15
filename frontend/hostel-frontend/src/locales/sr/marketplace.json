@@ -1,4 +1,49 @@
 {
+  "auto": {
+      "details": {
+        "title": "Karakteristike automobila",
+        "not_specified": "Nije navedeno"
+      },
+      "properties": {
+        "brand_model": "Marka i model",
+        "year": "Godina proizvodnje",
+        "mileage": "Kilometraža",
+        "fuel_type": "Vrsta goriva",
+        "transmission": "Menjač",
+        "engine": "Motor",
+        "color": "Boja",
+        "body_type": "Tip karoserije",
+        "drive_type": "Pogon",
+        "doors": "Vrata",
+        "seats": "Sedišta",
+        "features": "Dodatne karakteristike",
+        "fuel_types": {
+          "petrol": "Benzin",
+          "diesel": "Dizel",
+          "electric": "Električni",
+          "hybrid": "Hibrid"
+        },
+        "transmissions": {
+          "manual": "Manuelni",
+          "automatic": "Automatski",
+          "semi-automatic": "Poluautomatski"
+        },
+        "body_types": {
+          "sedan": "Sedan",
+          "suv": "SUV",
+          "hatchback": "Hečbek",
+          "coupe": "Kupe",
+          "wagon": "Karavan"
+        },
+        "drive_types": {
+          "front": "Prednji",
+          "rear": "Zadnji",
+          "all": "Svi",
+          "4wd": "4WD"
+        }
+      }
+    
+  },
   "favorites": {
     "title": "Omiljeni oglasi",
     "empty": "Još uvek nemate omiljene oglase",

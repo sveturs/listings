@@ -123,27 +123,80 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
         return translation || listing[field];
     };
 
-    // Функция для получения переведенного имени атрибута
     const getTranslatedName = (attr) => {
         if (!attr) return '';
         
-        // Поиск перевода
+        // Если текущий язык русский, возвращаем отображаемое имя без перевода
+        if (i18n.language === 'ru') {
+            return attr.display_name;
+        }
+        
+        // Проверяем наличие прямого перевода имени атрибута
         if (attr.translations && attr.translations[i18n.language]) {
             return attr.translations[i18n.language];
         }
         
-        // Стандартные переводы для атрибутов недвижимости
-        const defaultTranslations = {
-            rooms: t('listings.attributes.rooms', { defaultValue: 'Комнаты' }),
-            floor: t('listings.attributes.floor', { defaultValue: 'Этаж' }),
-            total_floors: t('listings.attributes.total_floors', { defaultValue: 'Этажей' }),
-            area: t('listings.attributes.area', { defaultValue: 'Площадь' }),
-            land_area: t('listings.attributes.land_area', { defaultValue: 'Участок' }),
-            property_type: t('listings.attributes.property_type', { defaultValue: 'Тип' })
-        };
+        // Стандартные переводы для атрибутов
+        const attributeTranslations = {
+            // Автомобили
+            'make': { 'en': 'Make', 'sr': 'Marka' },
+            'model': { 'en': 'Model', 'sr': 'Model' },
+            'year': { 'en': 'Year', 'sr': 'Godina proizvodnje' },
+            'mileage': { 'en': 'Mileage', 'sr': 'Kilometraža' },
+
+            'engine_capacity': { 'en': 'Engine capacity', 'sr': 'Zapremina motora' },
+        'fuel_type': { 'en': 'Fuel type', 'sr': 'Vrsta goriva' },
+        'transmission': { 'en': 'Transmission', 'sr': 'Menjač' },
+        'body_type': { 'en': 'Body type', 'sr': 'Tip karoserije' },
+        'color': { 'en': 'Color', 'sr': 'Boja' },
+        'power': { 'en': 'Power', 'sr': 'Snaga' },
+        'drive_type': { 'en': 'Drive type', 'sr': 'Pogon' },
+        'number_of_doors': { 'en': 'Number of doors', 'sr': 'Broj vrata' },
+        'number_of_seats': { 'en': 'Number of seats', 'sr': 'Broj sedišta' },
         
-        return defaultTranslations[attr.attribute_name] || attr.display_name || attr.attribute_name;
+        // Недвижимость
+        'property_type': { 'en': 'Property type', 'sr': 'Tip nekretnine' },
+        'rooms': { 'en': 'Rooms', 'sr': 'Broj soba' },
+        'floor': { 'en': 'Floor', 'sr': 'Sprat' },
+        'total_floors': { 'en': 'Total floors', 'sr': 'Ukupno spratova' },
+        'area': { 'en': 'Area', 'sr': 'Površina' },
+        'land_area': { 'en': 'Land area', 'sr': 'Površina zemljišta' },
+        'building_type': { 'en': 'Building type', 'sr': 'Tip zgrade' },
+        'has_balcony': { 'en': 'Balcony', 'sr': 'Balkon' },
+        'has_elevator': { 'en': 'Elevator', 'sr': 'Lift' },
+        'has_parking': { 'en': 'Parking', 'sr': 'Parking' },
+        
+        // Электроника
+        'brand': { 'en': 'Brand', 'sr': 'Brend' },
+        'model_phone': { 'en': 'Model', 'sr': 'Model' },
+        'memory': { 'en': 'Memory', 'sr': 'Memorija' },
+        'ram': { 'en': 'RAM', 'sr': 'RAM' },
+        'os': { 'en': 'Operating system', 'sr': 'Operativni sistem' },
+        'screen_size': { 'en': 'Screen size', 'sr': 'Veličina ekrana' },
+        'camera': { 'en': 'Camera', 'sr': 'Kamera' },
+        'has_5g': { 'en': '5G', 'sr': '5G' },
+        
+        // Компьютеры
+        'pc_brand': { 'en': 'Brand', 'sr': 'Brend' },
+        'pc_type': { 'en': 'Type', 'sr': 'Tip' },
+        'cpu': { 'en': 'Processor', 'sr': 'Procesor' },
+        'gpu': { 'en': 'Graphics card', 'sr': 'Grafička kartica' },
+        'ram_pc': { 'en': 'RAM', 'sr': 'RAM' },
+        'storage_type': { 'en': 'Storage type', 'sr': 'Tip skladišta' },
+        'storage_capacity': { 'en': 'Storage capacity', 'sr': 'Kapacitet skladišta' },
+        'os_pc': { 'en': 'Operating system', 'sr': 'Operativni sistem' }
     };
+    
+    // Проверяем наличие стандартного перевода для атрибута
+    if (attributeTranslations[attr.attribute_name] && 
+        attributeTranslations[attr.attribute_name][i18n.language]) {
+        return attributeTranslations[attr.attribute_name][i18n.language];
+    }
+    
+    // Если перевод не найден, возвращаем display_name
+    return attr.display_name || attr.attribute_name;
+};
+    
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('sr-RS', {

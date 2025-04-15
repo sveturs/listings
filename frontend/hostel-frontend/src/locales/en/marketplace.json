@@ -1,4 +1,48 @@
 {
+  "auto": {
+      "details": {
+        "title": "Car Specifications",
+        "not_specified": "Not specified"
+      },
+      "properties": {
+        "brand_model": "Brand and Model",
+        "year": "Year of Manufacture",
+        "mileage": "Mileage",
+        "fuel_type": "Fuel Type",
+        "transmission": "Transmission",
+        "engine": "Engine",
+        "color": "Color",
+        "body_type": "Body Type",
+        "drive_type": "Drive Type",
+        "doors": "Doors",
+        "seats": "Seats",
+        "features": "Additional Features",
+        "fuel_types": {
+          "petrol": "Petrol",
+          "diesel": "Diesel",
+          "electric": "Electric",
+          "hybrid": "Hybrid"
+        },
+        "transmissions": {
+          "manual": "Manual",
+          "automatic": "Automatic",
+          "semi-automatic": "Semi-automatic"
+        },
+        "body_types": {
+          "sedan": "Sedan",
+          "suv": "SUV",
+          "hatchback": "Hatchback",
+          "coupe": "Coupe",
+          "wagon": "Wagon"
+        },
+        "drive_types": {
+          "front": "Front",
+          "rear": "Rear",
+          "all": "All",
+          "4wd": "4WD"
+        }
+      }
+    },
   "favorites": {
     "title": "Favorite Listings",
     "empty": "You don't have any favorite listings yet",

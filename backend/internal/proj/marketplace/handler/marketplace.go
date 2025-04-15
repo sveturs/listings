@@ -1377,172 +1377,183 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 }
 
 func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
-	// Получаем старую версию объявления
-	id, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-	}
+    // Получаем старую версию объявления
+    id, err := strconv.Atoi(c.Params("id"))
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+    }
 
-	oldListing, err := h.marketplaceService.GetListingByID(c.Context(), id)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
-	}
+    oldListing, err := h.marketplaceService.GetListingByID(c.Context(), id)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+    }
 
-	var listing models.MarketplaceListing
-	if err := c.BodyParser(&listing); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
-	}
+    var listing models.MarketplaceListing
+    if err := c.BodyParser(&listing); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+    }
 
-	listing.ID = id
-	listing.UserID = c.Locals("user_id").(int)
-	if err := c.BodyParser(&listing); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
-	}
+    listing.ID = id
+    listing.UserID = c.Locals("user_id").(int)
+    if err := c.BodyParser(&listing); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+    }
 
-	var requestBody map[string]interface{}
-	if err := json.Unmarshal(c.Body(), &requestBody); err == nil {
-		processAttributesFromRequest(requestBody, &listing)
-	}
-	// Обработка изменения цены и метаданных о скидке
-	if listing.Price != oldListing.Price {
-		// Если у объявления нет метаданных, создаем их
-		if listing.Metadata == nil {
-			listing.Metadata = make(map[string]interface{})
-		}
+    var requestBody map[string]interface{}
+    if err := json.Unmarshal(c.Body(), &requestBody); err == nil {
+        if _, hasAttrs := requestBody["attributes"]; !hasAttrs {
+            // Атрибуты не переданы, загружаем существующие
+            existingAttrs, err := h.marketplaceService.Storage().GetListingAttributes(c.Context(), listing.ID)
+            if err == nil && len(existingAttrs) > 0 {
+                listing.Attributes = existingAttrs
+                log.Printf("Loaded existing %d attributes for listing %d", len(existingAttrs), listing.ID)
+            }
+        } else {
+            // Атрибуты переданы, обрабатываем их как обычно
+            processAttributesFromRequest(requestBody, &listing)
+        }
+    }
+    
+    // Обработка изменения цены и метаданных о скидке
+    if listing.Price != oldListing.Price {
+        // Если у объявления нет метаданных, создаем их
+        if listing.Metadata == nil {
+            listing.Metadata = make(map[string]interface{})
+        }
 
-		// Проверяем, снизилась ли цена
-		if listing.Price < oldListing.Price {
-			// Определяем исходную цену для расчета скидки
-			var originalPrice float64
-			var hasExistingDiscount bool
+        // Проверяем, снизилась ли цена
+        if listing.Price < oldListing.Price {
+            // Определяем исходную цену для расчета скидки
+            var originalPrice float64
+            var hasExistingDiscount bool
 
-			// Проверяем существующие метаданные о скидке
-			if oldListing.Metadata != nil {
-				if discount, ok := oldListing.Metadata["discount"].(map[string]interface{}); ok {
-					if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
-						// Используем предыдущую цену из существующей скидки
-						originalPrice = prevPrice
-						hasExistingDiscount = true
-						log.Printf("Найдена существующая скидка для объявления %d. Предыдущая цена: %.2f", listing.ID, originalPrice)
-					}
-				}
-			}
+            // Проверяем существующие метаданные о скидке
+            if oldListing.Metadata != nil {
+                if discount, ok := oldListing.Metadata["discount"].(map[string]interface{}); ok {
+                    if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+                        // Используем предыдущую цену из существующей скидки
+                        originalPrice = prevPrice
+                        hasExistingDiscount = true
+                        log.Printf("Найдена существующая скидка для объявления %d. Предыдущая цена: %.2f", listing.ID, originalPrice)
+                    }
+                }
+            }
 
-			// Если нет существующей скидки, используем текущую цену объявления
-			if !hasExistingDiscount {
-				originalPrice = oldListing.Price
-			}
+            // Если нет существующей скидки, используем текущую цену объявления
+            if !hasExistingDiscount {
+                originalPrice = oldListing.Price
+            }
 
-			// Вычисляем процент скидки от исходной цены
-			discountPercent := int((originalPrice - listing.Price) / originalPrice * 100)
+            // Вычисляем процент скидки от исходной цены
+            discountPercent := int((originalPrice - listing.Price) / originalPrice * 100)
 
-			// Добавляем или обновляем информацию о скидке в метаданные
-			listing.Metadata["discount"] = map[string]interface{}{
-				"discount_percent":  discountPercent,
-				"previous_price":    originalPrice,
-				"effective_from":    time.Now().Format(time.RFC3339),
-				"has_price_history": true,
-			}
+            // Добавляем или обновляем информацию о скидке в метаданные
+            listing.Metadata["discount"] = map[string]interface{}{
+                "discount_percent":  discountPercent,
+                "previous_price":    originalPrice,
+                "effective_from":    time.Now().Format(time.RFC3339),
+                "has_price_history": true,
+            }
 
-			log.Printf("Обновлена информация о скидке для объявления %d: %d%% (исходная цена: %.2f, новая цена: %.2f)",
-				listing.ID, discountPercent, originalPrice, listing.Price)
-		} else if listing.Price > oldListing.Price {
-			// Если цена повысилась, проверяем, нужно ли удалить информацию о скидке
-			if oldListing.Metadata != nil {
-				if _, ok := oldListing.Metadata["discount"]; ok {
-					// Удаляем метаданные о скидке при повышении цены
-					delete(listing.Metadata, "discount")
-					log.Printf("Удалена информация о скидке для объявления %d из-за повышения цены", listing.ID)
-				}
-			}
-		}
-		// Если цены равны, оставляем метаданные без изменений
-	}
+            log.Printf("Обновлена информация о скидке для объявления %d: %d%% (исходная цена: %.2f, новая цена: %.2f)",
+                listing.ID, discountPercent, originalPrice, listing.Price)
+        } else if listing.Price > oldListing.Price {
+            // Если цена повысилась, проверяем, нужно ли удалить информацию о скидке
+            if oldListing.Metadata != nil {
+                if _, ok := oldListing.Metadata["discount"]; ok {
+                    // Удаляем метаданные о скидке при повышении цены
+                    delete(listing.Metadata, "discount")
+                    log.Printf("Удалена информация о скидке для объявления %d из-за повышения цены", listing.ID)
+                }
+            }
+        }
+        // Если цены равны, оставляем метаданные без изменений
+    }
 
-	// Обновляем объявление
-	err = h.marketplaceService.UpdateListing(c.Context(), &listing)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
-	}
-	// Переиндексируем объявление в OpenSearch с переводами
-	// Даём небольшую задержку для завершения транзакций
-	time.Sleep(500 * time.Millisecond)
-	
-	updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listing.ID)
-	if err != nil {
-		log.Printf("Failed to get updated listing for reindexing: %v", err)
-	} else {
-		// Проверяем наличие переводов
-		if updatedListing.Translations == nil || len(updatedListing.Translations) == 0 {
-			log.Printf("Warning: Listing %d has no translations before reindexing, will try to load them explicitly", listing.ID)
-			
-			// Пытаемся явно загрузить переводы
-			translations, err := h.marketplaceService.Storage().GetTranslationsForEntity(c.Context(), "listing", listing.ID)
-			if err != nil {
-				log.Printf("Error loading translations for listing %d: %v", listing.ID, err)
-			} else if len(translations) > 0 {
-				// Организуем переводы в структуру TranslationMap
-				transMap := make(models.TranslationMap)
-				for _, t := range translations {
-					if _, ok := transMap[t.Language]; !ok {
-						transMap[t.Language] = make(map[string]string)
-					}
-					transMap[t.Language][t.FieldName] = t.TranslatedText
-				}
-				updatedListing.Translations = transMap
-				log.Printf("Explicitly loaded %d translations for listing %d", len(translations), listing.ID)
-			}
-		}
-		
-		if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
-			log.Printf("Failed to reindex listing %d: %v", listing.ID, err)
-		} else {
-			log.Printf("Successfully reindexed listing %d with all translations", listing.ID)
-		}
-	}
-	// Проверяем изменение цены
-	if oldListing.Price != listing.Price {
-		// Вызываем явно синхронизацию данных о скидке и истории цен
-		err = h.marketplaceService.SynchronizeDiscountData(c.Context(), listing.ID)
-		if err != nil {
-			log.Printf("Ошибка при синхронизации скидки для объявления %d: %v", listing.ID, err)
-			// Не возвращаем ошибку клиенту, чтобы не прерывать обновление
-		}
+    // Обновляем объявление
+    err = h.marketplaceService.UpdateListing(c.Context(), &listing)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
+    }
+    // Переиндексируем объявление в OpenSearch с переводами
+    // Даём небольшую задержку для завершения транзакций
+    time.Sleep(500 * time.Millisecond)
+    
+    updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listing.ID)
+    if err != nil {
+        log.Printf("Failed to get updated listing for reindexing: %v", err)
+    } else {
+        // Проверяем наличие переводов
+        if updatedListing.Translations == nil || len(updatedListing.Translations) == 0 {
+            log.Printf("Warning: Listing %d has no translations before reindexing, will try to load them explicitly", listing.ID)
+            
+            // Пытаемся явно загрузить переводы
+            translations, err := h.marketplaceService.Storage().GetTranslationsForEntity(c.Context(), "listing", listing.ID)
+            if err != nil {
+                log.Printf("Error loading translations for listing %d: %v", listing.ID, err)
+            } else if len(translations) > 0 {
+                // Организуем переводы в структуру TranslationMap
+                transMap := make(models.TranslationMap)
+                for _, t := range translations {
+                    if _, ok := transMap[t.Language]; !ok {
+                        transMap[t.Language] = make(map[string]string)
+                    }
+                    transMap[t.Language][t.FieldName] = t.TranslatedText
+                }
+                updatedListing.Translations = transMap
+                log.Printf("Explicitly loaded %d translations for listing %d", len(translations), listing.ID)
+            }
+        }
+        
+        if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
+            log.Printf("Failed to reindex listing %d: %v", listing.ID, err)
+        } else {
+            log.Printf("Successfully reindexed listing %d with all translations", listing.ID)
+        }
+    }
+    // Проверяем изменение цены
+    if oldListing.Price != listing.Price {
+        // Вызываем явно синхронизацию данных о скидке и истории цен
+        err = h.marketplaceService.SynchronizeDiscountData(c.Context(), listing.ID)
+        if err != nil {
+            log.Printf("Ошибка при синхронизации скидки для объявления %d: %v", listing.ID, err)
+            // Не возвращаем ошибку клиенту, чтобы не прерывать обновление
+        }
 
-		favoritedUsers, err := h.marketplaceService.GetFavoritedUsers(c.Context(), listing.ID)
-		if err != nil {
-			log.Printf("Error getting favorited users: %v", err)
-		} else {
-			priceChange := listing.Price - oldListing.Price
-			changeText := "увеличилась"
-			if priceChange < 0 {
-				changeText = "уменьшилась"
-			}
+        favoritedUsers, err := h.marketplaceService.GetFavoritedUsers(c.Context(), listing.ID)
+        if err != nil {
+            log.Printf("Error getting favorited users: %v", err)
+        } else {
+            priceChange := listing.Price - oldListing.Price
+            changeText := "увеличилась"
+            if priceChange < 0 {
+                changeText = "уменьшилась"
+            }
 
-			for _, userID := range favoritedUsers {
-				notificationText := fmt.Sprintf(
-					"Изменение цены в избранном\nОбъявление: %s\nЦена %s на %.2f руб.\nНовая цена: %.2f руб.",
-					listing.Title,
-					changeText,
-					math.Abs(float64(priceChange)),
-					listing.Price,
-				)
-				if err := h.services.Notification().SendNotification(
-					c.Context(),
-					userID,
-					models.NotificationTypeFavoritePrice,
-					notificationText,
-					listing.ID,
-				); err != nil {
-					log.Printf("Error sending notification to user %d: %v", userID, err)
-				}
-			}
-		}
-	}
+            for _, userID := range favoritedUsers {
+                notificationText := fmt.Sprintf(
+                    "Изменение цены в избранном\nОбъявление: %s\nЦена %s на %.2f руб.\nНовая цена: %.2f руб.",
+                    listing.Title,
+                    changeText,
+                    math.Abs(float64(priceChange)),
+                    listing.Price,
+                )
+                if err := h.services.Notification().SendNotification(
+                    c.Context(),
+                    userID,
+                    models.NotificationTypeFavoritePrice,
+                    notificationText,
+                    listing.ID,
+                ); err != nil {
+                    log.Printf("Error sending notification to user %d: %v", userID, err)
+                }
+            }
+        }
+    }
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Listing updated successfully",
-	})
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Listing updated successfully",
+    })
 }
 
 func (h *MarketplaceHandler) UpdateTranslations(c *fiber.Ctx) error {

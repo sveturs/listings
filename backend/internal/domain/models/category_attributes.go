@@ -46,8 +46,9 @@ type ListingAttributeValue struct {
     DisplayValue  string          `json:"display_value"`
     // Добавляем поле для единиц измерения
     Unit          string          `json:"unit,omitempty"`
+    Translations      map[string]string               `json:"translations,omitempty"`
+    OptionTranslations map[string]map[string]string   `json:"option_translations,omitempty"`
 }
-
 
 // CategoryAttributeMapping связывает атрибуты с категориями
 type CategoryAttributeMapping struct {
