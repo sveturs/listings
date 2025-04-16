@@ -22,6 +22,15 @@ ALTER TABLE marketplace_listings ADD COLUMN IF NOT EXISTS metadata JSONB;
 -- Создаем индекс для быстрого поиска товаров со скидками
 CREATE INDEX IF NOT EXISTS idx_listings_metadata_discount ON marketplace_listings USING GIN ((metadata -> 'discount'));
 
+-- Удаляем функции и триггеры, если они существуют
+DROP TRIGGER IF EXISTS trig_update_metadata_after_price_change ON price_history;
+DROP TRIGGER IF EXISTS trg_new_listing_price_history ON marketplace_listings;
+DROP TRIGGER IF EXISTS trg_update_listing_price_history ON marketplace_listings;
+DROP FUNCTION IF EXISTS update_listing_metadata_after_price_change();
+DROP FUNCTION IF EXISTS update_price_history();
+DROP FUNCTION IF EXISTS check_price_manipulation(INT);
+DROP FUNCTION IF EXISTS refresh_discount_metadata();
+
 -- Функция для проверки манипуляций с ценами
 CREATE OR REPLACE FUNCTION check_price_manipulation(p_listing_id INT)
 RETURNS BOOLEAN AS $$
@@ -254,25 +263,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Создаем триггер для новых объявлений
-CREATE TRIGGER trg_new_listing_price_history
-AFTER INSERT ON marketplace_listings
-FOR EACH ROW
-EXECUTE FUNCTION update_price_history('create');
-
--- Создаем триггер для обновления объявлений
-CREATE TRIGGER trg_update_listing_price_history
-AFTER UPDATE OF price ON marketplace_listings
-FOR EACH ROW
-WHEN (OLD.price IS DISTINCT FROM NEW.price)
-EXECUTE FUNCTION update_price_history('update');
-
--- Создаем триггер для обновления метаданных после вставки в историю цен
-CREATE TRIGGER trig_update_metadata_after_price_change
-AFTER INSERT ON price_history
-FOR EACH ROW
-EXECUTE FUNCTION update_listing_metadata_after_price_change();
-
 -- Функция для ручного обновления метаданных скидок
 CREATE OR REPLACE FUNCTION refresh_discount_metadata()
 RETURNS void AS $$
@@ -381,6 +371,23 @@ BEGIN
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Создаем триггеры
+CREATE TRIGGER trg_new_listing_price_history
+AFTER INSERT ON marketplace_listings
+FOR EACH ROW
+EXECUTE FUNCTION update_price_history('create');
+
+CREATE TRIGGER trg_update_listing_price_history
+AFTER UPDATE OF price ON marketplace_listings
+FOR EACH ROW
+WHEN (OLD.price IS DISTINCT FROM NEW.price)
+EXECUTE FUNCTION update_price_history('update');
+
+CREATE TRIGGER trig_update_metadata_after_price_change
+AFTER INSERT ON price_history
+FOR EACH ROW
+EXECUTE FUNCTION update_listing_metadata_after_price_change();
 
 -- Вставляем запись в schema_migrations
 INSERT INTO schema_migrations (version, dirty) VALUES (13, false) ON CONFLICT (version) DO NOTHING;

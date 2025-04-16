@@ -491,11 +491,11 @@ INSERT INTO translations (entity_type, entity_id, language, field_name, translat
 
 ('category', 9999, 'sr', 'name', 'Ostalo', true, true, NOW(), NOW()),
 
-('category', 10000, 'en', 'name', 'Bezbednost', true, true, NOW(), NOW()),
+('category', 10000, 'sr', 'name', 'Bezbednost', true, true, NOW(), NOW()),
     -- Children's Goods and Toys subcategories (parent id=10000)
-    ('category', 10100, 'en', 'name', 'Video nadzor', true, true, NOW(), NOW()),
+    ('category', 10100, 'sr', 'name', 'Video nadzor', true, true, NOW(), NOW()),
         -- Video Surveillance subcategories (parent id=10100)
-         ('category', 10410, 'en', 'name', 'Konektori i video baluni', true, true, NOW(), NOW());
+         ('category', 10410, 'sr', 'name', 'Konektori i video baluni', true, true, NOW(), NOW());
 
 -- Ажурирање sequence-а за translations
 SELECT setval('translations_id_seq', (SELECT MAX(id) FROM translations), true);
