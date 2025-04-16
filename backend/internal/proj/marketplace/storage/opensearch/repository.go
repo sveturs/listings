@@ -639,17 +639,8 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 }
 
 func processAttributesForIndex(doc map[string]interface{}, attributes []models.ListingAttributeValue,
-	importantAttrs, realEstateFields, carFields map[string]bool, listingID int, r *Repository) {
+    importantAttrs, realEstateFields, carFields map[string]bool, listingID int, r *Repository) {
 
-<<<<<<< HEAD
-	realEstateText := make([]string, 0)
-	makeValue, modelValue := "", ""
-	uniqueTextValues := make(map[string]bool)
-	attributeTextValues := make(map[string][]string)
-	selectValues := []string{}
-	seen := make(map[int]bool)
-	attributesArray := make([]map[string]interface{}, 0, len(attributes))
-=======
     realEstateText := make([]string, 0)
     makeValue, modelValue := "", ""
     uniqueTextValues := make(map[string]bool)
@@ -657,46 +648,24 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
     selectValues := []string{}
     seen := make(map[int]bool)
     attributesArray := make([]map[string]interface{}, 0, len(attributes))
-    carKeywords := []string{} // Новый массив для ключевых слов автомобиля
->>>>>>> f1664c41fc60394ed31313e1905425b093a9b312
+    carKeywords := []string{} // Для ключевых слов автомобиля
 
-	for _, attr := range attributes {
-		if seen[attr.AttributeID] {
-			continue
-		}
-		seen[attr.AttributeID] = true
+    for _, attr := range attributes {
+        if seen[attr.AttributeID] {
+            continue
+        }
+        seen[attr.AttributeID] = true
 
-		if !hasAttributeValue(attr) {
-			continue
-		}
+        if !hasAttributeValue(attr) {
+            continue
+        }
 
-		attrDoc := createAttributeDocument(attr)
-		attributesArray = append(attributesArray, attrDoc)
+        attrDoc := createAttributeDocument(attr)
+        attributesArray = append(attributesArray, attrDoc)
 
-		if attr.TextValue != nil && *attr.TextValue != "" {
-			textValue := *attr.TextValue
+        if attr.TextValue != nil && *attr.TextValue != "" {
+            textValue := *attr.TextValue
 
-<<<<<<< HEAD
-			switch attr.AttributeName {
-			case "make":
-				makeValue = textValue
-				doc["make"] = makeValue
-				doc["make_lowercase"] = strings.ToLower(makeValue)
-				log.Printf("FIRST PASS: Добавлена марка '%s' в корень документа для объявления %d", makeValue, listingID)
-			case "model":
-				modelValue = textValue
-				doc["model"] = modelValue
-				doc["model_lowercase"] = strings.ToLower(modelValue)
-				log.Printf("FIRST PASS: Добавлена модель '%s' в корень документа для объявления %d", modelValue, listingID)
-			default:
-				if isImportantTextAttribute(attr.AttributeName) {
-					doc[attr.AttributeName] = textValue
-					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(textValue)
-					log.Printf("FIRST PASS: Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
-						attr.AttributeName, textValue, listingID)
-				}
-			}
-=======
             switch attr.AttributeName {
             case "make":
                 makeValue = textValue
@@ -718,118 +687,114 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
                         attr.AttributeName, textValue, listingID)
                 }
             }
->>>>>>> f1664c41fc60394ed31313e1905425b093a9b312
 
-			if !uniqueTextValues[textValue] {
-				attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], textValue)
-				uniqueTextValues[textValue] = true
-			}
-			lowerValue := strings.ToLower(textValue)
-			if !uniqueTextValues[lowerValue] {
-				attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], lowerValue)
-				uniqueTextValues[lowerValue] = true
-			}
-			if attr.AttributeName == "make" || attr.AttributeName == "model" ||
-				attr.AttributeName == "brand" || attr.AttributeName == "color" {
+            if !uniqueTextValues[textValue] {
+                attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], textValue)
+                uniqueTextValues[textValue] = true
+            }
+            lowerValue := strings.ToLower(textValue)
+            if !uniqueTextValues[lowerValue] {
+                attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], lowerValue)
+                uniqueTextValues[lowerValue] = true
+            }
 
-				// Если есть текстовое значение, добавляем его и в нижнем регистре
-				if attr.TextValue != nil && *attr.TextValue != "" {
-					doc[attr.AttributeName] = *attr.TextValue
-					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(*attr.TextValue)
-					log.Printf("Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
-						attr.AttributeName, *attr.TextValue, listingID)
-				} else if attr.DisplayValue != "" {
-					// Если есть только отображаемое значение
-					doc[attr.AttributeName] = attr.DisplayValue
-					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(attr.DisplayValue)
-					log.Printf("Добавлен важный атрибут (из DisplayValue) %s = '%s' в корень документа для объявления %d",
-						attr.AttributeName, attr.DisplayValue, listingID)
-				}
-			}
-			if attr.AttributeType == "select" {
-				selectValues = append(selectValues, textValue, strings.ToLower(textValue))
+            if attr.AttributeName == "make" || attr.AttributeName == "model" ||
+                attr.AttributeName == "brand" || attr.AttributeName == "color" {
+                // Если есть текстовое значение, добавляем его и в нижнем регистре
+                if attr.TextValue != nil && *attr.TextValue != "" {
+                    doc[attr.AttributeName] = *attr.TextValue
+                    doc[attr.AttributeName+"_lowercase"] = strings.ToLower(*attr.TextValue)
+                    log.Printf("Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
+                        attr.AttributeName, *attr.TextValue, listingID)
+                } else if attr.DisplayValue != "" {
+                    // Если есть только отображаемое значение
+                    doc[attr.AttributeName] = attr.DisplayValue
+                    doc[attr.AttributeName+"_lowercase"] = strings.ToLower(attr.DisplayValue)
+                    log.Printf("Добавлен важный атрибут (из DisplayValue) %s = '%s' в корень документа для объявления %d",
+                        attr.AttributeName, attr.DisplayValue, listingID)
+                }
+            }
 
-				value := textValue
-				if attr.DisplayValue != "" {
-					value = attr.DisplayValue
-				}
-				if value != "" {
-					translations, err := r.getAttributeOptionTranslations(attr.AttributeName, value)
-					if err == nil && len(translations) > 0 {
-						attrDoc["translations"] = translations
-						for lang, translation := range translations {
-							if _, ok := attributeTextValues[attr.AttributeName+"_"+lang]; !ok {
-								attributeTextValues[attr.AttributeName+"_"+lang] = []string{}
-							}
-							attributeTextValues[attr.AttributeName+"_"+lang] = append(
-								attributeTextValues[attr.AttributeName+"_"+lang],
-								translation,
-								strings.ToLower(translation),
-							)
-						}
-					}
-				}
-			}
-		}
+            if attr.AttributeType == "select" {
+                selectValues = append(selectValues, textValue, strings.ToLower(textValue))
 
-		if attr.NumericValue != nil {
-			numVal := *attr.NumericValue
-			if !math.IsNaN(numVal) && !math.IsInf(numVal, 0) {
-				if realEstateFields[attr.AttributeName] || carFields[attr.AttributeName] || importantAttrs[attr.AttributeName] {
-					doc[attr.AttributeName] = numVal
-					displayValue := formatAttributeDisplayValue(attr)
-					doc[attr.AttributeName+"_text"] = displayValue
-					realEstateText = append(realEstateText, displayValue)
-					addRangesForAttribute(doc, attr)
-					log.Printf("FIRST PASS: Добавлен числовой атрибут %s = %f в корень документа для объявления %d",
-						attr.AttributeName, numVal, listingID)
-				}
-			}
-		}
+                value := textValue
+                if attr.DisplayValue != "" {
+                    value = attr.DisplayValue
+                }
+                if value != "" {
+                    translations, err := r.getAttributeOptionTranslations(attr.AttributeName, value)
+                    if err == nil && len(translations) > 0 {
+                        attrDoc["translations"] = translations
+                        for lang, translation := range translations {
+                            if _, ok := attributeTextValues[attr.AttributeName+"_"+lang]; !ok {
+                                attributeTextValues[attr.AttributeName+"_"+lang] = []string{}
+                            }
+                            attributeTextValues[attr.AttributeName+"_"+lang] = append(
+                                attributeTextValues[attr.AttributeName+"_"+lang],
+                                translation,
+                                strings.ToLower(translation),
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
-		if attr.BooleanValue != nil {
-			boolValue := *attr.BooleanValue
-			if importantAttrs[attr.AttributeName] {
-				doc[attr.AttributeName] = boolValue
-				strValue := "нет"
-				if boolValue {
-					strValue = "да"
-				}
-				doc[attr.AttributeName+"_text"] = strValue
-				realEstateText = append(realEstateText, strValue)
-				log.Printf("FIRST PASS: Добавлен булев атрибут %s = %v в корень документа для объявления %d",
-					attr.AttributeName, boolValue, listingID)
-			}
-		}
+        if attr.NumericValue != nil {
+            numVal := *attr.NumericValue
+            if !math.IsNaN(numVal) && !math.IsInf(numVal, 0) {
+                if realEstateFields[attr.AttributeName] || carFields[attr.AttributeName] || importantAttrs[attr.AttributeName] {
+                    doc[attr.AttributeName] = numVal
+                    displayValue := formatAttributeDisplayValue(attr)
+                    doc[attr.AttributeName+"_text"] = displayValue
+                    realEstateText = append(realEstateText, displayValue)
+                    addRangesForAttribute(doc, attr)
+                    log.Printf("FIRST PASS: Добавлен числовой атрибут %s = %f в корень документа для объявления %d",
+                        attr.AttributeName, numVal, listingID)
+                }
+            }
+        }
 
-		if attr.JSONValue != nil {
-			jsonStr := string(attr.JSONValue)
-			if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
-				attrDoc["json_value"] = jsonStr
-				var jsonData interface{}
-				if err := json.Unmarshal(attr.JSONValue, &jsonData); err == nil {
-					if strArray, ok := jsonData.([]string); ok {
-						attrDoc["json_array"] = strArray
-						attributeTextValues[attr.AttributeName] = append(
-							attributeTextValues[attr.AttributeName],
-							strArray...,
-						)
-					}
-				}
-			}
-		}
-	}
+        if attr.BooleanValue != nil {
+            boolValue := *attr.BooleanValue
+            if importantAttrs[attr.AttributeName] {
+                doc[attr.AttributeName] = boolValue
+                strValue := "нет"
+                if boolValue {
+                    strValue = "да"
+                }
+                doc[attr.AttributeName+"_text"] = strValue
+                realEstateText = append(realEstateText, strValue)
+                log.Printf("FIRST PASS: Добавлен булев атрибут %s = %v в корень документа для объявления %d",
+                    attr.AttributeName, boolValue, listingID)
+            }
+        }
 
-	ensureImportantAttributes(doc, makeValue, modelValue, listingID)
+        if attr.JSONValue != nil {
+            jsonStr := string(attr.JSONValue)
+            if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
+                attrDoc["json_value"] = jsonStr
+                var jsonData interface{}
+                if err := json.Unmarshal(attr.JSONValue, &jsonData); err == nil {
+                    if strArray, ok := jsonData.([]string); ok {
+                        attrDoc["json_array"] = strArray
+                        attributeTextValues[attr.AttributeName] = append(
+                            attributeTextValues[attr.AttributeName],
+                            strArray...,
+                        )
+                    }
+                }
+            }
+        }
+    }
 
-	if len(selectValues) > 0 {
-		doc["select_values"] = getUniqueValues(selectValues)
-	}
+    ensureImportantAttributes(doc, makeValue, modelValue, listingID)
 
-<<<<<<< HEAD
-	doc["attributes"] = attributesArray
-	doc["all_attributes_text"] = getUniqueValues(flattenAttributeValues(attributeTextValues))
-=======
+    if len(selectValues) > 0 {
+        doc["select_values"] = getUniqueValues(selectValues)
+    }
+
     // Добавляем собранные ключевые слова по автомобилю для улучшения поиска
     if len(carKeywords) > 0 {
         doc["car_keywords"] = getUniqueValues(carKeywords)
@@ -837,12 +802,11 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
 
     doc["attributes"] = attributesArray
     doc["all_attributes_text"] = getUniqueValues(flattenAttributeValues(attributeTextValues))
->>>>>>> f1664c41fc60394ed31313e1905425b093a9b312
 
-	if len(realEstateText) > 0 {
-		doc["real_estate_attributes_text"] = realEstateText
-		doc["real_estate_attributes_combined"] = strings.Join(realEstateText, " ")
-	}
+    if len(realEstateText) > 0 {
+        doc["real_estate_attributes_text"] = realEstateText
+        doc["real_estate_attributes_combined"] = strings.Join(realEstateText, " ")
+    }
 }
 
 
