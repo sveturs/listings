@@ -210,6 +210,17 @@ func (s *MarketplaceService) GetFavoritedUsers(ctx context.Context, listingID in
 func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
 	return s.storage.GetListingByID(ctx, id)
 }
+func (s *MarketplaceService) GetOpenSearchRepository() (interface{
+    SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
+}, bool) {
+    // Пытаемся привести хранилище к типу с нужным методом
+    if osRepo, ok := s.storage.(interface{
+        SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
+    }); ok {
+        return osRepo, true
+    }
+    return nil, false
+}
 func (s *MarketplaceService) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
     return s.storage.GetAttributeRanges(ctx, categoryID)
 }

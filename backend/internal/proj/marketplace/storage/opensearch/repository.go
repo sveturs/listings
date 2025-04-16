@@ -132,14 +132,22 @@ func (r *Repository) extractDocumentID(hit map[string]interface{}) (int, error) 
 
 // SearchListings выполняет поиск объявлений
 func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	query := r.buildSearchQuery(params)
-	queryJSON, _ := json.MarshalIndent(query, "", "  ")
-	log.Printf("OpenSearch запрос: %s", string(queryJSON))
-
-	response, err := r.client.Search(r.indexName, query)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
-	}
+    var query map[string]interface{}
+    
+    // ВАЖНО: проверяем наличие CustomQuery и используем его напрямую, если он задан
+    if params.CustomQuery != nil {
+        query = params.CustomQuery
+        // Логируем, что используем специальный запрос
+        queryJSON, _ := json.MarshalIndent(query, "", "  ")
+        log.Printf("Используем специальный запрос для поиска: %s", string(queryJSON))
+    } else {
+        query = r.buildSearchQuery(params)
+    }
+    
+    response, err := r.client.Search(r.indexName, query)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
+    }
 
 	var searchResponse map[string]interface{}
 	if err := json.Unmarshal(response, &searchResponse); err != nil {
@@ -404,30 +412,50 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 	offset := 0
 	totalIndexed := 0
 
-	for {
-		log.Printf("Получение пакета объявлений (размер: %d, смещение: %d)", batchSize, offset)
-		listings, total, err := r.storage.GetListings(ctx, map[string]string{}, batchSize, offset)
-		if err != nil {
-			return fmt.Errorf("ошибка получения объявлений: %w", err)
-		}
+    for {
+        log.Printf("Получение пакета объявлений (размер: %d, смещение: %d)", batchSize, offset)
+        listings, total, err := r.storage.GetListings(ctx, map[string]string{}, batchSize, offset)
+        if err != nil {
+            return fmt.Errorf("ошибка получения объявлений: %w", err)
+        }
 
-		if len(listings) == 0 {
-			break
-		}
+        if len(listings) == 0 {
+            break
+        }
 
-		log.Printf("Получено %d объявлений из %d всего (пакет %d)", len(listings), total, offset/batchSize+1)
+        log.Printf("Получено %d объявлений из %d всего (пакет %d)", len(listings), total, offset/batchSize+1)
 
-		for i, listing := range listings {
-			log.Printf("DEBUG: Проверка метаданных объявления %d: %+v", listing.ID, listing.Metadata)
-			log.Printf("Объявление %d/%d: ID=%d, Категория=%d, Название=%s",
-				i+1, len(listings), listing.ID, listing.CategoryID, listing.Title)
-		}
-
-		listingPtrs := make([]*models.MarketplaceListing, len(listings))
-		for i := range listings {
-			listingPtrs[i] = &listings[i]
-		}
-
+        listingPtrs := make([]*models.MarketplaceListing, len(listings))
+        for i := range listings {
+            listingID := listings[i].ID
+            
+            // Проверяем наличие переводов и при необходимости загружаем их
+            if listings[i].Translations == nil || len(listings[i].Translations) == 0 {
+                translations, err := r.storage.GetTranslationsForEntity(ctx, "listing", listingID)
+                if err == nil && len(translations) > 0 {
+                    transMap := make(models.TranslationMap)
+                    for _, t := range translations {
+                        if _, ok := transMap[t.Language]; !ok {
+                            transMap[t.Language] = make(map[string]string)
+                        }
+                        transMap[t.Language][t.FieldName] = t.TranslatedText
+                    }
+                    listings[i].Translations = transMap
+                    log.Printf("Загружено %d переводов для объявления %d", len(translations), listingID)
+                }
+            }
+            
+            // Проверяем наличие атрибутов и при необходимости загружаем их
+            if listings[i].Attributes == nil || len(listings[i].Attributes) == 0 {
+                attrs, err := r.storage.GetListingAttributes(ctx, listingID)
+                if err == nil && len(attrs) > 0 {
+                    listings[i].Attributes = attrs
+                    log.Printf("Загружено %d атрибутов для объявления %d", len(attrs), listingID)
+                }
+            }
+            
+            listingPtrs[i] = &listings[i]
+        }
 		if err := r.BulkIndexListings(ctx, listingPtrs); err != nil {
 			return fmt.Errorf("ошибка массовой индексации (пакет %d): %w", offset/batchSize+1, err)
 		}
@@ -473,603 +501,619 @@ func (r *Repository) getAttributeOptionTranslations(attrName, value string) (map
 }
 
 func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string]interface{} {
-    doc := map[string]interface{}{
-        "id":                listing.ID,
-        "title":             listing.Title,
-        "description":       listing.Description,
-        "title_suggest":     listing.Title,
-        "title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
-        "price":             listing.Price,
-        "condition":         listing.Condition,
-        "status":            listing.Status,
-        "location":          listing.Location,
-        "city":              listing.City,
-        "country":           listing.Country,
-        "views_count":       listing.ViewsCount,
-        "created_at":        listing.CreatedAt.Format(time.RFC3339),
-        "updated_at":        listing.UpdatedAt.Format(time.RFC3339),
-        "show_on_map":       listing.ShowOnMap,
-        "original_language": listing.OriginalLanguage,
-        "category_id":       listing.CategoryID,
-        "user_id":           listing.UserID,
-        "translations":      listing.Translations,
-        "average_rating":    listing.AverageRating,
-        "review_count":      listing.ReviewCount,
-    }
+	doc := map[string]interface{}{
+		"id":                listing.ID,
+		"title":             listing.Title,
+		"description":       listing.Description,
+		"title_suggest":     listing.Title,
+		"title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
+		"price":             listing.Price,
+		"condition":         listing.Condition,
+		"status":            listing.Status,
+		"location":          listing.Location,
+		"city":              listing.City,
+		"country":           listing.Country,
+		"views_count":       listing.ViewsCount,
+		"created_at":        listing.CreatedAt.Format(time.RFC3339),
+		"updated_at":        listing.UpdatedAt.Format(time.RFC3339),
+		"show_on_map":       listing.ShowOnMap,
+		"original_language": listing.OriginalLanguage,
+		"category_id":       listing.CategoryID,
+		"user_id":           listing.UserID,
+		"translations":      listing.Translations,
+		"average_rating":    listing.AverageRating,
+		"review_count":      listing.ReviewCount,
+	}
 
-    log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
-        listing.ID, listing.City, listing.Country, listing.Location)
+	log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
+		listing.ID, listing.City, listing.Country, listing.Location)
 
-    realEstateFields := createRealEstateFieldsMap()
-    carFields := createCarFieldsMap()
-    importantAttrs := createImportantAttributesMap()
+	realEstateFields := createRealEstateFieldsMap()
+	carFields := createCarFieldsMap()
+	importantAttrs := createImportantAttributesMap()
 
-    if listing.Attributes != nil && len(listing.Attributes) > 0 {
-        processAttributesForIndex(doc, listing.Attributes, importantAttrs, realEstateFields, carFields, listing.ID, r)
-    }
+	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+		processAttributesForIndex(doc, listing.Attributes, importantAttrs, realEstateFields, carFields, listing.ID, r)
+	}
 
-    processDiscountData(doc, listing)
-    processMetadata(doc, listing)
-    processStorefrontData(doc, listing, r.storage)
-    processCoordinates(doc, listing, r)
-    processCategoryPath(doc, listing, r.storage)
-    processCategory(doc, listing)
-    processUser(doc, listing)
-    processImages(doc, listing, r.storage)
+	processDiscountData(doc, listing)
+	processMetadata(doc, listing)
+	processStorefrontData(doc, listing, r.storage)
+	processCoordinates(doc, listing, r)
+	processCategoryPath(doc, listing, r.storage)
+	processCategory(doc, listing)
+	processUser(doc, listing)
+	processImages(doc, listing, r.storage)
 
-    docJSON, _ := json.MarshalIndent(doc, "", "  ")
-    log.Printf("FINAL DOC for listing %d [size=%d bytes]: %s", listing.ID, len(docJSON), string(docJSON))
+	docJSON, _ := json.MarshalIndent(doc, "", "  ")
+	log.Printf("FINAL DOC for listing %d [size=%d bytes]: %s", listing.ID, len(docJSON), string(docJSON))
 
-    return doc
+	return doc
 }
 
 func processAttributesForIndex(doc map[string]interface{}, attributes []models.ListingAttributeValue,
-    importantAttrs, realEstateFields, carFields map[string]bool, listingID int, r *Repository) {
+	importantAttrs, realEstateFields, carFields map[string]bool, listingID int, r *Repository) {
 
-    realEstateText := make([]string, 0)
-    makeValue, modelValue := "", ""
-    uniqueTextValues := make(map[string]bool)
-    attributeTextValues := make(map[string][]string)
-    selectValues := []string{}
-    seen := make(map[int]bool)
-    attributesArray := make([]map[string]interface{}, 0, len(attributes))
+	realEstateText := make([]string, 0)
+	makeValue, modelValue := "", ""
+	uniqueTextValues := make(map[string]bool)
+	attributeTextValues := make(map[string][]string)
+	selectValues := []string{}
+	seen := make(map[int]bool)
+	attributesArray := make([]map[string]interface{}, 0, len(attributes))
 
-    for _, attr := range attributes {
-        if seen[attr.AttributeID] {
-            continue
-        }
-        seen[attr.AttributeID] = true
+	for _, attr := range attributes {
+		if seen[attr.AttributeID] {
+			continue
+		}
+		seen[attr.AttributeID] = true
 
-        if !hasAttributeValue(attr) {
-            continue
-        }
+		if !hasAttributeValue(attr) {
+			continue
+		}
 
-        attrDoc := createAttributeDocument(attr)
-        attributesArray = append(attributesArray, attrDoc)
+		attrDoc := createAttributeDocument(attr)
+		attributesArray = append(attributesArray, attrDoc)
 
-        if attr.TextValue != nil && *attr.TextValue != "" {
-            textValue := *attr.TextValue
+		if attr.TextValue != nil && *attr.TextValue != "" {
+			textValue := *attr.TextValue
 
-            switch attr.AttributeName {
-            case "make":
-                makeValue = textValue
-                doc["make"] = makeValue
-                doc["make_lowercase"] = strings.ToLower(makeValue)
-                log.Printf("FIRST PASS: Добавлена марка '%s' в корень документа для объявления %d", makeValue, listingID)
-            case "model":
-                modelValue = textValue
-                doc["model"] = modelValue
-                doc["model_lowercase"] = strings.ToLower(modelValue)
-                log.Printf("FIRST PASS: Добавлена модель '%s' в корень документа для объявления %d", modelValue, listingID)
-            default:
-                if isImportantTextAttribute(attr.AttributeName) {
-                    doc[attr.AttributeName] = textValue
-                    doc[attr.AttributeName+"_lowercase"] = strings.ToLower(textValue)
-                    log.Printf("FIRST PASS: Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
-                        attr.AttributeName, textValue, listingID)
-                }
-            }
+			switch attr.AttributeName {
+			case "make":
+				makeValue = textValue
+				doc["make"] = makeValue
+				doc["make_lowercase"] = strings.ToLower(makeValue)
+				log.Printf("FIRST PASS: Добавлена марка '%s' в корень документа для объявления %d", makeValue, listingID)
+			case "model":
+				modelValue = textValue
+				doc["model"] = modelValue
+				doc["model_lowercase"] = strings.ToLower(modelValue)
+				log.Printf("FIRST PASS: Добавлена модель '%s' в корень документа для объявления %d", modelValue, listingID)
+			default:
+				if isImportantTextAttribute(attr.AttributeName) {
+					doc[attr.AttributeName] = textValue
+					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(textValue)
+					log.Printf("FIRST PASS: Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
+						attr.AttributeName, textValue, listingID)
+				}
+			}
 
-            if !uniqueTextValues[textValue] {
-                attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], textValue)
-                uniqueTextValues[textValue] = true
-            }
-            lowerValue := strings.ToLower(textValue)
-            if !uniqueTextValues[lowerValue] {
-                attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], lowerValue)
-                uniqueTextValues[lowerValue] = true
-            }
+			if !uniqueTextValues[textValue] {
+				attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], textValue)
+				uniqueTextValues[textValue] = true
+			}
+			lowerValue := strings.ToLower(textValue)
+			if !uniqueTextValues[lowerValue] {
+				attributeTextValues[attr.AttributeName] = append(attributeTextValues[attr.AttributeName], lowerValue)
+				uniqueTextValues[lowerValue] = true
+			}
+			if attr.AttributeName == "make" || attr.AttributeName == "model" ||
+				attr.AttributeName == "brand" || attr.AttributeName == "color" {
 
-            if attr.AttributeType == "select" {
-                selectValues = append(selectValues, textValue, strings.ToLower(textValue))
+				// Если есть текстовое значение, добавляем его и в нижнем регистре
+				if attr.TextValue != nil && *attr.TextValue != "" {
+					doc[attr.AttributeName] = *attr.TextValue
+					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(*attr.TextValue)
+					log.Printf("Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
+						attr.AttributeName, *attr.TextValue, listingID)
+				} else if attr.DisplayValue != "" {
+					// Если есть только отображаемое значение
+					doc[attr.AttributeName] = attr.DisplayValue
+					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(attr.DisplayValue)
+					log.Printf("Добавлен важный атрибут (из DisplayValue) %s = '%s' в корень документа для объявления %d",
+						attr.AttributeName, attr.DisplayValue, listingID)
+				}
+			}
+			if attr.AttributeType == "select" {
+				selectValues = append(selectValues, textValue, strings.ToLower(textValue))
 
-                value := textValue
-                if attr.DisplayValue != "" {
-                    value = attr.DisplayValue
-                }
-                if value != "" {
-                    translations, err := r.getAttributeOptionTranslations(attr.AttributeName, value)
-                    if err == nil && len(translations) > 0 {
-                        attrDoc["translations"] = translations
-                        for lang, translation := range translations {
-                            if _, ok := attributeTextValues[attr.AttributeName+"_"+lang]; !ok {
-                                attributeTextValues[attr.AttributeName+"_"+lang] = []string{}
-                            }
-                            attributeTextValues[attr.AttributeName+"_"+lang] = append(
-                                attributeTextValues[attr.AttributeName+"_"+lang],
-                                translation,
-                                strings.ToLower(translation),
-                            )
-                        }
-                    }
-                }
-            }
-        }
+				value := textValue
+				if attr.DisplayValue != "" {
+					value = attr.DisplayValue
+				}
+				if value != "" {
+					translations, err := r.getAttributeOptionTranslations(attr.AttributeName, value)
+					if err == nil && len(translations) > 0 {
+						attrDoc["translations"] = translations
+						for lang, translation := range translations {
+							if _, ok := attributeTextValues[attr.AttributeName+"_"+lang]; !ok {
+								attributeTextValues[attr.AttributeName+"_"+lang] = []string{}
+							}
+							attributeTextValues[attr.AttributeName+"_"+lang] = append(
+								attributeTextValues[attr.AttributeName+"_"+lang],
+								translation,
+								strings.ToLower(translation),
+							)
+						}
+					}
+				}
+			}
+		}
 
-        if attr.NumericValue != nil {
-            numVal := *attr.NumericValue
-            if !math.IsNaN(numVal) && !math.IsInf(numVal, 0) {
-                if realEstateFields[attr.AttributeName] || carFields[attr.AttributeName] || importantAttrs[attr.AttributeName] {
-                    doc[attr.AttributeName] = numVal
-                    displayValue := formatAttributeDisplayValue(attr)
-                    doc[attr.AttributeName+"_text"] = displayValue
-                    realEstateText = append(realEstateText, displayValue)
-                    addRangesForAttribute(doc, attr)
-                    log.Printf("FIRST PASS: Добавлен числовой атрибут %s = %f в корень документа для объявления %d",
-                        attr.AttributeName, numVal, listingID)
-                }
-            }
-        }
+		if attr.NumericValue != nil {
+			numVal := *attr.NumericValue
+			if !math.IsNaN(numVal) && !math.IsInf(numVal, 0) {
+				if realEstateFields[attr.AttributeName] || carFields[attr.AttributeName] || importantAttrs[attr.AttributeName] {
+					doc[attr.AttributeName] = numVal
+					displayValue := formatAttributeDisplayValue(attr)
+					doc[attr.AttributeName+"_text"] = displayValue
+					realEstateText = append(realEstateText, displayValue)
+					addRangesForAttribute(doc, attr)
+					log.Printf("FIRST PASS: Добавлен числовой атрибут %s = %f в корень документа для объявления %d",
+						attr.AttributeName, numVal, listingID)
+				}
+			}
+		}
 
-        if attr.BooleanValue != nil {
-            boolValue := *attr.BooleanValue
-            if importantAttrs[attr.AttributeName] {
-                doc[attr.AttributeName] = boolValue
-                strValue := "нет"
-                if boolValue {
-                    strValue = "да"
-                }
-                doc[attr.AttributeName+"_text"] = strValue
-                realEstateText = append(realEstateText, strValue)
-                log.Printf("FIRST PASS: Добавлен булев атрибут %s = %v в корень документа для объявления %d",
-                    attr.AttributeName, boolValue, listingID)
-            }
-        }
+		if attr.BooleanValue != nil {
+			boolValue := *attr.BooleanValue
+			if importantAttrs[attr.AttributeName] {
+				doc[attr.AttributeName] = boolValue
+				strValue := "нет"
+				if boolValue {
+					strValue = "да"
+				}
+				doc[attr.AttributeName+"_text"] = strValue
+				realEstateText = append(realEstateText, strValue)
+				log.Printf("FIRST PASS: Добавлен булев атрибут %s = %v в корень документа для объявления %d",
+					attr.AttributeName, boolValue, listingID)
+			}
+		}
 
-        if attr.JSONValue != nil {
-            jsonStr := string(attr.JSONValue)
-            if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
-                attrDoc["json_value"] = jsonStr
-                var jsonData interface{}
-                if err := json.Unmarshal(attr.JSONValue, &jsonData); err == nil {
-                    if strArray, ok := jsonData.([]string); ok {
-                        attrDoc["json_array"] = strArray
-                        attributeTextValues[attr.AttributeName] = append(
-                            attributeTextValues[attr.AttributeName],
-                            strArray...,
-                        )
-                    }
-                }
-            }
-        }
-    }
+		if attr.JSONValue != nil {
+			jsonStr := string(attr.JSONValue)
+			if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
+				attrDoc["json_value"] = jsonStr
+				var jsonData interface{}
+				if err := json.Unmarshal(attr.JSONValue, &jsonData); err == nil {
+					if strArray, ok := jsonData.([]string); ok {
+						attrDoc["json_array"] = strArray
+						attributeTextValues[attr.AttributeName] = append(
+							attributeTextValues[attr.AttributeName],
+							strArray...,
+						)
+					}
+				}
+			}
+		}
+	}
 
-    ensureImportantAttributes(doc, makeValue, modelValue, listingID)
+	ensureImportantAttributes(doc, makeValue, modelValue, listingID)
 
-    if len(selectValues) > 0 {
-        doc["select_values"] = getUniqueValues(selectValues)
-    }
+	if len(selectValues) > 0 {
+		doc["select_values"] = getUniqueValues(selectValues)
+	}
 
-    doc["attributes"] = attributesArray
-    doc["all_attributes_text"] = getUniqueValues(flattenAttributeValues(attributeTextValues))
+	doc["attributes"] = attributesArray
+	doc["all_attributes_text"] = getUniqueValues(flattenAttributeValues(attributeTextValues))
 
-    if len(realEstateText) > 0 {
-        doc["real_estate_attributes_text"] = realEstateText
-        doc["real_estate_attributes_combined"] = strings.Join(realEstateText, " ")
-    }
+	if len(realEstateText) > 0 {
+		doc["real_estate_attributes_text"] = realEstateText
+		doc["real_estate_attributes_combined"] = strings.Join(realEstateText, " ")
+	}
 }
 
 func hasAttributeValue(attr models.ListingAttributeValue) bool {
-    return (attr.TextValue != nil && *attr.TextValue != "") ||
-        (attr.NumericValue != nil) ||
-        (attr.BooleanValue != nil) ||
-        (attr.JSONValue != nil && string(attr.JSONValue) != "{}" && string(attr.JSONValue) != "[]") ||
-        attr.DisplayValue != ""
+	return (attr.TextValue != nil && *attr.TextValue != "") ||
+		(attr.NumericValue != nil) ||
+		(attr.BooleanValue != nil) ||
+		(attr.JSONValue != nil && string(attr.JSONValue) != "{}" && string(attr.JSONValue) != "[]") ||
+		attr.DisplayValue != ""
 }
 
 func isImportantTextAttribute(attrName string) bool {
-    importantTextAttrs := map[string]bool{
-        "brand":        true,
-        "color":        true,
-        "fuel_type":    true,
-        "transmission": true,
-        "body_type":    true,
-        "property_type": true,
-    }
-    return importantTextAttrs[attrName]
+	importantTextAttrs := map[string]bool{
+		"brand":         true,
+		"color":         true,
+		"fuel_type":     true,
+		"transmission":  true,
+		"body_type":     true,
+		"property_type": true,
+	}
+	return importantTextAttrs[attrName]
 }
 
 func formatAttributeDisplayValue(attr models.ListingAttributeValue) string {
-    numVal := *attr.NumericValue
-    unitStr := attr.Unit
+	numVal := *attr.NumericValue
+	unitStr := attr.Unit
 
-    if unitStr == "" {
-        switch attr.AttributeName {
-        case "area":
-            unitStr = "m²"
-        case "land_area":
-            unitStr = "ar"
-        case "mileage":
-            unitStr = "km"
-        case "engine_capacity":
-            unitStr = "l"
-        case "power":
-            unitStr = "ks"
-        case "screen_size":
-            unitStr = "inč"
-        case "rooms":
-            unitStr = "soba"
-        case "floor", "total_floors":
-            unitStr = "sprat"
-        }
-    }
+	if unitStr == "" {
+		switch attr.AttributeName {
+		case "area":
+			unitStr = "m²"
+		case "land_area":
+			unitStr = "ar"
+		case "mileage":
+			unitStr = "km"
+		case "engine_capacity":
+			unitStr = "l"
+		case "power":
+			unitStr = "ks"
+		case "screen_size":
+			unitStr = "inč"
+		case "rooms":
+			unitStr = "soba"
+		case "floor", "total_floors":
+			unitStr = "sprat"
+		}
+	}
 
-    if attr.AttributeName == "year" {
-        return fmt.Sprintf("%d", int(numVal))
-    } else if unitStr != "" {
-        return fmt.Sprintf("%g %s", numVal, unitStr)
-    }
-    return fmt.Sprintf("%g", numVal)
+	if attr.AttributeName == "year" {
+		return fmt.Sprintf("%d", int(numVal))
+	} else if unitStr != "" {
+		return fmt.Sprintf("%g %s", numVal, unitStr)
+	}
+	return fmt.Sprintf("%g", numVal)
 }
 
 func addRangesForAttribute(doc map[string]interface{}, attr models.ListingAttributeValue) {
-    if attr.NumericValue == nil {
-        return
-    }
-    numVal := *attr.NumericValue
+	if attr.NumericValue == nil {
+		return
+	}
+	numVal := *attr.NumericValue
 
-    switch attr.AttributeName {
-    case "price":
-        doc["price_range"] = getPriceRange(int(numVal))
-    case "mileage":
-        doc["mileage_range"] = getMileageRange(int(numVal))
-    case "area":
-        if numVal <= 30 {
-            doc["area_range"] = "do 30 m²"
-        } else if numVal <= 50 {
-            doc["area_range"] = "30-50 m²"
-        } else if numVal <= 80 {
-            doc["area_range"] = "50-80 m²"
-        } else if numVal <= 120 {
-            doc["area_range"] = "80-120 m²"
-        } else {
-            doc["area_range"] = "od 120 m²"
-        }
-    }
+	switch attr.AttributeName {
+	case "price":
+		doc["price_range"] = getPriceRange(int(numVal))
+	case "mileage":
+		doc["mileage_range"] = getMileageRange(int(numVal))
+	case "area":
+		if numVal <= 30 {
+			doc["area_range"] = "do 30 m²"
+		} else if numVal <= 50 {
+			doc["area_range"] = "30-50 m²"
+		} else if numVal <= 80 {
+			doc["area_range"] = "50-80 m²"
+		} else if numVal <= 120 {
+			doc["area_range"] = "80-120 m²"
+		} else {
+			doc["area_range"] = "od 120 m²"
+		}
+	}
 }
 
 func createAttributeDocument(attr models.ListingAttributeValue) map[string]interface{} {
-    attrDoc := map[string]interface{}{
-        "attribute_id":   attr.AttributeID,
-        "attribute_name": attr.AttributeName,
-        "display_name":   attr.DisplayName,
-        "attribute_type": attr.AttributeType,
-        "display_value":  attr.DisplayValue,
-    }
+	attrDoc := map[string]interface{}{
+		"attribute_id":   attr.AttributeID,
+		"attribute_name": attr.AttributeName,
+		"display_name":   attr.DisplayName,
+		"attribute_type": attr.AttributeType,
+		"display_value":  attr.DisplayValue,
+	}
 
-    if attr.TextValue != nil && *attr.TextValue != "" {
-        textValue := *attr.TextValue
-        attrDoc["text_value"] = textValue
-        attrDoc["text_value_lowercase"] = strings.ToLower(textValue)
-    }
+	if attr.TextValue != nil && *attr.TextValue != "" {
+		textValue := *attr.TextValue
+		attrDoc["text_value"] = textValue
+		attrDoc["text_value_lowercase"] = strings.ToLower(textValue)
+	}
 
-    if attr.NumericValue != nil && !math.IsNaN(*attr.NumericValue) && !math.IsInf(*attr.NumericValue, 0) {
-        attrDoc["numeric_value"] = *attr.NumericValue
-        if attr.Unit != "" {
-            attrDoc["unit"] = attr.Unit
-        }
-    }
+	if attr.NumericValue != nil && !math.IsNaN(*attr.NumericValue) && !math.IsInf(*attr.NumericValue, 0) {
+		attrDoc["numeric_value"] = *attr.NumericValue
+		if attr.Unit != "" {
+			attrDoc["unit"] = attr.Unit
+		}
+	}
 
-    if attr.BooleanValue != nil {
-        attrDoc["boolean_value"] = *attr.BooleanValue
-    }
+	if attr.BooleanValue != nil {
+		attrDoc["boolean_value"] = *attr.BooleanValue
+	}
 
-    if attr.JSONValue != nil {
-        jsonStr := string(attr.JSONValue)
-        if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
-            attrDoc["json_value"] = jsonStr
-        }
-    }
+	if attr.JSONValue != nil {
+		jsonStr := string(attr.JSONValue)
+		if jsonStr != "" && jsonStr != "{}" && jsonStr != "[]" {
+			attrDoc["json_value"] = jsonStr
+		}
+	}
 
-    return attrDoc
+	return attrDoc
 }
 
 func ensureImportantAttributes(doc map[string]interface{}, makeValue, modelValue string, listingID int) {
-    if makeValue != "" && doc["make"] == nil {
-        doc["make"] = makeValue
-        doc["make_lowercase"] = strings.ToLower(makeValue)
-        log.Printf("FINAL CHECK: Добавлена марка '%s' в корень документа для объявления %d",
-            makeValue, listingID)
-    }
+	if makeValue != "" && doc["make"] == nil {
+		doc["make"] = makeValue
+		doc["make_lowercase"] = strings.ToLower(makeValue)
+		log.Printf("FINAL CHECK: Добавлена марка '%s' в корень документа для объявления %d",
+			makeValue, listingID)
+	}
 
-    if modelValue != "" && doc["model"] == nil {
-        doc["model"] = modelValue
-        doc["model_lowercase"] = strings.ToLower(modelValue)
-        log.Printf("FINAL CHECK: Добавлена модель '%s' в корень документа для объявления %d",
-            modelValue, listingID)
-    }
+	if modelValue != "" && doc["model"] == nil {
+		doc["model"] = modelValue
+		doc["model_lowercase"] = strings.ToLower(modelValue)
+		log.Printf("FINAL CHECK: Добавлена модель '%s' в корень документа для объявления %d",
+			modelValue, listingID)
+	}
 }
 
 func getUniqueValues(values []string) []string {
-    seen := make(map[string]bool)
-    unique := make([]string, 0, len(values))
+	seen := make(map[string]bool)
+	unique := make([]string, 0, len(values))
 
-    for _, val := range values {
-        if !seen[val] {
-            seen[val] = true
-            unique = append(unique, val)
-        }
-    }
+	for _, val := range values {
+		if !seen[val] {
+			seen[val] = true
+			unique = append(unique, val)
+		}
+	}
 
-    return unique
+	return unique
 }
 
 func flattenAttributeValues(attributeTextValues map[string][]string) []string {
-    var result []string
-    for _, values := range attributeTextValues {
-        result = append(result, values...)
-    }
-    return result
+	var result []string
+	for _, values := range attributeTextValues {
+		result = append(result, values...)
+	}
+	return result
 }
 
 func createRealEstateFieldsMap() map[string]bool {
-    return map[string]bool{
-        "rooms":         true,
-        "floor":         true,
-        "total_floors":  true,
-        "area":          true,
-        "land_area":     true,
-        "property_type": true,
-        "year_built":    true,
-        "bathrooms":     true,
-        "condition":     true,
-        "amenities":     true,
-        "heating_type":  true,
-        "parking":       true,
-        "balcony":       true,
-        "furnished":     true,
-        "air_conditioning": true,
-    }
+	return map[string]bool{
+		"rooms":            true,
+		"floor":            true,
+		"total_floors":     true,
+		"area":             true,
+		"land_area":        true,
+		"property_type":    true,
+		"year_built":       true,
+		"bathrooms":        true,
+		"condition":        true,
+		"amenities":        true,
+		"heating_type":     true,
+		"parking":          true,
+		"balcony":          true,
+		"furnished":        true,
+		"air_conditioning": true,
+	}
 }
 
 func createCarFieldsMap() map[string]bool {
-    return map[string]bool{
-        "make":           true,
-        "model":          true,
-        "year":           true,
-        "mileage":        true,
-        "engine_capacity": true,
-        "fuel_type":      true,
-        "transmission":   true,
-        "body_type":      true,
-    }
+	return map[string]bool{
+		"make":            true,
+		"model":           true,
+		"year":            true,
+		"mileage":         true,
+		"engine_capacity": true,
+		"fuel_type":       true,
+		"transmission":    true,
+		"body_type":       true,
+	}
 }
 
 func createImportantAttributesMap() map[string]bool {
-    return map[string]bool{
-        "make":            true,
-        "model":           true,
-        "brand":           true,
-        "year":            true,
-        "color":           true,
-        "rooms":           true,
-        "property_type":   true,
-        "body_type":       true,
-        "engine_capacity": true,
-        "fuel_type":       true,
-        "transmission":    true,
-        "cpu":             true,
-        "gpu":             true,
-        "memory":          true,
-        "ram":             true,
-        "storage_type":    true,
-        "screen_size":     true,
-    }
+	return map[string]bool{
+		"make":            true,
+		"model":           true,
+		"brand":           true,
+		"year":            true,
+		"color":           true,
+		"rooms":           true,
+		"property_type":   true,
+		"body_type":       true,
+		"engine_capacity": true,
+		"fuel_type":       true,
+		"transmission":    true,
+		"cpu":             true,
+		"gpu":             true,
+		"memory":          true,
+		"ram":             true,
+		"storage_type":    true,
+		"screen_size":     true,
+	}
 }
 
 func processDiscountData(doc map[string]interface{}, listing *models.MarketplaceListing) {
-    doc["has_discount"] = listing.HasDiscount
-    if listing.OldPrice > 0 {
-        doc["old_price"] = listing.OldPrice
-    }
+	doc["has_discount"] = listing.HasDiscount
+	if listing.OldPrice > 0 {
+		doc["old_price"] = listing.OldPrice
+	}
 
-    if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
-        discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
-        matches := discountRegex.FindStringSubmatch(listing.Description)
-        priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
-        priceMatches := priceRegex.FindStringSubmatch(listing.Description)
+	if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
+		discountRegex := regexp.MustCompile(`(\d+)%\s*СКИДКА`)
+		matches := discountRegex.FindStringSubmatch(listing.Description)
+		priceRegex := regexp.MustCompile(`Старая цена:\s*(\d+[\.,]?\d*)\s*RSD`)
+		priceMatches := priceRegex.FindStringSubmatch(listing.Description)
 
-        if len(matches) > 1 && len(priceMatches) > 1 {
-            discountPercent, _ := strconv.Atoi(matches[1])
-            oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
-            oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
+		if len(matches) > 1 && len(priceMatches) > 1 {
+			discountPercent, _ := strconv.Atoi(matches[1])
+			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
 
-            if listing.Metadata == nil {
-                listing.Metadata = make(map[string]interface{})
-            }
+			if listing.Metadata == nil {
+				listing.Metadata = make(map[string]interface{})
+			}
 
-            discount := map[string]interface{}{
-                "discount_percent":  discountPercent,
-                "previous_price":    oldPrice,
-                "effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339),
-                "has_price_history": true,
-            }
+			discount := map[string]interface{}{
+				"discount_percent":  discountPercent,
+				"previous_price":    oldPrice,
+				"effective_from":    time.Now().AddDate(0, 0, -10).Format(time.RFC3339),
+				"has_price_history": true,
+			}
 
-            listing.Metadata["discount"] = discount
-            doc["old_price"] = oldPrice
-            doc["has_discount"] = true
+			listing.Metadata["discount"] = discount
+			doc["old_price"] = oldPrice
+			doc["has_discount"] = true
 
-            log.Printf("Extracted discount from description for listing %d: %v", listing.ID, discount)
-        }
-    }
+			log.Printf("Extracted discount from description for listing %d: %v", listing.ID, discount)
+		}
+	}
 }
 
 func processMetadata(doc map[string]interface{}, listing *models.MarketplaceListing) {
-    if listing.Metadata != nil {
-        doc["metadata"] = listing.Metadata
-        if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
-            if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
-                discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
-                discount["discount_percent"] = discountPercent
-                listing.Metadata["discount"] = discount
-                doc["metadata"] = listing.Metadata
-                doc["has_discount"] = true
-                doc["old_price"] = prevPrice
+	if listing.Metadata != nil {
+		doc["metadata"] = listing.Metadata
+		if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
+			if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+				discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
+				discount["discount_percent"] = discountPercent
+				listing.Metadata["discount"] = discount
+				doc["metadata"] = listing.Metadata
+				doc["has_discount"] = true
+				doc["old_price"] = prevPrice
 
-                log.Printf("Recalculated discount percent for OpenSearch: %d%% (listing %d)",
-                    discountPercent, listing.ID)
-            }
-        }
-    }
+				log.Printf("Recalculated discount percent for OpenSearch: %d%% (listing %d)",
+					discountPercent, listing.ID)
+			}
+		}
+	}
 }
 
 func processStorefrontData(doc map[string]interface{}, listing *models.MarketplaceListing, storage storage.Storage) {
-    if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-        needStorefrontInfo := listing.City == "" || listing.Country == "" || listing.Location == "" ||
-            listing.Latitude == nil || listing.Longitude == nil
+	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+		needStorefrontInfo := listing.City == "" || listing.Country == "" || listing.Location == "" ||
+			listing.Latitude == nil || listing.Longitude == nil
 
-        if needStorefrontInfo {
-            log.Printf("Fetching storefront %d data for listing %d address info", *listing.StorefrontID, listing.ID)
-            var storefront models.Storefront
-            err := storage.QueryRow(context.Background(), `
+		if needStorefrontInfo {
+			log.Printf("Fetching storefront %d data for listing %d address info", *listing.StorefrontID, listing.ID)
+			var storefront models.Storefront
+			err := storage.QueryRow(context.Background(), `
                 SELECT name, city, address, country, latitude, longitude
                 FROM user_storefronts 
                 WHERE id = $1
             `, *listing.StorefrontID).Scan(
-                &storefront.Name,
-                &storefront.City,
-                &storefront.Address,
-                &storefront.Country,
-                &storefront.Latitude,
-                &storefront.Longitude,
-            )
+				&storefront.Name,
+				&storefront.City,
+				&storefront.Address,
+				&storefront.Country,
+				&storefront.Latitude,
+				&storefront.Longitude,
+			)
 
-            if err == nil {
-                if listing.City == "" && storefront.City != "" {
-                    doc["city"] = storefront.City
-                }
-                if listing.Country == "" && storefront.Country != "" {
-                    doc["country"] = storefront.Country
-                }
-                if listing.Location == "" && storefront.Address != "" {
-                    doc["location"] = storefront.Address
-                }
-                if (listing.Latitude == nil || listing.Longitude == nil ||
-                    *listing.Latitude == 0 || *listing.Longitude == 0) &&
-                    storefront.Latitude != nil && storefront.Longitude != nil &&
-                    *storefront.Latitude != 0 && *storefront.Longitude != 0 {
-                    doc["coordinates"] = map[string]interface{}{
-                        "lat": *storefront.Latitude,
-                        "lon": *storefront.Longitude,
-                    }
-                    doc["show_on_map"] = true
-                }
-            }
-        }
-        doc["storefront_id"] = *listing.StorefrontID
-    }
+			if err == nil {
+				if listing.City == "" && storefront.City != "" {
+					doc["city"] = storefront.City
+				}
+				if listing.Country == "" && storefront.Country != "" {
+					doc["country"] = storefront.Country
+				}
+				if listing.Location == "" && storefront.Address != "" {
+					doc["location"] = storefront.Address
+				}
+				if (listing.Latitude == nil || listing.Longitude == nil ||
+					*listing.Latitude == 0 || *listing.Longitude == 0) &&
+					storefront.Latitude != nil && storefront.Longitude != nil &&
+					*storefront.Latitude != 0 && *storefront.Longitude != 0 {
+					doc["coordinates"] = map[string]interface{}{
+						"lat": *storefront.Latitude,
+						"lon": *storefront.Longitude,
+					}
+					doc["show_on_map"] = true
+				}
+			}
+		}
+		doc["storefront_id"] = *listing.StorefrontID
+	}
 }
 
 func processCoordinates(doc map[string]interface{}, listing *models.MarketplaceListing, r *Repository) {
-    if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
-        doc["coordinates"] = map[string]interface{}{
-            "lat": *listing.Latitude,
-            "lon": *listing.Longitude,
-        }
-    } else if _, ok := doc["coordinates"]; !ok {
-        if cityVal, ok := doc["city"].(string); ok && cityVal != "" {
-            countryVal := ""
-            if c, ok := doc["country"].(string); ok {
-                countryVal = c
-            }
-            geocoded, err := r.geocodeCity(cityVal, countryVal)
-            if err == nil && geocoded != nil {
-                doc["coordinates"] = map[string]interface{}{
-                    "lat": geocoded.Lat,
-                    "lon": geocoded.Lon,
-                }
-                doc["show_on_map"] = true
-            }
-        }
-    }
+	if listing.Latitude != nil && listing.Longitude != nil && *listing.Latitude != 0 && *listing.Longitude != 0 {
+		doc["coordinates"] = map[string]interface{}{
+			"lat": *listing.Latitude,
+			"lon": *listing.Longitude,
+		}
+	} else if _, ok := doc["coordinates"]; !ok {
+		if cityVal, ok := doc["city"].(string); ok && cityVal != "" {
+			countryVal := ""
+			if c, ok := doc["country"].(string); ok {
+				countryVal = c
+			}
+			geocoded, err := r.geocodeCity(cityVal, countryVal)
+			if err == nil && geocoded != nil {
+				doc["coordinates"] = map[string]interface{}{
+					"lat": geocoded.Lat,
+					"lon": geocoded.Lon,
+				}
+				doc["show_on_map"] = true
+			}
+		}
+	}
 }
 
 func processCategoryPath(doc map[string]interface{}, listing *models.MarketplaceListing, storage storage.Storage) {
-    if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
-        doc["category_path_ids"] = listing.CategoryPathIds
-    } else {
-        parentID := listing.CategoryID
-        pathIDs := []int{parentID}
-        for parentID > 0 {
-            var cat models.MarketplaceCategory
-            err := storage.QueryRow(context.Background(),
-                "SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
-                Scan(&cat.ParentID)
-            if err != nil || cat.ParentID == nil {
-                break
-            }
-            parentID = *cat.ParentID
-            pathIDs = append([]int{parentID}, pathIDs...)
-        }
-        doc["category_path_ids"] = pathIDs
-    }
+	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
+		doc["category_path_ids"] = listing.CategoryPathIds
+	} else {
+		parentID := listing.CategoryID
+		pathIDs := []int{parentID}
+		for parentID > 0 {
+			var cat models.MarketplaceCategory
+			err := storage.QueryRow(context.Background(),
+				"SELECT parent_id FROM marketplace_categories WHERE id = $1", parentID).
+				Scan(&cat.ParentID)
+			if err != nil || cat.ParentID == nil {
+				break
+			}
+			parentID = *cat.ParentID
+			pathIDs = append([]int{parentID}, pathIDs...)
+		}
+		doc["category_path_ids"] = pathIDs
+	}
 }
 
 func processCategory(doc map[string]interface{}, listing *models.MarketplaceListing) {
-    if listing.Category != nil {
-        doc["category"] = map[string]interface{}{
-            "id":   listing.Category.ID,
-            "name": listing.Category.Name,
-            "slug": listing.Category.Slug,
-        }
-    }
+	if listing.Category != nil {
+		doc["category"] = map[string]interface{}{
+			"id":   listing.Category.ID,
+			"name": listing.Category.Name,
+			"slug": listing.Category.Slug,
+		}
+	}
 }
 
 func processUser(doc map[string]interface{}, listing *models.MarketplaceListing) {
-    if listing.User != nil {
-        doc["user"] = map[string]interface{}{
-            "id":    listing.User.ID,
-            "name":  listing.User.Name,
-            "email": listing.User.Email,
-        }
-    }
+	if listing.User != nil {
+		doc["user"] = map[string]interface{}{
+			"id":    listing.User.ID,
+			"name":  listing.User.Name,
+			"email": listing.User.Email,
+		}
+	}
 }
 
 func processImages(doc map[string]interface{}, listing *models.MarketplaceListing, storage storage.Storage) {
-    if listing.Images != nil && len(listing.Images) > 0 {
-        imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
-        for _, img := range listing.Images {
-            imagesDoc = append(imagesDoc, map[string]interface{}{
-                "id":        img.ID,
-                "file_path": img.FilePath,
-                "is_main":   img.IsMain,
-            })
-        }
-        doc["images"] = imagesDoc
-    } else {
-        images, err := storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
-        if err == nil && len(images) > 0 {
-            imagesDoc := make([]map[string]interface{}, 0, len(images))
-            for _, img := range images {
-                imagesDoc = append(imagesDoc, map[string]interface{}{
-                    "id":        img.ID,
-                    "file_path": img.FilePath,
-                    "is_main":   img.IsMain,
-                })
-            }
-            doc["images"] = imagesDoc
-        }
-    }
+	if listing.Images != nil && len(listing.Images) > 0 {
+		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
+		for _, img := range listing.Images {
+			imagesDoc = append(imagesDoc, map[string]interface{}{
+				"id":        img.ID,
+				"file_path": img.FilePath,
+				"is_main":   img.IsMain,
+			})
+		}
+		doc["images"] = imagesDoc
+	} else {
+		images, err := storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
+		if err == nil && len(images) > 0 {
+			imagesDoc := make([]map[string]interface{}, 0, len(images))
+			for _, img := range images {
+				imagesDoc = append(imagesDoc, map[string]interface{}{
+					"id":        img.ID,
+					"file_path": img.FilePath,
+					"is_main":   img.IsMain,
+				})
+			}
+			doc["images"] = imagesDoc
+		}
+	}
 }
 
 func getLocalizedRoomText(rooms float64) string {
