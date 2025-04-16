@@ -52,52 +52,52 @@ INSERT INTO category_attributes (name, display_name, attribute_type, options, is
 ('year', 'Year', 'number', '{"min": 1990, "max": 2025}', true, true, true),
 ('mileage', 'Mileage', 'number', '{"min": 0}', true, true, false),
 ('engine_capacity', 'Engine capacity', 'number', '{"min": 0.1, "max": 10, "step": 0.1}', true, true, false),
-('fuel_type', 'Fuel type', 'select', '{"values": ["Бензин", "Дизель", "Гибрид", "Электро", "Газ"]}', true, true, false),
-('transmission', 'Transmission', 'select', '{"values": ["Механика", "Автомат", "Робот", "Вариатор"]}', true, true, false),
-('body_type', 'Body type', 'select', '{"values": ["Седан", "Хэтчбек", "Универсал", "Внедорожник", "Купе", "Кабриолет", "Минивэн", "Пикап"]}', true, true, false),
-('color', 'Color', 'select', '{"values": ["Белый", "Черный", "Серый", "Серебристый", "Красный", "Синий", "Зеленый", "Желтый", "Коричневый", "Другой"]}', true, true, false),
+('fuel_type', 'Fuel type', 'select', '{"values": ["Petrol", "Diesel", "Hybrid", "Electric", "Gas"]}', true, true, false),
+('transmission', 'Transmission', 'select', '{"values": ["Manual", "Automatic", "Automated Manual", "CVT"]}', true, true, false),
+('body_type', 'Body type', 'select', '{"values": ["Sedan", "Hatchback", "Station Wagon", "SUV", "Coupe", "Convertible", "Minivan", "Pickup"]}', true, true, false),
+('color', 'Color', 'select', '{"values": ["White", "Black", "Gray", "Silver", "Red", "Blue", "Green", "Yellow", "Brown", "Other"]}', true, true, false),
 ('power', 'Power', 'number', '{"min": 1, "max": 2000}', true, true, false),
-('drive_type', 'Drive type', 'select', '{"values": ["Передний", "Задний", "Полный", "Другой"]}', true, true, false),
+('drive_type', 'Drive type', 'select', '{"values": ["Front-wheel drive", "Rear-wheel drive", "All-wheel drive", "Other"]}', true, true, false),
 ('number_of_doors', 'Number of doors', 'select', '{"values": ["2", "3", "4", "5", "6+"]}', true, true, false),
 ('number_of_seats', 'Number of seats', 'select', '{"values": ["1", "2", "3", "4", "5", "6", "7", "8+"]}', true, true, false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Недвижимость
 INSERT INTO category_attributes (name, display_name, attribute_type, options, is_searchable, is_filterable, is_required) VALUES
-('property_type', 'Тип недвижимости', 'select', '{"values": ["Квартира", "Дом", "Комната", "Земельный участок", "Коммерческая недвижимость", "Гараж"]}', true, true, true),
-('rooms', 'Количество комнат', 'select', '{"values": ["Студия", "1", "2", "3", "4", "5+"]}', true, true, false),
-('floor', 'Этаж', 'number', '{"min": 0, "max": 100}', true, true, false),
-('total_floors', 'Этажей в доме', 'number', '{"min": 1, "max": 100}', true, true, false),
-('area', 'Площадь (м²)', 'number', '{"min": 1}', true, true, true),
-('land_area', 'Площадь участка (сот.)', 'number', '{"min": 0}', true, true, false),
-('building_type', 'Тип дома', 'select', '{"values": ["Панельный", "Кирпичный", "Монолитный", "Деревянный", "Блочный", "Другой"]}', true, true, false),
-('has_balcony', 'Балкон', 'boolean', NULL, true, true, false),
-('has_elevator', 'Лифт', 'boolean', NULL, true, true, false),
-('has_parking', 'Парковка', 'boolean', NULL, true, true, false)
+('property_type', 'Property type', 'select', '{"values": ["Apartment", "House", "Room", "Land", "Commercial property", "Garage"]}', true, true, true),
+('rooms', 'Rooms', 'select', '{"values": ["Studio", "1", "2", "3", "4", "5+"]}', true, true, false),
+('floor', 'Floor', 'number', '{"min": 0, "max": 100}', true, true, false),
+('total_floors', 'Total floors', 'number', '{"min": 1, "max": 100}', true, true, false),
+('area', 'Area (m²)', 'number', '{"min": 1}', true, true, true),
+('land_area', 'Land area', 'number', '{"min": 0}', true, true, false),
+('building_type', 'Building type', 'select', '{"values": ["Panel", "Brick", "Monolithic", "Wooden", "Block", "Other"]}', true, true, false),
+('has_balcony', 'Balcony', 'boolean', NULL, true, true, false),
+('has_elevator', 'Elevator', 'boolean', NULL, true, true, false),
+('has_parking', 'Parking', 'boolean', NULL, true, true, false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Электроника - Телефоны
 INSERT INTO category_attributes (name, display_name, attribute_type, options, is_searchable, is_filterable, is_required) VALUES
-('brand', 'Бренд', 'select', '{"values": ["Apple", "Samsung", "Xiaomi", "Huawei", "Google", "OnePlus", "Sony", "Nokia", "LG", "Other"]}', true, true, true),
-('model_phone', 'Модель', 'text', NULL, true, true, true),
-('memory', 'Память (ГБ)', 'select', '{"values": ["8", "16", "32", "64", "128", "256", "512", "1024"]}', true, true, false),
-('ram', 'ОЗУ (ГБ)', 'select', '{"values": ["1", "2", "3", "4", "6", "8", "12", "16"]}', true, true, false),
-('os', 'Операционная система', 'select', '{"values": ["iOS", "Android", "Windows", "Другая"]}', true, true, false),
-('screen_size', 'Размер экрана (дюймы)', 'number', '{"min": 1, "max": 15, "step": 0.1}', true, true, false),
-('camera', 'Камера (МП)', 'number', '{"min": 1}', true, true, false),
+('brand', 'Brand', 'select', '{"values": ["Apple", "Samsung", "Xiaomi", "Huawei", "Google", "OnePlus", "Sony", "Nokia", "LG", "Other"]}', true, true, true),
+('model_phone', 'Model', 'text', NULL, true, true, true),
+('memory', 'Memory (GB)', 'select', '{"values": ["8", "16", "32", "64", "128", "256", "512", "1024"]}', true, true, false),
+('ram', 'RAM (GB)', 'select', '{"values": ["1", "2", "3", "4", "6", "8", "12", "16"]}', true, true, false),
+('os', 'Operating system', 'select', '{"values": ["iOS", "Android", "Windows", "Other"]}', true, true, false),
+('screen_size', 'Screen size (inches)', 'number', '{"min": 1, "max": 15, "step": 0.1}', true, true, false),
+('camera', 'Camera (MP)', 'number', '{"min": 1}', true, true, false),
 ('has_5g', '5G', 'boolean', NULL, true, true, false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Компьютеры
 INSERT INTO category_attributes (name, display_name, attribute_type, options, is_searchable, is_filterable, is_required) VALUES
-('pc_brand', 'Бренд', 'select', '{"values": ["Apple", "Dell", "HP", "Lenovo", "Asus", "Acer", "MSI", "Gigabyte", "Сборка"]}', true, true, true),
-('pc_type', 'Тип', 'select', '{"values": ["Ноутбук", "Настольный ПК", "Моноблок", "Сервер", "Другое"]}', true, true, true),
-('cpu', 'Процессор', 'text', NULL, true, true, false),
-('gpu', 'Видеокарта', 'text', NULL, true, true, false),
-('ram_pc', 'ОЗУ (ГБ)', 'select', '{"values": ["2", "4", "8", "16", "32", "64", "128"]}', true, true, false),
-('storage_type', 'Тип накопителя', 'select', '{"values": ["HDD", "SSD", "HDD+SSD"]}', true, true, false),
-('storage_capacity', 'Объем накопителя (ГБ)', 'number', '{"min": 1}', true, true, false),
-('os_pc', 'Операционная система', 'select', '{"values": ["Windows", "macOS", "Linux", "Без ОС"]}', true, true, false)
+('pc_brand', 'Brand', 'select', '{"values": ["Apple", "Dell", "HP", "Lenovo", "Asus", "Acer", "MSI", "Gigabyte", "Custom build"]}', true, true, true),
+('pc_type', 'Type', 'select', '{"values": ["Laptop", "Desktop PC", "All-in-One", "Server", "Other"]}', true, true, true),
+('cpu', 'Processor', 'text', NULL, true, true, false),
+('gpu', 'Graphics card', 'text', NULL, true, true, false),
+('ram_pc', 'RAM (GB)', 'select', '{"values": ["2", "4", "8", "16", "32", "64", "128"]}', true, true, false),
+('storage_type', 'Storage type', 'select', '{"values": ["HDD", "SSD", "HDD+SSD"]}', true, true, false),
+('storage_capacity', 'Storage capacity (GB)', 'number', '{"min": 1}', true, true, false),
+('os_pc', 'Operating system', 'select', '{"values": ["Windows", "macOS", "Linux", "No OS"]}', true, true, false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Добавляем переводы для атрибутов на английский
@@ -200,6 +200,59 @@ SELECT 'attribute', id, 'sr', 'display_name',
         WHEN name = 'storage_type' THEN 'Tip skladišta'
         WHEN name = 'storage_capacity' THEN 'Kapacitet skladišta (GB)'
         WHEN name = 'os_pc' THEN 'Operativni sistem'
+        ELSE display_name
+    END, 
+    false, true, NOW(), NOW()
+FROM category_attributes
+ON CONFLICT DO NOTHING;
+
+-- Добавляем переводы для атрибутов на русский
+INSERT INTO translations (entity_type, entity_id, language, field_name, translated_text, is_machine_translated, is_verified, created_at, updated_at) 
+SELECT 'attribute', id, 'ru', 'display_name', 
+    CASE 
+        -- Автомобили
+        WHEN name = 'make' THEN 'Марка'
+        WHEN name = 'model' THEN 'Модель'
+        WHEN name = 'year' THEN 'Год выпуска'
+        WHEN name = 'mileage' THEN 'Пробег (км)'
+        WHEN name = 'engine_capacity' THEN 'Объем двигателя (л)'
+        WHEN name = 'fuel_type' THEN 'Тип топлива'
+        WHEN name = 'transmission' THEN 'Коробка передач'
+        WHEN name = 'body_type' THEN 'Тип кузова'
+        WHEN name = 'color' THEN 'Цвет'
+        WHEN name = 'power' THEN 'Мощность (л.с.)'
+        WHEN name = 'drive_type' THEN 'Привод'
+        WHEN name = 'number_of_doors' THEN 'Количество дверей'
+        WHEN name = 'number_of_seats' THEN 'Количество мест'
+        -- Недвижимость
+        WHEN name = 'property_type' THEN 'Тип недвижимости'
+        WHEN name = 'rooms' THEN 'Количество комнат'
+        WHEN name = 'floor' THEN 'Этаж'
+        WHEN name = 'total_floors' THEN 'Этажей в доме'
+        WHEN name = 'area' THEN 'Площадь (м²)'
+        WHEN name = 'land_area' THEN 'Площадь участка (сот.)'
+        WHEN name = 'building_type' THEN 'Тип дома'
+        WHEN name = 'has_balcony' THEN 'Балкон'
+        WHEN name = 'has_elevator' THEN 'Лифт'
+        WHEN name = 'has_parking' THEN 'Парковка'
+        -- Телефоны
+        WHEN name = 'brand' THEN 'Бренд'
+        WHEN name = 'model_phone' THEN 'Модель'
+        WHEN name = 'memory' THEN 'Память (ГБ)'
+        WHEN name = 'ram' THEN 'ОЗУ (ГБ)'
+        WHEN name = 'os' THEN 'Операционная система'
+        WHEN name = 'screen_size' THEN 'Размер экрана (дюймы)'
+        WHEN name = 'camera' THEN 'Камера (МП)'
+        WHEN name = 'has_5g' THEN '5G'
+        -- Компьютеры
+        WHEN name = 'pc_brand' THEN 'Бренд'
+        WHEN name = 'pc_type' THEN 'Тип'
+        WHEN name = 'cpu' THEN 'Процессор'
+        WHEN name = 'gpu' THEN 'Видеокарта'
+        WHEN name = 'ram_pc' THEN 'ОЗУ (ГБ)'
+        WHEN name = 'storage_type' THEN 'Тип накопителя'
+        WHEN name = 'storage_capacity' THEN 'Объем накопителя (ГБ)'
+        WHEN name = 'os_pc' THEN 'Операционная система'
         ELSE display_name
     END, 
     false, true, NOW(), NOW()

@@ -913,9 +913,6 @@ const translateKnownValue = (value, translations) => {
                         {/* Отображаем все атрибуты */}
                         {listing.attributes && listing.attributes.length > 0 && (
                             <Box sx={{ mt: 3, mb: 4 }}>
-                                <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-                                    {t('listings.details.attributes.title', { defaultValue: 'Характеристики' })}
-                                </Typography>
 
                                 {/* Специальное отображение для автомобилей */}
 

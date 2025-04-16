@@ -489,7 +489,15 @@ INSERT INTO translations (entity_type, entity_id, language, field_name, translat
     ('category', 9745, 'en', 'name', 'School Supplies', true, true, NOW(), NOW()),
     ('category', 9750, 'en', 'name', 'Childrens Clothing and Footwear, Accessories', true, true, NOW(), NOW()),
 
-('category', 9999, 'en', 'name', 'Other', true, true, NOW(), NOW());
+('category', 9999, 'en', 'name', 'Other', true, true, NOW(), NOW()),
+('category', 10000, 'en', 'name', 'Security', true, true, NOW(), NOW()),
+    -- Children's Goods and Toys subcategories (parent id=10000)
+    ('category', 10100, 'en', 'name', 'Video Surveillance', true, true, NOW(), NOW()),
+        -- Video Surveillance subcategories (parent id=10100)
+         ('category', 10410, 'en', 'name', 'Connectors and Video Baluns', true, true, NOW(), NOW());
+ 
+
+
 
 -- Update sequence for translations
 SELECT setval('translations_id_seq', (SELECT MAX(id) FROM translations), true);
