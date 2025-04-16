@@ -151,225 +151,312 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 }
 
 func (r *Repository) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-	if prefix == "" {
-		return []string{}, nil
-	}
+    if prefix == "" {
+        return []string{}, nil
+    }
 
-	log.Printf("Запрос автодополнения для: '%s', размер: %d", prefix, size)
+    log.Printf("Запрос автодополнения для: '%s', размер: %d", prefix, size)
 
-	query := map[string]interface{}{
-		"size":    size,
-		"_source": []string{"title"},
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"should": []map[string]interface{}{
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"title": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-								"slop":           2,
-							},
-						},
-					},
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"description": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-							},
-						},
-					},
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"title_variations": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-							},
-						},
-					},
-					{
-						"fuzzy": map[string]interface{}{
-							"title": map[string]interface{}{
-								"value":     prefix,
-								"fuzziness": "AUTO",
-							},
-						},
-					},
-					{
-						"nested": map[string]interface{}{
-							"path": "attributes",
-							"query": map[string]interface{}{
-								"bool": map[string]interface{}{
-									"should": []map[string]interface{}{
-										{
-											"match_phrase_prefix": map[string]interface{}{
-												"attributes.text_value": map[string]interface{}{
-													"query":          prefix,
-													"max_expansions": 10,
-												},
-											},
-										},
-										{
-											"match_phrase_prefix": map[string]interface{}{
-												"attributes.display_value": map[string]interface{}{
-													"query":          prefix,
-													"max_expansions": 10,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"make": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-							},
-						},
-					},
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"model": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-							},
-						},
-					},
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"brand": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-							},
-						},
-					},
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"color": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-							},
-						},
-					},
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"select_values": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-							},
-						},
-					},
-				},
-				"minimum_should_match": 1,
-			},
-		},
-	}
+    // Создаем комплексный запрос, который ищет как по обычным полям, так и по атрибутам
+    query := map[string]interface{}{
+        "size":    0, // Не нужны сами документы, только агрегации
+        "_source": false,
+        "query": map[string]interface{}{
+            "bool": map[string]interface{}{
+                "should": []map[string]interface{}{
+                    // Поиск по заголовку
+                    {
+                        "match_phrase_prefix": map[string]interface{}{
+                            "title": map[string]interface{}{
+                                "query":          prefix,
+                                "max_expansions": 10,
+                            },
+                        },
+                    },
+                    // Поиск по полю model_lowercase (для автомобилей)
+                    {
+                        "match_phrase_prefix": map[string]interface{}{
+                            "model_lowercase": map[string]interface{}{
+                                "query":          strings.ToLower(prefix),
+                                "max_expansions": 10,
+                            },
+                        },
+                    },
+                    // Поиск по полю make_lowercase (для автомобилей)
+                    {
+                        "match_phrase_prefix": map[string]interface{}{
+                            "make_lowercase": map[string]interface{}{
+                                "query":          strings.ToLower(prefix),
+                                "max_expansions": 10,
+                            },
+                        },
+                    },
+                    // Поиск по атрибутам (nested query)
+                    {
+                        "nested": map[string]interface{}{
+                            "path": "attributes",
+                            "query": map[string]interface{}{
+                                "bool": map[string]interface{}{
+                                    "should": []map[string]interface{}{
+                                        // Поиск по текстовым значениям атрибутов
+                                        {
+                                            "match_phrase_prefix": map[string]interface{}{
+                                                "attributes.text_value": map[string]interface{}{
+                                                    "query":          prefix,
+                                                    "max_expansions": 10,
+                                                },
+                                            },
+                                        },
+                                        // Поиск по отображаемым значениям атрибутов
+                                        {
+                                            "match_phrase_prefix": map[string]interface{}{
+                                                "attributes.display_value": map[string]interface{}{
+                                                    "query":          prefix,
+                                                    "max_expansions": 10,
+                                                },
+                                            },
+                                        },
+                                    },
+                                    // Приоритет для автомобильных атрибутов
+                                    "boost": 2.0,
+                                },
+                            },
+                        },
+                    },
+                },
+                "minimum_should_match": 1,
+            },
+        },
+        // Добавляем агрегации для извлечения уникальных значений
+        "aggs": map[string]interface{}{
+            "title_suggestions": map[string]interface{}{
+                "terms": map[string]interface{}{
+                    "field":             "title.keyword",
+                    "size":              size,
+                    "min_doc_count":     1,
+                    "include":           fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+                    "order":             map[string]string{"_count": "desc"},
+                },
+            },
+            "make_suggestions": map[string]interface{}{
+                "terms": map[string]interface{}{
+                    "field":             "make.keyword",
+                    "size":              size,
+                    "min_doc_count":     1,
+                    "include":           fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+                    "order":             map[string]string{"_count": "desc"},
+                },
+            },
+            "model_suggestions": map[string]interface{}{
+                "terms": map[string]interface{}{
+                    "field":             "model.keyword",
+                    "size":              size,
+                    "min_doc_count":     1,
+                    "include":           fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+                    "order":             map[string]string{"_count": "desc"},
+                },
+            },
+            "nested_attr_suggestions": map[string]interface{}{
+                "nested": map[string]interface{}{
+                    "path": "attributes",
+                },
+                "aggs": map[string]interface{}{
+                    "attribute_values": map[string]interface{}{
+                        "terms": map[string]interface{}{
+                            "field":             "attributes.text_value.keyword",
+                            "size":              size,
+                            "min_doc_count":     1,
+                            "include":           fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+                            "order":             map[string]string{"_count": "desc"},
+                        },
+                    },
+                    "display_values": map[string]interface{}{
+                        "terms": map[string]interface{}{
+                            "field":             "attributes.display_value.keyword",
+                            "size":              size,
+                            "min_doc_count":     1,
+                            "include":           fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+                            "order":             map[string]string{"_count": "desc"},
+                        },
+                    },
+                    // Специальные агрегации для моделей (авто)
+                    "model_values": map[string]interface{}{
+                        "filter": map[string]interface{}{
+                            "term": map[string]interface{}{
+                                "attributes.attribute_name": "model",
+                            },
+                        },
+                        "aggs": map[string]interface{}{
+                            "models": map[string]interface{}{
+                                "terms": map[string]interface{}{
+                                    "field":             "attributes.text_value.keyword",
+                                    "size":              size,
+                                    "min_doc_count":     1,
+                                    "include":           fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+                                    "order":             map[string]string{"_count": "desc"},
+                                },
+                            },
+                        },
+                    },
+                    // Специальные агрегации для марок (авто)
+                    "make_values": map[string]interface{}{
+                        "filter": map[string]interface{}{
+                            "term": map[string]interface{}{
+                                "attributes.attribute_name": "make",
+                            },
+                        },
+                        "aggs": map[string]interface{}{
+                            "makes": map[string]interface{}{
+                                "terms": map[string]interface{}{
+                                    "field":             "attributes.text_value.keyword",
+                                    "size":              size,
+                                    "min_doc_count":     1,
+                                    "include":           fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+                                    "order":             map[string]string{"_count": "desc"},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
 
-	query["suggest"] = map[string]interface{}{
-		"title_suggest": map[string]interface{}{
-			"prefix": prefix,
-			"completion": map[string]interface{}{
-				"field": "title_suggest",
-				"size":  size,
-			},
-		},
-	}
+    // Добавляем запрос на автопродление, который уже есть в оригинальной функции
+    query["suggest"] = map[string]interface{}{
+        "title_suggest": map[string]interface{}{
+            "prefix": prefix,
+            "completion": map[string]interface{}{
+                "field": "title_suggest",
+                "size":  size,
+            },
+        },
+    }
 
-	responseBytes, err := r.client.Search(r.indexName, query)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
-	}
+    responseBytes, err := r.client.Search(r.indexName, query)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка выполнения поиска для автопродления: %w", err)
+    }
 
-	var searchResponse map[string]interface{}
-	if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
-		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
-	}
+    var searchResponse map[string]interface{}
+    if err := json.Unmarshal(responseBytes, &searchResponse); err != nil {
+        return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
+    }
 
-	suggestions := make([]string, 0, size)
-	if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
-		if hitsArray, ok := hits["hits"].([]interface{}); ok {
-			for _, hit := range hitsArray {
-				if hitObj, ok := hit.(map[string]interface{}); ok {
-					if source, ok := hitObj["_source"].(map[string]interface{}); ok {
-						if title, ok := source["title"].(string); ok {
-							suggestions = append(suggestions, title)
-						}
-					}
-				}
-			}
-		}
-	}
+    // Создаем множество для хранения уникальных подсказок
+    suggestionSet := make(map[string]bool)
 
-	if suggest, ok := searchResponse["suggest"].(map[string]interface{}); ok {
-		if titleSuggest, ok := suggest["title_suggest"].([]interface{}); ok && len(titleSuggest) > 0 {
-			if suggItem, ok := titleSuggest[0].(map[string]interface{}); ok {
-				if options, ok := suggItem["options"].([]interface{}); ok {
-					for _, option := range options {
-						if optObj, ok := option.(map[string]interface{}); ok {
-							if text, ok := optObj["text"].(string); ok {
-								if !contains(suggestions, text) {
-									suggestions = append(suggestions, text)
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+    // Извлекаем подсказки из обычных результатов поиска
+    if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
+        if hitsArray, ok := hits["hits"].([]interface{}); ok {
+            for _, hit := range hitsArray {
+                if hitObj, ok := hit.(map[string]interface{}); ok {
+                    if source, ok := hitObj["_source"].(map[string]interface{}); ok {
+                        // Извлекаем заголовок
+                        if title, ok := source["title"].(string); ok && title != "" {
+                            suggestionSet[title] = true
+                        }
+                        
+                        // Извлекаем марку и модель
+                        if make, ok := source["make"].(string); ok && make != "" {
+                            suggestionSet[make] = true
+                        }
+                        if model, ok := source["model"].(string); ok && model != "" {
+                            suggestionSet[model] = true
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	if len(suggestions) < size {
-		attrValues := make(map[string]bool)
-		if hits, ok := searchResponse["hits"].(map[string]interface{}); ok {
-			if hitsArray, ok := hits["hits"].([]interface{}); ok {
-				for _, hit := range hitsArray {
-					if hitObj, ok := hit.(map[string]interface{}); ok {
-						if source, ok := hitObj["_source"].(map[string]interface{}); ok {
-							for _, field := range []string{"make", "model", "brand", "color"} {
-								if value, ok := source[field].(string); ok && value != "" {
-									attrValues[value] = true
-								}
-							}
+    // Извлекаем подсказки из агрегаций
+    if aggs, ok := searchResponse["aggregations"].(map[string]interface{}); ok {
+        // Извлекаем подсказки из title_suggestions
+        extractSuggestionsFromAgg(aggs, "title_suggestions", suggestionSet)
+        
+        // Извлекаем подсказки из make_suggestions
+        extractSuggestionsFromAgg(aggs, "make_suggestions", suggestionSet)
+        
+        // Извлекаем подсказки из model_suggestions
+        extractSuggestionsFromAgg(aggs, "model_suggestions", suggestionSet)
+        
+        // Извлекаем подсказки из nested_attr_suggestions
+        if nestedAgg, ok := aggs["nested_attr_suggestions"].(map[string]interface{}); ok {
+            // Извлекаем обычные значения атрибутов
+            extractSuggestionsFromAgg(nestedAgg, "attribute_values", suggestionSet)
+            extractSuggestionsFromAgg(nestedAgg, "display_values", suggestionSet)
+            
+            // Извлекаем значения моделей
+            if modelValuesAgg, ok := nestedAgg["model_values"].(map[string]interface{}); ok {
+                if modelsAgg, ok := modelValuesAgg["models"].(map[string]interface{}); ok {
+                    extractBucketsFromAgg(modelsAgg, suggestionSet)
+                }
+            }
+            
+            // Извлекаем значения марок
+            if makeValuesAgg, ok := nestedAgg["make_values"].(map[string]interface{}); ok {
+                if makesAgg, ok := makeValuesAgg["makes"].(map[string]interface{}); ok {
+                    extractBucketsFromAgg(makesAgg, suggestionSet)
+                }
+            }
+        }
+    }
 
-							if attributes, ok := source["attributes"].([]interface{}); ok {
-								for _, attrI := range attributes {
-									if attr, ok := attrI.(map[string]interface{}); ok {
-										if textValue, ok := attr["text_value"].(string); ok && textValue != "" {
-											if strings.HasPrefix(strings.ToLower(textValue), strings.ToLower(prefix)) {
-												attrValues[textValue] = true
-											}
-										}
-										if displayValue, ok := attr["display_value"].(string); ok && displayValue != "" {
-											if strings.HasPrefix(strings.ToLower(displayValue), strings.ToLower(prefix)) {
-												attrValues[displayValue] = true
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
+    // Извлекаем подсказки из suggest
+    if suggest, ok := searchResponse["suggest"].(map[string]interface{}); ok {
+        if titleSuggest, ok := suggest["title_suggest"].([]interface{}); ok && len(titleSuggest) > 0 {
+            if suggItem, ok := titleSuggest[0].(map[string]interface{}); ok {
+                if options, ok := suggItem["options"].([]interface{}); ok {
+                    for _, option := range options {
+                        if optObj, ok := option.(map[string]interface{}); ok {
+                            if text, ok := optObj["text"].(string); ok && text != "" {
+                                suggestionSet[text] = true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-		for value := range attrValues {
-			if !contains(suggestions, value) {
-				suggestions = append(suggestions, value)
-				if len(suggestions) >= size {
-					break
-				}
-			}
-		}
-	}
+    // Конвертируем множество в срез
+    suggestions := make([]string, 0, len(suggestionSet))
+    for sugg := range suggestionSet {
+        if strings.Contains(strings.ToLower(sugg), strings.ToLower(prefix)) {
+            suggestions = append(suggestions, sugg)
+        }
+    }
 
-	log.Printf("Найдено %d подсказок для '%s': %v", len(suggestions), prefix, suggestions)
-	return suggestions, nil
+    // Ограничиваем количество результатов
+    if len(suggestions) > size {
+        suggestions = suggestions[:size]
+    }
+
+    log.Printf("Найдено %d подсказок для '%s': %v", len(suggestions), prefix, suggestions)
+    return suggestions, nil
 }
+
+// Вспомогательная функция для извлечения подсказок из агрегации
+func extractSuggestionsFromAgg(aggs map[string]interface{}, aggName string, suggestions map[string]bool) {
+    if agg, ok := aggs[aggName].(map[string]interface{}); ok {
+        extractBucketsFromAgg(agg, suggestions)
+    }
+}
+
+// Вспомогательная функция для извлечения бакетов из агрегации
+func extractBucketsFromAgg(agg map[string]interface{}, suggestions map[string]bool) {
+    if buckets, ok := agg["buckets"].([]interface{}); ok {
+        for _, bucket := range buckets {
+            if bucketObj, ok := bucket.(map[string]interface{}); ok {
+                if key, ok := bucketObj["key"].(string); ok && key != "" {
+                    suggestions[key] = true
+                }
+            }
+        }
+    }
+}
+
 
 func contains(arr []string, str string) bool {
 	for _, a := range arr {
@@ -533,6 +620,7 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
     selectValues := []string{}
     seen := make(map[int]bool)
     attributesArray := make([]map[string]interface{}, 0, len(attributes))
+    carKeywords := []string{} // Новый массив для ключевых слов автомобиля
 
     for _, attr := range attributes {
         if seen[attr.AttributeID] {
@@ -555,11 +643,13 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
                 makeValue = textValue
                 doc["make"] = makeValue
                 doc["make_lowercase"] = strings.ToLower(makeValue)
+                carKeywords = append(carKeywords, textValue, strings.ToLower(textValue)) // Добавляем к ключевым словам
                 log.Printf("FIRST PASS: Добавлена марка '%s' в корень документа для объявления %d", makeValue, listingID)
             case "model":
                 modelValue = textValue
                 doc["model"] = modelValue
                 doc["model_lowercase"] = strings.ToLower(modelValue)
+                carKeywords = append(carKeywords, textValue, strings.ToLower(textValue)) // Добавляем к ключевым словам
                 log.Printf("FIRST PASS: Добавлена модель '%s' в корень документа для объявления %d", modelValue, listingID)
             default:
                 if isImportantTextAttribute(attr.AttributeName) {
@@ -660,6 +750,11 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
         doc["select_values"] = getUniqueValues(selectValues)
     }
 
+    // Добавляем собранные ключевые слова по автомобилю для улучшения поиска
+    if len(carKeywords) > 0 {
+        doc["car_keywords"] = getUniqueValues(carKeywords)
+    }
+
     doc["attributes"] = attributesArray
     doc["all_attributes_text"] = getUniqueValues(flattenAttributeValues(attributeTextValues))
 
@@ -668,6 +763,7 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
         doc["real_estate_attributes_combined"] = strings.Join(realEstateText, " ")
     }
 }
+
 
 func hasAttributeValue(attr models.ListingAttributeValue) bool {
     return (attr.TextValue != nil && *attr.TextValue != "") ||
@@ -1284,6 +1380,14 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"heating_type_text^3",
 			"parking_text^3",
 			"furnished_text^3",
+            "car_keywords^5",
+            "attributes.text_value^4",
+            "attributes.display_value^4",
+            "attributes.text_value.keyword^5",
+            "make^6",
+            "model^6", 
+            "make_lowercase^6",
+            "model_lowercase^6",
 		}
 
 		languagePriority := "sr"
@@ -1364,6 +1468,111 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				},
 			},
 		})
+
+		// Добавляем специальную обработку для атрибутов в nested формате
+		attrQuery := map[string]interface{}{
+			"nested": map[string]interface{}{
+				"path": "attributes",
+				"query": map[string]interface{}{
+					"bool": map[string]interface{}{
+						"should": []map[string]interface{}{
+							{
+								"match": map[string]interface{}{
+									"attributes.text_value": map[string]interface{}{
+										"query":     params.Query,
+										"boost":     4.0,
+										"fuzziness": "AUTO",
+									},
+								},
+							},
+							{
+								"match": map[string]interface{}{
+									"attributes.display_value": map[string]interface{}{
+										"query":     params.Query,
+										"boost":     4.0,
+										"fuzziness": "AUTO",
+									},
+								},
+							},
+							{
+								"term": map[string]interface{}{
+									"attributes.text_value.keyword": map[string]interface{}{
+										"value": params.Query,
+										"boost": 5.0,
+									},
+								},
+							},
+						},
+					},
+				},
+				"score_mode": "max",
+				"boost": 3.0,
+			},
+		}
+		
+		should = append(should, attrQuery)
+		
+		// Специальный запрос для модели автомобиля
+		modelQuery := map[string]interface{}{
+			"nested": map[string]interface{}{
+				"path": "attributes",
+				"query": map[string]interface{}{
+					"bool": map[string]interface{}{
+						"must": []map[string]interface{}{
+							{
+								"term": map[string]interface{}{
+									"attributes.attribute_name": "model",
+								},
+							},
+							{
+								"match": map[string]interface{}{
+									"attributes.text_value": map[string]interface{}{
+										"query":     params.Query,
+										"boost":     6.0,
+										"fuzziness": "AUTO",
+									},
+								},
+							},
+						},
+					},
+				},
+				"score_mode": "max",
+				"boost": 6.0,
+			},
+		}
+		
+		should = append(should, modelQuery)
+		
+		// Аналогичный запрос для марки автомобиля
+		makeQuery := map[string]interface{}{
+			"nested": map[string]interface{}{
+				"path": "attributes",
+				"query": map[string]interface{}{
+					"bool": map[string]interface{}{
+						"must": []map[string]interface{}{
+							{
+								"term": map[string]interface{}{
+									"attributes.attribute_name": "make",
+								},
+							},
+							{
+								"match": map[string]interface{}{
+									"attributes.text_value": map[string]interface{}{
+										"query":     params.Query,
+										"boost":     6.0,
+										"fuzziness": "AUTO",
+									},
+								},
+							},
+						},
+					},
+				},
+				"score_mode": "max",
+				"boost": 6.0,
+			},
+		}
+		
+		should = append(should, makeQuery)
 
 		realEstateKeywords := []string{
 			"квартира", "комната", "комнат", "дом", "этаж",
@@ -1544,6 +1753,15 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					"select_values": map[string]interface{}{
 						"query":     params.Query,
 						"boost":     3.0,
+						"fuzziness": "AUTO",
+					},
+				},
+			},
+			{
+				"match": map[string]interface{}{
+					"car_keywords": map[string]interface{}{
+						"query":     params.Query,
+						"boost":     5.0,
 						"fuzziness": "AUTO",
 					},
 				},

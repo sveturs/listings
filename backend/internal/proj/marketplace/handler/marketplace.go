@@ -13,8 +13,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"math"
-		"regexp"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -274,7 +274,7 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 		}
 	}
 
-	// После выполнения всех переводов делаем небольшую задержку 
+	// После выполнения всех переводов делаем небольшую задержку
 	// чтобы гарантировать, что все транзакции с переводами завершились
 	time.Sleep(500 * time.Millisecond)
 
@@ -286,7 +286,7 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 		// Дополнительная проверка наличия переводов перед индексацией
 		if updatedListing.Translations == nil || len(updatedListing.Translations) == 0 {
 			log.Printf("Warning: Listing %d has no translations before reindexing, will try to load them explicitly", listingID)
-			
+
 			// Пытаемся явно загрузить переводы
 			translations, err := h.marketplaceService.Storage().GetTranslationsForEntity(c.Context(), "listing", listingID)
 			if err != nil {
@@ -304,7 +304,7 @@ func (h *MarketplaceHandler) CreateListing(c *fiber.Ctx) error {
 				log.Printf("Explicitly loaded %d translations for listing %d", len(translations), listingID)
 			}
 		}
-		
+
 		// Переиндексируем объявление в OpenSearch, чтобы поиск работал по всем языкам
 		if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
 			log.Printf("Warning: Failed to reindex listing %d after translations: %v", listingID, err)
@@ -555,164 +555,164 @@ func isSignificantAttribute(attrName string) bool {
 
 // Обновим функцию processAttributesFromRequest для лучшей обработки атрибутов недвижимости
 func processAttributesFromRequest(requestBody map[string]interface{}, listing *models.MarketplaceListing) {
-    if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
-        log.Printf("DEBUG: Found %d attributes in request", len(attributesRaw))
+	if attributesRaw, ok := requestBody["attributes"].([]interface{}); ok {
+		log.Printf("DEBUG: Found %d attributes in request", len(attributesRaw))
 
-        for _, attrRaw := range attributesRaw {
-            if attrMap, ok := attrRaw.(map[string]interface{}); ok {
-                var attr models.ListingAttributeValue
+		for _, attrRaw := range attributesRaw {
+			if attrMap, ok := attrRaw.(map[string]interface{}); ok {
+				var attr models.ListingAttributeValue
 
-                // ID атрибута
-                if attrID, ok := attrMap["attribute_id"].(float64); ok {
-                    attr.AttributeID = int(attrID)
-                }
+				// ID атрибута
+				if attrID, ok := attrMap["attribute_id"].(float64); ok {
+					attr.AttributeID = int(attrID)
+				}
 
-                // Имя атрибута для отладки
-                if attrName, ok := attrMap["attribute_name"].(string); ok {
-                    attr.AttributeName = attrName
-                }
+				// Имя атрибута для отладки
+				if attrName, ok := attrMap["attribute_name"].(string); ok {
+					attr.AttributeName = attrName
+				}
 
-                // Имя для отображения
-                if displayName, ok := attrMap["display_name"].(string); ok {
-                    attr.DisplayName = displayName
-                }
+				// Имя для отображения
+				if displayName, ok := attrMap["display_name"].(string); ok {
+					attr.DisplayName = displayName
+				}
 
-                // Тип атрибута
-                if attrType, ok := attrMap["attribute_type"].(string); ok {
-                    attr.AttributeType = attrType
+				// Тип атрибута
+				if attrType, ok := attrMap["attribute_type"].(string); ok {
+					attr.AttributeType = attrType
 
-                    // Список числовых атрибутов
-                    isNumericAttr := attr.AttributeName == "rooms" || 
-                                 attr.AttributeName == "floor" || 
-                                 attr.AttributeName == "total_floors" || 
-                                 attr.AttributeName == "area" || 
-                                 attr.AttributeName == "land_area" ||
-                                 attr.AttributeName == "mileage" ||
-                                 attr.AttributeName == "year" ||
-                                 attr.AttributeName == "engine_capacity" ||
-                                 attr.AttributeName == "power" ||
-                                 attr.AttributeName == "screen_size"
+					// Список числовых атрибутов
+					isNumericAttr := attr.AttributeName == "rooms" ||
+						attr.AttributeName == "floor" ||
+						attr.AttributeName == "total_floors" ||
+						attr.AttributeName == "area" ||
+						attr.AttributeName == "land_area" ||
+						attr.AttributeName == "mileage" ||
+						attr.AttributeName == "year" ||
+						attr.AttributeName == "engine_capacity" ||
+						attr.AttributeName == "power" ||
+						attr.AttributeName == "screen_size"
 
-                    if isNumericAttr {
-                        // Обрабатываем как числовой атрибут, независимо от указанного типа
-                        var numValue float64
-                        var isSet bool
+					if isNumericAttr {
+						// Обрабатываем как числовой атрибут, независимо от указанного типа
+						var numValue float64
+						var isSet bool
 
-                        if value, ok := attrMap["value"].(float64); ok {
-                            numValue = value
-                            isSet = true
-                        } else if value, ok := attrMap["numeric_value"].(float64); ok {
-                            numValue = value
-                            isSet = true
-                        } else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
-                            // Удаляем все, кроме цифр, точки и минуса
-                            clean := regexp.MustCompile(`[^\d\.-]`).ReplaceAllString(strValue, "")
-                            if parsedValue, parseErr := strconv.ParseFloat(clean, 64); parseErr == nil {
-                                numValue = parsedValue
-                                isSet = true
-                            }
-                        }
+						if value, ok := attrMap["value"].(float64); ok {
+							numValue = value
+							isSet = true
+						} else if value, ok := attrMap["numeric_value"].(float64); ok {
+							numValue = value
+							isSet = true
+						} else if strValue, ok := attrMap["value"].(string); ok && strValue != "" {
+							// Удаляем все, кроме цифр, точки и минуса
+							clean := regexp.MustCompile(`[^\d\.-]`).ReplaceAllString(strValue, "")
+							if parsedValue, parseErr := strconv.ParseFloat(clean, 64); parseErr == nil {
+								numValue = parsedValue
+								isSet = true
+							}
+						}
 
-                        if isSet {
-                            attr.NumericValue = &numValue
-                            attr.AttributeType = "number" // Принудительно устанавливаем тип как числовой
-                            
-                            // Устанавливаем единицу измерения
-                            switch attr.AttributeName {
-                            case "area":
-                                attr.Unit = "m²"
-                                attr.DisplayValue = fmt.Sprintf("%g м²", numValue)
-                            case "land_area":
-                                attr.Unit = "ar"
-                                attr.DisplayValue = fmt.Sprintf("%g сот", numValue)
-                            case "mileage":
-                                attr.Unit = "km"
-                                attr.DisplayValue = fmt.Sprintf("%g км", numValue)
-                            case "engine_capacity":
-                                attr.Unit = "l"
-                                attr.DisplayValue = fmt.Sprintf("%g л", numValue)
-                            case "power":
-                                attr.Unit = "ks"
-                                attr.DisplayValue = fmt.Sprintf("%g л.с.", numValue)
-                            case "screen_size":
-                                attr.Unit = "inč"
-                                attr.DisplayValue = fmt.Sprintf("%g\"", numValue)
-                            case "rooms":
-                                attr.Unit = "soba"
-                                attr.DisplayValue = fmt.Sprintf("%g", numValue)
-                            case "floor", "total_floors":
-                                attr.Unit = "sprat"
-                                attr.DisplayValue = fmt.Sprintf("%g", numValue)
-                            case "year":
-                                attr.DisplayValue = fmt.Sprintf("%d", int(numValue))
-                            default:
-                                attr.DisplayValue = fmt.Sprintf("%g", numValue)
-                            }
-                        }
-                    } else {
-                        // Обычная обработка для других атрибутов
-                        if attr.AttributeType == "text" || attr.AttributeType == "select" {
-                            if value, ok := attrMap["value"].(string); ok && value != "" {
-                                strValue := value
-                                attr.TextValue = &strValue
-                                attr.DisplayValue = strValue
-                            } else if value, ok := attrMap["text_value"].(string); ok && value != "" {
-                                strValue := value
-                                attr.TextValue = &strValue
-                                attr.DisplayValue = strValue
-                            }
-                        } else if attr.AttributeType == "boolean" {
-                            if value, ok := attrMap["value"].(bool); ok {
-                                boolValue := value
-                                attr.BooleanValue = &boolValue
-                                
-                                if boolValue {
-                                    attr.DisplayValue = "Да"
-                                } else {
-                                    attr.DisplayValue = "Нет"
-                                }
-                            } else if strValue, ok := attrMap["value"].(string); ok {
-                                boolValue := strValue == "true" || strValue == "да" || strValue == "1"
-                                attr.BooleanValue = &boolValue
-                                
-                                if boolValue {
-                                    attr.DisplayValue = "Да"
-                                } else {
-                                    attr.DisplayValue = "Нет"
-                                }
-                            }
-                        }
-                    }
-                }
+						if isSet {
+							attr.NumericValue = &numValue
+							attr.AttributeType = "number" // Принудительно устанавливаем тип как числовой
 
-                // Проверка есть ли единица измерения в запросе
-                if unit, ok := attrMap["unit"].(string); ok && unit != "" {
-                    attr.Unit = unit
-                }
+							// Устанавливаем единицу измерения
+							switch attr.AttributeName {
+							case "area":
+								attr.Unit = "m²"
+								attr.DisplayValue = fmt.Sprintf("%g м²", numValue)
+							case "land_area":
+								attr.Unit = "ar"
+								attr.DisplayValue = fmt.Sprintf("%g сот", numValue)
+							case "mileage":
+								attr.Unit = "km"
+								attr.DisplayValue = fmt.Sprintf("%g км", numValue)
+							case "engine_capacity":
+								attr.Unit = "l"
+								attr.DisplayValue = fmt.Sprintf("%g л", numValue)
+							case "power":
+								attr.Unit = "ks"
+								attr.DisplayValue = fmt.Sprintf("%g л.с.", numValue)
+							case "screen_size":
+								attr.Unit = "inč"
+								attr.DisplayValue = fmt.Sprintf("%g\"", numValue)
+							case "rooms":
+								attr.Unit = "soba"
+								attr.DisplayValue = fmt.Sprintf("%g", numValue)
+							case "floor", "total_floors":
+								attr.Unit = "sprat"
+								attr.DisplayValue = fmt.Sprintf("%g", numValue)
+							case "year":
+								attr.DisplayValue = fmt.Sprintf("%d", int(numValue))
+							default:
+								attr.DisplayValue = fmt.Sprintf("%g", numValue)
+							}
+						}
+					} else {
+						// Обычная обработка для других атрибутов
+						if attr.AttributeType == "text" || attr.AttributeType == "select" {
+							if value, ok := attrMap["value"].(string); ok && value != "" {
+								strValue := value
+								attr.TextValue = &strValue
+								attr.DisplayValue = strValue
+							} else if value, ok := attrMap["text_value"].(string); ok && value != "" {
+								strValue := value
+								attr.TextValue = &strValue
+								attr.DisplayValue = strValue
+							}
+						} else if attr.AttributeType == "boolean" {
+							if value, ok := attrMap["value"].(bool); ok {
+								boolValue := value
+								attr.BooleanValue = &boolValue
 
-                // Добавляем атрибут только если есть какое-то значение
-                if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
-                    listing.Attributes = append(listing.Attributes, attr)
-                }
-            }
-        }
-    }
+								if boolValue {
+									attr.DisplayValue = "Да"
+								} else {
+									attr.DisplayValue = "Нет"
+								}
+							} else if strValue, ok := attrMap["value"].(string); ok {
+								boolValue := strValue == "true" || strValue == "да" || strValue == "1"
+								attr.BooleanValue = &boolValue
+
+								if boolValue {
+									attr.DisplayValue = "Да"
+								} else {
+									attr.DisplayValue = "Нет"
+								}
+							}
+						}
+					}
+				}
+
+				// Проверка есть ли единица измерения в запросе
+				if unit, ok := attrMap["unit"].(string); ok && unit != "" {
+					attr.Unit = unit
+				}
+
+				// Добавляем атрибут только если есть какое-то значение
+				if attr.TextValue != nil || attr.NumericValue != nil || attr.BooleanValue != nil || attr.JSONValue != nil {
+					listing.Attributes = append(listing.Attributes, attr)
+				}
+			}
+		}
+	}
 }
 
 // GetAttributeRanges возвращает минимальные и максимальные значения для числовых атрибутов категории
 func (h *MarketplaceHandler) GetAttributeRanges(c *fiber.Ctx) error {
-    categoryID, err := c.ParamsInt("id")
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
-    }
-    
-    ranges, err := h.marketplaceService.Storage().GetAttributeRanges(c.Context(), categoryID)
-    if err != nil {
-        log.Printf("Error fetching attribute ranges: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch attribute ranges")
-    }
-    
-    return utils.SuccessResponse(c, ranges)
+	categoryID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+	}
+
+	ranges, err := h.marketplaceService.Storage().GetAttributeRanges(c.Context(), categoryID)
+	if err != nil {
+		log.Printf("Error fetching attribute ranges: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch attribute ranges")
+	}
+
+	return utils.SuccessResponse(c, ranges)
 }
 
 // GetCategoryAttributes возвращает атрибуты для указанной категории
@@ -1024,25 +1024,25 @@ func (h *MarketplaceHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 	})
 }
 func (h *MarketplaceHandler) ReindexAllListings(c *fiber.Ctx) error {
-    // Проверяем административные права
-    userID, ok := c.Locals("user_id").(int)
-    if !ok || userID == 0 {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
-    }
+	// Проверяем административные права
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
 
-    // Запускаем процесс переиндексации в фоне
-    go func() {
-        ctx := context.Background()
-        if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
-            log.Printf("Ошибка переиндексации объявлений: %v", err)
-        } else {
-            log.Println("Переиндексация успешно завершена")
-        }
-    }()
+	// Запускаем процесс переиндексации в фоне
+	go func() {
+		ctx := context.Background()
+		if err := h.marketplaceService.ReindexAllListings(ctx); err != nil {
+			log.Printf("Ошибка переиндексации объявлений: %v", err)
+		} else {
+			log.Println("Переиндексация успешно завершена")
+		}
+	}()
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Запущена переиндексация всех объявлений. Процесс может занять некоторое время.",
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Запущена переиндексация всех объявлений. Процесс может занять некоторое время.",
+	})
 }
 func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	prefix := c.Query("q", "")
@@ -1058,13 +1058,15 @@ func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 
 	// Структура для объединенных результатов
 	type SuggestionItem struct {
-		Type       string      `json:"type"`
-		ID         interface{} `json:"id"`
-		Title      string      `json:"title"`
-		Display    string      `json:"display,omitempty"`
-		Priority   int         `json:"priority"`
-		CategoryID int         `json:"category_id,omitempty"`
-		Path       interface{} `json:"path,omitempty"`
+		Type           string      `json:"type"`
+		ID             interface{} `json:"id"`
+		Title          string      `json:"title"`
+		Display        string      `json:"display,omitempty"`
+		Priority       int         `json:"priority"`
+		CategoryID     int         `json:"category_id,omitempty"`
+		Path           interface{} `json:"path,omitempty"`
+		AttributeName  string      `json:"attribute_name,omitempty"`
+		AttributeValue string      `json:"attribute_value,omitempty"`
 	}
 
 	var suggestions []SuggestionItem
@@ -1143,6 +1145,60 @@ func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	}
 
 	// 2. Получаем подсказки категорий
+	attributeRows, err := h.marketplaceService.Storage().Query(c.Context(), `
+	SELECT DISTINCT 
+		ca.name as attr_name, 
+		ca.display_name as attr_display, 
+		lav.text_value, 
+		COUNT(DISTINCT l.id) as listing_count,
+		MIN(l.category_id) as category_id
+	FROM listing_attribute_values lav
+	JOIN category_attributes ca ON lav.attribute_id = ca.id
+	JOIN marketplace_listings l ON lav.listing_id = l.id
+	WHERE 
+		lav.text_value IS NOT NULL 
+		AND lav.text_value != ''
+		AND LOWER(lav.text_value) LIKE LOWER($1)
+		AND l.status = 'active'
+		AND ca.name IN ('make', 'model', 'brand', 'property_type', 'body_type')
+	GROUP BY ca.name, ca.display_name, lav.text_value
+	ORDER BY listing_count DESC
+	LIMIT $2
+`, "%"+prefix+"%", size)
+
+	if err == nil {
+		defer attributeRows.Close()
+
+		for attributeRows.Next() {
+			var attrName, attrDisplay, attrValue string
+			var listingCount, categoryID int
+
+			if err := attributeRows.Scan(&attrName, &attrDisplay, &attrValue, &listingCount, &categoryID); err != nil {
+				log.Printf("Ошибка сканирования атрибута: %v", err)
+				continue
+			}
+
+			// Определяем приоритет атрибута
+			priority := 2
+			if attrName == "model" || attrName == "make" {
+				priority = 1 // Высокий приоритет для марки и модели
+			}
+
+			// Формируем текст для отображения
+			display := fmt.Sprintf("%s: %s (%d)", attrDisplay, attrValue, listingCount)
+
+			suggestions = append(suggestions, SuggestionItem{
+				Type:           "attribute",
+				Title:          attrValue,
+				Display:        display,
+				Priority:       priority,
+				CategoryID:     categoryID,
+				AttributeName:  attrName,
+				AttributeValue: attrValue,
+			})
+		}
+	}
+
 	categorySuggestions, err := h.marketplaceService.GetCategorySuggestions(c.Context(), prefix, 3)
 	if err == nil && len(categorySuggestions) > 0 {
 		for _, category := range categorySuggestions {
@@ -1235,19 +1291,20 @@ func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 
 	// 4. Сортируем результаты по приоритету
 	sort.Slice(suggestions, func(i, j int) bool {
-		return suggestions[i].Priority < suggestions[j].Priority
-	})
+        return suggestions[i].Priority < suggestions[j].Priority
+    })
 
 	// 5. Ограничиваем количество результатов
-	if len(suggestions) > size {
-		suggestions = suggestions[:size]
-	}
 
-	log.Printf("Найдено %d расширенных подсказок для запроса '%s'", len(suggestions), prefix)
+    if len(suggestions) > size {
+        suggestions = suggestions[:size]
+    }
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": suggestions,
-	})
+    log.Printf("Найдено %d расширенных подсказок для запроса '%s'", len(suggestions), prefix)
+
+    return utils.SuccessResponse(c, fiber.Map{
+        "data": suggestions,
+    })
 }
 
 func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
@@ -1377,183 +1434,183 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 }
 
 func (h *MarketplaceHandler) UpdateListing(c *fiber.Ctx) error {
-    // Получаем старую версию объявления
-    id, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
-    }
+	// Получаем старую версию объявления
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
+	}
 
-    oldListing, err := h.marketplaceService.GetListingByID(c.Context(), id)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
-    }
+	oldListing, err := h.marketplaceService.GetListingByID(c.Context(), id)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+	}
 
-    var listing models.MarketplaceListing
-    if err := c.BodyParser(&listing); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
-    }
+	var listing models.MarketplaceListing
+	if err := c.BodyParser(&listing); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+	}
 
-    listing.ID = id
-    listing.UserID = c.Locals("user_id").(int)
-    if err := c.BodyParser(&listing); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
-    }
+	listing.ID = id
+	listing.UserID = c.Locals("user_id").(int)
+	if err := c.BodyParser(&listing); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input format")
+	}
 
-    var requestBody map[string]interface{}
-    if err := json.Unmarshal(c.Body(), &requestBody); err == nil {
-        if _, hasAttrs := requestBody["attributes"]; !hasAttrs {
-            // Атрибуты не переданы, загружаем существующие
-            existingAttrs, err := h.marketplaceService.Storage().GetListingAttributes(c.Context(), listing.ID)
-            if err == nil && len(existingAttrs) > 0 {
-                listing.Attributes = existingAttrs
-                log.Printf("Loaded existing %d attributes for listing %d", len(existingAttrs), listing.ID)
-            }
-        } else {
-            // Атрибуты переданы, обрабатываем их как обычно
-            processAttributesFromRequest(requestBody, &listing)
-        }
-    }
-    
-    // Обработка изменения цены и метаданных о скидке
-    if listing.Price != oldListing.Price {
-        // Если у объявления нет метаданных, создаем их
-        if listing.Metadata == nil {
-            listing.Metadata = make(map[string]interface{})
-        }
+	var requestBody map[string]interface{}
+	if err := json.Unmarshal(c.Body(), &requestBody); err == nil {
+		if _, hasAttrs := requestBody["attributes"]; !hasAttrs {
+			// Атрибуты не переданы, загружаем существующие
+			existingAttrs, err := h.marketplaceService.Storage().GetListingAttributes(c.Context(), listing.ID)
+			if err == nil && len(existingAttrs) > 0 {
+				listing.Attributes = existingAttrs
+				log.Printf("Loaded existing %d attributes for listing %d", len(existingAttrs), listing.ID)
+			}
+		} else {
+			// Атрибуты переданы, обрабатываем их как обычно
+			processAttributesFromRequest(requestBody, &listing)
+		}
+	}
 
-        // Проверяем, снизилась ли цена
-        if listing.Price < oldListing.Price {
-            // Определяем исходную цену для расчета скидки
-            var originalPrice float64
-            var hasExistingDiscount bool
+	// Обработка изменения цены и метаданных о скидке
+	if listing.Price != oldListing.Price {
+		// Если у объявления нет метаданных, создаем их
+		if listing.Metadata == nil {
+			listing.Metadata = make(map[string]interface{})
+		}
 
-            // Проверяем существующие метаданные о скидке
-            if oldListing.Metadata != nil {
-                if discount, ok := oldListing.Metadata["discount"].(map[string]interface{}); ok {
-                    if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
-                        // Используем предыдущую цену из существующей скидки
-                        originalPrice = prevPrice
-                        hasExistingDiscount = true
-                        log.Printf("Найдена существующая скидка для объявления %d. Предыдущая цена: %.2f", listing.ID, originalPrice)
-                    }
-                }
-            }
+		// Проверяем, снизилась ли цена
+		if listing.Price < oldListing.Price {
+			// Определяем исходную цену для расчета скидки
+			var originalPrice float64
+			var hasExistingDiscount bool
 
-            // Если нет существующей скидки, используем текущую цену объявления
-            if !hasExistingDiscount {
-                originalPrice = oldListing.Price
-            }
+			// Проверяем существующие метаданные о скидке
+			if oldListing.Metadata != nil {
+				if discount, ok := oldListing.Metadata["discount"].(map[string]interface{}); ok {
+					if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+						// Используем предыдущую цену из существующей скидки
+						originalPrice = prevPrice
+						hasExistingDiscount = true
+						log.Printf("Найдена существующая скидка для объявления %d. Предыдущая цена: %.2f", listing.ID, originalPrice)
+					}
+				}
+			}
 
-            // Вычисляем процент скидки от исходной цены
-            discountPercent := int((originalPrice - listing.Price) / originalPrice * 100)
+			// Если нет существующей скидки, используем текущую цену объявления
+			if !hasExistingDiscount {
+				originalPrice = oldListing.Price
+			}
 
-            // Добавляем или обновляем информацию о скидке в метаданные
-            listing.Metadata["discount"] = map[string]interface{}{
-                "discount_percent":  discountPercent,
-                "previous_price":    originalPrice,
-                "effective_from":    time.Now().Format(time.RFC3339),
-                "has_price_history": true,
-            }
+			// Вычисляем процент скидки от исходной цены
+			discountPercent := int((originalPrice - listing.Price) / originalPrice * 100)
 
-            log.Printf("Обновлена информация о скидке для объявления %d: %d%% (исходная цена: %.2f, новая цена: %.2f)",
-                listing.ID, discountPercent, originalPrice, listing.Price)
-        } else if listing.Price > oldListing.Price {
-            // Если цена повысилась, проверяем, нужно ли удалить информацию о скидке
-            if oldListing.Metadata != nil {
-                if _, ok := oldListing.Metadata["discount"]; ok {
-                    // Удаляем метаданные о скидке при повышении цены
-                    delete(listing.Metadata, "discount")
-                    log.Printf("Удалена информация о скидке для объявления %d из-за повышения цены", listing.ID)
-                }
-            }
-        }
-        // Если цены равны, оставляем метаданные без изменений
-    }
+			// Добавляем или обновляем информацию о скидке в метаданные
+			listing.Metadata["discount"] = map[string]interface{}{
+				"discount_percent":  discountPercent,
+				"previous_price":    originalPrice,
+				"effective_from":    time.Now().Format(time.RFC3339),
+				"has_price_history": true,
+			}
 
-    // Обновляем объявление
-    err = h.marketplaceService.UpdateListing(c.Context(), &listing)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
-    }
-    // Переиндексируем объявление в OpenSearch с переводами
-    // Даём небольшую задержку для завершения транзакций
-    time.Sleep(500 * time.Millisecond)
-    
-    updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listing.ID)
-    if err != nil {
-        log.Printf("Failed to get updated listing for reindexing: %v", err)
-    } else {
-        // Проверяем наличие переводов
-        if updatedListing.Translations == nil || len(updatedListing.Translations) == 0 {
-            log.Printf("Warning: Listing %d has no translations before reindexing, will try to load them explicitly", listing.ID)
-            
-            // Пытаемся явно загрузить переводы
-            translations, err := h.marketplaceService.Storage().GetTranslationsForEntity(c.Context(), "listing", listing.ID)
-            if err != nil {
-                log.Printf("Error loading translations for listing %d: %v", listing.ID, err)
-            } else if len(translations) > 0 {
-                // Организуем переводы в структуру TranslationMap
-                transMap := make(models.TranslationMap)
-                for _, t := range translations {
-                    if _, ok := transMap[t.Language]; !ok {
-                        transMap[t.Language] = make(map[string]string)
-                    }
-                    transMap[t.Language][t.FieldName] = t.TranslatedText
-                }
-                updatedListing.Translations = transMap
-                log.Printf("Explicitly loaded %d translations for listing %d", len(translations), listing.ID)
-            }
-        }
-        
-        if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
-            log.Printf("Failed to reindex listing %d: %v", listing.ID, err)
-        } else {
-            log.Printf("Successfully reindexed listing %d with all translations", listing.ID)
-        }
-    }
-    // Проверяем изменение цены
-    if oldListing.Price != listing.Price {
-        // Вызываем явно синхронизацию данных о скидке и истории цен
-        err = h.marketplaceService.SynchronizeDiscountData(c.Context(), listing.ID)
-        if err != nil {
-            log.Printf("Ошибка при синхронизации скидки для объявления %d: %v", listing.ID, err)
-            // Не возвращаем ошибку клиенту, чтобы не прерывать обновление
-        }
+			log.Printf("Обновлена информация о скидке для объявления %d: %d%% (исходная цена: %.2f, новая цена: %.2f)",
+				listing.ID, discountPercent, originalPrice, listing.Price)
+		} else if listing.Price > oldListing.Price {
+			// Если цена повысилась, проверяем, нужно ли удалить информацию о скидке
+			if oldListing.Metadata != nil {
+				if _, ok := oldListing.Metadata["discount"]; ok {
+					// Удаляем метаданные о скидке при повышении цены
+					delete(listing.Metadata, "discount")
+					log.Printf("Удалена информация о скидке для объявления %d из-за повышения цены", listing.ID)
+				}
+			}
+		}
+		// Если цены равны, оставляем метаданные без изменений
+	}
 
-        favoritedUsers, err := h.marketplaceService.GetFavoritedUsers(c.Context(), listing.ID)
-        if err != nil {
-            log.Printf("Error getting favorited users: %v", err)
-        } else {
-            priceChange := listing.Price - oldListing.Price
-            changeText := "увеличилась"
-            if priceChange < 0 {
-                changeText = "уменьшилась"
-            }
+	// Обновляем объявление
+	err = h.marketplaceService.UpdateListing(c.Context(), &listing)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating listing")
+	}
+	// Переиндексируем объявление в OpenSearch с переводами
+	// Даём небольшую задержку для завершения транзакций
+	time.Sleep(500 * time.Millisecond)
 
-            for _, userID := range favoritedUsers {
-                notificationText := fmt.Sprintf(
-                    "Изменение цены в избранном\nОбъявление: %s\nЦена %s на %.2f руб.\nНовая цена: %.2f руб.",
-                    listing.Title,
-                    changeText,
-                    math.Abs(float64(priceChange)),
-                    listing.Price,
-                )
-                if err := h.services.Notification().SendNotification(
-                    c.Context(),
-                    userID,
-                    models.NotificationTypeFavoritePrice,
-                    notificationText,
-                    listing.ID,
-                ); err != nil {
-                    log.Printf("Error sending notification to user %d: %v", userID, err)
-                }
-            }
-        }
-    }
+	updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listing.ID)
+	if err != nil {
+		log.Printf("Failed to get updated listing for reindexing: %v", err)
+	} else {
+		// Проверяем наличие переводов
+		if updatedListing.Translations == nil || len(updatedListing.Translations) == 0 {
+			log.Printf("Warning: Listing %d has no translations before reindexing, will try to load them explicitly", listing.ID)
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Listing updated successfully",
-    })
+			// Пытаемся явно загрузить переводы
+			translations, err := h.marketplaceService.Storage().GetTranslationsForEntity(c.Context(), "listing", listing.ID)
+			if err != nil {
+				log.Printf("Error loading translations for listing %d: %v", listing.ID, err)
+			} else if len(translations) > 0 {
+				// Организуем переводы в структуру TranslationMap
+				transMap := make(models.TranslationMap)
+				for _, t := range translations {
+					if _, ok := transMap[t.Language]; !ok {
+						transMap[t.Language] = make(map[string]string)
+					}
+					transMap[t.Language][t.FieldName] = t.TranslatedText
+				}
+				updatedListing.Translations = transMap
+				log.Printf("Explicitly loaded %d translations for listing %d", len(translations), listing.ID)
+			}
+		}
+
+		if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
+			log.Printf("Failed to reindex listing %d: %v", listing.ID, err)
+		} else {
+			log.Printf("Successfully reindexed listing %d with all translations", listing.ID)
+		}
+	}
+	// Проверяем изменение цены
+	if oldListing.Price != listing.Price {
+		// Вызываем явно синхронизацию данных о скидке и истории цен
+		err = h.marketplaceService.SynchronizeDiscountData(c.Context(), listing.ID)
+		if err != nil {
+			log.Printf("Ошибка при синхронизации скидки для объявления %d: %v", listing.ID, err)
+			// Не возвращаем ошибку клиенту, чтобы не прерывать обновление
+		}
+
+		favoritedUsers, err := h.marketplaceService.GetFavoritedUsers(c.Context(), listing.ID)
+		if err != nil {
+			log.Printf("Error getting favorited users: %v", err)
+		} else {
+			priceChange := listing.Price - oldListing.Price
+			changeText := "увеличилась"
+			if priceChange < 0 {
+				changeText = "уменьшилась"
+			}
+
+			for _, userID := range favoritedUsers {
+				notificationText := fmt.Sprintf(
+					"Изменение цены в избранном\nОбъявление: %s\nЦена %s на %.2f руб.\nНовая цена: %.2f руб.",
+					listing.Title,
+					changeText,
+					math.Abs(float64(priceChange)),
+					listing.Price,
+				)
+				if err := h.services.Notification().SendNotification(
+					c.Context(),
+					userID,
+					models.NotificationTypeFavoritePrice,
+					notificationText,
+					listing.ID,
+				); err != nil {
+					log.Printf("Error sending notification to user %d: %v", userID, err)
+				}
+			}
+		}
+	}
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Listing updated successfully",
+	})
 }
 
 func (h *MarketplaceHandler) UpdateTranslations(c *fiber.Ctx) error {
@@ -2381,20 +2438,20 @@ func (h *MarketplaceHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 	// Запускаем реиндексацию в фоне
 	go func() {
 		ctx := context.Background()
-		
+
 		// Получаем все ID объявлений
 		rows, err := h.services.Storage().Query(ctx, `
 			SELECT id FROM marketplace_listings 
 			WHERE status = 'active'
 			ORDER BY id
 		`)
-		
+
 		if err != nil {
 			log.Printf("Error getting listing IDs for reindex: %v", err)
 			return
 		}
 		defer rows.Close()
-		
+
 		var listingIDs []int
 		for rows.Next() {
 			var id int
@@ -2404,9 +2461,9 @@ func (h *MarketplaceHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 			}
 			listingIDs = append(listingIDs, id)
 		}
-		
+
 		log.Printf("Starting reindex of %d listings with translations...", len(listingIDs))
-		
+
 		// Реиндексируем каждое объявление с явной загрузкой переводов
 		count := 0
 		for _, id := range listingIDs {
@@ -2416,7 +2473,7 @@ func (h *MarketplaceHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 				log.Printf("Error getting listing %d: %v", id, err)
 				continue
 			}
-			
+
 			// Проверяем наличие переводов
 			if listing.Translations == nil || len(listing.Translations) == 0 {
 				// Явно загружаем переводы
@@ -2436,7 +2493,7 @@ func (h *MarketplaceHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 					log.Printf("Loaded %d translations for listing %d", len(translations), id)
 				}
 			}
-			
+
 			// Индексируем объявление
 			if err := h.marketplaceService.Storage().IndexListing(ctx, listing); err != nil {
 				log.Printf("Error indexing listing %d: %v", id, err)
@@ -2447,7 +2504,7 @@ func (h *MarketplaceHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 				}
 			}
 		}
-		
+
 		log.Printf("Successfully reindexed %d listings with translations", count)
 	}()
 

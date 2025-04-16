@@ -87,6 +87,20 @@ const ListingMapping = `
   },
   "mappings": {
     "properties": {
+      "car_keywords": {
+          "type": "text",
+          "analyzer": "default_analyzer",
+          "fields": {
+              "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+              },
+              "autocomplete": {
+                  "type": "text",
+                  "analyzer": "autocomplete"
+              }
+          }
+      },
       "id": {
         "type": "keyword"
       },
