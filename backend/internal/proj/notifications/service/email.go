@@ -1,6 +1,7 @@
 package service
 
 import (
+    "crypto/tls"
     "fmt"
     "log"
     "net/smtp"
@@ -28,9 +29,8 @@ func NewEmailService(smtpHost, smtpPort, senderEmail, senderName, smtpUsername, 
 }
 
 func (e *EmailService) SendEmail(to, subject, body string) error {
-    // Формируем адрес SMTP-сервера
-    addr := fmt.Sprintf("%s:%s", e.smtpHost, e.smtpPort)
-
+    log.Printf("Attempting to send email to %s with subject: %s", to, subject)
+    
     // Формируем заголовки письма
     headers := make(map[string]string)
     headers["From"] = fmt.Sprintf("%s <%s>", e.senderName, e.senderEmail)
@@ -46,21 +46,78 @@ func (e *EmailService) SendEmail(to, subject, body string) error {
     }
     message += "\r\n" + body
 
-    // Аутентификация на SMTP-сервере
-    auth := smtp.PlainAuth("", e.smtpUsername, e.smtpPassword, e.smtpHost)
-
-    // Отправляем письмо
-    err := smtp.SendMail(addr, auth, e.senderEmail, []string{to}, []byte(message))
+    // Формируем адрес SMTP-сервера
+    addr := fmt.Sprintf("%s:%s", e.smtpHost, e.smtpPort)
+    
+    // Создаем незащищенное соединение
+    c, err := smtp.Dial(addr)
     if err != nil {
-        log.Printf("Error sending email to %s: %v", to, err)
+        log.Printf("Error connecting to SMTP server: %v", err)
+        return err
+    }
+    defer c.Quit()
+
+    // Выполняем STARTTLS с отключенной проверкой сертификата
+    tlsConfig := &tls.Config{
+        InsecureSkipVerify: true,
+        ServerName:         e.smtpHost,
+    }
+    
+    if err = c.StartTLS(tlsConfig); err != nil {
+        log.Printf("Error starting TLS: %v", err)
+        
+        // Если StartTLS не работает, попробуем без шифрования
+        log.Printf("Trying without TLS...")
+        c, err = smtp.Dial(addr)
+        if err != nil {
+            log.Printf("Error reconnecting to SMTP server: %v", err)
+            return err
+        }
+        defer c.Quit()
+    }
+
+    // Аутентификация
+    auth := smtp.PlainAuth("", e.smtpUsername, e.smtpPassword, e.smtpHost)
+    if err = c.Auth(auth); err != nil {
+        log.Printf("Authentication error: %v", err)
         return err
     }
 
-    log.Printf("Email sent successfully to %s", to)
+    // Отправитель и получатель
+    if err = c.Mail(e.senderEmail); err != nil {
+        log.Printf("Error setting sender: %v", err)
+        return err
+    }
+    
+    if err = c.Rcpt(to); err != nil {
+        log.Printf("Error setting recipient: %v", err)
+        return err
+    }
+
+    // Отправка данных
+    w, err := c.Data()
+    if err != nil {
+        log.Printf("Error getting data writer: %v", err)
+        return err
+    }
+    
+    _, err = w.Write([]byte(message))
+    if err != nil {
+        log.Printf("Error writing message: %v", err)
+        return err
+    }
+    
+    err = w.Close()
+    if err != nil {
+        log.Printf("Error closing writer: %v", err)
+        return err
+    }
+
+    log.Printf("Email successfully sent to %s", to)
     return nil
 }
 
-// Метод для формирования HTML-шаблона уведомления
+// Метод для форматирования HTML-шаблона уведомления
 func (e *EmailService) FormatNotificationEmail(title, message, listingID string) string {
     var listingLink string
     if listingID != "" {
