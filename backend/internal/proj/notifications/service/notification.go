@@ -27,13 +27,14 @@ func NewNotificationService(storage storage.Storage) NotificationServiceInterfac
 
     // Инициализируем сервис для отправки email
     emailService := NewEmailService(
-        "mail.svetu.rs",                 // SMTP-хост
-        "25",                            // SMTP-порт (используем порт 25 вместо 587 для обхода проблем с TLS)
-        "info@svetu.rs",                 // Адрес отправителя
-        "SveTu.rs",                      // Имя отправителя
-        "info@svetu.rs",                 // Имя пользователя для SMTP-авторизации
-        os.Getenv("EMAIL_PASSWORD"),     // Пароль от почтового ящика
-    )
+		"mailserver",                    // Используем имя контейнера вместо домена
+		"25",                            // SMTP-порт без шифрования
+		"info@svetu.rs",                 // Адрес отправителя
+		"SveTu.rs",                      // Имя отправителя
+		"info@svetu.rs",                 // Имя пользователя
+		os.Getenv("EMAIL_PASSWORD"),     // Пароль
+	)
+	
 
     return &NotificationService{
         storage: storage,

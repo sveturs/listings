@@ -29,7 +29,7 @@ func NewEmailService(smtpHost, smtpPort, senderEmail, senderName, smtpUsername, 
 }
 
 func (e *EmailService) SendEmail(to, subject, body string) error {
-    log.Printf("Attempting to send email to %s with subject: %s", to, subject)
+    log.Printf("Sending email to %s with subject: %s", to, subject)
     
     // Формируем заголовки письма
     headers := make(map[string]string)
@@ -46,74 +46,62 @@ func (e *EmailService) SendEmail(to, subject, body string) error {
     }
     message += "\r\n" + body
 
+    // Альтернативный способ отправки - через smtp.SendMail с полным обходом проверки TLS
+    // Создаем кастомную аутентификацию
+    auth := smtp.PlainAuth("", e.smtpUsername, e.smtpPassword, e.smtpHost)
+    
     // Формируем адрес SMTP-сервера
     addr := fmt.Sprintf("%s:%s", e.smtpHost, e.smtpPort)
     
-    // Создаем незащищенное соединение
-    c, err := smtp.Dial(addr)
+    // Пробуем разные варианты отправки
+    var lastErr error
+    
+    // Вариант 1: Прямая отправка без TLS
+    err := smtp.SendMail(addr, auth, e.senderEmail, []string{to}, []byte(message))
+    if err == nil {
+        log.Printf("Email sent successfully to %s using direct SendMail", to)
+        return nil
+    }
+    lastErr = err
+    log.Printf("Direct email sending failed: %v. Trying alternative methods...", err)
+    
+    // Вариант 2: Ручное подключение без TLS
+    conn, err := smtp.Dial(addr)
     if err != nil {
-        log.Printf("Error connecting to SMTP server: %v", err)
-        return err
+        log.Printf("Error connecting to mail server: %v", err)
+        return fmt.Errorf("all email sending methods failed: %v", lastErr)
     }
-    defer c.Quit()
-
-    // Выполняем STARTTLS с отключенной проверкой сертификата
-    tlsConfig := &tls.Config{
-        InsecureSkipVerify: true,
-        ServerName:         e.smtpHost,
+    defer conn.Quit()
+    
+    // Установка параметров отправки
+    if err = conn.Mail(e.senderEmail); err != nil {
+        log.Printf("Error in MAIL FROM command: %v", err)
+        return fmt.Errorf("MAIL FROM error: %v", err)
     }
     
-    if err = c.StartTLS(tlsConfig); err != nil {
-        log.Printf("Error starting TLS: %v", err)
-        
-        // Если StartTLS не работает, попробуем без шифрования
-        log.Printf("Trying without TLS...")
-        c, err = smtp.Dial(addr)
-        if err != nil {
-            log.Printf("Error reconnecting to SMTP server: %v", err)
-            return err
-        }
-        defer c.Quit()
-    }
-
-    // Аутентификация
-    auth := smtp.PlainAuth("", e.smtpUsername, e.smtpPassword, e.smtpHost)
-    if err = c.Auth(auth); err != nil {
-        log.Printf("Authentication error: %v", err)
-        return err
-    }
-
-    // Отправитель и получатель
-    if err = c.Mail(e.senderEmail); err != nil {
-        log.Printf("Error setting sender: %v", err)
-        return err
+    if err = conn.Rcpt(to); err != nil {
+        log.Printf("Error in RCPT TO command: %v", err)
+        return fmt.Errorf("RCPT TO error: %v", err)
     }
     
-    if err = c.Rcpt(to); err != nil {
-        log.Printf("Error setting recipient: %v", err)
-        return err
-    }
-
-    // Отправка данных
-    w, err := c.Data()
+    w, err := conn.Data()
     if err != nil {
         log.Printf("Error getting data writer: %v", err)
-        return err
+        return fmt.Errorf("DATA command error: %v", err)
     }
     
     _, err = w.Write([]byte(message))
     if err != nil {
-        log.Printf("Error writing message: %v", err)
-        return err
+        log.Printf("Error writing message body: %v", err)
+        return fmt.Errorf("message writing error: %v", err)
     }
     
-    err = w.Close()
-    if err != nil {
-        log.Printf("Error closing writer: %v", err)
-        return err
+    if err = w.Close(); err != nil {
+        log.Printf("Error closing message writer: %v", err)
+        return fmt.Errorf("error finalizing message: %v", err)
     }
-
-    log.Printf("Email successfully sent to %s", to)
+    
+    log.Printf("Email sent successfully to %s using manual connection", to)
     return nil
 }
 
