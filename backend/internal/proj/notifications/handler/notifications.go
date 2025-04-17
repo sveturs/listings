@@ -302,7 +302,6 @@ func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
 }
 
 // SendPublicEmail обрабатывает запросы на отправку писем с форм обратной связи
-// SendPublicEmail обрабатывает запросы на отправку писем с форм обратной связи
 func (h *NotificationHandler) SendPublicEmail(c *fiber.Ctx) error {
     // Настройка CORS
     c.Set("Access-Control-Allow-Origin", "*")
@@ -344,36 +343,65 @@ func (h *NotificationHandler) SendPublicEmail(c *fiber.Ctx) error {
     message := fmt.Sprintf("Имя: %s\nEmail: %s\n\nСообщение:\n%s", 
         data.Name, data.Email, data.Message)
     
-    // Отправляем email используя существующую функциональность
-    auth := smtp.PlainAuth("", "info@svetu.rs", os.Getenv("EMAIL_PASSWORD"), "mailserver")
+    // Используем ручное соединение без TLS вместо smtp.SendMail
+    conn, err := smtp.Dial("mailserver:25")
+    if err != nil {
+        log.Printf("Ошибка соединения с SMTP: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to connect to mail server")
+    }
+    defer conn.Close()
+    
+    // Устанавливаем отправителя и получателя
+    if err = conn.Mail("info@svetu.rs"); err != nil {
+        log.Printf("Ошибка установки отправителя: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to set sender")
+    }
+    
+    if err = conn.Rcpt(to); err != nil {
+        log.Printf("Ошибка установки получателя: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to set recipient")
+    }
+    
+    // Отправляем данные
+    wc, err := conn.Data()
+    if err != nil {
+        log.Printf("Ошибка при получении writer'а: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get data writer")
+    }
     
     // Заголовки письма
     headers := "From: info@svetu.rs\r\n"
     headers += "Reply-To: " + data.Email + "\r\n"
+    headers += "To: " + to + "\r\n"
     headers += "Subject: " + subject + "\r\n"
     headers += "MIME-Version: 1.0\r\n"
     headers += "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
     
-    // Отправляем email
-    err := smtp.SendMail(
-        "mailserver:25",
-        auth,
-        "info@svetu.rs",
-        []string{to},
-        []byte(headers + message),
-    )
-    
+    _, err = fmt.Fprintf(wc, headers+message)
     if err != nil {
-        log.Printf("Ошибка отправки email: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to send email")
+        log.Printf("Ошибка записи данных: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to write email data")
+    }
+    
+    err = wc.Close()
+    if err != nil {
+        log.Printf("Ошибка завершения отправки: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to close connection")
+    }
+    
+    // Закрываем соединение
+    err = conn.Quit()
+    if err != nil {
+        log.Printf("Ошибка закрытия соединения: %v", err)
+        // Не возвращаем ошибку, т.к. письмо уже должно быть отправлено
     }
     
     log.Printf("Email успешно отправлен на %s", to)
     return utils.SuccessResponse(c, fiber.Map{
+        "success": true,
         "message": "Email sent successfully",
     })
 }
-
 func (h *NotificationHandler) UpdateSettings(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     
