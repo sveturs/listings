@@ -1,7 +1,6 @@
 package service
 
 import (
-    "crypto/tls"
     "fmt"
     "log"
     "net/smtp"

@@ -8,6 +8,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	    "net/smtp"
 	"fmt"
 	"log"
 	"os"
@@ -299,6 +300,79 @@ func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
 		"data": settings,
 	})
 }
+
+// SendPublicEmail обрабатывает запросы на отправку писем с форм обратной связи
+func (h *NotificationHandler) SendPublicEmail(c *fiber.Ctx) error {
+    // Настройка CORS
+    c.Set("Access-Control-Allow-Origin", "*")
+    c.Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+    c.Set("Access-Control-Allow-Headers", "Content-Type")
+    
+    // Получаем данные из запроса
+    var data struct {
+        Name    string `json:"name"`
+        Email   string `json:"email"`
+        Message string `json:"message"`
+        Source  string `json:"source"` // Добавим поле для определения источника запроса
+    }
+
+    if err := c.BodyParser(&data); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid data format")
+    }
+    
+    log.Printf("Получен запрос на отправку email от %s (%s): %s", data.Name, data.Email, data.Source)
+
+    // Валидация данных
+    if data.Name == "" || data.Email == "" || data.Message == "" {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "All fields are required")
+    }
+    
+    // Определяем получателя в зависимости от источника
+    to := "info@svetu.rs" // По умолчанию
+    if data.Source == "klimagrad" {
+        to = "klimagrad@svetu.rs"
+    }
+    
+    // Формируем заголовок
+    subject := "Сообщение с сайта"
+    if data.Source == "klimagrad" {
+        subject = "Сообщение с сайта KlimaGrad"
+    }
+    
+    // Формируем текст сообщения
+    message := fmt.Sprintf("Имя: %s\nEmail: %s\n\nСообщение:\n%s", 
+        data.Name, data.Email, data.Message)
+    
+    // Отправляем email используя существующую функциональность
+    auth := smtp.PlainAuth("", "info@svetu.rs", os.Getenv("EMAIL_PASSWORD"), "mailserver")
+    
+    // Заголовки письма
+    headers := "From: info@svetu.rs\r\n"
+    headers += "Reply-To: " + data.Email + "\r\n"
+    headers += "Subject: " + subject + "\r\n"
+    headers += "MIME-Version: 1.0\r\n"
+    headers += "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
+    
+    // Отправляем email
+    err := smtp.SendMail(
+        "mailserver:25",
+        auth,
+        "info@svetu.rs",
+        []string{to},
+        []byte(headers + message),
+    )
+    
+    if err != nil {
+        log.Printf("Ошибка отправки email: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to send email")
+    }
+    
+    log.Printf("Email успешно отправлен на %s", to)
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Email sent successfully",
+    })
+}
+
 func (h *NotificationHandler) UpdateSettings(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     
