@@ -49,7 +49,9 @@ INSERT INTO payment_methods (
 ) VALUES 
     ('Bank transfer', 'bank_transfer', 'bank', true, 1000, 10000000, 0, 100),
     ('Post office', 'post_office', 'cash', true, 500, 500000, 1.5, 50),
-    ('IPS QR code', 'ips_qr', 'digital', true, 100, 1000000, 0.8, 0);
+    ('IPS QR code', 'ips_qr', 'digital', true, 100, 1000000, 0.8, 0)
+ON CONFLICT (code) DO NOTHING;  
+
 
 -- Добавляем начальный баланс для пользователей
 INSERT INTO user_balances (user_id, balance, frozen_balance, currency, updated_at) 
