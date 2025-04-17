@@ -102,20 +102,21 @@ export const useNotifications = () => {
 
     const updateSettings = async (type, channel, value) => {
         try {
+            // Логируем данные для отладки
+            console.log("Updating settings:", { 
+                notification_type: type, 
+                [`${channel}_enabled`]: value 
+            });
+            
             const response = await axios.put('/api/v1/notifications/settings', {
                 notification_type: type,
                 [`${channel}_enabled`]: value
             });
-    
+            
+            console.log("Server response:", response.data);
+            
             if (response.data.success) {
-                // Правильно обновляем состояние
-                setSettings(prev => ({
-                    ...prev,
-                    [type]: {
-                        ...prev[type],
-                        [`${channel}_enabled`]: value
-                    }
-                }));
+                // Немедленно обновляем локальный кеш
                 return true;
             }
             return false;
@@ -123,7 +124,11 @@ export const useNotifications = () => {
             console.error('Error updating settings:', err);
             return false;
         }
-    };    
+    };
+    
+    
+
+    
     const connectTelegram = async () => {
         try {
             const response = await axios.post('/api/v1/notifications/telegram/token');

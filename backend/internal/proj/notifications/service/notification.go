@@ -48,7 +48,74 @@ func (s *NotificationService) GetNotificationSettings(ctx context.Context, userI
 }
 
 func (s *NotificationService) UpdateNotificationSettings(ctx context.Context, settings *models.NotificationSettings) error {
-	return s.storage.UpdateNotificationSettings(ctx, settings)
+    // Логирование для отладки
+    log.Printf("Updating notification settings: %+v", settings)
+
+    // Проверка на валидность типа уведомления
+    validTypes := map[string]bool{
+        models.NotificationTypeNewMessage:     true,
+        models.NotificationTypeNewReview:      true,
+        models.NotificationTypeReviewVote:     true,
+        models.NotificationTypeReviewResponse: true,
+        models.NotificationTypeListingStatus:  true,
+        models.NotificationTypeFavoritePrice:  true,
+    }
+
+    if !validTypes[settings.NotificationType] {
+        log.Printf("Invalid notification type: %s", settings.NotificationType)
+        return fmt.Errorf("invalid notification type: %s", settings.NotificationType)
+    }
+
+    // Проверим текущие настройки, чтобы не затереть случайно другие значения
+    existingSettings, err := s.storage.GetNotificationSettings(ctx, settings.UserID)
+    if err != nil {
+        log.Printf("Error getting existing settings: %v", err)
+        // Продолжаем выполнение, будем использовать то, что пришло
+    } else {
+        // Найдем текущие настройки для этого типа
+        var existingSetting *models.NotificationSettings
+        for i := range existingSettings {
+            if existingSettings[i].NotificationType == settings.NotificationType {
+                existingSetting = &existingSettings[i]
+                break
+            }
+        }
+
+        // Если нашли существующие настройки, проверим, не затираем ли мы случайно поля
+        if existingSetting != nil {
+            // Если обновление касается только telegram_enabled, сохраним текущее значение email_enabled
+            if settings.EmailEnabled == false && existingSetting.EmailEnabled == true {
+                if c := ctx.Value("request"); c != nil {
+                    if req, ok := c.(map[string]interface{}); ok {
+                        if _, exists := req["email_enabled"]; !exists {
+                            log.Printf("Preserving email_enabled=true for notification type %s", settings.NotificationType)
+                            settings.EmailEnabled = true
+                        }
+                    }
+                }
+            }
+            
+            // И наоборот - если обновление касается только email_enabled
+            if settings.TelegramEnabled == false && existingSetting.TelegramEnabled == true {
+                if c := ctx.Value("request"); c != nil {
+                    if req, ok := c.(map[string]interface{}); ok {
+                        if _, exists := req["telegram_enabled"]; !exists {
+                            log.Printf("Preserving telegram_enabled=true for notification type %s", settings.NotificationType)
+                            settings.TelegramEnabled = true
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    err = s.storage.UpdateNotificationSettings(ctx, settings)
+    if err != nil {
+        log.Printf("Error updating settings in DB: %v", err)
+        return err
+    }
+
+    return nil
 }
 
 func (s *NotificationService) ConnectTelegram(ctx context.Context, userID int, chatID string, username string) error {

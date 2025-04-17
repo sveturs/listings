@@ -171,11 +171,6 @@ services:
 
 volumes:
   db_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /opt/hostel-data/db
   opensearch_data:
     driver: local
     driver_opts:

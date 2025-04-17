@@ -302,25 +302,33 @@ func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
 
 // UpdateSettings обновляет настройки уведомлений
 func (h *NotificationHandler) UpdateSettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
-	var settings models.NotificationSettings
-	if err := c.BodyParser(&settings); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid data format")
-	}
+    userID := c.Locals("user_id").(int)
+    var settings models.NotificationSettings
+    
+    // Сначала выведем полученное тело запроса
+    body := c.Body()
+    log.Printf("Received raw settings update body: %s", string(body))
+    
+    if err := c.BodyParser(&settings); err != nil {
+        log.Printf("Error parsing settings data: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid data format")
+    }
 
-	settings.UserID = userID
-	err := h.notificationService.UpdateNotificationSettings(c.Context(), &settings)
-	if err != nil {
-		log.Printf("Error updating settings: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update settings")
-	}
+    // Выводим распарсенные настройки
+    log.Printf("Parsed settings: %+v", settings)
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "Settings updated"})
+    settings.UserID = userID
+    err := h.notificationService.UpdateNotificationSettings(c.Context(), &settings)
+    if err != nil {
+        log.Printf("Error updating settings: %v", err)
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update settings")
+    }
+
+    return utils.SuccessResponse(c, fiber.Map{"message": "Settings updated"})
 }
 
-// GetTelegramStatus проверяет статус подключения Telegram
-// Нужно добавить проверку на nil в метод GetTelegramStatus
-// в файле /app/internal/proj/notifications/handler/notifications.go
+
+
 
 // GetTelegramStatus проверяет статус подключения Telegram
 func (h *NotificationHandler) GetTelegramStatus(c *fiber.Ctx) error {
