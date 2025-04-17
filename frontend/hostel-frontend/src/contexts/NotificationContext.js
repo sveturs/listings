@@ -70,43 +70,66 @@ export const NotificationProvider = ({ children }) => {
     }, [statusCheckInterval]);
     useEffect(() => {
         const fetchSettings = async () => {
-            if (!user) return;
             try {
-                const [settingsResponse, telegramResponse] = await Promise.all([
-                    axios.get('/api/v1/notifications/settings'),
-                    axios.get('/api/v1/notifications/telegram')
-                ]);
-
-                const settingsData = settingsResponse.data.data || {};
-                setSettings(settingsData);
-                setTelegramConnected(!!telegramResponse.data.connected);
+                console.log('Fetching notification settings...');
+                const response = await axios.get('/api/v1/notifications/settings');
+                console.log('Raw settings response:', response.data);
+                
+                if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
+                    const settingsArray = response.data.data.data;
+                    const formattedSettings = {};
+                    
+                    // Преобразуем массив настроек в объект для удобного доступа
+                    settingsArray.forEach(setting => {
+                        if (setting && setting.notification_type) {
+                            formattedSettings[setting.notification_type] = {
+                                telegram_enabled: Boolean(setting.telegram_enabled),
+                                email_enabled: Boolean(setting.email_enabled)
+                            };
+                        }
+                    });
+                    
+                    console.log('Formatted settings:', formattedSettings);
+                    setSettings(formattedSettings);
+                } else {
+                    console.warn('Settings data has unexpected format:', response.data);
+                }
             } catch (err) {
                 console.error('Error fetching settings:', err);
             }
         };
+        
         fetchSettings();
     }, [user]);
 
     const updateSettings = async (type, channel, value) => {
-        if (!user) return false;
         try {
-            await axios.put('/api/v1/notifications/settings', {
+            console.log(`Updating ${channel} for ${type} to ${value}`);
+            
+            // Отправляем только измененное поле
+            const payload = {
                 notification_type: type,
-                [channel + '_enabled']: value
-            });
-            setSettings(prev => ({
-                ...prev,
-                [type]: {
-                    ...prev[type],
-                    [channel]: value
-                }
-            }));
-            return true;
+                [`${channel}_enabled`]: value
+            };
+            
+            console.log("Sending payload:", payload);
+            
+            const response = await axios.put('/api/v1/notifications/settings', payload);
+            console.log("Server response:", response.data);
+            
+            if (response.data.success) {
+                // После успешного обновления запрашиваем свежие настройки
+                await fetchSettings();
+                return true;
+            }
+            
+            return false;
         } catch (err) {
-            console.error('Error:', err);
+            console.error('Error updating settings:', err);
             return false;
         }
     };
+    
 
     const connectTelegram = async () => {
         try {

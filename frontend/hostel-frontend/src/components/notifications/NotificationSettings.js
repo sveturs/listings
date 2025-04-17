@@ -12,7 +12,8 @@ import {
     Button,
     Alert,
     Snackbar,
-    Divider
+    Divider,
+    CircularProgress 
 
 } from '@mui/material';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -114,32 +115,37 @@ const NotificationSettings = () => {
             setLoading(false);
         }
     };
-
+    useEffect(() => {
+        // Загружаем настройки при монтировании компонента
+        fetchSettings();
+    }, [fetchSettings]);
     const handleSettingChange = async (type, channel, value) => {
         if (!NOTIFICATION_TYPES[type]?.implemented) {
             showSnackbar(t('notifications.inDevelopment'), 'warning');
             return;
         }
-    
+
         try {
+            setLoading(true);
             console.log(`Changing ${channel} for ${type} to ${value}`);
-            
+
             const success = await updateSettings(type, channel, value);
-            
+
+            setLoading(false);
+
             if (success) {
-                // Вместо непосредственного обновления состояния, повторно загружаем настройки
-                await fetchSettings();
                 showSnackbar(t('notifications.settingsUpdated'));
             } else {
                 showSnackbar(t('notifications.updateError'), 'error');
             }
         } catch (error) {
+            setLoading(false);
             console.error("Error updating setting:", error);
             showSnackbar(t('notifications.updateError'), 'error');
         }
     };
-    
-    
+
+
 
 
     return (
@@ -150,7 +156,7 @@ const NotificationSettings = () => {
 
             <Paper sx={{ p: 3, mb: 3 }}>
                 <Stack spacing={3}>
-                    
+
                     <Box>
                         {/* Заменяем Tabs на единый блок подключения */}
                         <Box sx={{
@@ -228,10 +234,10 @@ const NotificationSettings = () => {
                                 </>
                             )}
                         </Box>
-<Box sx={{ mt: 3, p: 2, border: '1px dashed', borderColor: 'divider' }}>
-    <Typography variant="h6">Отладочная информация</Typography>
-    <pre>{JSON.stringify(settings, null, 2)}</pre>
-</Box>
+                        <Box sx={{ mt: 3, p: 2, border: '1px dashed', borderColor: 'divider' }}>
+                            <Typography variant="h6">Отладочная информация</Typography>
+                            <pre>{JSON.stringify(settings, null, 2)}</pre>
+                        </Box>
                         <Divider />
 
                         <Stack spacing={2} sx={{ mt: 3 }}>
@@ -262,29 +268,36 @@ const NotificationSettings = () => {
                                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                                         <FormControlLabel
                                             control={
-                                                <Switch
-                                                    checked={Boolean(settings[type]?.telegram_enabled)}
-                                                    onChange={(e) => handleSettingChange(type, 'telegram', e.target.checked)}
-                                                    disabled={!telegramConnected || !implemented}
-                                                    color="primary"
-                                                    name={`${type}-telegram`} // Добавляем уникальное имя
-                                                />
+                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <Switch
+                                                        checked={Boolean(settings[type]?.telegram_enabled)}
+                                                        onChange={(e) => handleSettingChange(type, 'telegram', e.target.checked)}
+                                                        disabled={!telegramConnected || !implemented || loading}
+                                                        color="primary"
+                                                        name={`${type}-telegram`}
+                                                    />
+                                                    {loading && <CircularProgress size={16} sx={{ ml: 0.5 }} />}
+                                                </Box>
                                             }
                                             label="Telegram"
                                         />
                                         <FormControlLabel
                                             control={
-                                                <Switch
-                                                    checked={Boolean(settings[type]?.email_enabled)}
-                                                    onChange={(e) => handleSettingChange(type, 'email', e.target.checked)}
-                                                    disabled={!implemented}
-                                                    color="primary"
-                                                    name={`${type}-email`} // Добавляем уникальное имя
-                                                />
+                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <Switch
+                                                        checked={Boolean(settings[type]?.email_enabled)}
+                                                        onChange={(e) => handleSettingChange(type, 'email', e.target.checked)}
+                                                        disabled={!implemented || loading}
+                                                        color="primary"
+                                                        name={`${type}-email`}
+                                                    />
+                                                    {loading && <CircularProgress size={16} sx={{ ml: 0.5 }} />}
+                                                </Box>
                                             }
                                             label="Email"
                                         />
                                     </Stack>
+
 
                                 </Box>
                             ))}

@@ -299,36 +299,85 @@ func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
 		"data": settings,
 	})
 }
-
-// UpdateSettings обновляет настройки уведомлений
 func (h *NotificationHandler) UpdateSettings(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
-    var settings models.NotificationSettings
     
-    // Сначала выведем полученное тело запроса
-    body := c.Body()
-    log.Printf("Received raw settings update body: %s", string(body))
+    // Получаем и логируем необработанное тело запроса
+    body := string(c.Body())
+    log.Printf("Raw request body: %s", body)
     
-    if err := c.BodyParser(&settings); err != nil {
-        log.Printf("Error parsing settings data: %v", err)
+    // Парсим запрос, не используя прямую привязку к структуре настроек
+    var request struct {
+        NotificationType string `json:"notification_type"`
+        TelegramEnabled  *bool  `json:"telegram_enabled"`
+        EmailEnabled     *bool  `json:"email_enabled"`
+    }
+    
+    if err := c.BodyParser(&request); err != nil {
+        log.Printf("Error parsing request: %v", err)
         return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid data format")
     }
-
-    // Выводим распарсенные настройки
-    log.Printf("Parsed settings: %+v", settings)
-
+    
+    log.Printf("Parsed request: %+v", request)
+    
+    // Получаем текущие настройки пользователя
+    currentSettings, err := h.notificationService.GetNotificationSettings(c.Context(), userID)
+    if err != nil {
+        log.Printf("Error getting current settings: %v", err)
+        // Если ошибка, создаем новую настройку с дефолтными значениями
+        currentSettings = []models.NotificationSettings{}
+    }
+    
+    // Ищем настройку для этого типа уведомления
+    var settings models.NotificationSettings
     settings.UserID = userID
-    err := h.notificationService.UpdateNotificationSettings(c.Context(), &settings)
+    settings.NotificationType = request.NotificationType
+    
+    // По умолчанию настройка активна для обоих каналов, если создается новая
+    settings.TelegramEnabled = true
+    settings.EmailEnabled = true
+    
+    // Проверяем, есть ли уже такая настройка
+    for _, s := range currentSettings {
+        if s.NotificationType == request.NotificationType {
+            // Если нашли, используем текущие настройки как базовые
+            settings = s
+            break
+        }
+    }
+    
+    // Обновляем только те настройки, которые пришли в запросе
+    if request.TelegramEnabled != nil {
+        settings.TelegramEnabled = *request.TelegramEnabled
+        log.Printf("Setting telegram_enabled to: %v", settings.TelegramEnabled)
+    }
+    
+    if request.EmailEnabled != nil {
+        settings.EmailEnabled = *request.EmailEnabled
+        log.Printf("Setting email_enabled to: %v", settings.EmailEnabled)
+    }
+    
+    log.Printf("Final settings to save: %+v", settings)
+    
+    err = h.notificationService.UpdateNotificationSettings(c.Context(), &settings)
     if err != nil {
         log.Printf("Error updating settings: %v", err)
         return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update settings")
     }
-
-    return utils.SuccessResponse(c, fiber.Map{"message": "Settings updated"})
+    
+    // Получаем обновленные настройки для ответа
+    updatedSettings, err := h.notificationService.GetNotificationSettings(c.Context(), userID)
+    if err != nil {
+        log.Printf("Error getting updated settings: %v", err)
+        updatedSettings = []models.NotificationSettings{settings}
+    }
+    
+    // Возвращаем обновленные настройки в ответе
+    return utils.SuccessResponse(c, fiber.Map{
+        "message": "Settings updated",
+        "settings": updatedSettings,
+    })
 }
-
-
-
 
 // GetTelegramStatus проверяет статус подключения Telegram
 func (h *NotificationHandler) GetTelegramStatus(c *fiber.Ctx) error {

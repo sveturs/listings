@@ -31,50 +31,6 @@ export const useNotifications = () => {
      //       console.error('Error:', err);
         }
     };
-    const fetchSettings = async () => {
-        try {
-           // console.log('Fetching settings...');
-            const response = await axios.get('/api/v1/notifications/settings');
-           // console.log('Raw settings response:', response.data);
-    
-            // Правильный путь к массиву настроек
-            const settingsArray = response.data?.data?.data;
-            
-            if (Array.isArray(settingsArray)) {
-                const formattedSettings = {};
-                
-                settingsArray.forEach(setting => {
-                    if (setting && setting.notification_type) {
-                        formattedSettings[setting.notification_type] = {
-                            telegram_enabled: Boolean(setting.telegram_enabled),
-                            push_enabled: Boolean(setting.push_enabled)
-                        };
-                    }
-                });
-    
-          //      console.log('Formatted settings:', formattedSettings);
-                setSettings(formattedSettings);
-            } else {
-         //       console.warn('Settings data is not an array:', response.data);
-                setSettings({});
-            }
-    
-            // Отдельно проверяем статус подключения Telegram
-            const telegramStatus = await axios.get('/api/v1/notifications/telegram');
-            // console.log('Telegram status raw:', telegramStatus.data);
-            
-            // Проверяем правильный путь к статусу подключения
-            if (telegramStatus.data?.data?.connected === true) {
-                setTelegramConnected(true);
-            } else {
-                setTelegramConnected(false);
-            }
-    
-        } catch (err) {
-          //   console.error('Error fetching settings:', err);
-            setSettings({});
-        }
-    };
 
     useEffect(() => {
         let intervalId;
@@ -100,32 +56,65 @@ export const useNotifications = () => {
         };
     }, []);
 
-    const updateSettings = async (type, channel, value) => {
-        try {
-            // Логируем данные для отладки
-            console.log("Updating settings:", { 
-                notification_type: type, 
-                [`${channel}_enabled`]: value 
-            });
-            
-            const response = await axios.put('/api/v1/notifications/settings', {
-                notification_type: type,
-                [`${channel}_enabled`]: value
-            });
-            
-            console.log("Server response:", response.data);
-            
-            if (response.data.success) {
-                // Немедленно обновляем локальный кеш
-                return true;
-            }
-            return false;
-        } catch (err) {
-            console.error('Error updating settings:', err);
-            return false;
+// Исправленная функция для обновления настроек
+const updateSettings = async (type, channel, value) => {
+    try {
+        console.log(`Updating ${channel} for ${type} to ${value}`);
+        
+        // Отправляем только измененное поле
+        const payload = {
+            notification_type: type,
+            [`${channel}_enabled`]: value
+        };
+        
+        console.log("Sending payload:", payload);
+        
+        const response = await axios.put('/api/v1/notifications/settings', payload);
+        console.log("Server response:", response.data);
+        
+        if (response.data.success) {
+            // После успешного обновления запрашиваем свежие настройки
+            await fetchSettings();
+            return true;
         }
-    };
-    
+        
+        return false;
+    } catch (err) {
+        console.error('Error updating settings:', err);
+        return false;
+    }
+};
+
+// Исправленная функция для получения настроек
+const fetchSettings = async () => {
+    try {
+        console.log('Fetching notification settings...');
+        const response = await axios.get('/api/v1/notifications/settings');
+        console.log('Raw settings response:', response.data);
+        
+        if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
+            const settingsArray = response.data.data.data;
+            const formattedSettings = {};
+            
+            // Преобразуем массив настроек в объект для удобного доступа
+            settingsArray.forEach(setting => {
+                if (setting && setting.notification_type) {
+                    formattedSettings[setting.notification_type] = {
+                        telegram_enabled: Boolean(setting.telegram_enabled),
+                        email_enabled: Boolean(setting.email_enabled)
+                    };
+                }
+            });
+            
+            console.log('Formatted settings:', formattedSettings);
+            setSettings(formattedSettings);
+        } else {
+            console.warn('Settings data has unexpected format:', response.data);
+        }
+    } catch (err) {
+        console.error('Error fetching settings:', err);
+    }
+};
     
 
     
