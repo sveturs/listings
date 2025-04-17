@@ -15,16 +15,9 @@ import {
     Divider
     
 } from '@mui/material';
-import {
-    MessageCircle,
-    FileText,
-    Star,
-    Tag,
-    RefreshCw,
-    QrCode
-} from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import axios from '../../api/axios';
+import { MessageCircle, FileText, Star, Tag, RefreshCw, QrCode, Mail } from 'lucide-react';
 
 const NotificationSettings = () => {
     const { t } = useTranslation('marketplace');
@@ -262,6 +255,17 @@ const NotificationSettings = () => {
                                             />
                                         }
                                         label="Telegram"
+                                    />
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={Boolean(settings[type]?.email_enabled)}
+                                                onChange={(e) => handleSettingChange(type, 'email', e.target.checked)}
+                                                disabled={!implemented}
+                                                color="primary"
+                                            />
+                                        }
+                                        label="Email"
                                     />
                                 </Stack>
                             </Box>

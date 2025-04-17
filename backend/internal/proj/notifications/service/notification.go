@@ -15,19 +15,33 @@ import (
 type NotificationService struct {
 	storage storage.Storage
 	bot     *tgbotapi.BotAPI
+	email   *EmailService
+
 }
 
 func NewNotificationService(storage storage.Storage) NotificationServiceInterface {
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
-	if err != nil {
-		log.Printf("Error initializing telegram bot: %v", err)
-	}
+    bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+    if err != nil {
+        log.Printf("Error initializing telegram bot: %v", err)
+    }
 
-	return &NotificationService{
-		storage: storage,
-		bot:     bot,
-	}
+    // Инициализируем сервис для отправки email
+    emailService := NewEmailService(
+        "mail.svetu.rs",                 // SMTP-хост
+        "587",                           // SMTP-порт
+        "info@svetu.rs",                 // Адрес отправителя
+        "SveTu.rs",                      // Имя отправителя
+        "info@svetu.rs",                 // Имя пользователя для SMTP-авторизации
+        os.Getenv("EMAIL_PASSWORD"),     // Пароль от почтового ящика
+    )
+
+    return &NotificationService{
+        storage: storage,
+        bot:     bot,
+        email:   emailService,
+    }
 }
+
 
 func (s *NotificationService) GetNotificationSettings(ctx context.Context, userID int) ([]models.NotificationSettings, error) {
 	return s.storage.GetNotificationSettings(ctx, userID)
@@ -103,39 +117,96 @@ func (s *NotificationService) SendListingUpdateNotification(ctx context.Context,
 
 // Изменяем сигнатуру метода, добавляя listingID
 func (s *NotificationService) SendNotification(ctx context.Context, userID int, notificationType string, message string, listingID int) error {
-	// Проверяем настройки пользователя
-	settings, err := s.storage.GetNotificationSettings(ctx, userID)
-	if err != nil {
-		return err
-	}
+    // Проверяем настройки пользователя
+    settings, err := s.storage.GetNotificationSettings(ctx, userID)
+    if err != nil {
+        return err
+    }
 
-	// Находим нужный тип уведомления
-	var setting *models.NotificationSettings
-	for _, s := range settings {
-		if s.NotificationType == notificationType {
-			setting = &s
-			break
-		}
-	}
+    // Находим нужный тип уведомления
+    var setting *models.NotificationSettings
+    for _, s := range settings {
+        if s.NotificationType == notificationType {
+            setting = &s
+            break
+        }
+    }
 
-	// Если уведомления выключены, не отправляем
-	if setting == nil || !setting.TelegramEnabled {
-		return nil
-	}
+    // Получаем информацию о пользователе для email
+    user, err := s.storage.GetUserByID(ctx, userID)
+    if err != nil {
+        log.Printf("Error getting user info for notifications: %v", err)
+        // Продолжаем выполнение, возможно, отправим только Telegram
+    }
 
-	// Получаем Telegram подключение
-	conn, err := s.storage.GetTelegramConnection(ctx, userID)
-	if err != nil {
-		return err
-	}
+    // Создаем базовое уведомление для БД
+    notification := &models.Notification{
+        UserID:    userID,
+        Type:      notificationType,
+        Title:     s.getNotificationTitle(notificationType),
+        Message:   message,
+        ListingID: listingID,
+    }
+    
+    // Сохраняем уведомление в БД
+    if err := s.storage.CreateNotification(ctx, notification); err != nil {
+        log.Printf("Error creating notification in DB: %v", err)
+        // Продолжаем выполнение, попробуем отправить уведомления
+    }
 
-	// Формируем сообщение с полной ссылкой
-	messageWithLink := fmt.Sprintf("%s\n\nПерейти к объявлению: https://SveTu.rs/marketplace/listings/%d",
-		message,
-		listingID)
+    // Отправляем в Telegram, если включено
+    if setting != nil && setting.TelegramEnabled {
+        if err := s.sendTelegramNotification(ctx, userID, message, listingID); err != nil {
+            log.Printf("Error sending Telegram notification: %v", err)
+        }
+    }
 
-	chatID, _ := strconv.ParseInt(conn.TelegramChatID, 10, 64)
-	msg := tgbotapi.NewMessage(chatID, messageWithLink)
-	_, err = s.bot.Send(msg)
-	return err
+    // Отправляем на email, если включено
+    if setting != nil && setting.EmailEnabled && user != nil && user.Email != "" {
+        title := s.getNotificationTitle(notificationType)
+        htmlBody := s.email.FormatNotificationEmail(title, message, strconv.Itoa(listingID))
+        
+        if err := s.email.SendEmail(user.Email, title, htmlBody); err != nil {
+            log.Printf("Error sending email notification: %v", err)
+        }
+    }
+
+    return nil
+}
+func (s *NotificationService) sendTelegramNotification(ctx context.Context, userID int, message string, listingID int) error {
+    // Получаем Telegram подключение
+    conn, err := s.storage.GetTelegramConnection(ctx, userID)
+    if err != nil {
+        return err
+    }
+
+    // Формируем сообщение с полной ссылкой
+    messageWithLink := fmt.Sprintf("%s\n\nПерейти к объявлению: https://SveTu.rs/marketplace/listings/%d",
+        message,
+        listingID)
+
+    chatID, _ := strconv.ParseInt(conn.TelegramChatID, 10, 64)
+    msg := tgbotapi.NewMessage(chatID, messageWithLink)
+    _, err = s.bot.Send(msg)
+    return err
+}
+
+// Получение заголовка уведомления в зависимости от типа
+func (s *NotificationService) getNotificationTitle(notificationType string) string {
+    switch notificationType {
+    case models.NotificationTypeNewMessage:
+        return "Новое сообщение"
+    case models.NotificationTypeNewReview:
+        return "Новый отзыв"
+    case models.NotificationTypeReviewVote:
+        return "Оценка отзыва"
+    case models.NotificationTypeReviewResponse:
+        return "Ответ на отзыв"
+    case models.NotificationTypeListingStatus:
+        return "Обновление объявления"
+    case models.NotificationTypeFavoritePrice:
+        return "Изменение цены"
+    default:
+        return "Уведомление SveTu.rs"
+    }
 }

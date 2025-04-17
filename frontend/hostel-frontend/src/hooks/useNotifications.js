@@ -106,7 +106,7 @@ export const useNotifications = () => {
                 notification_type: type,
                 [`${channel}_enabled`]: value
             });
-
+    
             if (response.data.success) {
                 // Правильно обновляем состояние
                 setSettings(prev => ({
@@ -123,7 +123,7 @@ export const useNotifications = () => {
             console.error('Error updating settings:', err);
             return false;
         }
-    };
+    };    
     const connectTelegram = async () => {
         try {
             const response = await axios.post('/api/v1/notifications/telegram/token');

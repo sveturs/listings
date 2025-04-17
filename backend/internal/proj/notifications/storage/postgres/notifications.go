@@ -19,7 +19,7 @@ func NewNotificationStorage(pool *pgxpool.Pool) *Storage {
 
 func (s *Storage) GetNotificationSettings(ctx context.Context, userID int) ([]models.NotificationSettings, error) {
     rows, err := s.pool.Query(ctx, `
-        SELECT user_id, notification_type, telegram_enabled, created_at, updated_at
+        SELECT user_id, notification_type, telegram_enabled, email_enabled, created_at, updated_at
         FROM notification_settings
         WHERE user_id = $1
     `, userID)
@@ -35,6 +35,7 @@ func (s *Storage) GetNotificationSettings(ctx context.Context, userID int) ([]mo
             &setting.UserID,
             &setting.NotificationType,
             &setting.TelegramEnabled,
+            &setting.EmailEnabled,
             &setting.CreatedAt,
             &setting.UpdatedAt,
         )
@@ -51,20 +52,24 @@ func (s *Storage) UpdateNotificationSettings(ctx context.Context, settings *mode
         INSERT INTO notification_settings (
             user_id, 
             notification_type, 
-            telegram_enabled
+            telegram_enabled,
+            email_enabled
         ) VALUES (
             $1, 
             $2, 
-            $3
+            $3,
+            $4
         )
         ON CONFLICT (user_id, notification_type) 
         DO UPDATE SET
             telegram_enabled = EXCLUDED.telegram_enabled,
+            email_enabled = EXCLUDED.email_enabled,
             updated_at = CURRENT_TIMESTAMP
     `, 
         settings.UserID,
         settings.NotificationType,
         settings.TelegramEnabled,
+        settings.EmailEnabled,
     )
     
     if err != nil {

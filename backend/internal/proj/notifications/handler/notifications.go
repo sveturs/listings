@@ -138,38 +138,44 @@ func (h *NotificationHandler) handleStartCommand(c *fiber.Ctx, message *tgbotapi
 	}
 
 	// Установка базовых настроек уведомлений
-	settings := []models.NotificationSettings{
-		{
-			UserID:           userID,
-			NotificationType: "new_message",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "new_review",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "review_vote",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "review_response",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "listing_status",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "favorite_price",
-			TelegramEnabled:  true,
-		},
-	}
+    settings := []models.NotificationSettings{
+        {
+            UserID:           userID,
+            NotificationType: "new_message",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "new_review",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "review_vote",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "review_response",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "listing_status",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "favorite_price",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+    }
 
 	for _, setting := range settings {
 		if err := h.notificationService.UpdateNotificationSettings(c.Context(), &setting); err != nil {
@@ -235,41 +241,48 @@ func (h *NotificationHandler) validateUserToken(token string) (int, error) {
 
 // GetSettings handler
 func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+    userID := c.Locals("user_id").(int)
 
-	// Создаем базовые настройки, если их нет
-	baseSettings := []models.NotificationSettings{
-		{
-			UserID:           userID,
-			NotificationType: "new_message",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "new_review",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "review_vote",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "review_response",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "listing_status",
-			TelegramEnabled:  true,
-		},
-		{
-			UserID:           userID,
-			NotificationType: "favorite_price",
-			TelegramEnabled:  true,
-		},
-	}
+    // Создаем базовые настройки, если их нет
+    baseSettings := []models.NotificationSettings{
+        {
+            UserID:           userID,
+            NotificationType: "new_message",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "new_review",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "review_vote",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "review_response",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "listing_status",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+        {
+            UserID:           userID,
+            NotificationType: "favorite_price",
+            TelegramEnabled:  true,
+            EmailEnabled:     true, // Добавляем email
+        },
+    }
+
 
 	settings, err := h.notificationService.GetNotificationSettings(c.Context(), userID)
 	if err != nil || len(settings) == 0 {

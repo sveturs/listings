@@ -10,9 +10,11 @@ type NotificationSettings struct {
     UserID            int       `json:"user_id"`
     NotificationType  string    `json:"notification_type"`
     TelegramEnabled   bool      `json:"telegram_enabled"`
+    EmailEnabled      bool      `json:"email_enabled"`    // Добавляем поле для email
     CreatedAt         time.Time `json:"created_at"`
     UpdatedAt         time.Time `json:"updated_at"`
 }
+
 
 
 type Notification struct {
