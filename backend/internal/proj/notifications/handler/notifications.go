@@ -302,6 +302,7 @@ func (h *NotificationHandler) GetSettings(c *fiber.Ctx) error {
 }
 
 // SendPublicEmail обрабатывает запросы на отправку писем с форм обратной связи
+// SendPublicEmail обрабатывает запросы на отправку писем с форм обратной связи
 func (h *NotificationHandler) SendPublicEmail(c *fiber.Ctx) error {
     // Настройка CORS
     c.Set("Access-Control-Allow-Origin", "*")

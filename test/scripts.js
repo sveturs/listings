@@ -36,74 +36,60 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Обработчик формы обратной связи
     const contactForm = document.getElementById('contactForm');
-    const formStatus = document.getElementById('formStatus');
+const formStatus = document.getElementById('formStatus');
 
-    if (contactForm) {
-        contactForm.addEventListener('submit', function (e) {
-            e.preventDefault();
+if (contactForm) {
+    contactForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const message = document.getElementById('message').value;
+        
+        // Показываем статус отправки
+        if (formStatus) {
+            formStatus.style.display = 'block';
+            formStatus.className = 'alert alert-info mt-3';
             
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const message = document.getElementById('message').value;
-            
-            // Показываем статус отправки
+            const lang = document.documentElement.lang || 'sr';
+            if (lang === 'ru') {
+                formStatus.textContent = 'Отправка сообщения...';
+            } else {
+                formStatus.textContent = 'Slanje poruke...';
+            }
+        }
+        
+        // Отправляем запрос на API основного сайта
+        fetch('https://svetu.rs/api/v1/public/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                message: message,
+                source: 'klimagrad'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
             if (formStatus) {
                 formStatus.style.display = 'block';
-                formStatus.className = 'alert alert-info mt-3';
                 
-                const lang = document.documentElement.lang || 'sr';
-                if (lang === 'ru') {
-                    formStatus.textContent = 'Отправка сообщения...';
-                } else {
-                    formStatus.textContent = 'Slanje poruke...';
-                }
-            }
-            
-            // Отправляем запрос на API основного сайта
-            fetch('https://svetu.rs/api/v1/public/send-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: name,
-                    email: email,
-                    message: message,
-                    source: 'klimagrad'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (formStatus) {
-                    formStatus.style.display = 'block';
-                    
-                    if (data.success) {
-                        formStatus.className = 'alert alert-success mt-3';
-                        const lang = document.documentElement.lang || 'sr';
-                        if (lang === 'ru') {
-                            formStatus.textContent = 'Спасибо за сообщение! Мы свяжемся с вами в ближайшее время.';
-                        } else {
-                            formStatus.textContent = 'Hvala na poruci! Kontaktiraćemo vas uskoro.';
-                        }
-                        
-                        // Очищаем форму
-                        contactForm.reset();
+                if (data.success) {
+                    formStatus.className = 'alert alert-success mt-3';
+                    const lang = document.documentElement.lang || 'sr';
+                    if (lang === 'ru') {
+                        formStatus.textContent = 'Спасибо за сообщение! Мы свяжемся с вами в ближайшее время.';
                     } else {
-                        formStatus.className = 'alert alert-danger mt-3';
-                        const lang = document.documentElement.lang || 'sr';
-                        if (lang === 'ru') {
-                            formStatus.textContent = 'Произошла ошибка при отправке сообщения. Пожалуйста, попробуйте позже.';
-                        } else {
-                            formStatus.textContent = 'Došlo je do greške prilikom slanja poruke. Molimo pokušajte ponovo kasnije.';
-                        }
+                        formStatus.textContent = 'Hvala na poruci! Kontaktiraćemo vas uskoro.';
                     }
-                }
-            })
-            .catch(error => {
-                if (formStatus) {
-                    formStatus.style.display = 'block';
-                    formStatus.className = 'alert alert-danger mt-3';
                     
+                    // Очищаем форму
+                    contactForm.reset();
+                } else {
+                    formStatus.className = 'alert alert-danger mt-3';
                     const lang = document.documentElement.lang || 'sr';
                     if (lang === 'ru') {
                         formStatus.textContent = 'Произошла ошибка при отправке сообщения. Пожалуйста, попробуйте позже.';
@@ -111,10 +97,25 @@ document.addEventListener('DOMContentLoaded', function () {
                         formStatus.textContent = 'Došlo je do greške prilikom slanja poruke. Molimo pokušajte ponovo kasnije.';
                     }
                 }
-                console.error('Error:', error);
-            });
+            }
+        })
+        .catch(error => {
+            if (formStatus) {
+                formStatus.style.display = 'block';
+                formStatus.className = 'alert alert-danger mt-3';
+                
+                const lang = document.documentElement.lang || 'sr';
+                if (lang === 'ru') {
+                    formStatus.textContent = 'Произошла ошибка при отправке сообщения. Пожалуйста, попробуйте позже.';
+                } else {
+                    formStatus.textContent = 'Došlo je do greške prilikom slanja poruke. Molimo pokušajte ponovo kasnije.';
+                }
+            }
+            console.error('Error:', error);
         });
-    }
+    });
+}
+
 
     // Автоматическая пауза видео при скролле за пределы видимости
     const videos = document.querySelectorAll('video');

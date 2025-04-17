@@ -186,9 +186,14 @@ func (s *Server) setupRoutes() {
 		log.Printf("Received webhook request: %s", string(c.Body()))
 		return s.notifications.Notification.HandleTelegramWebhook(c)
 	})
+// Public routes without authentication
+	s.app.Post("/api/v1/public/send-email", s.notifications.Notification.SendPublicEmail)
+
+
 	// маршрут для витрин
 	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
 	s.app.Get("/v1/notifications/telegram", s.notifications.Notification.GetTelegramStatus)
+
 	// Balance routes
 	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequired)
 	balanceRoutes.Get("/", s.balance.Balance.GetBalance) // Добавляем .Balance
@@ -320,6 +325,7 @@ func (s *Server) setupRoutes() {
 	// Административные маршруты для переиндексации
 	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
 	api.Post("/admin/reindex-listings-with-translations", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAllWithTranslations)
+	
 	// Chat routes
 	chat := api.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)
