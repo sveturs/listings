@@ -4,6 +4,7 @@ import { Box, Button, Paper, Typography, Alert, CircularProgress } from '@mui/ma
 import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
+import { getAdminEmails } from '../../utils/adminUtils';
 
 const AdminPage = () => {
   const { t } = useTranslation(['common', 'marketplace']);
@@ -74,9 +75,9 @@ const AdminPage = () => {
         <Typography variant="body1" paragraph>
           Добро пожаловать, {user?.name || 'Администратор'}!
         </Typography>
-        
+
         <Alert severity="info" sx={{ mb: 3 }}>
-          Эта страница доступна только для администратора!  (voroshilovdo@gmail.com)
+          Эта страница доступна только для администраторов! ({getAdminEmails().join(', ')})
         </Alert>
 
         <Box sx={{ mt: 4 }}>

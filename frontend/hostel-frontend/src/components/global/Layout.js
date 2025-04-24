@@ -15,7 +15,7 @@ import CitySelector from './CitySelector';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import { Plus, MapPin, X, Menu as MenuIcon, Check } from 'lucide-react';
 import AutocompleteInput from '../shared/AutocompleteInput';
-
+import { isAdmin } from '../../utils/adminUtils';
 import {
   HomeWork,
   DirectionsCar,
@@ -1073,6 +1073,14 @@ const Layout = ({ children }) => {
               </ListItemIcon>
               <Typography variant="inherit">{t('navigation.balance', { defaultValue: 'Мой баланс', ns: 'marketplace' })}</Typography>
             </MenuItem>
+
+
+            {isAdmin(user.email) && (
+                <MenuItem component={Link} to="/admin" onClick={handleCloseMenu}>
+                  <Settings fontSize="small" sx={{ mr: 1 }} />
+                  Администрирование
+                </MenuItem>
+            )}
 
             <Divider />
 

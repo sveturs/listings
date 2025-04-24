@@ -2,8 +2,8 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { isAdmin } from '../../utils/adminUtils';
 
-// Компонент маршрута, доступного только для администратора
 const AdminRoute = ({ children }) => {
   const { user } = useAuth();
 
@@ -12,13 +12,11 @@ const AdminRoute = ({ children }) => {
     return <Navigate to="/" replace />;
   }
 
-  // Проверка, что email пользователя соответствует указанному
-  if (user.email !== 'voroshilovdo@gmail.com') {
-    // Если email не соответствует, перенаправляем на главную
+  // Проверка, что email пользователя находится в списке администраторов
+  if (!isAdmin(user.email)) {
     return <Navigate to="/" replace />;
   }
 
-  // Если все проверки пройдены - отображаем дочерний компонент
   return children;
 };
 
