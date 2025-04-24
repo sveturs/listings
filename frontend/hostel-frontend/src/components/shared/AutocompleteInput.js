@@ -1,3 +1,4 @@
+// frontend/hostel-frontend/src/components/shared/AutocompleteInput.js
 import React, { useState, useEffect, useRef } from 'react';
 import { TextField, InputAdornment, IconButton, Box, Paper, List, ListItem, ListItemText, Typography, CircularProgress } from '@mui/material';
 import { Search, X } from 'lucide-react';
@@ -36,14 +37,33 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
         try {
             setLoading(true);
 
+            // Пробуем использовать API расширенных подсказок
+            try {
+                const enhancedResponse = await axios.get('/api/v1/marketplace/enhanced-suggestions', {
+                    params: { q: text, size: 8 }
+                });
+
+                if (enhancedResponse.data && enhancedResponse.data.data) {
+                    console.log('Using enhanced suggestions API, query:', text, 'results:', enhancedResponse.data.data);
+                    setSuggestions(enhancedResponse.data.data);
+                    setLoading(false);
+                    return;
+                }
+            } catch (err) {
+                console.log('Enhanced suggestions API not available, falling back to standard search');
+                // Продолжаем с обычным поиском, если API расширенных подсказок недоступно
+            }
+
+            let productSuggestions = [];
+            let attributeSuggestions = [];
+            let allListings = [];
+
             // 1. Запрос на товары (через обычный поиск)
             const searchResponse = await axios.get('/api/v1/marketplace/search', {
-                params: { q: text, size: 3 } // Ограничиваем количество товаров
+                params: { q: text, size: 8, tmp: 1 } 
             });
 
             console.log('Using search API for product suggestions, query:', text);
-
-            let productSuggestions = [];
 
             // Извлекаем товары из результатов поиска
             if (searchResponse.data && searchResponse.data.data) {
@@ -55,18 +75,55 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                     listings = searchResponse.data.data.data;
                 }
 
-                // Фильтруем товары по релевантности
-                const lowerQuery = text.toLowerCase();
+                allListings = listings; // Сохраняем все найденные объявления
+
+                // ИЗМЕНЕНИЕ: Не фильтруем только по заголовку, используем все найденные товары
                 productSuggestions = listings
-                    .filter(listing => listing && listing.title &&
-                        listing.title.toLowerCase().includes(lowerQuery))
                     .map(listing => ({
                         id: listing.id,
                         type: 'product',
                         title: listing.title,
                         category_id: listing.category_id,
                         category_path_ids: listing.category_path_ids || []
-                    }));
+                    }))
+                    .slice(0, 3); // Ограничиваем до 3 результатов
+
+                // Обрабатываем атрибуты из найденных товаров
+                const lowerQuery = text.toLowerCase();
+                
+                // Проходим по всем объявлениям и ищем соответствующие атрибуты
+                for (const listing of listings) {
+                    if (listing.attributes && listing.attributes.length > 0) {
+                        // Ищем атрибуты, которые соответствуют поисковому запросу
+                        const matchingAttrs = listing.attributes.filter(attr => 
+                            (attr.text_value && typeof attr.text_value === 'string' && 
+                             attr.text_value.toLowerCase().includes(lowerQuery)) ||
+                            (attr.display_value && typeof attr.display_value === 'string' && 
+                             attr.display_value.toLowerCase().includes(lowerQuery))
+                        );
+
+                        for (const attr of matchingAttrs) {
+                            const attrValue = attr.text_value || attr.display_value;
+                            if (attrValue) {
+                                // Проверяем, что такого атрибута еще нет в подсказках
+                                if (!attributeSuggestions.some(s => 
+                                    s.attribute_name === attr.attribute_name && 
+                                    s.attribute_value === attrValue)) {
+                                    
+                                    attributeSuggestions.push({
+                                        type: 'attribute',
+                                        title: attrValue,
+                                        display: `${attr.display_name || attr.attribute_name}: ${attrValue}`,
+                                        priority: 2, // Средний приоритет для атрибутов
+                                        attribute_name: attr.attribute_name,
+                                        attribute_value: attrValue,
+                                        category_id: listing.category_id
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // 2. Запрос на категории 
@@ -130,6 +187,11 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                 display: product.title,
                 priority: 1
             }));
+
+            // Добавляем найденные атрибуты
+            attributeSuggestions.forEach(attr => {
+                finalSuggestions.push(attr);
+            });
 
             // Затем добавляем категории товаров из результатов поиска
             const productCategoryIds = new Set();
@@ -285,11 +347,36 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             window.location.href = url.toString();
             
             setShowSuggestions(false);
+        } else if (suggestion.type === 'attribute') {
+            // НОВОЕ: Обработка клика по атрибуту
+            // Для атрибута - устанавливаем его значение в поле поиска и выполняем поиск
+            setInputValue(suggestion.attribute_value || suggestion.title);
+            if (onChange) onChange(suggestion.attribute_value || suggestion.title);
+            
+            // Выполняем поиск с атрибутом
+            const url = new URL(window.location.href);
+            url.pathname = '/marketplace';
+            const params = new URLSearchParams(url.search);
+            
+            // Устанавливаем запрос
+            params.set('query', suggestion.attribute_value || suggestion.title);
+            
+            // Если есть ID категории, устанавливаем и его
+            if (suggestion.category_id) {
+                params.set('category_id', suggestion.category_id);
+            }
+            
+            // Если есть имя атрибута, добавляем специальный параметр для фильтрации по атрибуту
+            if (suggestion.attribute_name) {
+                params.set(`attr_${suggestion.attribute_name}`, suggestion.attribute_value || suggestion.title);
+            }
+            
+            url.search = params.toString();
+            window.location.href = url.toString();
+            
+            setShowSuggestions(false);
         }
     };
-    
-    
-    
 
     // Очистка ввода
     const handleClear = () => {
@@ -365,12 +452,16 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                         {suggestions.map((suggestion, index) => {
                             // Определяем тип и приоритет для стилизации
                             const isProduct = suggestion.type === 'product';
+                            const isCategory = suggestion.type === 'category';
+                            const isAttribute = suggestion.type === 'attribute';
                             const priority = suggestion.priority || 1;
 
                             // Выбираем цвет полосы слева
                             let borderColor = '#4682B4'; // Синий для товаров
-                            if (!isProduct) {
+                            if (isCategory) {
                                 borderColor = '#6BAB33'; // Зеленый для категорий
+                            } else if (isAttribute) {
+                                borderColor = '#FFA500'; // Оранжевый для атрибутов
                             }
 
                             return (
@@ -416,7 +507,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                                             </Typography>
                                         }
                                         secondary={
-                                            suggestion.type === 'category' && suggestion.path && suggestion.path.length > 1 ? (
+                                            isCategory && suggestion.path && suggestion.path.length > 1 ? (
                                                 <Typography
                                                     variant="caption"
                                                     sx={{
@@ -430,6 +521,21 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                                                     }}
                                                 >
                                                     {suggestion.path.slice(0, -1).map(cat => cat.name).join(' > ')}
+                                                </Typography>
+                                            ) : isAttribute && suggestion.attribute_name ? (
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        color: 'text.secondary',
+                                                        fontSize: '0.8rem',
+                                                        display: 'block',
+                                                        maxWidth: '100%',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                >
+                                                    {`${suggestion.attribute_name}: ${suggestion.attribute_value || suggestion.title}`}
                                                 </Typography>
                                             ) : null
                                         }
