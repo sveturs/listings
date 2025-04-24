@@ -1789,9 +1789,41 @@ func (h *MarketplaceHandler) BatchTranslateListings(c *fiber.Ctx) error {
 
 		// Источниковый язык
 		sourceLanguage := listing.OriginalLanguage
-		if sourceLanguage == "" {
-			sourceLanguage = "sr" // По умолчанию
-		}
+if sourceLanguage == "" {
+    // Явное определение языка из текста, если язык не указан
+    detectedLang, confidence, err := h.services.Translation().DetectLanguage(c.Context(), listing.Title + "\n" + listing.Description)
+    if err == nil && confidence > 0.7 {
+        sourceLanguage = detectedLang
+        log.Printf("Detected language for listing %d: %s (confidence: %.2f)", listingID, detectedLang, confidence)
+        
+        // Обновляем язык в базе данных для будущих операций
+        _, err = h.services.Storage().Exec(c.Context(), 
+            "UPDATE marketplace_listings SET original_language = $1 WHERE id = $2", 
+            detectedLang, listingID)
+        if err != nil {
+            log.Printf("Error updating original language: %v", err)
+        }
+    } else {
+        // Получаем язык из заголовка запроса
+        if userLang := c.Get("Accept-Language"); ok && userLang != "" {
+            sourceLanguage = userLang
+            log.Printf("Using user preferred language for listing %d: %s", listingID, userLang)
+        } else {
+            // Если всё еще нет языка, используем русский по умолчанию, так как большинство пользователей русскоговорящие
+            sourceLanguage = "ru"
+            log.Printf("Using default language (ru) for listing %d", listingID)
+        }
+    }
+    
+    // Обновляем поле original_language в базе данных
+    _, err = h.services.Storage().Exec(c.Context(), 
+        "UPDATE marketplace_listings SET original_language = $1 WHERE id = $2", 
+        sourceLanguage, listingID)
+    if err != nil {
+        log.Printf("Error updating original language: %v", err)
+    }
+}
+
 
 		// Получаем провайдер перевода из запроса или используем Google по умолчанию
 		provider := c.Query("translation_provider", "google")

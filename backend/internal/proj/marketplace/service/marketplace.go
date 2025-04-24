@@ -44,10 +44,17 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 	listing.ViewsCount = 0
 
 	if listing.OriginalLanguage == "" {
+		// Пытаемся получить язык из контекста
 		if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
 			listing.OriginalLanguage = userLang
+			log.Printf("Using language from context: %s", userLang)
+		} else if userLang, ok := ctx.Value("Accept-Language").(string); ok && userLang != "" {
+			listing.OriginalLanguage = userLang
+			log.Printf("Using language from Accept-Language header: %s", userLang)
 		} else {
-			listing.OriginalLanguage = "sr"
+			// Используем русский по умолчанию, т.к. большинство пользователей русскоговорящие
+			listing.OriginalLanguage = "ru"
+			log.Printf("Using default language (ru)")
 		}
 	}
 

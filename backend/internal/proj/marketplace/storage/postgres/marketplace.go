@@ -134,13 +134,20 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 	var listingID int
 
 	// Если не указан язык, берем значение из контекста или используем по умолчанию
-	if listing.OriginalLanguage == "" {
-		if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
-			listing.OriginalLanguage = userLang
-		} else {
-			listing.OriginalLanguage = "ru" // Значение по умолчанию
-		}
-	}
+    if listing.OriginalLanguage == "" {
+        // Пытаемся получить язык из контекста
+        if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
+            listing.OriginalLanguage = userLang
+            log.Printf("Using language from context: %s", userLang)
+        } else if userLang, ok := ctx.Value("Accept-Language").(string); ok && userLang != "" {
+            listing.OriginalLanguage = userLang
+            log.Printf("Using language from Accept-Language header: %s", userLang)
+        } else {
+            // Используем русский по умолчанию, т.к. большинство пользователей русскоговорящие
+            listing.OriginalLanguage = "ru"
+            log.Printf("Using default language (ru)")
+        }
+    }
 
 	// Вставляем основные данные объявления
 	err := s.pool.QueryRow(ctx, `

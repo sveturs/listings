@@ -1,48 +1,48 @@
 {
   "auto": {
-      "details": {
-        "title": "Car Specifications",
-        "not_specified": "Not specified"
-      },
-      "properties": {
-        "brand_model": "Brand and Model",
-        "year": "Year of Manufacture",
-        "mileage": "Mileage",
-        "fuel_type": "Fuel Type",
-        "transmission": "Transmission",
-        "engine": "Engine",
-        "color": "Color",
-        "body_type": "Body Type",
-        "drive_type": "Drive Type",
-        "doors": "Doors",
-        "seats": "Seats",
-        "features": "Additional Features",
-        "fuel_types": {
-          "petrol": "Petrol",
-          "diesel": "Diesel",
-          "electric": "Electric",
-          "hybrid": "Hybrid"
-        },
-        "transmissions": {
-          "manual": "Manual",
-          "automatic": "Automatic",
-          "semi-automatic": "Semi-automatic"
-        },
-        "body_types": {
-          "sedan": "Sedan",
-          "suv": "SUV",
-          "hatchback": "Hatchback",
-          "coupe": "Coupe",
-          "wagon": "Wagon"
-        },
-        "drive_types": {
-          "front": "Front",
-          "rear": "Rear",
-          "all": "All",
-          "4wd": "4WD"
-        }
-      }
+    "details": {
+      "title": "Car specifications.",
+      "not_specified": "Not specified"
     },
+    "properties": {
+      "brand_model": "Brand and model",
+      "year": "Year",
+      "mileage": "Mileage",
+      "fuel_type": "Fuel type",
+      "transmission": "Transmission",
+      "engine": "Engine",
+      "color": "Color",
+      "body_type": "Body type",
+      "drive_type": "Drive type",
+      "doors": "Doors",
+      "seats": "Seats",
+      "features": "Additional features",
+      "fuel_types": {
+        "petrol": "Petrol",
+        "diesel": "Diesel",
+        "electric": "Electric",
+        "hybrid": "Hybrid"
+      },
+      "transmissions": {
+        "manual": "Manual",
+        "automatic": "Automatic",
+        "semi-automatic": "Semi-automatic"
+      },
+      "body_types": {
+        "sedan": "Sedan",
+        "suv": "SUV",
+        "hatchback": "Hatchback",
+        "coupe": "Coupe",
+        "wagon": "Wagon"
+      },
+      "drive_types": {
+        "front": "Front-wheel",
+        "rear": "Rear-wheel",
+        "all": "All-wheel",
+        "4wd": "4WD"
+      }
+    }
+  },
   "favorites": {
     "title": "Favorite Listings",
     "empty": "You don't have any favorite listings yet",
@@ -62,7 +62,7 @@
       "noLocation": "Location not specified"
     },
     "similar": {
-      "title": "Similar Listings",
+      "title": "Similar listings",
       "error": "Failed to load similar listings",
       "loadMore": "Show more",
       "loading": "Loading..."
@@ -71,7 +71,7 @@
     "Youdonthave": "You don't have any listings yet. Create your first listing now!",
     "edit": {
       "title": "Edit Listing",
-      "translationNote": "You are editing a translation. The original is in a different language.",
+      "translationNote": "You're editing a translation. The original is in another language.",
       "saveChanges": "Save Changes",
       "location": {
         "title": "Location",
@@ -87,7 +87,7 @@
         "loadFailed": "Error loading data",
         "updateFailed": "Error updating listing",
         "imageUpload": {
-          "invalidType": "Only images can be uploaded",
+          "invalidType": "You can only upload images",
           "tooLarge": "File size should not exceed 15MB"
         }
       }
@@ -96,7 +96,7 @@
       "title": "Create Listing",
       "category": "Category",
       "сategories": "Categories",
-      "name": "Item name",
+      "name": "Title",
       "description": "Description",
       "price": "Price",
       "condition": {
@@ -108,16 +108,16 @@
       "location": {
         "label": "Location",
         "showOnMap": "Show location on map",
-        "searchPlaceholder": "Search by address...",
+        "searchPlaceholder": "Search address...",
         "currentLocation": "My location",
-        "mapInstructions": "Click on the map or enter address"
+        "mapInstructions": "Click on the map or enter an address"
       },
       "photos": {
-        "upload": "Upload photo",
+        "upload": "Upload Photos",
         "processing": "Processing ({{progress}}%)",
         "addWatermark": "Adding watermark...",
         "maxCount": "Maximum number of photos: {{count}}",
-        "onlyImages": "Only images can be uploaded",
+        "onlyImages": "You can only upload images",
         "processingError": "Error processing images"
       },
       "submit": "Create Listing",
@@ -130,11 +130,11 @@
         "photoCount": "{{count}} photos"
       },
       "priceHistory": {
-        "title": "Price History",
-        "description": "The chart shows how the price of this item has changed over time. The chart is automatically updated when the seller changes the price.",
+        "title": "Price history",
+        "description": "This chart shows how the price has changed over time. It updates automatically when the seller changes the price.",
         "showHistory": "Click to show price history chart",
         "currentPrice": "Current price",
-        "noData": "No price change data for this item",
+        "noData": "No price history data for this item",
         "loadError": "Failed to load price history"
       },
       "discount": {
@@ -185,7 +185,7 @@
       },
       "favorite": {
         "add": "Add to favorites",
-        "remove": "In favorites"
+        "remove": "Remove from favorites"
       },
       "location": {
         "show": "Show on map",
@@ -215,7 +215,7 @@
         "label": "Distance",
         "any": "Any distance",
         "fromYourLocation": "From your location",
-        "needLocation": "To use distance filter, determine your location"
+        "needLocation": "To use distance filter, you need to determine your location"
       },
       "condition": {
         "label": "Condition",
@@ -229,7 +229,7 @@
       },
       "apply": "Show results",
       "reset": "Reset",
-      "noResults": "No results found for your query"
+      "noResults": "No results found for your search"
     },
     "map": {
       "showOnMap": "Show on map",
@@ -263,33 +263,34 @@
     "views": "{{count}} views",
     "translateSelected": "Translate selected",
     "deleteSelected": "Delete selected",
-    "translateSuccess": "Successfully translated {{count}} listings",
+    "translateSuccess": "Successfully translated listings: {{count}}",
     "translateError": "Error translating listings",
-    "deleteSuccess": "Successfully deleted {{count}} listings",
+    "deleteSuccess": "Successfully deleted listings: {{count}}",
     "deleteError": "Error deleting listings",
     "deleteConfirmText": "Are you sure you want to delete {{count}} selected listings?",
     "deleteWarning": "This action cannot be undone! Deleted listings cannot be recovered.",
-    "deleteConfirmTitle": "Confirm Deletion",
-    "batchActionsHint": "Choose an action for selected listings",
+    "deleteConfirmTitle": "Confirm deletion",
+    "batchActionsHint": "Select an action for the selected listings",
     "translate": "Translate",
     "title": "Title",
     "price": "Price",
     "status": "Status",
     "date": "Date",
     "noListings": "No listings",
-    "translateConfirmTitle": "Confirm Translation",
+    "translateConfirmTitle": "Confirm translation",
     "translateConfirmText": "You are about to translate {{count}} listings to all available languages.",
     "translationCost": "Translation cost",
     "costPerListing": "{{cost}} per listing",
     "insufficientFunds": "Insufficient funds for translation. Required: {{required}}, Available: {{available}}",
     "translationInfo": "Translation will be performed using machine translation. Quality may vary depending on language and text complexity.",
     "translating": "Translating...",
-    "confirmTranslation": "Confirm Translation",
-    "translateSuccessWithCost": "Successfully translated {{count}} listings for {{cost}} RSD"
+    "confirmTranslation": "Confirm translation",
+    "translateSuccessWithCost": "Successfully translated listings: {{count}} for {{cost}} RSD"
   },
   "reviews": {
+    "none": "No reviews",
     "title": "Reviews",
-    "write": "Write review",
+    "write": "Write a review",
     "edit": "Edit review",
     "rating": "Overall rating",
     "comment": "Comment",
@@ -311,7 +312,7 @@
     "sellerRating": "Seller rating",
     "storeRating": "Store rating",
     "basedOn": "Based on {{count}} reviews",
-    "noRatingsYet": "No ratings yet",
+    "noRatingsYet": "no ratings yet",
     "seeAllReviews": "See all reviews",
     "seeAllUserReviews": "See all user reviews",
     "hideReviews": "Hide reviews",
@@ -334,7 +335,7 @@
     "typing": "typing...",
     "placeholder": "Type a message...",
     "send": "Send",
-    "empty": "Select a chat to start conversation",
+    "empty": "Select a chat to start a conversation",
     "noMessages": "You don't have any messages yet",
     "openlisting": "Open listing",
     "archive": "Archive",
@@ -365,11 +366,11 @@
       "listingStatus": "Listing status",
       "favoritePrice": "Favorite price changes",
       "notificationschatmessage": "Chat message notifications",
-      "newMessageDescription": "Notifications about new chat messages",
+      "newMessageDescription": "Notifications about new messages in chat",
       "newReviewDescription": "Notifications about new reviews on your listings",
       "reviewVoteDescription": "Notifications about votes on your reviews",
       "reviewResponseDescription": "Notifications about responses to your reviews",
-      "listingStatusDescription": "Notifications about changes in your listings status",
+      "listingStatusDescription": "Notifications about changes to your listing status",
       "favoritePriceDescription": "Notifications about price changes in your favorite listings"
     },
     "test": "Send test notification",
@@ -407,7 +408,7 @@
     },
     "errors": {
       "loadFailed": "Failed to load balance data",
-      "depositFailed": "Deposit error",
+      "depositFailed": "Error making deposit",
       "loadPaymentMethods": "Failed to load payment methods"
     },
     "descriptions": {
@@ -417,24 +418,24 @@
   },
   "store": {
     "listings": {
-      "selectTranslationProvider": "Translation Service",
+      "selectTranslationProvider": "Translation service",
       "freeWithinLimits": "Free within limits",
       "higherQuality": "Higher quality",
       "googleTranslate": "Google Translate",
       "openaiTranslate": "OpenAI (GPT)"
     },
-    "seeAllReviews": "All store reviews",
+    "seeAllReviews": "See all store reviews",
     "backToStore": "Back to store",
-    "createdAt": "Created on {{date}}",
-    "myStorefronts": "My Storefronts",
-    "noStorefronts": "You don't have any storefronts yet",
+    "createdAt": "Created {{date}}",
+    "myStorefronts": "My stores",
+    "noStorefronts": "You don't have any stores yet",
     "createFirstStorefront": "Create a storefront to start selling products in your store",
     "openSince": "Store open since {{date}}",
     "storeProducts": "Store products",
-    "noProductsMessage": "There are no products in the store at the moment",
-    "noProducts": "There are no products in this storefront yet",
-    "notFound": "Storefront not found",
-    "backToList": "Back to storefront list",
+    "noProductsMessage": "There are currently no products in the store",
+    "noProducts": "No products in this store yet",
+    "notFound": "Store not found",
+    "backToList": "Back to store list",
     "manage": "Manage",
     "created": "Created",
     "statusActive": "Active",
@@ -443,35 +444,8 @@
     "contactInfo": "Contact information",
     "location": "Location",
     "errors": {
-      "loadFailed": "Failed to load storefront data",
-      "updateFailed": "Failed to update storefront data"
-    },
-    "listings": {
-      "translateConfirmTitle": "Confirm Translation",
-      "translateConfirmText": "You are about to translate {{count}} listings to all available languages.",
-      "translationCost": "Translation cost",
-      "costPerListing": "{{cost}} per listing",
-      "insufficientFunds": "Insufficient funds for translation. Required: {{required}}, Available: {{available}}",
-      "translationInfo": "Translation will be performed using machine translation. Quality may vary depending on language and text complexity.",
-      "translating": "Translating...",
-      "confirmTranslation": "Confirm Translation",
-      "translateSuccessWithCost": "Successfully translated {{count}} listings for {{cost}} RSD",
-      "title": "Title",
-      "price": "Price",
-      "status": "Status",
-      "date": "Date",
-      "noListings": "No listings",
-      "translate": "Translate",
-      "translateSelected": "Translate selected",
-      "deleteSelected": "Delete selected",
-      "translateSuccess": "Successfully translated {{count}} listings",
-      "translateError": "Error translating listings",
-      "deleteSuccess": "Successfully deleted {{count}} listings",
-      "deleteError": "Error deleting listings",
-      "deleteConfirmText": "Are you sure you want to delete {{count}} selected listings?",
-      "deleteWarning": "This action cannot be undone! Deleted listings cannot be recovered.",
-      "deleteConfirmTitle": "Confirm Deletion",
-      "batchActionsHint": "Choose an action for selected listings"
+      "loadFailed": "Failed to load store data",
+      "updateFailed": "Failed to update store data"
     },
     "tabs": {
       "import": "Import products",
@@ -479,27 +453,27 @@
       "stats": "Statistics"
     },
     "create": {
-      "title": "Create Storefront",
-      "button": "Create Storefront",
+      "title": "Create Store",
+      "button": "Create store",
       "creating": "Creating...",
-      "nameRequired": "Enter store name",
-      "insufficientFunds": "Insufficient funds to create a storefront. 15000 RSD required.",
-      "error": "Failed to create storefront",
-      "costNote": "Creating a storefront costs 15000 RSD. This amount will be deducted from your balance.",
+      "nameRequired": "Store name is required",
+      "insufficientFunds": "Insufficient funds to create a store. Required: 15000 RSD.",
+      "error": "Failed to create store",
+      "costNote": "The cost of creating a store is 15000 RSD. This amount will be deducted from your balance.",
       "yourBalance": "Your balance",
-      "balanceWarning": "To create a storefront, you need to have at least 15000 RSD in your balance. Your current balance: {{balance}} RSD."
+      "balanceWarning": "To create a store, you need to have at least 15000 RSD in your balance. Your current balance: {{balance}} RSD."
     },
     "edit": {
-      "title": "Edit Storefront",
+      "title": "Edit Store",
       "saving": "Saving...",
-      "saveChanges": "Save Changes",
-      "success": "Storefront updated successfully",
-      "slugHelp": "Unique identifier for storefront URL"
+      "saveChanges": "Save changes",
+      "success": "Store updated successfully",
+      "slugHelp": "Unique identifier for the store URL"
     },
     "settings": {
-      "title": "Storefront Settings",
-      "basic": "Basic Settings",
-      "additional": "Additional Settings",
+      "title": "Store Settings",
+      "basic": "Basic settings",
+      "additional": "Additional settings",
       "name": "Store name",
       "slug": "URL (slug)",
       "statusActive": "Active",
@@ -512,9 +486,9 @@
       "location": "Location"
     },
     "stats": {
-      "title": "Storefront Statistics",
-      "description": "Sales and traffic statistics for your storefront will be displayed here.",
-      "notAvailable": "Statistics will be available after adding products to your storefront."
+      "title": "Store Statistics",
+      "description": "Here you will see statistics on sales and traffic for your store.",
+      "notAvailable": "Statistics will be available after adding products to the store."
     },
     "pagination": {
       "itemsPerPage": "Items per page:",
@@ -522,11 +496,11 @@
     },
     "import": {
       "button": "Import",
-      "sources": "Import Sources",
-      "createSourceDescription": "Create a data source to import products into your storefront. CSV, XML, and JSON formats are supported.",
+      "sources": "Import sources",
+      "createSourceDescription": "Create a data source to import products into your store. CSV, XML and JSON formats are supported.",
       "addSource": "Add source",
       "noSources": "No import sources created",
-      "createFirstSource": "Create an import source to upload products to your storefront",
+      "createFirstSource": "Create an import source to upload products to your store",
       "sourceType": "Source: {{type}}",
       "created": "Created: {{date}}",
       "urlSource": "URL: {{url}}",
@@ -538,38 +512,38 @@
       "selectFile": "Select file",
       "importing": "Importing...",
       "uploadAndImport": "Upload & import",
-      "runImport": "Run",
+      "runImport": "Run import",
       "kb": "KB",
-      "historyTitle": "Import History",
+      "historyTitle": "Import history",
       "imported": "Imported",
       "statusSuccess": "Success",
       "statusPartial": "Partial",
       "statusError": "Error",
-      "createSourceTitle": "Create Import Source",
+      "createSourceTitle": "Create import source",
       "typeLabel": "Import type",
       "typeCSV": "CSV - comma/semicolon separated values",
       "typeXML": "XML - structured data",
       "typeJSON": "JSON - JavaScript Object Notation",
       "urlLabel": "Source URL (optional)",
       "urlPlaceholder": "Can be left empty for manual file upload",
-      "urlHelp": "Specify URL if you want to import data from an external source",
+      "urlHelp": "Specify a URL if you want to import data from an external source",
       "creating": "Creating...",
       "createSource": "Create source",
       "selectTypeError": "Select import type",
       "createError": "Failed to create import source",
-      "sourceCreated": "Import source created successfully! Now you can upload a file using the \"Run Import\" button.",
+      "sourceCreated": "Import source successfully created! Now you can upload a file using the \"Run import\" button.",
       "deleteConfirm": "Are you sure you want to delete this import source?",
       "deleteError": "Failed to delete import source",
-      "needFileOrUrl": "For import, you need to either upload a file or configure a source URL",
+      "needFileOrUrl": "For import, you need either to upload a file or configure a source URL",
       "completed": "Import completed. Status: {{status}}. Processed: {{imported}} of {{total}}",
       "error": "Import error: {{message}}",
-      "importData": "Import Data",
+      "importData": "Import data",
       "noCsvSelected": "No CSV file selected",
       "noXmlZipSelected": "No ZIP archive with XML selected",
-      "importSuccess": "Import completed. Status: {{status}}. Imported: {{imported}}/{{total}} items.",
+      "importSuccess": "Import completed. Status: {{status}}. Imported: {{imported}}/{{total}} products.",
       "unknownError": "Unknown error",
       "serverError": "Server error",
-      "invalidCsvFormat": "Invalid CSV format",
+      "invalidCsvFormat": "Invalid CSV file format",
       "invalidZipFormat": "Invalid ZIP archive format",
       "csvImport": "CSV Import",
       "xmlImport": "XML Import",
@@ -578,21 +552,21 @@
       "csvHelp": "CSV file must contain required fields: id, title, description, price, category_id",
       "selectZipFile": "Select ZIP archive with images",
       "browseZip": "Browse ZIP",
-      "zipHelp": "Optional: add ZIP archive with images. File names must match names in the \"images\" column of the CSV file.",
-      "imageNamingInfo": "In the \"images\" column of the CSV file, specify image paths separated by commas. When uploading a ZIP archive, these paths must correspond to files inside the archive.",
+      "zipHelp": "Optional: add a ZIP archive with images. File names must match the names in the \"images\" column of the CSV file.",
+      "imageNamingInfo": "In the \"images\" column of the CSV file, list image paths separated by commas. When uploading a ZIP archive, these paths must correspond to files within the archive.",
       "selectXmlZipFile": "Select ZIP archive with XML file",
       "browseXmlZip": "Browse ZIP with XML",
-      "xmlZipHelp": "ZIP archive must contain XML file with product catalog. The system will automatically find and process the XML file inside the archive.",
+      "xmlZipHelp": "ZIP archive must contain an XML file with product catalog. The system will automatically find and process the XML file inside the archive.",
       "xmlFormatInfo": "XML file must contain <artikal> elements with product information. Images specified in <slika> tags are supported.",
       "alternativeUrlImport": "Alternatively: import by URL",
-      "xmlUrlInfo": "You can also add a direct link to a ZIP archive with XML when creating an import source. The system will automatically recognize ZIP archive by .zip extension in the URL and process it as an XML source.",
-      "startImport": "Start Import",
+      "xmlUrlInfo": "You can also add a direct link to a ZIP archive with XML when creating an import source. The system will automatically recognize a ZIP archive by the .zip extension in the URL and process it as an XML source.",
+      "startImport": "Start import",
       "sourceDetails": "Source details",
       "importStatus": "Import status",
       "statusNone": "Not executed",
       "lastRunAt": "Last run: {{date}}",
-      "sync": "Sync",
-      "runSync": "Run sync",
+      "sync": "Synchronization",
+      "runSync": "Run synchronization",
       "scheduleNone": "Manual only",
       "scheduleHourly": "Hourly",
       "scheduleDaily": "Daily",
@@ -601,39 +575,39 @@
       "scheduledImport": "Scheduled import",
       "editSource": "Edit import source",
       "syncStarting": "Starting synchronization...",
-      "syncCompleted": "Synchronization completed. Status: {{status}}. Imported: {{imported}}/{{total}} items.",
-      "syncSuccess": "Synchronization started successfully",
+      "syncCompleted": "Synchronization completed. Status: {{status}}. Imported: {{imported}}/{{total}} products.",
+      "syncSuccess": "Synchronization successfully started",
       "syncError": "Error starting synchronization",
       "noUrlConfigured": "Source URL not configured",
       "scheduleLabel": "Update schedule",
       "scheduleFrequency": "Update frequency",
       "scheduleManualy": "Manual only",
       "scheduleHelp": "Choose how often to automatically update data from the specified URL",
-      "scheduleUrlRequired": "URL must be specified to set up a schedule",
-      "csvStructureTitle": "CSV File Structure for Import",
-      "xmlStructureTitle": "XML File Structure for Import",
-      "csvDescription": "CSV file must be in format with \";\" (semicolon) delimiter. The first row must contain column headers.",
+      "scheduleUrlRequired": "URL is required for schedule configuration",
+      "csvStructureTitle": "CSV file structure for import",
+      "xmlStructureTitle": "XML file structure for import",
+      "csvDescription": "CSV file must be in a format with a \";\" (semicolon) separator. The first row must contain column headers.",
       "xmlDescription": "XML file must contain <artikal> elements with product information. The system will automatically import all products from the XML file.",
       "requiredFields": "CSV file fields",
-      "xmlExample": "Example of product element structure:",
+      "xmlExample": "Example product element structure:",
       "xmlFields": "XML file fields",
       "xmlImageInfo": "Image information:",
-      "xmlImageInfo1": "Images are defined inside the <slike> element as separate <slika> elements",
+      "xmlImageInfo1": "Images are defined within the <slike> element as separate <slika> elements",
       "xmlImageInfo2": "Each <slika> element must contain a URL or path to an image",
       "xmlImageInfo3": "The first image in the list will be set as the main one",
-      "xmlImageInfo4": "For elements with CDATA inside, the content will be correctly processed",
-      "xmlWarning": "Maximum ZIP archive size - 100 MB. Supported XML formats: UTF-8, Windows-1251.",
+      "xmlImageInfo4": "For elements with CDATA inside, the content will be properly processed",
+      "xmlWarning": "Maximum ZIP archive size is 100 MB. Supported XML formats: UTF-8, Windows-1251.",
       "imageInstructions": "Instructions for working with images:",
-      "imageInstruction1": "In the \"images\" column of the CSV file, list image paths separated by commas, for example: \"image1.jpg,image2.jpg,image3.jpg\"",
+      "imageInstruction1": "In the \"images\" column, list image paths separated by commas, e.g.: \"image1.jpg,image2.jpg,image3.jpg\"",
       "imageInstruction2": "When uploading a ZIP archive, file names in the archive must match the names specified in the CSV",
-      "imageInstruction3": "For images by URL, specify full addresses starting with \"http://\" or \"https://\"",
+      "imageInstruction3": "For images via URL, specify full addresses starting with \"http://\" or \"https://\"",
       "imageInstruction4": "The first image in the list will be set as the main one",
-      "csvWarning": "Maximum CSV file size - 10 MB, ZIP archive - 100 MB. Supported image formats: JPEG, PNG, GIF, WebP.",
-      "downloadSample": "Download CSV sample file",
+      "csvWarning": "Maximum CSV file size is 10 MB, ZIP archive 100 MB. Supported image formats: JPEG, PNG, GIF, WebP.",
+      "downloadSample": "Download sample CSV file",
       "xml": {
         "fields": {
-          "id": "Unique product identifier",
-          "sifra": "SKU (product code)",
+          "id": "Unique product ID",
+          "sifra": "Product code",
           "naziv": "Product name",
           "kategorija1": "Main product category",
           "kategorija2": "Product subcategory",
@@ -642,40 +616,40 @@
           "mpCena": "Retail price",
           "dostupan": "Product availability (1 - available, 0 - unavailable)",
           "naAkciji": "Product on sale (1 - yes, 0 - no)",
-          "opis": "Product description (can contain HTML tags)",
+          "opis": "Product description (may contain HTML tags)",
           "slike": "Block with product images",
-          "slika": "Link to product image (inside the slike tag)"
+          "slika": "Link to product image (inside slike tag)"
         }
       },
       "fields": {
-        "id": "Unique listing identifier (used only for tracking during import)",
+        "id": "Unique listing ID (used only for tracking during import)",
         "title": "Listing title",
         "description": "Detailed listing description",
         "price": "Price (numeric value)",
-        "category_id": "Category ID (if category not found, the \"Other\" category is used)",
-        "condition": "Item condition: \"new\" - new, \"used\" - used (default is \"new\")",
-        "status": "Listing status: \"active\" - active, \"inactive\" - inactive (default is \"active\")",
-        "location": "Item location (text description)",
+        "category_id": "Category ID (if category is not found, \"Other\" category is used)",
+        "condition": "Product condition: \"new\" or \"used\" (default \"new\")",
+        "status": "Listing status: \"active\" or \"inactive\" (default \"active\")",
+        "location": "Product location (text description)",
         "latitude": "Latitude (for map display)",
         "longitude": "Longitude (for map display)",
         "address_city": "City",
         "address_country": "Country",
-        "show_on_map": "Show on map: \"true\" or \"false\" (default is \"true\")",
-        "original_language": "Listing language: \"ru\", \"en\", \"sr\", etc. (default is \"sr\")",
-        "images": "Image paths separated by commas. Can be URLs or file names in ZIP archive"
+        "show_on_map": "Show on map: \"true\" or \"false\" (default \"true\")",
+        "original_language": "Listing language: \"ru\", \"en\", \"sr\" etc. (default \"sr\")",
+        "images": "Paths to images, separated by commas. Can be URLs or file names in ZIP archive"
       }
     },
     "categoryMapping": {
-      "title": "Category Mapping",
-      "description": "Set up mapping of categories from import sources to system categories",
-      "info": "When an item is imported, the system uses these mappings to determine the category. Unmapped categories will be assigned to the 'Other' section.",
+      "title": "Category mapping",
+      "description": "Configure mapping of categories from import sources to system categories",
+      "info": "When a product is imported, the system uses these mappings to determine the category. Unmapped categories will be assigned to the 'Other' section.",
       "button": "Categories",
       "buttonTitle": "Configure category mapping",
       "currentMappings": "Current mappings",
-      "noMappings": "Category mappings not configured",
+      "noMappings": "No category mappings configured",
       "addMapping": "Add mapping",
       "sourceCategory": "Source category",
-      "sourceCategoryHelp": "Category name from imported file",
+      "sourceCategoryHelp": "Category name from the import file",
       "targetCategory": "System category",
       "addMappingTitle": "Add category mapping",
       "editMappingTitle": "Edit category mapping",
@@ -687,23 +661,23 @@
       "loadingImportedCategories": "Loading imported categories...",
       "noImportedCategories": "No imported categories found",
       "notMappedYet": "Not mapped yet",
-      "mapCategory": "Map",
+      "mapCategory": "Map category",
       "searchCategories": "Search categories",
       "dropHere": "Drop here",
       "systemCategories": "System categories",
       "dragSource": "Drag to imported category",
       "noCategories": "No categories",
       "searchImportedCategories": "Search imported categories",
-      "dropTarget": "Drop target",
+      "dropTarget": "Drop target zone",
       "dragDropInfo": "Drag a category from the right panel to an imported category on the left to create a mapping. To remove a mapping, click the X icon next to the mapped category.",
       "statistics": "Mapping statistics:",
-      "applyMappings": "Apply to items",
-      "applySuccess": "Successfully updated categories for {{count}} items",
+      "applyMappings": "Apply to products",
+      "applySuccess": "Successfully updated categories for {{count}} products",
       "applyError": "Error applying category mappings",
       "noMappingsToApply": "No mappings to apply",
       "applyingMappings": "Applying mappings...",
-      "applyConfirmation": "Are you sure you want to apply mappings? This will change categories of already imported items.",
-      "applyHelp": "This button will update categories of all items that were imported from this source, according to configured mappings.",
+      "applyConfirmation": "Are you sure you want to apply mappings? This will change categories of already imported products.",
+      "applyHelp": "This button will update categories of all products imported from this source, according to the configured mappings.",
       "mappingsCount": "Mappings: {{count}}",
       "importedCategoriesCount": "Imported categories: {{count}}"
     }
@@ -711,13 +685,15 @@
   "search": {
     "didyoumean": "Did you mean",
     "usesuggestion": "Use suggestion",
-    "noresults": "No listings found for your search"
+    "noresults": "No results found for your search",
+    "find": "Search"
   },
   "buttons": {
     "search": "Search"
   },
   "common": {
-    "backToHome": "Back to home"
+    "backToHome": "Back to home",
+    "loading": "Loading..."
   },
   "gallery": {
     "fullscreen": "Fullscreen mode",
@@ -728,5 +704,83 @@
     "zoomOut": "Zoom out",
     "reset": "Reset zoom",
     "imageCount": "Image {{current}} of {{total}}"
+  },
+  "navigation": {
+    "forBusiness": "For Business",
+    "help": "Help",
+    "cabinet": "My Profile",
+    "postListing": "Post Listing",
+    "post": "Post",
+    "myListings": "My Listings",
+    "allCategories": "ALL CATEGORIES",
+    "menu": "Menu",
+    "favorites": "Favorites",
+    "messages": "Messages",
+    "notifications": "Notifications",
+    "storefronts": "My Stores",
+    "balance": "My Balance",
+    "language": "Language"
+  },
+  "languages": {
+    "russian": "Russian",
+    "serbian": "Serbian"
+  },
+  "location": {
+    "citySelection": "City Selection",
+    "useThisCity": "Use this city",
+    "detectedCity": "We've detected that you're in {{city}}",
+    "selectCity": "Select city",
+    "popularCities": "Popular cities",
+    "searchCity": "Search city...",
+    "changeCity": "Change city",
+    "detectingLocation": "Detecting location...",
+    "useCurrentLocation": "Use my location",
+    "saveToProfile": "Save to profile",
+    "noResults": "No results found",
+    "savedToProfile": "City saved to profile",
+    "errorSavingToProfile": "Error saving city to profile"
+  },
+  "categories": {
+    "title": "Categories",
+    "realestate": "Real Estate",
+    "apartments": "Apartments",
+    "houses": "Houses",
+    "rooms": "Rooms",
+    "commercial": "Commercial",
+    "land": "Land",
+    "garages": "Garages",
+    "transport": "Vehicles",
+    "cars": "Cars",
+    "motorcycles": "Motorcycles",
+    "parts": "Parts",
+    "trucks": "Trucks",
+    "specialVehicles": "Special Vehicles",
+    "electronics": "Electronics",
+    "phones": "Phones",
+    "computers": "Computers",
+    "tvAudio": "TV & Audio",
+    "photoVideo": "Photo & Video",
+    "forHome": "For Home",
+    "furniture": "Furniture",
+    "appliances": "Appliances",
+    "kitchenware": "Kitchenware",
+    "renovation": "Renovation",
+    "forGarden": "For Garden",
+    "gardenFurniture": "Garden Furniture",
+    "plants": "Plants",
+    "tools": "Tools"
+  },
+  "cities": {
+    "belgrade": "Belgrade",
+    "noviSad": "Novi Sad",
+    "nis": "Niš",
+    "kragujevac": "Kragujevac"
+  },
+  "countries": {
+    "serbia": "Serbia"
+  },
+  "auth": {
+    "signin": "Sign in",
+    "signout": "Sign out"
   }
 }

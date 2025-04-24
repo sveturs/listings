@@ -233,7 +233,7 @@ const AttributeFilters = ({ categoryId, onFilterChange, filters = {}, onAttribut
                     }
                 } else {
                     console.log(`Ответ не содержит данных или данные некорректны`, response.data);
-                    setError("Не удалось загрузить атрибуты");
+                    setError(" атрибуты отсутствуют");
                     if (onAttributesLoaded) {
                         onAttributesLoaded(false);
                     }

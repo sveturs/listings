@@ -18,7 +18,7 @@
       "seats": "Места",
       "features": "Дополнительные особенности",
       "fuel_types": {
-        "petrol": "Бензин1",
+        "petrol": "Бензин",
         "diesel": "Дизель",
         "electric": "Электрический",
         "hybrid": "Гибрид"
@@ -288,7 +288,7 @@
     "translateSuccessWithCost": "Успешно переведено объявлений: {{count}} за {{cost}} RSD"
   },
   "reviews": {
-    "none" : "Нет отзывов1",
+    "none": "Нет отзывов",
     "title": "Отзывы",
     "write": "Написать отзыв",
     "edit": "Редактировать отзыв",
@@ -685,13 +685,15 @@
   "search": {
     "didyoumean": "Возможно, вы имели в виду",
     "usesuggestion": "Использовать предложение",
-    "noresults": "По вашему запросу не найдено объявлений"
+    "noresults": "По вашему запросу не найдено объявлений",
+    "find": "Найти"
   },
   "buttons": {
     "search": "Поиск"
   },
   "common": {
-    "backToHome": "Вернуться на главную"
+    "backToHome": "Вернуться на главную",
+    "loading": "Загрузка..."
   },
   "gallery": {
     "fullscreen": "Полноэкранный режим",
@@ -702,5 +704,83 @@
     "zoomOut": "Уменьшить",
     "reset": "Сбросить масштаб",
     "imageCount": "Изображение {{current}} из {{total}}"
+  },
+  "navigation": {
+    "forBusiness": "Для бизнеса",
+    "help": "Помощь",
+    "cabinet": "Кабинет",
+    "postListing": "Подать объявление",
+    "post": "Подать",
+    "myListings": "Мои объявления",
+    "allCategories": "ВСЕ КАТЕГОРИИ",
+    "menu": "Меню",
+    "favorites": "Избранное",
+    "messages": "Сообщения",
+    "notifications": "Оповещения",
+    "storefronts": "Мои витрины",
+    "balance": "Мой баланс",
+    "language": "Язык"
+  },
+  "languages": {
+    "russian": "Русский",
+    "serbian": "Сербский"
+  },
+  "location": {
+    "citySelection": "Выбор города",
+    "useThisCity": "Использовать этот город",
+    "detectedCity": "Мы определили, что вы находитесь в городе {{city}}",
+    "selectCity": "Выбрать город",
+    "popularCities": "Популярные города",
+    "searchCity": "Поиск города...",
+    "changeCity": "Изменить город",
+    "detectingLocation": "Определение местоположения...",
+    "useCurrentLocation": "Использовать моё местоположение",
+    "saveToProfile": "Сохранить в профиле",
+    "noResults": "Ничего не найдено",
+    "savedToProfile": "Город сохранен в профиле",
+    "errorSavingToProfile": "Ошибка сохранения города в профиле"
+  },
+  "categories": {
+    "title": "Категории",
+    "realestate": "Недвижимость",
+    "apartments": "Квартиры",
+    "houses": "Дома",
+    "rooms": "Комнаты",
+    "commercial": "Коммерческая",
+    "land": "Земельные участки",
+    "garages": "Гаражи",
+    "transport": "Транспорт",
+    "cars": "Автомобили",
+    "motorcycles": "Мотоциклы",
+    "parts": "Запчасти",
+    "trucks": "Грузовики",
+    "specialVehicles": "Спецтехника",
+    "electronics": "Электроника",
+    "phones": "Телефоны",
+    "computers": "Компьютеры",
+    "tvAudio": "ТВ и аудио",
+    "photoVideo": "Фото и видео",
+    "forHome": "Для дома",
+    "furniture": "Мебель",
+    "appliances": "Бытовая техника",
+    "kitchenware": "Посуда",
+    "renovation": "Ремонт",
+    "forGarden": "Для сада",
+    "gardenFurniture": "Садовая мебель",
+    "plants": "Растения",
+    "tools": "Инструменты"
+  },
+  "cities": {
+    "belgrade": "Белград",
+    "noviSad": "Нови-Сад",
+    "nis": "Ниш",
+    "kragujevac": "Крагуевац"
+  },
+  "countries": {
+    "serbia": "Сербия"
+  },
+  "auth": {
+    "signin": "Войти",
+    "signout": "Выйти"
   }
 }

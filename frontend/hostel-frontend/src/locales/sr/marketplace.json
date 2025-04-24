@@ -1,55 +1,54 @@
 {
   "auto": {
-      "details": {
-        "title": "Karakteristike automobila",
-        "not_specified": "Nije navedeno"
+    "details": {
+      "title": "Karakteristike automobila.",
+      "not_specified": "Nije navedeno"
+    },
+    "properties": {
+      "brand_model": "Marka i model",
+      "year": "Godina proizvodnje",
+      "mileage": "Kilometraža",
+      "fuel_type": "Vrsta goriva",
+      "transmission": "Menjač",
+      "engine": "Motor",
+      "color": "Boja",
+      "body_type": "Tip karoserije",
+      "drive_type": "Pogon",
+      "doors": "Vrata",
+      "seats": "Sedišta",
+      "features": "Dodatne karakteristike",
+      "fuel_types": {
+        "petrol": "Benzin",
+        "diesel": "Dizel",
+        "electric": "Električni",
+        "hybrid": "Hibrid"
       },
-      "properties": {
-        "brand_model": "Marka i model",
-        "year": "Godina proizvodnje",
-        "mileage": "Kilometraža",
-        "fuel_type": "Vrsta goriva",
-        "transmission": "Menjač",
-        "engine": "Motor",
-        "color": "Boja",
-        "body_type": "Tip karoserije",
-        "drive_type": "Pogon",
-        "doors": "Vrata",
-        "seats": "Sedišta",
-        "features": "Dodatne karakteristike",
-        "fuel_types": {
-          "petrol": "Benzin",
-          "diesel": "Dizel",
-          "electric": "Električni",
-          "hybrid": "Hibrid"
-        },
-        "transmissions": {
-          "manual": "Manuelni",
-          "automatic": "Automatski",
-          "semi-automatic": "Poluautomatski"
-        },
-        "body_types": {
-          "sedan": "Sedan",
-          "suv": "SUV",
-          "hatchback": "Hečbek",
-          "coupe": "Kupe",
-          "wagon": "Karavan"
-        },
-        "drive_types": {
-          "front": "Prednji",
-          "rear": "Zadnji",
-          "all": "Svi",
-          "4wd": "4WD"
-        }
+      "transmissions": {
+        "manual": "Manuelni",
+        "automatic": "Automatski",
+        "semi-automatic": "Poluautomatski"
+      },
+      "body_types": {
+        "sedan": "Sedan",
+        "suv": "SUV",
+        "hatchback": "Hečbek",
+        "coupe": "Kupe",
+        "wagon": "Karavan"
+      },
+      "drive_types": {
+        "front": "Prednji",
+        "rear": "Zadnji",
+        "all": "Svi",
+        "4wd": "4WD"
       }
-    
+    }
   },
   "favorites": {
     "title": "Omiljeni oglasi",
     "empty": "Još uvek nemate omiljene oglase",
-    "authRequired": "Morate se prijaviti da biste videli omiljene oglase",
+    "authRequired": "Morate se prijaviti da biste videli svoje omiljene oglase",
     "errors": {
-      "loadFailed": "Učitavanje omiljenih oglasa nije uspelo"
+      "loadFailed": "Nije moguće učitati omiljene oglase"
     }
   },
   "listings": {
@@ -59,21 +58,21 @@
       "price": "Cena",
       "location": "Lokacija",
       "date": "Datum",
-      "noListings": "Nije pronađen nijedan oglas",
+      "noListings": "Nema pronađenih oglasa",
       "noLocation": "Lokacija nije navedena"
     },
     "similar": {
       "title": "Slični oglasi",
-      "error": "Učitavanje sličnih oglasa nije uspelo",
+      "error": "Nije moguće učitati slične oglase",
       "loadMore": "Prikaži više",
       "loading": "Učitavanje..."
     },
     "myListings": "Moji oglasi",
-    "Youdonthave": "Još uvek nemate oglase. Kreirajte svoj prvi oglas odmah!",
+    "Youdonthave": "Nemate oglase. Kreirajte svoj prvi oglas odmah!",
     "edit": {
-      "title": "Izmena oglasa",
+      "title": "Uredi oglas",
       "translationNote": "Uređujete prevod. Original je na drugom jeziku.",
-      "saveChanges": "Sačuvaj izmene",
+      "saveChanges": "Sačuvaj promene",
       "location": {
         "title": "Lokacija",
         "showOnMap": "Prikaži lokaciju na mapi"
@@ -88,8 +87,8 @@
         "loadFailed": "Greška pri učitavanju podataka",
         "updateFailed": "Greška pri ažuriranju oglasa",
         "imageUpload": {
-          "invalidType": "Možete otpremiti samo slike",
-          "tooLarge": "Veličina datoteke ne sme biti veća od 15MB"
+          "invalidType": "Možete učitati samo slike",
+          "tooLarge": "Veličina datoteke ne sme prelaziti 15MB"
         }
       }
     },
@@ -97,7 +96,7 @@
       "title": "Kreiraj oglas",
       "category": "Kategorija",
       "сategories": "Kategorije",
-      "name": "Naziv artikla",
+      "name": "Naziv",
       "description": "Opis",
       "price": "Cena",
       "condition": {
@@ -109,19 +108,19 @@
       "location": {
         "label": "Lokacija",
         "showOnMap": "Prikaži lokaciju na mapi",
-        "searchPlaceholder": "Pretraga po adresi...",
+        "searchPlaceholder": "Pretraži adresu...",
         "currentLocation": "Moja lokacija",
         "mapInstructions": "Kliknite na mapu ili unesite adresu"
       },
       "photos": {
-        "upload": "Otpremi fotografiju",
+        "upload": "Otpremi fotografije",
         "processing": "Obrada ({{progress}}%)",
         "addWatermark": "Dodavanje vodenog žiga...",
-        "maxCount": "Maksimalan broj fotografija: {{count}}",
+        "maxCount": "Maksimalni broj fotografija: {{count}}",
         "onlyImages": "Možete otpremiti samo slike",
         "processingError": "Greška pri obradi slika"
       },
-      "submit": "Kreiraj oglas",
+      "submit": "Objavi oglas",
       "success": "Oglas uspešno kreiran!",
       "error": "Greška pri kreiranju oglasa"
     },
@@ -132,11 +131,11 @@
       },
       "priceHistory": {
         "title": "Istorija cena",
-        "description": "Grafikon prikazuje kako se cena ovog artikla menjala tokom vremena. Grafikon se automatski ažurira kada prodavac promeni cenu.",
-        "showHistory": "Kliknite da biste prikazali grafikon istorije cena",
+        "description": "Grafikon pokazuje kako se cena menjala tokom vremena. Automatski se ažurira kada prodavac promeni cenu.",
+        "showHistory": "Kliknite da prikažete istoriju cena",
         "currentPrice": "Trenutna cena",
-        "noData": "Nema podataka o promeni cene za ovaj artikal",
-        "loadError": "Učitavanje istorije cena nije uspelo"
+        "noData": "Nema podataka o istoriji cena za ovaj proizvod",
+        "loadError": "Nije moguće učitati istoriju cena"
       },
       "discount": {
         "title": "Popust",
@@ -153,7 +152,7 @@
           "count": "{{count}} recenzija",
           "countOne": "1 recenzija",
           "countMany": "{{count}} recenzija",
-          "goTo": "Idi na recenzije"
+          "goTo": "Pogledaj recenzije"
         },
         "date": {
           "created": "Kreirano"
@@ -173,30 +172,30 @@
       },
       "contact": {
         "call": "Pozovi",
-        "message": "Poruka",
+        "message": "Pošalji poruku",
         "share": "Podeli",
         "errors": {
           "noPhone": "Prodavac nije naveo broj telefona"
         }
       },
       "actions": {
-        "edit": "Izmeni",
+        "edit": "Uredi",
         "delete": "Obriši",
         "deleteConfirm": "Da li ste sigurni da želite da obrišete ovaj oglas?"
       },
       "favorite": {
         "add": "Dodaj u omiljene",
-        "remove": "U omiljenima"
+        "remove": "Ukloni iz omiljenih"
       },
       "location": {
         "show": "Prikaži na mapi",
         "title": "Lokacija",
         "expand": "Proširi mapu",
-        "collapse": "Skupi mapu"
+        "collapse": "Smanji mapu"
       },
       "viewDetails": "Pogledaj detalje",
       "errors": {
-        "loadFailed": "Učitavanje oglasa nije uspelo",
+        "loadFailed": "Nije moguće učitati oglas",
         "deleteFailed": "Greška pri brisanju oglasa",
         "updateFailed": "Greška pri ažuriranju oglasa",
         "storeLoadFailed": "Greška pri učitavanju informacija o prodavnici"
@@ -205,7 +204,7 @@
       "goToStore": "Idi u prodavnicu"
     },
     "filters": {
-      "any": "Bilo koji",
+      "any": "Bilo koja",
       "title": "Filteri",
       "price": {
         "label": "Cena",
@@ -223,13 +222,13 @@
         "any": "Bilo koje"
       },
       "sort": {
-        "label": "Sortiranje",
-        "newest": "Prvo najnoviji",
-        "cheapest": "Prvo najjeftiniji",
-        "expensive": "Prvo najskuplji"
+        "label": "Sortiraj",
+        "newest": "Najnovije prvo",
+        "cheapest": "Najjeftinije prvo",
+        "expensive": "Najskuplje prvo"
       },
       "apply": "Prikaži rezultate",
-      "reset": "Resetuj",
+      "reset": "Poništi",
       "noResults": "Nema rezultata za vašu pretragu"
     },
     "map": {
@@ -241,9 +240,9 @@
       "yourLocation": "Vaša lokacija",
       "itemsOnMap": "oglasa na mapi",
       "mapCenter": "Centar mape",
-      "locationError": "Dobijanje lokacije nije uspelo",
-      "geolocationNotSupported": "Vaš pretraživač ne podržava geolokaciju",
-      "needLocation": "Da biste koristili filter udaljenosti, morate odrediti svoju lokaciju",
+      "locationError": "Nije moguće dobiti lokaciju",
+      "geolocationNotSupported": "Geolokacija nije podržana u vašem pregledaču",
+      "needLocation": "Za korišćenje filtera udaljenosti potrebno je odrediti vašu lokaciju",
       "map": "Mapa"
     },
     "conditions": {
@@ -262,16 +261,16 @@
       "inactive": "Neaktivno"
     },
     "views": "{{count}} pregleda",
-    "translateSelected": "Prevedi izabrano",
-    "deleteSelected": "Obriši izabrano",
-    "translateSuccess": "Uspešno prevedeno {{count}} oglasa",
+    "translateSelected": "Prevedi izabrane",
+    "deleteSelected": "Obriši izabrane",
+    "translateSuccess": "Uspešno prevedeno oglasa: {{count}}",
     "translateError": "Greška pri prevođenju oglasa",
-    "deleteSuccess": "Uspešno obrisano {{count}} oglasa",
+    "deleteSuccess": "Uspešno obrisano oglasa: {{count}}",
     "deleteError": "Greška pri brisanju oglasa",
     "deleteConfirmText": "Da li ste sigurni da želite da obrišete {{count}} izabranih oglasa?",
-    "deleteWarning": "Ova akcija ne može da se poništi! Obrisani oglasi se ne mogu povratiti.",
+    "deleteWarning": "Ova radnja se ne može poništiti! Obrisani oglasi se ne mogu povratiti.",
     "deleteConfirmTitle": "Potvrda brisanja",
-    "batchActionsHint": "Izaberite akciju za izabrane oglase",
+    "batchActionsHint": "Izaberite radnju za izabrane oglase",
     "translate": "Prevedi",
     "title": "Naslov",
     "price": "Cena",
@@ -283,23 +282,24 @@
     "translationCost": "Cena prevoda",
     "costPerListing": "{{cost}} po oglasu",
     "insufficientFunds": "Nedovoljno sredstava za prevod. Potrebno: {{required}}, Dostupno: {{available}}",
-    "translationInfo": "Prevod će biti izvršen pomoću mašinskog prevođenja. Kvalitet može varirati u zavisnosti od jezika i složenosti teksta.",
+    "translationInfo": "Prevod će biti izvršen pomoću mašinskog prevođenja. Kvalitet može varirati zavisno od jezika i složenosti teksta.",
     "translating": "Prevođenje...",
     "confirmTranslation": "Potvrdi prevod",
-    "translateSuccessWithCost": "Uspešno prevedeno {{count}} oglasa za {{cost}} RSD"
+    "translateSuccessWithCost": "Uspešno prevedeno oglasa: {{count}} za {{cost}} RSD"
   },
   "reviews": {
+    "none": "Nema recenzija",
     "title": "Recenzije",
     "write": "Napiši recenziju",
-    "edit": "Izmeni recenziju",
-    "rating": "Ukupna ocena",
+    "edit": "Uredi recenziju",
+    "rating": "Ocena",
     "comment": "Komentar",
     "pros": "Prednosti",
-    "cons": "Mane",
+    "cons": "Nedostaci",
     "save": "Sačuvaj",
     "delete": "Obriši",
     "photos": "Fotografije",
-    "uploadupto10": "Možete otpremiti do 10 fotografija",
+    "uploadupto10": "Možete dodati do 10 fotografija",
     "writeResponse": "Napišite odgovor...",
     "helpful": "Korisno",
     "notHelpful": "Nije korisno",
@@ -307,14 +307,14 @@
     "report": "Prijavi",
     "verifiedPurchase": "Potvrđena kupovina",
     "responses": "Odgovori",
-    "submit": "Pošalji",
+    "submit": "Objavi",
     "cancel": "Otkaži",
     "sellerRating": "Ocena prodavca",
     "storeRating": "Ocena prodavnice",
     "basedOn": "Na osnovu {{count}} recenzija",
-    "noRatingsYet": "nema ocena",
+    "noRatingsYet": "nema recenzija",
     "seeAllReviews": "Pogledaj sve recenzije",
-    "seeAllUserReviews": "Pogledaj sve recenzije korisnika",
+    "seeAllUserReviews": "Pogledaj sve recenzije o korisniku",
     "hideReviews": "Sakrij recenzije",
     "allUserReviews": "Sve recenzije korisnika",
     "allStoreReviews": "Sve recenzije prodavnice",
@@ -326,16 +326,16 @@
     "noReviewsYet": "Još uvek nema recenzija",
     "allReviews": "Sve recenzije",
     "errors": {
-      "loadFailed": "Učitavanje recenzija nije uspelo"
+      "loadFailed": "Nije moguće učitati recenzije"
     }
   },
   "chat": {
     "newMessage": "Nova poruka",
     "reply": "Odgovori",
-    "typing": "kuca...",
-    "placeholder": "Unesite poruku...",
+    "typing": "piše...",
+    "placeholder": "Napišite poruku...",
     "send": "Pošalji",
-    "empty": "Izaberite chat da započnete razgovor",
+    "empty": "Izaberite razgovor za početak",
     "noMessages": "Još uvek nemate poruka",
     "openlisting": "Otvori oglas",
     "archive": "Arhiviraj",
@@ -343,7 +343,7 @@
     "call": "Pozovi",
     "copyPhone": "Kopiraj broj",
     "errors": {
-      "sendFailed": "Slanje poruke nije uspelo. Pokušajte kasnije."
+      "sendFailed": "Nije moguće poslati poruku. Pokušajte ponovo kasnije."
     }
   },
   "notifications": {
@@ -364,11 +364,11 @@
       "reviewVote": "Glasovi za recenzije",
       "reviewResponse": "Odgovori na recenzije",
       "listingStatus": "Status oglasa",
-      "favoritePrice": "Promene cena omiljenih",
-      "notificationschatmessage": "Obaveštenja o porukama u chatu",
-      "newMessageDescription": "Obaveštenja o novim porukama u chatu",
-      "newReviewDescription": "Obaveštenja o novim recenzijama na vaše oglase",
-      "reviewVoteDescription": "Obaveštenja o glasovima na vaše recenzije",
+      "favoritePrice": "Cene omiljenih oglasa",
+      "notificationschatmessage": "Obaveštenja o porukama ćaskanja",
+      "newMessageDescription": "Obaveštenja o novim porukama u ćaskanju",
+      "newReviewDescription": "Obaveštenja o novim recenzijama za vaše oglase",
+      "reviewVoteDescription": "Obaveštenja o glasovima za vaše recenzije",
       "reviewResponseDescription": "Obaveštenja o odgovorima na vaše recenzije",
       "listingStatusDescription": "Obaveštenja o promenama statusa vaših oglasa",
       "favoritePriceDescription": "Obaveštenja o promenama cena vaših omiljenih oglasa"
@@ -379,8 +379,8 @@
   "balance": {
     "title": "Stanje i transakcije",
     "available": "Dostupno stanje",
-    "deposit": "Uplati",
-    "confirmDeposit": "Potvrdi uplatu",
+    "deposit": "Dopuni",
+    "confirmDeposit": "Potvrdi dopunu",
     "processing": "Obrada...",
     "amount": "Iznos",
     "paymentMethod": "Način plaćanja",
@@ -388,28 +388,28 @@
     "type": "Tip",
     "description": "Opis",
     "status": "Status",
-    "fee": "Naknada: {{fixed}} RSD + {{percent}}%",
+    "fee": "Provizija: {{fixed}} RSD + {{percent}}%",
     "minAmount": "Minimalni iznos",
     "maxAmount": "Maksimalni iznos",
-    "paymentSuccess": "Plaćanje uspešno",
+    "paymentSuccess": "Plaćanje uspešno izvršeno",
     "paymentCanceled": "Plaćanje otkazano",
     "types": {
       "deposit": "Uplata",
       "withdrawal": "Isplata",
       "payment": "Plaćanje",
-      "transfer": "Prenos",
+      "transfer": "Transfer",
       "service_payment": "Plaćanje usluge",
-      "service_fee": "Naknada za uslugu"
+      "service_fee": "Provizija za uslugu"
     },
     "statuses": {
-      "pending": "Na čekanju",
+      "pending": "U obradi",
       "completed": "Završeno",
-      "failed": "Neuspelo"
+      "failed": "Neuspešno"
     },
     "errors": {
-      "loadFailed": "Učitavanje podataka o stanju nije uspelo",
-      "depositFailed": "Greška pri uplati",
-      "loadPaymentMethods": "Učitavanje načina plaćanja nije uspelo"
+      "loadFailed": "Nije moguće učitati podatke o stanju",
+      "depositFailed": "Greška pri dopuni stanja",
+      "loadPaymentMethods": "Nije moguće učitati načine plaćanja"
     },
     "descriptions": {
       "storeCreation": "Kreiranje prodavnice",
@@ -418,15 +418,15 @@
   },
   "store": {
     "listings": {
-      "selectTranslationProvider": "Servis za prevod",
-      "freeWithinLimits": "Besplatno u okviru limita",
-      "higherQuality": "Bolji kvalitet",
+      "selectTranslationProvider": "Servis za prevođenje",
+      "freeWithinLimits": "Besplatno u određenim granicama",
+      "higherQuality": "Viši kvalitet",
       "googleTranslate": "Google Translate",
       "openaiTranslate": "OpenAI (GPT)"
     },
-    "seeAllReviews": "Sve recenzije prodavnice",
-    "backToStore": "Nazad u prodavnicu",
-    "createdAt": "Kreirano {{date}}",
+    "seeAllReviews": "Pogledaj sve recenzije prodavnice",
+    "backToStore": "Povratak u prodavnicu",
+    "createdAt": "Kreirana {{date}}",
     "myStorefronts": "Moje prodavnice",
     "noStorefronts": "Još uvek nemate prodavnice",
     "createFirstStorefront": "Kreirajte prodavnicu da biste počeli da prodajete proizvode",
@@ -436,43 +436,16 @@
     "noProducts": "Još uvek nema proizvoda u ovoj prodavnici",
     "notFound": "Prodavnica nije pronađena",
     "backToList": "Nazad na listu prodavnica",
-    "manage": "Upravljaj",
-    "created": "Kreirano",
-    "statusActive": "Aktivno",
-    "statusInactive": "Neaktivno",
+    "manage": "Upravljanje",
+    "created": "Kreirana",
+    "statusActive": "Aktivna",
+    "statusInactive": "Neaktivna",
     "noDescription": "Nema opisa",
     "contactInfo": "Kontakt informacije",
     "location": "Lokacija",
     "errors": {
-      "loadFailed": "Učitavanje podataka o prodavnici nije uspelo",
-      "updateFailed": "Ažuriranje podataka o prodavnici nije uspelo"
-    },
-    "listings": {
-      "translateConfirmTitle": "Potvrda prevoda",
-      "translateConfirmText": "Prevešćete {{count}} oglasa na sve dostupne jezike.",
-      "translationCost": "Cena prevoda",
-      "costPerListing": "{{cost}} po oglasu",
-      "insufficientFunds": "Nedovoljno sredstava za prevod. Potrebno: {{required}}, Dostupno: {{available}}",
-      "translationInfo": "Prevod će biti izvršen pomoću mašinskog prevođenja. Kvalitet može varirati u zavisnosti od jezika i složenosti teksta.",
-      "translating": "Prevođenje...",
-      "confirmTranslation": "Potvrdi prevod",
-      "translateSuccessWithCost": "Uspešno prevedeno {{count}} oglasa za {{cost}} RSD",
-      "title": "Naslov",
-      "price": "Cena",
-      "status": "Status",
-      "date": "Datum",
-      "noListings": "Nema oglasa",
-      "translate": "Prevedi",
-      "translateSelected": "Prevedi izabrano",
-      "deleteSelected": "Obriši izabrano",
-      "translateSuccess": "Uspešno prevedeno {{count}} oglasa",
-      "translateError": "Greška pri prevođenju oglasa",
-      "deleteSuccess": "Uspešno obrisano {{count}} oglasa",
-      "deleteError": "Greška pri brisanju oglasa",
-      "deleteConfirmText": "Da li ste sigurni da želite da obrišete {{count}} izabranih oglasa?",
-      "deleteWarning": "Ova akcija ne može da se poništi! Obrisani oglasi se ne mogu povratiti.",
-      "deleteConfirmTitle": "Potvrda brisanja",
-      "batchActionsHint": "Izaberite akciju za izabrane oglase"
+      "loadFailed": "Nije moguće učitati podatke o prodavnici",
+      "updateFailed": "Nije moguće ažurirati podatke o prodavnici"
     },
     "tabs": {
       "import": "Uvoz proizvoda",
@@ -485,15 +458,15 @@
       "creating": "Kreiranje...",
       "nameRequired": "Unesite naziv prodavnice",
       "insufficientFunds": "Nedovoljno sredstava za kreiranje prodavnice. Potrebno je 15000 RSD.",
-      "error": "Kreiranje prodavnice nije uspelo",
-      "costNote": "Kreiranje prodavnice košta 15000 RSD. Ovaj iznos će biti oduzet sa vašeg stanja.",
+      "error": "Nije moguće kreirati prodavnicu",
+      "costNote": "Cena kreiranja prodavnice je 15000 RSD. Ovaj iznos će biti oduzet sa vašeg stanja.",
       "yourBalance": "Vaše stanje",
       "balanceWarning": "Za kreiranje prodavnice potrebno je imati najmanje 15000 RSD na stanju. Vaše trenutno stanje: {{balance}} RSD."
     },
     "edit": {
-      "title": "Izmena prodavnice",
+      "title": "Uređivanje prodavnice",
       "saving": "Čuvanje...",
-      "saveChanges": "Sačuvaj izmene",
+      "saveChanges": "Sačuvaj promene",
       "success": "Prodavnica uspešno ažurirana",
       "slugHelp": "Jedinstveni identifikator za URL adresu prodavnice"
     },
@@ -503,94 +476,94 @@
       "additional": "Dodatna podešavanja",
       "name": "Naziv prodavnice",
       "slug": "URL (slug)",
-      "statusActive": "Aktivno",
-      "statusInactive": "Neaktivno",
-      "created": "Kreirano",
-      "updated": "Ažurirano",
+      "statusActive": "Aktivna",
+      "statusInactive": "Neaktivna",
+      "created": "Kreirana",
+      "updated": "Ažurirana",
       "phone": "Telefon",
       "email": "Email",
-      "website": "Veb sajt",
+      "website": "Web sajt",
       "location": "Lokacija"
     },
     "stats": {
       "title": "Statistika prodavnice",
-      "description": "Ovde će biti prikazana statistika prodaje i posećenosti vaše prodavnice.",
-      "notAvailable": "Statistika će biti dostupna nakon dodavanja proizvoda u vašu prodavnicu."
+      "description": "Ovde će biti prikazana statistika prodaje i poseta za vašu prodavnicu.",
+      "notAvailable": "Statistika će biti dostupna nakon dodavanja proizvoda u prodavnicu."
     },
     "pagination": {
-      "itemsPerPage": "Stavki po stranici:",
-      "showing": "Prikazano {{start}}-{{end}} od {{total}} stavki"
+      "itemsPerPage": "Artikala po stranici:",
+      "showing": "Prikazivanje {{start}}-{{end}} od {{total}} artikala"
     },
     "import": {
       "button": "Uvoz",
-      "sources": "Izvori za uvoz",
-      "createSourceDescription": "Kreirajte izvor podataka za uvoz proizvoda u vašu prodavnicu. Podržani su CSV, XML i JSON formati.",
+      "sources": "Izvori uvoza",
+      "createSourceDescription": "Kreirajte izvor podataka za uvoz proizvoda u vašu prodavnicu. Podržani formati su CSV, XML i JSON.",
       "addSource": "Dodaj izvor",
-      "noSources": "Nema kreiranih izvora za uvoz",
-      "createFirstSource": "Kreirajte izvor za uvoz da biste učitali proizvode u vašu prodavnicu",
+      "noSources": "Nema kreiranih izvora uvoza",
+      "createFirstSource": "Kreirajte izvor uvoza za uvoz proizvoda u vašu prodavnicu",
       "sourceType": "Izvor: {{type}}",
-      "created": "Kreirano: {{date}}",
+      "created": "Kreiran: {{date}}",
       "urlSource": "URL: {{url}}",
       "manualUpload": "Ručno otpremanje datoteka",
       "lastImport": "Poslednji uvoz",
-      "never": "Nikad",
-      "notRun": "Nije pokrenuto",
+      "never": "Nikada",
+      "notRun": "Nije pokrenut",
       "history": "Istorija",
       "selectFile": "Izaberi datoteku",
       "importing": "Uvoz...",
       "uploadAndImport": "Otpremi i uvezi",
-      "runImport": "Pokreni",
+      "runImport": "Pokreni uvoz",
       "kb": "KB",
       "historyTitle": "Istorija uvoza",
       "imported": "Uvezeno",
       "statusSuccess": "Uspešno",
       "statusPartial": "Delimično",
       "statusError": "Greška",
-      "createSourceTitle": "Kreiranje izvora za uvoz",
+      "createSourceTitle": "Kreiranje izvora uvoza",
       "typeLabel": "Tip uvoza",
       "typeCSV": "CSV - vrednosti razdvojene zarezom/tačka-zarezom",
       "typeXML": "XML - strukturirani podaci",
       "typeJSON": "JSON - JavaScript Object Notation",
       "urlLabel": "URL izvora (opciono)",
       "urlPlaceholder": "Može ostati prazno za ručno otpremanje datoteka",
-      "urlHelp": "Navedite URL ako želite da uvezete podatke iz eksternog izvora",
+      "urlHelp": "Navedite URL ako želite da uvezete podatke iz spoljnog izvora",
       "creating": "Kreiranje...",
       "createSource": "Kreiraj izvor",
       "selectTypeError": "Izaberite tip uvoza",
-      "createError": "Kreiranje izvora za uvoz nije uspelo",
-      "sourceCreated": "Izvor za uvoz uspešno kreiran! Sada možete otpremiti datoteku pomoću dugmeta \"Pokreni uvoz\".",
-      "deleteConfirm": "Da li ste sigurni da želite da obrišete ovaj izvor za uvoz?",
-      "deleteError": "Brisanje izvora za uvoz nije uspelo",
-      "needFileOrUrl": "Za uvoz, potrebno je da otpremite datoteku ili podesite URL izvora",
+      "createError": "Nije moguće kreirati izvor uvoza",
+      "sourceCreated": "Izvor uvoza uspešno kreiran! Sada možete otpremiti datoteku klikom na dugme \"Pokreni uvoz\".",
+      "deleteConfirm": "Da li ste sigurni da želite da obrišete ovaj izvor uvoza?",
+      "deleteError": "Nije moguće obrisati izvor uvoza",
+      "needFileOrUrl": "Za uvoz potrebno je ili otpremiti datoteku ili konfigurisati URL izvora",
       "completed": "Uvoz završen. Status: {{status}}. Obrađeno: {{imported}} od {{total}}",
       "error": "Greška pri uvozu: {{message}}",
       "importData": "Uvoz podataka",
-      "noCsvSelected": "Nije izabrana CSV datoteka",
-      "noXmlZipSelected": "Nije izabrana ZIP arhiva sa XML",
-      "importSuccess": "Uvoz završen. Status: {{status}}. Uvezeno: {{imported}}/{{total}} stavki.",
+      "noCsvSelected": "CSV datoteka nije izabrana",
+      "noXmlZipSelected": "ZIP arhiva sa XML-om nije izabrana",
+      "importSuccess": "Uvoz završen. Status: {{status}}. Uvezeno: {{imported}}/{{total}} proizvoda.",
       "unknownError": "Nepoznata greška",
       "serverError": "Greška servera",
-      "invalidCsvFormat": "Nevažeći CSV format",
-      "invalidZipFormat": "Nevažeći ZIP format",
-      "csvImport": "CSV uvoz",
-      "xmlImport": "XML uvoz",
+      "invalidCsvFormat": "Nevažeći format CSV datoteke",
+      "invalidZipFormat": "Nevažeći format ZIP arhive",
+      "csvImport": "CSV Uvoz",
+      "xmlImport": "XML Uvoz",
       "selectCsvFile": "Izaberite CSV datoteku",
       "browseCsv": "Pretraži CSV",
-      "csvHelp": "CSV datoteka mora da sadrži obavezna polja: id, title, description, price, category_id",
+      "csvHelp": "CSV datoteka mora sadržati obavezna polja: id, title, description, price, category_id",
       "selectZipFile": "Izaberite ZIP arhivu sa slikama",
       "browseZip": "Pretraži ZIP",
-      "zipHelp": "Opciono: dodajte ZIP arhivu sa slikama. Imena datoteka moraju da se podudaraju sa imenima u koloni \"images\" CSV datoteke.",
-      "imageNamingInfo": "U koloni \"images\" CSV datoteke, navedite putanje do slika razdvojene zarezima. Prilikom otpremanja ZIP arhive, ove putanje moraju odgovarati datotekama unutar arhive.",
+      "zipHelp": "Opciono: dodajte ZIP arhivu sa slikama. Imena datoteka moraju odgovarati imenima u koloni \"images\" CSV datoteke.",
+      "imageNamingInfo": "U koloni \"images\" CSV datoteke navedite putanje slika odvojene zarezom. Kada otpremate ZIP arhivu, ove putanje moraju odgovarati datotekama unutar arhive.",
       "selectXmlZipFile": "Izaberite ZIP arhivu sa XML datotekom",
-      "browseXmlZip": "Pretraži ZIP sa XML",
-      "xmlZipHelp": "ZIP arhiva mora da sadrži XML datoteku sa katalogom proizvoda. Sistem će automatski pronaći i obraditi XML datoteku unutar arhive.",
-      "xmlFormatInfo": "XML datoteka mora da sadrži <artikal> elemente sa informacijama o proizvodima. Podržane su slike navedene u <slika> oznakama.",
+      "browseXmlZip": "Pretraži ZIP sa XML-om",
+      "xmlZipHelp": "ZIP arhiva mora sadržati XML datoteku sa katalogom proizvoda. Sistem će automatski pronaći i obraditi XML datoteku unutar arhive.",
+      "xmlFormatInfo": "XML datoteka mora sadržati elemente <artikal> sa informacijama o proizvodima. Podržane su slike navedene u tagovima <slika>.",
       "alternativeUrlImport": "Alternativno: uvoz putem URL-a",
-      "xmlUrlInfo": "Takođe možete dodati direktnu vezu do ZIP arhive sa XML pri kreiranju izvora za uvoz. Sistem će automatski prepoznati ZIP arhivu po .zip ekstenziji u URL-u i obraditi je kao XML izvor.",
+      "xmlUrlInfo": "Takođe možete dodati direktnu vezu na ZIP arhivu sa XML-om prilikom kreiranja izvora uvoza. Sistem će automatski prepoznati ZIP arhivu po ekstenziji .zip u URL-u i obraditi je kao XML izvor.",
       "startImport": "Započni uvoz",
       "sourceDetails": "Detalji izvora",
       "importStatus": "Status uvoza",
-      "statusNone": "Nije izvršeno",
+      "statusNone": "Nije izvršen",
       "lastRunAt": "Poslednje pokretanje: {{date}}",
       "sync": "Sinhronizacija",
       "runSync": "Pokreni sinhronizaciju",
@@ -599,87 +572,87 @@
       "scheduleDaily": "Dnevno",
       "scheduleWeekly": "Nedeljno",
       "scheduleMonthly": "Mesečno",
-      "scheduledImport": "Zakazani uvoz",
-      "editSource": "Izmeni izvor za uvoz",
+      "scheduledImport": "Planirani uvoz",
+      "editSource": "Uređivanje izvora uvoza",
       "syncStarting": "Pokretanje sinhronizacije...",
-      "syncCompleted": "Sinhronizacija završena. Status: {{status}}. Uvezeno: {{imported}}/{{total}} stavki.",
+      "syncCompleted": "Sinhronizacija završena. Status: {{status}}. Uvezeno: {{imported}}/{{total}} proizvoda.",
       "syncSuccess": "Sinhronizacija uspešno pokrenuta",
       "syncError": "Greška pri pokretanju sinhronizacije",
       "noUrlConfigured": "URL izvora nije konfigurisan",
       "scheduleLabel": "Raspored ažuriranja",
-      "scheduleFrequency": "Učestalost ažuriranja",
+      "scheduleFrequency": "Frekvencija ažuriranja",
       "scheduleManualy": "Samo ručno",
       "scheduleHelp": "Izaberite koliko često automatski ažurirati podatke iz navedenog URL-a",
-      "scheduleUrlRequired": "URL mora biti naveden za podešavanje rasporeda",
+      "scheduleUrlRequired": "Za konfiguraciju rasporeda potrebno je navesti URL",
       "csvStructureTitle": "Struktura CSV datoteke za uvoz",
       "xmlStructureTitle": "Struktura XML datoteke za uvoz",
-      "csvDescription": "CSV datoteka mora biti u formatu sa \";\" (tačka-zarez) kao separatorom. Prvi red mora sadržati zaglavlja kolona.",
-      "xmlDescription": "XML datoteka mora sadržati <artikal> elemente sa informacijama o proizvodima. Sistem će automatski uvesti sve proizvode iz XML datoteke.",
+      "csvDescription": "CSV datoteka mora biti u formatu sa separatorom \";\" (tačka-zarez). Prvi red mora sadržati zaglavlja kolona.",
+      "xmlDescription": "XML datoteka mora sadržati elemente <artikal> sa informacijama o proizvodima. Sistem će automatski uvesti sve proizvode iz XML datoteke.",
       "requiredFields": "Polja CSV datoteke",
       "xmlExample": "Primer strukture elementa proizvoda:",
       "xmlFields": "Polja XML datoteke",
       "xmlImageInfo": "Informacije o slikama:",
-      "xmlImageInfo1": "Slike se definišu unutar <slike> elementa kao zasebni <slika> elementi",
-      "xmlImageInfo2": "Svaki <slika> element mora sadržati URL ili putanju do slike",
-      "xmlImageInfo3": "Prva slika na listi će biti postavljena kao glavna",
+      "xmlImageInfo1": "Slike se definišu unutar elementa <slike> kao pojedinačni elementi <slika>",
+      "xmlImageInfo2": "Svaki element <slika> mora sadržati URL ili putanju do slike",
+      "xmlImageInfo3": "Prva slika na listi biće postavljena kao glavna",
       "xmlImageInfo4": "Za elemente sa CDATA unutra, sadržaj će biti pravilno obrađen",
-      "xmlWarning": "Maksimalna veličina ZIP arhive - 100 MB. Podržani XML formati: UTF-8, Windows-1251.",
+      "xmlWarning": "Maksimalna veličina ZIP arhive je 100 MB. Podržani formati XML-a: UTF-8, Windows-1251.",
       "imageInstructions": "Uputstva za rad sa slikama:",
-      "imageInstruction1": "U koloni \"images\" CSV datoteke, navedite putanje do slika razdvojene zarezima, na primer: \"image1.jpg,image2.jpg,image3.jpg\"",
-      "imageInstruction2": "Pri otpremanju ZIP arhive, imena datoteka u arhivi moraju odgovarati imenima navedenim u CSV-u",
-      "imageInstruction3": "Za slike putem URL-a, navedite pune adrese koje počinju sa \"http://\" ili \"https://\"",
-      "imageInstruction4": "Prva slika na listi će biti postavljena kao glavna",
-      "csvWarning": "Maksimalna veličina CSV datoteke - 10 MB, ZIP arhive - 100 MB. Podržani formati slika: JPEG, PNG, GIF, WebP.",
+      "imageInstruction1": "U koloni \"images\" navedite putanje slika odvojene zarezom, npr: \"image1.jpg,image2.jpg,image3.jpg\"",
+      "imageInstruction2": "Kada otpremate ZIP arhivu, imena datoteka u arhivi moraju odgovarati imenima navedenim u CSV-u",
+      "imageInstruction3": "Za slike putem URL-a, navedite pune adrese počevši sa \"http://\" ili \"https://\"",
+      "imageInstruction4": "Prva slika na listi biće postavljena kao glavna",
+      "csvWarning": "Maksimalna veličina CSV datoteke je 10 MB, ZIP arhive 100 MB. Podržani formati slika: JPEG, PNG, GIF, WebP.",
       "downloadSample": "Preuzmi primer CSV datoteke",
       "xml": {
         "fields": {
           "id": "Jedinstveni identifikator proizvoda",
           "sifra": "Šifra (kod) proizvoda",
           "naziv": "Naziv proizvoda",
-          "kategorija1": "Glavna kategorija proizvoda",
+          "kategorija1": "Osnovna kategorija proizvoda",
           "kategorija2": "Potkategorija proizvoda",
           "kategorija3": "Dodatna potkategorija",
           "vpCena": "Veleprodajna cena (ne koristi se)",
           "mpCena": "Maloprodajna cena proizvoda",
           "dostupan": "Dostupnost proizvoda (1 - dostupan, 0 - nedostupan)",
           "naAkciji": "Proizvod na akciji (1 - da, 0 - ne)",
-          "opis": "Opis proizvoda (može sadržati HTML oznake)",
+          "opis": "Opis proizvoda (može sadržati HTML tagove)",
           "slike": "Blok sa slikama proizvoda",
-          "slika": "Link do slike proizvoda (unutar slike oznake)"
+          "slika": "Veza na sliku proizvoda (unutar taga slike)"
         }
       },
       "fields": {
-        "id": "Jedinstveni identifikator oglasa (koristi se samo za praćenje tokom uvoza)",
+        "id": "Jedinstveni identifikator oglasa (tokom uvoza koristi se samo za praćenje)",
         "title": "Naslov oglasa",
         "description": "Detaljan opis oglasa",
         "price": "Cena (numerička vrednost)",
         "category_id": "ID kategorije (ako kategorija nije pronađena, koristi se kategorija \"Ostalo\")",
-        "condition": "Stanje artikla: \"new\" - novo, \"used\" - korišćeno (podrazumevano je \"new\")",
-        "status": "Status oglasa: \"active\" - aktivan, \"inactive\" - neaktivan (podrazumevano je \"active\")",
-        "location": "Lokacija artikla (tekstualni opis)",
+        "condition": "Stanje proizvoda: \"new\" - novo, \"used\" - korišćeno (podrazumevano \"new\")",
+        "status": "Status oglasa: \"active\" - aktivan, \"inactive\" - neaktivan (podrazumevano \"active\")",
+        "location": "Lokacija proizvoda (tekstualni opis)",
         "latitude": "Geografska širina (za prikaz na mapi)",
         "longitude": "Geografska dužina (za prikaz na mapi)",
         "address_city": "Grad",
         "address_country": "Država",
-        "show_on_map": "Prikaži na mapi: \"true\" ili \"false\" (podrazumevano je \"true\")",
-        "original_language": "Jezik oglasa: \"ru\", \"en\", \"sr\", itd. (podrazumevano je \"sr\")",
-        "images": "Putanje do slika razdvojene zarezima. Mogu biti URL-ovi ili imena datoteka u ZIP arhivi"
+        "show_on_map": "Prikaži na mapi: \"true\" ili \"false\" (podrazumevano \"true\")",
+        "original_language": "Jezik oglasa: \"ru\", \"en\", \"sr\" itd. (podrazumevano \"sr\")",
+        "images": "Putanje do slika, odvojene zarezima. Mogu biti URL adrese ili imena datoteka u ZIP arhivi"
       }
     },
     "categoryMapping": {
       "title": "Mapiranje kategorija",
-      "description": "Podesite mapiranje kategorija iz izvora uvoza u sistemske kategorije",
-      "info": "Kada se artikal uvozi, sistem koristi ova mapiranja za određivanje kategorije. Nemapirane kategorije će biti dodeljene odeljku 'Ostalo'.",
+      "description": "Konfigurišite mapiranje kategorija iz izvora uvoza na kategorije sistema",
+      "info": "Kada se proizvod uvozi, sistem koristi ova mapiranja za određivanje kategorije. Nemapirane kategorije biće dodeljene odeljku 'Ostalo'.",
       "button": "Kategorije",
       "buttonTitle": "Konfiguriši mapiranje kategorija",
       "currentMappings": "Trenutna mapiranja",
-      "noMappings": "Mapiranja kategorija nisu konfigurisana",
+      "noMappings": "Nema konfigurisanih mapiranja kategorija",
       "addMapping": "Dodaj mapiranje",
-      "sourceCategory": "Kategorija izvora",
-      "sourceCategoryHelp": "Naziv kategorije iz uvezene datoteke",
-      "targetCategory": "Sistemska kategorija",
+      "sourceCategory": "Kategorija u izvoru",
+      "sourceCategoryHelp": "Naziv kategorije iz uvozne datoteke",
+      "targetCategory": "Kategorija u sistemu",
       "addMappingTitle": "Dodaj mapiranje kategorija",
-      "editMappingTitle": "Izmeni mapiranje kategorija",
+      "editMappingTitle": "Uredi mapiranje kategorija",
       "saveSuccess": "Mapiranja kategorija uspešno sačuvana",
       "saveError": "Greška pri čuvanju mapiranja kategorija",
       "fetchError": "Greška pri učitavanju mapiranja kategorija",
@@ -690,35 +663,37 @@
       "notMappedYet": "Još nije mapirano",
       "mapCategory": "Mapiraj",
       "searchCategories": "Pretraži kategorije",
-      "dropHere": "Spusti ovde",
-      "systemCategories": "Sistemske kategorije",
+      "dropHere": "Prevuci ovde",
+      "systemCategories": "Kategorije sistema",
       "dragSource": "Prevuci na uvezenu kategoriju",
       "noCategories": "Nema kategorija",
       "searchImportedCategories": "Pretraži uvezene kategorije",
-      "dropTarget": "Cilj za spuštanje",
-      "dragDropInfo": "Prevucite kategoriju sa desnog panela na uvezenu kategoriju sa leve strane da biste kreirali mapiranje. Da biste uklonili mapiranje, kliknite na ikonu X pored mapirane kategorije.",
+      "dropTarget": "Ciljna zona za prevlačenje",
+      "dragDropInfo": "Prevucite kategoriju iz desnog panela na uvezenu kategoriju levo da biste kreirali mapiranje. Da biste uklonili mapiranje, kliknite na ikonu X pored mapirane kategorije.",
       "statistics": "Statistika mapiranja:",
-      "applyMappings": "Primeni na artikle",
-      "applySuccess": "Uspešno ažurirane kategorije za {{count}} artikala",
+      "applyMappings": "Primeni na proizvode",
+      "applySuccess": "Uspešno ažurirane kategorije za {{count}} proizvoda",
       "applyError": "Greška pri primeni mapiranja kategorija",
       "noMappingsToApply": "Nema mapiranja za primenu",
       "applyingMappings": "Primena mapiranja...",
-      "applyConfirmation": "Da li ste sigurni da želite da primenite mapiranja? Ovo će promeniti kategorije već uvezenih artikala.",
-      "applyHelp": "Ovo dugme će ažurirati kategorije svih artikala koji su uvezeni iz ovog izvora, prema konfigurisanim mapiranjima.",
+      "applyConfirmation": "Da li ste sigurni da želite da primenite mapiranja? Ovo će promeniti kategorije već uvezenih proizvoda.",
+      "applyHelp": "Ovo dugme će ažurirati kategorije svih proizvoda koji su uvezeni iz ovog izvora, prema konfigurisanim mapiranjima.",
       "mappingsCount": "Mapiranja: {{count}}",
-      "importedCategoriesCount": "Uvezenih kategorija: {{count}}"
+      "importedCategoriesCount": "Uvezene kategorije: {{count}}"
     }
   },
   "search": {
     "didyoumean": "Da li ste mislili",
     "usesuggestion": "Koristi predlog",
-    "noresults": "Nisu pronađeni oglasi za vašu pretragu"
+    "noresults": "Nema rezultata za vašu pretragu",
+    "find": "Pretraži"
   },
   "buttons": {
-    "search": "Pretraga"
+    "search": "Pretraži"
   },
   "common": {
-    "backToHome": "Nazad na početnu"
+    "backToHome": "Nazad na početnu",
+    "loading": "Učitavanje..."
   },
   "gallery": {
     "fullscreen": "Prikaz preko celog ekrana",
@@ -729,5 +704,83 @@
     "zoomOut": "Umanji",
     "reset": "Resetuj zum",
     "imageCount": "Slika {{current}} od {{total}}"
+  },
+  "navigation": {
+    "forBusiness": "Za biznis",
+    "help": "Pomoć",
+    "cabinet": "Moj profil",
+    "postListing": "Postavi oglas",
+    "post": "Postavi",
+    "myListings": "Moji oglasi",
+    "allCategories": "SVE KATEGORIJE",
+    "menu": "Meni",
+    "favorites": "Omiljeno",
+    "messages": "Poruke",
+    "notifications": "Obaveštenja",
+    "storefronts": "Moje prodavnice",
+    "balance": "Moj balans",
+    "language": "Jezik"
+  },
+  "languages": {
+    "russian": "Ruski",
+    "serbian": "Srpski"
+  },
+  "location": {
+    "citySelection": "Izbor grada",
+    "useThisCity": "Koristi ovaj grad",
+    "detectedCity": "Otkrili smo da se nalazite u gradu {{city}}",
+    "selectCity": "Izaberi grad",
+    "popularCities": "Popularni gradovi",
+    "searchCity": "Traži grad...",
+    "changeCity": "Promeni grad",
+    "detectingLocation": "Određivanje lokacije...",
+    "useCurrentLocation": "Koristi moju lokaciju",
+    "saveToProfile": "Sačuvaj u profilu",
+    "noResults": "Nema rezultata",
+    "savedToProfile": "Grad je sačuvan u profilu",
+    "errorSavingToProfile": "Greška pri čuvanju grada u profilu"
+  },
+  "categories": {
+    "title": "Kategorije",
+    "realestate": "Nekretnine",
+    "apartments": "Stanovi",
+    "houses": "Kuće",
+    "rooms": "Sobe",
+    "commercial": "Poslovni prostor",
+    "land": "Zemljište",
+    "garages": "Garaže",
+    "transport": "Transport",
+    "cars": "Automobili",
+    "motorcycles": "Motocikli",
+    "parts": "Delovi",
+    "trucks": "Kamioni",
+    "specialVehicles": "Specijalna vozila",
+    "electronics": "Elektronika",
+    "phones": "Telefoni",
+    "computers": "Računari",
+    "tvAudio": "TV i audio",
+    "photoVideo": "Foto i video",
+    "forHome": "Za kuću",
+    "furniture": "Nameštaj",
+    "appliances": "Kućni aparati",
+    "kitchenware": "Posuđe",
+    "renovation": "Renoviranje",
+    "forGarden": "Za baštu",
+    "gardenFurniture": "Baštenski nameštaj",
+    "plants": "Biljke",
+    "tools": "Alati"
+  },
+  "cities": {
+    "belgrade": "Beograd",
+    "noviSad": "Novi Sad",
+    "nis": "Niš",
+    "kragujevac": "Kragujevac"
+  },
+  "countries": {
+    "serbia": "Srbija"
+  },
+  "auth": {
+    "signin": "Prijavi se",
+    "signout": "Odjavi se"
   }
 }

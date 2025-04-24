@@ -25,7 +25,7 @@ import { useLocation } from '../../contexts/LocationContext';
 import { useAuth } from '../../contexts/AuthContext';
 
 const CitySelector = ({ isMobile = false }) => {
-    const { t } = useTranslation('common');
+    const { t } = useTranslation(['common', 'marketplace']);
     const { userLocation, setCity, detectUserLocation, isGeolocating } = useLocation();
     const { user, isAuthenticated } = useAuth();
     const [open, setOpen] = useState(false);
@@ -78,10 +78,14 @@ const CitySelector = ({ isMobile = false }) => {
 
     // Популярные города в Сербии
     const popularCities = [
-        { id: 1, city: 'Белград', country: 'Сербия', lat: 44.8178, lon: 20.4570 },
-        { id: 2, city: 'Нови-Сад', country: 'Сербия', lat: 45.2671, lon: 19.8335 },
-        { id: 3, city: 'Ниш', country: 'Сербия', lat: 43.3209, lon: 21.8958 },
-        { id: 4, city: 'Крагуевац', country: 'Сербия', lat: 44.0128, lon: 20.9114 },
+        { id: 1, city: t('cities.belgrade', { defaultValue: 'Белград', ns: 'marketplace' }), 
+          country: t('countries.serbia', { defaultValue: 'Сербия', ns: 'marketplace' }), lat: 44.8178, lon: 20.4570 },
+        { id: 2, city: t('cities.noviSad', { defaultValue: 'Нови-Сад', ns: 'marketplace' }), 
+          country: t('countries.serbia', { defaultValue: 'Сербия', ns: 'marketplace' }), lat: 45.2671, lon: 19.8335 },
+        { id: 3, city: t('cities.nis', { defaultValue: 'Ниш', ns: 'marketplace' }), 
+          country: t('countries.serbia', { defaultValue: 'Сербия', ns: 'marketplace' }), lat: 43.3209, lon: 21.8958 },
+        { id: 4, city: t('cities.kragujevac', { defaultValue: 'Крагуевац', ns: 'marketplace' }), 
+          country: t('countries.serbia', { defaultValue: 'Сербия', ns: 'marketplace' }), lat: 44.0128, lon: 20.9114 },
     ];
 
     const handleToggle = () => {
@@ -108,13 +112,13 @@ const CitySelector = ({ isMobile = false }) => {
             try {
                 await updateUserProfile(city);
                 // Показываем уведомление об успешном сохранении
-                setSnackbarMessage(t('location.savedToProfile', { defaultValue: 'Город сохранен в профиле' }));
+                setSnackbarMessage(t('location.savedToProfile', { defaultValue: 'Город сохранен в профиле', ns: 'marketplace' }));
                 setSnackbarSeverity('success');
                 setSnackbarOpen(true);
             } catch (error) {
                 console.error('Error updating user profile:', error);
                 // Показываем уведомление об ошибке
-                setSnackbarMessage(t('location.errorSavingToProfile', { defaultValue: 'Ошибка сохранения города в профиле' }));
+                setSnackbarMessage(t('location.errorSavingToProfile', { defaultValue: 'Ошибка сохранения города в профиле', ns: 'marketplace' }));
                 setSnackbarSeverity('error');
                 setSnackbarOpen(true);
             }
@@ -145,13 +149,13 @@ const CitySelector = ({ isMobile = false }) => {
                             country: userLocation.country
                         });
                         // Показываем уведомление об успешном сохранении
-                        setSnackbarMessage(t('location.savedToProfile', { defaultValue: 'Город сохранен в профиле' }));
+                        setSnackbarMessage(t('location.savedToProfile', { defaultValue: 'Город сохранен в профиле', ns: 'marketplace' }));
                         setSnackbarSeverity('success');
                         setSnackbarOpen(true);
                     } catch (error) {
                         console.error('Error updating user profile:', error);
                         // Показываем уведомление об ошибке
-                        setSnackbarMessage(t('location.errorSavingToProfile', { defaultValue: 'Ошибка сохранения города в профиле' }));
+                        setSnackbarMessage(t('location.errorSavingToProfile', { defaultValue: 'Ошибка сохранения города в профиле', ns: 'marketplace' }));
                         setSnackbarSeverity('error');
                         setSnackbarOpen(true);
                     }
@@ -173,7 +177,7 @@ const CitySelector = ({ isMobile = false }) => {
 
     return (
         <>
-            <Tooltip title={t('location.changeCity', { defaultValue: 'Изменить город' })}>
+            <Tooltip title={t('location.changeCity', { defaultValue: 'Изменить город', ns: 'marketplace' })}>
                 <Box
                     ref={anchorRef}
                     onClick={handleToggle}
@@ -192,7 +196,7 @@ const CitySelector = ({ isMobile = false }) => {
                     <MapPin size={18} />
                     {!isMobile && (
                         <Typography variant="body2" sx={{ mx: 0.5, maxWidth: 120, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            {userLocation?.city || t('location.selectCity', { defaultValue: 'Выбрать город' })}
+                            {userLocation?.city || t('location.selectCity', { defaultValue: 'Выбрать город', ns: 'marketplace' })}
                         </Typography>
                     )}
                 </Box>
@@ -217,13 +221,13 @@ const CitySelector = ({ isMobile = false }) => {
             >
                 <Box sx={{ p: 2 }}>
                     <Typography variant="subtitle1" gutterBottom>
-                        {t('location.selectCity', { defaultValue: 'Выбрать город' })}
+                        {t('location.selectCity', { defaultValue: 'Выбрать город', ns: 'marketplace' })}
                     </Typography>
 
                     <TextField
                         fullWidth
                         size="small"
-                        placeholder={t('location.searchCity', { defaultValue: 'Поиск города...' })}
+                        placeholder={t('location.searchCity', { defaultValue: 'Поиск города...', ns: 'marketplace' })}
                         value={searchValue}
                         onChange={handleSearchChange}
                         InputProps={{
@@ -249,8 +253,8 @@ const CitySelector = ({ isMobile = false }) => {
                         disabled={isGeolocating}
                     >
                         {isGeolocating
-                            ? t('location.detectingLocation', { defaultValue: 'Определение местоположения...' })
-                            : t('location.useCurrentLocation', { defaultValue: 'Использовать моё местоположение' })}
+                            ? t('location.detectingLocation', { defaultValue: 'Определение местоположения...', ns: 'marketplace' })
+                            : t('listings.map.useMyLocation', { defaultValue: 'Использовать моё местоположение', ns: 'marketplace' })}
                     </Button>
 
                     {isAuthenticated && (
@@ -264,7 +268,7 @@ const CitySelector = ({ isMobile = false }) => {
                             }
                             label={
                                 <Typography variant="body2">
-                                    {t('location.saveToProfile', { defaultValue: 'Сохранить в профиле' })}
+                                    {t('location.saveToProfile', { defaultValue: 'Сохранить в профиле', ns: 'marketplace' })}
                                 </Typography>
                             }
                             sx={{ mt: 1 }}
@@ -279,11 +283,11 @@ const CitySelector = ({ isMobile = false }) => {
                         <List dense>
                             {loading ? (
                                 <ListItem>
-                                    <ListItemText primary={t('common.loading', { defaultValue: 'Загрузка...' })} />
+                                    <ListItemText primary={t('common.loading', { defaultValue: 'Загрузка...', ns: 'marketplace' })} />
                                 </ListItem>
                             ) : suggestions.length === 0 ? (
                                 <ListItem>
-                                    <ListItemText primary={t('location.noResults', { defaultValue: 'Ничего не найдено' })} />
+                                    <ListItemText primary={t('location.noResults', { defaultValue: 'Ничего не найдено', ns: 'marketplace' })} />
                                 </ListItem>
                             ) : (
                                 suggestions.map((city) => (
@@ -303,7 +307,7 @@ const CitySelector = ({ isMobile = false }) => {
                     ) : (
                         <>
                             <Typography variant="subtitle2" sx={{ px: 2, py: 1 }}>
-                                {t('location.popularCities', { defaultValue: 'Популярные города' })}
+                                {t('location.popularCities', { defaultValue: 'Популярные города11', ns: 'marketplace' })}
                             </Typography>
                             <List dense>
                                 {popularCities.map((city) => (
