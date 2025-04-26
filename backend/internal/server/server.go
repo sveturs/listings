@@ -106,7 +106,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	storefrontHandler := storefrontHandler.NewHandler(services)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
-	
+
 	// Обработчик перевода уже создан в marketplaceHandler
 
 	app := fiber.New(fiber.Config{
@@ -186,9 +186,8 @@ func (s *Server) setupRoutes() {
 		log.Printf("Received webhook request: %s", string(c.Body()))
 		return s.notifications.Notification.HandleTelegramWebhook(c)
 	})
-// Public routes without authentication
+	// Public routes without authentication
 	s.app.Post("/api/v1/public/send-email", s.notifications.Notification.SendPublicEmail)
-
 
 	// маршрут для витрин
 	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
@@ -230,7 +229,6 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/listings/:id/similar", s.marketplace.Marketplace.GetSimilarListings)
 	marketplace.Get("/categories/:id/attribute-ranges", s.marketplace.Marketplace.GetAttributeRanges)
 
-
 	// Маршруты для API перевода
 	translation := s.app.Group("/api/v1/translation")
 	translation.Get("/limits", s.translation.GetTranslationLimits)
@@ -255,7 +253,7 @@ func (s *Server) setupRoutes() {
 
 	// Protected routes
 	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
- 	api.Post("/admin/sync-discounts", s.middleware.AdminRequired, s.marketplace.Marketplace.SynchronizeDiscounts)
+	api.Post("/admin/sync-discounts", s.middleware.AdminRequired, s.marketplace.Marketplace.SynchronizeDiscounts)
 	api.Post("/admin/reindex-ratings", s.marketplace.Marketplace.ReindexRatings)
 	// api.Post("/admin/reindex-ratings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexRatings)
 	// Protected reviews routes
@@ -288,7 +286,7 @@ func (s *Server) setupRoutes() {
 	storefronts.Put("/import-sources/:id/category-mappings", s.storefront.Storefront.UpdateCategoryMappings)
 	storefronts.Get("/import-sources/:id/imported-categories", s.storefront.Storefront.GetImportedCategories)
 	storefronts.Post("/import-sources/:id/apply-category-mappings", s.storefront.Storefront.ApplyCategoryMappings)
-	
+
 	// Маршруты для отзывов пользователей и витрин
 	api.Get("/users/:id/reviews", s.review.Review.GetUserReviews)
 	api.Get("/users/:id/rating", s.review.Review.GetUserRatingSummary)
@@ -321,11 +319,15 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
 	marketplaceProtected.Put("/translations/:id", s.marketplace.Marketplace.UpdateTranslations)
 	marketplaceProtected.Post("/translations/batch", s.marketplace.Marketplace.BatchTranslateListings)
+	// Маршруты для модерации и улучшения изображений
+	marketplaceProtected.Post("/moderate-image", s.marketplace.Marketplace.ModerateImage)
+	marketplaceProtected.Post("/enhance-preview", s.marketplace.Marketplace.EnhancePreview)
+	marketplaceProtected.Post("/enhance-images", s.marketplace.Marketplace.EnhanceImages)
 
 	// Административные маршруты для переиндексации
 	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
 	api.Post("/admin/reindex-listings-with-translations", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAllWithTranslations)
-	
+
 	// Chat routes
 	chat := api.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)
@@ -336,15 +338,15 @@ func (s *Server) setupRoutes() {
 	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
 
 	// Notification routes
-    // Notification routes
-    notifications := api.Group("/notifications")
-    notifications.Get("/", s.notifications.Notification.GetNotifications)
-    notifications.Get("/settings", s.notifications.Notification.GetSettings)
-    notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
-    notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
-    notifications.Get("/telegram/token", s.notifications.Notification.GetTelegramToken)
-    notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
-    notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
+	// Notification routes
+	notifications := api.Group("/notifications")
+	notifications.Get("/", s.notifications.Notification.GetNotifications)
+	notifications.Get("/settings", s.notifications.Notification.GetSettings)
+	notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
+	notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
+	notifications.Get("/telegram/token", s.notifications.Notification.GetTelegramToken)
+	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
+	notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
 
 }
 

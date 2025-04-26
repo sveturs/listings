@@ -14,6 +14,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -330,201 +331,408 @@ var (
 	categoryTreeMutex      sync.RWMutex
 )
 
-// GetSimilarListings возвращает похожие объявления
+// ModerateImage проверяет изображение на запрещенный контент
+func (h *MarketplaceHandler) ModerateImage(c *fiber.Ctx) error {
+	log.Printf("ModerateImage: начало обработки запроса")
+
+	// Получаем файл из запроса
+	file, err := c.FormFile("image")
+	if err != nil {
+		log.Printf("ModerateImage: ошибка получения файла: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Ошибка получения файла")
+	}
+
+	log.Printf("ModerateImage: получен файл: name=%s, size=%d, contentType=%s",
+		file.Filename, file.Size, file.Header.Get("Content-Type"))
+
+	// Временно сохраняем файл
+	tempDir := "./uploads/temp"
+	if err := os.MkdirAll(tempDir, os.ModePerm); err != nil {
+		log.Printf("ModerateImage: ошибка создания директории %s: %v", tempDir, err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка создания временной директории")
+	}
+
+	tempPath := fmt.Sprintf("%s/%d%s", tempDir, time.Now().UnixNano(), filepath.Ext(file.Filename))
+	if err := c.SaveFile(file, tempPath); err != nil {
+		log.Printf("ModerateImage: ошибка сохранения файла во временную директорию %s: %v", tempPath, err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка сохранения файла")
+	}
+
+	log.Printf("ModerateImage: файл временно сохранен в %s", tempPath)
+
+	defer func() {
+		if err := os.Remove(tempPath); err != nil {
+			log.Printf("ModerateImage: ошибка удаления временного файла %s: %v", tempPath, err)
+		} else {
+			log.Printf("ModerateImage: временный файл %s успешно удален", tempPath)
+		}
+	}()
+
+	// Получаем сервис Cloudinary
+	log.Printf("ModerateImage: создание сервиса Cloudinary")
+	cloudinaryService, err := service.NewCloudinaryService()
+	if err != nil {
+		log.Printf("ModerateImage: ошибка инициализации сервиса Cloudinary: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка инициализации сервиса обработки изображений")
+	}
+
+	log.Printf("ModerateImage: сервис Cloudinary успешно создан, начинаем модерацию изображения")
+
+	// Проверяем изображение на модерацию
+	result, err := cloudinaryService.ModerateImage(c.Context(), tempPath)
+	if err != nil {
+		log.Printf("ModerateImage: ошибка модерации изображения: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка модерации изображения")
+	}
+
+	log.Printf("ModerateImage: модерация успешно завершена, результат: %+v", result)
+
+	return utils.SuccessResponse(c, result)
+}
+
+// EnhancePreview создает предпросмотр улучшенного изображения
+func (h *MarketplaceHandler) EnhancePreview(c *fiber.Ctx) error {
+
+	// Получаем файл из запроса
+	file, err := c.FormFile("image")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Ошибка получения файла")
+	}
+
+	// Временно сохраняем файл
+	tempPath := fmt.Sprintf("./uploads/temp/%d%s", time.Now().UnixNano(), filepath.Ext(file.Filename))
+	if err := c.SaveFile(file, tempPath); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка сохранения файла")
+	}
+	defer os.Remove(tempPath) // Удаляем временный файл после обработки
+
+	// Получаем сервис Cloudinary
+	cloudinaryService, err := service.NewCloudinaryService()
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка инициализации сервиса обработки изображений")
+	}
+
+	// Создаем предпросмотр улучшенного изображения
+	result, err := cloudinaryService.EnhancePreview(c.Context(), tempPath)
+	if err != nil {
+		log.Printf("Error creating enhancement preview: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка создания предпросмотра")
+	}
+
+	// Добавляем цену за улучшение
+	result["price"] = 30.0 // Цена в динарах (регулируйте в зависимости от стоимости)
+
+	return utils.SuccessResponse(c, result)
+}
+
+// EnhanceImages улучшает все загруженные изображения
+func (h *MarketplaceHandler) EnhanceImages(c *fiber.Ctx) error {
+	// Авторизованный пользователь
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
+
+	// Получаем баланс пользователя
+	balance, err := h.services.Balance().GetBalance(c.Context(), userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка проверки баланса")
+	}
+
+	// Получаем форму с файлами
+	form, err := c.MultipartForm()
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Ошибка получения файлов")
+	}
+
+	files := form.File["images"]
+	if len(files) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Нет файлов для обработки")
+	}
+
+	// Рассчитываем общую стоимость улучшения
+	pricePerImage := 30.0 // RSD
+	totalPrice := pricePerImage * float64(len(files))
+
+	// Проверяем достаточность средств
+	if balance.Balance < totalPrice {
+		return utils.ErrorResponse(c, fiber.StatusPaymentRequired,
+			fmt.Sprintf("Недостаточно средств. Требуется: %.2f RSD", totalPrice))
+	}
+
+	// Получаем сервис Cloudinary
+	cloudinaryService, err := service.NewCloudinaryService()
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка инициализации сервиса обработки изображений")
+	}
+
+	// Обрабатываем все изображения
+	enhancedImages := make([]map[string]interface{}, 0, len(files))
+
+	for _, file := range files {
+		// Сохраняем во временную директорию
+		tempPath := fmt.Sprintf("./uploads/temp/%d%s", time.Now().UnixNano(), filepath.Ext(file.Filename))
+		if err := c.SaveFile(file, tempPath); err != nil {
+			continue // Пропускаем файл при ошибке
+		}
+
+		// Улучшаем изображение
+		result, err := cloudinaryService.EnhanceImage(c.Context(), tempPath)
+		if err != nil {
+			os.Remove(tempPath)
+			continue
+		}
+
+		// Добавляем информацию о файле
+		result["original_name"] = file.Filename
+
+		// Добавляем в результат
+		enhancedImages = append(enhancedImages, result)
+
+		// Удаляем временный файл
+		os.Remove(tempPath)
+	}
+
+	// Если улучшено хотя бы одно изображение, списываем средства
+	if len(enhancedImages) > 0 {
+		// Пересчитываем стоимость на основе фактически улучшенных изображений
+		actualPrice := pricePerImage * float64(len(enhancedImages))
+
+		// Списываем средства с баланса
+		txDescription := fmt.Sprintf("Улучшение %d изображений", len(enhancedImages))
+		now := time.Now()
+		transaction := &models.BalanceTransaction{
+			UserID:        userID,
+			Type:          "service_payment",
+			Amount:        -actualPrice, // отрицательное значение для списания
+			Currency:      "RSD",
+			Status:        "completed",
+			PaymentMethod: "balance",
+			Description:   txDescription,
+			CreatedAt:     now,
+			CompletedAt:   &now,
+		}
+
+		txID, err := h.services.Storage().CreateTransaction(c.Context(), transaction)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка списания средств")
+		}
+
+		// Обновляем баланс напрямую через SQL
+		_, err = h.services.Storage().Exec(c.Context(), `
+    UPDATE user_balances 
+    SET balance = balance - $1, 
+        updated_at = NOW()
+    WHERE user_id = $2
+`, actualPrice, userID)
+		if err != nil {
+			log.Printf("Error updating balance: %v", err)
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка обновления баланса")
+		}
+
+		return utils.SuccessResponse(c, fiber.Map{
+			"success":         true,
+			"enhanced_images": enhancedImages,
+			"transaction_id":  txID,
+			"total_price":     actualPrice,
+		})
+	}
+
+	return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось улучшить изображения")
+}
+
 // GetSimilarListings возвращает похожие объявления
 func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
-    listingID, err := c.ParamsInt("id")
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
-    }
+	listingID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+	}
 
-    // Получаем параметры пагинации
-    page := c.QueryInt("page", 1)
-    limit := c.QueryInt("limit", 8)
-    offset := (page - 1) * limit
+	// Получаем параметры пагинации
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 8)
+	offset := (page - 1) * limit
 
-    // Получаем исходное объявление
-    listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
-    if err != nil {
-        log.Printf("Ошибка при получении объявления: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить объявление")
-    }
+	// Получаем исходное объявление
+	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+	if err != nil {
+		log.Printf("Ошибка при получении объявления: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить объявление")
+	}
 
-    // Формируем запрос для OpenSearch напрямую
-    query := map[string]interface{}{
-        "query": map[string]interface{}{
-            "bool": map[string]interface{}{
-                "must": []interface{}{
-                    map[string]interface{}{
-                        "term": map[string]interface{}{
-                            "category_id": listing.CategoryID,
-                        },
-                    },
-                    map[string]interface{}{
-                        "term": map[string]interface{}{
-                            "status": "active",
-                        },
-                    },
-                },
-                "must_not": []interface{}{
-                    map[string]interface{}{
-                        "term": map[string]interface{}{
-                            "id": listingID, // Исключаем текущее объявление
-                        },
-                    },
-                },
-                "should": []interface{}{},
-                "minimum_should_match": 1,
-            },
-        },
-        "from": offset,
-        "size": limit,
-    }
+	// Формируем запрос для OpenSearch напрямую
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must": []interface{}{
+					map[string]interface{}{
+						"term": map[string]interface{}{
+							"category_id": listing.CategoryID,
+						},
+					},
+					map[string]interface{}{
+						"term": map[string]interface{}{
+							"status": "active",
+						},
+					},
+				},
+				"must_not": []interface{}{
+					map[string]interface{}{
+						"term": map[string]interface{}{
+							"id": listingID, // Исключаем текущее объявление
+						},
+					},
+				},
+				"should":               []interface{}{},
+				"minimum_should_match": 1,
+			},
+		},
+		"from": offset,
+		"size": limit,
+	}
 
-    // Добавляем поиск по заголовку и описанию
-    shouldClauses := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]interface{})
+	// Добавляем поиск по заголовку и описанию
+	shouldClauses := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]interface{})
 
-    if listing.Title != "" {
-        shouldClauses = append(shouldClauses, map[string]interface{}{
-            "match": map[string]interface{}{
-                "title": map[string]interface{}{
-                    "query": listing.Title,
-                    "boost": 3.0,
-                    "fuzziness": "AUTO",
-                },
-            },
-        })
-    }
+	if listing.Title != "" {
+		shouldClauses = append(shouldClauses, map[string]interface{}{
+			"match": map[string]interface{}{
+				"title": map[string]interface{}{
+					"query":     listing.Title,
+					"boost":     3.0,
+					"fuzziness": "AUTO",
+				},
+			},
+		})
+	}
 
-    if len(listing.Description) > 0 {
-        descriptionExcerpt := listing.Description
-        if len(descriptionExcerpt) > 200 {
-            descriptionExcerpt = descriptionExcerpt[:200]
-        }
+	if len(listing.Description) > 0 {
+		descriptionExcerpt := listing.Description
+		if len(descriptionExcerpt) > 200 {
+			descriptionExcerpt = descriptionExcerpt[:200]
+		}
 
-        shouldClauses = append(shouldClauses, map[string]interface{}{
-            "match": map[string]interface{}{
-                "description": map[string]interface{}{
-                    "query": descriptionExcerpt,
-                    "boost": 1.0,
-                    "fuzziness": "AUTO",
-                },
-            },
-        })
-    }
+		shouldClauses = append(shouldClauses, map[string]interface{}{
+			"match": map[string]interface{}{
+				"description": map[string]interface{}{
+					"query":     descriptionExcerpt,
+					"boost":     1.0,
+					"fuzziness": "AUTO",
+				},
+			},
+		})
+	}
 
-    // Добавляем ценовой диапазон
-    if listing.Price > 0 {
-        minPrice := listing.Price * 0.7
-        maxPrice := listing.Price * 1.3
+	// Добавляем ценовой диапазон
+	if listing.Price > 0 {
+		minPrice := listing.Price * 0.7
+		maxPrice := listing.Price * 1.3
 
-        shouldClauses = append(shouldClauses, map[string]interface{}{
-            "range": map[string]interface{}{
-                "price": map[string]interface{}{
-                    "gte": minPrice,
-                    "lte": maxPrice,
-                    "boost": 1.5,
-                },
-            },
-        })
-    }
+		shouldClauses = append(shouldClauses, map[string]interface{}{
+			"range": map[string]interface{}{
+				"price": map[string]interface{}{
+					"gte":   minPrice,
+					"lte":   maxPrice,
+					"boost": 1.5,
+				},
+			},
+		})
+	}
 
-    // Обновляем запрос с новыми should-условиями
-    query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClauses
+	// Обновляем запрос с новыми should-условиями
+	query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = shouldClauses
 
-    // Логируем запрос для отладки
-    queryJSON, _ := json.MarshalIndent(query, "", "  ")
-    log.Printf("Запрос для похожих объявлений: %s", string(queryJSON))
+	// Логируем запрос для отладки
+	queryJSON, _ := json.MarshalIndent(query, "", "  ")
+	log.Printf("Запрос для похожих объявлений: %s", string(queryJSON))
 
-    // Выполняем запрос напрямую через OpenSearch клиент
-    osClient, err := h.getOpenSearchClient()
-    
-    if err != nil {
-        log.Printf("Не удалось получить клиент OpenSearch: %v", err)
-        // Используем запасной метод через стандартный поиск
-        fallbackParams := &search.ServiceParams{
-            CategoryID: strconv.Itoa(listing.CategoryID),
-            Size:       limit,
-            Page:       page,
-            Sort:       "date_desc",
-        }
-        
-        fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
-        if fallbackErr != nil {
-            log.Printf("Ошибка резервного поиска: %v", fallbackErr)
-            return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось найти похожие объявления")
-        }
-        
-        // Фильтруем результаты, убирая исходное объявление
-        var similarListings []*models.MarketplaceListing
-        for _, item := range fallbackResult.Items {
-            if item.ID != listingID {
-                similarListings = append(similarListings, item)
-                if len(similarListings) >= limit {
-                    break
-                }
-            }
-        }
-        
-        return utils.SuccessResponse(c, similarListings)
-    }
-    
-    // Выполняем поиск напрямую
-    indexName := "marketplace_listings" // или получите название индекса из конфигурации
-    queryJSONBytes, _ := json.Marshal(query)
-    responseBytes, err := osClient.Execute("POST", "/"+indexName+"/_search", queryJSONBytes)
-    
-    if err != nil {
-        log.Printf("Ошибка выполнения запроса к OpenSearch: %v", err)
-        // Используем запасной метод
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка поиска")
-    }
-    
-    // Декодируем ответ
-    var response map[string]interface{}
-    if err := json.Unmarshal(responseBytes, &response); err != nil {
-        log.Printf("Ошибка декодирования ответа: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка декодирования результатов")
-    }
-    
-    // Извлекаем id похожих объявлений
-    var similarIDs []int
-    if hits, ok := response["hits"].(map[string]interface{}); ok {
-        if hitsArray, ok := hits["hits"].([]interface{}); ok {
-            for _, hit := range hitsArray {
-                if hitMap, ok := hit.(map[string]interface{}); ok {
-                    if id, ok := hitMap["_id"].(string); ok {
-                        if idInt, err := strconv.Atoi(id); err == nil {
-                            similarIDs = append(similarIDs, idInt)
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    // Загружаем полные данные объявлений по ID
-    var similarListings []*models.MarketplaceListing
-    for _, id := range similarIDs {
-        if listing, err := h.marketplaceService.GetListingByID(c.Context(), id); err == nil {
-            similarListings = append(similarListings, listing)
-        }
-    }
+	// Выполняем запрос напрямую через OpenSearch клиент
+	osClient, err := h.getOpenSearchClient()
 
-    log.Printf("Найдено %d похожих объявлений", len(similarListings))
-    return utils.SuccessResponse(c, similarListings)
+	if err != nil {
+		log.Printf("Не удалось получить клиент OpenSearch: %v", err)
+		// Используем запасной метод через стандартный поиск
+		fallbackParams := &search.ServiceParams{
+			CategoryID: strconv.Itoa(listing.CategoryID),
+			Size:       limit,
+			Page:       page,
+			Sort:       "date_desc",
+		}
+
+		fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
+		if fallbackErr != nil {
+			log.Printf("Ошибка резервного поиска: %v", fallbackErr)
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось найти похожие объявления")
+		}
+
+		// Фильтруем результаты, убирая исходное объявление
+		var similarListings []*models.MarketplaceListing
+		for _, item := range fallbackResult.Items {
+			if item.ID != listingID {
+				similarListings = append(similarListings, item)
+				if len(similarListings) >= limit {
+					break
+				}
+			}
+		}
+
+		return utils.SuccessResponse(c, similarListings)
+	}
+
+	// Выполняем поиск напрямую
+	indexName := "marketplace_listings" // или получите название индекса из конфигурации
+	queryJSONBytes, _ := json.Marshal(query)
+	responseBytes, err := osClient.Execute("POST", "/"+indexName+"/_search", queryJSONBytes)
+
+	if err != nil {
+		log.Printf("Ошибка выполнения запроса к OpenSearch: %v", err)
+		// Используем запасной метод
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка поиска")
+	}
+
+	// Декодируем ответ
+	var response map[string]interface{}
+	if err := json.Unmarshal(responseBytes, &response); err != nil {
+		log.Printf("Ошибка декодирования ответа: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка декодирования результатов")
+	}
+
+	// Извлекаем id похожих объявлений
+	var similarIDs []int
+	if hits, ok := response["hits"].(map[string]interface{}); ok {
+		if hitsArray, ok := hits["hits"].([]interface{}); ok {
+			for _, hit := range hitsArray {
+				if hitMap, ok := hit.(map[string]interface{}); ok {
+					if id, ok := hitMap["_id"].(string); ok {
+						if idInt, err := strconv.Atoi(id); err == nil {
+							similarIDs = append(similarIDs, idInt)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Загружаем полные данные объявлений по ID
+	var similarListings []*models.MarketplaceListing
+	for _, id := range similarIDs {
+		if listing, err := h.marketplaceService.GetListingByID(c.Context(), id); err == nil {
+			similarListings = append(similarListings, listing)
+		}
+	}
+
+	log.Printf("Найдено %d похожих объявлений", len(similarListings))
+	return utils.SuccessResponse(c, similarListings)
 }
 
 // Вспомогательный метод для получения клиента OpenSearch
 func (h *MarketplaceHandler) getOpenSearchClient() (interface {
-    Execute(method, path string, body []byte) ([]byte, error)
+	Execute(method, path string, body []byte) ([]byte, error)
 }, error) {
-    // Реализуйте этот метод для получения доступа к OpenSearch клиенту
-    // через маркетплейс сервис
-    return nil, fmt.Errorf("не реализовано")
+	// Реализуйте этот метод для получения доступа к OpenSearch клиенту
+	// через маркетплейс сервис
+	return nil, fmt.Errorf("не реализовано")
 }
-
-
 
 // isSignificantAttribute определяет, является ли атрибут значимым для поиска похожих объявлений
 func isSignificantAttribute(attrName string) bool {
@@ -1292,20 +1500,20 @@ func (h *MarketplaceHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 
 	// 4. Сортируем результаты по приоритету
 	sort.Slice(suggestions, func(i, j int) bool {
-        return suggestions[i].Priority < suggestions[j].Priority
-    })
+		return suggestions[i].Priority < suggestions[j].Priority
+	})
 
 	// 5. Ограничиваем количество результатов
 
-    if len(suggestions) > size {
-        suggestions = suggestions[:size]
-    }
+	if len(suggestions) > size {
+		suggestions = suggestions[:size]
+	}
 
-    log.Printf("Найдено %d расширенных подсказок для запроса '%s'", len(suggestions), prefix)
+	log.Printf("Найдено %d расширенных подсказок для запроса '%s'", len(suggestions), prefix)
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "data": suggestions,
-    })
+	return utils.SuccessResponse(c, fiber.Map{
+		"data": suggestions,
+	})
 }
 
 func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
@@ -1789,41 +1997,40 @@ func (h *MarketplaceHandler) BatchTranslateListings(c *fiber.Ctx) error {
 
 		// Источниковый язык
 		sourceLanguage := listing.OriginalLanguage
-if sourceLanguage == "" {
-    // Явное определение языка из текста, если язык не указан
-    detectedLang, confidence, err := h.services.Translation().DetectLanguage(c.Context(), listing.Title + "\n" + listing.Description)
-    if err == nil && confidence > 0.7 {
-        sourceLanguage = detectedLang
-        log.Printf("Detected language for listing %d: %s (confidence: %.2f)", listingID, detectedLang, confidence)
-        
-        // Обновляем язык в базе данных для будущих операций
-        _, err = h.services.Storage().Exec(c.Context(), 
-            "UPDATE marketplace_listings SET original_language = $1 WHERE id = $2", 
-            detectedLang, listingID)
-        if err != nil {
-            log.Printf("Error updating original language: %v", err)
-        }
-    } else {
-        // Получаем язык из заголовка запроса
-        if userLang := c.Get("Accept-Language"); ok && userLang != "" {
-            sourceLanguage = userLang
-            log.Printf("Using user preferred language for listing %d: %s", listingID, userLang)
-        } else {
-            // Если всё еще нет языка, используем русский по умолчанию, так как большинство пользователей русскоговорящие
-            sourceLanguage = "ru"
-            log.Printf("Using default language (ru) for listing %d", listingID)
-        }
-    }
-    
-    // Обновляем поле original_language в базе данных
-    _, err = h.services.Storage().Exec(c.Context(), 
-        "UPDATE marketplace_listings SET original_language = $1 WHERE id = $2", 
-        sourceLanguage, listingID)
-    if err != nil {
-        log.Printf("Error updating original language: %v", err)
-    }
-}
+		if sourceLanguage == "" {
+			// Явное определение языка из текста, если язык не указан
+			detectedLang, confidence, err := h.services.Translation().DetectLanguage(c.Context(), listing.Title+"\n"+listing.Description)
+			if err == nil && confidence > 0.7 {
+				sourceLanguage = detectedLang
+				log.Printf("Detected language for listing %d: %s (confidence: %.2f)", listingID, detectedLang, confidence)
 
+				// Обновляем язык в базе данных для будущих операций
+				_, err = h.services.Storage().Exec(c.Context(),
+					"UPDATE marketplace_listings SET original_language = $1 WHERE id = $2",
+					detectedLang, listingID)
+				if err != nil {
+					log.Printf("Error updating original language: %v", err)
+				}
+			} else {
+				// Получаем язык из заголовка запроса
+				if userLang := c.Get("Accept-Language"); ok && userLang != "" {
+					sourceLanguage = userLang
+					log.Printf("Using user preferred language for listing %d: %s", listingID, userLang)
+				} else {
+					// Если всё еще нет языка, используем русский по умолчанию, так как большинство пользователей русскоговорящие
+					sourceLanguage = "ru"
+					log.Printf("Using default language (ru) for listing %d", listingID)
+				}
+			}
+
+			// Обновляем поле original_language в базе данных
+			_, err = h.services.Storage().Exec(c.Context(),
+				"UPDATE marketplace_listings SET original_language = $1 WHERE id = $2",
+				sourceLanguage, listingID)
+			if err != nil {
+				log.Printf("Error updating original language: %v", err)
+			}
+		}
 
 		// Получаем провайдер перевода из запроса или используем Google по умолчанию
 		provider := c.Query("translation_provider", "google")
@@ -2462,107 +2669,107 @@ func (h *MarketplaceHandler) ReindexAll(c *fiber.Ctx) error {
 
 // ReindexAllWithTranslations переиндексирует все объявления с явной загрузкой переводов
 func (h *MarketplaceHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
-    // Проверяем административные права
-    userID, ok := c.Locals("user_id").(int)
-    if !ok || userID == 0 {
-        return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
-    }
+	// Проверяем административные права
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
 
-    // Запускаем реиндексацию в фоне
-    go func() {
-        ctx := context.Background()
-        
-        // Получаем все ID объявлений
-        rows, err := h.services.Storage().Query(ctx, `
+	// Запускаем реиндексацию в фоне
+	go func() {
+		ctx := context.Background()
+
+		// Получаем все ID объявлений
+		rows, err := h.services.Storage().Query(ctx, `
             SELECT id FROM marketplace_listings 
             WHERE status = 'active'
             ORDER BY id
         `)
-        
-        if err != nil {
-            log.Printf("Error getting listing IDs for reindex: %v", err)
-            return
-        }
-        defer rows.Close()
-        
-        var listingIDs []int
-        for rows.Next() {
-            var id int
-            if err := rows.Scan(&id); err != nil {
-                log.Printf("Error scanning listing ID: %v", err)
-                continue
-            }
-            listingIDs = append(listingIDs, id)
-        }
-        
-        log.Printf("Starting reindex of %d listings with translations...", len(listingIDs))
-        
-        // Реиндексируем каждое объявление с явной загрузкой переводов
-        count := 0
-        for _, id := range listingIDs {
-            // Получаем объявление со всеми данными, включая атрибуты
-            listing, err := h.marketplaceService.GetListingByID(ctx, id)
-            if err != nil {
-                log.Printf("Error getting listing %d: %v", id, err)
-                continue
-            }
-            
-            // Специальная обработка для объявлений без атрибутов
-            if listing.Attributes == nil || len(listing.Attributes) == 0 {
-                attrs, err := h.marketplaceService.Storage().GetListingAttributes(ctx, id)
-                if err == nil && len(attrs) > 0 {
-                    listing.Attributes = attrs
-                    log.Printf("Loaded %d attributes for listing %d during reindex", len(attrs), id)
-                }
-            }
-            
-            // Проверяем наличие переводов и явно загружаем их если нужно
-            if listing.Translations == nil || len(listing.Translations) == 0 {
-                transMap := make(models.TranslationMap)
-                
-                // Используем прямой SQL-запрос для надежности
-                rows, err := h.marketplaceService.Storage().Query(ctx, `
+
+		if err != nil {
+			log.Printf("Error getting listing IDs for reindex: %v", err)
+			return
+		}
+		defer rows.Close()
+
+		var listingIDs []int
+		for rows.Next() {
+			var id int
+			if err := rows.Scan(&id); err != nil {
+				log.Printf("Error scanning listing ID: %v", err)
+				continue
+			}
+			listingIDs = append(listingIDs, id)
+		}
+
+		log.Printf("Starting reindex of %d listings with translations...", len(listingIDs))
+
+		// Реиндексируем каждое объявление с явной загрузкой переводов
+		count := 0
+		for _, id := range listingIDs {
+			// Получаем объявление со всеми данными, включая атрибуты
+			listing, err := h.marketplaceService.GetListingByID(ctx, id)
+			if err != nil {
+				log.Printf("Error getting listing %d: %v", id, err)
+				continue
+			}
+
+			// Специальная обработка для объявлений без атрибутов
+			if listing.Attributes == nil || len(listing.Attributes) == 0 {
+				attrs, err := h.marketplaceService.Storage().GetListingAttributes(ctx, id)
+				if err == nil && len(attrs) > 0 {
+					listing.Attributes = attrs
+					log.Printf("Loaded %d attributes for listing %d during reindex", len(attrs), id)
+				}
+			}
+
+			// Проверяем наличие переводов и явно загружаем их если нужно
+			if listing.Translations == nil || len(listing.Translations) == 0 {
+				transMap := make(models.TranslationMap)
+
+				// Используем прямой SQL-запрос для надежности
+				rows, err := h.marketplaceService.Storage().Query(ctx, `
                     SELECT language, field_name, translated_text 
                     FROM translations 
                     WHERE entity_type = 'listing' AND entity_id = $1
                 `, id)
-                
-                if err == nil {
-                    defer rows.Close()
-                    for rows.Next() {
-                        var lang, field, text string
-                        if err := rows.Scan(&lang, &field, &text); err == nil {
-                            if _, ok := transMap[lang]; !ok {
-                                transMap[lang] = make(map[string]string)
-                            }
-                            transMap[lang][field] = text
-                        }
-                    }
-                    
-                    if len(transMap) > 0 {
-                        listing.Translations = transMap
-                        log.Printf("Loaded %d languages of translations for listing %d", len(transMap), id)
-                    }
-                }
-            }
-            
-            // Индексируем объявление со всеми данными
-            if err := h.marketplaceService.Storage().IndexListing(ctx, listing); err != nil {
-                log.Printf("Error indexing listing %d: %v", id, err)
-            } else {
-                count++
-                if count%20 == 0 {
-                    log.Printf("Progress: %d/%d listings reindexed", count, len(listingIDs))
-                }
-            }
-        }
-        
-        log.Printf("Successfully reindexed %d/%d listings with translations", count, len(listingIDs))
-    }()
 
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "Переиндексация всех объявлений с переводами запущена...",
-    })
+				if err == nil {
+					defer rows.Close()
+					for rows.Next() {
+						var lang, field, text string
+						if err := rows.Scan(&lang, &field, &text); err == nil {
+							if _, ok := transMap[lang]; !ok {
+								transMap[lang] = make(map[string]string)
+							}
+							transMap[lang][field] = text
+						}
+					}
+
+					if len(transMap) > 0 {
+						listing.Translations = transMap
+						log.Printf("Loaded %d languages of translations for listing %d", len(transMap), id)
+					}
+				}
+			}
+
+			// Индексируем объявление со всеми данными
+			if err := h.marketplaceService.Storage().IndexListing(ctx, listing); err != nil {
+				log.Printf("Error indexing listing %d: %v", id, err)
+			} else {
+				count++
+				if count%20 == 0 {
+					log.Printf("Progress: %d/%d listings reindexed", count, len(listingIDs))
+				}
+			}
+		}
+
+		log.Printf("Successfully reindexed %d/%d listings with translations", count, len(listingIDs))
+	}()
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Переиндексация всех объявлений с переводами запущена...",
+	})
 }
 
 func (h *MarketplaceHandler) GetPriceHistory(c *fiber.Ctx) error {
