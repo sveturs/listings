@@ -117,39 +117,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Автоматическая пауза видео при скролле за пределы видимости
-    const videos = document.querySelectorAll('video');
-
-    if (videos.length > 0) {
-        function isElementInViewport(el) {
-            const rect = el.getBoundingClientRect();
-            return (
-                rect.top >= 0 &&
-                rect.left >= 0 &&
-                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-            );
-        }
-
-        function handleVideoVisibility() {
-            videos.forEach(video => {
-                if (isElementInViewport(video)) {
-                    if (video.paused && video.dataset.autoplay === 'true') {
-                        video.play();
-                    }
-                } else {
-                    if (!video.paused) {
-                        video.pause();
-                    }
-                }
-            });
-        }
-
-        window.addEventListener('scroll', handleVideoVisibility);
-        window.addEventListener('resize', handleVideoVisibility);
-        handleVideoVisibility();
-    }
-
     // Подсветка активного пункта меню при прокрутке
     window.addEventListener('scroll', function () {
         const scrollPosition = window.scrollY;

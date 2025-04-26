@@ -342,12 +342,6 @@ section h2:before {
     line-height: 1.6;
 }
 
-/* Видео */
-.ratio video {
-    object-fit: cover;
-    border-radius: 4px;
-}
-
 /* Формы */
 #contactForm .form-control {
     border-radius: 4px;
@@ -495,6 +489,20 @@ section h2:before {
     to {
         transform: rotate(360deg);
     }
+}
+
+/* Улучшения для изображений в карточках */
+.card-img-top {
+    height: 240px;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.05);
 }
 
 /* Адаптивность */

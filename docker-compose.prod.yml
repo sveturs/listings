@@ -74,6 +74,21 @@ services:
     networks:
       - hostel_network
     restart: unless-stopped
+
+  mail-webui:
+    image: roundcube/roundcubemail:latest
+    container_name: mail-webui
+    volumes:
+      - ./roundcube/config:/var/roundcube/config
+      - ./roundcube/db:/var/roundcube/db
+      - ./roundcube/logs:/var/roundcube/logs
+    environment:
+      - ROUNDCUBEMAIL_DEFAULT_HOST=ssl://mail.svetu.rs
+      - ROUNDCUBEMAIL_SMTP_SERVER=tls://mail.svetu.rs
+      - ROUNDCUBEMAIL_SMTP_PORT=587
+    networks:
+      - hostel_network
+    restart: unless-stopped    
 #  opensearch-dashboards:
 #    image: opensearchproject/opensearch-dashboards:2.11.0
 #    container_name: opensearch-dashboards

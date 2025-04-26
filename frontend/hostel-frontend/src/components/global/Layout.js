@@ -1070,7 +1070,7 @@ const Layout = ({ children }) => {
                 <SveTuLogo width={60} height={60} />
 
               </Box>
-              <Typography
+{/*               <Typography
                   component={Link}
                   to="/"
                   variant={isMobile ? "h5" : "h4"}
@@ -1083,6 +1083,7 @@ const Layout = ({ children }) => {
               >
                 Sve <span>Tu</span>
               </Typography>
+*/}              
               <Box sx={{ display: "flex", alignItems: "center", gap: isMobile ? 0.5 : 2 }}>
                 {/* Добавляем иконку меню на мобильных устройствах */}
                 {isMobile && (

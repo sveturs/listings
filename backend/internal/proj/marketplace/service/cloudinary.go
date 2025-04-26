@@ -8,7 +8,7 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"log"
 	"os"
-	"strings"
+//	"strings"
 	"cloud.google.com/go/vision/apiv1"
 	visionpb "google.golang.org/genproto/googleapis/cloud/vision/v1"
 
@@ -70,63 +70,22 @@ func (s *CloudinaryService) MakeUglyPhotoBeautiful(ctx context.Context, imagePat
 }
 
 func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string) (map[string]interface{}, error) {
-	log.Printf("ModerateImage: начало загрузки файла %s", imagePath)
+	log.Printf("ModerateImage: старт модерации файла %s", imagePath)
 
 	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 		log.Printf("ModerateImage: файл %s не существует", imagePath)
 		return nil, fmt.Errorf("file does not exist: %s", imagePath)
 	}
 
-	fileInfo, err := os.Stat(imagePath)
-	if err != nil {
-		log.Printf("ModerateImage: ошибка получения информации о файле: %v", err)
-		return nil, err
-	}
-	log.Printf("ModerateImage: размер файла: %d байт", fileInfo.Size())
-
-	fileBytes, err := os.ReadFile(imagePath)
-	if err != nil {
-		log.Printf("ModerateImage: ошибка чтения файла %s: %v", imagePath, err)
-		return nil, err
-	}
-	log.Printf("ModerateImage: файл успешно прочитан, размер: %d байт", len(fileBytes))
-
-	uploadParams := uploader.UploadParams{
-		Moderation: "webpurify",
-	}
-
-	log.Printf("ModerateImage: отправка файла в Cloudinary с модерацией webpurify")
-	resp, err := s.cld.Upload.Upload(ctx, imagePath, uploadParams)
-	if err != nil {
-		log.Printf("ModerateImage: ошибка загрузки в Cloudinary: %v", err)
-		return nil, err
-	}
-
-	log.Printf("ModerateImage: файл успешно загружен в Cloudinary, публичный ID: %s", resp.PublicID)
-
 	result := map[string]interface{}{
 		"safe":      true,
 		"issues":    []string{},
-		"url":       resp.SecureURL,
-		"public_id": resp.PublicID,
+		"url":       "",
+		"public_id": "",
 		"reason":    "",
 	}
 
-	if resp.Moderation != nil && len(resp.Moderation) > 0 {
-		log.Printf("ModerateImage: получены результаты модерации: %+v", resp.Moderation)
-		for _, mod := range resp.Moderation {
-			if mod.Status == "rejected" {
-				result["safe"] = false
-				msg := fmt.Sprintf("Отклонено Cloudinary: %s", mod.Kind)
-				result["issues"] = append(result["issues"].([]string), msg)
-				result["reason"] = msg
-				log.Printf("ModerateImage: изображение отклонено, причина: %s", msg)
-			}
-		}
-	} else {
-		log.Printf("ModerateImage: результаты модерации отсутствуют или пусты")
-	}
-
+	// 1. Проверка Google Vision SafeSearch
 	log.Printf("ModerateImage: запускаем Google Vision SafeSearch анализ")
 	visionClient, err := vision.NewImageAnnotatorClient(ctx)
 	if err != nil {
@@ -154,50 +113,67 @@ func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string)
 		return result, nil
 	}
 
-	unsafeDetected := false
-	unsafeReasons := []string{}
-	detailed := []string{}
-	addUnsafe := func(label string, likelihood visionpb.Likelihood) {
-		if likelihood >= visionpb.Likelihood_POSSIBLE {
-			unsafeDetected = true
-			msg := fmt.Sprintf("Google SafeSearch: %s=%s", label, likelihood)
-			result["issues"] = append(result["issues"].([]string), msg)
-			unsafeReasons = append(unsafeReasons, msg)
-			detailed = append(detailed, fmt.Sprintf("%s контент: %s", translateLabel(label), translateLikelihood(likelihood)))
-			log.Printf("ModerateImage: SafeSearch %s => %s", label, likelihood)
+	type unsafeCategory struct {
+		Label      string
+		Readable   string
+		Likelihood visionpb.Likelihood
+	}
+
+	categories := []unsafeCategory{
+		{"adult", "эротический контент", safe.Adult},
+		{"violence", "насильственный контент", safe.Violence},
+		{"racy", "провокационный контент", safe.Racy},
+		{"medical", "медицинский (шокирующий) контент", safe.Medical},
+		{"spoof", "фальшивый или пародийный контент", safe.Spoof},
+	}
+
+	for _, cat := range categories {
+		if cat.Likelihood >= visionpb.Likelihood_POSSIBLE {
+			result["safe"] = false
+			issueText := fmt.Sprintf("На изображении вероятно обнаружен %s (%s).",
+				cat.Readable, translateLikelihood(cat.Likelihood))
+			result["reason"] = issueText
+			result["issues"] = append(result["issues"].([]string), issueText)
+			log.Printf("ModerateImage: отклонено Google Vision: %s => %s", cat.Label, cat.Likelihood.String())
+			log.Printf("ModerateImage: итоговый результат: %+v", result)
+			return result, nil // ⬅️ Сразу выходим, если небезопасно
 		}
 	}
 
-	addUnsafe("adult", safe.Adult)
-	addUnsafe("violence", safe.Violence)
-	addUnsafe("racy", safe.Racy)
-	addUnsafe("medical", safe.Medical)
-	addUnsafe("spoof", safe.Spoof)
+	log.Printf("ModerateImage: Google Vision проверка пройдена успешно, продолжаем Cloudinary модерацию")
 
-	if unsafeDetected {
-		result["safe"] = false
-		result["reason"] = fmt.Sprintf("На изображении обнаружено: %s", strings.Join(detailed, ", "))
+	// 2. Загрузка в Cloudinary и проверка через webpurify
+	uploadParams := uploader.UploadParams{
+		Moderation: "webpurify",
+	}
+
+	resp, err := s.cld.Upload.Upload(ctx, imagePath, uploadParams)
+	if err != nil {
+		log.Printf("ModerateImage: ошибка загрузки в Cloudinary: %v", err)
+		return nil, err
+	}
+
+	log.Printf("ModerateImage: файл успешно загружен в Cloudinary, публичный ID: %s", resp.PublicID)
+
+	result["url"] = resp.SecureURL
+	result["public_id"] = resp.PublicID
+
+	if resp.Moderation != nil && len(resp.Moderation) > 0 {
+		for _, mod := range resp.Moderation {
+			if mod.Status == "rejected" {
+				result["safe"] = false
+				msg := fmt.Sprintf("Отклонено Cloudinary: %s", mod.Kind)
+				result["issues"] = append(result["issues"].([]string), msg)
+				result["reason"] = msg
+				log.Printf("ModerateImage: изображение отклонено Cloudinary: %s", msg)
+			}
+		}
+	} else {
+		log.Printf("ModerateImage: Cloudinary модерация успешно пройдена")
 	}
 
 	log.Printf("ModerateImage: итоговый результат: %+v", result)
 	return result, nil
-}
-
-func translateLabel(label string) string {
-	switch label {
-	case "adult":
-		return "эротический"
-	case "violence":
-		return "насильственный"
-	case "racy":
-		return "провокационный"
-	case "medical":
-		return "медицинский (шокирующий)"
-	case "spoof":
-		return "фальшивый или пародийный"
-	default:
-		return label
-	}
 }
 
 func translateLikelihood(likelihood visionpb.Likelihood) string {
@@ -209,7 +185,7 @@ func translateLikelihood(likelihood visionpb.Likelihood) string {
 	case visionpb.Likelihood_POSSIBLE:
 		return "возможно"
 	default:
-		return "неопределённо"
+		return "неопределено"
 	}
 }
 
