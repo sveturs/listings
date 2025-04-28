@@ -86,6 +86,7 @@ services:
       - ./certbot/www:/var/www/certbot
     depends_on:
       - nginx
+    command: certonly --webroot --webroot-path=/var/www/certbot --email admin@svetu.rs --agree-tos --no-eff-email --force-renewal -d svetu.rs -d www.svetu.rs -d mail.svetu.rs -d autodiscover.svetu.rs -d autoconfig.svetu.rs -d klimagrad.svetu.rs
 
 
   mail-webui:

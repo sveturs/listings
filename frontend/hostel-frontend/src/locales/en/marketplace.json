@@ -59,7 +59,8 @@
       "location": "Location",
       "date": "Date",
       "noListings": "No listings found",
-      "noLocation": "Location not specified"
+      "noLocation": "Location not specified",
+      "status": "Status"
     },
     "similar": {
       "title": "Similar listings",
