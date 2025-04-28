@@ -8,10 +8,9 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"log"
 	"os"
-//	"strings"
+	//	"strings"
 	"cloud.google.com/go/vision/apiv1"
 	visionpb "google.golang.org/genproto/googleapis/cloud/vision/v1"
-
 )
 
 type CloudinaryService struct {
@@ -113,30 +112,33 @@ func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string)
 		return result, nil
 	}
 
+	// для модерации
 	type unsafeCategory struct {
 		Label      string
 		Readable   string
 		Likelihood visionpb.Likelihood
+		Threshold  visionpb.Likelihood
 	}
 
 	categories := []unsafeCategory{
-		{"adult", "эротический контент", safe.Adult},
-		{"violence", "насильственный контент", safe.Violence},
-		{"racy", "провокационный контент", safe.Racy},
-		{"medical", "медицинский (шокирующий) контент", safe.Medical},
-		{"spoof", "фальшивый или пародийный контент", safe.Spoof},
+		{"adult", "эротический контент", safe.Adult, visionpb.Likelihood_LIKELY},                        
+		{"violence", "насильственный контент", safe.Violence, visionpb.Likelihood_POSSIBLE},             
+		{"racy", "провокационный контент", safe.Racy, visionpb.Likelihood_VERY_LIKELY},                  
+		{"medical", "медицинский (шокирующий) контент", safe.Medical, visionpb.Likelihood_VERY_LIKELY},  
+		{"spoof", "фальшивый или пародийный контент", safe.Spoof, visionpb.Likelihood_LIKELY},           
 	}
 
 	for _, cat := range categories {
-		if cat.Likelihood >= visionpb.Likelihood_POSSIBLE {
+		if cat.Likelihood >= cat.Threshold {
 			result["safe"] = false
 			issueText := fmt.Sprintf("На изображении вероятно обнаружен %s (%s).",
 				cat.Readable, translateLikelihood(cat.Likelihood))
 			result["reason"] = issueText
 			result["issues"] = append(result["issues"].([]string), issueText)
-			log.Printf("ModerateImage: отклонено Google Vision: %s => %s", cat.Label, cat.Likelihood.String())
+			log.Printf("ModerateImage: отклонено Google Vision: %s => %s (порог: %s)",
+				cat.Label, cat.Likelihood.String(), cat.Threshold.String())
 			log.Printf("ModerateImage: итоговый результат: %+v", result)
-			return result, nil // ⬅️ Сразу выходим, если небезопасно
+			return result, nil
 		}
 	}
 
@@ -191,128 +193,128 @@ func translateLikelihood(likelihood visionpb.Likelihood) string {
 
 // EnhanceImage улучшает изображение для товарной карточки
 func (s *CloudinaryService) EnhanceImage(ctx context.Context, imagePath string) (map[string]interface{}, error) {
-    log.Printf("EnhanceImage: начинаем улучшение товарного фото: %s", imagePath)
-    
-    // Проверяем существование файла
-    if _, err := os.Stat(imagePath); os.IsNotExist(err) {
-        log.Printf("EnhanceImage: файл %s не существует", imagePath)
-        return nil, fmt.Errorf("file does not exist: %s", imagePath)
-    }
-    
-    // Усиленная трансформация
-	transformationStr := "e_improve:outdoor:70,e_brightness:25,e_contrast:30,c_pad,w_1000,h_1000,b_white,q_auto:best"
-     log.Printf("EnhanceImage: используем следующую трансформацию: %s", transformationStr)
-    
-    // Создаем параметры загрузки
-    uploadParams := uploader.UploadParams{
-        Transformation: transformationStr,
-        Tags:           []string{"enhanced", "product"},
-    }
-    
-    // Пробуем включить удаление фона, если оно доступно
-    // Оставим закомментированным до проверки доступности
-    // uploadParams.BackgroundRemoval = "cloudinary_ai"
-    
-    resp, err := s.cld.Upload.Upload(ctx, imagePath, uploadParams)
-    if err != nil {
-        log.Printf("EnhanceImage: ошибка улучшения изображения: %v", err)
-        return nil, err
-    }
-    
-    // Проверяем и логируем ответ
-    if resp.SecureURL == "" {
-        log.Printf("EnhanceImage: предупреждение - пустой URL в ответе Cloudinary")
-    } else {
-        log.Printf("EnhanceImage: изображение успешно улучшено, URL: %s", resp.SecureURL)
-    }
-    
-    return map[string]interface{}{
-        "url":       resp.SecureURL,
-        "public_id": resp.PublicID,
-        "width":     resp.Width,
-        "height":    resp.Height,
-    }, nil
-}
+	log.Printf("EnhanceImage: начинаем улучшение товарного фото: %s", imagePath)
 
+	// Проверяем существование файла
+	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+		log.Printf("EnhanceImage: файл %s не существует", imagePath)
+		return nil, fmt.Errorf("file does not exist: %s", imagePath)
+	}
+
+	// Усиленная трансформация
+	transformationStr := "e_improve:outdoor:70,e_brightness:25,e_contrast:30,c_pad,w_1000,h_1000,b_white,q_auto:best"
+	log.Printf("EnhanceImage: используем следующую трансформацию: %s", transformationStr)
+
+	// Создаем параметры загрузки
+	uploadParams := uploader.UploadParams{
+		Transformation: transformationStr,
+		Tags:           []string{"enhanced", "product"},
+	}
+
+	// Пробуем включить удаление фона, если оно доступно
+	// Оставим закомментированным до проверки доступности
+	// uploadParams.BackgroundRemoval = "cloudinary_ai"
+
+	resp, err := s.cld.Upload.Upload(ctx, imagePath, uploadParams)
+	if err != nil {
+		log.Printf("EnhanceImage: ошибка улучшения изображения: %v", err)
+		return nil, err
+	}
+
+	// Проверяем и логируем ответ
+	if resp.SecureURL == "" {
+		log.Printf("EnhanceImage: предупреждение - пустой URL в ответе Cloudinary")
+	} else {
+		log.Printf("EnhanceImage: изображение успешно улучшено, URL: %s", resp.SecureURL)
+	}
+
+	return map[string]interface{}{
+		"url":       resp.SecureURL,
+		"public_id": resp.PublicID,
+		"width":     resp.Width,
+		"height":    resp.Height,
+	}, nil
+}
 
 // TestAvailableTransformations проверяет доступные трансформации
 func (s *CloudinaryService) TestAvailableTransformations(ctx context.Context, imagePath string) {
-    // Тест базовой трансформации
-    log.Printf("Тестирование базовых трансформаций...")
-    _, err1 := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
+	// Тест базовой трансформации
+	log.Printf("Тестирование базовых трансформаций...")
+	_, err1 := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
 		Transformation: "e_background_removal,e_improve,w_1000,h_1000,c_fill,b_white,e_brightness:30,e_contrast:30,e_sharpen,q_auto",
-		Tags: []string{"test_basic"},
-    })
-    log.Printf("Результат базовых трансформаций: %v", err1 == nil)
-    
-    // Тест удаления фона методом 1
-    log.Printf("Тестирование удаления фона (метод 1)...")
-    _, err2 := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
-        Transformation: "e_background_removal",
-        Tags: []string{"test_bgremoval_1"},
-    })
-    log.Printf("Результат удаления фона (метод 1): %v", err2 == nil)
-    
-    // Тест удаления фона методом 2
-    log.Printf("Тестирование удаления фона (метод 2)...")
-    _, err3 := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
-        BackgroundRemoval: "cloudinary_ai",
-        Tags: []string{"test_bgremoval_2"},
-    })
-    log.Printf("Результат удаления фона (метод 2): %v", err3 == nil)
+		Tags:           []string{"test_basic"},
+	})
+	log.Printf("Результат базовых трансформаций: %v", err1 == nil)
+
+	// Тест удаления фона методом 1
+	log.Printf("Тестирование удаления фона (метод 1)...")
+	_, err2 := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
+		Transformation: "e_background_removal",
+		Tags:           []string{"test_bgremoval_1"},
+	})
+	log.Printf("Результат удаления фона (метод 1): %v", err2 == nil)
+
+	// Тест удаления фона методом 2
+	log.Printf("Тестирование удаления фона (метод 2)...")
+	_, err3 := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
+		BackgroundRemoval: "cloudinary_ai",
+		Tags:              []string{"test_bgremoval_2"},
+	})
+	log.Printf("Результат удаления фона (метод 2): %v", err3 == nil)
 }
 func (s *CloudinaryService) TestBackgroundRemoval(ctx context.Context, imagePath string) (bool, error) {
-    _, err := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
-        Transformation: "e_background_removal",
-        Tags:           []string{"test", "background_removal"},
-    })
-    
-    if err != nil {
-        log.Printf("Тест удаления фона: ошибка: %v", err)
-        return false, err
-    }
-    
-    log.Printf("Тест удаления фона: успешно")
-    return true, nil
+	_, err := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
+		Transformation: "e_background_removal",
+		Tags:           []string{"test", "background_removal"},
+	})
+
+	if err != nil {
+		log.Printf("Тест удаления фона: ошибка: %v", err)
+		return false, err
+	}
+
+	log.Printf("Тест удаления фона: успешно")
+	return true, nil
 }
+
 // EnhancePreview создаёт предпросмотр улучшенного изображения
 func (s *CloudinaryService) EnhancePreview(ctx context.Context, imagePath string) (map[string]interface{}, error) {
-    log.Printf("EnhancePreview: создание предпросмотра для %s", imagePath)
-    
-    // Загружаем оригинал
-    origResp, err := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
-        Tags: []string{"original", "preview"},
-    })
+	log.Printf("EnhancePreview: создание предпросмотра для %s", imagePath)
 
-    if err != nil {
-        log.Printf("EnhancePreview: ошибка загрузки оригинала: %v", err)
-        return nil, err
-    }
+	// Загружаем оригинал
+	origResp, err := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
+		Tags: []string{"original", "preview"},
+	})
 
-    // Трансформация аналогичная EnhanceImage
-     transformationStr := "e_improve:outdoor,e_brightness:15,e_contrast:20,e_vibrance:10,e_sharpen:15,b_gen_remove,c_pad,w_1000,h_1000,b_white,q_auto:best"
+	if err != nil {
+		log.Printf("EnhancePreview: ошибка загрузки оригинала: %v", err)
+		return nil, err
+	}
 
-    // Создаём улучшенную версию
-    enhResp, err := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
-        Transformation: transformationStr,
-        Tags:           []string{"enhanced", "preview", "ai_processed"},
-    })
+	// Трансформация аналогичная EnhanceImage
+	transformationStr := "e_improve:outdoor,e_brightness:15,e_contrast:20,e_vibrance:10,e_sharpen:15,b_gen_remove,c_pad,w_1000,h_1000,b_white,q_auto:best"
 
-    if err != nil {
-        log.Printf("EnhancePreview: ошибка создания улучшенного предпросмотра: %v", err)
-        return nil, err
-    }
-    
-    log.Printf("EnhancePreview: успешно создан предпросмотр, оригинал: %s, улучшенный: %s", 
-               origResp.SecureURL, enhResp.SecureURL)
+	// Создаём улучшенную версию
+	enhResp, err := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
+		Transformation: transformationStr,
+		Tags:           []string{"enhanced", "preview", "ai_processed"},
+	})
 
-    // Возвращаем ссылки на обе версии для сравнения
-    return map[string]interface{}{
-        "original":    origResp.SecureURL,
-        "enhanced":    enhResp.SecureURL,
-        "original_id": origResp.PublicID,
-        "enhanced_id": enhResp.PublicID,
-    }, nil
+	if err != nil {
+		log.Printf("EnhancePreview: ошибка создания улучшенного предпросмотра: %v", err)
+		return nil, err
+	}
+
+	log.Printf("EnhancePreview: успешно создан предпросмотр, оригинал: %s, улучшенный: %s",
+		origResp.SecureURL, enhResp.SecureURL)
+
+	// Возвращаем ссылки на обе версии для сравнения
+	return map[string]interface{}{
+		"original":    origResp.SecureURL,
+		"enhanced":    enhResp.SecureURL,
+		"original_id": origResp.PublicID,
+		"enhanced_id": enhResp.PublicID,
+	}, nil
 }
 
 // RemoveBackground удаляет фон с изображения
