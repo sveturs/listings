@@ -7,6 +7,11 @@
 
 # testing
 /coverage
+/roundcube/db
+/roundcube/plugins
+/roundcube/logs
+/roundcube/temp
+
 
 # production
 /build

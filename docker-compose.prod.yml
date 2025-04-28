@@ -67,28 +67,51 @@ services:
       - DMS_DEBUG=0
       - ENABLE_AMAVIS=1
       - POSTMASTER_ADDRESS=postmaster@svetu.rs
-      - SSL_CERT_PATH=/etc/letsencrypt/live/svetu.rs/fullchain.pem
-      - SSL_KEY_PATH=/etc/letsencrypt/live/svetu.rs/privkey.pem
+      - SSL_CERT_PATH=/etc/letsencrypt/live/mail.svetu.rs/fullchain.pem
+      - SSL_KEY_PATH=/etc/letsencrypt/live/mail.svetu.rs/privkey.pem
     cap_add:
       - NET_ADMIN
     networks:
-      - hostel_network
+      hostel_network:
+        aliases:
+          - mailserver
+          - mail.svetu.rs 
     restart: unless-stopped
+
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - nginx
+
 
   mail-webui:
     image: roundcube/roundcubemail:latest
     container_name: mail-webui
     volumes:
-      - ./roundcube/config:/var/roundcube/config
-      - ./roundcube/db:/var/roundcube/db
-      - ./roundcube/logs:/var/roundcube/logs
+      - ./roundcube/config:/var/www/html/config
+      - roundcube_data:/var/roundcube  # Добавьте этот том для постоянного хранения данных
     environment:
-      - ROUNDCUBEMAIL_DEFAULT_HOST=ssl://mail.svetu.rs
-      - ROUNDCUBEMAIL_SMTP_SERVER=tls://mail.svetu.rs
+      - ROUNDCUBEMAIL_DEFAULT_HOST=ssl://mailserver:993
+      - ROUNDCUBEMAIL_SMTP_SERVER=tls://mailserver:587
       - ROUNDCUBEMAIL_SMTP_PORT=587
+      - ROUNDCUBEMAIL_PLUGINS=archive,zipdownload
+      - ROUNDCUBEMAIL_DES_KEY=random-string-for-encryption
+      - ROUNDCUBEMAIL_SKIN=elastic
+    expose:
+      - "80"
     networks:
-      - hostel_network
-    restart: unless-stopped    
+      hostel_network:
+        aliases:
+          - mail-webui
+    restart: unless-stopped
+    depends_on:
+      - mailserver            
+
+
 #  opensearch-dashboards:
 #    image: opensearchproject/opensearch-dashboards:2.11.0
 #    container_name: opensearch-dashboards
@@ -198,6 +221,7 @@ volumes:
       type: none
       o: bind
       device: /opt/hostel-data/uploads
+  roundcube_data:  # Том для хранения данных Roundcube
 
 networks:
   hostel_network:

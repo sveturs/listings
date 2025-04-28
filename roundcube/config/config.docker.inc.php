@@ -1,0 +1,12 @@
+<?php
+  $config['db_dsnw'] = 'sqlite:////var/roundcube/db/sqlite.db?mode=0646';
+  $config['db_dsnr'] = '';
+  $config['imap_host'] = 'ssl://mailserver:993:143';
+  $config['smtp_host'] = 'tls://mailserver:587:587';
+  $config['username_domain'] = '';
+  $config['temp_dir'] = '/tmp/roundcube-temp';
+  $config['skin'] = 'elastic';
+  $config['request_path'] = '/mail/';
+  $config['plugins'] = array_filter(array_unique(array_merge($config['plugins'], ['archive', 'zipdownload'])));
+  
+$config['des_key'] = getenv('ROUNDCUBEMAIL_DES_KEY');

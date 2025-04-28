@@ -156,4 +156,10 @@ WHERE title LIKE '%BGA%'
 AND category_id = 2835;  -- Только если они находятся в категории автомобильных инструментов
 
 
-конец смены категорий
+docker run --rm -it \
+  --name temp-certbot \
+  --network hostel-booking-system_hostel_network \
+  -v "/opt/hostel-booking-system/certbot/conf:/etc/letsencrypt" \
+  -v "/opt/hostel-booking-system/certbot/www:/var/www/certbot" \
+  certbot/certbot certonly --webroot -w /var/www/certbot \
+  --email admin@svetu.rs -d autodiscover.svetu.rs -d autoconfig.svetu.rs --agree-tos
