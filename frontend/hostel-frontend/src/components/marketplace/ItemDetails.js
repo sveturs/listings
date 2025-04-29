@@ -48,27 +48,29 @@ const ItemDetails = () => {
         return '/placeholder.png';
     }
 
-    // Обработка строкового формата (обратная совместимость)
+    // Строковый формат (обратная совместимость)
     if (typeof image === 'string') {
         return `${BACKEND_URL}/uploads/${image}`;
     }
 
-    // Обработка объектного формата
-    if (typeof image === 'object') {
-        // Если есть публичный URL, используем его напрямую
-        if (image.public_url) {
+    // Объектный формат
+    if (image.public_url) {
+        // Проверяем, является ли URL абсолютным
+        if (image.public_url.startsWith('http')) {
             return image.public_url;
+        } else {
+            return `${BACKEND_URL}${image.public_url}`;
         }
-        
-        // Для MinIO используем специальный путь
-        if (image.storage_type === 'minio') {
-            return `${BACKEND_URL}/listings/${image.file_path.split('/').pop()}`;
-        }
-        
-        // Для локального хранилища - старый формат
-        if (image.file_path) {
-            return `${BACKEND_URL}/uploads/${image.file_path}`;
-        }
+    }
+
+    // Для MinIO-объектов
+    if (image.storage_type === 'minio') {
+        return `${BACKEND_URL}/listings/${image.file_path.split('/').pop()}`;
+    }
+
+    // Для локального хранилища
+    if (image.file_path) {
+        return `${BACKEND_URL}/uploads/${image.file_path}`;
     }
 
     return '/placeholder.png';

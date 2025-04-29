@@ -216,35 +216,41 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
         return t('listings.details.seller.memberSince', { date });
     };
 
-const getMainImageUrl = () => {
+    const getMainImageUrl = () => {
         if (!listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
             return '/placeholder.jpg';
         }
-
+        
         let mainImage = listing.images.find(img => img && img.is_main === true) || listing.images[0];
-
+        
         if (mainImage && typeof mainImage === 'object') {
             // Если есть публичный URL, используем его напрямую
             if (mainImage.public_url) {
-                return mainImage.public_url;
+                // Проверяем, содержит ли URL абсолютный путь
+                if (mainImage.public_url.startsWith('http')) {
+                    return mainImage.public_url;
+                } else {
+                    return `${process.env.REACT_APP_BACKEND_URL}${mainImage.public_url}`;
+                }
             }
-
-            // Для MinIO формируем URL через специальный путь в nginx
+            
+            // Для MinIO-объектов формируем специальный путь через прокси в nginx
             if (mainImage.storage_type === 'minio') {
-                return `${process.env.REACT_APP_BACKEND_URL}/listings/${mainImage.file_path.split('/').pop()}`;
+                return `${process.env.REACT_APP_BACKEND_URL}/listings/${mainImage.file_path}`;
             }
-
-            // Для локального хранилища используем старый формат
+            
+            // Для локального хранилища используем прежний путь
             return `${process.env.REACT_APP_BACKEND_URL}/uploads/${mainImage.file_path}`;
         }
-
-        // Если изображение просто строка (обратная совместимость)
+        
+        // Для строковых путей (обратная совместимость)
         if (mainImage && typeof mainImage === 'string') {
             return `${process.env.REACT_APP_BACKEND_URL}/uploads/${mainImage}`;
         }
-
+        
         return '/placeholder.jpg';
     }
+    
 
 
 

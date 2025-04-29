@@ -72,17 +72,18 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 
 // UploadFile загружает файл в MinIO
 func (m *MinioClient) UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
-	// Загружаем файл в MinIO
-	_, err := m.client.PutObject(ctx, m.bucketName, objectName, reader, size, minio.PutObjectOptions{
-		ContentType: contentType,
-	})
-	if err != nil {
-		return "", fmt.Errorf("ошибка загрузки файла в MinIO: %w", err)
-	}
+    // Загружаем файл в MinIO
+    _, err := m.client.PutObject(ctx, m.bucketName, objectName, reader, size, minio.PutObjectOptions{
+        ContentType: contentType,
+    })
+    if err != nil {
+        return "", fmt.Errorf("ошибка загрузки файла в MinIO: %w", err)
+    }
 
-	// Возвращаем URL файла
-	return fmt.Sprintf("/%s/%s", m.bucketName, objectName), nil
+    // Возвращаем путь к файлу (без префиксов)
+    return fmt.Sprintf("/%s/%s", m.bucketName, objectName), nil
 }
+
 
 // DeleteFile удаляет файл из MinIO
 func (m *MinioClient) DeleteFile(ctx context.Context, objectName string) error {

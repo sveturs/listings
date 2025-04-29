@@ -721,8 +721,9 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
         return nil, err
     }
 
-    // Создаем отдельный путь для изображений объявлений
-    objectName := fmt.Sprintf("listings/%d/%s", listingID, fileName)
+    // Создаем путь для изображений объявлений БЕЗ префикса имени бакета
+    // Изменение тут - убираем имя бакета из пути
+    objectName := fmt.Sprintf("%d/%s", listingID, fileName)
 
     // Открываем файл
     src, err := file.Open()
@@ -746,12 +747,12 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
     // Создаем информацию об изображении
     image := &models.MarketplaceImage{
         ListingID:   listingID,
-        FilePath:    objectName,
+        FilePath:    objectName,  // Храним путь без имени бакета
         FileName:    file.Filename,
         FileSize:    int(file.Size),
         ContentType: file.Header.Get("Content-Type"),
         IsMain:      isMain,
-        StorageType: "minio", // В данной реализации всегда используем MinIO
+        StorageType: "minio",
         StorageBucket: "listings",
         PublicURL:   publicURL,
     }

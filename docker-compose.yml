@@ -119,7 +119,7 @@ services:
       - MINIO_USE_SSL=false
       - MINIO_BUCKET_NAME=listings
       - MINIO_LOCATION=eu-central-1
-      - FILE_STORAGE_PUBLIC_URL=http://localhost
+      - FILE_STORAGE_PUBLIC_URL=http://localhost/minio
     user: "101:101"
     stop_grace_period: 10s
     stop_signal: SIGTERM

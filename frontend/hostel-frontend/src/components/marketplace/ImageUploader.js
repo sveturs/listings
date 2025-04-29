@@ -1,4 +1,4 @@
-// frontend/hostel-frontend/src/components/marketplace/ImageUploader.js
+// src/components/marketplace/ImageUploader.js
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import imageCompression from 'browser-image-compression';
@@ -37,6 +37,8 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
         return;
       }
 
+      console.log("Начинаем обработку", validFiles.length, "изображений");
+
       const processPromises = validFiles.map(async (file, index) => {
         try {
           // Сжатие изображения перед загрузкой
@@ -48,11 +50,17 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
             onProgress: (p) => setProgress(Math.round(p * 100))
           };
 
+          console.log(`Сжимаем изображение ${index + 1}/${validFiles.length}`);
           const compressedFile = await imageCompression(file, compressionOptions);
+          console.log(`Изображение ${index + 1} сжато: ${compressedFile.size} байт`);
+          
+          // Создаем объект Blob с корректным типом
+          const blob = new Blob([compressedFile], { type: 'image/jpeg' });
+          const newFile = new File([blob], `image-${index}.jpg`, { type: 'image/jpeg' });
           
           return {
-            file: compressedFile,
-            preview: URL.createObjectURL(compressedFile),
+            file: newFile,
+            preview: URL.createObjectURL(newFile),
             isMain: index === 0
           };
         } catch (error) {
@@ -63,6 +71,7 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
 
       const results = await Promise.all(processPromises);
       const filteredResults = results.filter(Boolean);
+      console.log("Обработано изображений:", filteredResults.length);
 
       onImagesSelected(filteredResults);
 
