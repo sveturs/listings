@@ -45,42 +45,48 @@ const ItemDetails = () => {
   // Функция для получения URL изображения
   const getImageUrl = (image) => {
     if (!image) {
-        return '/placeholder.png';
+      return '/placeholder.png';
     }
 
     // Строковый формат (обратная совместимость)
     if (typeof image === 'string') {
-        return `${BACKEND_URL}/uploads/${image}`;
+      // Проверяем, это путь к Minio или обычному хранилищу
+      if (image.includes('listings/')) {
+        return `${BACKEND_URL}/listings/${image.split('/').pop()}`;
+      }
+      return `${BACKEND_URL}/uploads/${image}`;
     }
 
     // Объектный формат
     if (image.public_url) {
-        // Проверяем, является ли URL абсолютным
-        if (image.public_url.startsWith('http')) {
-            return image.public_url;
-        } else {
-            return `${BACKEND_URL}${image.public_url}`;
-        }
+      // Проверяем, является ли URL абсолютным
+      if (image.public_url.startsWith('http')) {
+        return image.public_url;
+      } else {
+        return `${BACKEND_URL}${image.public_url}`;
+      }
     }
 
     // Для MinIO-объектов
-    if (image.storage_type === 'minio') {
-        return `${BACKEND_URL}/listings/${image.file_path.split('/').pop()}`;
+    if (image.storage_type === 'minio' ||
+      (image.file_path && image.file_path.includes('listings/'))) {
+      return `${BACKEND_URL}/listings/${image.file_path.split('/').pop()}`;
     }
 
     // Для локального хранилища
     if (image.file_path) {
-        return `${BACKEND_URL}/uploads/${image.file_path}`;
+      return `${BACKEND_URL}/uploads/${image.file_path}`;
     }
 
     return '/placeholder.png';
-}
+  }
+
 
 
   // Переключение на предыдущее изображение
   const handlePrevImage = () => {
     if (item && item.images && item.images.length > 0) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev > 0 ? prev - 1 : item.images.length - 1
       );
     }
@@ -89,7 +95,7 @@ const ItemDetails = () => {
   // Переключение на следующее изображение
   const handleNextImage = () => {
     if (item && item.images && item.images.length > 0) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev < item.images.length - 1 ? prev + 1 : 0
       );
     }
@@ -112,8 +118,8 @@ const ItemDetails = () => {
   }
 
   // Получаем текущее изображение для отображения
-  const currentImage = item && item.images && item.images.length > 0 
-    ? item.images[currentImageIndex] 
+  const currentImage = item && item.images && item.images.length > 0
+    ? item.images[currentImageIndex]
     : null;
 
   return (
@@ -121,10 +127,10 @@ const ItemDetails = () => {
       <Grid container spacing={4}>
         {/* Изображения */}
         <Grid item xs={12} md={6}>
-          <Box 
-            component={Paper} 
-            elevation={3} 
-            sx={{ 
+          <Box
+            component={Paper}
+            elevation={3}
+            sx={{
               position: 'relative',
               height: 500, // Фиксированная высота для контейнера изображения
               display: 'flex',
@@ -136,7 +142,7 @@ const ItemDetails = () => {
             <img
               src={currentImage ? getImageUrl(currentImage) : (item.image || '/placeholder.png')}
               alt={item.title}
-              style={{ 
+              style={{
                 maxWidth: '100%',
                 maxHeight: '100%',
                 objectFit: 'contain', // Важное свойство - изображение поместится полностью
@@ -144,15 +150,15 @@ const ItemDetails = () => {
                 height: 'auto'
               }}
             />
-            
+
             {/* Кнопки для навигации между изображениями */}
             {item && item.images && item.images.length > 1 && (
               <>
-                <Button 
-                  variant="contained" 
-                  sx={{ 
-                    position: 'absolute', 
-                    left: 10, 
+                <Button
+                  variant="contained"
+                  sx={{
+                    position: 'absolute',
+                    left: 10,
                     backgroundColor: 'rgba(0,0,0,0.5)',
                     minWidth: '40px',
                     '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' }
@@ -161,11 +167,11 @@ const ItemDetails = () => {
                 >
                   &lt;
                 </Button>
-                <Button 
-                  variant="contained" 
-                  sx={{ 
-                    position: 'absolute', 
-                    right: 10, 
+                <Button
+                  variant="contained"
+                  sx={{
+                    position: 'absolute',
+                    right: 10,
                     backgroundColor: 'rgba(0,0,0,0.5)',
                     minWidth: '40px',
                     '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' }
@@ -177,20 +183,20 @@ const ItemDetails = () => {
               </>
             )}
           </Box>
-          
+
           {/* Миниатюры изображений */}
           {item && item.images && item.images.length > 1 && (
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                gap: 1, 
-                mt: 2, 
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1,
+                mt: 2,
                 overflowX: 'auto',
                 py: 1
               }}
             >
               {item.images.map((image, index) => (
-                <Box 
+                <Box
                   key={index}
                   component="img"
                   src={getImageUrl(image)}
@@ -212,7 +218,7 @@ const ItemDetails = () => {
             </Box>
           )}
         </Grid>
-        
+
         {/* Основная информация */}
         <Grid item xs={12} md={6}>
           <Box>
@@ -255,7 +261,7 @@ const ItemDetails = () => {
           </Box>
         </Grid>
       </Grid>
-      
+
       {/* Отзывы */}
       <Box mt={4}>
         <Typography variant="h5" fontWeight="bold">

@@ -744,6 +744,7 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
     if err != nil {
         return nil, fmt.Errorf("error uploading file: %w", err)
     }
+    log.Printf("UploadImage: Изображение загружено в MinIO. objectName=%s, publicURL=%s", objectName, publicURL)
 
     // Create image information
     image := &models.MarketplaceImage{
@@ -753,17 +754,20 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
         FileSize:      int(file.Size),
         ContentType:   file.Header.Get("Content-Type"),
         IsMain:        isMain,
-        StorageType:   "minio",
+        StorageType:   "minio",  // Явно указываем тип хранилища!
         StorageBucket: "listings",
         PublicURL:     publicURL,
     }
-
+    log.Printf("UploadImage: Сохраняем информацию об изображении: ListingID=%d, FilePath=%s, StorageType=%s, PublicURL=%s",
+        image.ListingID, image.FilePath, image.StorageType, image.PublicURL)
     // Save image information to database
     imageID, err := s.storage.AddListingImage(ctx, image)
     if err != nil {
+        // Если не удалось сохранить информацию, удаляем файл
         fileStorage.DeleteFile(ctx, objectName)
         return nil, fmt.Errorf("error saving image information: %w", err)
     }
+    log.Printf("UploadImage: Изображение успешно сохранено в базе данных с ID=%d", imageID)
 
     image.ID = imageID
     return image, nil

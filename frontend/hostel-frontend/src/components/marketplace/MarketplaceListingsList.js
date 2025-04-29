@@ -56,12 +56,19 @@ const getImageUrl = (listing) => {
         return `${baseUrl}/uploads/${mainImage}`;
     }
 
+    // Проверяем на Minio хранилище
+    if (mainImage.storage_type === 'minio' || 
+        (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
+        return `${baseUrl}/listings/${mainImage.file_path.split('/').pop()}`;
+    }
+
     if (mainImage && mainImage.file_path) {
         return `${baseUrl}/uploads/${mainImage.file_path}`;
     }
 
     return '/placeholder.jpg';
 };
+
 
 const MarketplaceListingsList = ({
     listings,

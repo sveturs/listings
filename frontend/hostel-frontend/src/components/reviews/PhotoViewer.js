@@ -87,7 +87,9 @@ const PhotoViewer = ({ open, onClose, photos, currentIndex = 0 }) => {
                 {/* Изображение */}
                 <Box
                     component="img"
-                    src={`${BACKEND_URL}/uploads/${photos[index]}`}
+                    src={photos[index].includes('listings/')
+                        ? `${BACKEND_URL}/listings/${photos[index].split('/').pop()}`
+                        : `${BACKEND_URL}/uploads/${photos[index]}`}
                     alt={`Photo ${index + 1}`}
                     sx={{
                         maxHeight: '100%',

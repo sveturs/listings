@@ -212,74 +212,54 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 }
 
 func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
-	var imageID int
-	err := s.pool.QueryRow(ctx, `
-        INSERT INTO marketplace_images (
-            listing_id, file_path, file_name, file_size, 
-            content_type, is_main
-        ) VALUES ($1, $2, $3, $4, $5, $6)
+    var id int
+    err := s.pool.QueryRow(ctx, `
+        INSERT INTO marketplace_images 
+        (listing_id, file_path, file_name, file_size, content_type, is_main, storage_type, storage_bucket, public_url, created_at) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) 
         RETURNING id
-    `,
-		image.ListingID, image.FilePath, image.FileName,
-		image.FileSize, image.ContentType, image.IsMain,
-	).Scan(&imageID)
-
-	return imageID, err
+    `, image.ListingID, image.FilePath, image.FileName, image.FileSize, image.ContentType, image.IsMain,
+    image.StorageType, image.StorageBucket, image.PublicURL).Scan(&id)
+    
+    if err != nil {
+        return 0, err
+    }
+    
+    return id, nil
 }
 
-func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-	// Преобразуем listingID в int, так как принимаем строку
-	id, err := strconv.Atoi(listingID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid listing ID: %w", err)
-	}
-
-	query := `
+ func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
+    query := `
         SELECT 
-            id, 
-            listing_id,
-            file_path,
-            file_name,
-            file_size,
-            content_type,
-            is_main,
-            created_at
+            id, listing_id, file_path, file_name, file_size, 
+            content_type, is_main, created_at, 
+            storage_type, storage_bucket, public_url  -- Эти поля обязательно должны быть в запросе
         FROM marketplace_images
         WHERE listing_id = $1
-        ORDER BY is_main DESC, created_at DESC
+        ORDER BY is_main DESC, id ASC
     `
-
-	rows, err := s.pool.Query(ctx, query, id)
-	if err != nil {
-		return nil, fmt.Errorf("error querying images: %w", err)
-	}
-	defer rows.Close()
-
-	var images []models.MarketplaceImage
-	for rows.Next() {
-		var img models.MarketplaceImage
-		err := rows.Scan(
-			&img.ID,
-			&img.ListingID,
-			&img.FilePath,
-			&img.FileName,
-			&img.FileSize,
-			&img.ContentType,
-			&img.IsMain,
-			&img.CreatedAt,
-		)
-		if err != nil {
-			log.Printf("Error scanning image row: %v", err)
-			continue
-		}
-		images = append(images, img)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating over images: %w", err)
-	}
-
-	return images, nil
+    
+    rows, err := s.pool.Query(ctx, query, listingID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    
+    var images []models.MarketplaceImage
+    for rows.Next() {
+        var image models.MarketplaceImage
+        err := rows.Scan(
+            &image.ID, &image.ListingID, &image.FilePath, &image.FileName, 
+            &image.FileSize, &image.ContentType, &image.IsMain, &image.CreatedAt,
+            &image.StorageType, &image.StorageBucket, &image.PublicURL,
+        )
+        if err != nil {
+            return nil, err
+        }
+        images = append(images, image)
+    }
+    
+    return images, nil
 }
 
 func (s *Storage) DeleteListingImage(ctx context.Context, imageID string) (string, error) {

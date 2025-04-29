@@ -121,12 +121,12 @@ const ListingDetailsPage = () => {
     // Замените функцию renderDiscountInfo:
     const renderDiscountInfo = () => {
         console.log("Rendering discount info. Full listing metadata:", listing.metadata);
-    
+
         if (!listing || !listing.metadata || !listing.metadata.discount) {
             console.log("No discount metadata found. Listing:", listing?.id);
             return null;
         }
-    
+
         const discount = listing.metadata.discount;
         console.log("Discount data found:", discount);
 
@@ -179,7 +179,7 @@ const ListingDetailsPage = () => {
         console.log(`Атрибут: ${attr.attribute_name} (${attr.attribute_id})`);
         console.log(`Значение: ${attr.display_value}`);
         console.log(`Тип атрибута: ${attr.attribute_type}`);
-        
+
         if (attr.text_value) {
             console.log(`text_value: ${attr.text_value}`);
         }
@@ -189,40 +189,40 @@ const ListingDetailsPage = () => {
         console.log(`Переводы атрибута:`, attr.translations);
         console.log(`Переводы опций:`, attr.option_translations);
         console.log(`Единица измерения: ${attr.unit}`);
-        
+
         // Если атрибут не имеет значения
         if (!attr.display_value && attr.display_value !== 0 && attr.display_value !== false) {
             return t('common.not_specified', { defaultValue: 'Не указано' });
         }
-        
+
         // Для булевых атрибутов возвращаем "Да"/"Нет"
         if (attr.attribute_type === 'boolean') {
             return attr.display_value === 'true' || attr.display_value === true ?
                 t('common.yes') : t('common.no');
         }
-        
+
         // Проверяем текущий язык интерфейса
         const currentLang = i18n.language;
-        
+
         // Если язык русский - возвращаем оригинальное значение без перевода
         if (currentLang === 'ru') {
             return attr.display_value;
         }
-        
+
         // Для атрибутов типа select и text с текстовым значением
-        if ((attr.attribute_type === 'select' || attr.attribute_type === 'text') && 
+        if ((attr.attribute_type === 'select' || attr.attribute_type === 'text') &&
             attr.text_value) {
-            
+
             // Получаем значение для перевода и формируем ключ
             const valueToTranslate = attr.text_value;
             const optionKey = `option_${valueToTranslate}`;
-            
+
             // Проверяем наличие переводов опций для данного языка
-            if (attr.option_translations && 
+            if (attr.option_translations &&
                 attr.option_translations[currentLang]) {
-                
+
                 console.log(`Ищем перевод для ${optionKey} в`, attr.option_translations[currentLang]);
-                
+
                 // Проверяем наличие конкретного ключа в переводах
                 if (attr.option_translations[currentLang][optionKey]) {
                     console.log(`Найден перевод: ${attr.option_translations[currentLang][optionKey]}`);
@@ -230,11 +230,11 @@ const ListingDetailsPage = () => {
                 }
             }
         }
-    
+
         // Для числовых атрибутов с единицами измерения
         if ((attr.attribute_type === 'number' || attr.numeric_value !== undefined) && attr.unit) {
             let numValue;
-            
+
             // Получаем числовое значение
             if (typeof attr.numeric_value === 'number') {
                 numValue = attr.numeric_value;
@@ -245,12 +245,12 @@ const ListingDetailsPage = () => {
             } else {
                 return attr.display_value;
             }
-    
+
             // Форматируем числа с единицами измерения
             if (attr.attribute_name === 'year') {
                 return Math.round(numValue).toString();
             }
-            
+
             // Базовые переводы единиц измерения
             const unitTranslations = {
                 'km': { 'en': 'km', 'ru': 'км', 'sr': 'km' },
@@ -262,10 +262,10 @@ const ListingDetailsPage = () => {
                 'soba': { 'en': 'room', 'ru': 'комн.', 'sr': 'soba' },
                 'sprat': { 'en': 'floor', 'ru': 'эт.', 'sr': 'sprat' }
             };
-            
+
             // Получаем переведенную единицу измерения
             const translatedUnit = unitTranslations[attr.unit]?.[currentLang] || attr.unit;
-            
+
             // Применяем форматирование в зависимости от типа атрибута
             if (attr.attribute_name === 'mileage') {
                 return `${Math.round(numValue).toLocaleString()} ${translatedUnit}`;
@@ -279,39 +279,39 @@ const ListingDetailsPage = () => {
                 return `${numValue} ${translatedUnit}`;
             }
         }
-        
+
         // Если никакие правила не сработали, возвращаем display_value
         return attr.display_value;
     };
-// Добавьте эту функцию перед определением ListingDetailsPage
-const debugAttribute = (attr) => {
-    console.group(`Атрибут: ${attr.attribute_name} (${attr.attribute_id})`);
-    console.log('Значение:', attr.display_value);
-    console.log('Тип атрибута:', attr.attribute_type);
-    console.log('Полная структура переводов для атрибута fuel_type:', 
-        JSON.stringify(attr.option_translations, null, 2));
-    if (attr.text_value !== undefined) console.log('text_value:', attr.text_value);
-    if (attr.numeric_value !== undefined) console.log('numeric_value:', attr.numeric_value);
-    if (attr.boolean_value !== undefined) console.log('boolean_value:', attr.boolean_value);
-    
-    console.log('Переводы атрибута:', attr.translations);
-    console.log('Переводы опций:', attr.option_translations);
-    console.log('Единица измерения:', attr.unit);
-    console.groupEnd();
-};
+    // Добавьте эту функцию перед определением ListingDetailsPage
+    const debugAttribute = (attr) => {
+        console.group(`Атрибут: ${attr.attribute_name} (${attr.attribute_id})`);
+        console.log('Значение:', attr.display_value);
+        console.log('Тип атрибута:', attr.attribute_type);
+        console.log('Полная структура переводов для атрибута fuel_type:',
+            JSON.stringify(attr.option_translations, null, 2));
+        if (attr.text_value !== undefined) console.log('text_value:', attr.text_value);
+        if (attr.numeric_value !== undefined) console.log('numeric_value:', attr.numeric_value);
+        if (attr.boolean_value !== undefined) console.log('boolean_value:', attr.boolean_value);
 
-// Вспомогательная функция для перевода известных значений
-const translateKnownValue = (value, translations) => {
-    if (!value) return value;
-    
-    // Если есть перевод для текущего языка и этого значения
-    if (translations[value] && translations[value][i18n.language]) {
-        return translations[value][i18n.language];
-    }
-    
-    // Если язык русский или перевода нет, возвращаем оригинальное значение
-    return i18n.language === 'ru' ? value : value;
-};
+        console.log('Переводы атрибута:', attr.translations);
+        console.log('Переводы опций:', attr.option_translations);
+        console.log('Единица измерения:', attr.unit);
+        console.groupEnd();
+    };
+
+    // Вспомогательная функция для перевода известных значений
+    const translateKnownValue = (value, translations) => {
+        if (!value) return value;
+
+        // Если есть перевод для текущего языка и этого значения
+        if (translations[value] && translations[value][i18n.language]) {
+            return translations[value][i18n.language];
+        }
+
+        // Если язык русский или перевода нет, возвращаем оригинальное значение
+        return i18n.language === 'ru' ? value : value;
+    };
 
     // Преобразование атрибутов в формат для AutoDetails компонента
     const convertAttributesToAutoProps = (attributes) => {
@@ -449,13 +449,13 @@ const translateKnownValue = (value, translations) => {
                 axios.get(`/api/v1/marketplace/listings/${id}`),
                 axios.get('/api/v1/marketplace/favorites')
             ]);
-    
+
             const listingData = listingResponse.data.data;
-    
+
             if (!listingData.images) {
                 listingData.images = [];
             }
-    
+
             // Отладка атрибутов
             if (listingData.attributes && listingData.attributes.length > 0) {
                 console.group('Атрибуты объявления с сервера:');
@@ -466,7 +466,7 @@ const translateKnownValue = (value, translations) => {
             } else {
                 console.warn('Объявление не имеет атрибутов!');
             }
-    
+
             setListing({
                 ...listingData,
                 is_favorite: favoritesResponse.data?.data?.some?.(
@@ -475,7 +475,7 @@ const translateKnownValue = (value, translations) => {
                 images: listingData.images || [],
                 metadata: listingData.metadata
             });
-            
+
             console.log("Listing data:", listingData);
             console.log("Storefront ID:", listingData.storefront_id);
         } catch (err) {
@@ -587,36 +587,74 @@ const translateKnownValue = (value, translations) => {
         }
     };
 
-    const getImageUrl = (image) => {
-        if (!image) {
-            return '/placeholder.jpg';
-        }
-        
-        console.log('Image data:', image);
-        
-        // For string format (backward compatibility)
-        if (typeof image === 'string') {
-            return `${process.env.REACT_APP_BACKEND_URL}/uploads/${image}`;
-        }
-        
-        // Important fix: direct URL to MinIO
-        if (image.file_path) {
-            // Use direct MinIO port for local development
-            return `http://${window.location.hostname}:9000/listings/${image.file_path}`;
-        }
-        
+ 
+    // В ListingDetailsPage.js
+const getImageUrl = (image) => {
+    if (!image) {
         return '/placeholder.jpg';
     }
+    
+    const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+    
+    // Для строк (обратная совместимость)
+    if (typeof image === 'string') {
+        // Если путь имеет формат ID/filename.jpg (MinIO)
+        if (image.match(/^\d+\/[^\/]+$/)) {
+            return `${baseUrl}/listings/${image}`;
+        }
+        
+        if (image.startsWith('/listings/')) {
+            return `${baseUrl}${image}`;
+        }
+        
+        return `${baseUrl}/uploads/${image}`;
+    }
+    
+    // Для объектов изображений
+    if (image.file_path) {
+        // Если публичный URL уже есть и он начинается с /listings/
+        if (image.public_url && image.public_url.startsWith('/listings/')) {
+            return `${baseUrl}${image.public_url}`;
+        }
+        
+        // Если тип хранилища MinIO или путь содержит listings/
+        if (image.storage_type === 'minio' || image.file_path.includes('listings/')) {
+            return `${baseUrl}/listings/${image.file_path}`;
+        }
+        
+        // Для локального хранилища
+        return `${baseUrl}/uploads/${image.file_path}`;
+    }
+    
+    return '/placeholder.jpg';
+};
+
 
     // Функция для получения всех путей к изображениям для галереи
     const getImagePaths = () => {
         if (!listing || !listing.images || listing.images.length === 0) {
             return [];
         }
-
-        // Возвращаем пути file_path для передачи в GalleryViewer
-        return listing.images.map(img => img.file_path);
+        
+        return listing.images.map(img => {
+            if (typeof img === 'string') {
+                return img;
+            }
+            
+            // Если это объект с информацией о файле, возвращаем полный путь
+            if (img.file_path) {
+                // MinIO использует структуру пути ID/filename.jpg
+                if (img.file_path.match(/^\d+\/[^\/]+$/)) {
+                    return img.file_path;
+                }
+                
+                return img.file_path;
+            }
+            
+            return '';
+        });
     };
+    
 
     // Обработчик клика по основному изображению
     const handleMainImageClick = () => {
@@ -661,8 +699,8 @@ const translateKnownValue = (value, translations) => {
             </Container>
         );
     }
-    console.log("Discount data available:", 
-        listing?.metadata?.discount?.discount_percent, 
+    console.log("Discount data available:",
+        listing?.metadata?.discount?.discount_percent,
         listing?.metadata?.discount?.previous_price);
     if (!listing) return null;
 
@@ -1165,6 +1203,7 @@ const translateKnownValue = (value, translations) => {
                     galleryMode="fullscreen"
                 />
             )}
+
 
             {/* Модальное окно истории цен */}
             <Modal

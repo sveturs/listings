@@ -42,12 +42,12 @@ const GalleryViewer = ({
     const touchStartX = useRef(null);
     const touchStartY = useRef(null);
     const currentTouchX = useRef(null); // Текущая позиция касания
-    
+
     // Добавляем эффект для обработки клавиш клавиатуры
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (!isOpen) return;
-            
+
             if (e.key === 'ArrowLeft') {
                 handlePrev(e);
             } else if (e.key === 'ArrowRight') {
@@ -56,21 +56,47 @@ const GalleryViewer = ({
                 handleClose(e);
             }
         };
-        
+
         window.addEventListener('keydown', handleKeyDown);
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [isOpen, selectedIndex]); // eslint-disable-line react-hooks/exhaustive-deps
-    
+
     if (!images || images.length === 0) return null;
 
     const getImageUrl = (image) => {
-        if (!image) return '';
-        if (typeof image === 'string') return `${BACKEND_URL}/uploads/${image}`;
-        if (image.file_path) return `${BACKEND_URL}/uploads/${image.file_path}`;
-        return '';
-    };
+        if (!image) return '/placeholder.jpg';
+        
+        const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+        
+        // Для строк (обратная совместимость)
+        if (typeof image === 'string') {
+            // Если это путь из MinIO (начинается с /listings/ или содержит listings/)
+            if (image.startsWith('/listings/') || image.includes('listings/')) {
+                return `${baseUrl}${image}`;
+            }
+            return `${baseUrl}/uploads/${image}`;
+        }
+        
+        // Для объектов с информацией о файле
+        if (image.file_path) {
+            // Для MinIO объектов
+            if (image.storage_type === 'minio' || image.file_path.includes('listings/')) {
+                if (image.public_url && image.public_url.startsWith('/listings/')) {
+                    return `${baseUrl}${image.public_url}`;
+                }
+                return `${baseUrl}/listings/${image.file_path}`;
+            }
+            
+            // Для локального хранилища
+            return `${baseUrl}/uploads/${image.file_path}`;
+        }
+        
+        return '/placeholder.jpg';
+    }
+    
+    
 
     const handleOpen = (index) => {
         setSelectedIndex(index);
@@ -90,7 +116,7 @@ const GalleryViewer = ({
         e?.stopPropagation();
         if (isDragging) return; // Не меняем при активном перетаскивании
         setIsZoomed(false);
-        
+
         // Моментально меняем изображение без анимации
         setSelectedIndex(prev => (prev > 0 ? prev - 1 : images.length - 1));
     };
@@ -99,7 +125,7 @@ const GalleryViewer = ({
         e?.stopPropagation();
         if (isDragging) return; // Не меняем при активном перетаскивании
         setIsZoomed(false);
-        
+
         // Моментально меняем изображение без анимации
         setSelectedIndex(prev => (prev < images.length - 1 ? prev + 1 : 0));
     };
@@ -112,7 +138,7 @@ const GalleryViewer = ({
     // Обработчик прокрутки колесика мыши
     const handleWheel = (e) => {
         if (isZoomed) return; // Не обрабатываем в режиме зума
-        
+
         if (e.deltaY < 0) {
             // Прокрутка вверх - следующая фотография
             handleNext(e);
@@ -132,7 +158,7 @@ const GalleryViewer = ({
     const handleTouchStart = (e) => {
         if (isZoomed) return; // Не обрабатываем в режиме зума
         if (!isMobile()) return; // Работаем только на мобильных устройствах
-        
+
         touchStartX.current = e.touches[0].clientX;
         touchStartY.current = e.touches[0].clientY;
         currentTouchX.current = e.touches[0].clientX;
@@ -143,23 +169,23 @@ const GalleryViewer = ({
     // Обработчик перемещения пальца
     const handleTouchMove = (e) => {
         if (isZoomed || !isDragging || !touchStartX.current || !isMobile()) return;
-        
+
         const touchX = e.touches[0].clientX;
         const deltaX = touchX - touchStartX.current;
-        
+
         // Проверяем, что свайп в основном горизонтальный
         const touchY = e.touches[0].clientY;
         const deltaY = Math.abs(touchY - touchStartY.current);
-        
+
         // Если движение больше вертикальное, то прекращаем обработку
         if (deltaY > Math.abs(deltaX) * 0.8) {
             return;
         }
-        
+
         // Обновляем позицию для эффекта перетаскивания
         currentTouchX.current = touchX;
         setDragPosition(deltaX);
-        
+
         // Предотвращаем прокрутку страницы при свайпе
         e.preventDefault();
     };
@@ -171,13 +197,13 @@ const GalleryViewer = ({
             setDragPosition(0);
             return;
         }
-        
+
         const touchEndX = e.changedTouches[0].clientX;
         const deltaX = touchEndX - touchStartX.current;
-        
+
         // Определяем направление и порог перелистывания
         const threshold = window.innerWidth * 0.15; // 15% ширины экрана
-        
+
         if (Math.abs(deltaX) > threshold) {
             if (deltaX > 0) {
                 // Свайп вправо - предыдущая фотография
@@ -195,7 +221,7 @@ const GalleryViewer = ({
             }, 150);
             return;
         }
-        
+
         // Сбрасываем все значения перетаскивания
         touchStartX.current = null;
         touchStartY.current = null;
@@ -207,7 +233,7 @@ const GalleryViewer = ({
     // Обработчик отмены касания
     const handleTouchCancel = () => {
         if (!isMobile()) return;
-        
+
         touchStartX.current = null;
         touchStartY.current = null;
         currentTouchX.current = null;
@@ -366,8 +392,8 @@ const GalleryViewer = ({
                                 objectFit: 'contain',
                                 cursor: isZoomed ? 'zoom-out' : 'zoom-in',
                                 transition: isDragging ? 'none' : 'transform 0.15s ease-out',
-                                transform: isDragging 
-                                    ? `translateX(${dragPosition}px)` 
+                                transform: isDragging
+                                    ? `translateX(${dragPosition}px)`
                                     : 'translateX(0)',
                                 opacity: 1,
                                 willChange: 'transform' // Оптимизация производительности анимации

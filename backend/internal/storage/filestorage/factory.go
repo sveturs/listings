@@ -51,17 +51,14 @@ type MinioStorage struct {
 	publicBaseURL  string
 	minioBucketName string
 }
-// In backend/internal/storage/filestorage/factory.go
-
+ 
 func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
-    // Make sure we upload to the listings bucket with consistent paths
-    bucketPath := objectName
+     bucketPath := objectName
     
     log.Printf("Uploading file to MinIO: objectName=%s, size=%d, contentType=%s, bucket=%s", 
         bucketPath, size, contentType, s.minioBucketName)
     
-    // Upload to MinIO
-    filePath, err := s.client.UploadFile(ctx, bucketPath, reader, size, contentType)
+     filePath, err := s.client.UploadFile(ctx, bucketPath, reader, size, contentType)
     if err != nil {
         log.Printf("ERROR uploading file to MinIO: %v", err)
         return "", err
@@ -69,12 +66,12 @@ func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader
 
     log.Printf("File successfully uploaded to MinIO: filePath=%s", filePath)
 
-    // Format direct URL for file access - the key part!
-    fileURL := fmt.Sprintf("/listings/%s", objectName)
+     fileURL := fmt.Sprintf("/listings/%s", objectName)
     
     log.Printf("URL for file: %s", fileURL)
     return fileURL, nil
 }
+
 
 func (s *MinioStorage) DeleteFile(ctx context.Context, objectName string) error {
 	// Извлекаем имя объекта из полного пути
