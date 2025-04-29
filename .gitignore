@@ -18,6 +18,7 @@
 
 # misc
 .DS_Store
+.env
 .env.local
 .env.development.local
 .env.test.local
@@ -37,9 +38,6 @@ dist/
 # SSL certificates and related files
 /certbot/
 
-# Uploads directory
-/backend/uploads/
-
 # Editor files
 .vscode/
 .idea/
@@ -58,9 +56,7 @@ collected_content.txt
 collected_code.txt
 project_code.txt
 market_project_code.txt
-.gitignore
 all_mark.sh
-.gitignore
 all_otziv.sh
 all_mark.sh
 all.sh
