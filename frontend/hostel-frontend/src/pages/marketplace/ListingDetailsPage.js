@@ -587,35 +587,47 @@ const translateKnownValue = (value, translations) => {
         }
     };
 
- const getImageUrl = (image) => {
-    if (!image) {
-        return '';
+    const getImageUrl = (image) => {
+        if (!image) {
+            return '/placeholder.jpg';
+        }
+        
+        const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+        
+        console.log('Processing image:', image);
+        
+        // Если это строка (обратная совместимость)
+        if (typeof image === 'string') {
+            return `${baseUrl}/uploads/${image}`;
+        }
+        
+        // Если есть публичный URL, используем его напрямую
+        if (image.public_url && image.public_url !== '') {
+            // Проверяем, абсолютный или относительный URL
+            if (image.public_url.startsWith('http')) {
+                return image.public_url;
+            } else {
+                return `${baseUrl}${image.public_url}`;
+            }
+        }
+        
+        // Для MinIO объектов формируем правильный URL
+        if (image.storage_type === 'minio' || image.file_path.includes('listings/')) {
+            return `${baseUrl}/listings/${image.file_path}`;
+        }
+        
+        // Если в пути нет listings/ префикса, но имя пути начинается с цифр (ID объявления)
+        if (/^\d+\//.test(image.file_path)) {
+            return `${baseUrl}/listings/${image.file_path}`;
+        }
+        
+        // Обработка для обычных файлов
+        if (image.file_path) {
+            return `${baseUrl}/uploads/${image.file_path}`;
+        }
+        
+        return '/placeholder.jpg';
     }
-
-    const baseUrl = process.env.REACT_APP_BACKEND_URL;
-    if (!baseUrl) {
-        console.error('REACT_APP_BACKEND_URL is not defined!');
-        return '';
-    }
-
-    if (typeof image === 'string') {
-        return `${baseUrl}/uploads/${image}`;
-    }
-
-    if (image.public_url) {
-        return image.public_url;
-    }
-
-    if (image.storage_type === 'minio') {
-        return `${baseUrl}/minio/${image.storage_bucket || 'listings'}/${image.file_path}`;
-    }
-
-    if (image.file_path) {
-        return `${baseUrl}/uploads/${image.file_path}`;
-    }
-
-    return '';
-};
 
     // Функция для получения всех путей к изображениям для галереи
     const getImagePaths = () => {

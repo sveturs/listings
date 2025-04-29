@@ -222,30 +222,36 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
         }
         
         let mainImage = listing.images.find(img => img && img.is_main === true) || listing.images[0];
+        const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
         
         if (mainImage && typeof mainImage === 'object') {
             // Если есть публичный URL, используем его напрямую
-            if (mainImage.public_url) {
-                // Проверяем, содержит ли URL абсолютный путь
+            if (mainImage.public_url && mainImage.public_url !== '') {
+                // Проверяем, абсолютный или относительный URL
                 if (mainImage.public_url.startsWith('http')) {
                     return mainImage.public_url;
                 } else {
-                    return `${process.env.REACT_APP_BACKEND_URL}${mainImage.public_url}`;
+                    return `${baseUrl}${mainImage.public_url}`;
                 }
             }
             
-            // Для MinIO-объектов формируем специальный путь через прокси в nginx
-            if (mainImage.storage_type === 'minio') {
-                return `${process.env.REACT_APP_BACKEND_URL}/listings/${mainImage.file_path}`;
+            // Для MinIO-объектов формируем URL на основе file_path
+            if (mainImage.storage_type === 'minio' || 
+                (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
+                // Извлекаем имя файла из пути
+                const filePath = mainImage.file_path.startsWith('/') ? mainImage.file_path.substring(1) : mainImage.file_path;
+                return `${baseUrl}/listings/${filePath}`;
             }
             
-            // Для локального хранилища используем прежний путь
-            return `${process.env.REACT_APP_BACKEND_URL}/uploads/${mainImage.file_path}`;
+            // Обычный файл
+            if (mainImage.file_path) {
+                return `${baseUrl}/uploads/${mainImage.file_path}`;
+            }
         }
         
-        // Для строковых путей (обратная совместимость)
+        // Для строк (обратная совместимость)
         if (mainImage && typeof mainImage === 'string') {
-            return `${process.env.REACT_APP_BACKEND_URL}/uploads/${mainImage}`;
+            return `${baseUrl}/uploads/${mainImage}`;
         }
         
         return '/placeholder.jpg';

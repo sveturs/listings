@@ -52,10 +52,16 @@ type MinioStorage struct {
 	minioBucketName string
 }
 func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
+    // Проверяем, не начинается ли объектное имя с названия бакета, чтобы избежать дублирования
+    cleanObjectName := objectName
+    if strings.HasPrefix(cleanObjectName, s.minioBucketName+"/") {
+        cleanObjectName = strings.TrimPrefix(cleanObjectName, s.minioBucketName+"/")
+    }
+
     log.Printf("Попытка загрузки файла в MinIO: objectName=%s, size=%d, contentType=%s, bucket=%s", 
-        objectName, size, contentType, s.minioBucketName)
+        cleanObjectName, size, contentType, s.minioBucketName)
     
-    filePath, err := s.client.UploadFile(ctx, objectName, reader, size, contentType)
+    filePath, err := s.client.UploadFile(ctx, cleanObjectName, reader, size, contentType)
     if err != nil {
         log.Printf("ОШИБКА при загрузке файла в MinIO: %v", err)
         return "", err
@@ -63,18 +69,8 @@ func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader
 
     log.Printf("Файл успешно загружен в MinIO: filePath=%s", filePath)
 
-    // Строим публичный URL для файла
-    var fileURL string
-    
-    // Полностью переработаем логику формирования URL:
-    // 1. Проверяем, начинается ли objectName с имени бакета уже
-    if strings.HasPrefix(objectName, s.minioBucketName+"/") {
-        // Если уже начинается с имени бакета, просто добавляем "/"
-        fileURL = "/" + objectName
-    } else {
-        // Если не начинается с имени бакета, добавляем его
-        fileURL = fmt.Sprintf("/%s/%s", s.minioBucketName, objectName)
-    }
+    // Формируем URL для доступа к файлу
+    fileURL := fmt.Sprintf("/%s/%s", s.minioBucketName, cleanObjectName)
     
     log.Printf("Сформирован URL для файла: %s", fileURL)
     return fileURL, nil
