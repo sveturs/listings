@@ -2,80 +2,88 @@
 package main
 
 import (
-    "context"
-    "backend/internal/config"
-    "backend/internal/storage/postgres"
-    "backend/internal/storage/opensearch"
-    "log"
-    "os"
-    "time"
+	"context"
+	"flag"
+	"log"
+	"os"
+	"strings"
+	"time"
 
-    "github.com/joho/godotenv"
+	"backend/internal/config"
+	"backend/internal/storage/filestorage"
+	"backend/internal/storage/opensearch"
+	"backend/internal/storage/postgres"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-    // Загрузка .env файла
-    if err := godotenv.Load(); err != nil {
-        log.Printf("Warning: Could not load .env file")
-    }
+	// Загрузка переменных окружения
+	envFile := os.Getenv("ENV_FILE")
+	if envFile == "" {
+		envFile = ".env"
+	}
 
-    // Загружаем конфигурацию
-    cfg, err := config.NewConfig()
-    if err != nil {
-        log.Fatalf("Failed to load config: %v", err)
-    }
-    
-    // Проверяем и устанавливаем URL для OpenSearch
-    if cfg.OpenSearch.URL == "" {
-        cfg.OpenSearch.URL = os.Getenv("OPENSEARCH_URL") // Читаем из переменной окружения
-        if cfg.OpenSearch.URL == "" {
-            cfg.OpenSearch.URL = "http://opensearch:9200" // или используем значение по умолчанию
-        }
-        log.Printf("Using OpenSearch URL: %s", cfg.OpenSearch.URL)
-    }
-    
-    if cfg.OpenSearch.MarketplaceIndex == "" {
-        cfg.OpenSearch.MarketplaceIndex = os.Getenv("OPENSEARCH_MARKETPLACE_INDEX")
-        if cfg.OpenSearch.MarketplaceIndex == "" {
-            cfg.OpenSearch.MarketplaceIndex = "marketplace"
-        }
-        log.Printf("Using OpenSearch index: %s", cfg.OpenSearch.MarketplaceIndex)
-    }
-    
-    // Инициализируем клиент OpenSearch
-    osClient, err := opensearch.NewOpenSearchClient(opensearch.Config{
-        URL:      cfg.OpenSearch.URL,
-        Username: cfg.OpenSearch.Username,
-        Password: cfg.OpenSearch.Password,
-    })
-    if err != nil {
-        log.Fatalf("Failed to create OpenSearch client: %v", err)
-    }
+	if err := godotenv.Load(envFile); err != nil {
+		log.Printf("Warning: Could not load .env file: %s", err)
+	}
 
-    // Используем ваш DatabaseURL из конфигурации или переменной окружения
-    dbUrl := cfg.DatabaseURL
-    if dbUrl == "" {
-        dbUrl = os.Getenv("DATABASE_URL")
-    }
+	// Чтение конфигурации
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 
-    // Инициализируем базу данных с OpenSearch
-    db, err := postgres.NewDatabase(dbUrl, osClient, cfg.OpenSearch.MarketplaceIndex)
-    if err != nil {
-        log.Fatalf("Failed to initialize database: %v", err)
-    }
-    defer db.Close()
+	// Парсинг аргументов командной строки
+	entityTypeFlag := flag.String("type", "listings", "Type of entities to reindex (listings, reviews)")
+	batchSizeFlag := flag.Int("batch-size", 500, "Batch size for reindexing")
+	flag.Parse()
 
-    // Создаем контекст с таймаутом
-    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-    defer cancel()
+	// Подключение к OpenSearch
+	var osClient *opensearch.OpenSearchClient
+	if cfg.OpenSearch.URL != "" {
+		osClient, err = opensearch.NewOpenSearchClient(opensearch.Config{
+			URL:      cfg.OpenSearch.URL,
+			Username: cfg.OpenSearch.Username,
+			Password: cfg.OpenSearch.Password,
+		})
+		if err != nil {
+			log.Printf("Error connecting to OpenSearch: %v", err)
+		}
+	}
 
-    // Запускаем переиндексацию
-    log.Println("Starting reindexing...")
-    start := time.Now()
+	// Инициализация файлового хранилища
+	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	if err != nil {
+		log.Printf("Warning: Failed to initialize file storage: %v. Proceeding without file storage.", err)
+		// Не прерываем выполнение программы, так как для индексации это не критично
+	}
 
-    if err := db.ReindexAllListings(ctx); err != nil {
-        log.Fatalf("Error during reindexing: %v", err)
-    }
+	// Подключение к базе данных
+	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage)
+	if err != nil {
+		log.Fatalf("Error connecting to database: %v", err)
+	}
+	defer db.Close()
 
-    log.Printf("Reindexing completed in %v", time.Since(start))
+	// Проверка подключения к БД
+	if err := db.Ping(context.Background()); err != nil {
+		log.Fatalf("Error pinging database: %v", err)
+	}
+
+	log.Printf("Starting reindexing of %s with batch size %d", *entityTypeFlag, *batchSizeFlag)
+	start := time.Now()
+
+	// Выполнение операции реиндексации в зависимости от типа сущности
+	switch strings.ToLower(*entityTypeFlag) {
+	case "listings", "marketplace":
+		if err := db.ReindexAllListings(context.Background()); err != nil {
+			log.Fatalf("Error reindexing listings: %v", err)
+		}
+	// Можно добавить другие типы реиндексации здесь
+	default:
+		log.Fatalf("Unknown entity type: %s", *entityTypeFlag)
+	}
+
+	log.Printf("Reindexing completed in %v", time.Since(start))
 }

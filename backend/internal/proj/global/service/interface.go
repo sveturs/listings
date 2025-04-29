@@ -4,6 +4,7 @@ package service
 import (
 	"backend/internal/config"
 	balanceService "backend/internal/proj/balance/service"
+	geocodeService "backend/internal/proj/geocode/service"
 	chatService "backend/internal/proj/marketplace/service"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	translationService "backend/internal/proj/marketplace/service"
@@ -12,8 +13,8 @@ import (
 	reviewService "backend/internal/proj/reviews/service"
 	storefrontService "backend/internal/proj/storefront/service"
 	userService "backend/internal/proj/users/service"
-	"backend/internal/storage" 
-	geocodeService "backend/internal/proj/geocode/service" 
+	"backend/internal/storage"
+	"backend/internal/storage/filestorage"
 )
 
 type ServicesInterface interface {
@@ -28,8 +29,9 @@ type ServicesInterface interface {
 	Balance() balanceService.BalanceServiceInterface
 	Payment() paymentService.PaymentServiceInterface
 	Storefront() storefrontService.StorefrontServiceInterface
-	Storage() storage.Storage 
+	Storage() storage.Storage
 	Geocode() geocodeService.GeocodeServiceInterface
-
-
+	
+	// FileStorage возвращает сервис для работы с файловым хранилищем
+	FileStorage() filestorage.FileStorageInterface
 }

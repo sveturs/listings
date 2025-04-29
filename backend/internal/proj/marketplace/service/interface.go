@@ -42,6 +42,7 @@ type MarketplaceServiceInterface interface {
     SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
     GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error)
 
-
+    UploadImage(ctx context.Context, file *multipart.FileHeader, listingID int, isMain bool) (*models.MarketplaceImage, error)
+    DeleteImage(ctx context.Context, imageID int) error
 
 }

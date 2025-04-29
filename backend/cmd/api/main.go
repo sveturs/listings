@@ -33,6 +33,7 @@ func main() {
 	}
 
 	// Создание и запуск сервера
+	// Удаляем второй аргумент fileStorage, так как NewServer инициализирует его внутри себя
 	srv, err := server.NewServer(cfg)
 	if err != nil {
 		log.Fatalf("Failed to create server: %v", err)

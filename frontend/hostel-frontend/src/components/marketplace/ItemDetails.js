@@ -45,19 +45,35 @@ const ItemDetails = () => {
   // Функция для получения URL изображения
   const getImageUrl = (image) => {
     if (!image) {
-      return '/placeholder.png';
+        return '/placeholder.png';
     }
 
+    // Обработка строкового формата (обратная совместимость)
     if (typeof image === 'string') {
-      return `${BACKEND_URL}/uploads/${image}`;
+        return `${BACKEND_URL}/uploads/${image}`;
     }
 
-    if (image.file_path) {
-      return `${BACKEND_URL}/uploads/${image.file_path}`;
+    // Обработка объектного формата
+    if (typeof image === 'object') {
+        // Если есть публичный URL, используем его напрямую
+        if (image.public_url) {
+            return image.public_url;
+        }
+        
+        // Для MinIO используем специальный путь
+        if (image.storage_type === 'minio') {
+            return `${BACKEND_URL}/listings/${image.file_path.split('/').pop()}`;
+        }
+        
+        // Для локального хранилища - старый формат
+        if (image.file_path) {
+            return `${BACKEND_URL}/uploads/${image.file_path}`;
+        }
     }
 
     return '/placeholder.png';
-  };
+}
+
 
   // Переключение на предыдущее изображение
   const handlePrevImage = () => {

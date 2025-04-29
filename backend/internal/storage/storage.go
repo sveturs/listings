@@ -7,6 +7,8 @@ import (
 	"backend/internal/types"
 	"context"
 	"database/sql"
+	"backend/internal/storage/filestorage"
+
 )
 
 type Storage interface {
@@ -62,7 +64,16 @@ type Storage interface {
 	GetSubcategories(ctx context.Context, parentID *int, limit int, offset int) ([]models.CategoryTreeNode, error)
 	AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
 	GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error)
-	DeleteListingImage(ctx context.Context, imageID string) (string, error)
+	
+	// FileStorage возвращает интерфейс для работы с файловым хранилищем
+	FileStorage() filestorage.FileStorageInterface
+	
+	// GetListingImageByID возвращает информацию об изображении по ID
+	GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error)
+	
+	// DeleteListingImage удаляет информацию об изображении из базы данных
+	DeleteListingImage(ctx context.Context, imageID int) error
+
 	GetAttributeOptionTranslations(ctx context.Context, attributeName, optionValue string) (map[string]string, error)
 	GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error)
 

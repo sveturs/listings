@@ -1,5 +1,4 @@
 // backend/internal/server/server.go
-
 package server
 
 import (
@@ -15,6 +14,7 @@ import (
 	reviewHandler "backend/internal/proj/reviews/handler"
 	storefrontHandler "backend/internal/proj/storefront/handler"
 	userHandler "backend/internal/proj/users/handler"
+	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"context"
@@ -39,10 +39,18 @@ type Server struct {
 	storefront    *storefrontHandler.Handler
 	geocode       *geocodeHandler.GeocodeHandler
 	translation   *marketplaceHandler.TranslationHandler // Новое поле для TranslationHandler
+	fileStorage   filestorage.FileStorageInterface       // Новое поле для файлового хранилища
 }
 
-// Обновить функцию NewServer:
+// Обновляем функцию NewServer для поддержки MinIO:
 func NewServer(cfg *config.Config) (*Server, error) {
+	// Инициализируем файловое хранилище
+	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	if err != nil {
+		log.Printf("Ошибка инициализации файлового хранилища: %v. Функции загрузки файлов могут быть недоступны.", err)
+		// Не прерываем выполнение программы, так как сервер может работать и без файлового хранилища
+	}
+
 	// Инициализируем клиент OpenSearch
 	var osClient *opensearch.OpenSearchClient
 	if cfg.OpenSearch.URL != "" {
@@ -61,8 +69,8 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		log.Println("OpenSearch URL не указан, поиск будет отключен")
 	}
 
-	// Инициализируем базу данных с OpenSearch
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex)
+	// Инициализируем базу данных с OpenSearch и файловым хранилищем
+	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
@@ -131,6 +139,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		payments:      services.Payment(),
 		geocode:       geocodeHandler,
 		translation:   marketplaceHandler.Translation, // Используем Translation из marketplaceHandler
+		fileStorage:   fileStorage, // Сохраняем ссылку на файловое хранилище
 	}
 
 	// Инициализируем webhooks для телеграма

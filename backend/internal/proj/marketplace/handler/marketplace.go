@@ -1025,47 +1025,21 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 	}
 
 	for i, file := range files {
-		// Обработка файла
-		log.Printf("Processing file %d: Name=%s, Size=%d, ContentType=%s", i, file.Filename, file.Size, file.Header.Get("Content-Type"))
-		fileName, err := h.marketplaceService.ProcessImage(file)
+		// Загружаем изображение
+		image, err := h.marketplaceService.UploadImage(c.Context(), file, listingID, i == mainImageIndex)
 		if err != nil {
-			log.Printf("Failed to process image: %v", err)
+			log.Printf("Failed to upload image: %v", err)
 			continue
 		}
 
-		// Сохраняем информацию о файле
-		image := models.MarketplaceImage{
-			ListingID:   listingID,
-			FilePath:    fileName,
-			FileName:    file.Filename,
-			FileSize:    int(file.Size),
-			ContentType: file.Header.Get("Content-Type"),
-			IsMain:      i == mainImageIndex,
-		}
-
-		// Сохраняем файл
-		err = c.SaveFile(file, "./uploads/"+fileName)
-		if err != nil {
-			log.Printf("Failed to save file: %v", err)
-			continue
-		}
-		log.Printf("Image saved: %s", image.FilePath)
-		// Сохраняем информацию в базу
-		imageID, err := h.marketplaceService.AddListingImage(c.Context(), &image)
-		if err != nil {
-			log.Printf("Failed to save image info: %v", err)
-			continue
-		}
-
-		image.ID = imageID
-		uploadedImages = append(uploadedImages, image)
+		uploadedImages = append(uploadedImages, *image)
 	}
 
+	// Переиндексируем объявление с загруженными изображениями
 	fullListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
 	if err != nil {
 		log.Printf("Failed to get full listing for reindexing: %v", err)
 	} else {
-		// Переиндексируем объявление с загруженными изображениями
 		if err := h.marketplaceService.Storage().IndexListing(c.Context(), fullListing); err != nil {
 			log.Printf("Failed to reindex listing after image upload: %v", err)
 		} else {
@@ -1078,8 +1052,56 @@ func (h *MarketplaceHandler) UploadImages(c *fiber.Ctx) error {
 		"images":  uploadedImages,
 	})
 }
+func (h *MarketplaceHandler) DeleteImage(c *fiber.Ctx) error {
+	imageID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID изображения")
+	}
 
-// ReindexRatings переиндексирует рейтинги всех объявлений
+	// Проверяем права доступа
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
+
+	// Получаем информацию об изображении и объявлении
+	image, err := h.marketplaceService.Storage().GetListingImageByID(c.Context(), imageID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "Изображение не найдено")
+	}
+
+	// Проверяем, является ли пользователь владельцем объявления
+	listing, err := h.marketplaceService.GetListingByID(c.Context(), image.ListingID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка получения информации об объявлении")
+	}
+
+	if listing.UserID != userID {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "У вас нет прав для удаления этого изображения")
+	}
+
+	// Удаляем изображение
+	err = h.marketplaceService.DeleteImage(c.Context(), imageID)
+	if err != nil {
+		log.Printf("Failed to delete image: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка удаления изображения")
+	}
+
+	// Переиндексируем объявление
+	updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listing.ID)
+	if err != nil {
+		log.Printf("Failed to get updated listing for reindexing: %v", err)
+	} else {
+		if err := h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing); err != nil {
+			log.Printf("Failed to reindex listing after image deletion: %v", err)
+		}
+	}
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"message": "Изображение успешно удалено",
+	})
+}
 // ReindexRatings переиндексирует рейтинги всех объявлений
 func (h *MarketplaceHandler) ReindexRatings(c *fiber.Ctx) error {
 	// Проверяем административные права

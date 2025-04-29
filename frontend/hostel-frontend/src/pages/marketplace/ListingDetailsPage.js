@@ -587,27 +587,35 @@ const translateKnownValue = (value, translations) => {
         }
     };
 
-    const getImageUrl = (image) => {
-        if (!image) {
-            return '';
-        }
-
-        const baseUrl = process.env.REACT_APP_BACKEND_URL;
-        if (!baseUrl) {
-            console.error('REACT_APP_BACKEND_URL is not defined!');
-            return '';
-        }
-
-        if (typeof image === 'string') {
-            return `${baseUrl}/uploads/${image}`;
-        }
-
-        if (image.file_path) {
-            return `${baseUrl}/uploads/${image.file_path}`;
-        }
-
+ const getImageUrl = (image) => {
+    if (!image) {
         return '';
-    };
+    }
+
+    const baseUrl = process.env.REACT_APP_BACKEND_URL;
+    if (!baseUrl) {
+        console.error('REACT_APP_BACKEND_URL is not defined!');
+        return '';
+    }
+
+    if (typeof image === 'string') {
+        return `${baseUrl}/uploads/${image}`;
+    }
+
+    if (image.public_url) {
+        return image.public_url;
+    }
+
+    if (image.storage_type === 'minio') {
+        return `${baseUrl}/minio/${image.storage_bucket || 'listings'}/${image.file_path}`;
+    }
+
+    if (image.file_path) {
+        return `${baseUrl}/uploads/${image.file_path}`;
+    }
+
+    return '';
+};
 
     // Функция для получения всех путей к изображениям для галереи
     const getImagePaths = () => {

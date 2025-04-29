@@ -125,17 +125,17 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
 
     const getTranslatedName = (attr) => {
         if (!attr) return '';
-        
+
         // Если текущий язык русский, возвращаем отображаемое имя без перевода
         if (i18n.language === 'ru') {
             return attr.display_name;
         }
-        
+
         // Проверяем наличие прямого перевода имени атрибута
         if (attr.translations && attr.translations[i18n.language]) {
             return attr.translations[i18n.language];
         }
-        
+
         // Стандартные переводы для атрибутов
         const attributeTranslations = {
             // Автомобили
@@ -145,58 +145,58 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
             'mileage': { 'en': 'Mileage', 'sr': 'Kilometraža' },
 
             'engine_capacity': { 'en': 'Engine capacity', 'sr': 'Zapremina motora' },
-        'fuel_type': { 'en': 'Fuel type', 'sr': 'Vrsta goriva' },
-        'transmission': { 'en': 'Transmission', 'sr': 'Menjač' },
-        'body_type': { 'en': 'Body type', 'sr': 'Tip karoserije' },
-        'color': { 'en': 'Color', 'sr': 'Boja' },
-        'power': { 'en': 'Power', 'sr': 'Snaga' },
-        'drive_type': { 'en': 'Drive type', 'sr': 'Pogon' },
-        'number_of_doors': { 'en': 'Number of doors', 'sr': 'Broj vrata' },
-        'number_of_seats': { 'en': 'Number of seats', 'sr': 'Broj sedišta' },
-        
-        // Недвижимость
-        'property_type': { 'en': 'Property type', 'sr': 'Tip nekretnine' },
-        'rooms': { 'en': 'Rooms', 'sr': 'Broj soba' },
-        'floor': { 'en': 'Floor', 'sr': 'Sprat' },
-        'total_floors': { 'en': 'Total floors', 'sr': 'Ukupno spratova' },
-        'area': { 'en': 'Area', 'sr': 'Površina' },
-        'land_area': { 'en': 'Land area', 'sr': 'Površina zemljišta' },
-        'building_type': { 'en': 'Building type', 'sr': 'Tip zgrade' },
-        'has_balcony': { 'en': 'Balcony', 'sr': 'Balkon' },
-        'has_elevator': { 'en': 'Elevator', 'sr': 'Lift' },
-        'has_parking': { 'en': 'Parking', 'sr': 'Parking' },
-        
-        // Электроника
-        'brand': { 'en': 'Brand', 'sr': 'Brend' },
-        'model_phone': { 'en': 'Model', 'sr': 'Model' },
-        'memory': { 'en': 'Memory', 'sr': 'Memorija' },
-        'ram': { 'en': 'RAM', 'sr': 'RAM' },
-        'os': { 'en': 'Operating system', 'sr': 'Operativni sistem' },
-        'screen_size': { 'en': 'Screen size', 'sr': 'Veličina ekrana' },
-        'camera': { 'en': 'Camera', 'sr': 'Kamera' },
-        'has_5g': { 'en': '5G', 'sr': '5G' },
-        
-        // Компьютеры
-        'pc_brand': { 'en': 'Brand', 'sr': 'Brend' },
-        'pc_type': { 'en': 'Type', 'sr': 'Tip' },
-        'cpu': { 'en': 'Processor', 'sr': 'Procesor' },
-        'gpu': { 'en': 'Graphics card', 'sr': 'Grafička kartica' },
-        'ram_pc': { 'en': 'RAM', 'sr': 'RAM' },
-        'storage_type': { 'en': 'Storage type', 'sr': 'Tip skladišta' },
-        'storage_capacity': { 'en': 'Storage capacity', 'sr': 'Kapacitet skladišta' },
-        'os_pc': { 'en': 'Operating system', 'sr': 'Operativni sistem' }
+            'fuel_type': { 'en': 'Fuel type', 'sr': 'Vrsta goriva' },
+            'transmission': { 'en': 'Transmission', 'sr': 'Menjač' },
+            'body_type': { 'en': 'Body type', 'sr': 'Tip karoserije' },
+            'color': { 'en': 'Color', 'sr': 'Boja' },
+            'power': { 'en': 'Power', 'sr': 'Snaga' },
+            'drive_type': { 'en': 'Drive type', 'sr': 'Pogon' },
+            'number_of_doors': { 'en': 'Number of doors', 'sr': 'Broj vrata' },
+            'number_of_seats': { 'en': 'Number of seats', 'sr': 'Broj sedišta' },
+
+            // Недвижимость
+            'property_type': { 'en': 'Property type', 'sr': 'Tip nekretnine' },
+            'rooms': { 'en': 'Rooms', 'sr': 'Broj soba' },
+            'floor': { 'en': 'Floor', 'sr': 'Sprat' },
+            'total_floors': { 'en': 'Total floors', 'sr': 'Ukupno spratova' },
+            'area': { 'en': 'Area', 'sr': 'Površina' },
+            'land_area': { 'en': 'Land area', 'sr': 'Površina zemljišta' },
+            'building_type': { 'en': 'Building type', 'sr': 'Tip zgrade' },
+            'has_balcony': { 'en': 'Balcony', 'sr': 'Balkon' },
+            'has_elevator': { 'en': 'Elevator', 'sr': 'Lift' },
+            'has_parking': { 'en': 'Parking', 'sr': 'Parking' },
+
+            // Электроника
+            'brand': { 'en': 'Brand', 'sr': 'Brend' },
+            'model_phone': { 'en': 'Model', 'sr': 'Model' },
+            'memory': { 'en': 'Memory', 'sr': 'Memorija' },
+            'ram': { 'en': 'RAM', 'sr': 'RAM' },
+            'os': { 'en': 'Operating system', 'sr': 'Operativni sistem' },
+            'screen_size': { 'en': 'Screen size', 'sr': 'Veličina ekrana' },
+            'camera': { 'en': 'Camera', 'sr': 'Kamera' },
+            'has_5g': { 'en': '5G', 'sr': '5G' },
+
+            // Компьютеры
+            'pc_brand': { 'en': 'Brand', 'sr': 'Brend' },
+            'pc_type': { 'en': 'Type', 'sr': 'Tip' },
+            'cpu': { 'en': 'Processor', 'sr': 'Procesor' },
+            'gpu': { 'en': 'Graphics card', 'sr': 'Grafička kartica' },
+            'ram_pc': { 'en': 'RAM', 'sr': 'RAM' },
+            'storage_type': { 'en': 'Storage type', 'sr': 'Tip skladišta' },
+            'storage_capacity': { 'en': 'Storage capacity', 'sr': 'Kapacitet skladišta' },
+            'os_pc': { 'en': 'Operating system', 'sr': 'Operativni sistem' }
+        };
+
+        // Проверяем наличие стандартного перевода для атрибута
+        if (attributeTranslations[attr.attribute_name] &&
+            attributeTranslations[attr.attribute_name][i18n.language]) {
+            return attributeTranslations[attr.attribute_name][i18n.language];
+        }
+
+        // Если перевод не найден, возвращаем display_name
+        return attr.display_name || attr.attribute_name;
     };
-    
-    // Проверяем наличие стандартного перевода для атрибута
-    if (attributeTranslations[attr.attribute_name] && 
-        attributeTranslations[attr.attribute_name][i18n.language]) {
-        return attributeTranslations[attr.attribute_name][i18n.language];
-    }
-    
-    // Если перевод не найден, возвращаем display_name
-    return attr.display_name || attr.attribute_name;
-};
-    
+
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('sr-RS', {
@@ -216,22 +216,39 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
         return t('listings.details.seller.memberSince', { date });
     };
 
-    const getMainImageUrl = () => {
+const getMainImageUrl = () => {
         if (!listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
             return '/placeholder.jpg';
         }
+
         let mainImage = listing.images.find(img => img && img.is_main === true) || listing.images[0];
-        if (mainImage && typeof mainImage === 'object' && mainImage.file_path && mainImage.file_path.includes('pending')) {
-            return '/placeholder.jpg';
+
+        if (mainImage && typeof mainImage === 'object') {
+            // Если есть публичный URL, используем его напрямую
+            if (mainImage.public_url) {
+                return mainImage.public_url;
+            }
+
+            // Для MinIO формируем URL через специальный путь в nginx
+            if (mainImage.storage_type === 'minio') {
+                return `${process.env.REACT_APP_BACKEND_URL}/listings/${mainImage.file_path.split('/').pop()}`;
+            }
+
+            // Для локального хранилища используем старый формат
+            return `${process.env.REACT_APP_BACKEND_URL}/uploads/${mainImage.file_path}`;
         }
-        if (mainImage && typeof mainImage === 'object' && mainImage.file_path) {
-            return `${BACKEND_URL}/uploads/${mainImage.file_path}`;
-        }
+
+        // Если изображение просто строка (обратная совместимость)
         if (mainImage && typeof mainImage === 'string') {
-            return `${BACKEND_URL}/uploads/${mainImage}`;
+            return `${process.env.REACT_APP_BACKEND_URL}/uploads/${mainImage}`;
         }
+
         return '/placeholder.jpg';
-    };
+    }
+
+
+
+
 
     const handleCardClick = (e) => {
         if (e.target.closest('[data-shop-button="true"]') || e.target.closest('#detailsButton')) {
@@ -300,7 +317,7 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
             return null;
         }
         // Получаем важные атрибуты недвижимости
-        const realEstateAttrs = listing.attributes.filter(attr => 
+        const realEstateAttrs = listing.attributes.filter(attr =>
             ['rooms', 'floor', 'total_floors', 'area', 'land_area', 'property_type'].includes(attr.attribute_name)
         );
         if (realEstateAttrs.length === 0) {
@@ -311,7 +328,7 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
                 {realEstateAttrs.map(attr => {
                     // Форматируем отображение атрибута
                     let displayValue = attr.display_value || '';
-                    
+
                     // Добавляем единицы измерения, если их нет
                     if (attr.attribute_name === 'area' && !displayValue.includes('м²')) {
                         displayValue = `${displayValue} м²`;
@@ -320,11 +337,11 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
                     } else if (attr.attribute_name === 'rooms' && attr.numeric_value) {
                         // Форматируем комнаты правильно
                         const numRooms = attr.numeric_value;
-                        const roomWord = numRooms === 1 ? 'комната' : 
-                                        (numRooms >= 2 && numRooms <= 4) ? 'комнаты' : 'комнат';
+                        const roomWord = numRooms === 1 ? 'комната' :
+                            (numRooms >= 2 && numRooms <= 4) ? 'комнаты' : 'комнат';
                         displayValue = `${numRooms} ${roomWord}`;
                     }
-                    
+
                     return (
                         <Chip
                             key={attr.attribute_id}
@@ -462,11 +479,11 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
                                 {formatDate(listing.created_at)}
                             </Typography>
                         </Box>
-                        
+
                         {showStatus && (
                             <Box sx={{ mt: 1 }}>
                                 <Chip
-                                    label={listing.status === 'active' 
+                                    label={listing.status === 'active'
                                         ? t('listings.status.active')
                                         : t('listings.status.inactive')
                                     }
@@ -475,7 +492,7 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
                                     variant={listing.status === 'active' ? "filled" : "outlined"}
                                     sx={{ minWidth: 80 }}
                                 />
-                                
+
                                 {listing.metadata && listing.metadata.promotions && Object.keys(listing.metadata.promotions).length > 0 && (
                                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                                         {Object.entries(listing.metadata.promotions).map(([type, data]) => (

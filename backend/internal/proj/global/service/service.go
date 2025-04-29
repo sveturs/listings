@@ -13,23 +13,25 @@ import (
 	storefrontService "backend/internal/proj/storefront/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage"
-    "log"
+	"backend/internal/storage/filestorage"
+	"log"
 )
 
 type Service struct {
-	users        *userService.Service
-	marketplace  *marketplaceService.Service
-	review       *reviewService.Service
-	chat         *marketplaceService.Service
-	config       *config.Config
-	notification *notificationService.Service
-	translation  translationService.TranslationServiceInterface
-	balance      *balance.BalanceService
-	payment      payment.PaymentServiceInterface
-	storefront   storefrontService.StorefrontServiceInterface
-	storage      storage.Storage
-	geocode      geocodeService.GeocodeServiceInterface
-    scheduleImport *storefrontService.ScheduleService
+	users         *userService.Service
+	marketplace   *marketplaceService.Service
+	review        *reviewService.Service
+	chat          *marketplaceService.Service
+	config        *config.Config
+	notification  *notificationService.Service
+	translation   translationService.TranslationServiceInterface
+	balance       *balance.BalanceService
+	payment       payment.PaymentServiceInterface
+	storefront    storefrontService.StorefrontServiceInterface
+	storage       storage.Storage
+	geocode       geocodeService.GeocodeServiceInterface
+	scheduleImport *storefrontService.ScheduleService
+	fileStorage   filestorage.FileStorageInterface
 }
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
@@ -37,7 +39,8 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
 	storefrontSvc := storefrontService.NewStorefrontService(storage)
-scheduleService := storefrontService.NewScheduleService(storage, storefrontSvc)
+	scheduleService := storefrontService.NewScheduleService(storage, storefrontSvc)
+	
 	// Создаем сервис платежей с передачей сервиса баланса
 	stripeService := payment.NewStripeService(
 		cfg.StripeAPIKey,
@@ -45,7 +48,7 @@ scheduleService := storefrontService.NewScheduleService(storage, storefrontSvc)
 		cfg.FrontendURL,
 		balanceSvc,
 	)
-    scheduleService.Start()
+	scheduleService.Start()
 	// Create services
 	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification)
 	
@@ -55,22 +58,30 @@ scheduleService := storefrontService.NewScheduleService(storage, storefrontSvc)
 		ms.SetTranslationService(translationSvc)
 	}
 	
+	// Инициализация файлового хранилища
+	fileStorageSvc, err := filestorage.NewFileStorage(cfg.FileStorage)
+	if err != nil {
+		log.Printf("Ошибка инициализации файлового хранилища: %v. Будут использоваться временные файлы.", err)
+	}
+	
 	return &Service{
-		users:        userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
-		marketplace:  marketplaceSvc,
-		review:       reviewService.NewService(storage),
-		chat:         marketplaceSvc, // Reuse the same service for chat
-		config:       cfg,
-		notification: notificationSvc,
-		translation:  translationSvc,
-		balance:      balanceSvc,
-		payment:      stripeService,
-		storefront:   storefrontService.NewStorefrontService(storage),
-		storage:      storage,
-		geocode:      geocodeSvc,
-        scheduleImport: scheduleService,
+		users:         userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
+		marketplace:   marketplaceSvc,
+		review:        reviewService.NewService(storage),
+		chat:          marketplaceSvc, // Reuse the same service for chat
+		config:        cfg,
+		notification:  notificationSvc,
+		translation:   translationSvc,
+		balance:       balanceSvc,
+		payment:       stripeService,
+		storefront:    storefrontService.NewStorefrontService(storage),
+		storage:       storage,
+		geocode:       geocodeSvc,
+		scheduleImport: scheduleService,
+		fileStorage:   fileStorageSvc,
 	}
 }
+
 func (s *Service) Shutdown() {
 	// Останавливаем сервис расписания
 	if s.scheduleImport != nil {
@@ -79,22 +90,30 @@ func (s *Service) Shutdown() {
 	
 	log.Println("All services stopped")
 }
+
 func (s *Service) Geocode() geocodeService.GeocodeServiceInterface {
 	return s.geocode
-
 }
 
 func (s *Service) Storage() storage.Storage {
 	return s.storage
 }
+
 func (s *Service) Storefront() storefrontService.StorefrontServiceInterface {
 	return s.storefront
 }
+
 func (s *Service) Payment() payment.PaymentServiceInterface {
 	return s.payment
 }
+
 func (s *Service) Balance() balance.BalanceServiceInterface {
 	return s.balance
+}
+
+// FileStorage возвращает сервис для работы с файловым хранилищем
+func (s *Service) FileStorage() filestorage.FileStorageInterface {
+	return s.fileStorage
 }
 
 // Остальные методы интерфейса ServicesInterface

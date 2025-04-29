@@ -16,6 +16,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"backend/internal/storage/filestorage"
+
 
 	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
@@ -36,27 +38,31 @@ type Database struct {
 	osMarketplaceRepo opensearch.MarketplaceSearchRepository
 	db                *sql.DB
 	marketplaceIndex  string
+    fsStorage filestorage.FileStorageInterface
+
 }
 
-func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string) (*Database, error) {
-	pool, err := pgxpool.New(context.Background(), dbURL)
-	if err != nil {
-		return nil, fmt.Errorf("error creating connection pool: %w", err)
-	}
+func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface) (*Database, error) {
+    pool, err := pgxpool.New(context.Background(), dbURL)
+    if err != nil {
+        return nil, fmt.Errorf("error creating connection pool: %w", err)
+    }
 
-	// Создаем сервис переводов
-	translationService, err := marketplaceService.NewTranslationService(os.Getenv("OPENAI_API_KEY"))
-	if err != nil {
-		return nil, fmt.Errorf("error creating translation service: %w", err)
-	}
+    // Создаем сервис переводов
+    translationService, err := marketplaceService.NewTranslationService(os.Getenv("OPENAI_API_KEY"))
+    if err != nil {
+        return nil, fmt.Errorf("error creating translation service: %w", err)
+    }
 
-	db := &Database{
-		pool:            pool,
-		marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
-		reviewDB:        reviewStorage.NewStorage(pool, translationService),
-		usersDB:         userStorage.NewStorage(pool),
-		notificationsDB: notificationStorage.NewNotificationStorage(pool),
-	}
+    db := &Database{
+        pool:            pool,
+        marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
+        reviewDB:        reviewStorage.NewStorage(pool, translationService),
+        usersDB:         userStorage.NewStorage(pool),
+        notificationsDB: notificationStorage.NewNotificationStorage(pool),
+        fsStorage:       fileStorage, // Используем переданный параметр
+    }
+
 
 	// Инициализируем репозиторий OpenSearch, если клиент передан
 	if osClient != nil {
@@ -77,11 +83,46 @@ func (db *Database) Close() {
 		db.pool.Close()
 	}
 }
+func (db *Database) FileStorage() filestorage.FileStorageInterface {
+    return db.fsStorage
+}
 func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
     if db.osMarketplaceRepo == nil {
         return nil, fmt.Errorf("OpenSearch не настроен")
     }
     return db.osMarketplaceRepo.SearchListings(ctx, params)
+}
+func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
+	var image models.MarketplaceImage
+	
+	err := db.pool.QueryRow(ctx, `
+		SELECT id, listing_id, file_path, file_name, file_size, content_type, is_main, 
+		       storage_type, storage_bucket, public_url, created_at
+		FROM marketplace_images
+		WHERE id = $1
+	`, imageID).Scan(
+		&image.ID, &image.ListingID, &image.FilePath, &image.FileName, &image.FileSize,
+		&image.ContentType, &image.IsMain, &image.StorageType, &image.StorageBucket,
+		&image.PublicURL, &image.CreatedAt,
+	)
+	
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("image not found")
+		}
+		return nil, err
+	}
+	
+	return &image, nil
+}
+
+func (db *Database) DeleteListingImage(ctx context.Context, imageID int) error {
+	_, err := db.pool.Exec(ctx, `
+		DELETE FROM marketplace_images
+		WHERE id = $1
+	`, imageID)
+	
+	return err
 }
 
 func (db *Database) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
@@ -287,9 +328,7 @@ func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]m
 	return db.marketplaceDB.GetListingImages(ctx, listingID)
 }
 
-func (db *Database) DeleteListingImage(ctx context.Context, imageID string) (string, error) {
-	return db.marketplaceDB.DeleteListingImage(ctx, imageID)
-}
+ 
 
 func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {
 	return db.marketplaceDB.AddToFavorites(ctx, userID, listingID)

@@ -144,6 +144,43 @@ services:
     stop_grace_period: 1s
     restart: "no"
 
+  minio:
+    image: minio/minio:RELEASE.2023-09-30T07-02-29Z
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: 5465465465465
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - hostel_network
+    restart: unless-stopped
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc config host add myminio http://minio:9000 minioadmin 5465465465465;
+      /usr/bin/mc mb --ignore-existing myminio/listings;
+      /usr/bin/mc policy set public myminio/listings;
+      exit 0;
+      "
+    networks:
+      - hostel_network
+
+
   backend:
     build:
       context: ./backend
@@ -155,6 +192,14 @@ services:
       - WS_ENABLED=true
       - OPENSEARCH_URL=http://opensearch:9200
       - OPENSEARCH_MARKETPLACE_INDEX=marketplace
+      - FILE_STORAGE_PROVIDER=minio
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=5465465465465
+      - MINIO_USE_SSL=false
+      - MINIO_BUCKET_NAME=listings
+      - MINIO_LOCATION=eu-central-1
+      - FILE_STORAGE_PUBLIC_URL=https://svetu.rs/minio
     user: "101:101"
     volumes:
       - uploads_data:/app/uploads
@@ -167,6 +212,8 @@ services:
         condition: service_healthy
       opensearch:
         condition: service_started
+      minio:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 10s
@@ -223,6 +270,12 @@ volumes:
       o: bind
       device: /opt/hostel-data/uploads
   roundcube_data:  # Том для хранения данных Roundcube
+  minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/hostel-data/minio
 
 networks:
   hostel_network:

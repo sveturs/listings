@@ -78,15 +78,19 @@ type MarketplaceCategory struct {
 }
 
 type MarketplaceImage struct {
-	ID          int       `json:"id"`
-	ListingID   int       `json:"listing_id"`
-	FilePath    string    `json:"file_path"`
-	FileName    string    `json:"file_name"`
-	FileSize    int       `json:"file_size"`
-	ContentType string    `json:"content_type"`
-	IsMain      bool      `json:"is_main"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID            int       `json:"id"`
+	ListingID     int       `json:"listing_id"`
+	FilePath      string    `json:"file_path"`    // Путь к файлу в хранилище
+	FileName      string    `json:"file_name"`    // Оригинальное имя файла
+	FileSize      int       `json:"file_size"`    // Размер файла в байтах
+	ContentType   string    `json:"content_type"` // MIME-тип файла
+	IsMain        bool      `json:"is_main"`      // Является ли изображение основным
+	StorageType   string    `json:"storage_type"` // Тип хранилища: "local" или "minio"
+	StorageBucket string    `json:"storage_bucket,omitempty"` // Имя бакета для MinIO
+	PublicURL     string    `json:"public_url"`   // Публичный URL для доступа к файлу
+	CreatedAt     time.Time `json:"created_at"`
 }
+
 type CategoryTreeNode struct {
 	ID            int                `json:"id"`
 	Name          string             `json:"name"`

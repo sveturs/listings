@@ -15,6 +15,8 @@ require (
 	github.com/stripe/stripe-go/v72 v72.122.0
 	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.214.0
+	github.com/minio/minio-go/v7 v7.0.65
+
 )
 
 require (

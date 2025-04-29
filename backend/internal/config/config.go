@@ -7,25 +7,40 @@ import (
 )
 
 type Config struct {
-	Port                 string
-	DatabaseURL          string
-	GoogleClientID       string
-	GoogleClientSecret   string
-	GoogleRedirectURL    string
-	FrontendURL          string
-	Environment          string
-	OpenAIAPIKey         string
+	Port                  string
+	DatabaseURL           string
+	GoogleClientID        string
+	GoogleClientSecret    string
+	GoogleRedirectURL     string
+	FrontendURL           string
+	Environment           string
+	OpenAIAPIKey          string
 	GoogleTranslateAPIKey string
-	StripeAPIKey         string
-	StripeWebhookSecret  string
-	OpenSearch           OpenSearchConfig `yaml:"opensearch"`
+	StripeAPIKey          string
+	StripeWebhookSecret   string
+	OpenSearch            OpenSearchConfig  `yaml:"opensearch"`
+	FileStorage           FileStorageConfig `yaml:"file_storage"`
 }
+
+type FileStorageConfig struct {
+	Provider        string `yaml:"provider"` // "local" или "minio"
+	LocalBasePath   string `yaml:"local_base_path"`
+	PublicBaseURL   string `yaml:"public_base_url"`
+	MinioEndpoint   string `yaml:"minio_endpoint"`
+	MinioAccessKey  string `yaml:"minio_access_key"`
+	MinioSecretKey  string `yaml:"minio_secret_key"`
+	MinioUseSSL     bool   `yaml:"minio_use_ssl"`
+	MinioBucketName string `yaml:"minio_bucket_name"`
+	MinioLocation   string `yaml:"minio_location"`
+}
+
 type OpenSearchConfig struct {
-    URL             string `yaml:"url"`
-    Username        string `yaml:"username"`
-    Password        string `yaml:"password"`
-    MarketplaceIndex string `yaml:"marketplace_index"`
+	URL              string `yaml:"url"`
+	Username         string `yaml:"username"`
+	Password         string `yaml:"password"`
+	MarketplaceIndex string `yaml:"marketplace_index"`
 }
+
 func NewConfig() (*Config, error) {
 
 	config := &Config{}
@@ -68,34 +83,69 @@ func NewConfig() (*Config, error) {
 	}
 	config.StripeAPIKey = os.Getenv("STRIPE_API_KEY")
 	config.StripeWebhookSecret = os.Getenv("STRIPE_WEBHOOK_SECRET")
-	
+
 	// Получаем ключ Google Translate API (необязательный)
 	config.GoogleTranslateAPIKey = os.Getenv("GOOGLE_TRANSLATE_API_KEY")
 
-    config.OpenSearch = OpenSearchConfig{
-        URL:              os.Getenv("OPENSEARCH_URL"),
-        Username:         os.Getenv("OPENSEARCH_USERNAME"),
-        Password:         os.Getenv("OPENSEARCH_PASSWORD"),
-        MarketplaceIndex: os.Getenv("OPENSEARCH_MARKETPLACE_INDEX"),
-    }
+	config.OpenSearch = OpenSearchConfig{
+		URL:              os.Getenv("OPENSEARCH_URL"),
+		Username:         os.Getenv("OPENSEARCH_USERNAME"),
+		Password:         os.Getenv("OPENSEARCH_PASSWORD"),
+		MarketplaceIndex: os.Getenv("OPENSEARCH_MARKETPLACE_INDEX"),
+	}
 
-   // Если индекс не указан, используем значение по умолчанию
-   if config.OpenSearch.MarketplaceIndex == "" {
-	config.OpenSearch.MarketplaceIndex = "marketplace"
-}
+	// Если индекс не указан, используем значение по умолчанию
+	if config.OpenSearch.MarketplaceIndex == "" {
+		config.OpenSearch.MarketplaceIndex = "marketplace"
+	}
 
-return &Config{
-	Port:                 port,
-	DatabaseURL:          dbURL,
-	GoogleClientID:       googleClientID,
-	GoogleClientSecret:   googleClientSecret,
-	GoogleRedirectURL:    googleRedirectURL,
-	FrontendURL:          frontendURL,
-	Environment:          environment,
-	OpenAIAPIKey:         openAIAPIKey,
-	GoogleTranslateAPIKey: config.GoogleTranslateAPIKey,
-	StripeAPIKey:         config.StripeAPIKey,
-	StripeWebhookSecret:  config.StripeWebhookSecret,
-	OpenSearch:           config.OpenSearch, 
-}, nil
+	// Настройки хранилища файлов
+	provider := os.Getenv("FILE_STORAGE_PROVIDER")
+	if provider == "" {
+		provider = "minio" // По умолчанию используем MinIO
+	}
+	
+	config.FileStorage = FileStorageConfig{
+		Provider:        provider,
+		LocalBasePath:   os.Getenv("FILE_STORAGE_LOCAL_PATH"),
+		PublicBaseURL:   os.Getenv("FILE_STORAGE_PUBLIC_URL"),
+		MinioEndpoint:   os.Getenv("MINIO_ENDPOINT"),
+		MinioAccessKey:  os.Getenv("MINIO_ACCESS_KEY"),
+		MinioSecretKey:  os.Getenv("MINIO_SECRET_KEY"),
+		MinioUseSSL:     os.Getenv("MINIO_USE_SSL") == "true",
+		MinioBucketName: os.Getenv("MINIO_BUCKET_NAME"),
+		MinioLocation:   os.Getenv("MINIO_LOCATION"),
+	}
+	
+	// Валидация на основе выбранного провайдера
+	if config.FileStorage.Provider == "minio" {
+		if config.FileStorage.MinioEndpoint == "" {
+			return nil, fmt.Errorf("MINIO_ENDPOINT is not set")
+		}
+		if config.FileStorage.MinioAccessKey == "" {
+			return nil, fmt.Errorf("MINIO_ACCESS_KEY is not set")
+		}
+		if config.FileStorage.MinioSecretKey == "" {
+			return nil, fmt.Errorf("MINIO_SECRET_KEY is not set")
+		}
+		if config.FileStorage.MinioBucketName == "" {
+			config.FileStorage.MinioBucketName = "listings" // По умолчанию
+		}
+	}
+
+	return &Config{
+		Port:                  port,
+		DatabaseURL:           dbURL,
+		GoogleClientID:        googleClientID,
+		GoogleClientSecret:    googleClientSecret,
+		GoogleRedirectURL:     googleRedirectURL,
+		FrontendURL:           frontendURL,
+		Environment:           environment,
+		OpenAIAPIKey:          openAIAPIKey,
+		GoogleTranslateAPIKey: config.GoogleTranslateAPIKey,
+		StripeAPIKey:          config.StripeAPIKey,
+		StripeWebhookSecret:   config.StripeWebhookSecret,
+		OpenSearch:            config.OpenSearch,
+		FileStorage:           config.FileStorage,
+	}, nil
 }
