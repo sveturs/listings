@@ -3,12 +3,12 @@ package minio
 import (
 	"context"
 	"fmt"
-	"io"
-	"log"
-	"time"
-
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"io"
+	"log"
+	"strings"
+	"time"
 )
 
 // MinioConfig содержит настройки подключения к MinIO
@@ -70,20 +70,25 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 	}, nil
 }
 
-// UploadFile загружает файл в MinIO
+// In backend/internal/storage/minio/client.go
+
 func (m *MinioClient) UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
-    // Загружаем файл в MinIO
-    _, err := m.client.PutObject(ctx, m.bucketName, objectName, reader, size, minio.PutObjectOptions{
-        ContentType: contentType,
-    })
-    if err != nil {
-        return "", fmt.Errorf("ошибка загрузки файла в MinIO: %w", err)
-    }
+	// Remove leading slash if present
+	if strings.HasPrefix(objectName, "/") {
+		objectName = objectName[1:]
+	}
 
-    // Возвращаем путь к файлу (без префиксов)
-    return fmt.Sprintf("/%s/%s", m.bucketName, objectName), nil
+	// Upload file to MinIO
+	_, err := m.client.PutObject(ctx, m.bucketName, objectName, reader, size, minio.PutObjectOptions{
+		ContentType: contentType,
+	})
+	if err != nil {
+		return "", fmt.Errorf("error uploading file to MinIO: %w", err)
+	}
+
+	// Return path to file (relative path)
+	return objectName, nil
 }
-
 
 // DeleteFile удаляет файл из MinIO
 func (m *MinioClient) DeleteFile(ctx context.Context, objectName string) error {

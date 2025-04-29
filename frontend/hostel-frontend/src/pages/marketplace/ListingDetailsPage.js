@@ -592,38 +592,17 @@ const translateKnownValue = (value, translations) => {
             return '/placeholder.jpg';
         }
         
-        const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+        console.log('Image data:', image);
         
-        console.log('Processing image:', image);
-        
-        // Если это строка (обратная совместимость)
+        // For string format (backward compatibility)
         if (typeof image === 'string') {
-            return `${baseUrl}/uploads/${image}`;
+            return `${process.env.REACT_APP_BACKEND_URL}/uploads/${image}`;
         }
         
-        // Если есть публичный URL, используем его напрямую
-        if (image.public_url && image.public_url !== '') {
-            // Проверяем, абсолютный или относительный URL
-            if (image.public_url.startsWith('http')) {
-                return image.public_url;
-            } else {
-                return `${baseUrl}${image.public_url}`;
-            }
-        }
-        
-        // Для MinIO объектов формируем правильный URL
-        if (image.storage_type === 'minio' || image.file_path.includes('listings/')) {
-            return `${baseUrl}/listings/${image.file_path}`;
-        }
-        
-        // Если в пути нет listings/ префикса, но имя пути начинается с цифр (ID объявления)
-        if (/^\d+\//.test(image.file_path)) {
-            return `${baseUrl}/listings/${image.file_path}`;
-        }
-        
-        // Обработка для обычных файлов
+        // Important fix: direct URL to MinIO
         if (image.file_path) {
-            return `${baseUrl}/uploads/${image.file_path}`;
+            // Use direct MinIO port for local development
+            return `http://${window.location.hostname}:9000/listings/${image.file_path}`;
         }
         
         return '/placeholder.jpg';

@@ -714,36 +714,38 @@ func (s *MarketplaceService) ProcessImage(file *multipart.FileHeader) (string, e
 
 	return fileName, nil
 }
+// In backend/internal/proj/marketplace/service/marketplace.go
+
 func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.FileHeader, listingID int, isMain bool) (*models.MarketplaceImage, error) {
-    // Получаем имя файла
+    // Get file name
     fileName, err := s.ProcessImage(file)
     if err != nil {
         return nil, err
     }
 
-    // Создаем отдельный путь для изображений объявлений
+    // Create object path - ensure no duplicate 'listings/' prefix
     objectName := fmt.Sprintf("%d/%s", listingID, fileName)
 
-    // Открываем файл
+    // Open the file
     src, err := file.Open()
     if err != nil {
-        return nil, fmt.Errorf("ошибка открытия файла: %w", err)
+        return nil, fmt.Errorf("error opening file: %w", err)
     }
     defer src.Close()
 
-    // Используем FileStorage для загрузки файла
+    // Use FileStorage to upload
     fileStorage := s.storage.FileStorage()
     if fileStorage == nil {
-        return nil, fmt.Errorf("сервис файлового хранилища не инициализирован")
+        return nil, fmt.Errorf("file storage service not initialized")
     }
 
-    // Загружаем файл в хранилище
+    // Upload to storage
     publicURL, err := fileStorage.UploadFile(ctx, objectName, src, file.Size, file.Header.Get("Content-Type"))
     if err != nil {
-        return nil, fmt.Errorf("ошибка загрузки файла: %w", err)
+        return nil, fmt.Errorf("error uploading file: %w", err)
     }
 
-    // Создаем информацию об изображении
+    // Create image information
     image := &models.MarketplaceImage{
         ListingID:     listingID,
         FilePath:      objectName,
@@ -751,17 +753,16 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
         FileSize:      int(file.Size),
         ContentType:   file.Header.Get("Content-Type"),
         IsMain:        isMain,
-        StorageType:   "minio", // Обязательно устанавливаем тип хранилища
+        StorageType:   "minio",
         StorageBucket: "listings",
         PublicURL:     publicURL,
     }
 
-    // Сохраняем информацию об изображении в базу данных
+    // Save image information to database
     imageID, err := s.storage.AddListingImage(ctx, image)
     if err != nil {
-        // Если не удалось сохранить информацию, удаляем файл из хранилища
         fileStorage.DeleteFile(ctx, objectName)
-        return nil, fmt.Errorf("ошибка сохранения информации об изображении: %w", err)
+        return nil, fmt.Errorf("error saving image information: %w", err)
     }
 
     image.ID = imageID

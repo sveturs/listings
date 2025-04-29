@@ -16,7 +16,7 @@
 Эти тестовые карты работают только в тестовом режиме (с ключами, начинающимися на `sk_test_` и `pk_test_`). 
 
 лечат
-
+dim@dimPC /data/hostel-booking-system$ docker exec -it minio mc anonymous set public myminio/listings
 
 dim@dimPC /data/hostel-booking-system$ docker exec -it hostel_db psql -U postgres -d hostel_db
 psql (15.12 (Debian 15.12-1.pgdg120+1))

@@ -139,7 +139,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		payments:      services.Payment(),
 		geocode:       geocodeHandler,
 		translation:   marketplaceHandler.Translation, // Используем Translation из marketplaceHandler
-		fileStorage:   fileStorage, // Сохраняем ссылку на файловое хранилище
+		fileStorage:   fileStorage,                    // Сохраняем ссылку на файловое хранилище
 	}
 
 	// Инициализируем webhooks для телеграма
@@ -174,6 +174,13 @@ func (s *Server) setupRoutes() {
 	})
 	s.app.Get("/api/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
+	})
+	// Добавьте в setupRoutes() перед другими маршрутами
+	s.app.Get("/listings/*", func(c *fiber.Ctx) error {
+		path := c.Params("*")
+		minioUrl := fmt.Sprintf("http://minio:9000/listings/%s", path)
+
+		return c.Redirect(minioUrl)
 	})
 	// Static files
 	s.app.Static("/uploads", "./uploads")

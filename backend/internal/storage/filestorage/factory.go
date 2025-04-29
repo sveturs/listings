@@ -9,7 +9,7 @@ import (
 	"log" // Разкомментируйте эту строку
 	"path/filepath"
 	"time"
-	"strings"
+//	"strings"
 )
 
 // Factory создает и возвращает соответствующую реализацию FileStorageInterface
@@ -51,28 +51,28 @@ type MinioStorage struct {
 	publicBaseURL  string
 	minioBucketName string
 }
-func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
-    // Проверяем, не начинается ли объектное имя с названия бакета, чтобы избежать дублирования
-    cleanObjectName := objectName
-    if strings.HasPrefix(cleanObjectName, s.minioBucketName+"/") {
-        cleanObjectName = strings.TrimPrefix(cleanObjectName, s.minioBucketName+"/")
-    }
+// In backend/internal/storage/filestorage/factory.go
 
-    log.Printf("Попытка загрузки файла в MinIO: objectName=%s, size=%d, contentType=%s, bucket=%s", 
-        cleanObjectName, size, contentType, s.minioBucketName)
+func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
+    // Make sure we upload to the listings bucket with consistent paths
+    bucketPath := objectName
     
-    filePath, err := s.client.UploadFile(ctx, cleanObjectName, reader, size, contentType)
+    log.Printf("Uploading file to MinIO: objectName=%s, size=%d, contentType=%s, bucket=%s", 
+        bucketPath, size, contentType, s.minioBucketName)
+    
+    // Upload to MinIO
+    filePath, err := s.client.UploadFile(ctx, bucketPath, reader, size, contentType)
     if err != nil {
-        log.Printf("ОШИБКА при загрузке файла в MinIO: %v", err)
+        log.Printf("ERROR uploading file to MinIO: %v", err)
         return "", err
     }
 
-    log.Printf("Файл успешно загружен в MinIO: filePath=%s", filePath)
+    log.Printf("File successfully uploaded to MinIO: filePath=%s", filePath)
 
-    // Формируем URL для доступа к файлу
-    fileURL := fmt.Sprintf("/%s/%s", s.minioBucketName, cleanObjectName)
+    // Format direct URL for file access - the key part!
+    fileURL := fmt.Sprintf("/listings/%s", objectName)
     
-    log.Printf("Сформирован URL для файла: %s", fileURL)
+    log.Printf("URL for file: %s", fileURL)
     return fileURL, nil
 }
 
