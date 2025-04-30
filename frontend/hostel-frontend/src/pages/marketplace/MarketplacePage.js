@@ -1005,20 +1005,24 @@ if (isMobile) {
                 <Breadcrumbs paths={categoryPath} categories={categories} />
             </Box>
 
-            <Grid container spacing={3}>
-                <Grid item xs={12} md={3}>
-                    <CompactMarketplaceFilters
-                        filters={filters}
-                        onFilterChange={handleFilterChange}
-                        selectedCategoryId={filters.category_id}
-                        onToggleMapView={handleToggleMapView}
-                        setSearchParams={setSearchParams}
-                        fetchListings={fetchListings}
-                        viewMode={viewMode}
-                        handleViewModeChange={handleViewModeChange}
-                    />
+            <Grid container spacing={2}>
+                {/* Фильтры с адаптивной шириной */}
+                <Grid item xs={12} sm={12} md={3} lg={3} xl={2} sx={{ minWidth: '250px' }}>
+                    <Box sx={{ width: '100%', minWidth: '250px', maxWidth: '100%' }}>
+                        <CompactMarketplaceFilters
+                            filters={filters}
+                            onFilterChange={handleFilterChange}
+                            selectedCategoryId={filters.category_id}
+                            onToggleMapView={handleToggleMapView}
+                            setSearchParams={setSearchParams}
+                            fetchListings={fetchListings}
+                            viewMode={viewMode}
+                            handleViewModeChange={handleViewModeChange}
+                        />
+                    </Box>
                 </Grid>
-                <Grid item xs={12} md={9}>
+                {/* Основной контент с адаптивной шириной */}
+                <Grid item xs={12} sm={12} md={9} lg={9} xl={10}>
                     {/* Атрибуты категории в центральной части */}
                     {filters.category_id && !mapViewActive && (
                         <CentralAttributeFilters

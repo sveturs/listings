@@ -1,3 +1,12 @@
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -37,7 +46,23 @@ code {
 .MuiContainer-root {
   padding-top: 1px !important;
   padding-bottom: 1px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
+
+@media (min-width: 600px) {
+  .MuiContainer-root {
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .MuiContainer-root.MuiContainer-maxWidthLg {
+    max-width: 1200px !important;
+  }
+}
+
 .MuiBox-root:has(.MuiBreadcrumbs-root) {
   margin-bottom: 5px !important;
 }
@@ -45,7 +70,37 @@ code {
 .MuiGrid-container {
   /* gap: 1px !important; */
   padding-top: 1px !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
 
+/* Исправление для Grid item */
+.MuiGrid-item {
+  padding: 8px !important;
+  box-sizing: border-box !important;
+}
+
+/* Исправление для конкретного Grid item с фильтрами */
+.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-12.MuiGrid-grid-sm-12.MuiGrid-grid-md-3.MuiGrid-grid-lg-3.MuiGrid-grid-xl-2 {
+  min-width: 250px !important;
+  flex-basis: auto !important;
+  flex-grow: 1 !important;
+}
+
+/* Исправление для Box с фильтрами */
+.MuiBox-root.css-5yrx54 {
+  width: 100% !important;
+  min-width: 250px !important;
+  box-sizing: border-box !important;
+}
+
+/* Исправление для конкретного бокса с проблемой */
+.MuiBox-root.css-i9gxme {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
 

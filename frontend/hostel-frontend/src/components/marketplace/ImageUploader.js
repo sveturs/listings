@@ -53,11 +53,11 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
           console.log(`Сжимаем изображение ${index + 1}/${validFiles.length}`);
           const compressedFile = await imageCompression(file, compressionOptions);
           console.log(`Изображение ${index + 1} сжато: ${compressedFile.size} байт`);
-          
+
           // Создаем объект Blob с корректным типом
           const blob = new Blob([compressedFile], { type: 'image/jpeg' });
           const newFile = new File([blob], `image-${index}.jpg`, { type: 'image/jpeg' });
-          
+
           return {
             file: newFile,
             preview: URL.createObjectURL(newFile),
@@ -85,13 +85,34 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
     }
   };
 
+  // Создаем ссылку на скрытый input
+  const fileInputRef = React.useRef(null);
+
+  // Функция для открытия окна выбора файлов
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        {/* Скрытый input для выбора файлов */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          multiple
+          accept="image/*"
+          onChange={handleImageChange}
+        />
+
+        {/* Кнопка для открытия окна выбора файлов */}
         <Button
           id="loadPhotoButton"
           variant="contained"
-          component="label"
+          onClick={handleButtonClick}
           startIcon={uploading ? <CircularProgress size={20} /> : <CloudUploadIcon />}
           disabled={uploading}
         >
@@ -99,13 +120,6 @@ const ImageUploader = ({ onImagesSelected, maxImages = 10, maxSizeMB = 1 }) => {
             ? t('listings.create.photos.processing', { progress })
             : t('listings.create.photos.upload')
           }
-          <input
-            type="file"
-            hidden
-            multiple
-            accept="image/*"
-            onChange={handleImageChange}
-          />
         </Button>
       </Box>
 

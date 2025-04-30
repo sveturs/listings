@@ -23,32 +23,32 @@ import {
     ToggleButton,
     ToggleButtonGroup
 } from '@mui/material';
-import { 
-    List, 
+import {
+    List,
     Grid as GridIcon
 } from 'lucide-react';
 import { useLocation } from '../../contexts/LocationContext';
 import VirtualizedCategoryTree from './VirtualizedCategoryTree';
 import AttributeFilters from './AttributeFilters';
 
-const CompactMarketplaceFilters = ({ 
-    filters, 
-    onFilterChange, 
-    selectedCategoryId, 
-    onToggleMapView, 
-    setSearchParams, 
+const CompactMarketplaceFilters = ({
+    filters,
+    onFilterChange,
+    selectedCategoryId,
+    onToggleMapView,
+    setSearchParams,
     fetchListings,
     viewMode,
-    handleViewModeChange 
+    handleViewModeChange
 }) => {
     const { t } = useTranslation('marketplace', 'common');
     const { userLocation, detectUserLocation } = useLocation();
     const [attributeFilters, setAttributeFilters] = useState({});
-    
+
     const handleSearchChange = useCallback((value) => {
         onFilterChange({ ...filters, query: value });
     }, [filters, onFilterChange]);
-    
+
     const handleCategorySelect = useCallback((id) => {
         console.log(`MarketplaceFilters: Выбрана категория с ID: ${id}`);
 
@@ -65,11 +65,11 @@ const CompactMarketplaceFilters = ({
 
     const handleFilterChange = useCallback((attributeFilters) => {
         console.log(`MarketplaceFilters: Выбраны фильтры:`, attributeFilters);
-        
+
         // ВАЖНО: Теперь мы полностью игнорируем атрибуты недвижимости в боковой панели
         // Они будут обрабатываться только через CentralAttributeFilters
         const nonRealEstateAttrs = { ...attributeFilters };
-        
+
         // Вызываем родительский обработчик только с базовыми фильтрами
         onFilterChange(prev => {
             const updated = { ...prev };
@@ -77,12 +77,12 @@ const CompactMarketplaceFilters = ({
             return updated;
         });
     }, [onFilterChange]);
-    
-    
+
+
     const resetAttributeFilters = useCallback(() => {
         handleFilterChange({ attributeFilters: {} });
     }, [handleFilterChange]);
-    
+
     const handleDistanceChange = async (value) => {
         // Если выбрано расстояние, но нет координат, используем геолокацию
         if (value && (!filters.latitude || !filters.longitude)) {
@@ -107,16 +107,16 @@ const CompactMarketplaceFilters = ({
             onFilterChange({ ...filters, distance: value });
         }
     };
-    
+
     const isMapAvailable = useMemo(() => {
         // Карта доступна, если либо нет фильтра по расстоянию, либо есть координаты
         return !filters.distance || (userLocation?.lat && userLocation?.lon);
     }, [filters.distance, userLocation]);
 
     const isDistanceWithoutCoordinates = filters.distance && (!userLocation?.lat || !userLocation?.lon);
-    
+
     return (
-        <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Paper variant="elevation" elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column', width: '100%', minWidth: '250px', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
             {/* Поиск с автодополнением */}
             <Box sx={{ p: 2, backgroundColor: 'background.default', boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)', zIndex: 1 }}>
                 <AutocompleteInput
@@ -146,7 +146,7 @@ const CompactMarketplaceFilters = ({
                 >
                     {t('listings.map.map')}
                 </Button>
-                
+
                 <ToggleButtonGroup
                     value={viewMode}
                     exclusive

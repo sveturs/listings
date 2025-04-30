@@ -1,11 +1,11 @@
 // frontend/hostel-frontend/src/components/marketplace/CentralAttributeFilters.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { 
-    Paper, 
-    Typography, 
-    Box, 
-    Collapse, 
-    Button, 
+import {
+    Paper,
+    Typography,
+    Box,
+    Collapse,
+    Button,
     Divider,
     useTheme,
     useMediaQuery,
@@ -17,11 +17,11 @@ import AttributeFilters from './AttributeFilters';
 import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
 
-const CentralAttributeFilters = ({ 
-    categoryId, 
-    onFilterChange, 
+const CentralAttributeFilters = ({
+    categoryId,
+    onFilterChange,
     filters = {},
-    resetAttributeFilters 
+    resetAttributeFilters
 }) => {
     const { t } = useTranslation('marketplace');
     const [expanded, setExpanded] = useState(true);
@@ -34,26 +34,26 @@ const CentralAttributeFilters = ({
 
     // Преобразуем categoryId в строку для безопасного сравнения
     const catId = String(categoryId);
-    
+
     console.log(`DEBUG-CAF: Инициализация компонента, categoryId=${categoryId}, тип=${typeof categoryId}`);
 
-    const hasActiveFilters = filters && 
-                           typeof filters === 'object' && 
+    const hasActiveFilters = filters &&
+                           typeof filters === 'object' &&
                            Object.keys(filters).length > 0;
-    
+
     // Прямой отладочный запрос к API
     useEffect(() => {
         if (!categoryId) return;
-        
+
         console.log(`DEBUG-CAF: Прямой запрос к API для категории ${categoryId}`);
         setDebugLoading(true);
         setDebugError(null);
-        
+
         const fetchDebugData = async () => {
             try {
                 const response = await axios.get(`/api/v1/marketplace/categories/${categoryId}/attributes`);
                 console.log(`DEBUG-CAF: Ответ API для категории ${categoryId}:`, response);
-                
+
                 if (response.data?.data) {
                     const filterableAttrs = response.data.data.filter(attr => attr.is_filterable);
                     console.log(`DEBUG-CAF: Получено ${response.data.data.length} атрибутов, фильтруемых: ${filterableAttrs.length}`);
@@ -76,10 +76,10 @@ const CentralAttributeFilters = ({
                 setDebugLoading(false);
             }
         };
-        
+
         fetchDebugData();
     }, [categoryId]);
-    
+
     useEffect(() => {
         if (hasActiveFilters) {
             setExpanded(true);
@@ -112,19 +112,21 @@ const CentralAttributeFilters = ({
     };
 
     return (
-        <Paper 
-            sx={{ 
-                p: 2, 
-                mb: 3, 
-                width: '100%', 
+        <Paper
+            sx={{
+                p: 2,
+                mb: 3,
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
                 position: 'relative',
                 overflow: 'hidden'
             }}
         >
-            <Box 
-                sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
                     cursor: 'pointer',
                     pb: 1,
@@ -137,29 +139,29 @@ const CentralAttributeFilters = ({
                     <Typography variant="h6" sx={{ fontSize: '1.1rem' }}>
                         {getCategoryTitle()} [{categoryId}]
                     </Typography>
-                    
+
                     {hasActiveFilters && (
-                        <Box 
-                            component="span" 
-                            sx={{ 
-                                ml: 1, 
-                                bgcolor: 'primary.main', 
-                                color: 'white', 
-                                width: 20, 
-                                height: 20, 
-                                borderRadius: '50%', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center', 
-                                fontSize: '0.75rem' 
+                        <Box
+                            component="span"
+                            sx={{
+                                ml: 1,
+                                bgcolor: 'primary.main',
+                                color: 'white',
+                                width: 20,
+                                height: 20,
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem'
                             }}
                         >
                             {Object.keys(filters).length}
                         </Box>
                     )}
                 </Box>
-                
-                <IconButton 
+
+                <IconButton
                     size="small"
                     onClick={(e) => {
                         e.stopPropagation();
@@ -169,13 +171,13 @@ const CentralAttributeFilters = ({
                     {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </IconButton>
             </Box>
-            
+
             {/* Добавляем кнопку сброса фильтров, которая всегда видна если есть активные фильтры */}
             {hasActiveFilters && expanded && (
                 <Box sx={{ mb: 2 }}>
-                    <Button 
-                        size="small" 
-                        color="error" 
+                    <Button
+                        size="small"
+                        color="error"
                         variant="outlined"
                         onClick={(e) => {
                             e.stopPropagation();
@@ -191,7 +193,7 @@ const CentralAttributeFilters = ({
 
             <Collapse in={expanded}>
                 <Divider sx={{ mb: 2 }} />
-                
+
                 <AttributeFilters
                     categoryId={categoryId}
                     onFilterChange={onFilterChange}
@@ -199,7 +201,7 @@ const CentralAttributeFilters = ({
                     onAttributesLoaded={handleAttributesLoaded}
                 />
             </Collapse>
-            
+
             {/* Сообщение если нет атрибутов показываем только после загрузки */}
             {expanded && !hasAttributes && !debugLoading && (
                 <Box sx={{ py: 2, textAlign: 'center' }}>

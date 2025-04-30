@@ -18,6 +18,7 @@ import { ShoppingBag, Store } from '@mui/icons-material';
 import { useLocation as useGeoLocation } from '../../contexts/LocationContext'; // Добавляем импорт
 import CitySelector from './CitySelector';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
+import CategoryMenu from '../marketplace/CategoryMenu'; // Импортируем компонент меню категорий
 import { Plus } from 'lucide-react';
 import {
   AppBar,
@@ -219,6 +220,9 @@ const Layout = ({ children }) => {
                   )}
                 </Box>
               ))}
+
+              {/* Добавляем меню категорий */}
+              {!isMobile && <CategoryMenu />}
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: isMobile ? 0.5 : 2 }}>
@@ -231,6 +235,9 @@ const Layout = ({ children }) => {
               >
                 {isMobile ? <Plus /> : t('listings.create.title', { ns: 'marketplace' })}
               </Button>
+
+              {/* Добавляем меню категорий для мобильной версии */}
+              {isMobile && <CategoryMenu />}
 
               {/* Используем обновленный CitySelector без передачи onCityChange */}
               <CitySelector isMobile={isMobile} />
@@ -322,14 +329,14 @@ const Layout = ({ children }) => {
                       <AccountBalanceWallet fontSize="small" sx={{ mr: 1 }} />
                       {t('navigation.balance')}
                     </MenuItem>
-                    
+
                     {user.email === 'voroshilovdo@gmail.com' && (
                       <MenuItem component={Link} to="/admin" onClick={handleCloseMenu}>
                         <Settings fontSize="small" sx={{ mr: 1 }} />
                         Администрирование
                       </MenuItem>
                     )}
-                    
+
                     <Divider />
                     <MenuItem onClick={logout}>
                       <Logout fontSize="small" sx={{ mr: 1 }} />
@@ -371,7 +378,7 @@ const Layout = ({ children }) => {
         </Alert>
       </Slide>
 
-      <Container maxWidth="lg" sx={{ py: 0 }}>
+      <Container maxWidth="lg" sx={{ py: 0, px: { xs: 1, sm: 2, md: 3 }, width: '100%', boxSizing: 'border-box' }}>
         {currentPath !== '/' && (
           <Box
             sx={{
