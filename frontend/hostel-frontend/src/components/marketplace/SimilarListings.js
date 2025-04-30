@@ -23,7 +23,7 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
-    
+
     const [similarListings, setSimilarListings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -32,7 +32,7 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const loadMoreRef = useRef(null);
-    
+
     const fetchSimilarListings = useCallback(async (isLoadMore = false) => {
         try {
             if (isLoadMore) {
@@ -40,7 +40,7 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
             } else {
                 setLoading(true);
             }
-            
+
             // Загружаем данные с сервера с пагинацией
             const response = await axios.get(`/api/v1/marketplace/listings/${listingId}/similar`, {
                 params: {
@@ -48,13 +48,13 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
                     page: page
                 }
             });
-            
+
             if (response.data && response.data.data) {
                 const newListings = response.data.data;
-                
+
                 // Проверяем, есть ли еще данные для загрузки
                 setHasMore(newListings.length >= limit);
-                
+
                 if (isLoadMore) {
                     // Добавляем новые элементы к существующим
                     setSimilarListings(prev => [...prev, ...newListings]);
@@ -71,20 +71,20 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
             setLoadingMore(false);
         }
     }, [listingId, limit, page, t]);
-    
+
     useEffect(() => {
         if (listingId) {
             fetchSimilarListings();
         }
     }, [listingId, fetchSimilarListings]);
-    
+
     const handleLoadMore = () => {
         if (!loadingMore && hasMore) {
             setPage(prevPage => prevPage + 1);
             fetchSimilarListings(true);
         }
     };
-    
+
     // Опциональная функция для наблюдения за скроллом и автоматической подгрузки
     // Раскомментируйте этот код, если нужна автоматическая подгрузка при прокрутке
     /*
@@ -97,11 +97,11 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
             },
             { threshold: 0.5 }
         );
-        
+
         if (loadMoreRef.current) {
             observer.observe(loadMoreRef.current);
         }
-        
+
         return () => {
             if (loadMoreRef.current) {
                 observer.unobserve(loadMoreRef.current);
@@ -109,7 +109,7 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
         };
     }, [loadMoreRef, hasMore, loadingMore]);
     */
-    
+
     const formatPrice = (price) => {
         return new Intl.NumberFormat('sr-RS', {
             style: 'currency',
@@ -117,33 +117,53 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
             maximumFractionDigits: 0
         }).format(price || 0);
     };
-    
+
     const getImageUrl = (listing) => {
         if (!listing || !listing.images || listing.images.length === 0) {
             return '/placeholder.jpg';
         }
-        
+
         const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
-        
+
         // Найдем главное изображение или используем первое
         const mainImage = listing.images.find(img => img.is_main) || listing.images[0];
-        
-        if (typeof mainImage === 'string') {
+
+        if (mainImage && typeof mainImage === 'object') {
+            // Если есть публичный URL, используем его напрямую
+            if (mainImage.public_url && mainImage.public_url !== '') {
+                // Проверяем, абсолютный или относительный URL
+                if (mainImage.public_url.startsWith('http')) {
+                    return mainImage.public_url;
+                } else {
+                    return `${baseUrl}${mainImage.public_url}`;
+                }
+            }
+
+            // Для MinIO-объектов формируем URL на основе storage_type
+            if (mainImage.storage_type === 'minio' ||
+                (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
+                return `${baseUrl}${mainImage.public_url}`;
+            }
+
+            // Обычный файл
+            if (mainImage.file_path) {
+                return `${baseUrl}/uploads/${mainImage.file_path}`;
+            }
+        }
+
+        // Для строк (обратная совместимость)
+        if (mainImage && typeof mainImage === 'string') {
             return `${baseUrl}/uploads/${mainImage}`;
         }
-        
-        if (mainImage && mainImage.file_path) {
-            return `${baseUrl}/uploads/${mainImage.file_path}`;
-        }
-        
+
         return '/placeholder.jpg';
     };
-    
+
     const renderDiscountBadge = (listing) => {
         if (!listing || !listing.metadata || !listing.metadata.discount) return null;
-        
+
         const discount = listing.metadata.discount;
-        
+
         return (
             <Chip
                 icon={<Percent size={14} />}
@@ -161,11 +181,11 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
             />
         );
     };
-    
+
     const handleCardClick = (id) => {
         navigate(`/marketplace/listings/${id}`);
     };
-    
+
     if (loading) {
         return (
             <Box sx={{ mt: 6, mb: 4 }}>
@@ -184,15 +204,15 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
             </Box>
         );
     }
-    
+
     if (error) {
         return null; // Скрываем секцию при ошибке
     }
-    
+
     if (!similarListings || similarListings.length === 0) {
         return null; // Скрываем секцию, если нет похожих объявлений
     }
-    
+
     return (
         <Box sx={{ mt: 6, mb: 4 }}>
             <Typography variant="h5" gutterBottom>
@@ -201,7 +221,7 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
             <Grid container spacing={2}>
                 {similarListings.map((listing) => (
                     <Grid item xs={6} sm={4} md={3} key={listing.id}>
-                        <Card 
+                        <Card
                             sx={{
                                 height: '100%',
                                 display: 'flex',
@@ -234,9 +254,9 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
                                 />
                             </Box>
                             <CardContent sx={{ flexGrow: 1, p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                                <Typography 
-                                    variant="subtitle2" 
-                                    sx={{ 
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{
                                         fontWeight: 'medium',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
@@ -249,16 +269,16 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
                                 >
                                     {listing.title}
                                 </Typography>
-                                
+
                                 <Box sx={{ mt: 1 }}>
-                                    <Typography 
-                                        variant="body2" 
-                                        color="primary.main" 
+                                    <Typography
+                                        variant="body2"
+                                        color="primary.main"
                                         sx={{ fontWeight: 'bold' }}
                                     >
                                         {formatPrice(listing.price)}
                                     </Typography>
-                                    
+
                                     {listing.metadata && listing.metadata.discount && (
                                         <Typography
                                             variant="caption"
@@ -269,12 +289,12 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
                                         </Typography>
                                     )}
                                 </Box>
-                                
+
                                 {!isMobile && listing.city && (
                                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                                         <MapPin size={14} style={{ marginRight: 4 }} />
-                                        <Typography 
-                                            variant="caption" 
+                                        <Typography
+                                            variant="caption"
                                             color="text.secondary"
                                             noWrap
                                         >
@@ -287,18 +307,18 @@ const SimilarListings = ({ listingId, initialLimit = 8 }) => {
                     </Grid>
                 ))}
             </Grid>
-            
+
             {/* Кнопка "Загрузить еще" */}
             {hasMore && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }} ref={loadMoreRef}>
-                    <Button 
-                        variant="outlined" 
+                    <Button
+                        variant="outlined"
                         onClick={handleLoadMore}
                         disabled={loadingMore}
                         startIcon={loadingMore ? <CircularProgress size={16} /> : <ChevronDown />}
                     >
-                        {loadingMore ? 
-                            t('listings.similar.loading', { defaultValue: 'Загрузка...' }) : 
+                        {loadingMore ?
+                            t('listings.similar.loading', { defaultValue: 'Загрузка...' }) :
                             t('listings.similar.loadMore', { defaultValue: 'Показать ещё' })}
                     </Button>
                 </Box>
