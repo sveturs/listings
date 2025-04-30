@@ -57,9 +57,10 @@ const getImageUrl = (listing) => {
     }
 
     // Проверяем на Minio хранилище
-    if (mainImage.storage_type === 'minio' || 
+    if (mainImage.storage_type === 'minio' ||
         (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
-        return `${baseUrl}/listings/${mainImage.file_path.split('/').pop()}`;
+        console.log('Using MinIO URL:', `${baseUrl}${mainImage.public_url}`);
+        return `${baseUrl}${mainImage.public_url}`;
     }
 
     if (mainImage && mainImage.file_path) {
@@ -80,7 +81,7 @@ const MarketplaceListingsList = ({
     filters = {},
     initialSortField = 'created_at',
     initialSortOrder = 'desc',
-    loading = false 
+    loading = false
 }) => {
 
     console.log("MarketplaceListingsList: получены listings:", listings?.length || 0);
@@ -95,29 +96,29 @@ const MarketplaceListingsList = ({
     // Состояние для хранения данных о рейтингах
     const [listingsWithRatings, setListingsWithRatings] = useState([]);
     const [loadingRatings, setLoadingRatings] = useState(false);
-    
+
     // Определяем колонки таблицы
     const [columns, setColumns] = useState(['image', 'title', 'price', 'reviews', 'date', 'status', 'promotions']);
 
     // Функция для получения локализованного текста
     const getLocalizedText = (listing, field) => {
         if (!listing) return '';
-        
+
         // Получаем перевод для текущего языка интерфейса
         const currentLanguage = i18n.language;
-        
+
         // Проверяем, совпадает ли текущий язык с оригинальным языком объявления
         if (currentLanguage === listing.original_language) {
             return listing[field];
         }
-        
+
         // Проверяем наличие перевода
-        if (listing.translations && 
-            listing.translations[currentLanguage] && 
+        if (listing.translations &&
+            listing.translations[currentLanguage] &&
             listing.translations[currentLanguage][field]) {
             return listing.translations[currentLanguage][field];
         }
-        
+
         // Если перевода нет, возвращаем оригинальный текст
         return listing[field];
     };
@@ -190,7 +191,7 @@ const MarketplaceListingsList = ({
 
         fetchRatings();
     }, [listings]);
-    
+
     // Синхронизация состояния сортировки с фильтрами
     useEffect(() => {
         // Если есть sort_by в формате field_direction
@@ -251,9 +252,9 @@ const MarketplaceListingsList = ({
     const createSortHandler = (property) => () => {
         const isAsc = orderBy === property && order === 'asc';
         const newOrder = isAsc ? 'desc' : 'asc';
-        
+
         console.log(`SORT: Передаем в родительский компонент: поле=${property}, порядок=${newOrder}`);
-        
+
         if (onSortChange) {
             // Вызываем колбэк с параметрами сортировки
             onSortChange(property, newOrder);
@@ -349,13 +350,13 @@ const MarketplaceListingsList = ({
                                 </TableSortLabel>
                             </TableCell>
                         )}
-                        
+
                         {columns.includes('status') && (
                             <TableCell align="center">
                                 {t('listings.table.status')}
                             </TableCell>
                         )}
-                        
+
                         {columns.includes('promotions') && (
                             <TableCell align="center">
                                 {t('listings.table.promotions')}
@@ -480,11 +481,11 @@ const MarketplaceListingsList = ({
                                         </Box>
                                     </TableCell>
                                 )}
-                                
+
                                 {columns.includes('status') && (
                                     <TableCell align="center">
                                         <Chip
-                                            label={listing.status === 'active' 
+                                            label={listing.status === 'active'
                                                 ? t('listings.status.active')
                                                 : t('listings.status.inactive')
                                             }
@@ -495,7 +496,7 @@ const MarketplaceListingsList = ({
                                         />
                                     </TableCell>
                                 )}
-                                
+
                                 {columns.includes('promotions') && (
                                     <TableCell align="center">
                                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>

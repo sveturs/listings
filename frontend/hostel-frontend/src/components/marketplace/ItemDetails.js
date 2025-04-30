@@ -70,7 +70,8 @@ const ItemDetails = () => {
     // Для MinIO-объектов
     if (image.storage_type === 'minio' ||
       (image.file_path && image.file_path.includes('listings/'))) {
-      return `${BACKEND_URL}/listings/${image.file_path.split('/').pop()}`;
+      console.log('Using MinIO URL:', `${BACKEND_URL}${image.public_url}`);
+      return `${BACKEND_URL}${image.public_url}`;
     }
 
     // Для локального хранилища

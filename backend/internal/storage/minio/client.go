@@ -101,10 +101,33 @@ func (m *MinioClient) DeleteFile(ctx context.Context, objectName string) error {
 
 // GetPresignedURL создает предварительно подписанный URL для доступа к файлу
 func (m *MinioClient) GetPresignedURL(ctx context.Context, objectName string, expiry time.Duration) (string, error) {
+	// Удаляем начальный слеш, если он есть
+	if strings.HasPrefix(objectName, "/") {
+		objectName = objectName[1:]
+	}
+
 	// Создаем предварительно подписанный URL
 	presignedURL, err := m.client.PresignedGetObject(ctx, m.bucketName, objectName, expiry, nil)
 	if err != nil {
 		return "", fmt.Errorf("ошибка создания предварительно подписанного URL: %w", err)
 	}
 	return presignedURL.String(), nil
+}
+
+// GetObject возвращает файл из MinIO в виде потока
+func (m *MinioClient) GetObject(ctx context.Context, objectName string) (io.ReadCloser, error) {
+	// Удаляем начальный слеш, если он есть
+	if strings.HasPrefix(objectName, "/") {
+		objectName = objectName[1:]
+	}
+
+	log.Printf("Получение объекта из MinIO: bucket=%s, object=%s", m.bucketName, objectName)
+
+	// Получаем объект из MinIO
+	obj, err := m.client.GetObject(ctx, m.bucketName, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения объекта из MinIO: %w", err)
+	}
+
+	return obj, nil
 }

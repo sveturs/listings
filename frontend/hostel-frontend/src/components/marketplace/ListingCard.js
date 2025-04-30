@@ -220,10 +220,10 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
         if (!listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
             return '/placeholder.jpg';
         }
-    
+
         let mainImage = listing.images.find(img => img && img.is_main === true) || listing.images[0];
         const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
-    
+
         if (mainImage && typeof mainImage === 'object') {
             // Если есть публичный URL, используем его напрямую
             if (mainImage.public_url && mainImage.public_url !== '') {
@@ -231,32 +231,32 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
                 if (mainImage.public_url.startsWith('http')) {
                     return mainImage.public_url;
                 } else {
+                    console.log('Using public_url:', `${baseUrl}${mainImage.public_url}`);
                     return `${baseUrl}${mainImage.public_url}`;
                 }
             }
-    
-            // Для MinIO-объектов формируем URL на основе file_path
+
+            // Для MinIO-объектов формируем URL на основе storage_type
             if (mainImage.storage_type === 'minio' ||
                 (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
-                // Извлекаем имя файла из пути
-                const fileName = mainImage.file_path.split('/').pop();
-                return `${baseUrl}/listings/${fileName}`;
+                console.log('Using MinIO URL:', `${baseUrl}${mainImage.public_url}`);
+                return `${baseUrl}${mainImage.public_url}`;
             }
-    
+
             // Обычный файл
             if (mainImage.file_path) {
                 return `${baseUrl}/uploads/${mainImage.file_path}`;
             }
         }
-    
+
         // Для строк (обратная совместимость)
         if (mainImage && typeof mainImage === 'string') {
             return `${baseUrl}/uploads/${mainImage}`;
         }
-    
+
         return '/placeholder.jpg';
     }
-    
+
 
 
     const handleCardClick = (e) => {

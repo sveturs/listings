@@ -22,9 +22,47 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
     }).format(price);
   };
 
-  const imageUrl = listing.images && listing.images.length > 0
-    ? `${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}`
-    : null;
+  const getImageUrl = () => {
+    if (!listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
+      return null;
+    }
+
+    let mainImage = listing.images.find(img => img && img.is_main === true) || listing.images[0];
+    const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+
+    if (mainImage && typeof mainImage === 'object') {
+      // Если есть публичный URL, используем его напрямую
+      if (mainImage.public_url && mainImage.public_url !== '') {
+        // Проверяем, абсолютный или относительный URL
+        if (mainImage.public_url.startsWith('http')) {
+          return mainImage.public_url;
+        } else {
+          return `${baseUrl}${mainImage.public_url}`;
+        }
+      }
+
+      // Для MinIO-объектов формируем URL на основе storage_type
+      if (mainImage.storage_type === 'minio' ||
+          (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
+        console.log('Using MinIO URL:', `${baseUrl}${mainImage.public_url}`);
+        return `${baseUrl}${mainImage.public_url}`;
+      }
+
+      // Обычный файл
+      if (mainImage.file_path) {
+        return `${baseUrl}/uploads/${mainImage.file_path}`;
+      }
+    }
+
+    // Для строк (обратная совместимость)
+    if (mainImage && typeof mainImage === 'string') {
+      return `${baseUrl}/uploads/${mainImage}`;
+    }
+
+    return null;
+  };
+
+  const imageUrl = getImageUrl();
 
   return (
     <Card
@@ -100,36 +138,36 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
   const mapRef = useRef(null);
   const [selectedListing, setSelectedListing] = useState(null);
   const [error, setError] = useState(null);
-  
+
   // Если координат нет, компонент всё равно отрендерится, но карта не будет инициализирована
   const hasCoordinates = latitude && longitude;
-  
+
   useEffect(() => {
     // Проверяем условия внутри хука
     if (!hasCoordinates || !mapContainerRef.current) return;
-    
+
     // Инициализируем карту только если её еще нет
     if (!mapRef.current) {
       mapRef.current = L.map(mapContainerRef.current).setView([latitude, longitude], 15);
-      
+
       // Добавляем слой тайлов OpenStreetMap
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
       }).addTo(mapRef.current);
-      
+
       // Если есть список маркеров, добавляем их
       if (markers && markers.length > 0) {
         const markerGroup = L.featureGroup();
-        
+
         markers.forEach(marker => {
           const leafletMarker = L.marker([marker.latitude, marker.longitude]);
-          
+
           // Если у маркера есть всплывающая подсказка
           if (marker.tooltip) {
             leafletMarker.bindTooltip(marker.tooltip);
           }
-          
+
           // Обработчик клика по маркеру для показа карточки
           leafletMarker.on('click', () => {
             // Если у маркера есть полные данные объявления
@@ -146,11 +184,11 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
               leafletMarker.bindPopup(marker.title).openPopup();
             }
           });
-          
+
           leafletMarker.addTo(mapRef.current);
           markerGroup.addLayer(leafletMarker);
         });
-        
+
         // Масштабируем карту, чтобы видеть все маркеры
         if (markers.length > 1) {
           mapRef.current.fitBounds(markerGroup.getBounds(), {
@@ -168,25 +206,25 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
       console.log("Обновление карты с координатами:", [latitude, longitude]);
       // Обновляем центр и масштаб карты
       mapRef.current.setView([latitude, longitude], 15);
-      
+
       // Сначала очищаем все существующие маркеры
       mapRef.current.eachLayer(layer => {
         if (layer instanceof L.Marker) {
           mapRef.current.removeLayer(layer);
         }
       });
-      
+
       // Затем добавляем новые маркеры
       if (markers && markers.length > 0) {
         const markerGroup = L.featureGroup();
-        
+
         markers.forEach(marker => {
           const leafletMarker = L.marker([marker.latitude, marker.longitude]);
-          
+
           if (marker.tooltip) {
             leafletMarker.bindTooltip(marker.tooltip);
           }
-          
+
           // Обработчик клика по маркеру для показа карточки
           leafletMarker.on('click', () => {
             // Если у маркера есть полные данные объявления
@@ -203,11 +241,11 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
               leafletMarker.bindPopup(marker.title).openPopup();
             }
           });
-          
+
           leafletMarker.addTo(mapRef.current);
           markerGroup.addLayer(leafletMarker);
         });
-        
+
         // Масштабируем карту, чтобы видеть все маркеры
         if (markers.length > 1) {
           mapRef.current.fitBounds(markerGroup.getBounds(), {
@@ -221,7 +259,7 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
         marker.bindPopup(title);
       }
     }
-    
+
     // Очистка при размонтировании компонента
     return () => {
       if (mapRef.current) {
@@ -239,7 +277,7 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
   const handleNavigateToListing = (listingId) => {
     navigate(`/marketplace/listings/${listingId}`);
   };
-  
+
   return (
     <Paper
       sx={{
@@ -251,19 +289,19 @@ const FullscreenMap = ({ latitude, longitude, title, markers = [] }) => {
       }}
     >
       {hasCoordinates ? (
-        <div 
+        <div
           ref={mapContainerRef}
           style={{ width: '100%', height: '80vh' }}
         />
       ) : (
-        <div style={{ 
-          width: '100%', 
-          height: '80vh', 
-          display: 'flex', 
+        <div style={{
+          width: '100%',
+          height: '80vh',
+          display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          backgroundColor: '#f5f5f5' 
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#f5f5f5'
         }}>
           <Typography variant="h6" color="error" gutterBottom>
             Координаты отсутствуют

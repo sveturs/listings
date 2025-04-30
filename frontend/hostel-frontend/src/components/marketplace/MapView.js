@@ -61,16 +61,36 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
       mainImage = images[0];
     }
 
-    // Если изображение - это строка с путем
-    if (typeof mainImage === 'string') {
-      const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
-      return `${baseUrl}/uploads/${mainImage}`;
+    const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+
+    if (mainImage && typeof mainImage === 'object') {
+      // Если есть публичный URL, используем его напрямую
+      if (mainImage.public_url && mainImage.public_url !== '') {
+        // Проверяем, абсолютный или относительный URL
+        if (mainImage.public_url.startsWith('http')) {
+          return mainImage.public_url;
+        } else {
+          console.log('Using public_url:', `${baseUrl}${mainImage.public_url}`);
+          return `${baseUrl}${mainImage.public_url}`;
+        }
+      }
+
+      // Для MinIO-объектов формируем URL на основе storage_type
+      if (mainImage.storage_type === 'minio' ||
+          (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
+        console.log('Using MinIO URL:', `${baseUrl}${mainImage.public_url}`);
+        return `${baseUrl}${mainImage.public_url}`;
+      }
+
+      // Обычный файл
+      if (mainImage.file_path) {
+        return `${baseUrl}/uploads/${mainImage.file_path}`;
+      }
     }
 
-    // Если изображение - это объект с file_path
-    if (mainImage && typeof mainImage === 'object' && mainImage.file_path) {
-      const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
-      return `${baseUrl}/uploads/${mainImage.file_path}`;
+    // Если изображение - это строка с путем
+    if (mainImage && typeof mainImage === 'string') {
+      return `${baseUrl}/uploads/${mainImage}`;
     }
 
     return null;
@@ -269,8 +289,8 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
   const handleAttributeFilterChange = (newAttrFilters) => {
     console.log("MapView: получены новые атрибутные фильтры:", newAttrFilters);
     if (onFilterChange) {
-      onFilterChange({ 
-        ...filters, 
+      onFilterChange({
+        ...filters,
         attributeFilters: newAttrFilters
       });
     }
@@ -279,9 +299,9 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
   // Обработчик сброса атрибутных фильтров
   const resetAttributeFilters = () => {
     if (onFilterChange) {
-      onFilterChange({ 
-        ...filters, 
-        attributeFilters: {} 
+      onFilterChange({
+        ...filters,
+        attributeFilters: {}
       });
     }
   };
@@ -1056,9 +1076,9 @@ const MapView = ({ listings, filters, onFilterChange, onMapClose }) => {
         {/* Контейнер для карты должен иметь явные размеры */}
         <div
           ref={mapContainerRef}
-          style={{ 
-            width: '100%', 
-            height: '100%', 
+          style={{
+            width: '100%',
+            height: '100%',
             position: 'absolute',
             top: 0,
             left: 0

@@ -21,13 +21,16 @@ const (
 type FileStorageInterface interface {
 	// UploadFile загружает файл в хранилище
 	UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error)
-	
+
 	// DeleteFile удаляет файл из хранилища
 	DeleteFile(ctx context.Context, objectName string) error
-	
+
 	// GetURL возвращает URL для доступа к файлу
 	GetURL(ctx context.Context, objectName string) (string, error)
-	
+
 	// GetPresignedURL создает предварительно подписанный URL для доступа к файлу (если поддерживается)
 	GetPresignedURL(ctx context.Context, objectName string, expiry time.Duration) (string, error)
+
+	// GetFile возвращает содержимое файла в виде потока
+	GetFile(ctx context.Context, objectName string) (io.ReadCloser, error)
 }

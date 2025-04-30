@@ -72,20 +72,26 @@ const GalleryViewer = ({
         
         // Для строк (обратная совместимость)
         if (typeof image === 'string') {
-            // Если это путь из MinIO (начинается с /listings/ или содержит listings/)
-            if (image.startsWith('/listings/') || image.includes('listings/')) {
+            // Проверяем, это путь к MinIO
+            if (image.startsWith('/listings/')) {
                 return `${baseUrl}${image}`;
+            } else if (image.match(/^\d+\/[^\/]+$/)) {
+                // Для формата "ID/filename.jpg"
+                return `${baseUrl}/listings/${image}`;
             }
+            // Для старых путей
             return `${baseUrl}/uploads/${image}`;
         }
         
         // Для объектов с информацией о файле
         if (image.file_path) {
+            // Используем public_url, если он есть и начинается с /listings/
+            if (image.public_url && image.public_url.startsWith('/listings/')) {
+                return `${baseUrl}${image.public_url}`;
+            }
+            
             // Для MinIO объектов
-            if (image.storage_type === 'minio' || image.file_path.includes('listings/')) {
-                if (image.public_url && image.public_url.startsWith('/listings/')) {
-                    return `${baseUrl}${image.public_url}`;
-                }
+            if (image.storage_type === 'minio') {
                 return `${baseUrl}/listings/${image.file_path}`;
             }
             

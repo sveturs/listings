@@ -177,10 +177,13 @@ func (s *Server) setupRoutes() {
 	})
 	s.app.Get("/listings/*", func(c *fiber.Ctx) error {
 		path := c.Params("*")
-		minioUrl := fmt.Sprintf("http://minio:9000/listings/%s", path)
-	
-		return c.Redirect(minioUrl)
-	})	
+		log.Printf("Serving MinIO file: %s", path)
+
+		// Перенаправляем на публичный URL MinIO
+		minioUrl := fmt.Sprintf("http://localhost:9000/listings/%s", path)
+		log.Printf("Redirecting to public MinIO URL: %s", minioUrl)
+		return c.Redirect(minioUrl, 302)
+	})
 	// Static files
 	s.app.Static("/uploads", "./uploads")
 	s.app.Static("/public", "./public")
