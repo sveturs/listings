@@ -335,7 +335,7 @@ const MarketplacePage = () => {
     const debouncedFetchListings = useRef(
         debounce((filters) => {
             fetchListings(filters);
-        }, 300)
+        }, 500) // Увеличиваем время дебаунса с 300 до 500 мс
     ).current;
 
     // Обработчик изменения фильтров

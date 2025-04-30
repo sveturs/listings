@@ -171,6 +171,10 @@ const getImageUrl = (listing) => {
   return '/placeholder.jpg';
 };
 
+// Функция для определения браузера Firefox
+const isFirefox = () => {
+    return typeof window !== 'undefined' && window.navigator.userAgent.indexOf('Firefox') !== -1;
+};
 // Получаем информацию о скидке
 const getDiscountInfo = (listing) => {
   if (listing.metadata && listing.metadata.discount) {
@@ -525,6 +529,11 @@ export const MobileListingCard = ({ listing, viewMode = 'grid' }) => {
 // Компонент MobileGrid - обертка для отображения сетки объявлений
 export const MobileListingGrid = ({ listings, viewMode = 'grid' }) => {
   const { t } = useTranslation('marketplace');
+  const [isFirefoxBrowser, setIsFirefoxBrowser] = useState(false);
+
+  useEffect(() => {
+    setIsFirefoxBrowser(isFirefox());
+  }, []);
 
   if (viewMode === 'list') {
     return (
@@ -546,24 +555,82 @@ export const MobileListingGrid = ({ listings, viewMode = 'grid' }) => {
     );
   }
 
+  // Специальный рендеринг для Firefox
+    if (isFirefoxBrowser) {
+        return (
+            <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                width: '100%',
+                margin: '0 auto', // Центрирование контейнера
+                padding: 0
+            }}>
+                {listings.map((listing) => (
+                    <div
+                        key={listing.id}
+                        style={{
+                            width: '50%',
+                            boxSizing: 'border-box',
+                            padding: '4px',
+                            float: 'left',
+                            maxWidth: '50%' // Принудительная максимальная ширина 50%
+                        }}
+                    >
+                        <Link
+                            to={`/marketplace/listings/${listing.id}`}
+                            style={{
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                display: 'block',
+                                width: '100%' // Полная ширина внутри контейнера
+                            }}
+                        >
+                            <MobileListingCard listing={listing} viewMode="grid" />
+                        </Link>
+                    </div>
+                ))}
+
+                {listings.length === 0 && (
+                    <div style={{ width: '100%', padding: '16px 0', textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary">
+                            {t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })}
+                        </Typography>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+
+
+    // Стандартный рендеринг для других браузеров
   return (
-    <Grid container spacing={0}>
+    <Box className="MobileListingGrid" sx={{ width: '100%', display: 'flex', flexWrap: 'wrap' }}>
       {listings.map((listing) => (
-        <Grid item xs={6} key={listing.id} component={Link} to={`/marketplace/listings/${listing.id}`} sx={{ textDecoration: 'none', color: 'inherit' }}>
+        <Box
+          key={listing.id}
+          component={Link}
+          to={`/marketplace/listings/${listing.id}`}
+          sx={{
+            width: '50%',
+            boxSizing: 'border-box',
+            textDecoration: 'none',
+            color: 'inherit',
+            padding: '4px'
+          }}
+        >
           <MobileListingCard listing={listing} viewMode="grid" />
-        </Grid>
+        </Box>
       ))}
 
-      {listings.length === 0 && (
-        <Grid item xs={12}>
-          <Box sx={{ py: 4, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              {t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })}
-            </Typography>
-          </Box>
-        </Grid>
+       {listings.length === 0 && (
+        <Box sx={{ width: '100%', py: 4, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            {t('search.noresults', { defaultValue: 'По вашему запросу ничего не найдено' })}
+          </Typography>
+        </Box>
       )}
-    </Grid>
+    </Box>
   );
 };
 

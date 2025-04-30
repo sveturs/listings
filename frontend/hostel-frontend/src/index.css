@@ -87,25 +87,7 @@ code {
   flex-grow: 1 !important;
 }
 
-/* Исправление для Grid container в Firefox */
-@-moz-document url-prefix() {
-  .MuiGrid-container {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-  }
 
-  .MuiGrid-container > .MuiGrid-item {
-    float: left !important;
-  }
-
-  /* Исправление для мобильных устройств */
-  @media (max-width: 960px) {
-    .MuiGrid-container {
-      flex-direction: column !important;
-    }
-  }
-}
 
 /* Исправление для Box с фильтрами */
 .MuiBox-root.css-5yrx54 {
@@ -121,6 +103,40 @@ code {
   padding: 0 !important;
   margin: 0 !important;
   box-sizing: border-box !important;
+}
+
+/* Исправление для мобильной сетки в Firefox */
+@-moz-document url-prefix() {
+  /* Стили для контейнера с карточками */
+  .MuiGrid-container.MuiGrid-spacing-xs-1,
+  .MobileListingGrid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    margin: 0 auto !important; /* Центрирование */
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Стили для карточек */
+  .MuiGrid-grid-xs-6,
+  .MobileListingGrid > a,
+  .MobileListingGrid > div {
+    width: 50% !important;
+    max-width: 50% !important;
+    flex-basis: 50% !important;
+    box-sizing: border-box !important;
+    padding: 8px !important;
+    float: left !important;
+  }
+
+  /* Исправления для контейнеров внутри карточек */
+  .MobileListingGrid > a > div,
+  .MobileListingGrid > div > a,
+  .MobileListingGrid > div > a > div {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 }
 
 
