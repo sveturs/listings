@@ -256,24 +256,39 @@ func (s *StorefrontService) processOneImage(ctx context.Context, listingID int, 
 		return err
 	}
 
+	// Сохраняем файл в MinIO
+	fileStorage := s.storage.FileStorage()
+	if fileStorage == nil {
+		log.Printf("Ошибка: хранилище файлов не инициализировано")
+		return fmt.Errorf("хранилище файлов не инициализировано")
+	}
+
 	// Генерируем уникальное имя файла
 	fileName := fmt.Sprintf("%d_%d%s", listingID, time.Now().UnixNano(), s.getExtensionFromContentType(contentType))
-	filePath := filepath.Join("./uploads", fileName)
 
-	// Сохраняем файл
-	if err := ioutil.WriteFile(filePath, processedData, 0644); err != nil {
-		log.Printf("Ошибка при сохранении изображения %s: %v", filePath, err)
+	// Создаем путь для объекта в MinIO
+	objectName := fmt.Sprintf("%d/%s", listingID, fileName)
+
+	// Загружаем файл в MinIO
+	publicURL, err := fileStorage.UploadFile(ctx, objectName, bytes.NewReader(processedData), int64(len(processedData)), contentType)
+	if err != nil {
+		log.Printf("Ошибка при загрузке изображения в MinIO: %v", err)
 		return err
 	}
 
+	log.Printf("Изображение успешно загружено в MinIO. objectName=%s, publicURL=%s", objectName, publicURL)
+
 	// Создаем запись об изображении в базе данных
 	image := &models.MarketplaceImage{
-		ListingID:   listingID,
-		FilePath:    fileName,
-		FileName:    filepath.Base(imagePath),
-		FileSize:    len(processedData),
-		ContentType: contentType,
-		IsMain:      isMain,
+		ListingID:     listingID,
+		FilePath:      objectName,
+		FileName:      filepath.Base(imagePath),
+		FileSize:      len(processedData),
+		ContentType:   contentType,
+		IsMain:        isMain,
+		StorageType:   "minio",
+		StorageBucket: "listings",
+		PublicURL:     publicURL,
 	}
 
 	_, err = s.storage.AddListingImage(ctx, image)
@@ -325,13 +340,24 @@ func (s *StorefrontService) processOneImageWithName(ctx context.Context, listing
 		return err
 	}
 
-	filePath := filepath.Join("./uploads", fileName)
+	// Сохраняем файл в MinIO
+	fileStorage := s.storage.FileStorage()
+	if fileStorage == nil {
+		log.Printf("Ошибка: хранилище файлов не инициализировано")
+		return fmt.Errorf("хранилище файлов не инициализировано")
+	}
 
-	// Сохраняем файл
-	if err := ioutil.WriteFile(filePath, processedData, 0644); err != nil {
-		log.Printf("Ошибка при сохранении изображения %s: %v", filePath, err)
+	// Создаем путь для объекта в MinIO
+	objectName := fmt.Sprintf("%d/%s", listingID, fileName)
+
+	// Загружаем файл в MinIO
+	publicURL, err := fileStorage.UploadFile(ctx, objectName, bytes.NewReader(processedData), int64(len(processedData)), contentType)
+	if err != nil {
+		log.Printf("Ошибка при загрузке изображения в MinIO: %v", err)
 		return err
 	}
+
+	log.Printf("Изображение успешно загружено в MinIO. objectName=%s, publicURL=%s", objectName, publicURL)
 
 	// Обновляем запись об изображении в базе данных (уже должна существовать)
 	// Ищем запись с нужным ListingID и IsMain для обновления
@@ -343,20 +369,23 @@ func (s *StorefrontService) processOneImageWithName(ctx context.Context, listing
 	if err == nil {
 		// Нашли запись, обновляем ее
 		_, err = s.storage.Exec(ctx,
-			"UPDATE marketplace_images SET file_size = $1, content_type = $2 WHERE id = $3",
-			len(processedData), contentType, imageID)
+			"UPDATE marketplace_images SET file_path = $1, file_size = $2, content_type = $3, storage_type = $4, storage_bucket = $5, public_url = $6 WHERE id = $7",
+			objectName, len(processedData), contentType, "minio", "listings", publicURL, imageID)
 		if err != nil {
 			log.Printf("Ошибка при обновлении информации об изображении в БД: %v", err)
 		}
 	} else {
 		// Запись не найдена, создаем новую
 		image := &models.MarketplaceImage{
-			ListingID:   listingID,
-			FilePath:    fileName,
-			FileName:    strings.Split(imagePath, "/")[len(strings.Split(imagePath, "/"))-1],
-			FileSize:    len(processedData),
-			ContentType: contentType,
-			IsMain:      isMain,
+			ListingID:     listingID,
+			FilePath:      objectName,
+			FileName:      strings.Split(imagePath, "/")[len(strings.Split(imagePath, "/"))-1],
+			FileSize:      len(processedData),
+			ContentType:   contentType,
+			IsMain:        isMain,
+			StorageType:   "minio",
+			StorageBucket: "listings",
+			PublicURL:     publicURL,
 		}
 
 		_, err = s.storage.AddListingImage(ctx, image)
