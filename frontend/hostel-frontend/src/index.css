@@ -87,6 +87,26 @@ code {
   flex-grow: 1 !important;
 }
 
+/* Исправление для Grid container в Firefox */
+@-moz-document url-prefix() {
+  .MuiGrid-container {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+  }
+
+  .MuiGrid-container > .MuiGrid-item {
+    float: left !important;
+  }
+
+  /* Исправление для мобильных устройств */
+  @media (max-width: 960px) {
+    .MuiGrid-container {
+      flex-direction: column !important;
+    }
+  }
+}
+
 /* Исправление для Box с фильтрами */
 .MuiBox-root.css-5yrx54 {
   width: 100% !important;

@@ -1005,24 +1005,22 @@ if (isMobile) {
                 <Breadcrumbs paths={categoryPath} categories={categories} />
             </Box>
 
-            <Grid container spacing={2}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, width: '100%', gap: 2 }}>
                 {/* Фильтры с адаптивной шириной */}
-                <Grid item xs={12} sm={12} md={3} lg={3} xl={2} sx={{ minWidth: '250px' }}>
-                    <Box sx={{ width: '100%', minWidth: '250px', maxWidth: '100%' }}>
-                        <CompactMarketplaceFilters
-                            filters={filters}
-                            onFilterChange={handleFilterChange}
-                            selectedCategoryId={filters.category_id}
-                            onToggleMapView={handleToggleMapView}
-                            setSearchParams={setSearchParams}
-                            fetchListings={fetchListings}
-                            viewMode={viewMode}
-                            handleViewModeChange={handleViewModeChange}
-                        />
-                    </Box>
-                </Grid>
+                <Box sx={{ width: { xs: '100%', md: '250px' }, flexShrink: 0 }}>
+                    <CompactMarketplaceFilters
+                        filters={filters}
+                        onFilterChange={handleFilterChange}
+                        selectedCategoryId={filters.category_id}
+                        onToggleMapView={handleToggleMapView}
+                        setSearchParams={setSearchParams}
+                        fetchListings={fetchListings}
+                        viewMode={viewMode}
+                        handleViewModeChange={handleViewModeChange}
+                    />
+                </Box>
                 {/* Основной контент с адаптивной шириной */}
-                <Grid item xs={12} sm={12} md={9} lg={9} xl={10}>
+                <Box sx={{ flex: 1, width: { xs: '100%', md: 'calc(100% - 270px)' } }}>
                     {/* Атрибуты категории в центральной части */}
                     {filters.category_id && !mapViewActive && (
                         <CentralAttributeFilters
@@ -1036,8 +1034,8 @@ if (isMobile) {
                         />
                     )}
                     {renderContent()}
-                </Grid>
-            </Grid>
+                </Box>
+            </Box>
         </Container>
     );
 
