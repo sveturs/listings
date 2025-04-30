@@ -75,7 +75,7 @@ services:
       hostel_network:
         aliases:
           - mailserver
-          - mail.svetu.rs 
+          - mail.svetu.rs
     restart: unless-stopped
 
 
@@ -110,7 +110,7 @@ services:
           - mail-webui
     restart: unless-stopped
     depends_on:
-      - mailserver            
+      - mailserver
 
 
 #  opensearch-dashboards:
@@ -199,7 +199,7 @@ services:
       - MINIO_USE_SSL=false
       - MINIO_BUCKET_NAME=listings
       - MINIO_LOCATION=eu-central-1
-      - FILE_STORAGE_PUBLIC_URL=https://svetu.rs/minio
+      - FILE_STORAGE_PUBLIC_URL=https://svetu.rs
     user: "101:101"
     volumes:
       - uploads_data:/app/uploads
