@@ -167,7 +167,7 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /data/hostel-data/minio
+      device: ./data/minio
 
 networks:
   hostel_network:
