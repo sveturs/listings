@@ -1,17 +1,17 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"backend/internal/domain/models"
-    globalService "backend/internal/proj/global/service"
-    "backend/internal/proj/users/service" 
+	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/users/service"
 	"backend/pkg/utils"
+	"github.com/gofiber/fiber/v2"
 	"strconv" // Добавляем импорт для strconv
-//	"encoding/json" // Добавляем импорт для json
+	// "encoding/json" // Добавляем импорт для json
 )
 
 type UserHandler struct {
-    services globalService.ServicesInterface
+	services    globalService.ServicesInterface
 	userService service.UserServiceInterface
 }
 
@@ -21,6 +21,15 @@ func NewUserHandler(services globalService.ServicesInterface) *UserHandler {
 		userService: services.User(),
 	}
 }
+
+// Добавляем методы, связанные с администрированием
+// GetAllUsers экспортирован в admin.go
+// GetUserByIDAdmin экспортирован в admin.go
+// UpdateUserAdmin экспортирован в admin.go
+// UpdateUserStatus экспортирован в admin.go
+// DeleteUser экспортирован в admin.go
+// GetUserBalance экспортирован в admin_balance.go
+// GetUserTransactions экспортирован в admin_balance.go
 
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -81,22 +90,22 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
-    id, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
-    }
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
+	}
 
-    user, err := h.userService.GetUserByID(c.Context(), id)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusNotFound, "User not found")
-    }
+	user, err := h.userService.GetUserByID(c.Context(), id)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "User not found")
+	}
 
-    // Получаем только данные пользователя из User и возвращаем их
-    return utils.SuccessResponse(c, fiber.Map{
-        "id": user.ID,
-        "name": user.Name,
-        "email": user.Email,
-        "picture_url": user.PictureURL,
-        "created_at": user.CreatedAt,
-    })
+	// Получаем только данные пользователя из User и возвращаем их
+	return utils.SuccessResponse(c, fiber.Map{
+		"id":          user.ID,
+		"name":        user.Name,
+		"email":       user.Email,
+		"picture_url": user.PictureURL,
+		"created_at":  user.CreatedAt,
+	})
 }

@@ -331,6 +331,8 @@ func (s *Server) setupRoutes() {
 	adminRoutes.Put("/users/:id", s.users.User.UpdateUserAdmin)
 	adminRoutes.Put("/users/:id/status", s.users.User.UpdateUserStatus)
 	adminRoutes.Delete("/users/:id", s.users.User.DeleteUser)
+	adminRoutes.Get("/users/:id/balance", s.users.User.GetUserBalance)
+	adminRoutes.Get("/users/:id/transactions", s.users.User.GetUserTransactions)
 	adminRoutes.Post("/reindex-listings", s.marketplace.Marketplace.ReindexAll)
 	adminRoutes.Post("/reindex-listings-with-translations", s.marketplace.Marketplace.ReindexAllWithTranslations)
 	adminRoutes.Post("/sync-discounts", s.marketplace.Marketplace.SynchronizeDiscounts)

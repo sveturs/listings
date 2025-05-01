@@ -1,14 +1,14 @@
 // frontend/hostel-frontend/src/pages/admin/UsersManagementPage.js
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Paper, 
-  Typography, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
+import {
+  Box,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
   TableRow,
   Button,
   IconButton,
@@ -23,44 +23,47 @@ import {
   Tooltip,
   TablePagination
 } from '@mui/material';
-import { 
-  Edit as EditIcon, 
-  Delete as DeleteIcon, 
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
   Block as BlockIcon,
   CheckCircle as CheckCircleIcon,
-  ArrowBack as ArrowBackIcon
+  ArrowBack as ArrowBackIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../utils/dateUtils';
+import UserDetailsDialog from '../../components/admin/UserDetailsDialog';
 
 const UsersManagementPage = () => {
   const { t } = useTranslation(['common', 'admin']);
   const navigate = useNavigate();
-  
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
-  
+
   const [selectedUser, setSelectedUser] = useState(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  
+
   const [editFormData, setEditFormData] = useState({
     name: '',
     email: '',
     phone: '',
     status: ''
   });
-  
+
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateError, setUpdateError] = useState(null);
   const [updateSuccess, setUpdateSuccess] = useState(false);
@@ -69,7 +72,7 @@ const UsersManagementPage = () => {
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await axios.get(`/api/v1/admin/users?page=${page + 1}&limit=${rowsPerPage}`);
       setUsers(response.data.data || []);
@@ -92,7 +95,7 @@ const UsersManagementPage = () => {
     if (searchTerm.trim() === '') {
       setSearchResults(users);
     } else {
-      const filteredResults = users.filter(user => 
+      const filteredResults = users.filter(user =>
         user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.phone?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -138,6 +141,15 @@ const UsersManagementPage = () => {
     setOpenDeleteDialog(false);
   };
 
+  const handleOpenDetailsDialog = (user) => {
+    setSelectedUser(user);
+    setOpenDetailsDialog(true);
+  };
+
+  const handleCloseDetailsDialog = () => {
+    setOpenDetailsDialog(false);
+  };
+
   // Обработчики формы редактирования
   const handleEditFormChange = (e) => {
     const { name, value } = e.target;
@@ -150,16 +162,16 @@ const UsersManagementPage = () => {
   // Обновление пользователя
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
-    
+
     setUpdateLoading(true);
     setUpdateError(null);
     setUpdateSuccess(false);
-    
+
     try {
       await axios.put(`/api/v1/admin/users/${selectedUser.id}`, editFormData);
       setUpdateSuccess(true);
       fetchUsers(); // Обновляем список пользователей
-      
+
       // Закрываем диалог через 1 секунду после успешного обновления
       setTimeout(() => {
         handleCloseEditDialog();
@@ -175,10 +187,10 @@ const UsersManagementPage = () => {
   // Удаление пользователя
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
-    
+
     setUpdateLoading(true);
     setUpdateError(null);
-    
+
     try {
       await axios.delete(`/api/v1/admin/users/${selectedUser.id}`);
       fetchUsers(); // Обновляем список пользователей
@@ -194,7 +206,7 @@ const UsersManagementPage = () => {
   // Блокировка/разблокировка пользователя
   const handleToggleUserStatus = async (user) => {
     const newStatus = user.account_status === 'active' ? 'blocked' : 'active';
-    
+
     try {
       await axios.put(`/api/v1/admin/users/${user.id}/status`, { status: newStatus });
       fetchUsers(); // Обновляем список пользователей
@@ -225,8 +237,8 @@ const UsersManagementPage = () => {
           <Typography variant="h4" gutterBottom>
             Управление пользователями
           </Typography>
-          <Button 
-            variant="outlined" 
+          <Button
+            variant="outlined"
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate('/admin')}
           >
@@ -280,28 +292,40 @@ const UsersManagementPage = () => {
                 </TableRow>
               ) : (
                 searchResults.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow
+                    key={user.id}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
+                    }}
+                    onClick={() => handleOpenDetailsDialog(user)}
+                  >
                     <TableCell>{user.id}</TableCell>
                     <TableCell>{user.name || '-'}</TableCell>
                     <TableCell>{user.email || '-'}</TableCell>
                     <TableCell>{user.phone || '-'}</TableCell>
                     <TableCell>
-                      <Chip 
-                        label={user.account_status || 'active'} 
+                      <Chip
+                        label={user.account_status || 'active'}
                         color={getStatusColor(user.account_status)}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>{formatDate(user.created_at)}</TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Tooltip title="Подробнее">
+                        <IconButton onClick={() => handleOpenDetailsDialog(user)} size="small" color="primary">
+                          <InfoIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Редактировать">
                         <IconButton onClick={() => handleOpenEditDialog(user)} size="small">
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title={user.account_status === 'active' ? 'Заблокировать' : 'Разблокировать'}>
-                        <IconButton 
-                          onClick={() => handleToggleUserStatus(user)} 
+                        <IconButton
+                          onClick={() => handleToggleUserStatus(user)}
                           size="small"
                           color={user.account_status === 'active' ? 'default' : 'error'}
                         >
@@ -401,9 +425,9 @@ const UsersManagementPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEditDialog}>Отмена</Button>
-          <Button 
-            onClick={handleUpdateUser} 
-            variant="contained" 
+          <Button
+            onClick={handleUpdateUser}
+            variant="contained"
             color="primary"
             disabled={updateLoading}
             startIcon={updateLoading && <CircularProgress size={20} color="inherit" />}
@@ -429,9 +453,9 @@ const UsersManagementPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteDialog}>Отмена</Button>
-          <Button 
-            onClick={handleDeleteUser} 
-            variant="contained" 
+          <Button
+            onClick={handleDeleteUser}
+            variant="contained"
             color="error"
             disabled={updateLoading}
             startIcon={updateLoading && <CircularProgress size={20} color="inherit" />}
@@ -440,6 +464,15 @@ const UsersManagementPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Диалог просмотра детальной информации */}
+      {selectedUser && (
+        <UserDetailsDialog
+          open={openDetailsDialog}
+          onClose={handleCloseDetailsDialog}
+          userId={selectedUser.id}
+        />
+      )}
     </Box>
   );
 };
