@@ -321,20 +321,31 @@ const CategoryMenu = () => {
     <>
       {/* Кнопка для открытия меню категорий */}
       <Button
+        variant={isMobile ? "outlined" : "text"}
         sx={{
           color: '#004494',
           textTransform: 'none',
           fontWeight: 'normal',
           fontSize: isMobile ? '0.875rem' : 'inherit',
           minWidth: isMobile ? '40px' : 'auto',
-          p: isMobile ? 1 : 2
+          width: isMobile ? '40px' : 'auto',
+          height: isMobile ? '40px' : 'auto',
+          p: isMobile ? 0 : 2,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderColor: isMobile ? 'rgba(0, 68, 148, 0.5)' : 'transparent',
+          '&:hover': {
+            borderColor: isMobile ? 'rgba(0, 68, 148, 0.8)' : 'transparent',
+            backgroundColor: isMobile ? 'rgba(0, 68, 148, 0.04)' : 'rgba(0, 68, 148, 0.04)'
+          }
         }}
         onClick={isMobile ? handleOpenMobileCategoryDrawer : handleOpenCategoryMenu}
-        startIcon={<CategoryIcon fontSize="small" />}
-        endIcon={<KeyboardArrowDown />}
+        startIcon={!isMobile && <CategoryIcon fontSize="small" />}
+        endIcon={!isMobile && <KeyboardArrowDown />}
         disabled={isLoading}
       >
-        {!isMobile && t('navigation.allCategories', { defaultValue: 'ВСЕ КАТЕГОРИИ' })}
+        {isMobile ? <CategoryIcon fontSize="small" /> : t('navigation.allCategories', { defaultValue: 'ВСЕ КАТЕГОРИИ' })}
       </Button>
 
       {/* Выпадающее меню для категорий (для десктопов) */}

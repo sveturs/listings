@@ -78,13 +78,13 @@ const CitySelector = ({ isMobile = false }) => {
 
     // Популярные города в Сербии
     const popularCities = [
-        { id: 1, city: t('cities.belgrade', { defaultValue: 'Белград', ns: 'marketplace' }), 
+        { id: 1, city: t('cities.belgrade', { defaultValue: 'Белград', ns: 'marketplace' }),
           country: t('countries.serbia', { defaultValue: 'Сербия', ns: 'marketplace' }), lat: 44.8178, lon: 20.4570 },
-        { id: 2, city: t('cities.noviSad', { defaultValue: 'Нови-Сад', ns: 'marketplace' }), 
+        { id: 2, city: t('cities.noviSad', { defaultValue: 'Нови-Сад', ns: 'marketplace' }),
           country: t('countries.serbia', { defaultValue: 'Сербия', ns: 'marketplace' }), lat: 45.2671, lon: 19.8335 },
-        { id: 3, city: t('cities.nis', { defaultValue: 'Ниш', ns: 'marketplace' }), 
+        { id: 3, city: t('cities.nis', { defaultValue: 'Ниш', ns: 'marketplace' }),
           country: t('countries.serbia', { defaultValue: 'Сербия', ns: 'marketplace' }), lat: 43.3209, lon: 21.8958 },
-        { id: 4, city: t('cities.kragujevac', { defaultValue: 'Крагуевац', ns: 'marketplace' }), 
+        { id: 4, city: t('cities.kragujevac', { defaultValue: 'Крагуевац', ns: 'marketplace' }),
           country: t('countries.serbia', { defaultValue: 'Сербия', ns: 'marketplace' }), lat: 44.0128, lon: 20.9114 },
     ];
 
@@ -103,10 +103,10 @@ const CitySelector = ({ isMobile = false }) => {
         setCity({
             city: city.city,
             country: city.country,
-            lat: city.lat, 
+            lat: city.lat,
             lon: city.lon
         });
-        
+
         // Если пользователь авторизован и выбрал опцию сохранения в профиль
         if (isAuthenticated && saveToProfile) {
             try {
@@ -123,7 +123,7 @@ const CitySelector = ({ isMobile = false }) => {
                 setSnackbarOpen(true);
             }
         }
-        
+
         handleClose();
     };
 
@@ -138,7 +138,7 @@ const CitySelector = ({ isMobile = false }) => {
     const handleUseLocation = async () => {
         try {
             await detectUserLocation();
-            
+
             // Если пользователь авторизован и выбрал опцию сохранения в профиль
             if (isAuthenticated && saveToProfile && userLocation) {
                 // Создаем небольшую задержку, чтобы userLocation успел обновиться
@@ -161,7 +161,7 @@ const CitySelector = ({ isMobile = false }) => {
                     }
                 }, 500);
             }
-            
+
             handleClose();
         } catch (error) {
             console.error('Error getting location:', error);
@@ -184,16 +184,22 @@ const CitySelector = ({ isMobile = false }) => {
                     sx={{
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         cursor: 'pointer',
-                        px: isMobile ? 0.5 : 1,
-                        py: isMobile ? 0.3 : 0.5,
+                        width: isMobile ? '40px' : 'auto',
+                        height: isMobile ? '40px' : 'auto',
+                        minWidth: isMobile ? '40px' : 'auto',
+                        px: isMobile ? 0 : 1,
+                        py: isMobile ? 0 : 0.5,
                         borderRadius: 1,
+                        border: isMobile ? '1px solid rgba(0, 68, 148, 0.5)' : 'none',
                         '&:hover': {
-                            bgcolor: 'rgba(0,0,0,0.04)'
+                            bgcolor: 'rgba(0,0,0,0.04)',
+                            borderColor: isMobile ? 'rgba(0, 68, 148, 0.8)' : 'none'
                         }
                     }}
                 >
-                    <MapPin size={18} />
+                    <MapPin size={18} color="#004494" />
                     {!isMobile && (
                         <Typography variant="body2" sx={{ mx: 0.5, maxWidth: 120, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                             {userLocation?.city || t('location.selectCity', { defaultValue: 'Выбрать город', ns: 'marketplace' })}
@@ -328,9 +334,9 @@ const CitySelector = ({ isMobile = false }) => {
                 </Box>
             </Popover>
 
-            <Snackbar 
-                open={snackbarOpen} 
-                autoHideDuration={4000} 
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={4000}
                 onClose={handleSnackbarClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >

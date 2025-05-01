@@ -81,7 +81,7 @@ const Layout = ({ children }) => {
     {
       path: "/",
       label: "Sve Tu",
-      icon: <SveTuLogo width={60} height={60} />,
+      icon: <SveTuLogo width={isMobile ? 50 : 60} height={isMobile ? 50 : 60} />,
     }
   ];
 
@@ -176,7 +176,7 @@ const Layout = ({ children }) => {
               justifyContent: "space-between",
               alignItems: "center",
               minHeight: "56px",
-              px: 2,
+              px: isMobile ? '4px' : 2,
             }}
           >
             <Box

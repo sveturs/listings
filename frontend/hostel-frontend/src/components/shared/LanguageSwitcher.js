@@ -35,21 +35,31 @@ const LanguageSwitcher = () => {
             <Select
                 value={i18n.language}
                 onChange={handleLanguageChange}
+                IconComponent={isMobile ? () => null : undefined}
                 sx={{
-                    minWidth: isMobile ? 'auto' : 120,
+                    minWidth: isMobile ? '40px' : 120,
+                    width: isMobile ? '40px' : 'auto',
+                    height: isMobile ? '40px' : 'auto',
                     '& .MuiSelect-select': {
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         gap: 1,
-                        py: isMobile ? 1 : 1.2,
-                        pl: isMobile ? 1.5 : 2,
-                        pr: isMobile ? 3 : 4
+                        py: isMobile ? 0.5 : 1.2,
+                        px: isMobile ? 0 : 2,
+                        paddingRight: isMobile ? '0 !important' : '4px !important'
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: isMobile ? 'rgba(0, 68, 148, 0.5)' : undefined
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: isMobile ? 'rgba(0, 68, 148, 0.8)' : undefined
                     }
                 }}
             >
                 {LANGUAGES.map((lang) => (
-                    <MenuItem 
-                        key={lang.code} 
+                    <MenuItem
+                        key={lang.code}
                         value={lang.code}
                         sx={{
                             minWidth: isMobile ? 'auto' : 120,
@@ -57,15 +67,15 @@ const LanguageSwitcher = () => {
                             px: isMobile ? 1.5 : 2,
                         }}
                     >
-                        <Box sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
                             gap: 1,
                             width: '100%',
                             justifyContent: isMobile ? 'center' : 'flex-start'
                         }}>
-                            <Typography 
-                                variant="body2" 
+                            <Typography
+                                variant="body2"
                                 component="span"
                                 sx={{ fontSize: isMobile ? '1.2rem' : '1rem' }}
                             >
