@@ -38,20 +38,16 @@ type Server struct {
 	payments      paymentService.PaymentServiceInterface
 	storefront    *storefrontHandler.Handler
 	geocode       *geocodeHandler.GeocodeHandler
-	translation   *marketplaceHandler.TranslationHandler // Новое поле для TranslationHandler
-	fileStorage   filestorage.FileStorageInterface       // Новое поле для файлового хранилища
+	translation   *marketplaceHandler.TranslationHandler
+	fileStorage   filestorage.FileStorageInterface
 }
 
-// Обновляем функцию NewServer для поддержки MinIO:
 func NewServer(cfg *config.Config) (*Server, error) {
-	// Инициализируем файловое хранилище
 	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
 	if err != nil {
 		log.Printf("Ошибка инициализации файлового хранилища: %v. Функции загрузки файлов могут быть недоступны.", err)
-		// Не прерываем выполнение программы, так как сервер может работать и без файлового хранилища
 	}
 
-	// Инициализируем клиент OpenSearch
 	var osClient *opensearch.OpenSearchClient
 	if cfg.OpenSearch.URL != "" {
 		var err error
@@ -69,31 +65,25 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		log.Println("OpenSearch URL не указан, поиск будет отключен")
 	}
 
-	// Инициализируем базу данных с OpenSearch и файловым хранилищем
 	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	// Пытаемся создать фабрику сервисов перевода
 	var translationService marketplaceService.TranslationServiceInterface
 	if cfg.GoogleTranslateAPIKey != "" && cfg.OpenAIAPIKey != "" {
-		// Если доступны оба API, создаем фабрику с доступом к хранилищу
 		translationFactory, err := marketplaceService.NewTranslationServiceFactory(cfg.GoogleTranslateAPIKey, cfg.OpenAIAPIKey, db)
 		if err != nil {
 			log.Printf("Ошибка создания фабрики перевода: %v, будет использован только OpenAI", err)
-			// Если не удалось создать фабрику, пробуем создать только OpenAI сервис
 			translationService, err = marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create translation service: %w", err)
 			}
 		} else {
-			// Если фабрика создана успешно, используем ее
 			translationService = translationFactory
 			log.Printf("Создана фабрика сервисов перевода с поддержкой Google Translate и OpenAI")
 		}
 	} else if cfg.OpenAIAPIKey != "" {
-		// Если доступен только OpenAI
 		var err error
 		translationService, err = marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
 		if err != nil {
@@ -115,17 +105,30 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
 
-	// Обработчик перевода уже создан в marketplaceHandler
-
 	app := fiber.New(fiber.Config{
-		ErrorHandler: middleware.ErrorHandler,
-		BodyLimit:    50 * 1024 * 1024, // 50MB
-		// Добавляем конфигурацию для WebSocket
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			// Детальное логирование ошибки
+			log.Printf("Error type: %T", err)
+			log.Printf("Error details: %+v", err)
+			log.Printf("Error handler called with path: %s", c.Path())
+
+			// Стандартная обработка ошибки
+			code := fiber.StatusInternalServerError
+			if e, ok := err.(*fiber.Error); ok {
+				code = e.Code
+			}
+
+			return c.Status(code).JSON(fiber.Map{
+				"error":  err.Error(),
+				"status": code,
+				"path":   c.Path(),
+			})
+		},
+		BodyLimit:               50 * 1024 * 1024,
 		EnableTrustedProxyCheck: true,
 		TrustedProxies:          []string{"127.0.0.1", "::1"},
 	})
 
-	// Initialize server
 	server := &Server{
 		app:           app,
 		cfg:           cfg,
@@ -138,82 +141,67 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		storefront:    storefrontHandler,
 		payments:      services.Payment(),
 		geocode:       geocodeHandler,
-		translation:   marketplaceHandler.Translation, // Используем Translation из marketplaceHandler
-		fileStorage:   fileStorage,                    // Сохраняем ссылку на файловое хранилище
+		translation:   marketplaceHandler.Translation,
+		fileStorage:   fileStorage,
 	}
 
-	// Инициализируем webhooks для телеграма
 	notificationsHandler.Notification.ConnectTelegramWebhook()
-
-	// Устанавливаем глобальные middleware до настройки роутов
 	server.setupMiddleware()
-
-	// Настраиваем роуты
 	server.setupRoutes()
 
 	return server, nil
 }
 
 func (s *Server) setupMiddleware() {
-	// Глобальные middleware
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
-
-	// WebSocket middleware должен быть настроен до роутов WebSocket
 	s.app.Use("/ws", s.middleware.AuthRequired)
-
-	// Создаем необходимые директории
 	os.MkdirAll("./uploads", os.ModePerm)
 	os.MkdirAll("./public", os.ModePerm)
 }
 
 func (s *Server) setupRoutes() {
-	// Root path
 	s.app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hostel Booking System API")
 	})
+
 	s.app.Get("/api/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
+
 	s.app.Get("/listings/*", func(c *fiber.Ctx) error {
 		path := c.Params("*")
 		log.Printf("Serving MinIO file: %s", path)
-
-		// Перенаправляем на публичный URL MinIO
 		minioUrl := fmt.Sprintf("http://localhost:9000/listings/%s", path)
 		log.Printf("Redirecting to public MinIO URL: %s", minioUrl)
 		return c.Redirect(minioUrl, 302)
 	})
-	// Static files
+
 	s.app.Static("/uploads", "./uploads")
 	s.app.Static("/public", "./public")
 
-	// Service worker
 	s.app.Get("/service-worker.js", func(c *fiber.Ctx) error {
 		c.Set("Content-Type", "application/javascript")
 		return c.SendFile("./public/service-worker.js")
 	})
 
-	// WebSocket endpoint должен быть настроен до других роутов
 	s.app.Get("/ws/chat", websocket.New(s.marketplace.Chat.HandleWebSocket, websocket.Config{
 		HandshakeTimeout: 10 * time.Second,
 	}))
-	s.app.Post("/reindex-ratings-public", s.marketplace.Marketplace.ReindexRatings) /////////////////////////////  УБРАТЬ!!!!!!!!
-	// Telegram webhook
+
+	s.app.Post("/reindex-ratings-public", s.marketplace.Marketplace.ReindexRatings)
+
 	s.app.Post("/api/v1/notifications/telegram/webhook", func(c *fiber.Ctx) error {
 		log.Printf("Received webhook request: %s", string(c.Body()))
 		return s.notifications.Notification.HandleTelegramWebhook(c)
 	})
-	// Public routes without authentication
-	s.app.Post("/api/v1/public/send-email", s.notifications.Notification.SendPublicEmail)
 
-	// маршрут для витрин
+	s.app.Post("/api/v1/public/send-email", s.notifications.Notification.SendPublicEmail)
 	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
 	s.app.Get("/v1/notifications/telegram", s.notifications.Notification.GetTelegramStatus)
 
-	// Balance routes
 	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequired)
-	balanceRoutes.Get("/", s.balance.Balance.GetBalance) // Добавляем .Balance
+	balanceRoutes.Get("/", s.balance.Balance.GetBalance)
 	balanceRoutes.Get("/transactions", s.balance.Balance.GetTransactions)
 	balanceRoutes.Get("/payment-methods", s.balance.Balance.GetPaymentMethods)
 	balanceRoutes.Post("/deposit", s.balance.Balance.CreateDeposit)
@@ -231,28 +219,24 @@ func (s *Server) setupRoutes() {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	// Public marketplace routes
 	marketplace := s.app.Group("/api/v1/marketplace")
 	marketplace.Get("/listings", s.marketplace.Marketplace.GetListings)
 	marketplace.Get("/categories", s.marketplace.Marketplace.GetCategories)
 	marketplace.Get("/category-tree", s.marketplace.Marketplace.GetCategoryTree)
 	marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)
 	marketplace.Get("/subcategories", s.marketplace.Marketplace.GetSubcategories)
-
-	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced) // маршрут поиска
-	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)    // маршрут автодополнения
+	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced)
+	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)
 	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
 	marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", s.marketplace.Marketplace.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", s.marketplace.Marketplace.GetSimilarListings)
 	marketplace.Get("/categories/:id/attribute-ranges", s.marketplace.Marketplace.GetAttributeRanges)
 
-	// Маршруты для API перевода
 	translation := s.app.Group("/api/v1/translation")
 	translation.Get("/limits", s.translation.GetTranslationLimits)
 	translation.Post("/provider", s.translation.SetTranslationProvider)
 
-	// Public review routes
 	review := s.app.Group("/api/v1/reviews")
 	review.Get("/", s.review.Review.GetReviews)
 	review.Get("/:id", s.review.Review.GetReviewByID)
@@ -262,19 +246,14 @@ func (s *Server) setupRoutes() {
 	entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating)
 	entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)
 
-	// Auth routes
 	auth := s.app.Group("/auth")
 	auth.Get("/session", s.users.Auth.GetSession)
 	auth.Get("/google", s.users.Auth.GoogleAuth)
 	auth.Get("/google/callback", s.users.Auth.GoogleCallback)
 	auth.Get("/logout", s.users.Auth.Logout)
 
-	// Protected routes
 	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
-	api.Post("/admin/sync-discounts", s.middleware.AdminRequired, s.marketplace.Marketplace.SynchronizeDiscounts)
-	api.Post("/admin/reindex-ratings", s.marketplace.Marketplace.ReindexRatings)
-	// api.Post("/admin/reindex-ratings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexRatings)
-	// Protected reviews routes
+
 	protectedReviews := api.Group("/reviews")
 	protectedReviews.Post("/", s.review.Review.CreateReview)
 	protectedReviews.Put("/:id", s.review.Review.UpdateReview)
@@ -282,42 +261,35 @@ func (s *Server) setupRoutes() {
 	protectedReviews.Post("/:id/vote", s.review.Review.VoteForReview)
 	protectedReviews.Post("/:id/response", s.review.Review.AddResponse)
 	protectedReviews.Post("/:id/photos", s.review.Review.UploadPhotos)
-	// маршруты для витрин
+
 	storefronts := api.Group("/storefronts")
 	storefronts.Get("/", s.storefront.Storefront.GetUserStorefronts)
 	storefronts.Post("/", s.storefront.Storefront.CreateStorefront)
 	storefronts.Get("/:id", s.storefront.Storefront.GetStorefront)
 	storefronts.Put("/:id", s.storefront.Storefront.UpdateStorefront)
 	storefronts.Delete("/:id", s.storefront.Storefront.DeleteStorefront)
-
-	// Маршруты для источников импорта
 	storefronts.Get("/:id/import-sources", s.storefront.Storefront.GetImportSources)
 	storefronts.Post("/import-sources", s.storefront.Storefront.CreateImportSource)
 	storefronts.Put("/import-sources/:id", s.storefront.Storefront.UpdateImportSource)
 	storefronts.Delete("/import-sources/:id", s.storefront.Storefront.DeleteImportSource)
-
-	// Маршруты для импорта данных
 	storefronts.Post("/import-sources/:id/run", s.storefront.Storefront.RunImport)
 	storefronts.Get("/import-sources/:id/history", s.storefront.Storefront.GetImportHistory)
-	// Маршруты для сопоставления категорий
 	storefronts.Get("/import-sources/:id/category-mappings", s.storefront.Storefront.GetCategoryMappings)
 	storefronts.Put("/import-sources/:id/category-mappings", s.storefront.Storefront.UpdateCategoryMappings)
 	storefronts.Get("/import-sources/:id/imported-categories", s.storefront.Storefront.GetImportedCategories)
 	storefronts.Post("/import-sources/:id/apply-category-mappings", s.storefront.Storefront.ApplyCategoryMappings)
 
-	// Маршруты для отзывов пользователей и витрин
 	api.Get("/users/:id/reviews", s.review.Review.GetUserReviews)
 	api.Get("/users/:id/rating", s.review.Review.GetUserRatingSummary)
 	api.Get("/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
 	api.Get("/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
-	// API геолокации
+
 	geocodeApi := s.app.Group("/api/v1/geocode")
 	geocodeApi.Get("/reverse", s.geocode.ReverseGeocode)
 
 	citiesApi := s.app.Group("/api/v1/cities")
 	citiesApi.Get("/suggest", s.geocode.GetCitySuggestions)
 
-	// Protected user routes
 	users := api.Group("/users")
 	users.Post("/register", s.users.User.Register)
 	users.Get("/me", s.users.User.GetProfile)
@@ -326,7 +298,6 @@ func (s *Server) setupRoutes() {
 	users.Put("/profile", s.users.User.UpdateProfile)
 	users.Get("/:id/profile", s.users.User.GetProfileByID)
 
-	// Protected marketplace routes
 	marketplaceProtected := api.Group("/marketplace")
 	marketplaceProtected.Post("/listings", s.marketplace.Marketplace.CreateListing)
 	marketplaceProtected.Put("/listings/:id", s.marketplace.Marketplace.UpdateListing)
@@ -337,16 +308,34 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
 	marketplaceProtected.Put("/translations/:id", s.marketplace.Marketplace.UpdateTranslations)
 	marketplaceProtected.Post("/translations/batch", s.marketplace.Marketplace.BatchTranslateListings)
-	// Маршруты для модерации и улучшения изображений
 	marketplaceProtected.Post("/moderate-image", s.marketplace.Marketplace.ModerateImage)
 	marketplaceProtected.Post("/enhance-preview", s.marketplace.Marketplace.EnhancePreview)
 	marketplaceProtected.Post("/enhance-images", s.marketplace.Marketplace.EnhanceImages)
 
-	// Административные маршруты для переиндексации
-	api.Post("/admin/reindex-listings", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAll)
-	api.Post("/admin/reindex-listings-with-translations", s.middleware.AdminRequired, s.marketplace.Marketplace.ReindexAllWithTranslations)
+	// Тестовый маршрут
+	//	s.app.Get("/api/test-admin", s.middleware.AuthRequired, s.middleware.AdminRequired, func(c *fiber.Ctx) error {
+	//		log.Println("Test admin endpoint called")
+	//		return c.Status(200).JSON(fiber.Map{
+	//			"message": "Admin test successful",
+	//		})
+	//	})
 
-	// Chat routes
+	// Административные маршруты
+	adminRoutes := s.app.Group("/api/v1/admin")
+	adminRoutes.Use(s.middleware.AuthRequired)
+	adminRoutes.Use(s.middleware.AdminRequired)
+
+	// Использовать реальный обработчик из UserHandler
+	adminRoutes.Get("/users", s.users.User.GetAllUsers)
+	adminRoutes.Get("/users/:id", s.users.User.GetUserByIDAdmin)
+	adminRoutes.Put("/users/:id", s.users.User.UpdateUserAdmin)
+	adminRoutes.Put("/users/:id/status", s.users.User.UpdateUserStatus)
+	adminRoutes.Delete("/users/:id", s.users.User.DeleteUser)
+	adminRoutes.Post("/reindex-listings", s.marketplace.Marketplace.ReindexAll)
+	adminRoutes.Post("/reindex-listings-with-translations", s.marketplace.Marketplace.ReindexAllWithTranslations)
+	adminRoutes.Post("/sync-discounts", s.marketplace.Marketplace.SynchronizeDiscounts)
+	adminRoutes.Post("/reindex-ratings", s.marketplace.Marketplace.ReindexRatings)
+
 	chat := api.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)
 	chat.Get("/messages", s.marketplace.Chat.GetMessages)
@@ -355,8 +344,6 @@ func (s *Server) setupRoutes() {
 	chat.Post("/:chat_id/archive", s.marketplace.Chat.ArchiveChat)
 	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
 
-	// Notification routes
-	// Notification routes
 	notifications := api.Group("/notifications")
 	notifications.Get("/", s.notifications.Notification.GetNotifications)
 	notifications.Get("/settings", s.notifications.Notification.GetSettings)
@@ -365,7 +352,6 @@ func (s *Server) setupRoutes() {
 	notifications.Get("/telegram/token", s.notifications.Notification.GetTelegramToken)
 	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
 	notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
-
 }
 
 func (s *Server) Start() error {
@@ -373,10 +359,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-	// Останавливаем все сервисы
 	services := globalService.NewService(nil, nil, nil)
 	services.Shutdown()
-
-	// Завершаем работу сервера
 	return s.app.Shutdown()
 }

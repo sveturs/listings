@@ -1,7 +1,9 @@
 // frontend/hostel-frontend/src/pages/admin/AdminPage.js
 import React, { useState } from 'react';
-import { Box, Button, Paper, Typography, Alert, CircularProgress } from '@mui/material';
+import { Box, Button, Paper, Typography, Alert, CircularProgress, Grid } from '@mui/material';
+import { People as PeopleIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAdminEmails } from '../../utils/adminUtils';
@@ -9,6 +11,7 @@ import { getAdminEmails } from '../../utils/adminUtils';
 const AdminPage = () => {
   const { t } = useTranslation(['common', 'marketplace']);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -18,12 +21,12 @@ const AdminPage = () => {
   const [ratingsLoading, setRatingsLoading] = useState(false);
   const [ratingsResult, setRatingsResult] = useState(null);
   const [ratingsError, setRatingsError] = useState(null);
-  
+
   const handleReindexRatings = async () => {
     setRatingsLoading(true);
     setRatingsResult(null);
     setRatingsError(null);
-  
+
     try {
       const response = await axios.post('/api/v1/admin/reindex-ratings');
       setRatingsResult(response.data);
@@ -80,6 +83,38 @@ const AdminPage = () => {
           Эта страница доступна только для администраторов! ({getAdminEmails().join(', ')})
         </Alert>
 
+        <Box sx={{ mt: 4, mb: 4 }}>
+          <Typography variant="h5" gutterBottom>
+            Управление системой
+          </Typography>
+          <Grid container spacing={2} sx={{ mt: 2 }}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 3,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  height: '100%',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  '&:hover': { transform: 'translateY(-5px)', boxShadow: 6 }
+                }}
+                onClick={() => navigate('/admin/users')}
+              >
+                <PeopleIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+                <Typography variant="h6" align="center" gutterBottom>
+                  Пользователи
+                </Typography>
+                <Typography variant="body2" align="center" color="text.secondary">
+                  Управление пользователями, блокировка, редактирование профилей
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Box>
+
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>
             Управление поисковым индексом
@@ -89,9 +124,9 @@ const AdminPage = () => {
             Это может занять некоторое время, особенно если в системе много объявлений.
           </Typography>
 
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={handleReindex}
             disabled={loading}
             startIcon={loading && <CircularProgress size={20} color="inherit" />}
@@ -122,9 +157,9 @@ const AdminPage = () => {
             Это обновит информацию о скидках для всех объявлений и обеспечит корректное отображение скидок.
           </Typography>
 
-          <Button 
-            variant="contained" 
-            color="secondary" 
+          <Button
+            variant="contained"
+            color="secondary"
             onClick={handleSyncDiscounts}
             disabled={syncLoading}
             startIcon={syncLoading && <CircularProgress size={20} color="inherit" />}
@@ -145,7 +180,7 @@ const AdminPage = () => {
             </Alert>
           )}
         </Box>
-        
+
       </Paper>
       <Paper sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
@@ -158,9 +193,9 @@ const AdminPage = () => {
     Это обеспечит корректную сортировку объявлений по рейтингу.
   </Typography>
 
-  <Button 
-    variant="contained" 
-    color="primary" 
+  <Button
+    variant="contained"
+    color="primary"
     onClick={handleReindexRatings} // Добавим новую функцию
     disabled={ratingsLoading}
     startIcon={ratingsLoading && <CircularProgress size={20} color="inherit" />}
@@ -195,7 +230,7 @@ const AdminPage = () => {
         </Typography>
       </Paper>
     </Box>
-    
+
   );
 };
 

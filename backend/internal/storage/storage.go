@@ -3,12 +3,11 @@ package storage
 
 import (
 	"backend/internal/domain/models"
-    "backend/internal/domain/search"
+	"backend/internal/domain/search"
+	"backend/internal/storage/filestorage"
 	"backend/internal/types"
 	"context"
 	"database/sql"
-	"backend/internal/storage/filestorage"
-
 )
 
 type Storage interface {
@@ -23,6 +22,11 @@ type Storage interface {
 	UpdateLastSeen(ctx context.Context, id int) error
 	GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error)
 	GetSession(ctx context.Context, token string) (*types.SessionData, error)
+
+	// Административные методы для управления пользователями
+	GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int, error)
+	UpdateUserStatus(ctx context.Context, id int, status string) error
+	DeleteUser(ctx context.Context, id int) error
 
 	// Reviews
 	CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)
@@ -64,19 +68,18 @@ type Storage interface {
 	GetSubcategories(ctx context.Context, parentID *int, limit int, offset int) ([]models.CategoryTreeNode, error)
 	AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
 	GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error)
-	
+
 	// FileStorage возвращает интерфейс для работы с файловым хранилищем
 	FileStorage() filestorage.FileStorageInterface
-	
+
 	// GetListingImageByID возвращает информацию об изображении по ID
 	GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error)
-	
+
 	// DeleteListingImage удаляет информацию об изображении из базы данных
 	DeleteListingImage(ctx context.Context, imageID int) error
 
 	GetAttributeOptionTranslations(ctx context.Context, attributeName, optionValue string) (map[string]string, error)
 	GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error)
-
 
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
 	GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error)
@@ -90,10 +93,10 @@ type Storage interface {
 	AddPriceHistoryEntry(ctx context.Context, entry *models.PriceHistoryEntry) error
 	ClosePriceHistoryEntry(ctx context.Context, listingID int) error
 	CheckPriceManipulation(ctx context.Context, listingID int) (bool, error)
-    
-    SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
-    GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error)
-	SynchronizeDiscountMetadata(ctx context.Context) error  // Добавьте эту строку
+
+	SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
+	GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error)
+	SynchronizeDiscountMetadata(ctx context.Context) error // Добавьте эту строку
 
 	// Balance methods
 	GetUserBalance(ctx context.Context, userID int) (*models.UserBalance, error)
@@ -136,12 +139,12 @@ type Storage interface {
 	IndexListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListingIndex(ctx context.Context, id string) error
 	PrepareIndex(ctx context.Context) error
-	
+
 	// Import History methods
 	CreateImportHistory(ctx context.Context, history *models.ImportHistory) (int, error)
 	GetImportHistory(ctx context.Context, sourceID int, limit, offset int) ([]models.ImportHistory, error)
 	UpdateImportHistory(ctx context.Context, history *models.ImportHistory) error
-	
+
 	// Translation methods
 	GetTranslationsForEntity(ctx context.Context, entityType string, entityID int) ([]models.Translation, error)
 
@@ -164,5 +167,5 @@ type Rows interface {
 	Next() bool
 	Scan(dest ...interface{}) error
 	Close() error
-	Err() error  // Добавляем метод Err() для проверки ошибок после итерации
+	Err() error // Добавляем метод Err() для проверки ошибок после итерации
 }

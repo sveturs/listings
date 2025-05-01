@@ -33,6 +33,7 @@ import EditStorefrontPage from "./pages/store/EditStorefrontPage";
 import { LocationProvider } from './contexts/LocationContext';
 import AdminRoute from "./components/global/AdminRoute";
 import AdminPage from "./pages/admin/AdminPage";
+import UsersManagementPage from "./pages/admin/UsersManagementPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -109,6 +110,7 @@ function App() {
                         <Route path="/marketplace/listings/:id/edit" element={<EditListingPage />} />
                         <Route path="/balance" element={<PrivateRoute>      <TransactionsPage />    </PrivateRoute>} />
                         <Route path="/admin" element={<AdminRoute>      <AdminPage />    </AdminRoute>} />
+                        <Route path="/admin/users" element={<AdminRoute>      <UsersManagementPage />    </AdminRoute>} />
                       </Routes>
                     </Layout>
                   </NotificationProvider>

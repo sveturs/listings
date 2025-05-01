@@ -6,18 +6,17 @@ import (
 	"backend/internal/domain/search"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	"backend/internal/storage"
+	"backend/internal/storage/filestorage"
 	"backend/internal/types"
 	"context"
 	"database/sql"
-	"fmt"
-	"log"
-	"os"
 	"encoding/json"
+	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"backend/internal/storage/filestorage"
-
+	"log"
+	"os"
 
 	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
@@ -38,31 +37,29 @@ type Database struct {
 	osMarketplaceRepo opensearch.MarketplaceSearchRepository
 	db                *sql.DB
 	marketplaceIndex  string
-    fsStorage filestorage.FileStorageInterface
-
+	fsStorage         filestorage.FileStorageInterface
 }
 
 func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface) (*Database, error) {
-    pool, err := pgxpool.New(context.Background(), dbURL)
-    if err != nil {
-        return nil, fmt.Errorf("error creating connection pool: %w", err)
-    }
+	pool, err := pgxpool.New(context.Background(), dbURL)
+	if err != nil {
+		return nil, fmt.Errorf("error creating connection pool: %w", err)
+	}
 
-    // Создаем сервис переводов
-    translationService, err := marketplaceService.NewTranslationService(os.Getenv("OPENAI_API_KEY"))
-    if err != nil {
-        return nil, fmt.Errorf("error creating translation service: %w", err)
-    }
+	// Создаем сервис переводов
+	translationService, err := marketplaceService.NewTranslationService(os.Getenv("OPENAI_API_KEY"))
+	if err != nil {
+		return nil, fmt.Errorf("error creating translation service: %w", err)
+	}
 
-    db := &Database{
-        pool:            pool,
-        marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
-        reviewDB:        reviewStorage.NewStorage(pool, translationService),
-        usersDB:         userStorage.NewStorage(pool),
-        notificationsDB: notificationStorage.NewNotificationStorage(pool),
-        fsStorage:       fileStorage, // Используем переданный параметр
-    }
-
+	db := &Database{
+		pool:            pool,
+		marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
+		reviewDB:        reviewStorage.NewStorage(pool, translationService),
+		usersDB:         userStorage.NewStorage(pool),
+		notificationsDB: notificationStorage.NewNotificationStorage(pool),
+		fsStorage:       fileStorage, // Используем переданный параметр
+	}
 
 	// Инициализируем репозиторий OpenSearch, если клиент передан
 	if osClient != nil {
@@ -84,19 +81,19 @@ func (db *Database) Close() {
 	}
 }
 func (db *Database) FileStorage() filestorage.FileStorageInterface {
-    return db.fsStorage
+	return db.fsStorage
 }
 func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-    if db.osMarketplaceRepo == nil {
-        return nil, fmt.Errorf("OpenSearch не настроен")
-    }
-    return db.osMarketplaceRepo.SearchListings(ctx, params)
+	if db.osMarketplaceRepo == nil {
+		return nil, fmt.Errorf("OpenSearch не настроен")
+	}
+	return db.osMarketplaceRepo.SearchListings(ctx, params)
 }
 func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
 	var image models.MarketplaceImage
-	
+
 	err := db.pool.QueryRow(ctx, `
-		SELECT id, listing_id, file_path, file_name, file_size, content_type, is_main, 
+		SELECT id, listing_id, file_path, file_name, file_size, content_type, is_main,
 		       storage_type, storage_bucket, public_url, created_at
 		FROM marketplace_images
 		WHERE id = $1
@@ -105,14 +102,14 @@ func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*mode
 		&image.ContentType, &image.IsMain, &image.StorageType, &image.StorageBucket,
 		&image.PublicURL, &image.CreatedAt,
 	)
-	
+
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("image not found")
 		}
 		return nil, err
 	}
-	
+
 	return &image, nil
 }
 
@@ -121,7 +118,7 @@ func (db *Database) DeleteListingImage(ctx context.Context, imageID int) error {
 		DELETE FROM marketplace_images
 		WHERE id = $1
 	`, imageID)
-	
+
 	return err
 }
 
@@ -133,14 +130,14 @@ func (db *Database) IndexListing(ctx context.Context, listing *models.Marketplac
 	return db.osMarketplaceRepo.IndexListing(ctx, listing)
 }
 func (db *Database) PrepareIndex(ctx context.Context) error {
-    if db.osMarketplaceRepo == nil {
-        // Если репозиторий OpenSearch не инициализирован, просто возвращаем nil
-        // Поиск будет работать без OpenSearch
-        return nil
-    }
+	if db.osMarketplaceRepo == nil {
+		// Если репозиторий OpenSearch не инициализирован, просто возвращаем nil
+		// Поиск будет работать без OpenSearch
+		return nil
+	}
 
-    // Используем уже инициализированный репозиторий для проверки индекса
-    return db.osMarketplaceRepo.PrepareIndex(ctx)
+	// Используем уже инициализированный репозиторий для проверки индекса
+	return db.osMarketplaceRepo.PrepareIndex(ctx)
 }
 func (db *Database) DeleteListingIndex(ctx context.Context, id string) error {
 	if db.osMarketplaceRepo == nil {
@@ -165,21 +162,23 @@ func (db *Database) ReindexAllListings(ctx context.Context) error {
 
 	return db.osMarketplaceRepo.ReindexAll(ctx)
 }
+
 // GetCategoryAttributes получает атрибуты для указанной категории
 func (db *Database) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-    return db.marketplaceDB.GetCategoryAttributes(ctx, categoryID)
+	return db.marketplaceDB.GetCategoryAttributes(ctx, categoryID)
 }
+
 // SaveListingAttributes сохраняет значения атрибутов для объявления
 func (db *Database) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
-    return db.marketplaceDB.SaveListingAttributes(ctx, listingID, attributes)
+	return db.marketplaceDB.SaveListingAttributes(ctx, listingID, attributes)
 }
 func (db *Database) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
-    return db.marketplaceDB.GetAttributeRanges(ctx, categoryID)
+	return db.marketplaceDB.GetAttributeRanges(ctx, categoryID)
 }
 
 // GetListingAttributes получает значения атрибутов для объявления
 func (db *Database) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
-    return db.marketplaceDB.GetListingAttributes(ctx, listingID)
+	return db.marketplaceDB.GetListingAttributes(ctx, listingID)
 }
 func (db *Database) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
 	var session types.SessionData
@@ -207,8 +206,8 @@ func (db *Database) GetSession(ctx context.Context, token string) (*types.Sessio
 
 func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	query := `
-        SELECT user_id 
-        FROM marketplace_favorites 
+        SELECT user_id
+        FROM marketplace_favorites
         WHERE listing_id = $1
     `
 	rows, err := db.pool.Query(ctx, query, listingID)
@@ -328,8 +327,6 @@ func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]m
 	return db.marketplaceDB.GetListingImages(ctx, listingID)
 }
 
- 
-
 func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {
 	return db.marketplaceDB.AddToFavorites(ctx, userID, listingID)
 }
@@ -416,6 +413,19 @@ func (db *Database) UpdateLastSeen(ctx context.Context, id int) error {
 	return db.usersDB.UpdateLastSeen(ctx, id)
 }
 
+// Административные методы для управления пользователями
+func (db *Database) GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int, error) {
+	return db.usersDB.GetAllUsers(ctx, limit, offset)
+}
+
+func (db *Database) UpdateUserStatus(ctx context.Context, id int, status string) error {
+	return db.usersDB.UpdateUserStatus(ctx, id, status)
+}
+
+func (db *Database) DeleteUser(ctx context.Context, id int) error {
+	return db.usersDB.DeleteUser(ctx, id)
+}
+
 // Добавить следующие методы в структуру Database:
 
 func (db *Database) ArchiveChat(ctx context.Context, chatID int, userID int) error {
@@ -444,8 +454,8 @@ func (db *Database) MarkMessagesAsRead(ctx context.Context, messageIDs []int, us
 func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int, error) {
 	var count int
 	err := db.pool.QueryRow(ctx, `
-        SELECT COUNT(*) 
-        FROM marketplace_messages 
+        SELECT COUNT(*)
+        FROM marketplace_messages
         WHERE receiver_id = $1 AND is_read = false
     `, userID).Scan(&count)
 
@@ -470,39 +480,41 @@ func (db *Database) UpdateNotificationSettings(ctx context.Context, s *models.No
 func (db *Database) SaveTelegramConnection(ctx context.Context, userID int, chatID string, username string) error {
 	return db.notificationsDB.SaveTelegramConnection(ctx, userID, chatID, username)
 }
+
 // SearchListings выполняет поиск объявлений с пользовательским запросом
 func (db *Database) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-    if db.osMarketplaceRepo == nil {
-        return nil, fmt.Errorf("OpenSearch не настроен")
-    }
-    return db.osMarketplaceRepo.SearchListings(ctx, params)
+	if db.osMarketplaceRepo == nil {
+		return nil, fmt.Errorf("OpenSearch не настроен")
+	}
+	return db.osMarketplaceRepo.SearchListings(ctx, params)
 }
+
 // Добавить этот метод в структуру Database
 func (db *Database) GetAttributeOptionTranslations(ctx context.Context, attributeName, optionValue string) (map[string]string, error) {
-    query := `
+	query := `
         SELECT option_value, en_translation, sr_translation
         FROM attribute_option_translations
         WHERE attribute_name = $1 AND option_value = $2
     `
-    
-    var optValue, enTrans, srTrans string
-    err := db.pool.QueryRow(ctx, query, attributeName, optionValue).Scan(
-        &optValue, &enTrans, &srTrans,
-    )
-    
-    if err != nil {
-        if err == pgx.ErrNoRows {
-            return nil, nil
-        }
-        return nil, fmt.Errorf("error getting attribute translations: %w", err)
-    }
-    
-    translations := map[string]string{
-        "en": enTrans,
-        "sr": srTrans,
-    }
-    
-    return translations, nil
+
+	var optValue, enTrans, srTrans string
+	err := db.pool.QueryRow(ctx, query, attributeName, optionValue).Scan(
+		&optValue, &enTrans, &srTrans,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("error getting attribute translations: %w", err)
+	}
+
+	translations := map[string]string{
+		"en": enTrans,
+		"sr": srTrans,
+	}
+
+	return translations, nil
 }
 
 func (db *Database) GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error) {
@@ -582,70 +594,70 @@ func (db *Database) GetStorefrontRatingSummary(ctx context.Context, storefrontID
 	return db.reviewDB.GetStorefrontRatingSummary(ctx, storefrontID)
 }
 func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {
-    // Получаем все объявления с информацией о скидке
-    query := `
+	// Получаем все объявления с информацией о скидке
+	query := `
         SELECT id, price, metadata
         FROM marketplace_listings
         WHERE metadata->>'discount' IS NOT NULL
     `
-    
-    rows, err := db.pool.Query(ctx, query)
-    if err != nil {
-        return fmt.Errorf("error querying listings with discounts: %w", err)
-    }
-    defer rows.Close()
-    
-    count := 0
-    for rows.Next() {
-        var id int
-        var price float64
-        var metadataJSON []byte
-        
-        if err := rows.Scan(&id, &price, &metadataJSON); err != nil {
-            log.Printf("Error scanning row: %v", err)
-            continue
-        }
-        
-        var metadata map[string]interface{}
-        if err := json.Unmarshal(metadataJSON, &metadata); err != nil {
-            log.Printf("Error unmarshaling metadata: %v", err)
-            continue
-        }
-        
-        // Проверяем и обновляем информацию о скидке
-        if discount, ok := metadata["discount"].(map[string]interface{}); ok {
-            if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
-                // Пересчитываем актуальный процент скидки
-                if prevPrice > price {
-                    discountPercent := int((prevPrice - price) / prevPrice * 100)
-                    discount["discount_percent"] = float64(discountPercent)
-                    
-                    // Обновляем метаданные в БД
-                    metadata["discount"] = discount
-                    updatedMetadataJSON, err := json.Marshal(metadata)
-                    if err != nil {
-                        log.Printf("Error marshaling updated metadata: %v", err)
-                        continue
-                    }
-                    
-                    _, err = db.pool.Exec(ctx, `
+
+	rows, err := db.pool.Query(ctx, query)
+	if err != nil {
+		return fmt.Errorf("error querying listings with discounts: %w", err)
+	}
+	defer rows.Close()
+
+	count := 0
+	for rows.Next() {
+		var id int
+		var price float64
+		var metadataJSON []byte
+
+		if err := rows.Scan(&id, &price, &metadataJSON); err != nil {
+			log.Printf("Error scanning row: %v", err)
+			continue
+		}
+
+		var metadata map[string]interface{}
+		if err := json.Unmarshal(metadataJSON, &metadata); err != nil {
+			log.Printf("Error unmarshaling metadata: %v", err)
+			continue
+		}
+
+		// Проверяем и обновляем информацию о скидке
+		if discount, ok := metadata["discount"].(map[string]interface{}); ok {
+			if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
+				// Пересчитываем актуальный процент скидки
+				if prevPrice > price {
+					discountPercent := int((prevPrice - price) / prevPrice * 100)
+					discount["discount_percent"] = float64(discountPercent)
+
+					// Обновляем метаданные в БД
+					metadata["discount"] = discount
+					updatedMetadataJSON, err := json.Marshal(metadata)
+					if err != nil {
+						log.Printf("Error marshaling updated metadata: %v", err)
+						continue
+					}
+
+					_, err = db.pool.Exec(ctx, `
                         UPDATE marketplace_listings
                         SET metadata = $1
                         WHERE id = $2
                     `, updatedMetadataJSON, id)
-                    
-                    if err != nil {
-                        log.Printf("Error updating metadata for listing %d: %v", id, err)
-                        continue
-                    }
-                    
-                    count++
-                    log.Printf("Updated discount percentage for listing %d: %d%%", id, discountPercent)
-                }
-            }
-        }
-    }
-    
-    log.Printf("Synchronized discount metadata for %d listings", count)
-    return nil
+
+					if err != nil {
+						log.Printf("Error updating metadata for listing %d: %v", id, err)
+						continue
+					}
+
+					count++
+					log.Printf("Updated discount percentage for listing %d: %d%%", id, discountPercent)
+				}
+			}
+		}
+	}
+
+	log.Printf("Synchronized discount metadata for %d listings", count)
+	return nil
 }
