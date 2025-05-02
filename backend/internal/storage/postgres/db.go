@@ -232,9 +232,6 @@ type pgxResult struct {
 	ct pgconn.CommandTag
 }
 
-func (db *Database) GetSubcategories(ctx context.Context, parentID *int, limit int, offset int) ([]models.CategoryTreeNode, error) {
-	return db.marketplaceDB.GetSubcategories(ctx, parentID, limit, offset)
-}
 func (r pgxResult) LastInsertId() (int64, error) {
 	return 0, fmt.Errorf("LastInsertId is not supported by PostgreSQL")
 }
