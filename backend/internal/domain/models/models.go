@@ -62,8 +62,8 @@ type MarketplaceListing struct {
 	HasDiscount       bool                    `json:"has_discount"`
 	Metadata          map[string]interface{}  `json:"metadata,omitempty"` // Для хранения дополнительной информации, включая данные о скидке
 
-	    AverageRating float64 `json:"average_rating,omitempty"`
-    ReviewCount   int     `json:"review_count,omitempty"`
+	AverageRating float64 `json:"average_rating,omitempty"`
+	ReviewCount   int     `json:"review_count,omitempty"`
 }
 
 type MarketplaceCategory struct {
@@ -80,14 +80,14 @@ type MarketplaceCategory struct {
 type MarketplaceImage struct {
 	ID            int       `json:"id"`
 	ListingID     int       `json:"listing_id"`
-	FilePath      string    `json:"file_path"`    // Путь к файлу в хранилище
-	FileName      string    `json:"file_name"`    // Оригинальное имя файла
-	FileSize      int       `json:"file_size"`    // Размер файла в байтах
-	ContentType   string    `json:"content_type"` // MIME-тип файла
-	IsMain        bool      `json:"is_main"`      // Является ли изображение основным
-	StorageType   string    `json:"storage_type"` // Тип хранилища: "local" или "minio"
+	FilePath      string    `json:"file_path"`                // Путь к файлу в хранилище
+	FileName      string    `json:"file_name"`                // Оригинальное имя файла
+	FileSize      int       `json:"file_size"`                // Размер файла в байтах
+	ContentType   string    `json:"content_type"`             // MIME-тип файла
+	IsMain        bool      `json:"is_main"`                  // Является ли изображение основным
+	StorageType   string    `json:"storage_type"`             // Тип хранилища: "local" или "minio"
 	StorageBucket string    `json:"storage_bucket,omitempty"` // Имя бакета для MinIO
-	PublicURL     string    `json:"public_url"`   // Публичный URL для доступа к файлу
+	PublicURL     string    `json:"public_url,omitempty"`     // Публичный URL для доступа к файлу
 	CreatedAt     time.Time `json:"created_at"`
 }
 

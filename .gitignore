@@ -61,3 +61,5 @@ all_otziv.sh
 all_mark.sh
 all.sh
 filtered_project_code.txt
+
+**/.claude/settings.local.json

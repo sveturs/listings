@@ -5,6 +5,7 @@ import (
 	"backend/internal/domain/models"
 	"context"
 	"database/sql"
+	"log"
 )
 
 // GetAllUsers возвращает список всех пользователей с пагинацией
@@ -120,39 +121,194 @@ func (s *Storage) UpdateUserStatus(ctx context.Context, id int, status string) e
 
 // DeleteUser удаляет пользователя
 func (s *Storage) DeleteUser(ctx context.Context, id int) error {
+	// Логируем начало процесса удаления
+	log.Printf("Starting deletion process for user ID %d", id)
+
 	// Начинаем транзакцию
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
+		log.Printf("Error beginning transaction: %v", err)
 		return err
 	}
 	defer tx.Rollback(ctx)
 
-	// Удаляем связанные данные (можно добавить больше таблиц по мере необходимости)
+	// 1. Сначала проверим все объявления и удалим зависимые данные
+	log.Printf("Deleting data for user's marketplace listings")
 
-	// Удаляем уведомления пользователя
+	// Получаем список всех объявлений пользователя
+	var listingIDs []int
+	rows, err := tx.Query(ctx, `SELECT id FROM marketplace_listings WHERE user_id = $1`, id)
+	if err != nil {
+		log.Printf("Error selecting marketplace_listings: %v", err)
+		return err
+	}
+
+	for rows.Next() {
+		var listingID int
+		if err := rows.Scan(&listingID); err != nil {
+			rows.Close()
+			log.Printf("Error scanning listing ID: %v", err)
+			return err
+		}
+		listingIDs = append(listingIDs, listingID)
+	}
+	rows.Close()
+
+	// Удаляем все изображения для каждого объявления
+	for _, listingID := range listingIDs {
+		log.Printf("Deleting images for listing ID %d", listingID)
+		_, err = tx.Exec(ctx, `DELETE FROM marketplace_images WHERE listing_id = $1`, listingID)
+		if err != nil {
+			log.Printf("Error deleting marketplace_images: %v", err)
+			return err
+		}
+	}
+
+	// 2. Удаляем избранное (маркетплейс)
+	log.Printf("Deleting marketplace_favorites")
+	_, err = tx.Exec(ctx, `DELETE FROM marketplace_favorites WHERE user_id = $1`, id)
+	if err != nil {
+		log.Printf("Error deleting marketplace_favorites: %v", err)
+		return err
+	}
+
+	// 3. Теперь удаляем сообщения в чатах
+	log.Printf("Deleting marketplace_messages")
+	_, err = tx.Exec(ctx, `DELETE FROM marketplace_messages WHERE sender_id = $1 OR receiver_id = $1`, id)
+	if err != nil {
+		log.Printf("Error deleting marketplace_messages: %v", err)
+		return err
+	}
+
+	// 4. Удаляем чаты
+	log.Printf("Deleting marketplace_chats")
+	_, err = tx.Exec(ctx, `DELETE FROM marketplace_chats WHERE buyer_id = $1 OR seller_id = $1`, id)
+	if err != nil {
+		log.Printf("Error deleting marketplace_chats: %v", err)
+		return err
+	}
+
+	// 5. Теперь можно удалить сами объявления
+	log.Printf("Deleting marketplace_listings")
+	_, err = tx.Exec(ctx, `DELETE FROM marketplace_listings WHERE user_id = $1`, id)
+	if err != nil {
+		log.Printf("Error deleting marketplace_listings: %v", err)
+		return err
+	}
+
+	// 6. Для витрин и с ними связанных данных
+	log.Printf("Processing user_storefronts")
+
+	// Получаем ID всех витрин пользователя
+	var storefrontIDs []int
+	rows, err = tx.Query(ctx, `SELECT id FROM user_storefronts WHERE user_id = $1`, id)
+	if err != nil {
+		log.Printf("Error querying user_storefronts: %v", err)
+		return err
+	}
+
+	for rows.Next() {
+		var sfID int
+		if err := rows.Scan(&sfID); err != nil {
+			rows.Close()
+			log.Printf("Error scanning storefront ID: %v", err)
+			return err
+		}
+		storefrontIDs = append(storefrontIDs, sfID)
+	}
+	rows.Close()
+
+	// Для каждой витрины удаляем связанные данные
+	for _, sfID := range storefrontIDs {
+		// Удаляем историю импортов
+		log.Printf("Deleting import_history for storefront ID %d", sfID)
+		_, err = tx.Exec(ctx, `DELETE FROM import_history WHERE source_id IN (SELECT id FROM import_sources WHERE storefront_id = $1)`, sfID)
+		if err != nil {
+			log.Printf("Error deleting import_history: %v", err)
+			return err
+		}
+
+		// Удаляем источники импорта
+		log.Printf("Deleting import_sources for storefront ID %d", sfID)
+		_, err = tx.Exec(ctx, `DELETE FROM import_sources WHERE storefront_id = $1`, sfID)
+		if err != nil {
+			log.Printf("Error deleting import_sources: %v", err)
+			return err
+		}
+	}
+
+	// Удаляем витрины
+	log.Printf("Deleting user_storefronts")
+	_, err = tx.Exec(ctx, `DELETE FROM user_storefronts WHERE user_id = $1`, id)
+	if err != nil {
+		log.Printf("Error deleting user_storefronts: %v", err)
+		return err
+	}
+
+	// 7. Удаляем данные баланса
+	log.Printf("Deleting balance_transactions")
+	_, err = tx.Exec(ctx, `DELETE FROM balance_transactions WHERE user_id = $1`, id)
+	if err != nil {
+		log.Printf("Error deleting balance_transactions: %v", err)
+		return err
+	}
+
+	log.Printf("Deleting user_balances")
+	_, err = tx.Exec(ctx, `DELETE FROM user_balances WHERE user_id = $1`, id)
+	if err != nil {
+		log.Printf("Error deleting user_balances: %v", err)
+		return err
+	}
+
+	// 8. Удаляем уведомления и настройки уведомлений
+	log.Printf("Deleting notifications")
 	_, err = tx.Exec(ctx, `DELETE FROM notifications WHERE user_id = $1`, id)
 	if err != nil {
+		log.Printf("Error deleting notifications: %v", err)
 		return err
 	}
 
-	// Удаляем телеграм-соединения пользователя
+	log.Printf("Deleting notification_settings")
+	_, err = tx.Exec(ctx, `DELETE FROM notification_settings WHERE user_id = $1`, id)
+	if err != nil {
+		log.Printf("Error deleting notification_settings: %v", err)
+		return err
+	}
+
+	// 9. Удаляем телеграм-соединения
+	log.Printf("Deleting user_telegram_connections")
 	_, err = tx.Exec(ctx, `DELETE FROM user_telegram_connections WHERE user_id = $1`, id)
 	if err != nil {
+		log.Printf("Error deleting user_telegram_connections: %v", err)
 		return err
 	}
 
-	// Удаляем избранное пользователя
-	_, err = tx.Exec(ctx, `DELETE FROM user_favorites WHERE user_id = $1`, id)
+	// 10. Отзывы имеют каскадное удаление (ON DELETE CASCADE), но проверим на всякий случай
+	log.Printf("Checking reviews (should be handled by ON DELETE CASCADE)")
+	var reviewCount int
+	err = tx.QueryRow(ctx, `SELECT COUNT(*) FROM reviews WHERE user_id = $1`, id).Scan(&reviewCount)
 	if err != nil {
-		return err
+		log.Printf("Error checking reviews count: %v", err)
+	} else if reviewCount > 0 {
+		log.Printf("Found %d reviews that should be deleted by ON DELETE CASCADE", reviewCount)
 	}
 
-	// Удаляем самого пользователя
+	// 11. Наконец, удаляем самого пользователя
+	log.Printf("Deleting user")
 	_, err = tx.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
 	if err != nil {
+		log.Printf("Error deleting user: %v", err)
 		return err
 	}
 
 	// Фиксируем транзакцию
-	return tx.Commit(ctx)
+	log.Printf("Committing transaction for user deletion")
+	err = tx.Commit(ctx)
+	if err != nil {
+		log.Printf("Error committing transaction: %v", err)
+		return err
+	}
+
+	log.Printf("Successfully deleted user ID %d", id)
+	return nil
 }

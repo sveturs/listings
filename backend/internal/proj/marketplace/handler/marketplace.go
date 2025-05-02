@@ -1102,6 +1102,8 @@ func (h *MarketplaceHandler) DeleteImage(c *fiber.Ctx) error {
 		"message": "Изображение успешно удалено",
 	})
 }
+
+// ReindexRatings переиндексирует рейтинги всех объявлени
 // ReindexRatings переиндексирует рейтинги всех объявлений
 func (h *MarketplaceHandler) ReindexRatings(c *fiber.Ctx) error {
 	// Проверяем административные права
@@ -1548,6 +1550,7 @@ func (h *MarketplaceHandler) GetListings(c *fiber.Ctx) error {
 		"condition":     c.Query("condition"),
 		"sort_by":       c.Query("sort_by"),
 		"storefront_id": c.Query("storefront_id"),
+		"user_id":       c.Query("user_id"),
 	}
 
 	page, _ := strconv.Atoi(c.Query("page", "1"))

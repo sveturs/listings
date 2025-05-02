@@ -456,6 +456,21 @@ const ListingDetailsPage = () => {
                 listingData.images = [];
             }
 
+            // Отладка изображений
+            console.group('Данные изображений:');
+            console.log('Количество изображений:', listingData.images?.length);
+            console.log('Полные данные изображений:', JSON.stringify(listingData.images));
+            if (listingData.images && listingData.images.length > 0) {
+                const firstImage = listingData.images[0];
+                console.log('Тип первого изображения:', typeof firstImage);
+                if (typeof firstImage === 'object') {
+                    console.log('Ключи первого изображения:', Object.keys(firstImage));
+                    console.log('public_url:', firstImage.public_url);
+                    console.log('Тип public_url:', typeof firstImage.public_url);
+                }
+            }
+            console.groupEnd();
+
             // Отладка атрибутов
             if (listingData.attributes && listingData.attributes.length > 0) {
                 console.group('Атрибуты объявления с сервера:');
@@ -588,47 +603,87 @@ const ListingDetailsPage = () => {
     };
 
 
-    // В ListingDetailsPage.js
+    // Функция получения URL изображения - оптимизированная версия
     const getImageUrl = (image) => {
         if (!image) {
+            console.log('No image provided, using placeholder');
             return '/placeholder.jpg';
         }
 
-        console.log('Image data for debugging:', image);
         const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+        console.log('Base URL:', baseUrl);
 
-        // Для строк (обратная совместимость)
+        // 1. Строковые пути (для обратной совместимости)
         if (typeof image === 'string') {
-            // Для пути в формате /listings/*
+            console.log('Processing string image path:', image);
+            
+            // Относительный путь MinIO
             if (image.startsWith('/listings/')) {
-                return `${baseUrl}${image}`;
+                const url = `${baseUrl}${image}`;
+                console.log('Using MinIO relative path:', url);
+                return url;
             }
-
-            // Для пути в формате ID/filename.jpg (прямой путь MinIO)
+            
+            // ID/filename.jpg (прямой путь MinIO)
             if (image.match(/^\d+\/[^\/]+$/)) {
-                return `${baseUrl}/listings/${image}`;
+                const url = `${baseUrl}/listings/${image}`;
+                console.log('Using direct MinIO path pattern:', url);
+                return url;
             }
-
-            // Для старых путей
-            return `${baseUrl}/uploads/${image}`;
+            
+            // Локальное хранилище (обратная совместимость)
+            const url = `${baseUrl}/uploads/${image}`;
+            console.log('Using local storage path:', url);
+            return url;
         }
 
-        // Для объектов с информацией о файле
-        if (image.file_path) {
-            // Используем public_url, если он есть
-            if (image.public_url && image.public_url.startsWith('/listings/')) {
-                return `${baseUrl}${image.public_url}`;
+        // 2. Объекты с информацией о файле
+        if (typeof image === 'object' && image.file_path) {
+            console.log('Processing image object:', image.file_path);
+            
+            // Приоритет 1: Используем PublicURL если он доступен
+            if (image.public_url && typeof image.public_url === 'string' && image.public_url.trim() !== '') {
+                const publicUrl = image.public_url;
+                console.log('Found public_url string:', publicUrl);
+                
+                // Абсолютный URL
+                if (publicUrl.startsWith('http')) {
+                    console.log('Using absolute URL:', publicUrl);
+                    return publicUrl;
+                } 
+                // Относительный URL с /listings/
+                else if (publicUrl.startsWith('/listings/')) {
+                    const url = `${baseUrl}${publicUrl}`;
+                    console.log('Using public_url with listings path:', url);
+                    return url;
+                } 
+                // Другой относительный URL
+                else {
+                    const url = `${baseUrl}${publicUrl}`;
+                    console.log('Using general relative public_url:', url);
+                    return url;
+                }
             }
-
-            // Для MinIO объектов
-            if (image.storage_type === 'minio') {
-                return `${baseUrl}/listings/${image.file_path}`;
+            
+            // Приоритет 2: Формируем URL на основе типа хранилища и пути
+            if (image.storage_type === 'minio' || (image.file_path && image.file_path.includes('listings/'))) {
+                // Путь для MinIO может содержать префикс listings/ или не содержать
+                const path = image.file_path.includes('listings/') 
+                    ? image.file_path 
+                    : `listings/${image.file_path}`;
+                    
+                const url = `${baseUrl}/${path}`;
+                console.log('Constructed MinIO URL from path:', url);
+                return url;
             }
-
-            // Для локального хранилища
-            return `${baseUrl}/uploads/${image.file_path}`;
+            
+            // Приоритет 3: Локальное хранилище
+            const url = `${baseUrl}/uploads/${image.file_path}`;
+            console.log('Using local storage path from object:', url);
+            return url;
         }
 
+        console.log('Could not determine image URL, using placeholder');
         return '/placeholder.jpg';
     };
 
@@ -640,23 +695,26 @@ const ListingDetailsPage = () => {
             return [];
         }
 
-        return listing.images.map(img => {
-            if (typeof img === 'string') {
-                return img;
+        console.log('Getting image paths for gallery. Images:', listing.images);
+        // Используем нашу оптимизированную функцию getImageUrl для каждого изображения
+        
+        // Результирующий массив URL-ов изображений
+        const imagePaths = [];
+
+        for (const img of listing.images) {
+            console.log('Processing image', img);
+            
+            // Получаем URL с использованием универсальной функции
+            const url = getImageUrl(img);
+            console.log('Processed URL:', url);
+            
+            if (url && url !== '/placeholder.jpg') {
+                imagePaths.push(url);
             }
+        }
 
-            // Если это объект с информацией о файле, возвращаем полный путь
-            if (img.file_path) {
-                // MinIO использует структуру пути ID/filename.jpg
-                if (img.file_path.match(/^\d+\/[^\/]+$/)) {
-                    return img.file_path;
-                }
-
-                return img.file_path;
-            }
-
-            return '';
-        });
+        console.log('Final image paths:', imagePaths);
+        return imagePaths;
     };
 
 

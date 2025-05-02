@@ -68,37 +68,58 @@ const GalleryViewer = ({
     const getImageUrl = (image) => {
         if (!image) return '/placeholder.jpg';
         
+        console.log('GalleryViewer processing image:', image);
+        
         const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+        
+        // Если уже полный URL (начинается с http), возвращаем как есть
+        if (typeof image === 'string' && (image.startsWith('http://') || image.startsWith('https://'))) {
+            console.log('GalleryViewer: URL is already absolute, using as is:', image);
+            return image;
+        }
         
         // Для строк (обратная совместимость)
         if (typeof image === 'string') {
             // Проверяем, это путь к MinIO
             if (image.startsWith('/listings/')) {
-                return `${baseUrl}${image}`;
+                const url = `${baseUrl}${image}`;
+                console.log('GalleryViewer: Using listings path:', url);
+                return url;
             } else if (image.match(/^\d+\/[^\/]+$/)) {
                 // Для формата "ID/filename.jpg"
-                return `${baseUrl}/listings/${image}`;
+                const url = `${baseUrl}/listings/${image}`;
+                console.log('GalleryViewer: Using ID/filename format:', url);
+                return url;
             }
             // Для старых путей
-            return `${baseUrl}/uploads/${image}`;
+            const url = `${baseUrl}/uploads/${image}`;
+            console.log('GalleryViewer: Using uploads path:', url);
+            return url;
         }
         
         // Для объектов с информацией о файле
         if (image.file_path) {
             // Используем public_url, если он есть и начинается с /listings/
             if (image.public_url && image.public_url.startsWith('/listings/')) {
-                return `${baseUrl}${image.public_url}`;
+                const url = `${baseUrl}${image.public_url}`;
+                console.log('GalleryViewer: Using public_url:', url);
+                return url;
             }
             
             // Для MinIO объектов
             if (image.storage_type === 'minio') {
-                return `${baseUrl}/listings/${image.file_path}`;
+                const url = `${baseUrl}/listings/${image.file_path}`;
+                console.log('GalleryViewer: Using storage_type=minio:', url);
+                return url;
             }
             
             // Для локального хранилища
-            return `${baseUrl}/uploads/${image.file_path}`;
+            const url = `${baseUrl}/uploads/${image.file_path}`;
+            console.log('GalleryViewer: Using uploads path for file_path:', url);
+            return url;
         }
         
+        console.log('GalleryViewer: Could not determine image URL, using placeholder');
         return '/placeholder.jpg';
     }
     

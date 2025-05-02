@@ -76,11 +76,11 @@ const UserDetailsDialog = ({ open, onClose, userId }) => {
   // Загрузка дополнительных данных при переключении вкладок
   useEffect(() => {
     if (open && userId) {
-      if (tabValue === 1 && reviews.length === 0) {
+      if (tabValue === 1) {
         loadUserReviews();
-      } else if (tabValue === 2 && listings.length === 0) {
+      } else if (tabValue === 2) {
         loadUserListings();
-      } else if (tabValue === 3 && !balance) {
+      } else if (tabValue === 3) {
         loadUserBalance();
         loadUserTransactions();
       }
@@ -121,7 +121,27 @@ const UserDetailsDialog = ({ open, onClose, userId }) => {
     try {
       // Используем фильтр по user_id для получения объявлений пользователя
       const response = await axios.get(`/api/v1/marketplace/listings?user_id=${userId}`);
-      setListings(response.data.data || []);
+      console.log('Получены объявления пользователя:', response.data);
+      console.log('Структура данных:', JSON.stringify(response.data));
+      
+      // Извлекаем данные из структуры ответа
+      let listingsData = [];
+      if (response.data && response.data.data && Array.isArray(response.data.data.data)) {
+        // Если структура: response.data.data.data[]
+        listingsData = response.data.data.data;
+        console.log('Найдены данные в response.data.data.data:', listingsData.length, 'объявлений');
+      } else if (response.data && Array.isArray(response.data.data)) {
+        // Если структура: response.data.data[]
+        listingsData = response.data.data;
+        console.log('Найдены данные в response.data.data:', listingsData.length, 'объявлений');
+      } else if (response.data && Array.isArray(response.data)) {
+        // Если структура: response.data[]
+        listingsData = response.data;
+        console.log('Найдены данные в response.data:', listingsData.length, 'объявлений');
+      }
+      
+      console.log('Финальные данные объявлений:', listingsData);
+      setListings(listingsData);
     } catch (err) {
       console.error('Ошибка при загрузке объявлений пользователя:', err);
     } finally {
@@ -400,11 +420,14 @@ const UserDetailsDialog = ({ open, onClose, userId }) => {
 
                   {/* Вкладка Объявления */}
                   <TabPanel value={tabValue} index={2}>
+                    {console.log('Отображение вкладки объявлений. Данные:', listings)}
+                    {console.log('Количество объявлений:', listings ? listings.length : 0)}
+                    
                     {loadingData.listings ? (
                         <Box display="flex" justifyContent="center" p={3}>
                           <CircularProgress />
                         </Box>
-                    ) : listings.length > 0 ? (
+                    ) : listings && listings.length > 0 ? (
                         <TableContainer component={Paper}>
                           <Table>
                             <TableHead>
@@ -418,22 +441,25 @@ const UserDetailsDialog = ({ open, onClose, userId }) => {
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {listings.map((listing) => (
-                                  <TableRow key={listing.id}>
-                                    <TableCell>{listing.id}</TableCell>
-                                    <TableCell>{listing.title}</TableCell>
-                                    <TableCell>{listing.price} {listing.currency || 'RSD'}</TableCell>
-                                    <TableCell>
-                                      <Chip
-                                          label={listing.status}
-                                          color={listing.status === 'active' ? 'success' : listing.status === 'draft' ? 'warning' : 'default'}
-                                          size="small"
-                                      />
-                                    </TableCell>
-                                    <TableCell>{listing.views_count}</TableCell>
-                                    <TableCell>{formatDate(listing.created_at)}</TableCell>
-                                  </TableRow>
-                              ))}
+                              {listings.map((listing) => {
+                                  console.log('Отображение объявления:', listing);
+                                  return (
+                                    <TableRow key={listing.id}>
+                                      <TableCell>{listing.id}</TableCell>
+                                      <TableCell>{listing.title}</TableCell>
+                                      <TableCell>{listing.price} {listing.currency || 'RSD'}</TableCell>
+                                      <TableCell>
+                                        <Chip
+                                            label={listing.status}
+                                            color={listing.status === 'active' ? 'success' : listing.status === 'draft' ? 'warning' : 'default'}
+                                            size="small"
+                                        />
+                                      </TableCell>
+                                      <TableCell>{listing.views_count}</TableCell>
+                                      <TableCell>{formatDate(listing.created_at)}</TableCell>
+                                    </TableRow>
+                                  );
+                              })}
                             </TableBody>
                           </Table>
                         </TableContainer>

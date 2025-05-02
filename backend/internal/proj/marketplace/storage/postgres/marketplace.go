@@ -3,41 +3,43 @@ package postgres
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/proj/marketplace/service"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"regexp"
-	"backend/internal/proj/marketplace/service"
 	"log"
-	"strings"
 	"math"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
-    "sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	//"time"
 	// "github.com/jackc/pgx/v5"
 )
+
 var (
-    attributeCacheMutex sync.RWMutex
-    attributeCache      map[int][]models.CategoryAttribute
-    attributeCacheTime  map[int]time.Time
-    
-    rangesCacheMutex sync.RWMutex
-    rangesCache      map[int]map[string]map[string]interface{}
-    rangesCacheTime  map[int]time.Time
-    
-    cacheTTL = 30 * time.Minute
+	attributeCacheMutex sync.RWMutex
+	attributeCache      map[int][]models.CategoryAttribute
+	attributeCacheTime  map[int]time.Time
+
+	rangesCacheMutex sync.RWMutex
+	rangesCache      map[int]map[string]map[string]interface{}
+	rangesCacheTime  map[int]time.Time
+
+	cacheTTL = 30 * time.Minute
 )
 
 func init() {
-    attributeCache = make(map[int][]models.CategoryAttribute)
-    attributeCacheTime = make(map[int]time.Time)
-    rangesCache = make(map[int]map[string]map[string]interface{})
-    rangesCacheTime = make(map[int]time.Time)
+	attributeCache = make(map[int][]models.CategoryAttribute)
+	attributeCacheTime = make(map[int]time.Time)
+	rangesCache = make(map[int]map[string]map[string]interface{})
+	rangesCacheTime = make(map[int]time.Time)
 }
+
 type Storage struct {
 	pool               *pgxpool.Pool
 	translationService service.TranslationServiceInterface
@@ -134,20 +136,20 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 	var listingID int
 
 	// Если не указан язык, берем значение из контекста или используем по умолчанию
-    if listing.OriginalLanguage == "" {
-        // Пытаемся получить язык из контекста
-        if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
-            listing.OriginalLanguage = userLang
-            log.Printf("Using language from context: %s", userLang)
-        } else if userLang, ok := ctx.Value("Accept-Language").(string); ok && userLang != "" {
-            listing.OriginalLanguage = userLang
-            log.Printf("Using language from Accept-Language header: %s", userLang)
-        } else {
-            // Используем русский по умолчанию, т.к. большинство пользователей русскоговорящие
-            listing.OriginalLanguage = "ru"
-            log.Printf("Using default language (ru)")
-        }
-    }
+	if listing.OriginalLanguage == "" {
+		// Пытаемся получить язык из контекста
+		if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
+			listing.OriginalLanguage = userLang
+			log.Printf("Using language from context: %s", userLang)
+		} else if userLang, ok := ctx.Value("Accept-Language").(string); ok && userLang != "" {
+			listing.OriginalLanguage = userLang
+			log.Printf("Using language from Accept-Language header: %s", userLang)
+		} else {
+			// Используем русский по умолчанию, т.к. большинство пользователей русскоговорящие
+			listing.OriginalLanguage = "ru"
+			log.Printf("Using default language (ru)")
+		}
+	}
 
 	// Вставляем основные данные объявления
 	err := s.pool.QueryRow(ctx, `
@@ -212,24 +214,24 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 }
 
 func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
-    var id int
-    err := s.pool.QueryRow(ctx, `
+	var id int
+	err := s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_images 
         (listing_id, file_path, file_name, file_size, content_type, is_main, storage_type, storage_bucket, public_url, created_at) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) 
         RETURNING id
     `, image.ListingID, image.FilePath, image.FileName, image.FileSize, image.ContentType, image.IsMain,
-    image.StorageType, image.StorageBucket, image.PublicURL).Scan(&id)
-    
-    if err != nil {
-        return 0, err
-    }
-    
-    return id, nil
+		image.StorageType, image.StorageBucket, image.PublicURL).Scan(&id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
- func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-    query := `
+func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
+	query := `
         SELECT 
             id, listing_id, file_path, file_name, file_size, 
             content_type, is_main, created_at, 
@@ -238,28 +240,28 @@ func (s *Storage) AddListingImage(ctx context.Context, image *models.Marketplace
         WHERE listing_id = $1
         ORDER BY is_main DESC, id ASC
     `
-    
-    rows, err := s.pool.Query(ctx, query, listingID)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
-    
-    var images []models.MarketplaceImage
-    for rows.Next() {
-        var image models.MarketplaceImage
-        err := rows.Scan(
-            &image.ID, &image.ListingID, &image.FilePath, &image.FileName, 
-            &image.FileSize, &image.ContentType, &image.IsMain, &image.CreatedAt,
-            &image.StorageType, &image.StorageBucket, &image.PublicURL,
-        )
-        if err != nil {
-            return nil, err
-        }
-        images = append(images, image)
-    }
-    
-    return images, nil
+
+	rows, err := s.pool.Query(ctx, query, listingID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var images []models.MarketplaceImage
+	for rows.Next() {
+		var image models.MarketplaceImage
+		err := rows.Scan(
+			&image.ID, &image.ListingID, &image.FilePath, &image.FileName,
+			&image.FileSize, &image.ContentType, &image.IsMain, &image.CreatedAt,
+			&image.StorageType, &image.StorageBucket, &image.PublicURL,
+		)
+		if err != nil {
+			return nil, err
+		}
+		images = append(images, image)
+	}
+
+	return images, nil
 }
 
 func (s *Storage) DeleteListingImage(ctx context.Context, imageID string) (string, error) {
@@ -472,6 +474,13 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			conditions = append(conditions, fmt.Sprintf("AND l.storefront_id = $%d", argCount))
 			args = append(args, v)
 		}
+	}
+
+	// Добавляем фильтр по user_id
+	if v, ok := filters["user_id"]; ok && v != "" {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("AND l.user_id = $%d", argCount))
+		args = append(args, v)
 	}
 
 	if len(conditions) > 0 {
@@ -961,24 +970,24 @@ func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 }
 
 func (s *Storage) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-    // Проверяем, не равен ли category_id нулю
-    if listing.CategoryID == 0 {
-        // Если category_id = 0, запрашиваем текущее значение из базы
-        var currentCategoryID int
-        err := s.pool.QueryRow(ctx, `
+	// Проверяем, не равен ли category_id нулю
+	if listing.CategoryID == 0 {
+		// Если category_id = 0, запрашиваем текущее значение из базы
+		var currentCategoryID int
+		err := s.pool.QueryRow(ctx, `
             SELECT category_id FROM marketplace_listings WHERE id = $1
         `, listing.ID).Scan(&currentCategoryID)
-        
-        if err != nil {
-            log.Printf("Ошибка при получении текущей категории: %v", err)
-        } else if currentCategoryID > 0 {
-            // Используем текущую категорию, если она не нулевая
-            log.Printf("Заменяем нулевую категорию текущей категорией %d для объявления %d", currentCategoryID, listing.ID)
-            listing.CategoryID = currentCategoryID
-        }
-    }
 
-    result, err := s.pool.Exec(ctx, `
+		if err != nil {
+			log.Printf("Ошибка при получении текущей категории: %v", err)
+		} else if currentCategoryID > 0 {
+			// Используем текущую категорию, если она не нулевая
+			log.Printf("Заменяем нулевую категорию текущей категорией %d для объявления %d", currentCategoryID, listing.ID)
+			listing.CategoryID = currentCategoryID
+		}
+	}
+
+	result, err := s.pool.Exec(ctx, `
         UPDATE marketplace_listings
         SET 
             title = $1,
@@ -997,261 +1006,257 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $14 AND user_id = $15
     `,
-        listing.Title,
-        listing.Description,
-        listing.Price,
-        listing.Condition,
-        listing.Status,
-        listing.Location,
-        listing.Latitude,
-        listing.Longitude,
-        listing.City,
-        listing.Country,
-        listing.ShowOnMap,
-        listing.CategoryID,
-        listing.OriginalLanguage,
-        listing.ID,
-        listing.UserID,
-    )
+		listing.Title,
+		listing.Description,
+		listing.Price,
+		listing.Condition,
+		listing.Status,
+		listing.Location,
+		listing.Latitude,
+		listing.Longitude,
+		listing.City,
+		listing.Country,
+		listing.ShowOnMap,
+		listing.CategoryID,
+		listing.OriginalLanguage,
+		listing.ID,
+		listing.UserID,
+	)
 
-    if err != nil {
-        return fmt.Errorf("error updating listing: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("error updating listing: %w", err)
+	}
 
-    rowsAffected := result.RowsAffected()
-    if rowsAffected == 0 {
-        return fmt.Errorf("listing not found or you don't have permission to update it")
-    }
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("listing not found or you don't have permission to update it")
+	}
 
-    // Проверяем, переданы ли атрибуты в запросе
-    if listing.Attributes != nil {
-        // Атрибуты переданы, обновляем их
-        if err := s.SaveListingAttributes(ctx, listing.ID, listing.Attributes); err != nil {
-            log.Printf("Error updating attributes for listing %d: %v", listing.ID, err)
-            // Продолжаем выполнение даже при ошибке с атрибутами
-        }
-    } else {
-        // Атрибуты не переданы, логируем информацию
-        log.Printf("No attributes provided in update for listing %d, existing attributes preserved", listing.ID)
-    }
+	// Проверяем, переданы ли атрибуты в запросе
+	if listing.Attributes != nil {
+		// Атрибуты переданы, обновляем их
+		if err := s.SaveListingAttributes(ctx, listing.ID, listing.Attributes); err != nil {
+			log.Printf("Error updating attributes for listing %d: %v", listing.ID, err)
+			// Продолжаем выполнение даже при ошибке с атрибутами
+		}
+	} else {
+		// Атрибуты не переданы, логируем информацию
+		log.Printf("No attributes provided in update for listing %d, existing attributes preserved", listing.ID)
+	}
 
-    return nil
+	return nil
 }
-
 
 // Добавить эту функцию перед SaveListingAttributes
 func sanitizeAttributeValue(attr *models.ListingAttributeValue) {
-    // Ограничение длины текстовых атрибутов
-    if attr.TextValue != nil {
-        if len(*attr.TextValue) > 1000 {
-            truncated := (*attr.TextValue)[:1000]
-            attr.TextValue = &truncated
-            log.Printf("Attribute value truncated for attribute %s (ID: %d)", 
-                      attr.AttributeName, attr.AttributeID)
-        }
-    }
-    
-    // Проверка на NaN и Inf для числовых атрибутов
-    if attr.NumericValue != nil {
-        numVal := *attr.NumericValue
-        if math.IsNaN(numVal) || math.IsInf(numVal, 0) {
-            defaultVal := 0.0
-            attr.NumericValue = &defaultVal
-            log.Printf("Invalid numeric value (NaN/Inf) replaced with 0 for attribute %s (ID: %d)",
-                      attr.AttributeName, attr.AttributeID)
-        }
-    }
-    
-    // Стандартизация обработки пустых значений
-    if attr.TextValue != nil && *attr.TextValue == "" {
-        attr.TextValue = nil // Пустые строки -> NULL
-    }
+	// Ограничение длины текстовых атрибутов
+	if attr.TextValue != nil {
+		if len(*attr.TextValue) > 1000 {
+			truncated := (*attr.TextValue)[:1000]
+			attr.TextValue = &truncated
+			log.Printf("Attribute value truncated for attribute %s (ID: %d)",
+				attr.AttributeName, attr.AttributeID)
+		}
+	}
 
-    if attr.NumericValue != nil && *attr.NumericValue == 0 {
-        // Для некоторых атрибутов нуль может быть валидным значением
-        // Проверяем название атрибута
-        if !isZeroValidValue(attr.AttributeName) {
-            attr.NumericValue = nil
-        }
-    }
+	// Проверка на NaN и Inf для числовых атрибутов
+	if attr.NumericValue != nil {
+		numVal := *attr.NumericValue
+		if math.IsNaN(numVal) || math.IsInf(numVal, 0) {
+			defaultVal := 0.0
+			attr.NumericValue = &defaultVal
+			log.Printf("Invalid numeric value (NaN/Inf) replaced with 0 for attribute %s (ID: %d)",
+				attr.AttributeName, attr.AttributeID)
+		}
+	}
 
-    // Если все значения NULL, устанавливаем DisplayValue в пустую строку
-    if attr.TextValue == nil && attr.NumericValue == nil && 
-       attr.BooleanValue == nil && attr.JSONValue == nil {
-        attr.DisplayValue = ""
-    }
+	// Стандартизация обработки пустых значений
+	if attr.TextValue != nil && *attr.TextValue == "" {
+		attr.TextValue = nil // Пустые строки -> NULL
+	}
+
+	if attr.NumericValue != nil && *attr.NumericValue == 0 {
+		// Для некоторых атрибутов нуль может быть валидным значением
+		// Проверяем название атрибута
+		if !isZeroValidValue(attr.AttributeName) {
+			attr.NumericValue = nil
+		}
+	}
+
+	// Если все значения NULL, устанавливаем DisplayValue в пустую строку
+	if attr.TextValue == nil && attr.NumericValue == nil &&
+		attr.BooleanValue == nil && attr.JSONValue == nil {
+		attr.DisplayValue = ""
+	}
 }
 
 // Функция определяет, является ли нулевое значение допустимым для атрибута
 func isZeroValidValue(attrName string) bool {
-    // Для этих атрибутов ноль - допустимое значение
-    zeroValidAttrs := map[string]bool{
-        "floor": true,       // Например, цокольный этаж
-        "mileage": true,     // Для новых автомобилей
-        "price": true,       // Для бесплатных объявлений
-    }
-    return zeroValidAttrs[attrName]
+	// Для этих атрибутов ноль - допустимое значение
+	zeroValidAttrs := map[string]bool{
+		"floor":   true, // Например, цокольный этаж
+		"mileage": true, // Для новых автомобилей
+		"price":   true, // Для бесплатных объявлений
+	}
+	return zeroValidAttrs[attrName]
 }
-
-
-
 
 // SaveListingAttributes сохраняет значения атрибутов для объявления
 func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
-    log.Printf("Saving %d attributes for listing %d", len(attributes), listingID)
+	log.Printf("Saving %d attributes for listing %d", len(attributes), listingID)
 
-    // Начинаем транзакцию
-    tx, err := s.pool.Begin(ctx)
-    if err != nil {
-        return fmt.Errorf("error starting transaction: %w", err)
-    }
-    defer tx.Rollback(ctx)
+	// Начинаем транзакцию
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
 
-    // Удаляем старые атрибуты
-    _, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)
-    if err != nil {
-        return fmt.Errorf("error deleting old attributes: %w", err)
-    }
+	// Удаляем старые атрибуты
+	_, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)
+	if err != nil {
+		return fmt.Errorf("error deleting old attributes: %w", err)
+	}
 
-    // Проверяем, есть ли атрибуты для сохранения
-    if len(attributes) == 0 {
-        log.Printf("Storage: No attributes to save for listing %d", listingID)
-        return tx.Commit(ctx)
-    }
+	// Проверяем, есть ли атрибуты для сохранения
+	if len(attributes) == 0 {
+		log.Printf("Storage: No attributes to save for listing %d", listingID)
+		return tx.Commit(ctx)
+	}
 
-    // Карта для отслеживания уникальных attribute_id
-    seen := make(map[int]bool)
-    valueStrings := make([]string, 0, len(attributes))
-    valueArgs := make([]interface{}, 0, len(attributes)*7) // 7 параметров включая unit
-    counter := 1
+	// Карта для отслеживания уникальных attribute_id
+	seen := make(map[int]bool)
+	valueStrings := make([]string, 0, len(attributes))
+	valueArgs := make([]interface{}, 0, len(attributes)*7) // 7 параметров включая unit
+	counter := 1
 
-    for i, attr := range attributes {
-        // Санитизация значений атрибутов
-        sanitizeAttributeValue(&attr)
-        attributes[i] = attr
-        
-        // Проверка на нулевые или некорректные attribute_id
-        if attr.AttributeID <= 0 {
-            log.Printf("Storage: Invalid attribute ID: %d, skipping", attr.AttributeID)
-            continue
-        }
+	for i, attr := range attributes {
+		// Санитизация значений атрибутов
+		sanitizeAttributeValue(&attr)
+		attributes[i] = attr
 
-        // Определяем единицу измерения на основе имени атрибута или используем указанную
-        var unit string
-        if attr.Unit != "" {
-            unit = attr.Unit
-        } else {
-            switch attr.AttributeName {
-            case "area":
-                unit = "m²"
-            case "land_area":
-                unit = "ar"
-            case "mileage":
-                unit = "km"
-            case "engine_capacity":
-                unit = "l"
-            case "power":
-                unit = "ks"
-            case "screen_size":
-                unit = "inč"
-            case "rooms":
-                unit = "soba"
-            case "floor", "total_floors":
-                unit = "sprat"
-            }
-        }
+		// Проверка на нулевые или некорректные attribute_id
+		if attr.AttributeID <= 0 {
+			log.Printf("Storage: Invalid attribute ID: %d, skipping", attr.AttributeID)
+			continue
+		}
 
-        // Числовые атрибуты - дополнительная обработка
-        if attr.NumericValue == nil && attr.TextValue != nil && *attr.TextValue != "" {
-            // Список числовых атрибутов для конвертации
-            numericAttrs := map[string]bool{
-                "rooms": true, "floor": true, "total_floors": true, "area": true, 
-                "land_area": true, "mileage": true, "year": true, "engine_capacity": true,
-                "power": true, "screen_size": true,
-            }
-            
-            if numericAttrs[attr.AttributeName] {
-                // Преобразуем текст в число
-                clean := regexp.MustCompile(`[^\d\.-]`).ReplaceAllString(*attr.TextValue, "")
-                if numVal, err := strconv.ParseFloat(clean, 64); err == nil {
-                    attr.NumericValue = &numVal
-                    log.Printf("Converted text value '%s' to numeric: %f for attribute %s", 
-                              *attr.TextValue, numVal, attr.AttributeName)
-                }
-            }
-        }
+		// Определяем единицу измерения на основе имени атрибута или используем указанную
+		var unit string
+		if attr.Unit != "" {
+			unit = attr.Unit
+		} else {
+			switch attr.AttributeName {
+			case "area":
+				unit = "m²"
+			case "land_area":
+				unit = "ar"
+			case "mileage":
+				unit = "km"
+			case "engine_capacity":
+				unit = "l"
+			case "power":
+				unit = "ks"
+			case "screen_size":
+				unit = "inč"
+			case "rooms":
+				unit = "soba"
+			case "floor", "total_floors":
+				unit = "sprat"
+			}
+		}
 
-        // Проверка на дубликаты по attribute_id
-        if seen[attr.AttributeID] {
-            log.Printf("Storage: Duplicate attribute ID %d for listing %d, skipping", attr.AttributeID, listingID)
-            continue
-        }
-        seen[attr.AttributeID] = true
+		// Числовые атрибуты - дополнительная обработка
+		if attr.NumericValue == nil && attr.TextValue != nil && *attr.TextValue != "" {
+			// Список числовых атрибутов для конвертации
+			numericAttrs := map[string]bool{
+				"rooms": true, "floor": true, "total_floors": true, "area": true,
+				"land_area": true, "mileage": true, "year": true, "engine_capacity": true,
+				"power": true, "screen_size": true,
+			}
 
-        // Проверяем, что есть хотя бы одно значение для сохранения
-        hasValue := attr.TextValue != nil || attr.NumericValue != nil ||
-                    attr.BooleanValue != nil || attr.JSONValue != nil ||
-                    attr.DisplayValue != ""
-        if !hasValue {
-            log.Printf("Storage: No value provided for attribute %d, skipping", attr.AttributeID)
-            continue
-        }
+			if numericAttrs[attr.AttributeName] {
+				// Преобразуем текст в число
+				clean := regexp.MustCompile(`[^\d\.-]`).ReplaceAllString(*attr.TextValue, "")
+				if numVal, err := strconv.ParseFloat(clean, 64); err == nil {
+					attr.NumericValue = &numVal
+					log.Printf("Converted text value '%s' to numeric: %f for attribute %s",
+						*attr.TextValue, numVal, attr.AttributeName)
+				}
+			}
+		}
 
-        // Подготавливаем часть запроса для этого атрибута, добавляя unit
-        valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-            counter, counter+1, counter+2, counter+3, counter+4, counter+5, counter+6))
+		// Проверка на дубликаты по attribute_id
+		if seen[attr.AttributeID] {
+			log.Printf("Storage: Duplicate attribute ID %d for listing %d, skipping", attr.AttributeID, listingID)
+			continue
+		}
+		seen[attr.AttributeID] = true
 
-        // Добавляем параметры
-        valueArgs = append(valueArgs, listingID, attr.AttributeID)
+		// Проверяем, что есть хотя бы одно значение для сохранения
+		hasValue := attr.TextValue != nil || attr.NumericValue != nil ||
+			attr.BooleanValue != nil || attr.JSONValue != nil ||
+			attr.DisplayValue != ""
+		if !hasValue {
+			log.Printf("Storage: No value provided for attribute %d, skipping", attr.AttributeID)
+			continue
+		}
 
-        // Текстовое значение
-        if attr.TextValue != nil && *attr.TextValue != "" {
-            valueArgs = append(valueArgs, *attr.TextValue)
-        } else {
-            valueArgs = append(valueArgs, nil)
-        }
+		// Подготавливаем часть запроса для этого атрибута, добавляя unit
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			counter, counter+1, counter+2, counter+3, counter+4, counter+5, counter+6))
 
-        // Числовое значение с проверками
-        if attr.NumericValue != nil {
-            numericVal := *attr.NumericValue
-            // Проверка на NaN или Inf
-            if math.IsNaN(numericVal) || math.IsInf(numericVal, 0) {
-                log.Printf("Storage: Invalid numeric value (NaN/Inf) for attribute %d, using 0", attr.AttributeID)
-                numericVal = 0.0
-            }
-            valueArgs = append(valueArgs, numericVal)
-        } else {
-            valueArgs = append(valueArgs, nil)
-        }
+		// Добавляем параметры
+		valueArgs = append(valueArgs, listingID, attr.AttributeID)
 
-        // Логическое значение
-        if attr.BooleanValue != nil {
-            valueArgs = append(valueArgs, *attr.BooleanValue)
-        } else {
-            valueArgs = append(valueArgs, nil)
-        }
+		// Текстовое значение
+		if attr.TextValue != nil && *attr.TextValue != "" {
+			valueArgs = append(valueArgs, *attr.TextValue)
+		} else {
+			valueArgs = append(valueArgs, nil)
+		}
 
-        // JSON значение
-        if attr.JSONValue != nil && len(attr.JSONValue) > 0 {
-            valueArgs = append(valueArgs, string(attr.JSONValue))
-        } else {
-            valueArgs = append(valueArgs, nil)
-        }
+		// Числовое значение с проверками
+		if attr.NumericValue != nil {
+			numericVal := *attr.NumericValue
+			// Проверка на NaN или Inf
+			if math.IsNaN(numericVal) || math.IsInf(numericVal, 0) {
+				log.Printf("Storage: Invalid numeric value (NaN/Inf) for attribute %d, using 0", attr.AttributeID)
+				numericVal = 0.0
+			}
+			valueArgs = append(valueArgs, numericVal)
+		} else {
+			valueArgs = append(valueArgs, nil)
+		}
 
-        // Добавляем единицу измерения
-        valueArgs = append(valueArgs, unit)
+		// Логическое значение
+		if attr.BooleanValue != nil {
+			valueArgs = append(valueArgs, *attr.BooleanValue)
+		} else {
+			valueArgs = append(valueArgs, nil)
+		}
 
-        counter += 7
-    }
+		// JSON значение
+		if attr.JSONValue != nil && len(attr.JSONValue) > 0 {
+			valueArgs = append(valueArgs, string(attr.JSONValue))
+		} else {
+			valueArgs = append(valueArgs, nil)
+		}
 
-    // Если нет атрибутов для вставки, завершаем транзакцию
-    if len(valueStrings) == 0 {
-        log.Printf("Storage: No valid attributes found for listing %d after filtering", listingID)
-        return tx.Commit(ctx)
-    }
+		// Добавляем единицу измерения
+		valueArgs = append(valueArgs, unit)
 
-    // Составляем запрос для множественной вставки
-    query := fmt.Sprintf(`
+		counter += 7
+	}
+
+	// Если нет атрибутов для вставки, завершаем транзакцию
+	if len(valueStrings) == 0 {
+		log.Printf("Storage: No valid attributes found for listing %d after filtering", listingID)
+		return tx.Commit(ctx)
+	}
+
+	// Составляем запрос для множественной вставки
+	query := fmt.Sprintf(`
         INSERT INTO listing_attribute_values (
             listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit
         ) VALUES %s
@@ -1263,52 +1268,51 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
             unit = EXCLUDED.unit
     `, strings.Join(valueStrings, ","))
 
-    // Выполняем запрос
-    _, err = tx.Exec(ctx, query, valueArgs...)
-    if err != nil {
-        log.Printf("Storage: Error executing bulk insert: %v", err)
-        log.Printf("Storage: Query: %s", query)
-        log.Printf("Storage: Args: %+v", valueArgs)
-        return fmt.Errorf("error inserting attribute values: %w", err)
-    }
+	// Выполняем запрос
+	_, err = tx.Exec(ctx, query, valueArgs...)
+	if err != nil {
+		log.Printf("Storage: Error executing bulk insert: %v", err)
+		log.Printf("Storage: Query: %s", query)
+		log.Printf("Storage: Args: %+v", valueArgs)
+		return fmt.Errorf("error inserting attribute values: %w", err)
+	}
 
-    // Фиксируем транзакцию
-    if err = tx.Commit(ctx); err != nil {
-        return fmt.Errorf("error committing transaction: %w", err)
-    }
+	// Фиксируем транзакцию
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("error committing transaction: %w", err)
+	}
 
-    log.Printf("Storage: Successfully saved %d unique attributes for listing %d", len(valueStrings), listingID)
-    return nil
+	log.Printf("Storage: Successfully saved %d unique attributes for listing %d", len(valueStrings), listingID)
+	return nil
 }
-
 
 // Добавить в файле marketplace.go
 func (s *Storage) GetFormattedAttributeValue(ctx context.Context, attr models.ListingAttributeValue, language string) string {
-    // Для числовых атрибутов с единицей измерения
-    if attr.NumericValue != nil && attr.Unit != "" {
-        // Получаем перевод единицы измерения
-        var displayFormat string
-        err := s.pool.QueryRow(ctx, `
+	// Для числовых атрибутов с единицей измерения
+	if attr.NumericValue != nil && attr.Unit != "" {
+		// Получаем перевод единицы измерения
+		var displayFormat string
+		err := s.pool.QueryRow(ctx, `
             SELECT display_format FROM unit_translations 
             WHERE unit = $1 AND language = $2
         `, attr.Unit, language).Scan(&displayFormat)
-        
-        if err == nil && displayFormat != "" {
-            // Используем формат для отображения
-            return fmt.Sprintf(displayFormat, *attr.NumericValue)
-        }
-        
-        // Если не нашли перевод, используем стандартный формат
-        return fmt.Sprintf("%g %s", *attr.NumericValue, attr.Unit)
-    }
-    
-    // Для других типов атрибутов возвращаем DisplayValue
-    return attr.DisplayValue
+
+		if err == nil && displayFormat != "" {
+			// Используем формат для отображения
+			return fmt.Sprintf(displayFormat, *attr.NumericValue)
+		}
+
+		// Если не нашли перевод, используем стандартный формат
+		return fmt.Sprintf("%g %s", *attr.NumericValue, attr.Unit)
+	}
+
+	// Для других типов атрибутов возвращаем DisplayValue
+	return attr.DisplayValue
 }
 
 // GetListingAttributes получает значения атрибутов для объявления
 func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
-    query := `
+	query := `
         SELECT DISTINCT ON (a.id) 
             v.listing_id,
             v.attribute_id,
@@ -1357,169 +1361,169 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
         ORDER BY a.id, a.sort_order, a.display_name
     `
 
-    rows, err := s.pool.Query(ctx, query, listingID)
-    if err != nil {
-        return nil, fmt.Errorf("error querying listing attributes: %w", err)
-    }
-    defer rows.Close()
+	rows, err := s.pool.Query(ctx, query, listingID)
+	if err != nil {
+		return nil, fmt.Errorf("error querying listing attributes: %w", err)
+	}
+	defer rows.Close()
 
-    log.Printf("Запрос атрибутов для объявления %d", listingID)
-    var allAttributes []models.ListingAttributeValue
-    
-    // Для защиты от дубликатов по ID атрибута используем карту
-    seen := make(map[int]bool)
+	log.Printf("Запрос атрибутов для объявления %d", listingID)
+	var allAttributes []models.ListingAttributeValue
 
-    for rows.Next() {
-        var attr models.ListingAttributeValue
-        var textValue sql.NullString
-        var numericValue sql.NullFloat64
-        var boolValue sql.NullBool
-        var jsonValue sql.NullString
-        var unit sql.NullString
-        var translationsJson []byte
-        var optionTranslationsJson []byte
+	// Для защиты от дубликатов по ID атрибута используем карту
+	seen := make(map[int]bool)
 
-        if err := rows.Scan(
-            &attr.ListingID,
-            &attr.AttributeID,
-            &attr.AttributeName,
-            &attr.DisplayName,
-            &attr.AttributeType,
-            &textValue,
-            &numericValue,
-            &boolValue,
-            &jsonValue,
-            &unit,
-            &translationsJson,
-            &optionTranslationsJson,
-        ); err != nil {
-            log.Printf("Error scanning attribute: %v", err)
-            return nil, fmt.Errorf("error scanning listing attribute: %w", err)
-        }
+	for rows.Next() {
+		var attr models.ListingAttributeValue
+		var textValue sql.NullString
+		var numericValue sql.NullFloat64
+		var boolValue sql.NullBool
+		var jsonValue sql.NullString
+		var unit sql.NullString
+		var translationsJson []byte
+		var optionTranslationsJson []byte
 
-        // Добавляем переводы атрибута
-        if err := json.Unmarshal(translationsJson, &attr.Translations); err != nil {
-            log.Printf("Error unmarshal attribute translations: %v", err)
-            attr.Translations = make(map[string]string)
-        }
+		if err := rows.Scan(
+			&attr.ListingID,
+			&attr.AttributeID,
+			&attr.AttributeName,
+			&attr.DisplayName,
+			&attr.AttributeType,
+			&textValue,
+			&numericValue,
+			&boolValue,
+			&jsonValue,
+			&unit,
+			&translationsJson,
+			&optionTranslationsJson,
+		); err != nil {
+			log.Printf("Error scanning attribute: %v", err)
+			return nil, fmt.Errorf("error scanning listing attribute: %w", err)
+		}
 
-        // Добавляем переводы опций атрибута
-        if err := json.Unmarshal(optionTranslationsJson, &attr.OptionTranslations); err != nil {
-            log.Printf("Error unmarshal option translations: %v", err)
-            attr.OptionTranslations = make(map[string]map[string]string)
-        }
+		// Добавляем переводы атрибута
+		if err := json.Unmarshal(translationsJson, &attr.Translations); err != nil {
+			log.Printf("Error unmarshal attribute translations: %v", err)
+			attr.Translations = make(map[string]string)
+		}
 
-        // Проверяем, не добавляли ли мы уже этот атрибут
-        if seen[attr.AttributeID] {
-            log.Printf("WARNING: Skipping duplicate attribute ID=%d, Name=%s", 
-                       attr.AttributeID, attr.AttributeName)
-            continue
-        }
-        seen[attr.AttributeID] = true
+		// Добавляем переводы опций атрибута
+		if err := json.Unmarshal(optionTranslationsJson, &attr.OptionTranslations); err != nil {
+			log.Printf("Error unmarshal option translations: %v", err)
+			attr.OptionTranslations = make(map[string]map[string]string)
+		}
 
-        // Сохраняем единицу измерения
-        if unit.Valid {
-            attr.Unit = unit.String
-        }
+		// Проверяем, не добавляли ли мы уже этот атрибут
+		if seen[attr.AttributeID] {
+			log.Printf("WARNING: Skipping duplicate attribute ID=%d, Name=%s",
+				attr.AttributeID, attr.AttributeName)
+			continue
+		}
+		seen[attr.AttributeID] = true
 
-        // Заполняем значения в зависимости от типа
-        if textValue.Valid {
-            attr.TextValue = &textValue.String
-            attr.DisplayValue = textValue.String
-            log.Printf("DEBUG: Attribute %d (%s) has text value: %s",
-                attr.AttributeID, attr.AttributeName, textValue.String)
-        }
-        
-        if numericValue.Valid {
-            attr.NumericValue = &numericValue.Float64
-            
-            // Создаем отображаемое значение с учетом единиц измерения
-            unitStr := attr.Unit // Используем сохраненную единицу или определяем по имени атрибута
-            if unitStr == "" {
-                // Определяем единицу измерения на основе имени атрибута
-                switch attr.AttributeName {
-                case "area":
-                    unitStr = "m²"
-                case "land_area":
-                    unitStr = "ar"
-                case "mileage":
-                    unitStr = "km"
-                case "engine_capacity":
-                    unitStr = "l"
-                case "power":
-                    unitStr = "ks"
-                case "screen_size":
-                    unitStr = "inč"
-                }
-            }
-            
-            // Форматируем отображаемое значение с учетом типа
-            if attr.AttributeName == "year" {
-                attr.DisplayValue = fmt.Sprintf("%d", int(numericValue.Float64))
-            } else if unitStr != "" {
-                attr.DisplayValue = fmt.Sprintf("%g %s", numericValue.Float64, unitStr)
-            } else {
-                attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
-            }
-            
-            log.Printf("DEBUG: Attribute %d (%s) has numeric value: %f, display: %s",
-                attr.AttributeID, attr.AttributeName, numericValue.Float64, attr.DisplayValue)
-        }
-        
-        if boolValue.Valid {
-            attr.BooleanValue = &boolValue.Bool
-            if boolValue.Bool {
-                attr.DisplayValue = "Да"
-            } else {
-                attr.DisplayValue = "Нет"
-            }
-            log.Printf("DEBUG: Attribute %d (%s) has boolean value: %t",
-                attr.AttributeID, attr.AttributeName, boolValue.Bool)
-        }
-        
-        if jsonValue.Valid {
-            attr.JSONValue = json.RawMessage(jsonValue.String)
-            // Для multiselect можно форматировать массив значений
-            if attr.AttributeType == "multiselect" {
-                var values []string
-                if err := json.Unmarshal(attr.JSONValue, &values); err == nil {
-                    attr.DisplayValue = strings.Join(values, ", ")
-                }
-            } else {
-                attr.DisplayValue = jsonValue.String
-            }
-            log.Printf("DEBUG: Attribute %d (%s) has JSON value: %s",
-                attr.AttributeID, attr.AttributeName, jsonValue.String)
-        }
+		// Сохраняем единицу измерения
+		if unit.Valid {
+			attr.Unit = unit.String
+		}
 
-        allAttributes = append(allAttributes, attr)
-    }
+		// Заполняем значения в зависимости от типа
+		if textValue.Valid {
+			attr.TextValue = &textValue.String
+			attr.DisplayValue = textValue.String
+			log.Printf("DEBUG: Attribute %d (%s) has text value: %s",
+				attr.AttributeID, attr.AttributeName, textValue.String)
+		}
 
-    log.Printf("DEBUG: Found %d unique attributes for listing %d", len(allAttributes), listingID)
+		if numericValue.Valid {
+			attr.NumericValue = &numericValue.Float64
 
-    if err := rows.Err(); err != nil {
-        return nil, fmt.Errorf("error iterating listing attributes: %w", err)
-    }
+			// Создаем отображаемое значение с учетом единиц измерения
+			unitStr := attr.Unit // Используем сохраненную единицу или определяем по имени атрибута
+			if unitStr == "" {
+				// Определяем единицу измерения на основе имени атрибута
+				switch attr.AttributeName {
+				case "area":
+					unitStr = "m²"
+				case "land_area":
+					unitStr = "ar"
+				case "mileage":
+					unitStr = "km"
+				case "engine_capacity":
+					unitStr = "l"
+				case "power":
+					unitStr = "ks"
+				case "screen_size":
+					unitStr = "inč"
+				}
+			}
 
-    return allAttributes, nil
+			// Форматируем отображаемое значение с учетом типа
+			if attr.AttributeName == "year" {
+				attr.DisplayValue = fmt.Sprintf("%d", int(numericValue.Float64))
+			} else if unitStr != "" {
+				attr.DisplayValue = fmt.Sprintf("%g %s", numericValue.Float64, unitStr)
+			} else {
+				attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
+			}
+
+			log.Printf("DEBUG: Attribute %d (%s) has numeric value: %f, display: %s",
+				attr.AttributeID, attr.AttributeName, numericValue.Float64, attr.DisplayValue)
+		}
+
+		if boolValue.Valid {
+			attr.BooleanValue = &boolValue.Bool
+			if boolValue.Bool {
+				attr.DisplayValue = "Да"
+			} else {
+				attr.DisplayValue = "Нет"
+			}
+			log.Printf("DEBUG: Attribute %d (%s) has boolean value: %t",
+				attr.AttributeID, attr.AttributeName, boolValue.Bool)
+		}
+
+		if jsonValue.Valid {
+			attr.JSONValue = json.RawMessage(jsonValue.String)
+			// Для multiselect можно форматировать массив значений
+			if attr.AttributeType == "multiselect" {
+				var values []string
+				if err := json.Unmarshal(attr.JSONValue, &values); err == nil {
+					attr.DisplayValue = strings.Join(values, ", ")
+				}
+			} else {
+				attr.DisplayValue = jsonValue.String
+			}
+			log.Printf("DEBUG: Attribute %d (%s) has JSON value: %s",
+				attr.AttributeID, attr.AttributeName, jsonValue.String)
+		}
+
+		allAttributes = append(allAttributes, attr)
+	}
+
+	log.Printf("DEBUG: Found %d unique attributes for listing %d", len(allAttributes), listingID)
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating listing attributes: %w", err)
+	}
+
+	return allAttributes, nil
 }
 
 // GetAttributeRanges получает минимальные и максимальные значения для числовых атрибутов
 func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
-    // Проверяем наличие в кеше
-    rangesCacheMutex.RLock()
-    cachedRanges, hasCached := rangesCache[categoryID]
-    cacheTime, hasTime := rangesCacheTime[categoryID]
-    rangesCacheMutex.RUnlock()
-    
-    // Если данные в кеше и они не устарели
-    if hasCached && hasTime && time.Since(cacheTime) < cacheTTL {
-        log.Printf("Using cached attribute ranges for category %d", categoryID)
-        return cachedRanges, nil
-    }
-    
-    // Получаем ID всех подкатегорий заданной категории
-    query := `
+	// Проверяем наличие в кеше
+	rangesCacheMutex.RLock()
+	cachedRanges, hasCached := rangesCache[categoryID]
+	cacheTime, hasTime := rangesCacheTime[categoryID]
+	rangesCacheMutex.RUnlock()
+
+	// Если данные в кеше и они не устарели
+	if hasCached && hasTime && time.Since(cacheTime) < cacheTTL {
+		log.Printf("Using cached attribute ranges for category %d", categoryID)
+		return cachedRanges, nil
+	}
+
+	// Получаем ID всех подкатегорий заданной категории
+	query := `
     WITH RECURSIVE category_tree AS (
         SELECT id FROM marketplace_categories WHERE id = $1
         UNION ALL
@@ -1528,19 +1532,19 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
     )
     SELECT string_agg(id::text, ',') FROM category_tree
     `
-    
-    var categoryIDs string
-    err := s.pool.QueryRow(ctx, query, categoryID).Scan(&categoryIDs)
-    if err != nil {
-        return nil, fmt.Errorf("error getting category tree: %w", err)
-    }
-    
-    if categoryIDs == "" {
-        categoryIDs = strconv.Itoa(categoryID)
-    }
-    
-    // Запрос для получения границ числовых атрибутов
-    rangesQuery := `
+
+	var categoryIDs string
+	err := s.pool.QueryRow(ctx, query, categoryID).Scan(&categoryIDs)
+	if err != nil {
+		return nil, fmt.Errorf("error getting category tree: %w", err)
+	}
+
+	if categoryIDs == "" {
+		categoryIDs = strconv.Itoa(categoryID)
+	}
+
+	// Запрос для получения границ числовых атрибутов
+	rangesQuery := `
     SELECT 
         a.name,
         MIN(v.numeric_value) as min_value,
@@ -1556,121 +1560,120 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
         AND a.attribute_type = 'number'
     GROUP BY a.name
     `
-    
-    rows, err := s.pool.Query(ctx, rangesQuery)
-    if err != nil {
-        return nil, fmt.Errorf("error querying attribute ranges: %w", err)
-    }
-    defer rows.Close()
-    
-    // Формируем результат
-    ranges := make(map[string]map[string]interface{})
-    
-    for rows.Next() {
-        var attrName string
-        var minValue, maxValue float64
-        var valueCount int
-        
-        if err := rows.Scan(&attrName, &minValue, &maxValue, &valueCount); err != nil {
-            return nil, fmt.Errorf("error scanning attribute range: %w", err)
-        }
-        
-        // Для года и других целочисленных параметров округляем границы
-        if attrName == "year" || attrName == "rooms" || attrName == "floor" || attrName == "total_floors" {
-            minValue = float64(int(minValue))
-            maxValue = float64(int(maxValue))
-        }
-        
-        // Для "year" добавляем запас +1 год для новых автомобилей
-        if attrName == "year" && maxValue >= float64(time.Now().Year()-1) {
-            maxValue = float64(time.Now().Year() + 1)
-        }
-        
-        // Установка разумных шагов в зависимости от диапазона
-        var step float64 = 1.0
-        if attrName == "engine_capacity" {
-            step = 0.1
-        } else if attrName == "area" || attrName == "land_area" {
-            step = 0.5
-        }
-        
-        // Создаем информацию о границах
-        ranges[attrName] = map[string]interface{}{
-            "min": minValue,
-            "max": maxValue,
-            "step": step,
-            "count": valueCount,
-        }
-        
-        log.Printf("Attribute %s range: min=%.2f, max=%.2f, values=%d", 
-                  attrName, minValue, maxValue, valueCount)
-    }
-    
-    // Если нет данных, устанавливаем разумные значения по умолчанию
-    defaultRanges := map[string]map[string]interface{}{
-        "year": {"min": float64(time.Now().Year() - 30), "max": float64(time.Now().Year() + 1), "step": 1.0},
-        "mileage": {"min": 0.0, "max": 500000.0, "step": 1000.0},
-        "engine_capacity": {"min": 0.5, "max": 8.0, "step": 0.1},
-        "power": {"min": 50.0, "max": 500.0, "step": 10.0},
-        "rooms": {"min": 1.0, "max": 10.0, "step": 1.0},
-        "floor": {"min": 1.0, "max": 25.0, "step": 1.0},
-        "total_floors": {"min": 1.0, "max": 30.0, "step": 1.0},
-        "area": {"min": 10.0, "max": 300.0, "step": 0.5},
-        "land_area": {"min": 1.0, "max": 100.0, "step": 0.5},
-    }
-    
-    // Заполняем отсутствующие атрибуты значениями по умолчанию
-    for attr, defaultRange := range defaultRanges {
-        if _, exists := ranges[attr]; !exists {
-            ranges[attr] = defaultRange
-            log.Printf("No data for attribute %s, using defaults: min=%.2f, max=%.2f",
-                      attr, defaultRange["min"], defaultRange["max"])
-        }
-    }
-    
-    // Кешируем результат
-    rangesCacheMutex.Lock()
-    rangesCache[categoryID] = ranges
-    rangesCacheTime[categoryID] = time.Now()
-    rangesCacheMutex.Unlock()
-    
-    return ranges, nil
+
+	rows, err := s.pool.Query(ctx, rangesQuery)
+	if err != nil {
+		return nil, fmt.Errorf("error querying attribute ranges: %w", err)
+	}
+	defer rows.Close()
+
+	// Формируем результат
+	ranges := make(map[string]map[string]interface{})
+
+	for rows.Next() {
+		var attrName string
+		var minValue, maxValue float64
+		var valueCount int
+
+		if err := rows.Scan(&attrName, &minValue, &maxValue, &valueCount); err != nil {
+			return nil, fmt.Errorf("error scanning attribute range: %w", err)
+		}
+
+		// Для года и других целочисленных параметров округляем границы
+		if attrName == "year" || attrName == "rooms" || attrName == "floor" || attrName == "total_floors" {
+			minValue = float64(int(minValue))
+			maxValue = float64(int(maxValue))
+		}
+
+		// Для "year" добавляем запас +1 год для новых автомобилей
+		if attrName == "year" && maxValue >= float64(time.Now().Year()-1) {
+			maxValue = float64(time.Now().Year() + 1)
+		}
+
+		// Установка разумных шагов в зависимости от диапазона
+		var step float64 = 1.0
+		if attrName == "engine_capacity" {
+			step = 0.1
+		} else if attrName == "area" || attrName == "land_area" {
+			step = 0.5
+		}
+
+		// Создаем информацию о границах
+		ranges[attrName] = map[string]interface{}{
+			"min":   minValue,
+			"max":   maxValue,
+			"step":  step,
+			"count": valueCount,
+		}
+
+		log.Printf("Attribute %s range: min=%.2f, max=%.2f, values=%d",
+			attrName, minValue, maxValue, valueCount)
+	}
+
+	// Если нет данных, устанавливаем разумные значения по умолчанию
+	defaultRanges := map[string]map[string]interface{}{
+		"year":            {"min": float64(time.Now().Year() - 30), "max": float64(time.Now().Year() + 1), "step": 1.0},
+		"mileage":         {"min": 0.0, "max": 500000.0, "step": 1000.0},
+		"engine_capacity": {"min": 0.5, "max": 8.0, "step": 0.1},
+		"power":           {"min": 50.0, "max": 500.0, "step": 10.0},
+		"rooms":           {"min": 1.0, "max": 10.0, "step": 1.0},
+		"floor":           {"min": 1.0, "max": 25.0, "step": 1.0},
+		"total_floors":    {"min": 1.0, "max": 30.0, "step": 1.0},
+		"area":            {"min": 10.0, "max": 300.0, "step": 0.5},
+		"land_area":       {"min": 1.0, "max": 100.0, "step": 0.5},
+	}
+
+	// Заполняем отсутствующие атрибуты значениями по умолчанию
+	for attr, defaultRange := range defaultRanges {
+		if _, exists := ranges[attr]; !exists {
+			ranges[attr] = defaultRange
+			log.Printf("No data for attribute %s, using defaults: min=%.2f, max=%.2f",
+				attr, defaultRange["min"], defaultRange["max"])
+		}
+	}
+
+	// Кешируем результат
+	rangesCacheMutex.Lock()
+	rangesCache[categoryID] = ranges
+	rangesCacheTime[categoryID] = time.Now()
+	rangesCacheMutex.Unlock()
+
+	return ranges, nil
 }
 
 // Добавим метод для очистки кеша атрибутов
 func (s *Storage) InvalidateAttributesCache(categoryID int) {
-    attributeCacheMutex.Lock()
-    delete(attributeCache, categoryID)
-    delete(attributeCacheTime, categoryID)
-    attributeCacheMutex.Unlock()
-    
-    rangesCacheMutex.Lock()
-    delete(rangesCache, categoryID)
-    delete(rangesCacheTime, categoryID)
-    rangesCacheMutex.Unlock()
-    
-    log.Printf("Invalidated attributes cache for category %d", categoryID)
-}
+	attributeCacheMutex.Lock()
+	delete(attributeCache, categoryID)
+	delete(attributeCacheTime, categoryID)
+	attributeCacheMutex.Unlock()
 
+	rangesCacheMutex.Lock()
+	delete(rangesCache, categoryID)
+	delete(rangesCacheTime, categoryID)
+	rangesCacheMutex.Unlock()
+
+	log.Printf("Invalidated attributes cache for category %d", categoryID)
+}
 
 // Исправленная версия функции GetCategoryAttributes
 func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-    // Проверяем наличие в кеше
-    attributeCacheMutex.RLock()
-    cachedAttrs, hasCached := attributeCache[categoryID]
-    cacheTime, hasTime := attributeCacheTime[categoryID]
-    attributeCacheMutex.RUnlock()
-    
-    // Если данные в кеше и они не устарели
-    if hasCached && hasTime && time.Since(cacheTime) < cacheTTL {
-        log.Printf("Using cached attributes for category %d", categoryID)
-        return cachedAttrs, nil
-    }
-    
-    // Добавляем логирование для отладки
-    log.Printf("GetCategoryAttributes: Получение атрибутов для категории %d", categoryID)
-    
-    query := `
+	// Проверяем наличие в кеше
+	attributeCacheMutex.RLock()
+	cachedAttrs, hasCached := attributeCache[categoryID]
+	cacheTime, hasTime := attributeCacheTime[categoryID]
+	attributeCacheMutex.RUnlock()
+
+	// Если данные в кеше и они не устарели
+	if hasCached && hasTime && time.Since(cacheTime) < cacheTTL {
+		log.Printf("Using cached attributes for category %d", categoryID)
+		return cachedAttrs, nil
+	}
+
+	// Добавляем логирование для отладки
+	log.Printf("GetCategoryAttributes: Получение атрибутов для категории %d", categoryID)
+
+	query := `
     WITH RECURSIVE category_hierarchy AS (
         -- Находим все родительские категории (включая текущую)
         WITH RECURSIVE parents AS (
@@ -1734,121 +1737,120 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
     ORDER BY a.id, m.category_id = $1 DESC, a.sort_order, a.display_name
     `
 
-    // Выполняем запрос
-    rows, err := s.pool.Query(ctx, query, categoryID)
-    if err != nil {
-        log.Printf("GetCategoryAttributes: Ошибка запроса: %v", err)
-        return nil, fmt.Errorf("error querying category attributes: %w", err)
-    }
-    defer rows.Close()
+	// Выполняем запрос
+	rows, err := s.pool.Query(ctx, query, categoryID)
+	if err != nil {
+		log.Printf("GetCategoryAttributes: Ошибка запроса: %v", err)
+		return nil, fmt.Errorf("error querying category attributes: %w", err)
+	}
+	defer rows.Close()
 
-    var attributes []models.CategoryAttribute
-    for rows.Next() {
-        var attr models.CategoryAttribute
-        var options, validRules sql.NullString
-        var translationsJson, optionTranslationsJson []byte
+	var attributes []models.CategoryAttribute
+	for rows.Next() {
+		var attr models.CategoryAttribute
+		var options, validRules sql.NullString
+		var translationsJson, optionTranslationsJson []byte
 
-        if err := rows.Scan(
-            &attr.ID,
-            &attr.Name,
-            &attr.DisplayName,
-            &attr.AttributeType,
-            &options,
-            &validRules,
-            &attr.IsSearchable,
-            &attr.IsFilterable,
-            &attr.IsRequired,
-            &attr.SortOrder,
-            &attr.CreatedAt,
-            &translationsJson,
-            &optionTranslationsJson,
-        ); err != nil {
-            log.Printf("GetCategoryAttributes: Ошибка при сканировании результата: %v", err)
-            return nil, fmt.Errorf("error scanning category attribute: %w", err)
-        }
+		if err := rows.Scan(
+			&attr.ID,
+			&attr.Name,
+			&attr.DisplayName,
+			&attr.AttributeType,
+			&options,
+			&validRules,
+			&attr.IsSearchable,
+			&attr.IsFilterable,
+			&attr.IsRequired,
+			&attr.SortOrder,
+			&attr.CreatedAt,
+			&translationsJson,
+			&optionTranslationsJson,
+		); err != nil {
+			log.Printf("GetCategoryAttributes: Ошибка при сканировании результата: %v", err)
+			return nil, fmt.Errorf("error scanning category attribute: %w", err)
+		}
 
-        // Обработка опциональных JSON полей
-        if options.Valid {
-            attr.Options = json.RawMessage(options.String)
-        }
-        if validRules.Valid {
-            attr.ValidRules = json.RawMessage(validRules.String)
-        }
+		// Обработка опциональных JSON полей
+		if options.Valid {
+			attr.Options = json.RawMessage(options.String)
+		}
+		if validRules.Valid {
+			attr.ValidRules = json.RawMessage(validRules.String)
+		}
 
-        // Обработка переводов
-        attr.Translations = make(map[string]string)
-        if err := json.Unmarshal(translationsJson, &attr.Translations); err != nil {
-            log.Printf("GetCategoryAttributes: Ошибка парсинга переводов для атрибута %d: %v", attr.ID, err)
-        }
+		// Обработка переводов
+		attr.Translations = make(map[string]string)
+		if err := json.Unmarshal(translationsJson, &attr.Translations); err != nil {
+			log.Printf("GetCategoryAttributes: Ошибка парсинга переводов для атрибута %d: %v", attr.ID, err)
+		}
 
-        // Обработка переводов опций
-        attr.OptionTranslations = make(map[string]map[string]string)
-        if err := json.Unmarshal(optionTranslationsJson, &attr.OptionTranslations); err != nil {
-            log.Printf("GetCategoryAttributes: Ошибка парсинга переводов опций для атрибута %d: %v", attr.ID, err)
-        } else {
-            log.Printf("GetCategoryAttributes: Получены переводы опций для атрибута %d: %v", attr.ID, attr.OptionTranslations)
-        }
+		// Обработка переводов опций
+		attr.OptionTranslations = make(map[string]map[string]string)
+		if err := json.Unmarshal(optionTranslationsJson, &attr.OptionTranslations); err != nil {
+			log.Printf("GetCategoryAttributes: Ошибка парсинга переводов опций для атрибута %d: %v", attr.ID, err)
+		} else {
+			log.Printf("GetCategoryAttributes: Получены переводы опций для атрибута %d: %v", attr.ID, attr.OptionTranslations)
+		}
 
-        attributes = append(attributes, attr)
-    }
+		attributes = append(attributes, attr)
+	}
 
-    if err := rows.Err(); err != nil {
-        log.Printf("GetCategoryAttributes: Ошибка при итерации результатов: %v", err)
-        return nil, fmt.Errorf("error iterating category attributes: %w", err)
-    }
-    
-    // Получаем актуальные диапазоны для атрибутов
-    attributeRanges, err := s.GetAttributeRanges(ctx, categoryID)
-    if err != nil {
-        log.Printf("GetCategoryAttributes: Ошибка получения диапазонов атрибутов: %v", err)
-        // Продолжаем работу без диапазонов
-    } else {
-        // Обновляем опции атрибутов с учетом реальных диапазонов
-        for i, attr := range attributes {
-            // Обрабатываем только числовые атрибуты
-            if attr.AttributeType == "number" {
-                if ranges, ok := attributeRanges[attr.Name]; ok {
-                    // Создаем или обновляем объект options
-                    var options map[string]interface{}
-                    
-                    // Пытаемся использовать существующие options
-                    if attr.Options != nil && len(attr.Options) > 0 {
-                        err := json.Unmarshal(attr.Options, &options)
-                        if err != nil {
-                            options = make(map[string]interface{})
-                        }
-                    } else {
-                        options = make(map[string]interface{})
-                    }
-                    
-                    // Обновляем значения диапазонов
-                    options["min"] = ranges["min"]
-                    options["max"] = ranges["max"]
-                    options["step"] = ranges["step"]
-                    options["real_data"] = true
-                    
-                    // Сериализуем обратно в JSON
-                    optionsJSON, err := json.Marshal(options)
-                    if err == nil {
-                        attributes[i].Options = optionsJSON
-                        log.Printf("GetCategoryAttributes: Обновлены диапазоны для атрибута %s: min=%.2f, max=%.2f",
-                                attr.Name, ranges["min"], ranges["max"])
-                    }
-                }
-            }
-        }
-    }
+	if err := rows.Err(); err != nil {
+		log.Printf("GetCategoryAttributes: Ошибка при итерации результатов: %v", err)
+		return nil, fmt.Errorf("error iterating category attributes: %w", err)
+	}
 
-    // Кешируем результат
-    attributeCacheMutex.Lock()
-    attributeCache[categoryID] = attributes
-    attributeCacheTime[categoryID] = time.Now()
-    attributeCacheMutex.Unlock()
+	// Получаем актуальные диапазоны для атрибутов
+	attributeRanges, err := s.GetAttributeRanges(ctx, categoryID)
+	if err != nil {
+		log.Printf("GetCategoryAttributes: Ошибка получения диапазонов атрибутов: %v", err)
+		// Продолжаем работу без диапазонов
+	} else {
+		// Обновляем опции атрибутов с учетом реальных диапазонов
+		for i, attr := range attributes {
+			// Обрабатываем только числовые атрибуты
+			if attr.AttributeType == "number" {
+				if ranges, ok := attributeRanges[attr.Name]; ok {
+					// Создаем или обновляем объект options
+					var options map[string]interface{}
 
-    log.Printf("GetCategoryAttributes: Успешно получено %d атрибутов для категории %d", len(attributes), categoryID)
-    return attributes, nil
+					// Пытаемся использовать существующие options
+					if attr.Options != nil && len(attr.Options) > 0 {
+						err := json.Unmarshal(attr.Options, &options)
+						if err != nil {
+							options = make(map[string]interface{})
+						}
+					} else {
+						options = make(map[string]interface{})
+					}
+
+					// Обновляем значения диапазонов
+					options["min"] = ranges["min"]
+					options["max"] = ranges["max"]
+					options["step"] = ranges["step"]
+					options["real_data"] = true
+
+					// Сериализуем обратно в JSON
+					optionsJSON, err := json.Marshal(options)
+					if err == nil {
+						attributes[i].Options = optionsJSON
+						log.Printf("GetCategoryAttributes: Обновлены диапазоны для атрибута %s: min=%.2f, max=%.2f",
+							attr.Name, ranges["min"], ranges["max"])
+					}
+				}
+			}
+		}
+	}
+
+	// Кешируем результат
+	attributeCacheMutex.Lock()
+	attributeCache[categoryID] = attributes
+	attributeCacheTime[categoryID] = time.Now()
+	attributeCacheMutex.Unlock()
+
+	log.Printf("GetCategoryAttributes: Успешно получено %d атрибутов для категории %d", len(attributes), categoryID)
+	return attributes, nil
 }
-
 
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
 	log.Printf("GetCategories: starting to fetch categories")
