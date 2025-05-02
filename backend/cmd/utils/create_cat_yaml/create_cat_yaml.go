@@ -1,19 +1,17 @@
 package main
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
-	"gopkg.in/yaml.v3"
-	"io/ioutil"
-	"log"
-	"os"
-
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
+	"context"
+	"fmt"
+	"gopkg.in/yaml.v3"
+	"log"
+	"os"
+	"sort"
 )
 
 // CategoriesFile представляет структуру YAML файла с категориями
@@ -30,63 +28,48 @@ type Config struct {
 	DBName   string
 }
 
-// Вспомогательная функция для получения значения переменной окружения или дефолтного значения
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultValue
+// SimplifiedCategory представляет упрощенную структуру категории для YAML
+type SimplifiedCategory struct {
+	ID           int                   `yaml:"id"`
+	Name         string                `yaml:"name"`
+	Slug         string                `yaml:"slug"`
+	ParentID     *int                  `yaml:"parentid"`
+	Icon         string                `yaml:"icon"`
+	Translations map[string]string     `yaml:"translations"`
+	Children     []*SimplifiedCategory `yaml:"children"`
 }
 
-// Вспомогательная функция для получения целочисленного значения из переменной окружения
-func getEnvAsInt(key string, defaultValue int) int {
-	valueStr := getEnv(key, "")
-	if value := 0; valueStr != "" {
-		fmt.Sscanf(valueStr, "%d", &value)
-		return value
-	}
-	return defaultValue
-}
-
-// Подключение к базе данных
-func connectDB(config Config) (*sql.DB, error) {
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		config.Host, config.Port, config.User, config.Password, config.DBName)
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка открытия соединения с БД: %w", err)
-	}
-
-	// Проверка соединения
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("ошибка проверки соединения с БД: %w", err)
-	}
-
-	return db, nil
+// SimplifiedCategoriesFile представляет структуру YAML файла с упрощенными категориями
+type SimplifiedCategoriesFile struct {
+	Categories []*SimplifiedCategory `yaml:"categories"`
 }
 
 // Построение иерархической структуры категорий
-func buildCategoryTree(categories []models.MarketplaceCategory) []models.MarketplaceCategory {
+func buildCategoryTree(categories []*SimplifiedCategory) []*SimplifiedCategory {
+	sort.Slice(categories, func(i, j int) bool {
+		return categories[i].ID < categories[j].ID
+	})
+
 	// Создаем карту для быстрого доступа к категориям по ID
-	categoryMap := make(map[int]*models.MarketplaceCategory)
+	categoryMap := make(map[int]*SimplifiedCategory)
 	for i := range categories {
-		categoryMap[categories[i].ID] = &categories[i]
+		categoryMap[categories[i].ID] = categories[i]
 	}
 
 	// Строим дерево
-	var rootCategories []models.MarketplaceCategory
+	var rootCategories []*SimplifiedCategory
 	for _, cat := range categories {
+		c := cat
 		// Если нет родителя, это корневая категория
 		if cat.ParentID == nil {
-			rootCategories = append(rootCategories, cat)
+			rootCategories = append(rootCategories, c)
 		} else {
 			// Если есть родитель, добавляем текущую категорию в дочерние родителя
 			if parent, exists := categoryMap[*cat.ParentID]; exists {
-				parent.Children = append(parent.Children, cat)
+				parent.Children = append(parent.Children, c)
 			} else {
 				// Если родитель не найден, считаем категорию корневой
-				rootCategories = append(rootCategories, cat)
+				rootCategories = append(rootCategories, c)
 			}
 		}
 	}
@@ -94,10 +77,25 @@ func buildCategoryTree(categories []models.MarketplaceCategory) []models.Marketp
 	return rootCategories
 }
 
+// convertToSimplified преобразует MarketplaceCategory в SimplifiedCategory
+func convertToSimplified(cat models.MarketplaceCategory) *SimplifiedCategory {
+	simplified := &SimplifiedCategory{
+		//ID:           cat.ID * 10, // TODO: когда полностью перейдем на файл
+		ID:           cat.ID,
+		Name:         cat.Name,
+		Slug:         cat.Slug,
+		ParentID:     cat.ParentID,
+		Icon:         cat.Icon,
+		Translations: cat.Translations,
+	}
+
+	return simplified
+}
+
 // Запись категорий в YAML файл
-func writeCategoriesFile(filePath string, categories []models.MarketplaceCategory) error {
+func writeCategoriesFile(filePath string, categories []*SimplifiedCategory) error {
 	// Создаем структуру для файла
-	categoriesFile := CategoriesFile{
+	categoriesFile := SimplifiedCategoriesFile{
 		Categories: categories,
 	}
 
@@ -108,12 +106,13 @@ func writeCategoriesFile(filePath string, categories []models.MarketplaceCategor
 	}
 
 	// Записываем в файл
-	if err := ioutil.WriteFile(filePath, yamlData, 0644); err != nil {
+	if err := os.WriteFile(filePath, yamlData, 0644); err != nil {
 		return fmt.Errorf("ошибка записи файла: %w", err)
 	}
 
 	return nil
 }
+
 func run(cfg *config.Config) error {
 	ctx := context.Background()
 
@@ -162,8 +161,14 @@ func run(cfg *config.Config) error {
 		log.Fatal(err)
 	}
 
+	// Конвертируем категории в упрощенный формат
+	simplifiedFlatCategories := make([]*SimplifiedCategory, 0, len(flatCategories))
+	for _, cat := range flatCategories {
+		simplifiedFlatCategories = append(simplifiedFlatCategories, convertToSimplified(cat))
+	}
+
 	// Строим иерархическую структуру
-	rootCategories := buildCategoryTree(flatCategories)
+	rootCategories := buildCategoryTree(simplifiedFlatCategories)
 
 	// Записываем категории в YAML файл
 	if err := writeCategoriesFile(yamlFilePath, rootCategories); err != nil {
