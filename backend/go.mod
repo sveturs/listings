@@ -1,6 +1,6 @@
 module backend
 
-go 1.23
+go 1.23.0
 
 toolchain go1.24.2
 
@@ -19,7 +19,7 @@ require (
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/sashabaranov/go-openai v1.36.1
 	github.com/stripe/stripe-go/v72 v72.122.0
-	golang.org/x/oauth2 v0.24.0
+	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.214.0
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9
 	gopkg.in/yaml.v3 v3.0.1
