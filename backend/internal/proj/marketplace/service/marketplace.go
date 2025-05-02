@@ -12,23 +12,23 @@ import (
 	"mime/multipart"
 	//	"net/http"
 	//	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"os"    
 )
 
 type MarketplaceService struct {
-	storage           storage.Storage
+	storage            storage.Storage
 	translationService TranslationServiceInterface
 }
 
 func NewMarketplaceService(storage storage.Storage, translationService TranslationServiceInterface) MarketplaceServiceInterface {
 	return &MarketplaceService{
-		storage:           storage,
+		storage:            storage,
 		translationService: translationService,
 	}
 }
@@ -216,22 +216,39 @@ func (s *MarketplaceService) GetFavoritedUsers(ctx context.Context, listingID in
 	return s.storage.GetFavoritedUsers(ctx, listingID)
 }
 func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-	return s.storage.GetListingByID(ctx, id)
+	// Получаем объявление
+	listing, err := s.storage.GetListingByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Проверяем, пришел ли запрос от пользовательской части приложения (через GetListing API)
+	// или из административной/служебной части (другие API)
+	if ctx.Value("increment_views") == true {
+		// Увеличиваем счетчик просмотров только для просмотра деталей объявления
+		if err := s.storage.IncrementViewsCount(ctx, id); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+			log.Printf("Ошибка при увеличении счетчика просмотров для объявления %d: %v", id, err)
+		}
+	}
+
+	return listing, nil
 }
-func (s *MarketplaceService) GetOpenSearchRepository() (interface{
-    SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
+func (s *MarketplaceService) GetOpenSearchRepository() (interface {
+	SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
 }, bool) {
-    // Пытаемся привести хранилище к типу с нужным методом
-    if osRepo, ok := s.storage.(interface{
-        SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
-    }); ok {
-        return osRepo, true
-    }
-    return nil, false
+	// Пытаемся привести хранилище к типу с нужным методом
+	if osRepo, ok := s.storage.(interface {
+		SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
+	}); ok {
+		return osRepo, true
+	}
+	return nil, false
 }
 func (s *MarketplaceService) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
-    return s.storage.GetAttributeRanges(ctx, categoryID)
+	return s.storage.GetAttributeRanges(ctx, categoryID)
 }
+
 // GetCategoryAttributes получает атрибуты для указанной категории
 func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
 	attributes, err := s.storage.GetCategoryAttributes(ctx, categoryID)
@@ -714,116 +731,115 @@ func (s *MarketplaceService) ProcessImage(file *multipart.FileHeader) (string, e
 
 	return fileName, nil
 }
+
 // In backend/internal/proj/marketplace/service/marketplace.go
 
 func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.FileHeader, listingID int, isMain bool) (*models.MarketplaceImage, error) {
-    // Get file name
-    fileName, err := s.ProcessImage(file)
-    if err != nil {
-        return nil, err
-    }
+	// Get file name
+	fileName, err := s.ProcessImage(file)
+	if err != nil {
+		return nil, err
+	}
 
-    // Create object path - ensure no duplicate 'listings/' prefix
-    objectName := fmt.Sprintf("%d/%s", listingID, fileName)
+	// Create object path - ensure no duplicate 'listings/' prefix
+	objectName := fmt.Sprintf("%d/%s", listingID, fileName)
 
-    // Open the file
-    src, err := file.Open()
-    if err != nil {
-        return nil, fmt.Errorf("error opening file: %w", err)
-    }
-    defer src.Close()
+	// Open the file
+	src, err := file.Open()
+	if err != nil {
+		return nil, fmt.Errorf("error opening file: %w", err)
+	}
+	defer src.Close()
 
-    // Use FileStorage to upload
-    fileStorage := s.storage.FileStorage()
-    if fileStorage == nil {
-        return nil, fmt.Errorf("file storage service not initialized")
-    }
+	// Use FileStorage to upload
+	fileStorage := s.storage.FileStorage()
+	if fileStorage == nil {
+		return nil, fmt.Errorf("file storage service not initialized")
+	}
 
-    // Upload to storage
-    publicURL, err := fileStorage.UploadFile(ctx, objectName, src, file.Size, file.Header.Get("Content-Type"))
-    if err != nil {
-        return nil, fmt.Errorf("error uploading file: %w", err)
-    }
-    log.Printf("UploadImage: Изображение загружено в MinIO. objectName=%s, publicURL=%s", objectName, publicURL)
+	// Upload to storage
+	publicURL, err := fileStorage.UploadFile(ctx, objectName, src, file.Size, file.Header.Get("Content-Type"))
+	if err != nil {
+		return nil, fmt.Errorf("error uploading file: %w", err)
+	}
+	log.Printf("UploadImage: Изображение загружено в MinIO. objectName=%s, publicURL=%s", objectName, publicURL)
 
-    // Create image information
-    image := &models.MarketplaceImage{
-        ListingID:     listingID,
-        FilePath:      objectName,
-        FileName:      file.Filename,
-        FileSize:      int(file.Size),
-        ContentType:   file.Header.Get("Content-Type"),
-        IsMain:        isMain,
-        StorageType:   "minio",  // Явно указываем тип хранилища!
-        StorageBucket: "listings",
-        PublicURL:     publicURL,
-    }
-    log.Printf("UploadImage: Сохраняем информацию об изображении: ListingID=%d, FilePath=%s, StorageType=%s, PublicURL=%s",
-        image.ListingID, image.FilePath, image.StorageType, image.PublicURL)
-    // Save image information to database
-    imageID, err := s.storage.AddListingImage(ctx, image)
-    if err != nil {
-        // Если не удалось сохранить информацию, удаляем файл
-        fileStorage.DeleteFile(ctx, objectName)
-        return nil, fmt.Errorf("error saving image information: %w", err)
-    }
-    log.Printf("UploadImage: Изображение успешно сохранено в базе данных с ID=%d", imageID)
+	// Create image information
+	image := &models.MarketplaceImage{
+		ListingID:     listingID,
+		FilePath:      objectName,
+		FileName:      file.Filename,
+		FileSize:      int(file.Size),
+		ContentType:   file.Header.Get("Content-Type"),
+		IsMain:        isMain,
+		StorageType:   "minio", // Явно указываем тип хранилища!
+		StorageBucket: "listings",
+		PublicURL:     publicURL,
+	}
+	log.Printf("UploadImage: Сохраняем информацию об изображении: ListingID=%d, FilePath=%s, StorageType=%s, PublicURL=%s",
+		image.ListingID, image.FilePath, image.StorageType, image.PublicURL)
+	// Save image information to database
+	imageID, err := s.storage.AddListingImage(ctx, image)
+	if err != nil {
+		// Если не удалось сохранить информацию, удаляем файл
+		fileStorage.DeleteFile(ctx, objectName)
+		return nil, fmt.Errorf("error saving image information: %w", err)
+	}
+	log.Printf("UploadImage: Изображение успешно сохранено в базе данных с ID=%d", imageID)
 
-    image.ID = imageID
-    return image, nil
+	image.ID = imageID
+	return image, nil
 }
-
 
 // DeleteImage удаляет изображение
 func (s *MarketplaceService) DeleteImage(ctx context.Context, imageID int) error {
-    // Получаем информацию об изображении
-    image, err := s.storage.GetListingImageByID(ctx, imageID)
-    if err != nil {
-        return fmt.Errorf("ошибка получения информации об изображении: %w", err)
-    }
+	// Получаем информацию об изображении
+	image, err := s.storage.GetListingImageByID(ctx, imageID)
+	if err != nil {
+		return fmt.Errorf("ошибка получения информации об изображении: %w", err)
+	}
 
-    // Используем FileStorage для удаления файла
-    fileStorage := s.storage.FileStorage()
-    if fileStorage == nil {
-        return fmt.Errorf("сервис файлового хранилища не инициализирован")
-    }
+	// Используем FileStorage для удаления файла
+	fileStorage := s.storage.FileStorage()
+	if fileStorage == nil {
+		return fmt.Errorf("сервис файлового хранилища не инициализирован")
+	}
 
-    // Удаляем файл из хранилища
-    err = fileStorage.DeleteFile(ctx, image.FilePath)
-    if err != nil {
-        log.Printf("Ошибка удаления файла из хранилища: %v", err)
-        // Продолжаем выполнение для удаления записи из базы данных
-    }
+	// Удаляем файл из хранилища
+	err = fileStorage.DeleteFile(ctx, image.FilePath)
+	if err != nil {
+		log.Printf("Ошибка удаления файла из хранилища: %v", err)
+		// Продолжаем выполнение для удаления записи из базы данных
+	}
 
-    // Удаляем информацию об изображении из базы данных
-    err = s.storage.DeleteListingImage(ctx, imageID)
-    if err != nil {
-        return fmt.Errorf("ошибка удаления информации об изображении: %w", err)
-    }
+	// Удаляем информацию об изображении из базы данных
+	err = s.storage.DeleteListingImage(ctx, imageID)
+	if err != nil {
+		return fmt.Errorf("ошибка удаления информации об изображении: %w", err)
+	}
 
-    return nil
+	return nil
 }
-
 
 // backend/internal/proj/marketplace/service/marketplace.go
 
 // MigrateImagesToMinio мигрирует изображения из локального хранилища в MinIO
 func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 	// Этот метод будем вызывать вручную при необходимости миграции
-	
+
 	// Получаем все изображения с типом хранилища 'local'
 	query := `
 		SELECT id, listing_id, file_path, file_name, file_size, content_type, is_main, created_at
 		FROM marketplace_images
 		WHERE storage_type = 'local' OR storage_type IS NULL
 	`
-	
+
 	rows, err := s.storage.Query(ctx, query)
 	if err != nil {
 		return fmt.Errorf("ошибка получения изображений: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var count int
 	for rows.Next() {
 		var image models.MarketplaceImage
@@ -835,21 +851,20 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 			log.Printf("Ошибка сканирования данных изображения: %v", err)
 			continue
 		}
-		
+
 		// Пропускаем, если путь к файлу пустой
 		if image.FilePath == "" {
 			continue
 		}
-		
+
 		// Исключаем уже мигрированные изображения
 		if strings.HasPrefix(image.FilePath, "listings/") {
 			continue
 		}
-		
+
 		// Создаем новый путь для изображения в MinIO
 		newPath := fmt.Sprintf("listings/%d/%s", image.ListingID, filepath.Base(image.FilePath))
 
-		
 		// Открываем исходный файл
 		localPath := fmt.Sprintf("./uploads/%s", image.FilePath)
 		file, err := os.Open(localPath)
@@ -857,7 +872,7 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 			log.Printf("Ошибка открытия файла %s: %v", localPath, err)
 			continue
 		}
-		
+
 		// Получаем размер файла
 		fileInfo, err := file.Stat()
 		if err != nil {
@@ -865,21 +880,21 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 			file.Close()
 			continue
 		}
-		
+
 		// Загружаем файл в MinIO
 		fileStorage := s.storage.FileStorage()
 		if fileStorage == nil {
 			file.Close()
 			return fmt.Errorf("сервис файлового хранилища не инициализирован")
 		}
-		
+
 		publicURL, err := fileStorage.UploadFile(ctx, newPath, file, fileInfo.Size(), image.ContentType)
 		file.Close()
 		if err != nil {
 			log.Printf("Ошибка загрузки файла %s в MinIO: %v", localPath, err)
 			continue
 		}
-		
+
 		// Обновляем информацию об изображении в базе данных
 		_, err = s.storage.Exec(ctx, `
 			UPDATE marketplace_images
@@ -890,17 +905,17 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 			log.Printf("Ошибка обновления информации об изображении %d: %v", image.ID, err)
 			continue
 		}
-		
+
 		count++
 		log.Printf("Успешно мигрировано изображение %d для объявления %d", image.ID, image.ListingID)
 	}
-	
+
 	if err := rows.Err(); err != nil {
 		return fmt.Errorf("ошибка итерации по изображениям: %w", err)
 	}
-	
+
 	log.Printf("Миграция завершена. Всего мигрировано %d изображений", count)
-	
+
 	return nil
 }
 
@@ -931,24 +946,24 @@ func (s *MarketplaceService) UpdateTranslationWithProvider(ctx context.Context, 
 		// Используем фабрику для обновления перевода с информацией о провайдере
 		return factory.UpdateTranslation(ctx, translation, provider)
 	}
-	
+
 	// Если фабрики нет, используем прямой запрос к базе данных
 	// Подготавливаем метаданные
 	var metadataJSON []byte
 	var err error
-	
+
 	if translation.Metadata == nil {
 		translation.Metadata = map[string]interface{}{"provider": string(provider)}
 	} else if _, exists := translation.Metadata["provider"]; !exists {
 		translation.Metadata["provider"] = string(provider)
 	}
-	
+
 	metadataJSON, err = json.Marshal(translation.Metadata)
 	if err != nil {
 		log.Printf("Ошибка сериализации метаданных: %v", err)
 		metadataJSON = []byte("{}")
 	}
-	
+
 	query := `
         INSERT INTO translations (
             entity_type, entity_id, language, field_name,

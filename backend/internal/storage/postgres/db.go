@@ -593,6 +593,99 @@ func (db *Database) GetUserRatingSummary(ctx context.Context, userID int) (*mode
 func (db *Database) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
 	return db.reviewDB.GetStorefrontRatingSummary(ctx, storefrontID)
 }
+
+// IncrementViewsCount увеличивает счетчик просмотров объявления на 1
+// IncrementViewsCount увеличивает счетчик просмотров объявления на 1,
+// но только если данный пользователь ещё не просматривал это объявление
+func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
+	// Получаем ID пользователя из контекста
+	var userID int
+	if uid := ctx.Value("user_id"); uid != nil {
+		if uidInt, ok := uid.(int); ok {
+			userID = uidInt
+		}
+	}
+
+	// Для неавторизованных пользователей используем IP-адрес как идентификатор
+	var userIdentifier string
+	if ip := ctx.Value("ip_address"); ip != nil {
+		if ipStr, ok := ip.(string); ok {
+			userIdentifier = ipStr
+		}
+	}
+
+	// Проверяем, есть ли уже запись о просмотре этого объявления данным пользователем
+	// Если userID > 0, проверяем по user_id, иначе по ip_hash
+	var viewExists bool
+	var err error
+
+	if userID > 0 {
+		// Для авторизованных пользователей проверяем по ID
+		err = db.pool.QueryRow(ctx, `
+			SELECT EXISTS (
+				SELECT 1 FROM listing_views 
+				WHERE listing_id = $1 AND user_id = $2
+			)
+		`, id, userID).Scan(&viewExists)
+	} else if userIdentifier != "" {
+		// Для неавторизованных пользователей проверяем по IP-адресу
+		err = db.pool.QueryRow(ctx, `
+			SELECT EXISTS (
+				SELECT 1 FROM listing_views 
+				WHERE listing_id = $1 AND ip_hash = $2 AND user_id IS NULL
+			)
+		`, id, userIdentifier).Scan(&viewExists)
+	} else {
+		// Если нет ни ID пользователя, ни IP - считаем, что просмотр уже был (перестраховка)
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	// Если просмотра ещё не было, увеличиваем счетчик и добавляем запись о просмотре
+	if !viewExists {
+		// Начинаем транзакцию
+		tx, err := db.pool.Begin(ctx)
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback(ctx)
+
+		// Увеличиваем счетчик просмотров
+		_, err = tx.Exec(ctx, `
+			UPDATE marketplace_listings
+			SET views_count = views_count + 1
+			WHERE id = $1
+		`, id)
+		if err != nil {
+			return err
+		}
+
+		// Добавляем запись о просмотре
+		if userID > 0 {
+			_, err = tx.Exec(ctx, `
+				INSERT INTO listing_views (listing_id, user_id, view_time)
+				VALUES ($1, $2, NOW())
+			`, id, userID)
+		} else {
+			_, err = tx.Exec(ctx, `
+				INSERT INTO listing_views (listing_id, ip_hash, view_time)
+				VALUES ($1, $2, NOW())
+			`, id, userIdentifier)
+		}
+		if err != nil {
+			return err
+		}
+
+		// Фиксируем транзакцию
+		return tx.Commit(ctx)
+	}
+
+	return nil
+}
+
 func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {
 	// Получаем все объявления с информацией о скидке
 	query := `

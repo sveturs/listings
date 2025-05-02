@@ -1642,8 +1642,13 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID")
 	}
 
-	// Создаем контекст с user_id
+	// Создаем контекст с user_id и флагом увеличения счетчика просмотров
 	ctx := context.WithValue(c.Context(), "user_id", userID)
+	// Устанавливаем флаг увеличения счетчика просмотров для API получения деталей объявления
+	ctx = context.WithValue(ctx, "increment_views", true)
+	// Добавляем IP-адрес для отслеживания просмотров неавторизованных пользователей
+	ipAddress := c.IP()
+	ctx = context.WithValue(ctx, "ip_address", ipAddress)
 
 	listing, err := h.marketplaceService.GetListingByID(ctx, id)
 	if err != nil {
