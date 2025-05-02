@@ -1,0 +1,1307 @@
+categories:
+  - id: 9000
+    name: Работа
+    slug: jobs
+    parentid: null
+    icon: work
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Jobs
+      ru: Работа
+      sr: Posao
+    listingcount: 0
+    children: [ ]
+  - id: 10000
+    name: Безопасность
+    slug: security
+    parentid: null
+    icon: lock
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Security
+      sr: Bezbednost
+    listingcount: 0
+    children:
+      - id: 10100
+        name: Видеонаблюдение
+        slug: video-surveillance
+        parentid: 10000
+        icon: camera
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Video Surveillance
+          sr: Video nadzor
+        listingcount: 0
+        children: [ ]
+  - id: 6000
+    name: Все для сада
+    slug: garden
+    parentid: null
+    icon: tree
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Garden Supplies
+      ru: Все для сада
+      sr: Sve za baštu
+    listingcount: 0
+    children:
+      - id: 6250
+        name: Барбекю и аксессуары
+        slug: bbq-accessories
+        parentid: 6000
+        icon: bbq
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: BBQ and Accessories
+          ru: Барбекю и аксессуары
+          sr: Roštilj i dodaci
+        listingcount: 0
+        children: [ ]
+      - id: 6650
+        name: Растения и семена
+        slug: plants-seeds
+        parentid: 6000
+        icon: seedling
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Plants and Seeds
+          ru: Растения и семена
+          sr: Biljke i semena
+        listingcount: 0
+        children: [ ]
+  - id: 9500
+    name: Одежда, обувь, аксессуары
+    slug: fashion
+    parentid: null
+    icon: shirt
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Clothing, Footwear, Accessories
+      ru: Одежда, обувь, аксессуары
+      sr: Odeća, obuća, dodaci
+    listingcount: 0
+    children: [ ]
+  - id: 8500
+    name: Готовый бизнес и оборудование
+    slug: business
+    parentid: null
+    icon: briefcase
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Ready Business and Equipment
+      ru: Готовый бизнес и оборудование
+      sr: Gotov biznis i oprema
+    listingcount: 0
+    children: [ ]
+  - id: 7000
+    name: Хобби и отдых
+    slug: hobby-and-leisure
+    parentid: null
+    icon: camera
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Hobbies and Leisure
+      ru: Хобби и отдых
+      sr: Hobi i rekreacija
+    listingcount: 0
+    children:
+      - id: 7650
+        name: Кемпинг
+        slug: camping
+        parentid: 7000
+        icon: tent
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Camping
+          ru: Кемпинг
+          sr: Kampovanje
+        listingcount: 0
+        children: [ ]
+      - id: 7100
+        name: Книги и журналы
+        slug: books
+        parentid: 7000
+        icon: book
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Books and Magazines
+          ru: Книги и журналы
+          sr: Knjige i časopisi
+        listingcount: 0
+        children: [ ]
+      - id: 7750
+        name: Билеты, мероприятия и путешествия
+        slug: tickets
+        parentid: 7000
+        icon: ticket
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Tickets, Events and Travel
+          ru: Билеты, мероприятия и путешествия
+          sr: Karte, događaji i putovanja
+        listingcount: 0
+        children: [ ]
+      - id: 7300
+        name: Предметы искусства
+        slug: art
+        parentid: 7000
+        icon: painting
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Art Objects
+          ru: Предметы искусства
+          sr: Umetnički predmeti
+        listingcount: 0
+        children: [ ]
+      - id: 7800
+        name: Спорт
+        slug: sports-leisure
+        parentid: 7000
+        icon: sport
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Sports
+          ru: Спорт
+          sr: Sport
+        listingcount: 0
+        children:
+          - id: 7860
+            name: Спортивное питание
+            slug: sports-nutrition
+            parentid: 7800
+            icon: protein
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Sports Nutrition
+              ru: Спортивное питание
+              sr: Sportska ishrana
+            listingcount: 0
+            children: [ ]
+          - id: 7840
+            name: Ролики и скейтбординг
+            slug: skating
+            parentid: 7800
+            icon: skateboard
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Roller Skating and Skateboarding
+              ru: Ролики и скейтбординг
+              sr: Roleri i skejtbord
+            listingcount: 0
+            children: [ ]
+      - id: 7865
+        name: Народное ремесло и рукоделие
+        slug: folk-crafts
+        parentid: 7000
+        icon: hammer
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Folk Crafts and Handicrafts
+          ru: Народное ремесло и рукоделие
+          sr: Narodni zanati i rukotvorine
+        listingcount: 0
+        children:
+          - id: 7867
+            name: Керамика
+            slug: ceramics
+            parentid: 7865
+            icon: pottery
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Ceramics
+              ru: Керамика
+              sr: Keramika
+            listingcount: 0
+            children: [ ]
+          - id: 7868
+            name: Вышивка
+            slug: embroidery
+            parentid: 7865
+            icon: thread
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Embroidery
+              ru: Вышивка
+              sr: Vez
+            listingcount: 0
+            children: [ ]
+      - id: 7250
+        name: Коллекционирование
+        slug: collectibles
+        parentid: 7000
+        icon: coin
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Collecting
+          ru: Коллекционирование
+          sr: Kolekcionarstvo
+        listingcount: 0
+        children:
+          - id: 7264
+            name: Монеты
+            slug: coins
+            parentid: 7250
+            icon: coin
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Coins
+              ru: Монеты
+              sr: Novčići
+            listingcount: 0
+            children: [ ]
+          - id: 7262
+            name: Марки
+            slug: stamps
+            parentid: 7250
+            icon: stamp
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Stamps
+              ru: Марки
+              sr: Poštanske marke
+            listingcount: 0
+            children: [ ]
+          - id: 7259
+            name: Календари
+            slug: calendars
+            parentid: 7250
+            icon: calendar
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Calendars
+              ru: Календари
+              sr: Kalendari
+            listingcount: 0
+            children: [ ]
+          - id: 7253
+            name: Вещи знаменитостей, автографы
+            slug: celebrity-items
+            parentid: 7250
+            icon: star
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Celebrity Items, Autographs
+              ru: Вещи знаменитостей, автографы
+              sr: Stvari poznatih, autogrami
+            listingcount: 0
+            children: [ ]
+          - id: 7251
+            name: Банкноты
+            slug: banknotes
+            parentid: 7250
+            icon: money
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Banknotes
+              ru: Банкноты
+              sr: Novčanice
+            listingcount: 0
+            children: [ ]
+          - id: 7257
+            name: Жетоны, медали, значки
+            slug: medals-badges
+            parentid: 7250
+            icon: medal
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Tokens, Medals, Badges
+              ru: Жетоны, медали, значки
+              sr: Žetoni, medalje, značke
+            listingcount: 0
+            children: [ ]
+          - id: 7256
+            name: Документы
+            slug: documents
+            parentid: 7250
+            icon: document
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Documents
+              ru: Документы
+              sr: Dokumenta
+            listingcount: 0
+            children: [ ]
+          - id: 7255
+            name: Грампластинки
+            slug: vinyl
+            parentid: 7250
+            icon: vinyl
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Vinyl Records
+              ru: Грампластинки
+              sr: Gramofonske ploče
+            listingcount: 0
+            children: [ ]
+      - id: 7700
+        name: Антиквариат
+        slug: antiques
+        parentid: 7000
+        icon: antique
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Antiques
+          ru: Антиквариат
+          sr: Antikviteti
+        listingcount: 0
+        children: [ ]
+  - id: 3000
+    name: Электроника
+    slug: electronics
+    parentid: null
+    icon: smartphone
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Electronics
+      ru: Электроника
+      sr: Elektronika
+    listingcount: 0
+    children:
+      - id: 3200
+        name: Аудио и видео
+        slug: audio-video
+        parentid: 3000
+        icon: tv
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Audio and Video
+          ru: Аудио и видео
+          sr: Audio i video
+        listingcount: 0
+        children:
+          - id: 3230
+            name: Музыкальные центры, магнитолы
+            slug: stereo-systems
+            parentid: 3200
+            icon: stereo
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Stereo Systems, Boomboxes
+              ru: Музыкальные центры, магнитолы
+              sr: Muzički centri, kasetofoni
+            listingcount: 0
+            children: [ ]
+          - id: 3265
+            name: MP3-плееры
+            slug: mp3-players
+            parentid: 3200
+            icon: mp3
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: MP3 Players
+              ru: MP3-плееры
+              sr: MP3 plejeri
+            listingcount: 0
+            children: [ ]
+      - id: 4100
+        name: Бытовая техника
+        slug: appliances
+        parentid: 3000
+        icon: appliance
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Home Appliances
+          ru: Бытовая техника
+          sr: Kućni aparati
+        listingcount: 0
+        children:
+          - id: 4120
+            name: Для дома
+            slug: home-appliances
+            parentid: 4100
+            icon: home
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Home Appliances
+              ru: Для дома
+              sr: Kućni aparati
+            listingcount: 0
+            children: [ ]
+          - id: 4110
+            name: Для кухни
+            slug: kitchen-appliances
+            parentid: 4100
+            icon: kitchen
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Kitchen Appliances
+              ru: Для кухни
+              sr: Kuhinjski aparati
+            listingcount: 0
+            children:
+              - id: 4114
+                name: Плиты и духовые шкафы
+                slug: stoves-ovens
+                parentid: 4110
+                icon: stove
+                createdat: 2025-02-07T07:13:52.823283Z
+                translations:
+                  en: Stoves and Ovens
+                  ru: Плиты и духовые шкафы
+                  sr: Šporeti i rerne
+                listingcount: 0
+                children: [ ]
+      - id: 3700
+        name: Фототехника
+        slug: photo
+        parentid: 3000
+        icon: camera
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Photography Equipment
+          ru: Фототехника
+          sr: Foto oprema
+        listingcount: 0
+        children:
+          - id: 3730
+            name: Компактные фотоаппараты
+            slug: compact-cameras
+            parentid: 3700
+            icon: compact-camera
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Compact Cameras
+              ru: Компактные фотоаппараты
+              sr: Kompaktni fotoaparati
+            listingcount: 0
+            children: [ ]
+      - id: 3800
+        name: Планшеты и электронные книги
+        slug: tablets-ebooks
+        parentid: 3000
+        icon: tablet
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Tablets and E-readers
+          ru: Планшеты и электронные книги
+          sr: Tableti i e-čitači
+        listingcount: 0
+        children: [ ]
+      - id: 3600
+        name: Ноутбуки
+        slug: laptops
+        parentid: 3000
+        icon: laptop
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Laptops
+          ru: Ноутбуки
+          sr: Laptopovi
+        listingcount: 0
+        children: [ ]
+      - id: 3900
+        name: Оргтехника и расходники
+        slug: office-equipment
+        parentid: 3000
+        icon: printer
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Office Equipment and Supplies
+          ru: Оргтехника и расходники
+          sr: Kancelarijska oprema i potrošni materijal
+        listingcount: 0
+        children:
+          - id: 3970
+            name: Расходные материалы
+            slug: consumables
+            parentid: 3900
+            icon: ink
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Consumables
+              ru: Расходные материалы
+              sr: Potrošni materijal
+            listingcount: 0
+            children: [ ]
+          - id: 3940
+            name: ИБП, сетевые фильтры
+            slug: ups
+            parentid: 3900
+            icon: power-supply
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: UPS, Surge Protectors
+              ru: ИБП, сетевые фильтры
+              sr: UPS, filteri napajanja
+            listingcount: 0
+            children: [ ]
+      - id: 3500
+        name: Игры, приставки и программы
+        slug: games-software
+        parentid: 3000
+        icon: gamepad
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Games, Consoles and Software
+          ru: Игры, приставки и программы
+          sr: Igre, konzole i programi
+        listingcount: 0
+        children:
+          - id: 3530
+            name: Компьютерные игры
+            slug: pc-games
+            parentid: 3500
+            icon: game
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Computer Games
+              ru: Компьютерные игры
+              sr: Računarske igre
+            listingcount: 0
+            children: [ ]
+          - id: 3520
+            name: Игры для приставок
+            slug: console-games
+            parentid: 3500
+            icon: game-disc
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Console Games
+              ru: Игры для приставок
+              sr: Igre za konzole
+            listingcount: 0
+            children: [ ]
+  - id: 2000
+    name: Автомобили
+    slug: auto
+    parentid: null
+    icon: car
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Vehicles
+      ru: Автомобили
+      sr: Vozila
+    listingcount: 0
+    children:
+      - id: 2300
+        name: Спецтехника
+        slug: special-equipment
+        parentid: 2000
+        icon: truck-loader
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Special Equipment
+          ru: Спецтехника
+          sr: Specijalna mehanizacija
+        listingcount: 0
+        children:
+          - id: 2335
+            name: Дорожные катки
+            slug: road-rollers-special
+            parentid: 2300
+            icon: roller
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Road Rollers
+              ru: Дорожные катки
+              sr: Drumski valjci
+            listingcount: 0
+            children: [ ]
+          - id: 2355
+            name: Бульдозеры
+            slug: bulldozers
+            parentid: 2300
+            icon: bulldozer
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Bulldozers
+              ru: Бульдозеры
+              sr: Buldožeri
+            listingcount: 0
+            children: [ ]
+          - id: 2365
+            name: Буровые установки
+            slug: drilling-rigs
+            parentid: 2300
+            icon: drill
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Drilling Rigs
+              ru: Буровые установки
+              sr: Bušilice
+            listingcount: 0
+            children: [ ]
+          - id: 2310
+            name: Экскаваторы
+            slug: excavators-special
+            parentid: 2300
+            icon: excavator
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Excavators
+              ru: Экскаваторы
+              sr: Bageri
+            listingcount: 0
+            children: [ ]
+      - id: 2700
+        name: Водный транспорт
+        slug: water-transport
+        parentid: 2000
+        icon: ship
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Watercraft
+          ru: Водный транспорт
+          sr: Plovila
+        listingcount: 0
+        children:
+          - id: 2740
+            name: Катера и яхты
+            slug: boats-yachts
+            parentid: 2700
+            icon: yacht
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Boats and Yachts
+              ru: Катера и яхты
+              sr: Čamci i jahte
+            listingcount: 0
+            children: [ ]
+      - id: 2100
+        name: Легковые автомобили
+        slug: passenger-cars
+        parentid: 2000
+        icon: car
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Passenger Cars
+          ru: Легковые автомобили
+          sr: Putnički automobili
+        listingcount: 0
+        children: [ ]
+      - id: 2400
+        name: Сельхозтехника
+        slug: agricultural-vehicles
+        parentid: 2000
+        icon: tractor
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Agricultural Machinery
+          ru: Сельхозтехника
+          sr: Poljoprivredna mehanizacija
+        listingcount: 0
+        children:
+          - id: 2425
+            name: Бороны
+            slug: harrows
+            parentid: 2400
+            icon: harrow
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Harrows
+              ru: Бороны
+              sr: Drljače
+            listingcount: 0
+            children: [ ]
+          - id: 2420
+            name: Пресс-подборщики
+            slug: balers
+            parentid: 2400
+            icon: baler
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Balers
+              ru: Пресс-подборщики
+              sr: Balirke
+            listingcount: 0
+            children: [ ]
+          - id: 2440
+            name: Телескопические погрузчики
+            slug: telescopic-loaders
+            parentid: 2400
+            icon: loader
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Telescopic Loaders
+              ru: Телескопические погрузчики
+              sr: Teleskopski utovarivači
+            listingcount: 0
+            children: [ ]
+          - id: 2455
+            name: Плуги
+            slug: plows
+            parentid: 2400
+            icon: plow
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Plows
+              ru: Плуги
+              sr: Plugovi
+            listingcount: 0
+            children: [ ]
+      - id: 2200
+        name: Грузовые автомобили
+        slug: commercial-vehicles
+        parentid: 2000
+        icon: truck
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Commercial Vehicles
+          ru: Грузовые автомобили
+          sr: Komercijalna vozila
+        listingcount: 0
+        children:
+          - id: 2240
+            name: Автобусы
+            slug: buses-commercial
+            parentid: 2200
+            icon: bus
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Buses
+              ru: Автобусы
+              sr: Autobusi
+            listingcount: 0
+            children: [ ]
+          - id: 2210
+            name: Грузовики
+            slug: heavy-trucks
+            parentid: 2200
+            icon: truck-moving
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Trucks
+              ru: Грузовики
+              sr: Kamioni
+            listingcount: 0
+            children: [ ]
+      - id: 2500
+        name: Аренда авто и спецтехники
+        slug: vehicle-rent
+        parentid: 2000
+        icon: key
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Vehicle and Equipment Rental
+          ru: Аренда авто и спецтехники
+          sr: Iznajmljivanje vozila i mehanizacije
+        listingcount: 0
+        children:
+          - id: 2550
+            name: Прицепы
+            slug: trailers-rent
+            parentid: 2500
+            icon: trailer
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Trailers
+              ru: Прицепы
+              sr: Prikolice
+            listingcount: 0
+            children: [ ]
+          - id: 2535
+            name: Грузовой транспорт
+            slug: cargo-transport-rent
+            parentid: 2500
+            icon: truck
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Freight Transport
+              ru: Грузовой транспорт
+              sr: Teretni transport
+            listingcount: 0
+            children: [ ]
+          - id: 2520
+            name: Землеройная техника
+            slug: earthmoving-equipment-rent
+            parentid: 2500
+            icon: excavator
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Earthmoving Equipment
+              ru: Землеройная техника
+              sr: Oprema za zemljane radove
+            listingcount: 0
+            children: [ ]
+          - id: 2530
+            name: Дорожно-строительная техника
+            slug: road-construction-rent
+            parentid: 2500
+            icon: road
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Road Construction Equipment
+              ru: Дорожно-строительная техника
+              sr: Oprema za izgradnju puteva
+            listingcount: 0
+            children: [ ]
+          - id: 2555
+            name: Сельхозтехника
+            slug: agricultural-machinery-rent
+            parentid: 2500
+            icon: tractor
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Agricultural Equipment
+              ru: Сельхозтехника
+              sr: Poljoprivredna oprema
+            listingcount: 0
+            children: [ ]
+          - id: 2560
+            name: Автодома
+            slug: motorhomes-rent
+            parentid: 2500
+            icon: camper
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Motorhomes
+              ru: Автодома
+              sr: Kamp kućice
+            listingcount: 0
+            children: [ ]
+          - id: 2545
+            name: Навесное оборудование
+            slug: attachments-rent
+            parentid: 2500
+            icon: tool
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Attachments
+              ru: Навесное оборудование
+              sr: Priključci
+            listingcount: 0
+            children: [ ]
+      - id: 2600
+        name: Мотоциклы и мототехника
+        slug: motorcycles-main
+        parentid: 2000
+        icon: motorcycle
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Motorcycles and Motor Vehicles
+          ru: Мотоциклы и мототехника
+          sr: Motocikli i motorna vozila
+        listingcount: 0
+        children:
+          - id: 2640
+            name: Снегоходы
+            slug: snowmobiles
+            parentid: 2600
+            icon: snowmobile
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Snowmobiles
+              ru: Снегоходы
+              sr: Motorne sanke
+            listingcount: 0
+            children: [ ]
+          - id: 2610
+            name: Вездеходы
+            slug: atvs
+            parentid: 2600
+            icon: atv
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: All-terrain Vehicles
+              ru: Вездеходы
+              sr: Terenska vozila
+            listingcount: 0
+            children: [ ]
+          - id: 2630
+            name: Скутеры
+            slug: scooters-moto
+            parentid: 2600
+            icon: scooter
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Scooters
+              ru: Скутеры
+              sr: Skuteri
+            listingcount: 0
+            children: [ ]
+          - id: 2620
+            name: Квадроциклы и багги
+            slug: atvs-moto
+            parentid: 2600
+            icon: atv
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: ATVs and Buggies
+              ru: Квадроциклы и багги
+              sr: Kvadovi i bagiji
+            listingcount: 0
+            children: [ ]
+  - id: 9999
+    name: Прочее
+    slug: any
+    parentid: null
+    icon: any
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Other
+      ru: Прочее
+      sr: Ostalo
+    listingcount: 0
+    children: [ ]
+  - id: 8000
+    name: Животные
+    slug: animals
+    parentid: null
+    icon: paw
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Animals
+      ru: Животные
+      sr: Životinje
+    listingcount: 0
+    children:
+      - id: 8050
+        name: Собаки
+        slug: dogs
+        parentid: 8000
+        icon: dog
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Dogs
+          ru: Собаки
+          sr: Psi
+        listingcount: 0
+        children: [ ]
+      - id: 8100
+        name: Кошки
+        slug: cats
+        parentid: 8000
+        icon: cat
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Cats
+          ru: Кошки
+          sr: Mačke
+        listingcount: 0
+        children: [ ]
+  - id: 1000
+    name: Недвижимость
+    slug: real-estate
+    parentid: null
+    icon: home
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Real Estate
+      ru: Недвижимость
+      sr: Nekretnine
+    listingcount: 0
+    children:
+      - id: 1300
+        name: Дом, дача, коттедж
+        slug: house-cottage
+        parentid: 1000
+        icon: home
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: House, Cottage, Villa
+          ru: Дом, дача, коттедж
+          sr: Kuća, vikendica, vila
+        listingcount: 0
+        children: [ ]
+      - id: 1100
+        name: Квартира
+        slug: apartment
+        parentid: 1000
+        icon: apartment
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Apartment
+          ru: Квартира
+          sr: Stan
+        listingcount: 0
+        children: [ ]
+      - id: 1600
+        name: Коммерческая недвижимость
+        slug: commercial-property
+        parentid: 1000
+        icon: building
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Commercial Real Estate
+          ru: Коммерческая недвижимость
+          sr: Poslovni prostor
+        listingcount: 0
+        children: [ ]
+      - id: 1200
+        name: Комната
+        slug: room-rent
+        parentid: 1000
+        icon: door
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Room
+          ru: Комната
+          sr: Soba
+        listingcount: 0
+        children: [ ]
+      - id: 1900
+        name: Апартаменты
+        slug: apartment-property
+        parentid: 1000
+        icon: building
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Apartments
+          ru: Апартаменты
+          sr: Apartmani
+        listingcount: 0
+        children: [ ]
+      - id: 1800
+        name: Отель
+        slug: hotel-property
+        parentid: 1000
+        icon: hotel
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Hotel
+          ru: Отель
+          sr: Hotel
+        listingcount: 0
+        children: [ ]
+      - id: 1400
+        name: Земельный участок
+        slug: land-plot
+        parentid: 1000
+        icon: tree
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Land Plot
+          ru: Земельный участок
+          sr: Zemljišna parcela
+        listingcount: 0
+        children: [ ]
+  - id: 9700
+    name: Товары для детей и игрушки
+    slug: children-goods-toys
+    parentid: null
+    icon: toy
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Childrens Goods and Toys
+      ru: Товары для детей и игрушки
+      sr: Dečije stvari i igračke
+    listingcount: 0
+    children:
+      - id: 9705
+        name: Детские коляски
+        slug: baby-strollers
+        parentid: 9700
+        icon: stroller
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Baby Strollers
+          ru: Детские коляски
+          sr: Kolica za bebe
+        listingcount: 0
+        children: [ ]
+      - id: 9750
+        name: Детская одежда и обувь, аксессуары
+        slug: kids-fashion
+        parentid: 9700
+        icon: baby
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Childrens Clothing and Footwear, Accessories
+          ru: Детская одежда и обувь, аксессуары
+          sr: Dečija odeća i obuća, dodaci
+        listingcount: 0
+        children: [ ]
+      - id: 9740
+        name: Товары для купания
+        slug: bath-goods
+        parentid: 9700
+        icon: bath
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Bathing Products
+          ru: Товары для купания
+          sr: Proizvodi za kupanje
+        listingcount: 0
+        children: [ ]
+      - id: 9720
+        name: Товары для кормления
+        slug: feeding-goods
+        parentid: 9700
+        icon: bottle
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Feeding Products
+          ru: Товары для кормления
+          sr: Proizvodi za hranjenje
+        listingcount: 0
+        children: [ ]
+      - id: 9745
+        name: Товары для школы
+        slug: school-supplies
+        parentid: 9700
+        icon: backpack
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: School Supplies
+          ru: Товары для школы
+          sr: Školski pribor
+        listingcount: 0
+        children: [ ]
+      - id: 9725
+        name: Автомобильные кресла
+        slug: car-seats
+        parentid: 9700
+        icon: car-seat
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Car Seats
+          ru: Автомобильные кресла
+          sr: Auto-sedišta
+        listingcount: 0
+        children: [ ]
+      - id: 9710
+        name: Детская мебель
+        slug: children-furniture
+        parentid: 9700
+        icon: crib
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Childrens Furniture
+          ru: Детская мебель
+          sr: Dečiji nameštaj
+        listingcount: 0
+        children: [ ]
+      - id: 9715
+        name: Велосипеды и самокаты
+        slug: children-bikes-scooters
+        parentid: 9700
+        icon: bike
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Bicycles and Scooters
+          ru: Велосипеды и самокаты
+          sr: Bicikli i trotineti
+        listingcount: 0
+        children: [ ]
+      - id: 9735
+        name: Постельные принадлежности
+        slug: children-bedding
+        parentid: 9700
+        icon: blanket
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Bedding
+          ru: Постельные принадлежности
+          sr: Posteljina
+        listingcount: 0
+        children: [ ]
+      - id: 9730
+        name: Игрушки
+        slug: toys
+        parentid: 9700
+        icon: toy
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Toys
+          ru: Игрушки
+          sr: Igračke
+        listingcount: 0
+        children: [ ]
+  - id: 5000
+    name: Все для дома и квартиры
+    slug: home-and-apartment
+    parentid: null
+    icon: house
+    createdat: 2025-02-07T07:13:52.823283Z
+    translations:
+      en: Home and Apartment
+      ru: Все для дома и квартиры
+      sr: Sve za kuću i stan
+    listingcount: 0
+    children:
+      - id: 5100
+        name: Ремонт и строительство
+        slug: repair-construction
+        parentid: 5000
+        icon: tools
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Renovation and Construction
+          ru: Ремонт и строительство
+          sr: Renoviranje i izgradnja
+        listingcount: 0
+        children: [ ]
+      - id: 5300
+        name: Продукты питания
+        slug: food
+        parentid: 5000
+        icon: food
+        createdat: 2025-02-07T07:13:52.823283Z
+        translations:
+          en: Food Products
+          ru: Продукты питания
+          sr: Prehrambeni proizvodi
+        listingcount: 0
+        children:
+          - id: 5350
+            name: Домашние сыры
+            slug: homemade-cheese
+            parentid: 5300
+            icon: cheese
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Homemade Cheese
+              ru: Домашние сыры
+              sr: Domaći sirevi
+            listingcount: 0
+            children: [ ]
+          - id: 5330
+            name: Кондитерские изделия
+            slug: sweets
+            parentid: 5300
+            icon: candy
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Confectionery
+              ru: Кондитерские изделия
+              sr: Slatkiši
+            listingcount: 0
+            children: [ ]
+          - id: 5310
+            name: Чай, кофе, какао
+            slug: beverages
+            parentid: 5300
+            icon: coffee
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Tea, Coffee, Cocoa
+              ru: Чай, кофе, какао
+              sr: Čaj, kafa, kakao
+            listingcount: 0
+            children: [ ]
+          - id: 5315
+            name: Напитки
+            slug: drinks
+            parentid: 5300
+            icon: bottle
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Beverages
+              ru: Напитки
+              sr: Pića
+            listingcount: 0
+            children: [ ]
+          - id: 5320
+            name: Рыба, морепродукты, икра
+            slug: seafood
+            parentid: 5300
+            icon: fish
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Fish, Seafood, Caviar
+              ru: Рыба, морепродукты, икра
+              sr: Riba, morski plodovi, kavijar
+            listingcount: 0
+            children: [ ]
+          - id: 5370
+            name: Айвар
+            slug: ajvar
+            parentid: 5300
+            icon: jar
+            createdat: 2025-02-07T07:13:52.823283Z
+            translations:
+              en: Ajvar
+              ru: Айвар
+              sr: Ajvar
+            listingcount: 0
+            children: [ ]
