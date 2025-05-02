@@ -224,9 +224,8 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/categories", s.marketplace.Marketplace.GetCategories)
 	marketplace.Get("/category-tree", s.marketplace.Marketplace.GetCategoryTree)
 	marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)
-	marketplace.Get("/subcategories", s.marketplace.Marketplace.GetSubcategories)
-	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced)
-	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)
+	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced) // маршрут поиска
+	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)    // маршрут автодополнения
 	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
 	marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", s.marketplace.Marketplace.GetPriceHistory)

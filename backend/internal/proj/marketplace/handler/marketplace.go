@@ -1103,7 +1103,6 @@ func (h *MarketplaceHandler) DeleteImage(c *fiber.Ctx) error {
 	})
 }
 
-// ReindexRatings переиндексирует рейтинги всех объявлени
 // ReindexRatings переиндексирует рейтинги всех объявлений
 func (h *MarketplaceHandler) ReindexRatings(c *fiber.Ctx) error {
 	// Проверяем административные права
@@ -1607,19 +1606,6 @@ func (h *MarketplaceHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 	})
 }
 
-// Добавить новый метод
-func (h *MarketplaceHandler) GetSubcategories(c *fiber.Ctx) error {
-	parentID := c.Query("parent_id")
-	limit := c.QueryInt("limit", 20)
-	offset := c.QueryInt("offset", 0)
-
-	categories, err := h.marketplaceService.GetSubcategories(c.Context(), parentID, limit, offset)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching subcategories")
-	}
-
-	return utils.SuccessResponse(c, categories)
-}
 func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 	// Получаем user_id из контекста, если пользователь авторизован
 	var userID int

@@ -1,0 +1,3878 @@
+categories:
+    - id: 1000
+      name: Недвижимость
+      slug: real-estate
+      parentid: null
+      icon: home
+      translations:
+        en: Real Estate
+        ru: Недвижимость
+        sr: Nekretnine
+      children:
+        - id: 1100
+          name: Квартира
+          slug: apartment
+          parentid: 1000
+          icon: apartment
+          translations:
+            en: Apartment
+            ru: Квартира
+            sr: Stan
+          children: []
+        - id: 1200
+          name: Комната
+          slug: room-rent
+          parentid: 1000
+          icon: door
+          translations:
+            en: Room
+            ru: Комната
+            sr: Soba
+          children: []
+        - id: 1300
+          name: Дом, дача, коттедж
+          slug: house-cottage
+          parentid: 1000
+          icon: home
+          translations:
+            en: House, Cottage, Villa
+            ru: Дом, дача, коттедж
+            sr: Kuća, vikendica, vila
+          children: []
+        - id: 1400
+          name: Земельный участок
+          slug: land-plot
+          parentid: 1000
+          icon: tree
+          translations:
+            en: Land Plot
+            ru: Земельный участок
+            sr: Zemljišna parcela
+          children: []
+        - id: 1500
+          name: Гараж и машиноместо
+          slug: garage-parking
+          parentid: 1000
+          icon: garage
+          translations:
+            en: Garage and Parking Space
+            ru: Гараж и машиноместо
+            sr: Garaža i parking mesto
+          children: []
+        - id: 1600
+          name: Коммерческая недвижимость
+          slug: commercial-property
+          parentid: 1000
+          icon: building
+          translations:
+            en: Commercial Real Estate
+            ru: Коммерческая недвижимость
+            sr: Poslovni prostor
+          children: []
+        - id: 1700
+          name: Недвижимость за рубежом
+          slug: foreign-property
+          parentid: 1000
+          icon: globe
+          translations:
+            en: Overseas Real Estate
+            ru: Недвижимость за рубежом
+            sr: Nekretnine u inostranstvu
+          children: []
+        - id: 1800
+          name: Отель
+          slug: hotel-property
+          parentid: 1000
+          icon: hotel
+          translations:
+            en: Hotel
+            ru: Отель
+            sr: Hotel
+          children: []
+        - id: 1900
+          name: Апартаменты
+          slug: apartment-property
+          parentid: 1000
+          icon: building
+          translations:
+            en: Apartments
+            ru: Апартаменты
+            sr: Apartmani
+          children: []
+    - id: 2000
+      name: Автомобили
+      slug: auto
+      parentid: null
+      icon: car
+      translations:
+        en: Vehicles
+        ru: Автомобили
+        sr: Vozila
+      children:
+        - id: 2100
+          name: Легковые автомобили
+          slug: passenger-cars
+          parentid: 2000
+          icon: car
+          translations:
+            en: Passenger Cars
+            ru: Легковые автомобили
+            sr: Putnički automobili
+          children: []
+        - id: 2200
+          name: Грузовые автомобили
+          slug: commercial-vehicles
+          parentid: 2000
+          icon: truck
+          translations:
+            en: Commercial Vehicles
+            ru: Грузовые автомобили
+            sr: Komercijalna vozila
+          children:
+            - id: 2210
+              name: Грузовики
+              slug: heavy-trucks
+              parentid: 2200
+              icon: truck-moving
+              translations:
+                en: Trucks
+                ru: Грузовики
+                sr: Kamioni
+              children: []
+            - id: 2220
+              name: Полуприцепы
+              slug: semi-trailers
+              parentid: 2200
+              icon: trailer
+              translations:
+                en: Semi-trailers
+                ru: Полуприцепы
+                sr: Poluprikolice
+              children: []
+            - id: 2230
+              name: Лёгкий коммерческий транспорт
+              slug: light-commercial
+              parentid: 2200
+              icon: van
+              translations:
+                en: Light Commercial Vehicles
+                ru: Лёгкий коммерческий транспорт
+                sr: Laka komercijalna vozila
+              children: []
+            - id: 2240
+              name: Автобусы
+              slug: buses-commercial
+              parentid: 2200
+              icon: bus
+              translations:
+                en: Buses
+                ru: Автобусы
+                sr: Autobusi
+              children: []
+        - id: 2300
+          name: Спецтехника
+          slug: special-equipment
+          parentid: 2000
+          icon: truck-loader
+          translations:
+            en: Special Equipment
+            ru: Спецтехника
+            sr: Specijalna mehanizacija
+          children:
+            - id: 2310
+              name: Экскаваторы
+              slug: excavators-special
+              parentid: 2300
+              icon: excavator
+              translations:
+                en: Excavators
+                ru: Экскаваторы
+                sr: Bageri
+              children: []
+            - id: 2315
+              name: Погрузчики
+              slug: loaders-special
+              parentid: 2300
+              icon: loader
+              translations:
+                en: Loaders
+                ru: Погрузчики
+                sr: Utovarivači
+              children: []
+            - id: 2320
+              name: Экскаваторы-погрузчики
+              slug: backhoe-loaders-special
+              parentid: 2300
+              icon: backhoe
+              translations:
+                en: Backhoe Loaders
+                ru: Экскаваторы-погрузчики
+                sr: Kombinovani bageri
+              children: []
+            - id: 2325
+              name: Автокраны
+              slug: cranes-special
+              parentid: 2300
+              icon: crane
+              translations:
+                en: Mobile Cranes
+                ru: Автокраны
+                sr: Auto-dizalice
+              children: []
+            - id: 2330
+              name: Автобетоносмесители
+              slug: concrete-mixers-special
+              parentid: 2300
+              icon: mixer
+              translations:
+                en: Concrete Mixers
+                ru: Автобетоносмесители
+                sr: Automikseri
+              children: []
+            - id: 2335
+              name: Дорожные катки
+              slug: road-rollers-special
+              parentid: 2300
+              icon: roller
+              translations:
+                en: Road Rollers
+                ru: Дорожные катки
+                sr: Drumski valjci
+              children: []
+            - id: 2340
+              name: Поливомоечные машины
+              slug: street-washers
+              parentid: 2300
+              icon: water-truck
+              translations:
+                en: Street Sweepers
+                ru: Поливомоечные машины
+                sr: Čistilice
+              children: []
+            - id: 2345
+              name: Мусоровозы
+              slug: garbage-trucks
+              parentid: 2300
+              icon: garbage-truck
+              translations:
+                en: Garbage Trucks
+                ru: Мусоровозы
+                sr: Kamioni za smeće
+              children: []
+            - id: 2350
+              name: Автовышки
+              slug: aerial-platforms
+              parentid: 2300
+              icon: lift
+              translations:
+                en: Aerial Platforms
+                ru: Автовышки
+                sr: Autokorpe
+              children: []
+            - id: 2355
+              name: Бульдозеры
+              slug: bulldozers
+              parentid: 2300
+              icon: bulldozer
+              translations:
+                en: Bulldozers
+                ru: Бульдозеры
+                sr: Buldožeri
+              children: []
+            - id: 2360
+              name: Автогрейдеры
+              slug: graders
+              parentid: 2300
+              icon: grader
+              translations:
+                en: Motor Graders
+                ru: Автогрейдеры
+                sr: Grejderi
+              children: []
+            - id: 2365
+              name: Буровые установки
+              slug: drilling-rigs
+              parentid: 2300
+              icon: drill
+              translations:
+                en: Drilling Rigs
+                ru: Буровые установки
+                sr: Bušilice
+              children: []
+        - id: 2400
+          name: Сельхозтехника
+          slug: agricultural-vehicles
+          parentid: 2000
+          icon: tractor
+          translations:
+            en: Agricultural Machinery
+            ru: Сельхозтехника
+            sr: Poljoprivredna mehanizacija
+          children:
+            - id: 2410
+              name: Тракторы
+              slug: tractors-agricultural
+              parentid: 2400
+              icon: tractor
+              translations:
+                en: Tractors
+                ru: Тракторы
+                sr: Traktori
+              children: []
+            - id: 2415
+              name: Мини-тракторы
+              slug: mini-tractors
+              parentid: 2400
+              icon: mini-tractor
+              translations:
+                en: Mini Tractors
+                ru: Мини-тракторы
+                sr: Mini traktori
+              children: []
+            - id: 2420
+              name: Пресс-подборщики
+              slug: balers
+              parentid: 2400
+              icon: baler
+              translations:
+                en: Balers
+                ru: Пресс-подборщики
+                sr: Balirke
+              children: []
+            - id: 2425
+              name: Бороны
+              slug: harrows
+              parentid: 2400
+              icon: harrow
+              translations:
+                en: Harrows
+                ru: Бороны
+                sr: Drljače
+              children: []
+            - id: 2430
+              name: Косилки
+              slug: mowers
+              parentid: 2400
+              icon: mower
+              translations:
+                en: Mowers
+                ru: Косилки
+                sr: Kosačice
+              children: []
+            - id: 2435
+              name: Комбайны
+              slug: combines
+              parentid: 2400
+              icon: combine
+              translations:
+                en: Combines
+                ru: Комбайны
+                sr: Kombajni
+              children: []
+            - id: 2440
+              name: Телескопические погрузчики
+              slug: telescopic-loaders
+              parentid: 2400
+              icon: loader
+              translations:
+                en: Telescopic Loaders
+                ru: Телескопические погрузчики
+                sr: Teleskopski utovarivači
+              children: []
+            - id: 2445
+              name: Сеялки
+              slug: seeders
+              parentid: 2400
+              icon: seeder
+              translations:
+                en: Seeders
+                ru: Сеялки
+                sr: Sejačice
+              children: []
+            - id: 2450
+              name: Культиваторы
+              slug: cultivators
+              parentid: 2400
+              icon: cultivator
+              translations:
+                en: Cultivators
+                ru: Культиваторы
+                sr: Kultivatori
+              children: []
+            - id: 2455
+              name: Плуги
+              slug: plows
+              parentid: 2400
+              icon: plow
+              translations:
+                en: Plows
+                ru: Плуги
+                sr: Plugovi
+              children: []
+            - id: 2460
+              name: Опрыскиватели
+              slug: sprayers
+              parentid: 2400
+              icon: sprayer
+              translations:
+                en: Sprayers
+                ru: Опрыскиватели
+                sr: Prskalice
+              children: []
+        - id: 2500
+          name: Аренда авто и спецтехники
+          slug: vehicle-rent
+          parentid: 2000
+          icon: key
+          translations:
+            en: Vehicle and Equipment Rental
+            ru: Аренда авто и спецтехники
+            sr: Iznajmljivanje vozila i mehanizacije
+          children:
+            - id: 2510
+              name: Авто
+              slug: car-rent
+              parentid: 2500
+              icon: car
+              translations:
+                en: Cars
+                ru: Авто
+                sr: Automobili
+              children: []
+            - id: 2515
+              name: Подъёмная техника
+              slug: lifting-equipment-rent
+              parentid: 2500
+              icon: crane
+              translations:
+                en: Lifting Equipment
+                ru: Подъёмная техника
+                sr: Oprema za podizanje
+              children: []
+            - id: 2520
+              name: Землеройная техника
+              slug: earthmoving-equipment-rent
+              parentid: 2500
+              icon: excavator
+              translations:
+                en: Earthmoving Equipment
+                ru: Землеройная техника
+                sr: Oprema za zemljane radove
+              children: []
+            - id: 2525
+              name: Коммунальная техника
+              slug: municipal-equipment-rent
+              parentid: 2500
+              icon: truck
+              translations:
+                en: Municipal Equipment
+                ru: Коммунальная техника
+                sr: Komunalna mehanizacija
+              children: []
+            - id: 2530
+              name: Дорожно-строительная техника
+              slug: road-construction-rent
+              parentid: 2500
+              icon: road
+              translations:
+                en: Road Construction Equipment
+                ru: Дорожно-строительная техника
+                sr: Oprema za izgradnju puteva
+              children: []
+            - id: 2535
+              name: Грузовой транспорт
+              slug: cargo-transport-rent
+              parentid: 2500
+              icon: truck
+              translations:
+                en: Freight Transport
+                ru: Грузовой транспорт
+                sr: Teretni transport
+              children: []
+            - id: 2540
+              name: Погрузочная техника
+              slug: loading-equipment-rent
+              parentid: 2500
+              icon: loader
+              translations:
+                en: Loading Equipment
+                ru: Погрузочная техника
+                sr: Oprema za utovar
+              children: []
+            - id: 2545
+              name: Навесное оборудование
+              slug: attachments-rent
+              parentid: 2500
+              icon: tool
+              translations:
+                en: Attachments
+                ru: Навесное оборудование
+                sr: Priključci
+              children: []
+            - id: 2550
+              name: Прицепы
+              slug: trailers-rent
+              parentid: 2500
+              icon: trailer
+              translations:
+                en: Trailers
+                ru: Прицепы
+                sr: Prikolice
+              children: []
+            - id: 2555
+              name: Сельхозтехника
+              slug: agricultural-machinery-rent
+              parentid: 2500
+              icon: tractor
+              translations:
+                en: Agricultural Equipment
+                ru: Сельхозтехника
+                sr: Poljoprivredna oprema
+              children: []
+            - id: 2560
+              name: Автодома
+              slug: motorhomes-rent
+              parentid: 2500
+              icon: camper
+              translations:
+                en: Motorhomes
+                ru: Автодома
+                sr: Kamp kućice
+              children: []
+        - id: 2600
+          name: Мотоциклы и мототехника
+          slug: motorcycles-main
+          parentid: 2000
+          icon: motorcycle
+          translations:
+            en: Motorcycles and Motor Vehicles
+            ru: Мотоциклы и мототехника
+            sr: Motocikli i motorna vozila
+          children:
+            - id: 2610
+              name: Вездеходы
+              slug: atvs
+              parentid: 2600
+              icon: atv
+              translations:
+                en: All-terrain Vehicles
+                ru: Вездеходы
+                sr: Terenska vozila
+              children: []
+            - id: 2615
+              name: Картинг
+              slug: karting
+              parentid: 2600
+              icon: kart
+              translations:
+                en: Karting
+                ru: Картинг
+                sr: Karting
+              children: []
+            - id: 2620
+              name: Квадроциклы и багги
+              slug: atvs-moto
+              parentid: 2600
+              icon: atv
+              translations:
+                en: ATVs and Buggies
+                ru: Квадроциклы и багги
+                sr: Kvadovi i bagiji
+              children: []
+            - id: 2625
+              name: Мопеды
+              slug: mopeds
+              parentid: 2600
+              icon: moped
+              translations:
+                en: Mopeds
+                ru: Мопеды
+                sr: Mopedi
+              children: []
+            - id: 2630
+              name: Скутеры
+              slug: scooters-moto
+              parentid: 2600
+              icon: scooter
+              translations:
+                en: Scooters
+                ru: Скутеры
+                sr: Skuteri
+              children: []
+            - id: 2635
+              name: Мотоциклы
+              slug: motorcycles-vehicles
+              parentid: 2600
+              icon: motorcycle
+              translations:
+                en: Motorcycles
+                ru: Мотоциклы
+                sr: Motocikli
+              children: []
+            - id: 2640
+              name: Снегоходы
+              slug: snowmobiles
+              parentid: 2600
+              icon: snowmobile
+              translations:
+                en: Snowmobiles
+                ru: Снегоходы
+                sr: Motorne sanke
+              children: []
+        - id: 2700
+          name: Водный транспорт
+          slug: water-transport
+          parentid: 2000
+          icon: ship
+          translations:
+            en: Watercraft
+            ru: Водный транспорт
+            sr: Plovila
+          children:
+            - id: 2710
+              name: Вёсельные лодки
+              slug: rowing-boats
+              parentid: 2700
+              icon: boat
+              translations:
+                en: Rowing Boats
+                ru: Вёсельные лодки
+                sr: Čamci na vesla
+              children: []
+            - id: 2720
+              name: Каяки
+              slug: kayaks
+              parentid: 2700
+              icon: kayak
+              translations:
+                en: Kayaks
+                ru: Каяки
+                sr: Kajaci
+              children: []
+            - id: 2730
+              name: Гидроциклы
+              slug: jet-skis
+              parentid: 2700
+              icon: jet-ski
+              translations:
+                en: Jet Skis
+                ru: Гидроциклы
+                sr: Džet-ski
+              children: []
+            - id: 2740
+              name: Катера и яхты
+              slug: boats-yachts
+              parentid: 2700
+              icon: yacht
+              translations:
+                en: Boats and Yachts
+                ru: Катера и яхты
+                sr: Čamci i jahte
+              children: []
+            - id: 2750
+              name: Моторные лодки и моторы
+              slug: motorboats
+              parentid: 2700
+              icon: motorboat
+              translations:
+                en: Motorboats and Motors
+                ru: Моторные лодки и моторы
+                sr: Motorni čamci i motori
+              children: []
+        - id: 2800
+          name: Запчасти и аксессуары
+          slug: parts-accessories
+          parentid: 2000
+          icon: gear
+          translations:
+            en: Parts and Accessories
+            ru: Запчасти и аксессуары
+            sr: Delovi i dodaci
+          children:
+            - id: 2810
+              name: Запчасти
+              slug: parts
+              parentid: 2800
+              icon: car-part
+              translations:
+                en: Spare Parts
+                ru: Запчасти
+                sr: Rezervni delovi
+              children: []
+            - id: 2815
+              name: Шины, диски и колёса
+              slug: wheels-tires
+              parentid: 2800
+              icon: tire
+              translations:
+                en: Tires, Rims and Wheels
+                ru: Шины, диски и колёса
+                sr: Gume, felne i točkovi
+              children: []
+            - id: 2820
+              name: Аудио- и видеотехника
+              slug: car-audio-video
+              parentid: 2800
+              icon: car-stereo
+              translations:
+                en: Audio and Video Equipment
+                ru: Аудио- и видеотехника
+                sr: Audio i video oprema
+              children: []
+            - id: 2825
+              name: Аксессуары
+              slug: auto-accessories
+              parentid: 2800
+              icon: car-accessory
+              translations:
+                en: Accessories
+                ru: Аксессуары
+                sr: Dodaci
+              children: []
+            - id: 2830
+              name: Масла и автохимия
+              slug: oils-liquids
+              parentid: 2800
+              icon: oil
+              translations:
+                en: Oils and Auto Chemistry
+                ru: Масла и автохимия
+                sr: Ulja i auto-hemija
+              children: []
+            - id: 2835
+              name: Инструменты
+              slug: auto-tools
+              parentid: 2800
+              icon: wrench
+              translations:
+                en: Tools
+                ru: Инструменты
+                sr: Alati
+              children: []
+            - id: 2840
+              name: Багажники и фаркопы
+              slug: roof-racks
+              parentid: 2800
+              icon: roof-rack
+              translations:
+                en: Roof Racks and Towbars
+                ru: Багажники и фаркопы
+                sr: Krovni nosači i kuke
+              children: []
+            - id: 2845
+              name: Прицепы
+              slug: trailers
+              parentid: 2800
+              icon: trailer
+              translations:
+                en: Trailers
+                ru: Прицепы
+                sr: Prikolice
+              children: []
+            - id: 2850
+              name: Экипировка
+              slug: gear
+              parentid: 2800
+              icon: helmet
+              translations:
+                en: Equipment
+                ru: Экипировка
+                sr: Oprema
+              children: []
+            - id: 2855
+              name: Противоугонные устройства
+              slug: auto-security
+              parentid: 2800
+              icon: lock
+              translations:
+                en: Anti-theft Devices
+                ru: Противоугонные устройства
+                sr: Uređaji protiv krađe
+              children: []
+            - id: 2860
+              name: GPS-навигаторы
+              slug: gps
+              parentid: 2800
+              icon: navigation
+              translations:
+                en: GPS Navigation
+                ru: GPS-навигаторы
+                sr: GPS navigacija
+              children: []
+    - id: 3000
+      name: Электроника
+      slug: electronics
+      parentid: null
+      icon: smartphone
+      translations:
+        en: Electronics
+        ru: Электроника
+        sr: Elektronika
+      children:
+        - id: 3100
+          name: Телефоны
+          slug: phones-electronics
+          parentid: 3000
+          icon: phone
+          translations:
+            en: Phones
+            ru: Телефоны
+            sr: Telefoni
+          children:
+            - id: 3110
+              name: Мобильные телефоны
+              slug: mobile-phones
+              parentid: 3100
+              icon: smartphone
+              translations:
+                en: Mobile Phones
+                ru: Мобильные телефоны
+                sr: Mobilni telefoni
+              children: []
+            - id: 3120
+              name: Аксессуары
+              slug: phone-accessories-cat
+              parentid: 3100
+              icon: phone-case
+              translations:
+                en: Accessories
+                ru: Аксессуары
+                sr: Dodaci
+              children:
+                - id: 3121
+                  name: Аккумуляторы
+                  slug: batteries
+                  parentid: 3120
+                  icon: battery
+                  translations:
+                    en: Batteries
+                    ru: Аккумуляторы
+                    sr: Baterije
+                  children: []
+                - id: 3122
+                  name: Гарнитуры и наушники
+                  slug: headphones
+                  parentid: 3120
+                  icon: headphone
+                  translations:
+                    en: Headsets and Earphones
+                    ru: Гарнитуры и наушники
+                    sr: Slušalice
+                  children: []
+                - id: 3123
+                  name: Зарядные устройства
+                  slug: chargers
+                  parentid: 3120
+                  icon: charger
+                  translations:
+                    en: Chargers
+                    ru: Зарядные устройства
+                    sr: Punjači
+                  children: []
+                - id: 3124
+                  name: Кабели и адаптеры
+                  slug: cables
+                  parentid: 3120
+                  icon: cable
+                  translations:
+                    en: Cables and Adapters
+                    ru: Кабели и адаптеры
+                    sr: Kablovi i adapteri
+                  children: []
+                - id: 3125
+                  name: Модемы и роутеры
+                  slug: modems
+                  parentid: 3120
+                  icon: router
+                  translations:
+                    en: Modems and Routers
+                    ru: Модемы и роутеры
+                    sr: Modemi i ruteri
+                  children: []
+                - id: 3126
+                  name: Чехлы и плёнки
+                  slug: phone-cases
+                  parentid: 3120
+                  icon: phone-case
+                  translations:
+                    en: Cases and Screen Protectors
+                    ru: Чехлы и плёнки
+                    sr: Maske i zaštitne folije
+                  children: []
+                - id: 3127
+                  name: Запчасти
+                  slug: phone-parts
+                  parentid: 3120
+                  icon: repair
+                  translations:
+                    en: Spare Parts
+                    ru: Запчасти
+                    sr: Rezervni delovi
+                  children: []
+            - id: 3130
+              name: Рации
+              slug: radio
+              parentid: 3100
+              icon: radio
+              translations:
+                en: Two-way Radios
+                ru: Рации
+                sr: Radio stanice
+              children: []
+            - id: 3140
+              name: Стационарные телефоны
+              slug: landline-phones
+              parentid: 3100
+              icon: phone
+              translations:
+                en: Landline Phones
+                ru: Стационарные телефоны
+                sr: Fiksni telefoni
+              children: []
+        - id: 3200
+          name: Аудио и видео
+          slug: audio-video
+          parentid: 3000
+          icon: tv
+          translations:
+            en: Audio and Video
+            ru: Аудио и видео
+            sr: Audio i video
+          children:
+            - id: 3210
+              name: Телевизоры и проекторы
+              slug: tv-projectors
+              parentid: 3200
+              icon: tv
+              translations:
+                en: TVs and Projectors
+                ru: Телевизоры и проекторы
+                sr: Televizori i projektori
+              children: []
+            - id: 3215
+              name: Наушники
+              slug: headphones-audio
+              parentid: 3200
+              icon: headphones
+              translations:
+                en: Headphones
+                ru: Наушники
+                sr: Slušalice
+              children: []
+            - id: 3220
+              name: Акустика, колонки, сабвуферы
+              slug: speakers
+              parentid: 3200
+              icon: speaker
+              translations:
+                en: Speakers, Sound Systems, Subwoofers
+                ru: Акустика, колонки, сабвуферы
+                sr: Zvučnici, sistemi, sabvuferi
+              children: []
+            - id: 3225
+              name: Аксессуары
+              slug: av-accessories-cat
+              parentid: 3200
+              icon: remote
+              translations:
+                en: Accessories
+                ru: Аксессуары
+                sr: Dodaci
+              children: []
+            - id: 3230
+              name: Музыкальные центры, магнитолы
+              slug: stereo-systems
+              parentid: 3200
+              icon: stereo
+              translations:
+                en: Stereo Systems, Boomboxes
+                ru: Музыкальные центры, магнитолы
+                sr: Muzički centri, kasetofoni
+              children: []
+            - id: 3235
+              name: Усилители и ресиверы
+              slug: amplifiers
+              parentid: 3200
+              icon: amplifier
+              translations:
+                en: Amplifiers and Receivers
+                ru: Усилители и ресиверы
+                sr: Pojačala i risiveri
+              children: []
+            - id: 3240
+              name: Видеокамеры
+              slug: video-cameras
+              parentid: 3200
+              icon: video-camera
+              translations:
+                en: Video Cameras
+                ru: Видеокамеры
+                sr: Video kamere
+              children: []
+            - id: 3245
+              name: Видео, DVD и Blu-ray плееры
+              slug: video-players
+              parentid: 3200
+              icon: dvd
+              translations:
+                en: Video, DVD and Blu-ray Players
+                ru: Видео, DVD и Blu-ray плееры
+                sr: Video, DVD i Blu-rej plejeri
+              children: []
+            - id: 3250
+              name: Кабели и адаптеры
+              slug: av-cables
+              parentid: 3200
+              icon: cable
+              translations:
+                en: Cables and Adapters
+                ru: Кабели и адаптеры
+                sr: Kablovi i adapteri
+              children: []
+            - id: 3255
+              name: Музыка и фильмы
+              slug: media
+              parentid: 3200
+              icon: disc
+              translations:
+                en: Music and Movies
+                ru: Музыка и фильмы
+                sr: Muzika i filmovi
+              children: []
+            - id: 3260
+              name: Микрофоны
+              slug: microphones
+              parentid: 3200
+              icon: microphone
+              translations:
+                en: Microphones
+                ru: Микрофоны
+                sr: Mikrofoni
+              children: []
+            - id: 3265
+              name: MP3-плееры
+              slug: mp3-players
+              parentid: 3200
+              icon: mp3
+              translations:
+                en: MP3 Players
+                ru: MP3-плееры
+                sr: MP3 plejeri
+              children: []
+        - id: 3300
+          name: Товары для компьютера
+          slug: computer-goods
+          parentid: 3000
+          icon: computer
+          translations:
+            en: Computer Equipment
+            ru: Товары для компьютера
+            sr: Računarska oprema
+          children:
+            - id: 3310
+              name: Системные блоки
+              slug: desktop-pc
+              parentid: 3300
+              icon: desktop
+              translations:
+                en: Desktop Computers
+                ru: Системные блоки
+                sr: Desktop računari
+              children: []
+            - id: 3320
+              name: Моноблоки
+              slug: all-in-one
+              parentid: 3300
+              icon: monitor
+              translations:
+                en: All-in-Ones
+                ru: Моноблоки
+                sr: Monitori
+              children: []
+            - id: 3330
+              name: Комплектующие
+              slug: components
+              parentid: 3300
+              icon: chip
+              translations:
+                en: Components
+                ru: Комплектующие
+                sr: Komponente
+              children:
+                - id: 3331
+                  name: CD, DVD и Blu-ray приводы
+                  slug: optical-drives
+                  parentid: 3330
+                  icon: disc-drive
+                  translations:
+                    en: CD, DVD and Blu-ray Drives
+                    ru: CD, DVD и Blu-ray приводы
+                    sr: CD, DVD i Blu-rej uređaji
+                  children: []
+                - id: 3332
+                  name: Блоки питания
+                  slug: power-supplies
+                  parentid: 3330
+                  icon: power
+                  translations:
+                    en: Power Supplies
+                    ru: Блоки питания
+                    sr: Napajanja
+                  children: []
+                - id: 3333
+                  name: Видеокарты
+                  slug: video-cards
+                  parentid: 3330
+                  icon: gpu
+                  translations:
+                    en: Video Cards
+                    ru: Видеокарты
+                    sr: Grafičke karte
+                  children: []
+                - id: 3334
+                  name: Жёсткие диски
+                  slug: hard-drives
+                  parentid: 3330
+                  icon: hdd
+                  translations:
+                    en: Hard Drives
+                    ru: Жёсткие диски
+                    sr: Hard diskovi
+                  children: []
+                - id: 3335
+                  name: Звуковые карты
+                  slug: sound-cards
+                  parentid: 3330
+                  icon: sound
+                  translations:
+                    en: Sound Cards
+                    ru: Звуковые карты
+                    sr: Zvučne karte
+                  children: []
+                - id: 3336
+                  name: Контроллеры
+                  slug: controllers
+                  parentid: 3330
+                  icon: controller
+                  translations:
+                    en: Controllers
+                    ru: Контроллеры
+                    sr: Kontroleri
+                  children: []
+                - id: 3337
+                  name: Корпуса
+                  slug: pc-cases
+                  parentid: 3330
+                  icon: case
+                  translations:
+                    en: Cases
+                    ru: Корпуса
+                    sr: Kućišta
+                  children: []
+                - id: 3338
+                  name: Материнские платы
+                  slug: motherboards
+                  parentid: 3330
+                  icon: motherboard
+                  translations:
+                    en: Motherboards
+                    ru: Материнские платы
+                    sr: Matične ploče
+                  children: []
+                - id: 3339
+                  name: Оперативная память
+                  slug: ram
+                  parentid: 3330
+                  icon: memory
+                  translations:
+                    en: RAM
+                    ru: Оперативная память
+                    sr: RAM memorija
+                  children: []
+                - id: 3340
+                  name: Процессоры
+                  slug: processors
+                  parentid: 3330
+                  icon: cpu
+                  translations:
+                    en: Processors
+                    ru: Процессоры
+                    sr: Procesori
+                  children: []
+                - id: 3341
+                  name: Системы охлаждения
+                  slug: cooling
+                  parentid: 3330
+                  icon: fan
+                  translations:
+                    en: Cooling Systems
+                    ru: Системы охлаждения
+                    sr: Sistemi za hlađenje
+                  children: []
+            - id: 3360
+              name: Мониторы и запчасти
+              slug: monitors
+              parentid: 3300
+              icon: monitor
+              translations:
+                en: Monitors and Parts
+                ru: Мониторы и запчасти
+                sr: Monitori i delovi
+              children: []
+            - id: 3365
+              name: Сетевое оборудование
+              slug: network
+              parentid: 3300
+              icon: network
+              translations:
+                en: Network Equipment
+                ru: Сетевое оборудование
+                sr: Mrežna oprema
+              children: []
+            - id: 3370
+              name: Клавиатуры и мыши
+              slug: keyboards-mice
+              parentid: 3300
+              icon: keyboard
+              translations:
+                en: Keyboards and Mice
+                ru: Клавиатуры и мыши
+                sr: Tastature i miševi
+              children: []
+            - id: 3375
+              name: Джойстики и рули
+              slug: gaming-peripherals
+              parentid: 3300
+              icon: gamepad
+              translations:
+                en: Joysticks and Steering Wheels
+                ru: Джойстики и рули
+                sr: Džojstici i volani
+              children: []
+            - id: 3380
+              name: Флэшки и карты памяти
+              slug: storage
+              parentid: 3300
+              icon: usb
+              translations:
+                en: Flash Drives and Memory Cards
+                ru: Флэшки и карты памяти
+                sr: Fleš memorije i memorijske kartice
+              children: []
+            - id: 3385
+              name: Веб-камеры
+              slug: webcams
+              parentid: 3300
+              icon: webcam
+              translations:
+                en: Webcams
+                ru: Веб-камеры
+                sr: Veb kamere
+              children: []
+            - id: 3390
+              name: ТВ-тюнеры
+              slug: tv-tuners
+              parentid: 3300
+              icon: tv-card
+              translations:
+                en: TV Tuners
+                ru: ТВ-тюнеры
+                sr: TV tjuneri
+              children: []
+        - id: 3500
+          name: Игры, приставки и программы
+          slug: games-software
+          parentid: 3000
+          icon: gamepad
+          translations:
+            en: Games, Consoles and Software
+            ru: Игры, приставки и программы
+            sr: Igre, konzole i programi
+          children:
+            - id: 3510
+              name: Игровые приставки
+              slug: consoles
+              parentid: 3500
+              icon: console
+              translations:
+                en: Game Consoles
+                ru: Игровые приставки
+                sr: Konzole za igre
+              children: []
+            - id: 3520
+              name: Игры для приставок
+              slug: console-games
+              parentid: 3500
+              icon: game-disc
+              translations:
+                en: Console Games
+                ru: Игры для приставок
+                sr: Igre za konzole
+              children: []
+            - id: 3530
+              name: Компьютерные игры
+              slug: pc-games
+              parentid: 3500
+              icon: game
+              translations:
+                en: Computer Games
+                ru: Компьютерные игры
+                sr: Računarske igre
+              children: []
+            - id: 3540
+              name: Программы
+              slug: software
+              parentid: 3500
+              icon: software
+              translations:
+                en: Software
+                ru: Программы
+                sr: Programi
+              children: []
+        - id: 3600
+          name: Ноутбуки
+          slug: laptops
+          parentid: 3000
+          icon: laptop
+          translations:
+            en: Laptops
+            ru: Ноутбуки
+            sr: Laptopovi
+          children: []
+        - id: 3700
+          name: Фототехника
+          slug: photo
+          parentid: 3000
+          icon: camera
+          translations:
+            en: Photography Equipment
+            ru: Фототехника
+            sr: Foto oprema
+          children:
+            - id: 3710
+              name: Оборудование и аксессуары
+              slug: photo-accessories
+              parentid: 3700
+              icon: camera-accessories
+              translations:
+                en: Equipment and Accessories
+                ru: Оборудование и аксессуары
+                sr: Oprema i dodaci
+              children: []
+            - id: 3720
+              name: Объективы
+              slug: lenses
+              parentid: 3700
+              icon: camera-lens
+              translations:
+                en: Lenses
+                ru: Объективы
+                sr: Objektivi
+              children: []
+            - id: 3730
+              name: Компактные фотоаппараты
+              slug: compact-cameras
+              parentid: 3700
+              icon: compact-camera
+              translations:
+                en: Compact Cameras
+                ru: Компактные фотоаппараты
+                sr: Kompaktni fotoaparati
+              children: []
+            - id: 3740
+              name: Плёночные фотоаппараты
+              slug: film-cameras
+              parentid: 3700
+              icon: vintage-camera
+              translations:
+                en: Film Cameras
+                ru: Плёночные фотоаппараты
+                sr: Filmski fotoaparati
+              children: []
+            - id: 3750
+              name: Зеркальные фотоаппараты
+              slug: dslr-cameras
+              parentid: 3700
+              icon: dslr
+              translations:
+                en: DSLR Cameras
+                ru: Зеркальные фотоаппараты
+                sr: DSLR fotoaparati
+              children: []
+        - id: 3800
+          name: Планшеты и электронные книги
+          slug: tablets-ebooks
+          parentid: 3000
+          icon: tablet
+          translations:
+            en: Tablets and E-readers
+            ru: Планшеты и электронные книги
+            sr: Tableti i e-čitači
+          children:
+            - id: 3810
+              name: Планшеты
+              slug: tablets
+              parentid: 3800
+              icon: tablet
+              translations:
+                en: Tablets
+                ru: Планшеты
+                sr: Tableti
+              children: []
+            - id: 3820
+              name: Электронные книги
+              slug: ebook-readers
+              parentid: 3800
+              icon: ebook
+              translations:
+                en: E-readers
+                ru: Электронные книги
+                sr: E-čitači
+              children: []
+            - id: 3830
+              name: Аксессуары
+              slug: tablet-accessories-cat
+              parentid: 3800
+              icon: tablet-case
+              translations:
+                en: Accessories
+                ru: Аксессуары
+                sr: Dodaci
+              children: []
+        - id: 3900
+          name: Оргтехника и расходники
+          slug: office-equipment
+          parentid: 3000
+          icon: printer
+          translations:
+            en: Office Equipment and Supplies
+            ru: Оргтехника и расходники
+            sr: Kancelarijska oprema i potrošni materijal
+          children:
+            - id: 3910
+              name: МФУ, копиры и сканеры
+              slug: mfp
+              parentid: 3900
+              icon: printer
+              translations:
+                en: MFPs, Copiers and Scanners
+                ru: МФУ, копиры и сканеры
+                sr: MFP, kopir i skener uređaji
+              children: []
+            - id: 3920
+              name: Принтеры
+              slug: printers
+              parentid: 3900
+              icon: printer
+              translations:
+                en: Printers
+                ru: Принтеры
+                sr: Štampači
+              children: []
+            - id: 3930
+              name: Канцелярия
+              slug: stationery
+              parentid: 3900
+              icon: pencil
+              translations:
+                en: Stationery
+                ru: Канцелярия
+                sr: Kancelarijski materijal
+              children: []
+            - id: 3940
+              name: ИБП, сетевые фильтры
+              slug: ups
+              parentid: 3900
+              icon: power-supply
+              translations:
+                en: UPS, Surge Protectors
+                ru: ИБП, сетевые фильтры
+                sr: UPS, filteri napajanja
+              children: []
+            - id: 3950
+              name: Телефония
+              slug: office-phones
+              parentid: 3900
+              icon: phone
+              translations:
+                en: Telephony
+                ru: Телефония
+                sr: Telefonija
+              children: []
+            - id: 3960
+              name: Уничтожители бумаг
+              slug: shredders
+              parentid: 3900
+              icon: shredder
+              translations:
+                en: Paper Shredders
+                ru: Уничтожители бумаг
+                sr: Uništavači papira
+              children: []
+            - id: 3970
+              name: Расходные материалы
+              slug: consumables
+              parentid: 3900
+              icon: ink
+              translations:
+                en: Consumables
+                ru: Расходные материалы
+                sr: Potrošni materijal
+              children: []
+        - id: 4100
+          name: Бытовая техника
+          slug: appliances
+          parentid: 3000
+          icon: appliance
+          translations:
+            en: Home Appliances
+            ru: Бытовая техника
+            sr: Kućni aparati
+          children:
+            - id: 4110
+              name: Для кухни
+              slug: kitchen-appliances
+              parentid: 4100
+              icon: kitchen
+              translations:
+                en: Kitchen Appliances
+                ru: Для кухни
+                sr: Kuhinjski aparati
+              children:
+                - id: 4111
+                  name: Вытяжки
+                  slug: range-hoods
+                  parentid: 4110
+                  icon: hood
+                  translations:
+                    en: Exhaust Hoods
+                    ru: Вытяжки
+                    sr: Aspiratori
+                  children: []
+                - id: 4112
+                  name: Мелкая кухонная техника
+                  slug: small-kitchen-appliances
+                  parentid: 4110
+                  icon: blender
+                  translations:
+                    en: Small Kitchen Appliances
+                    ru: Мелкая кухонная техника
+                    sr: Mali kuhinjski aparati
+                  children: []
+                - id: 4113
+                  name: Микроволновые печи
+                  slug: microwaves
+                  parentid: 4110
+                  icon: microwave
+                  translations:
+                    en: Microwave Ovens
+                    ru: Микроволновые печи
+                    sr: Mikrotalasne pećnice
+                  children: []
+                - id: 4114
+                  name: Плиты и духовые шкафы
+                  slug: stoves-ovens
+                  parentid: 4110
+                  icon: stove
+                  translations:
+                    en: Stoves and Ovens
+                    ru: Плиты и духовые шкафы
+                    sr: Šporeti i rerne
+                  children: []
+                - id: 4115
+                  name: Посудомоечные машины
+                  slug: dishwashers
+                  parentid: 4110
+                  icon: dishwasher
+                  translations:
+                    en: Dishwashers
+                    ru: Посудомоечные машины
+                    sr: Mašine za pranje sudova
+                  children: []
+                - id: 4116
+                  name: Холодильники и морозильные камеры
+                  slug: refrigerators
+                  parentid: 4110
+                  icon: fridge
+                  translations:
+                    en: Refrigerators and Freezers
+                    ru: Холодильники и морозильные камеры
+                    sr: Frižideri i zamrzivači
+                  children: []
+            - id: 4120
+              name: Для дома
+              slug: home-appliances
+              parentid: 4100
+              icon: home
+              translations:
+                en: Home Appliances
+                ru: Для дома
+                sr: Kućni aparati
+              children:
+                - id: 4121
+                  name: Пылесосы и запчасти
+                  slug: vacuum-cleaners
+                  parentid: 4120
+                  icon: vacuum
+                  translations:
+                    en: Vacuum Cleaners and Parts
+                    ru: Пылесосы и запчасти
+                    sr: Usisivači i delovi
+                  children: []
+                - id: 4122
+                  name: Стиральные и сушильные машины
+                  slug: washers-dryers
+                  parentid: 4120
+                  icon: washer
+                  translations:
+                    en: Washing and Drying Machines
+                    ru: Стиральные и сушильные машины
+                    sr: Mašine za pranje i sušenje veša
+                  children: []
+                - id: 4123
+                  name: Утюги
+                  slug: irons
+                  parentid: 4120
+                  icon: iron
+                  translations:
+                    en: Irons
+                    ru: Утюги
+                    sr: Pegle
+                  children: []
+                - id: 4124
+                  name: Швейное оборудование
+                  slug: sewing
+                  parentid: 4120
+                  icon: sewing-machine
+                  translations:
+                    en: Sewing Equipment
+                    ru: Швейное оборудование
+                    sr: Oprema za šivenje
+                  children: []
+            - id: 4130
+              name: Климатическое оборудование
+              slug: climate-control
+              parentid: 4100
+              icon: temperature
+              translations:
+                en: Climate Equipment
+                ru: Климатическое оборудование
+                sr: Klimatizaciona oprema
+              children:
+                - id: 4131
+                  name: Вентиляторы
+                  slug: fans
+                  parentid: 4130
+                  icon: fan
+                  translations:
+                    en: Fans
+                    ru: Вентиляторы
+                    sr: Ventilatori
+                  children: []
+                - id: 4132
+                  name: Кондиционеры и запчасти
+                  slug: air-conditioners
+                  parentid: 4130
+                  icon: air-conditioner
+                  translations:
+                    en: Air Conditioners and Parts
+                    ru: Кондиционеры и запчасти
+                    sr: Klima uređaji i delovi
+                  children: []
+                - id: 4133
+                  name: Обогреватели
+                  slug: heaters
+                  parentid: 4130
+                  icon: heater
+                  translations:
+                    en: Heaters
+                    ru: Обогреватели
+                    sr: Grejalice
+                  children: []
+                - id: 4134
+                  name: Очистители воздуха
+                  slug: air-purifiers
+                  parentid: 4130
+                  icon: air-purifier
+                  translations:
+                    en: Air Purifiers
+                    ru: Очистители воздуха
+                    sr: Prečišćivači vazduha
+                  children: []
+                - id: 4135
+                  name: Термометры и метеостанции
+                  slug: weather-stations
+                  parentid: 4130
+                  icon: thermometer
+                  translations:
+                    en: Thermometers and Weather Stations
+                    ru: Термометры и метеостанции
+                    sr: Termometri i meteo stanice
+                  children: []
+            - id: 4140
+              name: Для индивидуального ухода
+              slug: personal-care
+              parentid: 4100
+              icon: health
+              translations:
+                en: Personal Care
+                ru: Для индивидуального ухода
+                sr: Aparati za ličnu negu
+              children:
+                - id: 4141
+                  name: Бритвы и триммеры
+                  slug: shavers
+                  parentid: 4140
+                  icon: razor
+                  translations:
+                    en: Shavers and Trimmers
+                    ru: Бритвы и триммеры
+                    sr: Brijači i trimeri
+                  children: []
+                - id: 4142
+                  name: Машинки для стрижки
+                  slug: hair-clippers
+                  parentid: 4140
+                  icon: scissors
+                  translations:
+                    en: Hair Clippers
+                    ru: Машинки для стрижки
+                    sr: Mašinice za šišanje
+                  children: []
+                - id: 4143
+                  name: Фены и приборы для укладки
+                  slug: hair-care
+                  parentid: 4140
+                  icon: hair-dryer
+                  translations:
+                    en: Hair Dryers and Styling Tools
+                    ru: Фены и приборы для укладки
+                    sr: Fenovi i uređaji za oblikovanje
+                  children: []
+                - id: 4144
+                  name: Эпиляторы
+                  slug: epilators
+                  parentid: 4140
+                  icon: epilator
+                  translations:
+                    en: Epilators
+                    ru: Эпиляторы
+                    sr: Epilatori
+                  children: []
+    - id: 5000
+      name: Все для дома и квартиры
+      slug: home-and-apartment
+      parentid: null
+      icon: house
+      translations:
+        en: Home and Apartment
+        ru: Все для дома и квартиры
+        sr: Sve za kuću i stan
+      children:
+        - id: 5100
+          name: Ремонт и строительство
+          slug: repair-construction
+          parentid: 5000
+          icon: tools
+          translations:
+            en: Renovation and Construction
+            ru: Ремонт и строительство
+            sr: Renoviranje i izgradnja
+          children:
+            - id: 5110
+              name: Двери
+              slug: doors
+              parentid: 5100
+              icon: door
+              translations:
+                en: Doors
+                ru: Двери
+                sr: Vrata
+              children: []
+            - id: 5115
+              name: Инструменты
+              slug: construction-tools
+              parentid: 5100
+              icon: hammer
+              translations:
+                en: Tools
+                ru: Инструменты
+                sr: Alati
+              children: []
+            - id: 5120
+              name: Камины и обогреватели
+              slug: fireplaces
+              parentid: 5100
+              icon: fire
+              translations:
+                en: Fireplaces and Heaters
+                ru: Камины и обогреватели
+                sr: Kamini i grejalice
+              children: []
+            - id: 5125
+              name: Окна и балконы
+              slug: windows
+              parentid: 5100
+              icon: window
+              translations:
+                en: Windows and Balconies
+                ru: Окна и балконы
+                sr: Prozori i balkoni
+              children: []
+            - id: 5130
+              name: Потолки
+              slug: ceilings
+              parentid: 5100
+              icon: ceiling
+              translations:
+                en: Ceilings
+                ru: Потолки
+                sr: Plafoni
+              children: []
+            - id: 5135
+              name: Для сада и дачи
+              slug: garden-items
+              parentid: 5100
+              icon: garden
+              translations:
+                en: Garden and Cottage
+                ru: Для сада и дачи
+                sr: Za baštu i vikendicu
+              children: []
+            - id: 5140
+              name: Сантехника, водоснабжение и сауна
+              slug: plumbing
+              parentid: 5100
+              icon: faucet
+              translations:
+                en: Plumbing, Water Supply and Sauna
+                ru: Сантехника, водоснабжение и сауна
+                sr: Vodovod, vodosnabdevanje i sauna
+              children: []
+            - id: 5145
+              name: Готовые строения и срубы
+              slug: buildings
+              parentid: 5100
+              icon: house
+              translations:
+                en: Ready-made Buildings and Log Houses
+                ru: Готовые строения и срубы
+                sr: Gotove konstrukcije i brvnare
+              children: []
+            - id: 5150
+              name: Ворота, заборы и ограждения
+              slug: fences
+              parentid: 5100
+              icon: fence
+              translations:
+                en: Gates, Fences and Barriers
+                ru: Ворота, заборы и ограждения
+                sr: Kapije, ograde i barijere
+              children: []
+            - id: 5155
+              name: Охрана и сигнализации
+              slug: home-security
+              parentid: 5100
+              icon: shield
+              translations:
+                en: Security and Alarm Systems
+                ru: Охрана и сигнализации
+                sr: Sigurnosni i alarmni sistemi
+              children: []
+        - id: 5200
+          name: Мебель и интерьер
+          slug: furniture-interior
+          parentid: 5000
+          icon: couch
+          translations:
+            en: Furniture and Interior
+            ru: Мебель и интерьер
+            sr: Nameštaj i enterijer
+          children:
+            - id: 5210
+              name: Кровати, диваны и кресла
+              slug: beds-sofas
+              parentid: 5200
+              icon: bed
+              translations:
+                en: Beds, Sofas and Armchairs
+                ru: Кровати, диваны и кресла
+                sr: Kreveti, kauči i fotelje
+              children: []
+            - id: 5215
+              name: Текстиль и ковры
+              slug: textiles
+              parentid: 5200
+              icon: carpet
+              translations:
+                en: Textiles and Rugs
+                ru: Текстиль и ковры
+                sr: Tekstil i tepisi
+              children: []
+            - id: 5220
+              name: Освещение
+              slug: lighting
+              parentid: 5200
+              icon: lamp
+              translations:
+                en: Lighting
+                ru: Освещение
+                sr: Osvetljenje
+              children: []
+            - id: 5225
+              name: Компьютерные столы и кресла
+              slug: computer-furniture
+              parentid: 5200
+              icon: desk
+              translations:
+                en: Computer Desks and Chairs
+                ru: Компьютерные столы и кресла
+                sr: Kompjuterski stolovi i stolice
+              children: []
+            - id: 5230
+              name: Шкафы, комоды и стеллажи
+              slug: storage-furniture
+              parentid: 5200
+              icon: cabinet
+              translations:
+                en: Wardrobes, Chests and Shelving
+                ru: Шкафы, комоды и стеллажи
+                sr: Ormari, komode i police
+              children: []
+            - id: 5235
+              name: Кухонные гарнитуры
+              slug: kitchen-furniture
+              parentid: 5200
+              icon: kitchen
+              translations:
+                en: Kitchen Sets
+                ru: Кухонные гарнитуры
+                sr: Kuhinjske garniture
+              children: []
+            - id: 5240
+              name: Столы и стулья
+              slug: tables-chairs
+              parentid: 5200
+              icon: chair
+              translations:
+                en: Tables and Chairs
+                ru: Столы и стулья
+                sr: Stolovi i stolice
+              children: []
+            - id: 5250
+              name: Комнатные растения
+              slug: indoor-plants
+              parentid: 5200
+              icon: plant
+              translations:
+                en: Indoor Plants
+                ru: Комнатные растения
+                sr: Sobne biljke
+              children:
+                - id: 5251
+                  name: Декоративно-лиственные растения
+                  slug: decorative-plants
+                  parentid: 5250
+                  icon: leaf
+                  translations:
+                    en: Decorative Foliage Plants
+                    ru: Декоративно-лиственные растения
+                    sr: Dekorativno lišće biljaka
+                  children: []
+                - id: 5252
+                  name: Цветущие растения
+                  slug: flowering-plants
+                  parentid: 5250
+                  icon: flower
+                  translations:
+                    en: Flowering Plants
+                    ru: Цветущие растения
+                    sr: Cvetne biljke
+                  children: []
+                - id: 5253
+                  name: Пальмы и фикусы
+                  slug: palms-ficus
+                  parentid: 5250
+                  icon: palm-tree
+                  translations:
+                    en: Palms and Ficus
+                    ru: Пальмы и фикусы
+                    sr: Palme i fikusi
+                  children: []
+                - id: 5254
+                  name: Кактусы и суккуленты
+                  slug: cacti
+                  parentid: 5250
+                  icon: cactus
+                  translations:
+                    en: Cacti and Succulents
+                    ru: Кактусы и суккуленты
+                    sr: Kaktusi i sukulenti
+                  children: []
+        - id: 5300
+          name: Продукты питания
+          slug: food
+          parentid: 5000
+          icon: food
+          translations:
+            en: Food Products
+            ru: Продукты питания
+            sr: Prehrambeni proizvodi
+          children:
+            - id: 5310
+              name: Чай, кофе, какао
+              slug: beverages
+              parentid: 5300
+              icon: coffee
+              translations:
+                en: Tea, Coffee, Cocoa
+                ru: Чай, кофе, какао
+                sr: Čaj, kafa, kakao
+              children: []
+            - id: 5315
+              name: Напитки
+              slug: drinks
+              parentid: 5300
+              icon: bottle
+              translations:
+                en: Beverages
+                ru: Напитки
+                sr: Pića
+              children: []
+            - id: 5320
+              name: Рыба, морепродукты, икра
+              slug: seafood
+              parentid: 5300
+              icon: fish
+              translations:
+                en: Fish, Seafood, Caviar
+                ru: Рыба, морепродукты, икра
+                sr: Riba, morski plodovi, kavijar
+              children: []
+            - id: 5325
+              name: Мясо, птица, субпродукты
+              slug: meat
+              parentid: 5300
+              icon: meat
+              translations:
+                en: Meat, Poultry, Offal
+                ru: Мясо, птица, субпродукты
+                sr: Meso, živina, iznutrice
+              children: []
+            - id: 5330
+              name: Кондитерские изделия
+              slug: sweets
+              parentid: 5300
+              icon: candy
+              translations:
+                en: Confectionery
+                ru: Кондитерские изделия
+                sr: Slatkiši
+              children: []
+            - id: 5340
+              name: Ракия и вино
+              slug: rakija-wine
+              parentid: 5300
+              icon: wine-bottle
+              translations:
+                en: Rakia and Wine
+                ru: Ракия и вино
+                sr: Rakija i vino
+              children:
+                - id: 5341
+                  name: Сливовая ракия
+                  slug: plum-rakija
+                  parentid: 5340
+                  icon: bottle
+                  translations:
+                    en: Plum Rakia
+                    ru: Сливовая ракия
+                    sr: Šljivovica
+                  children: []
+                - id: 5342
+                  name: Виноградная ракия
+                  slug: grape-rakija
+                  parentid: 5340
+                  icon: bottle
+                  translations:
+                    en: Grape Rakia
+                    ru: Виноградная ракия
+                    sr: Lozovača
+                  children: []
+                - id: 5343
+                  name: Фруктовая ракия
+                  slug: fruit-rakija
+                  parentid: 5340
+                  icon: bottle
+                  translations:
+                    en: Fruit Rakia
+                    ru: Фруктовая ракия
+                    sr: Voćna rakija
+                  children: []
+                - id: 5344
+                  name: Домашнее вино
+                  slug: homemade-wine
+                  parentid: 5340
+                  icon: wine
+                  translations:
+                    en: Homemade Wine
+                    ru: Домашнее вино
+                    sr: Domaće vino
+                  children: []
+            - id: 5350
+              name: Домашние сыры
+              slug: homemade-cheese
+              parentid: 5300
+              icon: cheese
+              translations:
+                en: Homemade Cheese
+                ru: Домашние сыры
+                sr: Domaći sirevi
+              children: []
+            - id: 5360
+              name: Каймак
+              slug: kajmak
+              parentid: 5300
+              icon: dairy
+              translations:
+                en: Kaymak
+                ru: Каймак
+                sr: Kajmak
+              children: []
+            - id: 5370
+              name: Айвар
+              slug: ajvar
+              parentid: 5300
+              icon: jar
+              translations:
+                en: Ajvar
+                ru: Айвар
+                sr: Ajvar
+              children: []
+        - id: 5400
+          name: Посуда и товары для кухни
+          slug: kitchenware
+          parentid: 5000
+          icon: utensils
+          translations:
+            en: Kitchenware and Kitchen Goods
+            ru: Посуда и товары для кухни
+            sr: Posuđe i kuhinjski pribor
+          children:
+            - id: 5405
+              name: Посуда
+              slug: dishes
+              parentid: 5400
+              icon: plate
+              translations:
+                en: Tableware
+                ru: Посуда
+                sr: Posuđe
+              children: []
+            - id: 5410
+              name: Товары для кухни
+              slug: kitchen-items
+              parentid: 5400
+              icon: kitchen-tools
+              translations:
+                en: Kitchen Items
+                ru: Товары для кухни
+                sr: Kuhinjski pribor
+              children: []
+            - id: 5415
+              name: Сервировка стола
+              slug: table-setting
+              parentid: 5400
+              icon: silverware
+              translations:
+                en: Table Setting
+                ru: Сервировка стола
+                sr: Pribor za postavljanje stola
+              children: []
+            - id: 5420
+              name: Приготовление пищи
+              slug: cooking
+              parentid: 5400
+              icon: pot
+              translations:
+                en: Cooking
+                ru: Приготовление пищи
+                sr: Pribor za kuvanje
+              children: []
+            - id: 5425
+              name: Хранение продуктов
+              slug: food-storage
+              parentid: 5400
+              icon: container
+              translations:
+                en: Food Storage
+                ru: Хранение продуктов
+                sr: Čuvanje hrane
+              children: []
+            - id: 5430
+              name: Приготовление напитков
+              slug: drink-preparation
+              parentid: 5400
+              icon: coffee-maker
+              translations:
+                en: Beverage Preparation
+                ru: Приготовление напитков
+                sr: Priprema napitaka
+              children: []
+            - id: 5435
+              name: Хозяйственные товары
+              slug: household
+              parentid: 5400
+              icon: broom
+              translations:
+                en: Household Goods
+                ru: Хозяйственные товары
+                sr: Kućna hemija
+              children: []
+    - id: 6000
+      name: Все для сада
+      slug: garden
+      parentid: null
+      icon: tree
+      translations:
+        en: Garden Supplies
+        ru: Все для сада
+        sr: Sve za baštu
+      children:
+        - id: 6050
+          name: Садовая мебель
+          slug: garden-furniture
+          parentid: 6000
+          icon: bench
+          translations:
+            en: Garden Furniture
+            ru: Садовая мебель
+            sr: Baštenski nameštaj
+          children: []
+        - id: 6100
+          name: Садовые инструменты
+          slug: garden-tools
+          parentid: 6000
+          icon: shovel
+          translations:
+            en: Garden Tools
+            ru: Садовые инструменты
+            sr: Baštenski alati
+          children: []
+        - id: 6200
+          name: Семена и рассада
+          slug: seeds-seedlings
+          parentid: 6000
+          icon: seed
+          translations:
+            en: Seeds and Seedlings
+            ru: Семена и рассада
+            sr: Seme i rasad
+          children: []
+        - id: 6250
+          name: Барбекю и аксессуары
+          slug: bbq-accessories
+          parentid: 6000
+          icon: bbq
+          translations:
+            en: BBQ and Accessories
+            ru: Барбекю и аксессуары
+            sr: Roštilj i dodaci
+          children: []
+        - id: 6300
+          name: Бассейны и оборудование
+          slug: pools-equipment
+          parentid: 6000
+          icon: pool
+          translations:
+            en: Swimming Pools and Equipment
+            ru: Бассейны и оборудование
+            sr: Bazeni i oprema
+          children: []
+        - id: 6350
+          name: Системы полива
+          slug: irrigation-systems
+          parentid: 6000
+          icon: sprinkler
+          translations:
+            en: Irrigation Systems
+            ru: Системы полива
+            sr: Sistemi za navodnjavanje
+          children: []
+        - id: 6400
+          name: Компостирование
+          slug: composting
+          parentid: 6000
+          icon: compost
+          translations:
+            en: Composting
+            ru: Компостирование
+            sr: Kompostiranje
+          children: []
+        - id: 6450
+          name: Теплицы и парники
+          slug: greenhouses
+          parentid: 6000
+          icon: greenhouse
+          translations:
+            en: Greenhouses and Hotbeds
+            ru: Теплицы и парники
+            sr: Staklenici i rasadnici
+          children: []
+        - id: 6500
+          name: Удобрения и грунты
+          slug: fertilizers-soils
+          parentid: 6000
+          icon: fertilizer
+          translations:
+            en: Fertilizers and Soils
+            ru: Удобрения и грунты
+            sr: Đubriva i zemlja
+          children: []
+        - id: 6550
+          name: Освещение
+          slug: garden-lighting
+          parentid: 6000
+          icon: light
+          translations:
+            en: Lighting
+            ru: Освещение
+            sr: Osvetljenje
+          children: []
+        - id: 6600
+          name: Оформление интерьера
+          slug: garden-decor
+          parentid: 6000
+          icon: decoration
+          translations:
+            en: Interior Design
+            ru: Оформление интерьера
+            sr: Uređenje enterijera
+          children: []
+        - id: 6650
+          name: Растения и семена
+          slug: plants-seeds
+          parentid: 6000
+          icon: seedling
+          translations:
+            en: Plants and Seeds
+            ru: Растения и семена
+            sr: Biljke i semena
+          children: []
+        - id: 6700
+          name: Сад и огород
+          slug: garden-supplies
+          parentid: 6000
+          icon: gardening
+          translations:
+            en: Garden and Vegetable Garden
+            ru: Сад и огород
+            sr: Bašta i povrtnjak
+          children: []
+        - id: 6750
+          name: Садовые растения
+          slug: garden-plants
+          parentid: 6000
+          icon: plant
+          translations:
+            en: Garden Plants
+            ru: Садовые растения
+            sr: Baštenske biljke
+          children:
+            - id: 6751
+              name: Декоративные кустарники и деревья
+              slug: ornamental-plants
+              parentid: 6750
+              icon: tree
+              translations:
+                en: Decorative Shrubs and Trees
+                ru: Декоративные кустарники и деревья
+                sr: Dekorativno grmlje i drveće
+              children: []
+            - id: 6752
+              name: Хвойные растения
+              slug: conifers
+              parentid: 6750
+              icon: pine
+              translations:
+                en: Coniferous Plants
+                ru: Хвойные растения
+                sr: Četinari
+              children: []
+            - id: 6753
+              name: Многолетние растения
+              slug: perennials
+              parentid: 6750
+              icon: flower
+              translations:
+                en: Perennial Plants
+                ru: Многолетние растения
+                sr: Višegodišnje biljke
+              children: []
+            - id: 6754
+              name: Плодовые растения
+              slug: fruit-plants
+              parentid: 6750
+              icon: fruit
+              translations:
+                en: Fruit Plants
+                ru: Плодовые растения
+                sr: Voćke
+              children: []
+            - id: 6755
+              name: Газон
+              slug: lawn
+              parentid: 6750
+              icon: grass
+              translations:
+                en: Lawn
+                ru: Газон
+                sr: Travnjak
+              children: []
+            - id: 6756
+              name: Зелень и пряные травы
+              slug: herbs
+              parentid: 6750
+              icon: herb
+              translations:
+                en: Greens and Herbs
+                ru: Зелень и пряные травы
+                sr: Zeleniš i začini
+              children: []
+        - id: 6850
+          name: Семена, луковицы, клубни
+          slug: seeds-bulbs
+          parentid: 6000
+          icon: seed
+          translations:
+            en: Seeds, Bulbs, Tubers
+            ru: Семена, луковицы, клубни
+            sr: Semena, lukovice, gomolji
+          children: []
+        - id: 6900
+          name: Товары для ухода за растениями
+          slug: plant-care
+          parentid: 6000
+          icon: watering-can
+          translations:
+            en: Plant Care Products
+            ru: Товары для ухода за растениями
+            sr: Sredstva za negu biljaka
+          children:
+            - id: 6901
+              name: Грунты и субстраты
+              slug: soil
+              parentid: 6900
+              icon: soil
+              translations:
+                en: Soils and Substrates
+                ru: Грунты и субстраты
+                sr: Zemlje i supstrati
+              children: []
+            - id: 6902
+              name: Удобрения
+              slug: fertilizers
+              parentid: 6900
+              icon: fertilizer
+              translations:
+                en: Fertilizers
+                ru: Удобрения
+                sr: Đubriva
+              children: []
+            - id: 6903
+              name: Средства от вредителей и сорняков
+              slug: pesticides
+              parentid: 6900
+              icon: spray
+              translations:
+                en: Pest and Weed Control
+                ru: Средства от вредителей и сорняков
+                sr: Sredstva protiv štetočina i korova
+              children: []
+            - id: 6904
+              name: Горшки и кашпо
+              slug: pots
+              parentid: 6900
+              icon: pot
+              translations:
+                en: Pots and Planters
+                ru: Горшки и кашпо
+                sr: Saksije i žardinjere
+              children: []
+            - id: 6905
+              name: Фитолампы
+              slug: grow-lights
+              parentid: 6900
+              icon: lamp
+              translations:
+                en: Plant Grow Lights
+                ru: Фитолампы
+                sr: Fito lampe
+              children: []
+            - id: 6906
+              name: Измерители влаги
+              slug: moisture-meters
+              parentid: 6900
+              icon: meter
+              translations:
+                en: Moisture Meters
+                ru: Измерители влаги
+                sr: Merači vlage
+              children: []
+        - id: 6950
+          name: Панно и искусственные растения
+          slug: artificial-plants
+          parentid: 6000
+          icon: artificial-plant
+          translations:
+            en: Panels and Artificial Plants
+            ru: Панно и искусственные растения
+            sr: Panoi i veštačke biljke
+          children: []
+    - id: 7000
+      name: Хобби и отдых
+      slug: hobby-and-leisure
+      parentid: null
+      icon: camera
+      translations:
+        en: Hobbies and Leisure
+        ru: Хобби и отдых
+        sr: Hobi i rekreacija
+      children:
+        - id: 7050
+          name: Музыкальные инструменты
+          slug: musical-instruments
+          parentid: 7000
+          icon: guitar
+          translations:
+            en: Musical Instruments
+            ru: Музыкальные инструменты
+            sr: Muzički instrumenti
+          children:
+            - id: 7055
+              name: Струнные инструменты
+              slug: string-instruments
+              parentid: 7050
+              icon: violin
+              translations:
+                en: String Instruments
+                ru: Струнные инструменты
+                sr: Žičani instrumenti
+              children: []
+            - id: 7060
+              name: Фортепиано и клавишные
+              slug: piano-keyboards
+              parentid: 7050
+              icon: piano
+              translations:
+                en: Pianos and Keyboards
+                ru: Фортепиано и клавишные
+                sr: Klaviri i klavijature
+              children: []
+            - id: 7065
+              name: Ударные инструменты
+              slug: percussion-instruments
+              parentid: 7050
+              icon: drum
+              translations:
+                en: Percussion Instruments
+                ru: Ударные инструменты
+                sr: Udaraljke
+              children: []
+            - id: 7070
+              name: Духовые инструменты
+              slug: wind-instruments
+              parentid: 7050
+              icon: trumpet
+              translations:
+                en: Wind Instruments
+                ru: Духовые инструменты
+                sr: Duvački instrumenti
+              children: []
+            - id: 7075
+              name: Аккордеоны и гармони
+              slug: accordions-harmonicas
+              parentid: 7050
+              icon: accordion
+              translations:
+                en: Accordions and Harmonicas
+                ru: Аккордеоны и гармони
+                sr: Harmonike
+              children: []
+            - id: 7080
+              name: Аудиооборудование
+              slug: audio-equipment
+              parentid: 7050
+              icon: speaker
+              translations:
+                en: Audio Equipment
+                ru: Аудиооборудование
+                sr: Audio oprema
+              children: []
+            - id: 7085
+              name: Аксессуары для инструментов
+              slug: instrument-accessories
+              parentid: 7050
+              icon: guitar-pick
+              translations:
+                en: Instrument Accessories
+                ru: Аксессуары для инструментов
+                sr: Dodaci za instrumente
+              children: []
+        - id: 7100
+          name: Книги и журналы
+          slug: books
+          parentid: 7000
+          icon: book
+          translations:
+            en: Books and Magazines
+            ru: Книги и журналы
+            sr: Knjige i časopisi
+          children:
+            - id: 7105
+              name: Журналы, газеты, брошюры
+              slug: magazines
+              parentid: 7100
+              icon: newspaper
+              translations:
+                en: Magazines, Newspapers, Brochures
+                ru: Журналы, газеты, брошюры
+                sr: Časopisi, novine, brošure
+              children: []
+            - id: 7115
+              name: Книги
+              slug: book
+              parentid: 7100
+              icon: book
+              translations:
+                en: Books
+                ru: Книги
+                sr: Knjige
+              children: []
+            - id: 7130
+              name: Учебная литература
+              slug: education-books
+              parentid: 7100
+              icon: study
+              translations:
+                en: Educational Literature
+                ru: Учебная литература
+                sr: Udžbenici
+              children: []
+        - id: 7150
+          name: Спортивный инвентарь
+          slug: sports-equipment
+          parentid: 7000
+          icon: dumbbell
+          translations:
+            en: Sports Equipment
+            ru: Спортивный инвентарь
+            sr: Sportski rekviziti
+          children: []
+        - id: 7250
+          name: Коллекционирование
+          slug: collectibles
+          parentid: 7000
+          icon: coin
+          translations:
+            en: Collecting
+            ru: Коллекционирование
+            sr: Kolekcionarstvo
+          children:
+            - id: 7251
+              name: Банкноты
+              slug: banknotes
+              parentid: 7250
+              icon: money
+              translations:
+                en: Banknotes
+                ru: Банкноты
+                sr: Novčanice
+              children: []
+            - id: 7252
+              name: Билеты
+              slug: collectible-tickets
+              parentid: 7250
+              icon: ticket
+              translations:
+                en: Tickets
+                ru: Билеты
+                sr: Karte
+              children: []
+            - id: 7253
+              name: Вещи знаменитостей, автографы
+              slug: celebrity-items
+              parentid: 7250
+              icon: star
+              translations:
+                en: Celebrity Items, Autographs
+                ru: Вещи знаменитостей, автографы
+                sr: Stvari poznatih, autogrami
+              children: []
+            - id: 7254
+              name: Военные вещи
+              slug: military-items
+              parentid: 7250
+              icon: military
+              translations:
+                en: Military Items
+                ru: Военные вещи
+                sr: Vojne stvari
+              children: []
+            - id: 7255
+              name: Грампластинки
+              slug: vinyl
+              parentid: 7250
+              icon: vinyl
+              translations:
+                en: Vinyl Records
+                ru: Грампластинки
+                sr: Gramofonske ploče
+              children: []
+            - id: 7256
+              name: Документы
+              slug: documents
+              parentid: 7250
+              icon: document
+              translations:
+                en: Documents
+                ru: Документы
+                sr: Dokumenta
+              children: []
+            - id: 7257
+              name: Жетоны, медали, значки
+              slug: medals-badges
+              parentid: 7250
+              icon: medal
+              translations:
+                en: Tokens, Medals, Badges
+                ru: Жетоны, медали, значки
+                sr: Žetoni, medalje, značke
+              children: []
+            - id: 7258
+              name: Игры
+              slug: collectible-games
+              parentid: 7250
+              icon: game
+              translations:
+                en: Games
+                ru: Игры
+                sr: Igre
+              children: []
+            - id: 7259
+              name: Календари
+              slug: calendars
+              parentid: 7250
+              icon: calendar
+              translations:
+                en: Calendars
+                ru: Календари
+                sr: Kalendari
+              children: []
+            - id: 7261
+              name: Картины
+              slug: paintings
+              parentid: 7250
+              icon: painting
+              translations:
+                en: Paintings
+                ru: Картины
+                sr: Slike
+              children: []
+            - id: 7262
+              name: Марки
+              slug: stamps
+              parentid: 7250
+              icon: stamp
+              translations:
+                en: Stamps
+                ru: Марки
+                sr: Poštanske marke
+              children: []
+            - id: 7263
+              name: Модели
+              slug: models
+              parentid: 7250
+              icon: model
+              translations:
+                en: Models
+                ru: Модели
+                sr: Modeli
+              children: []
+            - id: 7264
+              name: Монеты
+              slug: coins
+              parentid: 7250
+              icon: coin
+              translations:
+                en: Coins
+                ru: Монеты
+                sr: Novčići
+              children: []
+        - id: 7300
+          name: Предметы искусства
+          slug: art
+          parentid: 7000
+          icon: painting
+          translations:
+            en: Art Objects
+            ru: Предметы искусства
+            sr: Umetnički predmeti
+          children: []
+        - id: 7400
+          name: Велосипеды
+          slug: bicycles
+          parentid: 7000
+          icon: bike
+          translations:
+            en: Bicycles
+            ru: Велосипеды
+            sr: Bicikli
+          children:
+            - id: 7410
+              name: ВМХ
+              slug: bmx
+              parentid: 7400
+              icon: bmx
+              translations:
+                en: BMX
+                ru: ВМХ
+                sr: BMX
+              children: []
+            - id: 7415
+              name: Городские
+              slug: city-bikes
+              parentid: 7400
+              icon: city-bike
+              translations:
+                en: City Bikes
+                ru: Городские
+                sr: Gradski bicikli
+              children: []
+            - id: 7420
+              name: Шоссейные
+              slug: road-bikes
+              parentid: 7400
+              icon: road-bike
+              translations:
+                en: Road Bikes
+                ru: Шоссейные
+                sr: Bicikli za drum
+              children: []
+            - id: 7425
+              name: Детские
+              slug: kids-bikes
+              parentid: 7400
+              icon: kids-bike
+              translations:
+                en: Children Bikes
+                ru: Детские
+                sr: Dečiji bicikli
+              children: []
+            - id: 7430
+              name: Горные
+              slug: mountain-bikes
+              parentid: 7400
+              icon: mountain-bike
+              translations:
+                en: Mountain Bikes
+                ru: Горные
+                sr: Brdski bicikli
+              children: []
+            - id: 7435
+              name: Запчасти и аксессуары
+              slug: bike-parts
+              parentid: 7400
+              icon: bike-part
+              translations:
+                en: Parts and Accessories
+                ru: Запчасти и аксессуары
+                sr: Delovi i dodaci
+              children: []
+        - id: 7500
+          name: Охота и рыбалка
+          slug: hunting-fishing
+          parentid: 7000
+          icon: fishing
+          translations:
+            en: Hunting and Fishing
+            ru: Охота и рыбалка
+            sr: Lov i ribolov
+          children:
+            - id: 7510
+              name: Ножи, мультитулы, топоры
+              slug: knives-tools
+              parentid: 7500
+              icon: knife
+              translations:
+                en: Knives, Multi-tools, Axes
+                ru: Ножи, мультитулы, топоры
+                sr: Noževi, multialati, sekire
+              children: []
+            - id: 7520
+              name: Охота
+              slug: hunting
+              parentid: 7500
+              icon: target
+              translations:
+                en: Hunting
+                ru: Охота
+                sr: Lov
+              children:
+                - id: 7521
+                  name: Прицелы
+                  slug: scopes
+                  parentid: 7520
+                  icon: scope
+                  translations:
+                    en: Scopes
+                    ru: Прицелы
+                    sr: Optički nišani
+                  children: []
+                - id: 7522
+                  name: Аксессуары для прицелов
+                  slug: scope-accessories
+                  parentid: 7520
+                  icon: accessory
+                  translations:
+                    en: Scope Accessories
+                    ru: Аксессуары для прицелов
+                    sr: Dodaci za optičke nišane
+                  children: []
+                - id: 7523
+                  name: Монокуляры, бинокли, дальномеры
+                  slug: optics
+                  parentid: 7520
+                  icon: binoculars
+                  translations:
+                    en: Monoculars, Binoculars, Rangefinders
+                    ru: Монокуляры, бинокли, дальномеры
+                    sr: Monokulari, dvogledi, daljinomeri
+                  children: []
+            - id: 7530
+              name: Рыбалка
+              slug: fishing-category
+              parentid: 7500
+              icon: fish
+              translations:
+                en: Fishing
+                ru: Рыбалка
+                sr: Ribolov
+              children:
+                - id: 7531
+                  name: Удочки, спиннинги и катушки
+                  slug: rods-reels
+                  parentid: 7530
+                  icon: fishing-rod
+                  translations:
+                    en: Fishing Rods, Spinning Rods and Reels
+                    ru: Удочки, спиннинги и катушки
+                    sr: Štapovi, mašinice
+                  children: []
+                - id: 7551
+                  name: Приманки и снасти
+                  slug: lures-tackle
+                  parentid: 7530
+                  icon: lure
+                  translations:
+                    en: Lures and Tackle
+                    ru: Приманки и снасти
+                    sr: Mamci i pribor
+                  children: []
+                - id: 7571
+                  name: Эхолоты и снаряжение
+                  slug: fishing-equipment
+                  parentid: 7530
+                  icon: sonar
+                  translations:
+                    en: Fish Finders and Equipment
+                    ru: Эхолоты и снаряжение
+                    sr: Sonari i oprema
+                  children: []
+        - id: 7650
+          name: Кемпинг
+          slug: camping
+          parentid: 7000
+          icon: tent
+          translations:
+            en: Camping
+            ru: Кемпинг
+            sr: Kampovanje
+          children: []
+        - id: 7700
+          name: Антиквариат
+          slug: antiques
+          parentid: 7000
+          icon: antique
+          translations:
+            en: Antiques
+            ru: Антиквариат
+            sr: Antikviteti
+          children: []
+        - id: 7750
+          name: Билеты, мероприятия и путешествия
+          slug: tickets
+          parentid: 7000
+          icon: ticket
+          translations:
+            en: Tickets, Events and Travel
+            ru: Билеты, мероприятия и путешествия
+            sr: Karte, događaji i putovanja
+          children:
+            - id: 7751
+              name: Карты, купоны
+              slug: cards-coupons
+              parentid: 7750
+              icon: card
+              translations:
+                en: Cards, Coupons
+                ru: Карты, купоны
+                sr: Karte, kuponi
+              children: []
+            - id: 7752
+              name: Концерты
+              slug: concerts
+              parentid: 7750
+              icon: music
+              translations:
+                en: Concerts
+                ru: Концерты
+                sr: Koncerti
+              children: []
+            - id: 7753
+              name: Путешествия
+              slug: travel
+              parentid: 7750
+              icon: plane
+              translations:
+                en: Travel
+                ru: Путешествия
+                sr: Putovanja
+              children: []
+            - id: 7754
+              name: Спорт
+              slug: sport-tickets
+              parentid: 7750
+              icon: sport
+              translations:
+                en: Sports
+                ru: Спорт
+                sr: Sport
+              children: []
+            - id: 7755
+              name: Театр, опера, балет
+              slug: theatre
+              parentid: 7750
+              icon: theatre
+              translations:
+                en: Theater, Opera, Ballet
+                ru: Театр, опера, балет
+                sr: Pozorište, opera, balet
+              children: []
+            - id: 7756
+              name: Цирк, кино
+              slug: circus-cinema
+              parentid: 7750
+              icon: cinema
+              translations:
+                en: Circus, Cinema
+                ru: Цирк, кино
+                sr: Cirkus, bioskop
+              children: []
+            - id: 7758
+              name: Шоу, мюзикл
+              slug: shows
+              parentid: 7750
+              icon: show
+              translations:
+                en: Shows, Musicals
+                ru: Шоу, мюзикл
+                sr: Šou, mjuzikl
+              children: []
+        - id: 7800
+          name: Спорт
+          slug: sports-leisure
+          parentid: 7000
+          icon: sport
+          translations:
+            en: Sports
+            ru: Спорт
+            sr: Sport
+          children:
+            - id: 7805
+              name: Бильярд и боулинг
+              slug: billiards-bowling
+              parentid: 7800
+              icon: pool
+              translations:
+                en: Billiards and Bowling
+                ru: Бильярд и боулинг
+                sr: Bilijar i kuglanje
+              children: []
+            - id: 7810
+              name: Дайвинг и водный спорт
+              slug: diving
+              parentid: 7800
+              icon: diving
+              translations:
+                en: Diving and Water Sports
+                ru: Дайвинг и водный спорт
+                sr: Ronjenje i vodeni sportovi
+              children: []
+            - id: 7815
+              name: Единоборства
+              slug: martial-arts
+              parentid: 7800
+              icon: boxing
+              translations:
+                en: Martial Arts
+                ru: Единоборства
+                sr: Borilački sportovi
+              children: []
+            - id: 7820
+              name: Зимний спорт
+              slug: winter-sports
+              parentid: 7800
+              icon: skiing
+              translations:
+                en: Winter Sports
+                ru: Зимний спорт
+                sr: Zimski sportovi
+              children: []
+            - id: 7825
+              name: Игры с мячом
+              slug: ball-games
+              parentid: 7800
+              icon: ball
+              translations:
+                en: Ball Games
+                ru: Игры с мячом
+                sr: Igre sa loptom
+              children: []
+            - id: 7830
+              name: Настольные игры
+              slug: board-games
+              parentid: 7800
+              icon: chess
+              translations:
+                en: Board Games
+                ru: Настольные игры
+                sr: Društvene igre
+              children: []
+            - id: 7835
+              name: Пейнтбол и страйкбол
+              slug: paintball
+              parentid: 7800
+              icon: paintball
+              translations:
+                en: Paintball and Airsoft
+                ru: Пейнтбол и страйкбол
+                sr: Pejntbol i ersoft
+              children: []
+            - id: 7840
+              name: Ролики и скейтбординг
+              slug: skating
+              parentid: 7800
+              icon: skateboard
+              translations:
+                en: Roller Skating and Skateboarding
+                ru: Ролики и скейтбординг
+                sr: Roleri i skejtbord
+              children: []
+            - id: 7845
+              name: Теннис, бадминтон, пинг-понг
+              slug: racket-sports
+              parentid: 7800
+              icon: tennis
+              translations:
+                en: Tennis, Badminton, Ping-Pong
+                ru: Теннис, бадминтон, пинг-понг
+                sr: Tenis, badminton, ping-pong
+              children: []
+            - id: 7850
+              name: Туризм и отдых на природе
+              slug: outdoor
+              parentid: 7800
+              icon: camping
+              translations:
+                en: Tourism and Outdoor Recreation
+                ru: Туризм и отдых на природе
+                sr: Turizam i boravak u prirodi
+              children: []
+            - id: 7855
+              name: Фитнес и тренажёры
+              slug: fitness
+              parentid: 7800
+              icon: dumbbell
+              translations:
+                en: Fitness and Exercise Equipment
+                ru: Фитнес и тренажёры
+                sr: Fitnes i trenažeri
+              children: []
+            - id: 7860
+              name: Спортивное питание
+              slug: sports-nutrition
+              parentid: 7800
+              icon: protein
+              translations:
+                en: Sports Nutrition
+                ru: Спортивное питание
+                sr: Sportska ishrana
+              children: []
+        - id: 7865
+          name: Народное ремесло и рукоделие
+          slug: folk-crafts
+          parentid: 7000
+          icon: hammer
+          translations:
+            en: Folk Crafts and Handicrafts
+            ru: Народное ремесло и рукоделие
+            sr: Narodni zanati i rukotvorine
+          children:
+            - id: 7866
+              name: Опанци
+              slug: opanci
+              parentid: 7865
+              icon: shoe
+              translations:
+                en: Opanci
+                ru: Опанци
+                sr: Opanci
+              children: []
+            - id: 7867
+              name: Керамика
+              slug: ceramics
+              parentid: 7865
+              icon: pottery
+              translations:
+                en: Ceramics
+                ru: Керамика
+                sr: Keramika
+              children: []
+            - id: 7868
+              name: Вышивка
+              slug: embroidery
+              parentid: 7865
+              icon: thread
+              translations:
+                en: Embroidery
+                ru: Вышивка
+                sr: Vez
+              children: []
+            - id: 7869
+              name: Ткачество
+              slug: weaving
+              parentid: 7865
+              icon: fabric
+              translations:
+                en: Weaving
+                ru: Ткачество
+                sr: Tkanje
+              children: []
+            - id: 7870
+              name: Народные инструменты
+              slug: folk-instruments
+              parentid: 7865
+              icon: music
+              translations:
+                en: Folk Instruments
+                ru: Народные инструменты
+                sr: Narodni instrumenti
+              children: []
+            - id: 7871
+              name: Деревообработка
+              slug: woodworking
+              parentid: 7865
+              icon: wood
+              translations:
+                en: Woodworking
+                ru: Деревообработка
+                sr: Drvodelja
+              children: []
+        - id: 7900
+          name: Пчеловодство
+          slug: beekeeping
+          parentid: 7000
+          icon: bee
+          translations:
+            en: Beekeeping
+            ru: Пчеловодство
+            sr: Pčelarstvo
+          children:
+            - id: 7910
+              name: Мёд
+              slug: honey
+              parentid: 7900
+              icon: honey
+              translations:
+                en: Honey
+                ru: Мёд
+                sr: Med
+              children: []
+            - id: 7920
+              name: Пчелиный воск
+              slug: beeswax
+              parentid: 7900
+              icon: honeycomb
+              translations:
+                en: Beeswax
+                ru: Пчелиный воск
+                sr: Pčelinji vosak
+              children: []
+            - id: 7930
+              name: Прополис
+              slug: propolis
+              parentid: 7900
+              icon: drop
+              translations:
+                en: Propolis
+                ru: Прополис
+                sr: Propolis
+              children: []
+            - id: 7935
+              name: Пчеловодный инвентарь
+              slug: beekeeping-equipment
+              parentid: 7900
+              icon: tools
+              translations:
+                en: Beekeeping Equipment
+                ru: Пчеловодный инвентарь
+                sr: Pčelarski pribor
+              children: []
+            - id: 7945
+              name: Пчелы
+              slug: bees
+              parentid: 7900
+              icon: bee
+              translations:
+                en: Bees
+                ru: Пчелы
+                sr: Pčele
+              children: []
+        - id: 7950
+          name: Сельский туризм
+          slug: rural-tourism
+          parentid: 7000
+          icon: house
+          translations:
+            en: Rural Tourism
+            ru: Сельский туризм
+            sr: Seoski turizam
+          children:
+            - id: 7951
+              name: Этно-деревни
+              slug: ethno-villages
+              parentid: 7950
+              icon: village
+              translations:
+                en: Ethno-villages
+                ru: Этно-деревни
+                sr: Etno-sela
+              children: []
+            - id: 7952
+              name: Винные туры
+              slug: wine-tours
+              parentid: 7950
+              icon: wine-glass
+              translations:
+                en: Wine Tours
+                ru: Винные туры
+                sr: Vinske ture
+              children: []
+            - id: 7953
+              name: Агротуризм
+              slug: agro-tourism
+              parentid: 7950
+              icon: farm
+              translations:
+                en: Agritourism
+                ru: Агротуризм
+                sr: Agro turizam
+              children: []
+            - id: 7954
+              name: Горный туризм
+              slug: mountain-tourism
+              parentid: 7950
+              icon: mountain
+              translations:
+                en: Mountain Tourism
+                ru: Горный туризм
+                sr: Planinski turizam
+              children: []
+    - id: 8000
+      name: Животные
+      slug: animals
+      parentid: null
+      icon: paw
+      translations:
+        en: Animals
+        ru: Животные
+        sr: Životinje
+      children:
+        - id: 8050
+          name: Собаки
+          slug: dogs
+          parentid: 8000
+          icon: dog
+          translations:
+            en: Dogs
+            ru: Собаки
+            sr: Psi
+          children: []
+        - id: 8100
+          name: Кошки
+          slug: cats
+          parentid: 8000
+          icon: cat
+          translations:
+            en: Cats
+            ru: Кошки
+            sr: Mačke
+          children: []
+        - id: 8150
+          name: Птицы
+          slug: birds
+          parentid: 8000
+          icon: bird
+          translations:
+            en: Birds
+            ru: Птицы
+            sr: Ptice
+          children: []
+        - id: 8200
+          name: Аквариум
+          slug: aquarium
+          parentid: 8000
+          icon: fish-bowl
+          translations:
+            en: Aquarium
+            ru: Аквариум
+            sr: Akvarijum
+          children:
+            - id: 8205
+              name: Аквариумы
+              slug: fish-tanks
+              parentid: 8200
+              icon: aquarium
+              translations:
+                en: Aquariums
+                ru: Аквариумы
+                sr: Akvarijumi
+              children: []
+            - id: 8210
+              name: Рыбы
+              slug: fish
+              parentid: 8200
+              icon: fish
+              translations:
+                en: Fish
+                ru: Рыбы
+                sr: Ribe
+              children: []
+            - id: 8215
+              name: Другие аквариумные животные
+              slug: aquarium-animals
+              parentid: 8200
+              icon: seahorse
+              translations:
+                en: Other Aquarium Animals
+                ru: Другие аквариумные животные
+                sr: Druge akvarijumske životinje
+              children: []
+            - id: 8220
+              name: Оборудование
+              slug: aquarium-equipment-cat
+              parentid: 8200
+              icon: filter
+              translations:
+                en: Equipment
+                ru: Оборудование
+                sr: Oprema
+              children: []
+            - id: 8225
+              name: Растения
+              slug: aquarium-plants
+              parentid: 8200
+              icon: seaweed
+              translations:
+                en: Plants
+                ru: Растения
+                sr: Biljke
+              children: []
+            - id: 8230
+              name: Аквариумная мебель
+              slug: aquarium-furniture
+              parentid: 8200
+              icon: cabinet
+              translations:
+                en: Aquarium Furniture
+                ru: Аквариумная мебель
+                sr: Akvarijumski nameštaj
+              children: []
+            - id: 8235
+              name: Морская аквариумистика
+              slug: marine-aquariums
+              parentid: 8200
+              icon: coral
+              translations:
+                en: Marine Aquariums
+                ru: Морская аквариумистика
+                sr: Morska akvaristika
+              children: []
+        - id: 8250
+          name: Другие животные
+          slug: other-animals
+          parentid: 8000
+          icon: paw
+          translations:
+            en: Other Animals
+            ru: Другие животные
+            sr: Druge životinje
+          children:
+            - id: 8251
+              name: Амфибии
+              slug: amphibians
+              parentid: 8250
+              icon: frog
+              translations:
+                en: Amphibians
+                ru: Амфибии
+                sr: Vodozemci
+              children: []
+            - id: 8252
+              name: Грызуны
+              slug: rodents
+              parentid: 8250
+              icon: hamster
+              translations:
+                en: Rodents
+                ru: Грызуны
+                sr: Glodari
+              children: []
+            - id: 8253
+              name: Кролики
+              slug: rabbits
+              parentid: 8250
+              icon: rabbit
+              translations:
+                en: Rabbits
+                ru: Кролики
+                sr: Zečevi
+              children: []
+            - id: 8254
+              name: Лошади
+              slug: horses
+              parentid: 8250
+              icon: horse
+              translations:
+                en: Horses
+                ru: Лошади
+                sr: Konji
+              children: []
+            - id: 8255
+              name: Рептилии
+              slug: reptiles
+              parentid: 8250
+              icon: lizard
+              translations:
+                en: Reptiles
+                ru: Рептилии
+                sr: Gmizavci
+              children: []
+            - id: 8256
+              name: Сельхоз животные
+              slug: farm-animals
+              parentid: 8250
+              icon: cow
+              translations:
+                en: Farm Animals
+                ru: Сельхоз животные
+                sr: Domaće životinje
+              children: []
+            - id: 8257
+              name: Домашние птицы
+              slug: poultry
+              parentid: 8250
+              icon: chicken
+              translations:
+                en: Poultry
+                ru: Домашние птицы
+                sr: Živina
+              children: []
+            - id: 8258
+              name: Товары для животных
+              slug: pet-supplies
+              parentid: 8250
+              icon: pet-supplies
+              translations:
+                en: Pet Supplies
+                ru: Товары для животных
+                sr: Proizvodi za životinje
+              children: []
+    - id: 8500
+      name: Готовый бизнес и оборудование
+      slug: business
+      parentid: null
+      icon: briefcase
+      translations:
+        en: Ready Business and Equipment
+        ru: Готовый бизнес и оборудование
+        sr: Gotov biznis i oprema
+      children: []
+    - id: 9000
+      name: Работа
+      slug: jobs
+      parentid: null
+      icon: work
+      translations:
+        en: Jobs
+        ru: Работа
+        sr: Posao
+      children:
+        - id: 9050
+          name: Вакансии
+          slug: vacancies
+          parentid: 9000
+          icon: vacancy
+          translations:
+            en: Vacancies
+            ru: Вакансии
+            sr: Slobodna radna mesta
+          children: []
+        - id: 9100
+          name: Резюме
+          slug: resumes
+          parentid: 9000
+          icon: resume
+          translations:
+            en: Resumes
+            ru: Резюме
+            sr: Biografije
+          children: []
+        - id: 9150
+          name: Удаленная работа
+          slug: remote-work
+          parentid: 9000
+          icon: remote
+          translations:
+            en: Remote Work
+            ru: Удаленная работа
+            sr: Rad na daljinu
+          children: []
+        - id: 9200
+          name: Партнерство и сотрудничество
+          slug: partnership
+          parentid: 9000
+          icon: partnership
+          translations:
+            en: Partnership and Collaboration
+            ru: Партнерство и сотрудничество
+            sr: Partnerstvo i saradnja
+          children: []
+        - id: 9250
+          name: Обучение и стажировка
+          slug: education
+          parentid: 9000
+          icon: education
+          translations:
+            en: Training and Internship
+            ru: Обучение и стажировка
+            sr: Obuka i praksa
+          children: []
+        - id: 9300
+          name: Сезонные работы
+          slug: seasonal-work
+          parentid: 9000
+          icon: calendar
+          translations:
+            en: Seasonal Work
+            ru: Сезонные работы
+            sr: Sezonski posao
+          children:
+            - id: 9310
+              name: Сбор урожая
+              slug: harvest-work
+              parentid: 9300
+              icon: farmer
+              translations:
+                en: Harvesting
+                ru: Сбор урожая
+                sr: Berba
+              children: []
+            - id: 9315
+              name: Работа на винограднике
+              slug: vineyard-work
+              parentid: 9300
+              icon: grapes
+              translations:
+                en: Vineyard Work
+                ru: Работа на винограднике
+                sr: Rad u vinogradu
+              children: []
+            - id: 9320
+              name: Сезонные строительные работы
+              slug: seasonal-construction
+              parentid: 9300
+              icon: construction
+              translations:
+                en: Seasonal Construction Work
+                ru: Сезонные строительные работы
+                sr: Sezonski građevinski radovi
+              children: []
+    - id: 9500
+      name: Одежда, обувь, аксессуары
+      slug: fashion
+      parentid: null
+      icon: shirt
+      translations:
+        en: Clothing, Footwear, Accessories
+        ru: Одежда, обувь, аксессуары
+        sr: Odeća, obuća, dodaci
+      children: []
+    - id: 9700
+      name: Товары для детей и игрушки
+      slug: children-goods-toys
+      parentid: null
+      icon: toy
+      translations:
+        en: Childrens Goods and Toys
+        ru: Товары для детей и игрушки
+        sr: Dečije stvari i igračke
+      children:
+        - id: 9705
+          name: Детские коляски
+          slug: baby-strollers
+          parentid: 9700
+          icon: stroller
+          translations:
+            en: Baby Strollers
+            ru: Детские коляски
+            sr: Kolica za bebe
+          children: []
+        - id: 9710
+          name: Детская мебель
+          slug: children-furniture
+          parentid: 9700
+          icon: crib
+          translations:
+            en: Childrens Furniture
+            ru: Детская мебель
+            sr: Dečiji nameštaj
+          children: []
+        - id: 9715
+          name: Велосипеды и самокаты
+          slug: children-bikes-scooters
+          parentid: 9700
+          icon: bike
+          translations:
+            en: Bicycles and Scooters
+            ru: Велосипеды и самокаты
+            sr: Bicikli i trotineti
+          children: []
+        - id: 9720
+          name: Товары для кормления
+          slug: feeding-goods
+          parentid: 9700
+          icon: bottle
+          translations:
+            en: Feeding Products
+            ru: Товары для кормления
+            sr: Proizvodi za hranjenje
+          children: []
+        - id: 9725
+          name: Автомобильные кресла
+          slug: car-seats
+          parentid: 9700
+          icon: car-seat
+          translations:
+            en: Car Seats
+            ru: Автомобильные кресла
+            sr: Auto-sedišta
+          children: []
+        - id: 9730
+          name: Игрушки
+          slug: toys
+          parentid: 9700
+          icon: toy
+          translations:
+            en: Toys
+            ru: Игрушки
+            sr: Igračke
+          children: []
+        - id: 9735
+          name: Постельные принадлежности
+          slug: children-bedding
+          parentid: 9700
+          icon: blanket
+          translations:
+            en: Bedding
+            ru: Постельные принадлежности
+            sr: Posteljina
+          children: []
+        - id: 9740
+          name: Товары для купания
+          slug: bath-goods
+          parentid: 9700
+          icon: bath
+          translations:
+            en: Bathing Products
+            ru: Товары для купания
+            sr: Proizvodi za kupanje
+          children: []
+        - id: 9745
+          name: Товары для школы
+          slug: school-supplies
+          parentid: 9700
+          icon: backpack
+          translations:
+            en: School Supplies
+            ru: Товары для школы
+            sr: Školski pribor
+          children: []
+        - id: 9750
+          name: Детская одежда и обувь, аксессуары
+          slug: kids-fashion
+          parentid: 9700
+          icon: baby
+          translations:
+            en: Childrens Clothing and Footwear, Accessories
+            ru: Детская одежда и обувь, аксессуары
+            sr: Dečija odeća i obuća, dodaci
+          children: []
+    - id: 9999
+      name: Прочее
+      slug: any
+      parentid: null
+      icon: any
+      translations:
+        en: Other
+        ru: Прочее
+        sr: Ostalo
+      children: []
+    - id: 10000
+      name: Безопасность
+      slug: security
+      parentid: null
+      icon: lock
+      translations:
+        en: Security
+        sr: Bezbednost
+      children:
+        - id: 10100
+          name: Видеонаблюдение
+          slug: video-surveillance
+          parentid: 10000
+          icon: camera
+          translations:
+            en: Video Surveillance
+            sr: Video nadzor
+          children:
+            - id: 10410
+              name: Коннекторы и видео баллуны
+              slug: connectors-baluns
+              parentid: 10100
+              icon: connector
+              translations:
+                en: Connectors and Video Baluns
+                sr: Konektori i video baluni
+              children: []

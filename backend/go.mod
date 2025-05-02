@@ -1,6 +1,8 @@
 module backend
 
-go 1.21
+go 1.23
+
+toolchain go1.24.2
 
 require (
 	cloud.google.com/go/vision v1.2.0
@@ -20,6 +22,7 @@ require (
 	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.214.0
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9
+	gopkg.in/yaml.v3 v3.0.1
 
 )
 
@@ -60,6 +63,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
