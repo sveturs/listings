@@ -1,0 +1,229 @@
+#!/bin/bash
+set -e # Останавливаем выполнение при ошибках
+echo "Начинаем деплой с использованием Harbor..."
+cd /opt/hostel-booking-system
+
+# Настраиваем git pull strategy
+git config pull.rebase false
+
+# Создаем необходимые директории
+mkdir -p backend/uploads
+mkdir -p frontend/hostel-frontend/build
+mkdir -p certbot/conf
+mkdir -p certbot/www
+mkdir -p /tmp/hostel-backup/db
+# Создаем директории для почтового сервера
+mkdir -p mailserver/mail-data
+mkdir -p mailserver/mail-state
+mkdir -p mailserver/mail-logs
+mkdir -p mailserver/config
+
+# Сохраняем важные файлы
+cp -f backend/.env /tmp/hostel-backup/backend.env 2>/dev/null || true
+cp -f frontend/hostel-frontend/.env /tmp/hostel-backup/frontend.env 2>/dev/null || true
+
+# Сохраняем SSL сертификаты
+if [ -d "certbot/conf" ]; then
+  cp -r certbot/conf /tmp/hostel-backup/ 2>/dev/null || true
+fi
+
+# Сохраняем загруженные изображения
+cp -r backend/uploads /tmp/hostel-backup/ 2>/dev/null || true
+
+# Сохраняем данные почтового сервера
+if [ -d "mailserver" ]; then
+  mkdir -p /tmp/hostel-backup/mailserver
+  cp -r mailserver/mail-data /tmp/hostel-backup/mailserver/ 2>/dev/null || true
+  cp -r mailserver/mail-state /tmp/hostel-backup/mailserver/ 2>/dev/null || true
+  cp -r mailserver/config /tmp/hostel-backup/mailserver/ 2>/dev/null || true
+fi
+
+# Делаем бэкап базы данных только если контейнер запущен
+echo "Пытаемся создать бэкап базы данных..."
+if docker-compose -f docker-compose.prod.yml ps | grep -q "db.*Up"; then
+  BACKUP_FILE="/tmp/hostel-backup/db/backup_$(date +%Y%m%d_%H%M%S).sql"
+  docker-compose -f docker-compose.prod.yml exec -T db pg_dumpall -U postgres > "$BACKUP_FILE"
+  if [ $? -eq 0 ]; then
+    echo "Бэкап базы данных создан в $BACKUP_FILE"
+  else
+    echo "Ошибка создания бэкапа базы данных, но продолжаем деплой"
+  fi
+else
+  echo "База данных не запущена, пропускаем создание бэкапа"
+fi
+
+# Обеспечиваем чистое состояние git
+git fetch origin
+git reset --hard origin/main
+git clean -fdx -e "*.env*" -e "uploads/" -e "certbot/" -e "mailserver/"
+
+# Восстанавливаем файлы
+cp -f /tmp/hostel-backup/backend.env backend/.env 2>/dev/null || true
+cp -f /tmp/hostel-backup/frontend.env frontend/hostel-frontend/.env 2>/dev/null || true
+if [ -d "/tmp/hostel-backup/conf" ]; then
+  rm -rf certbot/conf
+  cp -r /tmp/hostel-backup/conf certbot/ 2>/dev/null || true
+fi
+
+# Восстанавливаем данные почтового сервера
+if [ -d "/tmp/hostel-backup/mailserver" ]; then
+  cp -r /tmp/hostel-backup/mailserver/mail-data mailserver/ 2>/dev/null || true
+  cp -r /tmp/hostel-backup/mailserver/mail-state mailserver/ 2>/dev/null || true
+  cp -r /tmp/hostel-backup/mailserver/config mailserver/ 2>/dev/null || true
+fi
+
+# Удаляем старые образы
+docker image prune -f
+
+# Очищаем сети и осиротевшие контейнеры
+echo "Очищаем старые контейнеры и сети..."
+docker-compose -f docker-compose.prod.yml.harbor down -v --remove-orphans || true
+docker network prune -f || true
+
+# Собираем фронтенд
+echo "Собираем фронтенд..."
+cd frontend/hostel-frontend
+
+# Создаем измененный package.json с дополнительными зависимостями
+echo "Добавляем необходимые зависимости в package.json..."
+if [ -f "package.json" ]; then
+  # Сохраняем оригинальный package.json
+  cp package.json package.json.orig
+  
+  # Добавляем react-query в зависимости
+  sed -i 's/"dependencies": {/"dependencies": {\n    "react-query": "^3.39.3",\n    "react-window": "^1.8.9",/g' package.json
+fi
+
+# Создаем кастомный скрипт для сборки фронтенда
+cat > build_frontend.sh << 'EOL'
+#!/bin/sh
+set -e
+echo "Устанавливаем зависимости..."
+npm cache clean --force
+npm install --legacy-peer-deps
+
+# Проверяем, установился ли react-query
+if ! npm list react-query >/dev/null 2>&1; then
+  echo "Принудительная установка react-query..."
+  npm install react-query@3.39.3 --save --legacy-peer-deps
+fi
+
+# Проверяем, установился ли react-window
+if ! npm list react-window >/dev/null 2>&1; then
+  echo "Принудительная установка react-window..."
+  npm install react-window@1.8.9 --save --legacy-peer-deps
+fi
+
+# Устанавливаем react-scripts
+echo "Устанавливаем React Scripts и другие основные зависимости..."
+npm install react-scripts@5.0.1 --save --legacy-peer-deps
+npm install ajv@6.12.6 ajv-keywords@3.5.2 schema-utils@3.1.1 --legacy-peer-deps
+
+echo "Пробуем сборку проекта..."
+npm run build || {
+  echo "Сборка не удалась, пробуем установить дополнительные зависимости..."
+
+  # Анализируем ошибки сборки
+  npm run build 2>&1 | tee build_error.log
+  
+  # Находим все упоминания о недостающих пакетах
+  if grep -q "Can't resolve" build_error.log; then
+    packages=$(grep -o "Can't resolve '[^']*'" build_error.log | sed "s/Can't resolve '//g" | sed "s/'//g")
+    echo "Найдены отсутствующие пакеты: $packages"
+    
+    for pkg in $packages; do
+      echo "Устанавливаем $pkg..."
+      npm install "$pkg" --save --legacy-peer-deps
+    done
+    
+    # Пробуем собрать снова
+    echo "Пробуем собрать проект снова..."
+    npm run build || {
+      echo "Сборка не удалась повторно. Пробуем последний вариант..."
+      
+      # Особые случаи для конкретных пакетов
+      if grep -q "Can't resolve 'react-query'" build_error.log; then
+        echo "Особый случай для react-query..."
+        npm uninstall react-query
+        npm install react-query@3.39.0 --legacy-peer-deps
+        npm install @tanstack/react-query --legacy-peer-deps
+      fi
+      
+      # Последняя попытка
+      npm run build
+    }
+  fi
+}
+EOL
+
+chmod +x build_frontend.sh
+NODE_ENV=production docker run -v $(pwd):/app -w /app node:18 sh -c "./build_frontend.sh"
+
+# Проверяем, успешно ли прошла сборка
+if [ ! -d "build" ] || [ -z "$(ls -A build)" ]; then
+  echo "Сборка фронтенда не удалась. Деплой прерван."
+  exit 1
+fi
+
+cd ../..
+
+# Авторизация в Harbor
+echo "Авторизация в Harbor..."
+docker login -u admin -p SveTu2025 harbor.svetu.rs
+
+# Загрузка образов из Harbor
+echo "Загрузка образов из Harbor..."
+docker pull harbor.svetu.rs/svetu/db/postgres:15
+docker pull harbor.svetu.rs/svetu/opensearch/opensearch:2.11.0
+docker pull harbor.svetu.rs/svetu/minio/minio:RELEASE.2023-09-30T07-02-29Z
+docker pull harbor.svetu.rs/svetu/minio/mc:latest
+docker pull harbor.svetu.rs/svetu/tools/migrate:latest
+docker pull harbor.svetu.rs/svetu/backend/api:latest
+
+# Запускаем только базу данных
+echo "Запускаем базу данных..."
+docker-compose -f docker-compose.prod.yml.harbor up --build -d db
+
+# Проверяем базу данных
+echo "Проверяем готовность базы данных..."
+RETRY_COUNT=30
+for i in $(seq 1 $RETRY_COUNT); do
+  if docker-compose -f docker-compose.prod.yml.harbor exec -T db pg_isready -U postgres > /dev/null 2>&1; then
+    echo "База данных готова!"
+    break
+  fi
+  echo "Ожидаем готовность базы данных... Попытка $i/$RETRY_COUNT"
+  sleep 2
+done
+
+if ! docker-compose -f docker-compose.prod.yml.harbor exec -T db pg_isready -U postgres > /dev/null 2>&1; then
+  echo "Не удалось запустить базу данных"
+  exit 1
+fi
+
+# Запускаем миграции
+echo "Запускаем миграции..."
+docker-compose -f docker-compose.prod.yml.harbor up -d migrate
+
+# Восстанавливаем данные из бэкапа, если он есть
+if [ -n "$(ls -t /tmp/hostel-backup/db/*.sql 2>/dev/null | head -1)" ]; then
+  LATEST_BACKUP=$(ls -t /tmp/hostel-backup/db/*.sql | head -1)
+  echo "Восстанавливаем базу данных из $LATEST_BACKUP..."
+  cat "$LATEST_BACKUP" | docker-compose -f docker-compose.prod.yml.harbor exec -T db psql -U postgres
+  if [ $? -eq 0 ]; then
+    echo "База данных успешно восстановлена"
+  else
+    echo "Ошибка восстановления базы данных, но продолжаем деплой"
+  fi
+else
+  echo "Бэкап базы данных не найден, пропускаем восстановление"
+fi
+
+# Запускаем остальные сервисы
+echo "Запускаем остальные сервисы..."
+docker-compose -f docker-compose.prod.yml.harbor up --build -d
+
+# Сохраняем последние 5 бэкапов и удаляем более старые
+find /tmp/hostel-backup/db -name "*.sql" -type f | sort -r | tail -n +6 | xargs rm -f 2>/dev/null || true
+
+echo "Деплой с использованием Harbor завершен!"
