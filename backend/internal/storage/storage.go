@@ -66,7 +66,6 @@ type Storage interface {
 	UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListing(ctx context.Context, id int, userID int) error
 	GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error)
-	GetSubcategories(ctx context.Context, parentID *int, limit int, offset int) ([]models.CategoryTreeNode, error)
 	AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
 	GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error)
 

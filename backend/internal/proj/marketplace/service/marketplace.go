@@ -195,20 +195,7 @@ func isKeyAttribute(attrName string) bool {
 
 	return keyAttributes[attrName]
 }
-func (s *MarketplaceService) GetSubcategories(ctx context.Context, parentID string, limit, offset int) ([]models.CategoryTreeNode, error) {
-	var parentIDInt *int
 
-	if parentID != "" {
-		// Преобразуем строку в int
-		id, err := strconv.Atoi(parentID)
-		if err != nil {
-			return nil, fmt.Errorf("invalid parent_id: %w", err)
-		}
-		parentIDInt = &id
-	}
-
-	return s.storage.GetSubcategories(ctx, parentIDInt, limit, offset)
-}
 func (s *MarketplaceService) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
 	return s.storage.GetListings(ctx, filters, limit, offset)
 }
