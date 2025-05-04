@@ -23,9 +23,15 @@ class ChatService {
         clearTimeout(this.reconnectTimer);
 
         try {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = process.env.NODE_ENV === 'development' ? 'localhost:3000' : window.location.host;
-            const wsUrl = `${protocol}//${host}/ws/chat`;
+            // Используем window.ENV для WebSocket URL если доступно
+            let wsUrl;
+            if (window.ENV && window.ENV.REACT_APP_WS_URL) {
+                wsUrl = window.ENV.REACT_APP_WS_URL;
+            } else {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const host = process.env.NODE_ENV === 'development' ? 'localhost:3000' : window.location.host;
+                wsUrl = `${protocol}//${host}/ws/chat`;
+            }
 
             console.log('Попытка подключения к WebSocket:', wsUrl);
             this.ws = new WebSocket(wsUrl);
@@ -61,7 +67,7 @@ class ChatService {
                 if (!this.isActive) return;
                 console.error('WebSocket ошибка:', error);
                 this.isConnecting = false;
-                
+
                 // Переподключаемся только если соединение было разорвано
                 if (this.ws?.readyState === WebSocket.CLOSED) {
                     this.handleReconnect();
@@ -174,7 +180,7 @@ class ChatService {
             console.error('Missing required params:', { chatId, listingId });
             return [];
         }
-    
+
         try {
             const response = await axios.get('/api/v1/marketplace/chat/messages', {
                 params: {
@@ -182,7 +188,7 @@ class ChatService {
                     listing_id: listingId
                 }
             });
-            
+
             if (response.data?.data) {
                 return response.data.data.sort((a, b) =>
                     new Date(a.created_at) - new Date(b.created_at)
@@ -206,7 +212,7 @@ class ChatService {
     }
     handleNewMessage = async (message) => {
         this.messageHandlers.forEach(handler => handler(message));
-         await this.updateChatsList();
+        await this.updateChatsList();
     }
 }
 
