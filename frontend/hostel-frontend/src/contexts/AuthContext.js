@@ -77,7 +77,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (params = '') => {
-    window.location.href = `${process.env.REACT_APP_BACKEND_URL}/auth/google${params}`;
+    const backendUrl = window.ENV?.REACT_APP_BACKEND_URL || '';
+    const authUrl = window.ENV?.REACT_APP_AUTH_URL || '/auth';
+    window.location.href = `${backendUrl}${authUrl}/google${params}`;
   };
 
   const logout = async () => {

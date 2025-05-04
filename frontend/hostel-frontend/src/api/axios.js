@@ -2,8 +2,15 @@
 import axios from 'axios';
 import i18n from '../i18n/config';
 
+const getBaseUrl = () => {
+  if (window.ENV && window.ENV.REACT_APP_BACKEND_URL !== undefined) {
+    return window.ENV.REACT_APP_BACKEND_URL;
+  }
+  return process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
+};
+
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000',
+  baseURL: getBaseUrl(),
   withCredentials: true,
   headers: {
       'Content-Type': 'application/json',
