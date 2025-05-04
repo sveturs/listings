@@ -76,7 +76,7 @@ const AdminPage = () => {
           Панель администратора
         </Typography>
         <Typography variant="body1" paragraph>
-          Добро пожаловать, {user?.name || 'Администратор'}!
+          Привет! {user?.name || 'Администратор'}.
         </Typography>
 
         <Alert severity="info" sx={{ mb: 3 }}>
