@@ -2378,7 +2378,7 @@ func (h *MarketplaceHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		}
 	})
 
-	log.Printf("Извлеченные атрибуты ФФильтров: %+v", attributeFilters)
+	log.Printf("Извлеченные атрибуты ФФФильтров: %+v", attributeFilters)
 
 	log.Printf("Исходные параметры сортировки из запроса: sort_by=%s", c.Query("sort_by", ""))
 
