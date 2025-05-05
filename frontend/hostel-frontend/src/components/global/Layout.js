@@ -48,12 +48,13 @@ import {
   AddHome,
   AccountCircle,
   Chat,
+  Map,
 } from "@mui/icons-material";
 
 const Layout = ({ children }) => {
   const { userLocation, setCity, locationDismissed, dismissLocationSuggestion } = useGeoLocation();
   const [showLocationAlert, setShowLocationAlert] = useState(false);
-  const { t, i18n } = useTranslation(['common', 'marketplace']);
+  const { t, i18n } = useTranslation(['common', 'marketplace', 'gis']);
   const theme = useTheme();
   const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -231,13 +232,36 @@ const Layout = ({ children }) => {
                 variant="contained"
                 onClick={() => navigate('/marketplace/create')}
                 startIcon={isMobile ? null : <Plus />}
-                sx={{ mr: isMobile ? 0.5 : 2, minWidth: isMobile ? '40px' : 'auto', px: isMobile ? 1 : 2 }}
+                sx={{ mr: isMobile ? 0.5 : 1, minWidth: isMobile ? '40px' : 'auto', px: isMobile ? 1 : 2 }}
               >
                 {isMobile ? <Plus /> : t('listings.create.title', { ns: 'marketplace' })}
+              </Button>
+              
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => navigate('/gis')}
+                startIcon={<Map />}
+                sx={{ mr: isMobile ? 0.5 : 2, display: { xs: 'none', sm: 'flex' } }}
+              >
+                {t('title', { ns: 'gis' })}
               </Button>
 
               {/* Добавляем меню категорий для мобильной версии */}
               {isMobile && <CategoryMenu />}
+              
+              {/* Кнопка GIS для мобильной версии */}
+              {isMobile && (
+                <Tooltip title={t('title', { ns: 'gis' })}>
+                  <IconButton 
+                    color="primary" 
+                    onClick={() => navigate('/gis')}
+                    sx={{ mr: 0.5 }}
+                  >
+                    <Map />
+                  </IconButton>
+                </Tooltip>
+              )}
 
               {/* Используем обновленный CitySelector без передачи onCityChange */}
               <CitySelector isMobile={isMobile} />
@@ -328,6 +352,10 @@ const Layout = ({ children }) => {
                     <MenuItem component={Link} to="/balance" onClick={handleCloseMenu}>
                       <AccountBalanceWallet fontSize="small" sx={{ mr: 1 }} />
                       {t('navigation.balance')}
+                    </MenuItem>
+                    <MenuItem component={Link} to="/gis" onClick={handleCloseMenu}>
+                      <Map fontSize="small" sx={{ mr: 1 }} />
+                      {t('gis:title', { defaultValue: 'Map Search' })}
                     </MenuItem>
 
                     {user.email === 'voroshilovdo@gmail.com' && (

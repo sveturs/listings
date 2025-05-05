@@ -231,6 +231,7 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/listings/:id/price-history", s.marketplace.Marketplace.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", s.marketplace.Marketplace.GetSimilarListings)
 	marketplace.Get("/categories/:id/attribute-ranges", s.marketplace.Marketplace.GetAttributeRanges)
+	marketplace.Get("/enhanced-suggestions", s.marketplace.Marketplace.GetEnhancedSuggestions)
 
 	translation := s.app.Group("/api/v1/translation")
 	translation.Get("/limits", s.translation.GetTranslationLimits)

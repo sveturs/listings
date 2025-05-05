@@ -24,42 +24,90 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
 
   const getImageUrl = () => {
     if (!listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
-      return null;
+      return '/placeholder-listing.jpg';
     }
 
+    // Находим главное изображение или используем первое в списке
     let mainImage = listing.images.find(img => img && img.is_main === true) || listing.images[0];
-    const baseUrl = window.ENV?.REACT_APP_MINIO_URL || window.ENV?.REACT_APP_BACKEND_URL || '';
 
-    if (mainImage && typeof mainImage === 'object') {
-      // Если есть публичный URL, используем его напрямую
-      if (mainImage.public_url && mainImage.public_url !== '') {
-        // Проверяем, абсолютный или относительный URL
-        if (mainImage.public_url.startsWith('http')) {
-          return mainImage.public_url;
-        } else {
-          return `${baseUrl}${mainImage.public_url}`;
+    // Используем переменную окружения из window.ENV вместо process.env
+    const baseUrl = window.ENV?.REACT_APP_MINIO_URL || window.ENV?.REACT_APP_BACKEND_URL || '';
+    console.log('FullscreenMap: Using baseUrl from env:', baseUrl);
+
+    // 1. Строковые пути (для обратной совместимости)
+    if (typeof mainImage === 'string') {
+      console.log('FullscreenMap: Processing string image path:', mainImage);
+
+      // Относительный путь MinIO
+      if (mainImage.startsWith('/listings/')) {
+        const url = `${baseUrl}${mainImage}`;
+        console.log('FullscreenMap: Using MinIO relative path:', url);
+        return url;
+      }
+
+      // ID/filename.jpg (прямой путь MinIO)
+      if (mainImage.match(/^\d+\/[^\/]+$/)) {
+        const url = `${baseUrl}/listings/${mainImage}`;
+        console.log('FullscreenMap: Using direct MinIO path pattern:', url);
+        return url;
+      }
+
+      // Локальное хранилище (обратная совместимость)
+      const url = `${baseUrl}/uploads/${mainImage}`;
+      console.log('FullscreenMap: Using local storage path:', url);
+      return url;
+    }
+
+    // 2. Объекты с информацией о файле
+    if (typeof mainImage === 'object' && mainImage !== null) {
+      console.log('FullscreenMap: Processing image object:', mainImage);
+
+      // Приоритет 1: Используем PublicURL если он доступен
+      if (mainImage.public_url && typeof mainImage.public_url === 'string' && mainImage.public_url.trim() !== '') {
+        const publicUrl = mainImage.public_url;
+        console.log('FullscreenMap: Found public_url string:', publicUrl);
+
+        // Абсолютный URL
+        if (publicUrl.startsWith('http')) {
+          console.log('FullscreenMap: Using absolute URL:', publicUrl);
+          return publicUrl;
+        }
+        // Относительный URL с /listings/
+        else if (publicUrl.startsWith('/listings/')) {
+          const url = `${baseUrl}${publicUrl}`;
+          console.log('FullscreenMap: Using public_url with listings path:', url);
+          return url;
+        }
+        // Другой относительный URL
+        else {
+          const url = `${baseUrl}${publicUrl}`;
+          console.log('FullscreenMap: Using general relative public_url:', url);
+          return url;
         }
       }
 
-      // Для MinIO-объектов формируем URL на основе storage_type
-      if (mainImage.storage_type === 'minio' ||
-          (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
-        console.log('Using MinIO URL:', `${baseUrl}${mainImage.public_url}`);
-        return `${baseUrl}${mainImage.public_url}`;
-      }
-
-      // Обычный файл
+      // Приоритет 2: Формируем URL на основе типа хранилища и пути к файлу
       if (mainImage.file_path) {
-        return `${baseUrl}/uploads/${mainImage.file_path}`;
+        if (mainImage.storage_type === 'minio' || mainImage.file_path.includes('listings/')) {
+          // Учитываем возможность наличия префикса listings/ в пути
+          const filePath = mainImage.file_path.includes('listings/')
+            ? mainImage.file_path.replace('listings/', '') 
+            : mainImage.file_path;
+
+          const url = `${baseUrl}/listings/${filePath}`;
+          console.log('FullscreenMap: Constructed MinIO URL from path:', url);
+          return url;
+        }
+
+        // Локальное хранилище
+        const url = `${baseUrl}/uploads/${mainImage.file_path}`;
+        console.log('FullscreenMap: Using local storage path from object:', url);
+        return url;
       }
     }
 
-    // Для строк (обратная совместимость)
-    if (mainImage && typeof mainImage === 'string') {
-      return `${baseUrl}/uploads/${mainImage}`;
-    }
-
-    return null;
+    console.log('FullscreenMap: Could not determine image URL, using placeholder');
+    return '/placeholder-listing.jpg';
   };
 
   const imageUrl = getImageUrl();

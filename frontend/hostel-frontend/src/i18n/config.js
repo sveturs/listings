@@ -11,19 +11,25 @@ import commonSr from '../locales/sr/common.json';
 import marketplaceRu from '../locales/ru/marketplace.json';
 import marketplaceEn from '../locales/en/marketplace.json';
 import marketplaceSr from '../locales/sr/marketplace.json';
+import gisRu from '../locales/ru/gis.json';
+import gisEn from '../locales/en/gis.json';
+import gisSr from '../locales/sr/gis.json';
 
 const resources = {
   ru: {
     common: commonRu,
-    marketplace: marketplaceRu
+    marketplace: marketplaceRu,
+    gis: gisRu
   },
   en: {
     common: commonEn,
-    marketplace: marketplaceEn
+    marketplace: marketplaceEn,
+    gis: gisEn
   },
   sr: {
     common: commonSr,
-    marketplace: marketplaceSr
+    marketplace: marketplaceSr,
+    gis: gisSr
   }
 };
 
@@ -36,7 +42,7 @@ i18n
     fallbackLng: 'sr',
     supportedLngs: ['en', 'ru', 'sr'],
     
-    ns: ['common', 'marketplace'],
+    ns: ['common', 'marketplace', 'gis'],
     defaultNS: 'common',
     lng: 'sr', 
     interpolation: {
