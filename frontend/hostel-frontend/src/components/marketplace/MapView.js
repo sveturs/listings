@@ -61,8 +61,7 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
       mainImage = images[0];
     }
 
-    const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
-
+    const baseUrl = window.ENV?.REACT_APP_MINIO_URL || window.ENV?.REACT_APP_BACKEND_URL || '';
     if (mainImage && typeof mainImage === 'object') {
       // Если есть публичный URL, используем его напрямую
       if (mainImage.public_url && mainImage.public_url !== '') {

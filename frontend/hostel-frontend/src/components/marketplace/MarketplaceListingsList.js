@@ -47,8 +47,7 @@ const getImageUrl = (listing) => {
         return '/placeholder.jpg';
     }
 
-    const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
-
+    const baseUrl = window.ENV?.REACT_APP_MINIO_URL || window.ENV?.REACT_APP_BACKEND_URL || '';
     // Найдем главное изображение или используем первое
     const mainImage = listing.images.find(img => img.is_main) || listing.images[0];
 

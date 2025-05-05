@@ -10,6 +10,7 @@ import reportWebVitals from './reportWebVitals';
 import { ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
+console.log('Environment check:', window.ENV);
 
 const theme = createTheme({
   // Можно добавить кастомные настройки темы

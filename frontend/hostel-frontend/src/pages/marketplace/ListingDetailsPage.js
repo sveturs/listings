@@ -610,7 +610,7 @@ const ListingDetailsPage = () => {
             return '/placeholder.jpg';
         }
 
-        const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+        const baseUrl = window.ENV?.REACT_APP_MINIO_URL || window.ENV?.REACT_APP_BACKEND_URL || '';
         console.log('Base URL:', baseUrl);
 
         // 1. Строковые пути (для обратной совместимости)

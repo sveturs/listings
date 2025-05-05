@@ -28,7 +28,7 @@ const ListingPreview = ({ listing, onClose, onNavigate }) => {
     }
 
     let mainImage = listing.images.find(img => img && img.is_main === true) || listing.images[0];
-    const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+    const baseUrl = window.ENV?.REACT_APP_MINIO_URL || window.ENV?.REACT_APP_BACKEND_URL || '';
 
     if (mainImage && typeof mainImage === 'object') {
       // Если есть публичный URL, используем его напрямую
