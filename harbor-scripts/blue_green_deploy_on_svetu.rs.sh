@@ -406,11 +406,28 @@ if [ "$PORT_CHECK_OK" != "true" ]; then
   exit 1
 fi
 
-# Создаем временный файл конфигурации с заменой переменных
+# Создаем временный файл конфигурации с правильным upstream
+echo -e "${YELLOW}Создаем новую конфигурацию upstream для nginx...${NC}"
+
+# Копируем текущую конфигурацию nginx
 cp /opt/hostel-booking-system/nginx.conf $WORK_DIR/nginx.conf.template
 
-# Заменяем переменные в конфигурации nginx
-sed -i "s/\$NEW_CONTAINER_IP/$NEW_CONTAINER_IP/g" $WORK_DIR/nginx.conf.template
+# Проверяем наличие upstream api_backend
+if grep -q "upstream api_backend" $WORK_DIR/nginx.conf.template; then
+  echo -e "${YELLOW}Заменяем upstream api_backend в конфигурации nginx...${NC}"
+  # Заменяем блок upstream на новый с правильным IP-адресом и именем контейнера для надежности
+  sed -i "s/upstream api_backend {[^}]*}/upstream api_backend {\n    server $NEW_CONTAINER:3000;\n    server $NEW_CONTAINER_IP:3000 backup;\n    keepalive 32;}/g" $WORK_DIR/nginx.conf.template
+else
+  echo -e "${YELLOW}Добавляем upstream api_backend в конфигурацию nginx...${NC}"
+  # Добавляем блок upstream в начало файла
+  sed -i "1i upstream api_backend {\n    server $NEW_CONTAINER:3000;\n    server $NEW_CONTAINER_IP:3000 backup;\n    keepalive 32;\n}\n" $WORK_DIR/nginx.conf.template
+fi
+
+# Выводим обновленный upstream для проверки
+echo -e "${YELLOW}Обновленный upstream api_backend:${NC}"
+grep -A 3 "upstream api_backend" $WORK_DIR/nginx.conf.template
+
+# Заменяем другие переменные в конфигурации nginx
 sed -i "s/\$MINIO_CONTAINER/$MINIO_CONTAINER/g" $WORK_DIR/nginx.conf.template
 sed -i "s/\$MINIO_IP/$MINIO_IP/g" $WORK_DIR/nginx.conf.template
 
@@ -459,6 +476,35 @@ if [ "$NGINX_RUNNING" -gt "0" ]; then
     docker stop $NEW_CONTAINER
     docker rm $NEW_CONTAINER
     exit 1
+  fi
+  
+  # Проверка доступности по имени контейнера из nginx
+  echo -e "${YELLOW}Проверка доступности бэкенда по имени контейнера из nginx...${NC}"
+  CONTAINER_NAME_CHECK=$(docker exec hostel_nginx curl -s --max-time 5 http://$NEW_CONTAINER:3000/api/health || echo "Failed")
+  if [[ "$CONTAINER_NAME_CHECK" != *"OK"* ]]; then
+    echo -e "${RED}Предупреждение: Бэкенд НЕ доступен по имени контейнера из nginx!${NC}"
+    echo -e "${YELLOW}Попытка исправить путем подключения к той же сети...${NC}"
+    
+    # Пробуем переподключить контейнеры к сети для улучшения DNS-резолвинга
+    docker network disconnect $HOSTEL_NETWORK $NEW_CONTAINER 2>/dev/null || true
+    docker network disconnect $HOSTEL_NETWORK hostel_nginx 2>/dev/null || true
+    docker network connect $HOSTEL_NETWORK $NEW_CONTAINER || true
+    docker network connect $HOSTEL_NETWORK hostel_nginx || true
+    
+    # Проверяем еще раз после переподключения
+    sleep 5
+    CONTAINER_NAME_CHECK=$(docker exec hostel_nginx curl -s --max-time 5 http://$NEW_CONTAINER:3000/api/health || echo "Failed")
+    if [[ "$CONTAINER_NAME_CHECK" != *"OK"* ]]; then
+      echo -e "${YELLOW}Предупреждение: Бэкенд все еще недоступен по имени контейнера. Будем использовать только IP-адрес.${NC}"
+      # Обновляем конфигурацию, чтобы использовать только IP-адрес
+      sed -i "s/upstream api_backend {[^}]*}/upstream api_backend {\n    server $NEW_CONTAINER_IP:3000;\n    keepalive 32;}/g" $WORK_DIR/nginx.conf.template
+      cp $WORK_DIR/nginx.conf.template $WORK_DIR/nginx.conf.new
+      cp $WORK_DIR/nginx.conf.new /opt/hostel-booking-system/nginx.conf
+    else
+      echo -e "${GREEN}Бэкенд теперь доступен по имени контейнера!${NC}"
+    fi
+  else
+    echo -e "${GREEN}Бэкенд успешно доступен по имени контейнера!${NC}"
   fi
 
   # Подключаем nginx к тем же сетям, что и бэкенд для надежности

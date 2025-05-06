@@ -154,12 +154,12 @@ func (s *StorefrontService) ProcessImportImagesAsync(ctx context.Context, listin
 					// Нашли запись, обновляем ее
 					_, err = s.storage.Exec(ctx,
 						"UPDATE marketplace_images SET file_size = $1, content_type = $2, storage_type = $3, storage_bucket = $4, public_url = $5, file_path = $6 WHERE id = $7",
-						len(processedData), contentType, "minio", "listings", publicURL, objectName, imageID)
+						len(processedData), contentType, "minio", "listings", publicURL, fileName, imageID)
 				} else {
 					// Запись не найдена, создаем новую
 					image := &models.MarketplaceImage{
 						ListingID:     listingID,
-						FilePath:      objectName,
+						FilePath:      fileName, // Используем только имя файла вместо полного пути
 						FileName:      strings.Split(path, "/")[len(strings.Split(path, "/"))-1],
 						FileSize:      len(processedData),
 						ContentType:   contentType,
@@ -281,7 +281,7 @@ func (s *StorefrontService) processOneImage(ctx context.Context, listingID int, 
 	// Создаем запись об изображении в базе данных
 	image := &models.MarketplaceImage{
 		ListingID:     listingID,
-		FilePath:      objectName,
+		FilePath:      fileName, // Используем только имя файла вместо полного пути
 		FileName:      filepath.Base(imagePath),
 		FileSize:      len(processedData),
 		ContentType:   contentType,
@@ -370,7 +370,7 @@ func (s *StorefrontService) processOneImageWithName(ctx context.Context, listing
 		// Нашли запись, обновляем ее
 		_, err = s.storage.Exec(ctx,
 			"UPDATE marketplace_images SET file_path = $1, file_size = $2, content_type = $3, storage_type = $4, storage_bucket = $5, public_url = $6 WHERE id = $7",
-			objectName, len(processedData), contentType, "minio", "listings", publicURL, imageID)
+			fileName, len(processedData), contentType, "minio", "listings", publicURL, imageID)
 		if err != nil {
 			log.Printf("Ошибка при обновлении информации об изображении в БД: %v", err)
 		}
@@ -378,7 +378,7 @@ func (s *StorefrontService) processOneImageWithName(ctx context.Context, listing
 		// Запись не найдена, создаем новую
 		image := &models.MarketplaceImage{
 			ListingID:     listingID,
-			FilePath:      objectName,
+			FilePath:      fileName, // Используем только имя файла вместо полного пути
 			FileName:      strings.Split(imagePath, "/")[len(strings.Split(imagePath, "/"))-1],
 			FileSize:      len(processedData),
 			ContentType:   contentType,

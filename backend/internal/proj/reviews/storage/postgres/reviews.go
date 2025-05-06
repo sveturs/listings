@@ -630,11 +630,10 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 	return stats, nil
 }
 
-// GetUserReviews получает все отзывы, связанные с пользователе
 // GetUserReviews получает все отзывы, связанные с пользователем
+func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error) {
 	// Базовый запрос для получения отзывов, связанных с пользователем
 	query := `
-    query := `
     WITH vote_counts AS (
         SELECT 
             review_id,
@@ -679,12 +678,13 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
           )
     ORDER BY r.created_at DESC
     `
+
 	rows, err := s.pool.Query(ctx, query, userID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("error executing query: %w", err)
 	}
 	defer rows.Close()
-    defer rows.Close()
+
 	var reviews []models.Review
 	for rows.Next() {
 		var r models.Review
@@ -695,7 +695,7 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 		var userEmail, userPicture *string
 		var entityOriginType *string
 		var entityOriginID *int
-        var entityOriginID *int
+
 		err := rows.Scan(
 			&r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
 			&r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
@@ -709,7 +709,7 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 		if err != nil {
 			return nil, fmt.Errorf("error scanning row: %w", err)
 		}
-        }
+
 		// Обрабатываем NULL значения
 		if pros != nil {
 			r.Pros = *pros
@@ -729,13 +729,13 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 		if entityOriginID != nil {
 			r.EntityOriginID = *entityOriginID
 		}
-        }
+
 		// Парсим переводы из JSON
 		if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
 			log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
 			r.Translations = make(map[string]map[string]string)
 		}
-        }
+
 		r.VotesCount = struct {
 			Helpful    int `json:"helpful"`
 			NotHelpful int `json:"not_helpful"`
@@ -743,22 +743,21 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 			Helpful:    r.HelpfulVotes,
 			NotHelpful: r.NotHelpfulVotes,
 		}
-        }
+
 		if currentUserVote != nil {
 			r.CurrentUserVote = *currentUserVote
 		}
-        }
+
 		reviews = append(reviews, r)
 	}
-    }
+
 	return reviews, rows.Err()
-    return reviews, rows.Err()
 }
 
 // GetStorefrontReviews получает все отзывы, связанные с витриной
+func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error) {
 	// Базовый запрос для получения отзывов, связанных с витриной
 	query := `
-    query := `
     WITH vote_counts AS (
         SELECT 
             review_id,
@@ -803,13 +802,14 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
           )
     ORDER BY r.created_at DESC
     `
+
 	rows, err := s.pool.Query(ctx, query, 0, storefrontID)
-    rows, err := s.pool.Query(ctx, query, 0, storefrontID)
+
 	if err != nil {
 		return nil, fmt.Errorf("error executing query: %w", err)
 	}
 	defer rows.Close()
-    defer rows.Close()
+
 	var reviews []models.Review
 	for rows.Next() {
 		var r models.Review
@@ -820,7 +820,7 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 		var userEmail, userPicture *string
 		var entityOriginType *string
 		var entityOriginID *int
-        var entityOriginID *int
+
 		err := rows.Scan(
 			&r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
 			&r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
@@ -834,7 +834,7 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 		if err != nil {
 			return nil, fmt.Errorf("error scanning row: %w", err)
 		}
-        }
+
 		// Обрабатываем NULL значения
 		if pros != nil {
 			r.Pros = *pros
@@ -854,13 +854,13 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 		if entityOriginID != nil {
 			r.EntityOriginID = *entityOriginID
 		}
-        }
+
 		// Парсим переводы из JSON
 		if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
 			log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
 			r.Translations = make(map[string]map[string]string)
 		}
-        }
+
 		r.VotesCount = struct {
 			Helpful    int `json:"helpful"`
 			NotHelpful int `json:"not_helpful"`
@@ -868,67 +868,159 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 			Helpful:    r.HelpfulVotes,
 			NotHelpful: r.NotHelpfulVotes,
 		}
-        }
+
 		if currentUserVote != nil {
 			r.CurrentUserVote = *currentUserVote
 		}
-        }
+
 		reviews = append(reviews, r)
 	}
-    }
+
 	return reviews, rows.Err()
-    return reviews, rows.Err()
 }
 
 // GetUserRatingSummary получает сводные данные о рейтинге пользователя
-	var summary models.UserRatingSummary
-
-	query := `
-    query := `
-    SELECT 
-        user_id, name, total_reviews, average_rating,
-        rating_1, rating_2, rating_3, rating_4, rating_5
-    FROM user_rating_summary
-    WHERE user_id = $1
-
-	err := s.pool.QueryRow(ctx, query, userID).Scan(
-		&summary.UserID, &summary.Name, &summary.TotalReviews, &summary.AverageRating,
-		&summary.Rating1, &summary.Rating2, &summary.Rating3, &summary.Rating4, &summary.Rating5)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			// Если нет данных, создаем пустую сводку
-			return &models.UserRatingSummary{UserID: userID}, nil
-		}
-		return nil, fmt.Errorf("error getting user rating summary: %w", err)
+func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error) {
+	// Создаем пустую сводку рейтинга
+	summary := &models.UserRatingSummary{
+		UserID:        userID,
+		TotalReviews:  0,
+		AverageRating: 0,
+		Rating1:       0,
+		Rating2:       0,
+		Rating3:       0,
+		Rating4:       0,
+		Rating5:       0,
 	}
 
-	return &summary, nil
-    return &summary, nil
+	// Получаем имя пользователя
+	var userName sql.NullString
+	err := s.pool.QueryRow(ctx, `SELECT name FROM users WHERE id = $1`, userID).Scan(&userName)
+	if err != nil && err != pgx.ErrNoRows {
+		log.Printf("Error getting user name: %v", err)
+	}
+
+	if userName.Valid {
+		summary.Name = userName.String
+	}
+
+	// Получаем данные о рейтинге из отзывов к пользователю
+	// Теперь запрос включает как отзывы с entity_type='user', так и отзывы на объявления пользователя
+	query := `
+    SELECT 
+        COUNT(*) as total_reviews,
+        COALESCE(AVG(rating), 0) as average_rating,
+        COUNT(*) FILTER (WHERE rating = 1) as rating_1,
+        COUNT(*) FILTER (WHERE rating = 2) as rating_2,
+        COUNT(*) FILTER (WHERE rating = 3) as rating_3,
+        COUNT(*) FILTER (WHERE rating = 4) as rating_4,
+        COUNT(*) FILTER (WHERE rating = 5) as rating_5
+    FROM reviews
+    WHERE 
+        ((entity_type = 'user' AND entity_id = $1) OR 
+         (entity_type = 'listing' AND EXISTS 
+            (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
+        AND status = 'published'
+    `
+
+	err = s.pool.QueryRow(ctx, query, userID).Scan(
+		&summary.TotalReviews,
+		&summary.AverageRating,
+		&summary.Rating1,
+		&summary.Rating2,
+		&summary.Rating3,
+		&summary.Rating4,
+		&summary.Rating5)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			// Если отзывов нет, возвращаем пустую сводку
+			return summary, nil
+		}
+		return nil, fmt.Errorf("error getting user rating data: %w", err)
+	}
+
+	return summary, nil
 }
 
 // GetStorefrontRatingSummary получает сводные данные о рейтинге витрины
-	var summary models.StorefrontRatingSummary
-
-	query := `
-    query := `
-    SELECT 
-        storefront_id, name, total_reviews, average_rating,
-        rating_1, rating_2, rating_3, rating_4, rating_5
-    FROM storefront_rating_summary
-    WHERE storefront_id = $1
-
-	err := s.pool.QueryRow(ctx, query, storefrontID).Scan(
-		&summary.StorefrontID, &summary.Name, &summary.TotalReviews, &summary.AverageRating,
-		&summary.Rating1, &summary.Rating2, &summary.Rating3, &summary.Rating4, &summary.Rating5)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			// Если нет данных, создаем пустую сводку
-			return &models.StorefrontRatingSummary{StorefrontID: storefrontID}, nil
-		}
-		return nil, fmt.Errorf("error getting storefront rating summary: %w", err)
+func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
+	// Создаем пустую сводку рейтинга
+	summary := &models.StorefrontRatingSummary{
+		StorefrontID:  storefrontID,
+		TotalReviews:  0,
+		AverageRating: 0,
+		Rating1:       0,
+		Rating2:       0,
+		Rating3:       0,
+		Rating4:       0,
+		Rating5:       0,
 	}
 
-	return &summary, nil
-    return &summary, nil
-,
+	// Получаем название витрины
+	var storefrontName sql.NullString
+	err := s.pool.QueryRow(ctx, `SELECT name FROM storefronts WHERE id = $1`, storefrontID).Scan(&storefrontName)
+	if err != nil && err != pgx.ErrNoRows {
+		log.Printf("Error getting storefront name: %v", err)
+	}
+
+	if storefrontName.Valid {
+		summary.Name = storefrontName.String
+	}
+
+	// Получаем данные о рейтинге из отзывов к витрине
+	query := `
+    SELECT 
+        COUNT(*) as total_reviews,
+        COALESCE(AVG(rating), 0) as average_rating,
+        COUNT(*) FILTER (WHERE rating = 1) as rating_1,
+        COUNT(*) FILTER (WHERE rating = 2) as rating_2,
+        COUNT(*) FILTER (WHERE rating = 3) as rating_3,
+        COUNT(*) FILTER (WHERE rating = 4) as rating_4,
+        COUNT(*) FILTER (WHERE rating = 5) as rating_5
+    FROM reviews
+    WHERE 
+        ((entity_type = 'storefront' AND entity_id = $1) OR 
+         (entity_type = 'listing' AND EXISTS 
+            (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.storefront_id = $1)))
+        AND status = 'published'
+    `
+
+	err = s.pool.QueryRow(ctx, query, storefrontID).Scan(
+		&summary.TotalReviews,
+		&summary.AverageRating,
+		&summary.Rating1,
+		&summary.Rating2,
+		&summary.Rating3,
+		&summary.Rating4,
+		&summary.Rating5)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			// Если отзывов нет, возвращаем пустую сводку
+			return summary, nil
+		}
+		return nil, fmt.Errorf("error getting storefront rating data: %w", err)
+	}
+
+	return summary, nil
+}
+
+func (s *Storage) saveTranslation(ctx context.Context, tx pgx.Tx, entityType string, entityID int,
+	language string, fieldName string, text string, isMachineTranslated bool, isVerified bool) error {
+
+	_, err := tx.Exec(ctx, `
+        INSERT INTO translations (
+            entity_type, entity_id, language, field_name,
+            translated_text, is_machine_translated, is_verified
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (entity_type, entity_id, language, field_name)
+        DO UPDATE SET
+            translated_text = EXCLUDED.translated_text,
+            is_machine_translated = EXCLUDED.is_machine_translated,
+            is_verified = EXCLUDED.is_verified,
+            updated_at = CURRENT_TIMESTAMP
+    `, entityType, entityID, language, fieldName, text, isMachineTranslated, isVerified)
+
+	return err
 }

@@ -1,21 +1,25 @@
 package storage
 
 import (
-    "context"
-    "backend/internal/domain/models"
+	"backend/internal/domain/models"
+	"context"
 )
 
 type ReviewRepository interface {
-    CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)
-    GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
-    GetReviewByID(ctx context.Context, id int) (*models.Review, error)
-    UpdateReview(ctx context.Context, review *models.Review) error
-    DeleteReview(ctx context.Context, id int) error
-    AddReviewResponse(ctx context.Context, response *models.ReviewResponse) error
-    AddReviewVote(ctx context.Context, vote *models.ReviewVote) error 
-    GetReviewVotes(ctx context.Context, reviewId int) (helpful int, notHelpful int, err error)
-    GetUserReviewVote(ctx context.Context, userId int, reviewId int) (string, error)
-    GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error)
-    UpdateReviewVotes(ctx context.Context, reviewId int) error
-    GetReviewStats(ctx context.Context, entityType string, entityId int) (*models.ReviewStats, error)
+	CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)
+	GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
+	GetReviewByID(ctx context.Context, id int) (*models.Review, error)
+	UpdateReview(ctx context.Context, review *models.Review) error
+	DeleteReview(ctx context.Context, id int) error
+	AddReviewResponse(ctx context.Context, response *models.ReviewResponse) error
+	AddReviewVote(ctx context.Context, vote *models.ReviewVote) error
+	GetReviewVotes(ctx context.Context, reviewId int) (helpful int, notHelpful int, err error)
+	GetUserReviewVote(ctx context.Context, userId int, reviewId int) (string, error)
+	GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error)
+	UpdateReviewVotes(ctx context.Context, reviewId int) error
+	GetReviewStats(ctx context.Context, entityType string, entityId int) (*models.ReviewStats, error)
+	GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error)
+	GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error)
+	GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error)
+	GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error)
 }
