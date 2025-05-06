@@ -27,10 +27,11 @@ export const NotificationProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await axios.get('/api/v1/notifications');
-      setNotifications(response.data.data || []);
+      const notificationsData = Array.isArray(response.data.data) ? response.data.data : [];
+      setNotifications(notificationsData);
       
       // Считаем непрочитанные уведомления
-      const unread = (response.data.data || []).filter(n => !n.is_read).length;
+      const unread = notificationsData.filter(n => !n.is_read).length;
       setUnreadCount(unread);
     } catch (err) {
       console.error('Error fetching notifications:', err);

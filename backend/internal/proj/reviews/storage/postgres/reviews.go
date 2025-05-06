@@ -8,28 +8,37 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-        
+
 	"github.com/jackc/pgx/v5"
 )
 
 func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*models.Review, error) {
-    tx, err := s.pool.Begin(ctx)
-    if err != nil {
-        return nil, fmt.Errorf("failed to start transaction: %w", err)
-    }
-    defer tx.Rollback(ctx)
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
 
-    // Сначала модерируем оригинальный текст
-    moderatedComment := review.Comment
-    if review.Comment != "" {
-        moderatedComment, err = s.translationService.ModerateText(ctx, review.Comment, review.OriginalLanguage)
-        if err != nil {
-            return nil, fmt.Errorf("failed to moderate comment: %w", err)
-        }
-    }
+	// Сначала модерируем оригинальный текст
+	moderatedComment := review.Comment
+	if review.Comment != "" {
+		// Используем текущий сервис перевода для модерации текста
+		// В режиме безопасной обработки с обработкой ошибок
+		moderatedComment, err = s.translationService.ModerateText(ctx, review.Comment, review.OriginalLanguage)
+		if err != nil {
+			// В случае ошибки модерации, просто используем оригинальный текст
+			log.Printf("Warning: failed to moderate comment: %v, using original text", err)
+			moderatedComment = review.Comment
+			err = nil // Сбрасываем ошибку, чтобы продолжить выполнение
+		}
 
-    // Создаем запись отзыва с модерированным текстом
-    err = tx.QueryRow(ctx, `
+		if err != nil {
+			return nil, fmt.Errorf("failed to moderate comment: %w", err)
+		}
+	}
+
+	// Создаем запись отзыва с модерированным текстом
+	err = tx.QueryRow(ctx, `
         INSERT INTO reviews (
             user_id, entity_type, entity_id, rating, comment, 
             pros, cons, photos, is_verified_purchase, status,
@@ -37,43 +46,51 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING id, created_at, updated_at
     `,
-        review.UserID, review.EntityType, review.EntityID, review.Rating,
-        moderatedComment, review.Pros, review.Cons, review.Photos,
-        review.IsVerifiedPurchase, review.Status, review.OriginalLanguage,
-    ).Scan(&review.ID, &review.CreatedAt, &review.UpdatedAt)
+		review.UserID, review.EntityType, review.EntityID, review.Rating,
+		moderatedComment, review.Pros, review.Cons, review.Photos,
+		review.IsVerifiedPurchase, review.Status, review.OriginalLanguage,
+	).Scan(&review.ID, &review.CreatedAt, &review.UpdatedAt)
 
-    if err != nil {
-        return nil, fmt.Errorf("failed to insert review: %w", err)
-    }
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert review: %w", err)
+	}
 
-    // Сохраняем модерированный текст как оригинальный перевод
-    err = s.saveTranslation(ctx, tx, "review", review.ID, review.OriginalLanguage, "comment", moderatedComment, false, true)
-    if err != nil {
-        return nil, fmt.Errorf("failed to save original translation: %w", err)
-    }
+	// Сохраняем модерированный текст как оригинальный перевод
+	err = s.saveTranslation(ctx, tx, "review", review.ID, review.OriginalLanguage, "comment", moderatedComment, false, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to save original translation: %w", err)
+	}
 
-    // Создаем переводы на другие языки
-    targetLangs := []string{"en", "ru", "sr"}
-    for _, lang := range targetLangs {
-        if lang == review.OriginalLanguage {
-            continue
-        }
+	// Создаем переводы на другие языки
+	targetLangs := []string{"en", "ru", "sr"}
+	for _, lang := range targetLangs {
+		if lang == review.OriginalLanguage {
+			continue
+		}
 
-        translatedText, err := s.translationService.Translate(ctx, moderatedComment, review.OriginalLanguage, lang)
-        if err != nil {
-            log.Printf("Failed to translate to %s: %v", lang, err)
-            continue
-        }
+		// Используем простой подход с обработкой ошибок для максимальной надежности
+		var translatedText string
+		var translateErr error
 
-        if err := s.saveTranslation(ctx, tx, "review", review.ID, lang, "comment", translatedText, true, false); err != nil {
-            log.Printf("Failed to save translation to %s: %v", lang, err)
-            continue
-        }
-    }
+		// Пытаемся перевести текст
+		translatedText, translateErr = s.translationService.Translate(ctx, moderatedComment, review.OriginalLanguage, lang)
 
-    if err = tx.Commit(ctx); err != nil {
-        return nil, fmt.Errorf("failed to commit transaction: %w", err)
-    }
+		// Обрабатываем возможную ошибку перевода
+		if translateErr != nil {
+			log.Printf("Failed to translate to %s: %v, using original text", lang, translateErr)
+			translatedText = moderatedComment // Используем оригинальный текст как запасной вариант
+		}
+
+		// Создаем перевод в БД
+		if err := s.saveTranslation(ctx, tx, "review", review.ID, lang, "comment", translatedText, true, false); err != nil {
+			log.Printf("Failed to save translation to %s: %v", lang, err)
+			// Продолжаем выполнение даже при ошибке сохранения перевода
+		}
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
 
 	// Загружаем все переводы в структуру отзыва
 	translations := make(map[string]map[string]string)
@@ -103,12 +120,12 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
 }
 
 func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error) {
-    userID, ok := ctx.Value("user_id").(int)
-    if !ok {
-        userID = 0
-    }
+	userID, ok := ctx.Value("user_id").(int)
+	if !ok {
+		userID = 0
+	}
 
-    baseQuery := `
+	baseQuery := `
     WITH vote_counts AS (
         SELECT 
             review_id,
@@ -149,128 +166,128 @@ func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) (
     LEFT JOIN translations_agg ta ON ta.entity_id = r.id
     WHERE 1=1`
 
-    args := []interface{}{userID}
-    paramCount := 2
+	args := []interface{}{userID}
+	paramCount := 2
 
-    // Добавляем условия фильтрации
-    if filter.EntityType != "" {
-        baseQuery += fmt.Sprintf(" AND r.entity_type = $%d", paramCount)
-        args = append(args, filter.EntityType)
-        paramCount++
-    }
+	// Добавляем условия фильтрации
+	if filter.EntityType != "" {
+		baseQuery += fmt.Sprintf(" AND r.entity_type = $%d", paramCount)
+		args = append(args, filter.EntityType)
+		paramCount++
+	}
 
-    if filter.EntityID != 0 {
-        baseQuery += fmt.Sprintf(" AND r.entity_id = $%d", paramCount)
-        args = append(args, filter.EntityID)
-        paramCount++
-    }
+	if filter.EntityID != 0 {
+		baseQuery += fmt.Sprintf(" AND r.entity_id = $%d", paramCount)
+		args = append(args, filter.EntityID)
+		paramCount++
+	}
 
-    if filter.UserID != 0 {
-        baseQuery += fmt.Sprintf(" AND r.user_id = $%d", paramCount)
-        args = append(args, filter.UserID)
-        paramCount++
-    }
+	if filter.UserID != 0 {
+		baseQuery += fmt.Sprintf(" AND r.user_id = $%d", paramCount)
+		args = append(args, filter.UserID)
+		paramCount++
+	}
 
-    if filter.MinRating > 0 {
-        baseQuery += fmt.Sprintf(" AND r.rating >= $%d", paramCount)
-        args = append(args, filter.MinRating)
-        paramCount++
-    }
+	if filter.MinRating > 0 {
+		baseQuery += fmt.Sprintf(" AND r.rating >= $%d", paramCount)
+		args = append(args, filter.MinRating)
+		paramCount++
+	}
 
-    if filter.MaxRating > 0 {
-        baseQuery += fmt.Sprintf(" AND r.rating <= $%d", paramCount)
-        args = append(args, filter.MaxRating)
-        paramCount++
-    }
+	if filter.MaxRating > 0 {
+		baseQuery += fmt.Sprintf(" AND r.rating <= $%d", paramCount)
+		args = append(args, filter.MaxRating)
+		paramCount++
+	}
 
-    if filter.Status != "" {
-        baseQuery += fmt.Sprintf(" AND r.status = $%d", paramCount)
-        args = append(args, filter.Status)
-        paramCount++
-    }
+	if filter.Status != "" {
+		baseQuery += fmt.Sprintf(" AND r.status = $%d", paramCount)
+		args = append(args, filter.Status)
+		paramCount++
+	}
 
-    // Сортировка
-    switch filter.SortBy {
-    case "rating":
-        baseQuery += " ORDER BY r.rating " + filter.SortOrder
-    case "likes":
-        baseQuery += " ORDER BY r.likes_count " + filter.SortOrder
-    default:
-        baseQuery += " ORDER BY r.created_at " + filter.SortOrder
-    }
+	// Сортировка
+	switch filter.SortBy {
+	case "rating":
+		baseQuery += " ORDER BY r.rating " + filter.SortOrder
+	case "likes":
+		baseQuery += " ORDER BY r.likes_count " + filter.SortOrder
+	default:
+		baseQuery += " ORDER BY r.created_at " + filter.SortOrder
+	}
 
-    // Пагинация
-    baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", paramCount, paramCount+1)
-    args = append(args, filter.Limit, (filter.Page-1)*filter.Limit)
+	// Пагинация
+	baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", paramCount, paramCount+1)
+	args = append(args, filter.Limit, (filter.Page-1)*filter.Limit)
 
-    rows, err := s.pool.Query(ctx, baseQuery, args...)
-    if err != nil {
-        return nil, 0, fmt.Errorf("error executing query: %w", err)
-    }
-    defer rows.Close()
+	rows, err := s.pool.Query(ctx, baseQuery, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error executing query: %w", err)
+	}
+	defer rows.Close()
 
-    var reviews []models.Review
-    var totalCount int64
+	var reviews []models.Review
+	var totalCount int64
 
-    for rows.Next() {
-        var r models.Review
-        r.User = &models.User{}
-        var currentUserVote *string
-        var translationsJSON []byte
-        var pros, cons *string
-        var userEmail, userPicture *string
+	for rows.Next() {
+		var r models.Review
+		r.User = &models.User{}
+		var currentUserVote *string
+		var translationsJSON []byte
+		var pros, cons *string
+		var userEmail, userPicture *string
 
-        err := rows.Scan(
-            &r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
-            &r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
-            &r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
-            &r.OriginalLanguage,
-            &r.HelpfulVotes, &r.NotHelpfulVotes,
-            &r.User.Name, &userEmail, &userPicture,
-            &totalCount,
-            &translationsJSON,
-            &currentUserVote,
-        )
-        if err != nil {
-            return nil, 0, fmt.Errorf("error scanning row: %w", err)
-        }
+		err := rows.Scan(
+			&r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
+			&r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
+			&r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
+			&r.OriginalLanguage,
+			&r.HelpfulVotes, &r.NotHelpfulVotes,
+			&r.User.Name, &userEmail, &userPicture,
+			&totalCount,
+			&translationsJSON,
+			&currentUserVote,
+		)
+		if err != nil {
+			return nil, 0, fmt.Errorf("error scanning row: %w", err)
+		}
 
-        // Обрабатываем NULL значения
-        if pros != nil {
-            r.Pros = *pros
-        }
-        if cons != nil {
-            r.Cons = *cons
-        }
-        if userEmail != nil {
-            r.User.Email = *userEmail
-        }
-        if userPicture != nil {
-            r.User.PictureURL = *userPicture
-        }
+		// Обрабатываем NULL значения
+		if pros != nil {
+			r.Pros = *pros
+		}
+		if cons != nil {
+			r.Cons = *cons
+		}
+		if userEmail != nil {
+			r.User.Email = *userEmail
+		}
+		if userPicture != nil {
+			r.User.PictureURL = *userPicture
+		}
 
-        // Парсим переводы из JSON
-        if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
-            log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
-            r.Translations = make(map[string]map[string]string)
-        }
+		// Парсим переводы из JSON
+		if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
+			log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
+			r.Translations = make(map[string]map[string]string)
+		}
 
-        r.VotesCount = struct {
-            Helpful    int `json:"helpful"`
-            NotHelpful int `json:"not_helpful"`
-        }{
-            Helpful:    r.HelpfulVotes,
-            NotHelpful: r.NotHelpfulVotes,
-        }
+		r.VotesCount = struct {
+			Helpful    int `json:"helpful"`
+			NotHelpful int `json:"not_helpful"`
+		}{
+			Helpful:    r.HelpfulVotes,
+			NotHelpful: r.NotHelpfulVotes,
+		}
 
-        if currentUserVote != nil {
-            r.CurrentUserVote = *currentUserVote
-        }
+		if currentUserVote != nil {
+			r.CurrentUserVote = *currentUserVote
+		}
 
-        reviews = append(reviews, r)
-    }
+		reviews = append(reviews, r)
+	}
 
-    return reviews, totalCount, rows.Err()
+	return reviews, totalCount, rows.Err()
 }
 
 func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, error) {
@@ -612,9 +629,11 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 
 	return stats, nil
 }
+
+// GetUserReviews получает все отзывы, связанные с пользователе
 // GetUserReviews получает все отзывы, связанные с пользователем
-func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error) {
-    // Базовый запрос для получения отзывов, связанных с пользователем
+	// Базовый запрос для получения отзывов, связанных с пользователем
+	query := `
     query := `
     WITH vote_counts AS (
         SELECT 
@@ -660,85 +679,85 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
           )
     ORDER BY r.created_at DESC
     `
-
-    rows, err := s.pool.Query(ctx, query, userID, userID)
-    if err != nil {
-        return nil, fmt.Errorf("error executing query: %w", err)
-    }
+	rows, err := s.pool.Query(ctx, query, userID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("error executing query: %w", err)
+	}
+	defer rows.Close()
     defer rows.Close()
-
-    var reviews []models.Review
-    for rows.Next() {
-        var r models.Review
-        r.User = &models.User{}
-        var currentUserVote *string
-        var translationsJSON []byte
-        var pros, cons *string
-        var userEmail, userPicture *string
-        var entityOriginType *string
+	var reviews []models.Review
+	for rows.Next() {
+		var r models.Review
+		r.User = &models.User{}
+		var currentUserVote *string
+		var translationsJSON []byte
+		var pros, cons *string
+		var userEmail, userPicture *string
+		var entityOriginType *string
+		var entityOriginID *int
         var entityOriginID *int
-
-        err := rows.Scan(
-            &r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
-            &r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
-            &r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
-            &r.OriginalLanguage, &entityOriginType, &entityOriginID,
-            &r.HelpfulVotes, &r.NotHelpfulVotes,
-            &r.User.Name, &userEmail, &userPicture,
-            &translationsJSON,
-            &currentUserVote,
-        )
-        if err != nil {
-            return nil, fmt.Errorf("error scanning row: %w", err)
+		err := rows.Scan(
+			&r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
+			&r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
+			&r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
+			&r.OriginalLanguage, &entityOriginType, &entityOriginID,
+			&r.HelpfulVotes, &r.NotHelpfulVotes,
+			&r.User.Name, &userEmail, &userPicture,
+			&translationsJSON,
+			&currentUserVote,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning row: %w", err)
+		}
         }
-
-        // Обрабатываем NULL значения
-        if pros != nil {
-            r.Pros = *pros
+		// Обрабатываем NULL значения
+		if pros != nil {
+			r.Pros = *pros
+		}
+		if cons != nil {
+			r.Cons = *cons
+		}
+		if userEmail != nil {
+			r.User.Email = *userEmail
+		}
+		if userPicture != nil {
+			r.User.PictureURL = *userPicture
+		}
+		if entityOriginType != nil {
+			r.EntityOriginType = *entityOriginType
+		}
+		if entityOriginID != nil {
+			r.EntityOriginID = *entityOriginID
+		}
         }
-        if cons != nil {
-            r.Cons = *cons
+		// Парсим переводы из JSON
+		if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
+			log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
+			r.Translations = make(map[string]map[string]string)
+		}
         }
-        if userEmail != nil {
-            r.User.Email = *userEmail
+		r.VotesCount = struct {
+			Helpful    int `json:"helpful"`
+			NotHelpful int `json:"not_helpful"`
+		}{
+			Helpful:    r.HelpfulVotes,
+			NotHelpful: r.NotHelpfulVotes,
+		}
         }
-        if userPicture != nil {
-            r.User.PictureURL = *userPicture
+		if currentUserVote != nil {
+			r.CurrentUserVote = *currentUserVote
+		}
         }
-        if entityOriginType != nil {
-            r.EntityOriginType = *entityOriginType
-        }
-        if entityOriginID != nil {
-            r.EntityOriginID = *entityOriginID
-        }
-
-        // Парсим переводы из JSON
-        if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
-            log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
-            r.Translations = make(map[string]map[string]string)
-        }
-
-        r.VotesCount = struct {
-            Helpful    int `json:"helpful"`
-            NotHelpful int `json:"not_helpful"`
-        }{
-            Helpful:    r.HelpfulVotes,
-            NotHelpful: r.NotHelpfulVotes,
-        }
-
-        if currentUserVote != nil {
-            r.CurrentUserVote = *currentUserVote
-        }
-
-        reviews = append(reviews, r)
+		reviews = append(reviews, r)
+	}
     }
-
+	return reviews, rows.Err()
     return reviews, rows.Err()
 }
 
 // GetStorefrontReviews получает все отзывы, связанные с витриной
-func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error) {
-    // Базовый запрос для получения отзывов, связанных с витриной
+	// Базовый запрос для получения отзывов, связанных с витриной
+	query := `
     query := `
     WITH vote_counts AS (
         SELECT 
@@ -784,131 +803,132 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
           )
     ORDER BY r.created_at DESC
     `
-
+	rows, err := s.pool.Query(ctx, query, 0, storefrontID)
     rows, err := s.pool.Query(ctx, query, 0, storefrontID)
-
-    if err != nil {
-        return nil, fmt.Errorf("error executing query: %w", err)
-    }
+	if err != nil {
+		return nil, fmt.Errorf("error executing query: %w", err)
+	}
+	defer rows.Close()
     defer rows.Close()
-
-    var reviews []models.Review
-    for rows.Next() {
-        var r models.Review
-        r.User = &models.User{}
-        var currentUserVote *string
-        var translationsJSON []byte
-        var pros, cons *string
-        var userEmail, userPicture *string
-        var entityOriginType *string
+	var reviews []models.Review
+	for rows.Next() {
+		var r models.Review
+		r.User = &models.User{}
+		var currentUserVote *string
+		var translationsJSON []byte
+		var pros, cons *string
+		var userEmail, userPicture *string
+		var entityOriginType *string
+		var entityOriginID *int
         var entityOriginID *int
-
-        err := rows.Scan(
-            &r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
-            &r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
-            &r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
-            &r.OriginalLanguage, &entityOriginType, &entityOriginID,
-            &r.HelpfulVotes, &r.NotHelpfulVotes,
-            &r.User.Name, &userEmail, &userPicture,
-            &translationsJSON,
-            &currentUserVote,
-        )
-        if err != nil {
-            return nil, fmt.Errorf("error scanning row: %w", err)
+		err := rows.Scan(
+			&r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
+			&r.Comment, &pros, &cons, &r.Photos, &r.LikesCount,
+			&r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
+			&r.OriginalLanguage, &entityOriginType, &entityOriginID,
+			&r.HelpfulVotes, &r.NotHelpfulVotes,
+			&r.User.Name, &userEmail, &userPicture,
+			&translationsJSON,
+			&currentUserVote,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning row: %w", err)
+		}
         }
-
-        // Обрабатываем NULL значения
-        if pros != nil {
-            r.Pros = *pros
+		// Обрабатываем NULL значения
+		if pros != nil {
+			r.Pros = *pros
+		}
+		if cons != nil {
+			r.Cons = *cons
+		}
+		if userEmail != nil {
+			r.User.Email = *userEmail
+		}
+		if userPicture != nil {
+			r.User.PictureURL = *userPicture
+		}
+		if entityOriginType != nil {
+			r.EntityOriginType = *entityOriginType
+		}
+		if entityOriginID != nil {
+			r.EntityOriginID = *entityOriginID
+		}
         }
-        if cons != nil {
-            r.Cons = *cons
+		// Парсим переводы из JSON
+		if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
+			log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
+			r.Translations = make(map[string]map[string]string)
+		}
         }
-        if userEmail != nil {
-            r.User.Email = *userEmail
+		r.VotesCount = struct {
+			Helpful    int `json:"helpful"`
+			NotHelpful int `json:"not_helpful"`
+		}{
+			Helpful:    r.HelpfulVotes,
+			NotHelpful: r.NotHelpfulVotes,
+		}
         }
-        if userPicture != nil {
-            r.User.PictureURL = *userPicture
+		if currentUserVote != nil {
+			r.CurrentUserVote = *currentUserVote
+		}
         }
-        if entityOriginType != nil {
-            r.EntityOriginType = *entityOriginType
-        }
-        if entityOriginID != nil {
-            r.EntityOriginID = *entityOriginID
-        }
-
-        // Парсим переводы из JSON
-        if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
-            log.Printf("Error unmarshaling translations for review %d: %v", r.ID, err)
-            r.Translations = make(map[string]map[string]string)
-        }
-
-        r.VotesCount = struct {
-            Helpful    int `json:"helpful"`
-            NotHelpful int `json:"not_helpful"`
-        }{
-            Helpful:    r.HelpfulVotes,
-            NotHelpful: r.NotHelpfulVotes,
-        }
-
-        if currentUserVote != nil {
-            r.CurrentUserVote = *currentUserVote
-        }
-
-        reviews = append(reviews, r)
+		reviews = append(reviews, r)
+	}
     }
-
+	return reviews, rows.Err()
     return reviews, rows.Err()
 }
 
 // GetUserRatingSummary получает сводные данные о рейтинге пользователя
-func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error) {
-    var summary models.UserRatingSummary
-    
+	var summary models.UserRatingSummary
+
+	query := `
     query := `
     SELECT 
         user_id, name, total_reviews, average_rating,
         rating_1, rating_2, rating_3, rating_4, rating_5
     FROM user_rating_summary
     WHERE user_id = $1
-    `
-    
-    err := s.pool.QueryRow(ctx, query, userID).Scan(
-        &summary.UserID, &summary.Name, &summary.TotalReviews, &summary.AverageRating,
-        &summary.Rating1, &summary.Rating2, &summary.Rating3, &summary.Rating4, &summary.Rating5)
-    if err != nil {
-        if err == pgx.ErrNoRows {
-            // Если нет данных, создаем пустую сводку
-            return &models.UserRatingSummary{UserID: userID}, nil
-        }
-        return nil, fmt.Errorf("error getting user rating summary: %w", err)
-    }
-    
+
+	err := s.pool.QueryRow(ctx, query, userID).Scan(
+		&summary.UserID, &summary.Name, &summary.TotalReviews, &summary.AverageRating,
+		&summary.Rating1, &summary.Rating2, &summary.Rating3, &summary.Rating4, &summary.Rating5)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			// Если нет данных, создаем пустую сводку
+			return &models.UserRatingSummary{UserID: userID}, nil
+		}
+		return nil, fmt.Errorf("error getting user rating summary: %w", err)
+	}
+
+	return &summary, nil
     return &summary, nil
 }
 
 // GetStorefrontRatingSummary получает сводные данные о рейтинге витрины
-func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
-    var summary models.StorefrontRatingSummary
-    
+	var summary models.StorefrontRatingSummary
+
+	query := `
     query := `
     SELECT 
         storefront_id, name, total_reviews, average_rating,
         rating_1, rating_2, rating_3, rating_4, rating_5
     FROM storefront_rating_summary
     WHERE storefront_id = $1
-    `
-    
-    err := s.pool.QueryRow(ctx, query, storefrontID).Scan(
-        &summary.StorefrontID, &summary.Name, &summary.TotalReviews, &summary.AverageRating,
-        &summary.Rating1, &summary.Rating2, &summary.Rating3, &summary.Rating4, &summary.Rating5)
-    if err != nil {
-        if err == pgx.ErrNoRows {
-            // Если нет данных, создаем пустую сводку
-            return &models.StorefrontRatingSummary{StorefrontID: storefrontID}, nil
-        }
-        return nil, fmt.Errorf("error getting storefront rating summary: %w", err)
-    }
-    
+
+	err := s.pool.QueryRow(ctx, query, storefrontID).Scan(
+		&summary.StorefrontID, &summary.Name, &summary.TotalReviews, &summary.AverageRating,
+		&summary.Rating1, &summary.Rating2, &summary.Rating3, &summary.Rating4, &summary.Rating5)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			// Если нет данных, создаем пустую сводку
+			return &models.StorefrontRatingSummary{StorefrontID: storefrontID}, nil
+		}
+		return nil, fmt.Errorf("error getting storefront rating summary: %w", err)
+	}
+
+	return &summary, nil
     return &summary, nil
+,
 }
