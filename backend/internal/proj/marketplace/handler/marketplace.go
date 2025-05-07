@@ -729,9 +729,20 @@ func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
 func (h *MarketplaceHandler) getOpenSearchClient() (interface {
 	Execute(method, path string, body []byte) ([]byte, error)
 }, error) {
-	// Реализуйте этот метод для получения доступа к OpenSearch клиенту
-	// через маркетплейс сервис
-	return nil, fmt.Errorf("не реализовано")
+	// Получаем доступ к хранилищу через marketplaceService
+	storage := h.marketplaceService.Storage()
+
+	// Пробуем получить клиент через метод GetOpenSearchClient, если он есть
+	if db, ok := storage.(interface {
+		GetOpenSearchClient() (interface {
+			Execute(method, path string, body []byte) ([]byte, error)
+		}, error)
+	}); ok {
+		return db.GetOpenSearchClient()
+	}
+
+	// Если метод GetOpenSearchClient отсутствует, возвращаем ошибку
+	return nil, fmt.Errorf("OpenSearch клиент не доступен")
 }
 
 // isSignificantAttribute определяет, является ли атрибут значимым для поиска похожих объявлений
@@ -1633,7 +1644,20 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 	// Устанавливаем флаг увеличения счетчика просмотров для API получения деталей объявления
 	ctx = context.WithValue(ctx, "increment_views", true)
 	// Добавляем IP-адрес для отслеживания просмотров неавторизованных пользователей
-	ipAddress := c.IP()
+	// Получаем реальный IP-адрес пользователя из заголовков, переданных прокси
+	ipAddress := c.Get("X-Forwarded-For")
+	if ipAddress == "" {
+		ipAddress = c.Get("X-Real-IP")
+		if ipAddress == "" {
+			// Если заголовки прокси не установлены, используем стандартный IP
+			ipAddress = c.IP()
+		}
+	}
+	// Если в X-Forwarded-For несколько адресов через запятую, берем первый (клиентский)
+	if commaPos := strings.Index(ipAddress, ","); commaPos > 0 {
+		ipAddress = strings.TrimSpace(ipAddress[:commaPos])
+	}
+	log.Printf("Использую IP-адрес для счетчика просмотров: %s", ipAddress)
 	ctx = context.WithValue(ctx, "ip_address", ipAddress)
 
 	listing, err := h.marketplaceService.GetListingByID(ctx, id)

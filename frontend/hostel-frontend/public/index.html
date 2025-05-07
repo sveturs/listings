@@ -13,25 +13,36 @@
   <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
-  <!-- Загрузим env.js перед React -->
-  <script src="%PUBLIC_URL%/env.js"></script>
-
-  <!-- Проверка существования ENV -->
+  <!-- Загрузим env.js перед React с автоопределением окружения -->
   <script>
-    if (!window.ENV) {
+    // Определяем режим (development или production) на основе URL
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' ||
+                        window.location.hostname.includes('192.168.');
+    
+    // Определяем какой env файл загружать
+    const envFile = isLocalhost ? 'env.development.js' : 'env.production.js';
+    
+    // Создаем и загружаем скрипт
+    const script = document.createElement('script');
+    script.src = '%PUBLIC_URL%/' + envFile;
+    script.onerror = function() {
+      // Резервное решение если файл не найден
       window.ENV = {
-        REACT_APP_BACKEND_URL: '',
+        REACT_APP_BACKEND_URL: isLocalhost ? 'http://localhost:3000' : 'https://svetu.rs',
         REACT_APP_API_PREFIX: '/api',
         REACT_APP_AUTH_PREFIX: '/auth',
-        REACT_APP_WEBSOCKET_URL: 'wss://svetu.rs/ws',
-        REACT_APP_WS_URL: 'wss://svetu.rs/ws/chat',
-        REACT_APP_MINIO_URL: '',
-        REACT_APP_HOST: 'https://svetu.rs'
+        REACT_APP_WEBSOCKET_URL: isLocalhost ? 'ws://localhost:3000/ws' : 'wss://svetu.rs/ws',
+        REACT_APP_WS_URL: isLocalhost ? 'ws://localhost:3000/ws/chat' : 'wss://svetu.rs/ws/chat',
+        REACT_APP_MINIO_URL: isLocalhost ? 'http://localhost:9000' : 'https://svetu.rs',
+        REACT_APP_HOST: isLocalhost ? 'http://localhost:3001' : 'https://svetu.rs'
       };
-      console.log('Using default ENV configuration');
-    } else {
-      console.log('ENV loaded from external file');
-    }
+      console.log('Using fallback ENV configuration for ' + (isLocalhost ? 'development' : 'production'));
+    };
+    script.onload = function() {
+      console.log('ENV loaded from ' + envFile);
+    };
+    document.head.appendChild(script);
   </script>
 
   <!-- Google tag (gtag.js) -->

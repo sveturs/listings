@@ -35,6 +35,7 @@ type Database struct {
 	usersDB           *userStorage.Storage
 	notificationsDB   *notificationStorage.Storage
 	osMarketplaceRepo opensearch.MarketplaceSearchRepository
+	osClient          *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
 	db                *sql.DB
 	marketplaceIndex  string
 	fsStorage         filestorage.FileStorageInterface
@@ -53,12 +54,14 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 	}
 
 	db := &Database{
-		pool:            pool,
-		marketplaceDB:   marketplaceStorage.NewStorage(pool, translationService),
-		reviewDB:        reviewStorage.NewStorage(pool, translationService),
-		usersDB:         userStorage.NewStorage(pool),
-		notificationsDB: notificationStorage.NewNotificationStorage(pool),
-		fsStorage:       fileStorage, // Используем переданный параметр
+		pool:             pool,
+		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService),
+		reviewDB:         reviewStorage.NewStorage(pool, translationService),
+		usersDB:          userStorage.NewStorage(pool),
+		notificationsDB:  notificationStorage.NewNotificationStorage(pool),
+		osClient:         osClient,    // Сохраняем клиент OpenSearch
+		marketplaceIndex: indexName,   // Сохраняем имя индекса
+		fsStorage:        fileStorage, // Используем переданный параметр
 	}
 
 	// Инициализируем репозиторий OpenSearch, если клиент передан
@@ -88,6 +91,16 @@ func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search
 		return nil, fmt.Errorf("OpenSearch не настроен")
 	}
 	return db.osMarketplaceRepo.SearchListings(ctx, params)
+}
+
+// GetOpenSearchClient возвращает клиент OpenSearch для прямого выполнения запросов
+func (db *Database) GetOpenSearchClient() (interface {
+	Execute(method, path string, body []byte) ([]byte, error)
+}, error) {
+	if db.osClient == nil {
+		return nil, fmt.Errorf("OpenSearch клиент не настроен")
+	}
+	return db.osClient, nil
 }
 func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
 	var image models.MarketplaceImage
@@ -625,7 +638,8 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 			)
 		`, id, userID).Scan(&viewExists)
 	} else if userIdentifier != "" {
-		// Для неавторизованных пользователей проверяем по IP-адресу
+		// Для неавторизованных пользователей проверяем строго по IP-адресу,
+		// убедившись, что user_id IS NULL (чтобы не конфликтовать с ограничением уникальности)
 		err = db.pool.QueryRow(ctx, `
 			SELECT EXISTS (
 				SELECT 1 FROM listing_views 
@@ -668,8 +682,8 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 			`, id, userID)
 		} else {
 			_, err = tx.Exec(ctx, `
-				INSERT INTO listing_views (listing_id, ip_hash, view_time)
-				VALUES ($1, $2, NOW())
+				INSERT INTO listing_views (listing_id, ip_hash, view_time, user_id)
+				VALUES ($1, $2, NOW(), NULL)
 			`, id, userIdentifier)
 		}
 		if err != nil {
@@ -677,10 +691,52 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		}
 
 		// Фиксируем транзакцию
-		return tx.Commit(ctx)
+		err = tx.Commit(ctx)
+		if err != nil {
+			return err
+		}
+
+		// После успешного обновления в PostgreSQL синхронизируем данные с OpenSearch
+		if db.osMarketplaceRepo != nil && db.osClient != nil {
+			// Получаем обновленное значение счетчика просмотров
+			var viewsCount int
+			err = db.pool.QueryRow(ctx, "SELECT views_count FROM marketplace_listings WHERE id = $1", id).Scan(&viewsCount)
+			if err != nil {
+				log.Printf("Ошибка при получении обновленного счетчика просмотров: %v", err)
+				// Не прерываем выполнение, так как главное - обновить в PostgreSQL
+			} else {
+				// Обновляем данные в OpenSearch
+				go db.updateViewCountInOpenSearch(id, viewsCount)
+			}
+		}
 	}
 
 	return nil
+}
+
+// updateViewCountInOpenSearch обновляет счетчик просмотров в индексе OpenSearch
+func (db *Database) updateViewCountInOpenSearch(id int, viewsCount int) {
+	ctx := context.Background()
+
+	// Получаем объявление из PostgreSQL
+	listing, err := db.GetListingByID(ctx, id)
+	if err != nil {
+		log.Printf("Ошибка при получении листинга для обновления OpenSearch: %v", err)
+		return
+	}
+
+	// Устанавливаем значение счетчика просмотров
+	listing.ViewsCount = viewsCount
+
+	// Индексируем объявление в OpenSearch
+	if db.osMarketplaceRepo != nil {
+		err = db.osMarketplaceRepo.IndexListing(ctx, listing)
+		if err != nil {
+			log.Printf("Ошибка при обновлении счетчика просмотров в OpenSearch: %v", err)
+		} else {
+			log.Printf("Успешно обновлен счетчик просмотров в OpenSearch для объявления %d: %d", id, viewsCount)
+		}
+	}
 }
 
 func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {

@@ -1,7 +1,7 @@
 // frontend/hostel-frontend/src/components/marketplace/ListingCard.js
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin as LocationIcon, Clock as AccessTime, Camera, Store } from 'lucide-react';
+import { MapPin as LocationIcon, Clock as AccessTime, Camera, Store, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
 
@@ -346,17 +346,27 @@ const ListingCard = ({ listing, isMobile, onClick, showStatus = false }) => {
         const discount = getDiscountInfo();
         return (
             <Box>
-                <Typography
-                    variant={isMobile ? "body2" : "h5"}
-                    color="primary"
-                    sx={{
-                        mt: 0.5,
-                        fontSize: isMobile ? '0.875rem' : undefined,
-                        fontWeight: 'bold'
-                    }}
-                >
-                    {formatPrice(listing.price)}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                        variant={isMobile ? "body2" : "h5"}
+                        color="primary"
+                        sx={{
+                            mt: 0.5,
+                            fontSize: isMobile ? '0.875rem' : undefined,
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        {formatPrice(listing.price)}
+                    </Typography>
+                    
+                    {/* View count indicator - always show even if zero */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', ml: 1, mt: 0.5 }}>
+                        <Eye size={14} color="#666" />
+                        <Typography variant="caption" color="text.secondary" sx={{ ml: 0.25 }}>
+                            {listing.views_count || 0}
+                        </Typography>
+                    </Box>
+                </Box>
                 {discount && (
                     <Typography
                         variant="body2"

@@ -412,15 +412,19 @@ echo -e "${YELLOW}Создаем новую конфигурацию upstream д
 # Копируем текущую конфигурацию nginx
 cp /opt/hostel-booking-system/nginx.conf $WORK_DIR/nginx.conf.template
 
+# Получаем текущий IP-адрес
+NEW_CONTAINER_IP_ACTUAL=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $NEW_CONTAINER)
+echo -e "${YELLOW}Актуальный IP-адрес нового контейнера: $NEW_CONTAINER_IP_ACTUAL${NC}"
+
 # Проверяем наличие upstream api_backend
 if grep -q "upstream api_backend" $WORK_DIR/nginx.conf.template; then
   echo -e "${YELLOW}Заменяем upstream api_backend в конфигурации nginx...${NC}"
-  # Заменяем блок upstream на новый с правильным IP-адресом и именем контейнера для надежности
-  sed -i "s/upstream api_backend {[^}]*}/upstream api_backend {\n    server $NEW_CONTAINER:3000;\n    server $NEW_CONTAINER_IP:3000 backup;\n    keepalive 32;}/g" $WORK_DIR/nginx.conf.template
+  # Используем актуальный IP-адрес
+  sed -i "s/upstream api_backend {[^}]*}/upstream api_backend {\n    server $NEW_CONTAINER_IP_ACTUAL:3000;\n    keepalive 32;}/g" $WORK_DIR/nginx.conf.template
 else
   echo -e "${YELLOW}Добавляем upstream api_backend в конфигурацию nginx...${NC}"
-  # Добавляем блок upstream в начало файла
-  sed -i "1i upstream api_backend {\n    server $NEW_CONTAINER:3000;\n    server $NEW_CONTAINER_IP:3000 backup;\n    keepalive 32;\n}\n" $WORK_DIR/nginx.conf.template
+  # Добавляем блок upstream в начало файла с актуальным IP-адресом
+  sed -i "1i upstream api_backend {\n    server $NEW_CONTAINER_IP_ACTUAL:3000;\n    keepalive 32;\n}\n" $WORK_DIR/nginx.conf.template
 fi
 
 # Выводим обновленный upstream для проверки
@@ -477,29 +481,30 @@ if [ "$NGINX_RUNNING" -gt "0" ]; then
     docker rm $NEW_CONTAINER
     exit 1
   fi
-  
+
   # Проверка доступности по имени контейнера из nginx
   echo -e "${YELLOW}Проверка доступности бэкенда по имени контейнера из nginx...${NC}"
   CONTAINER_NAME_CHECK=$(docker exec hostel_nginx curl -s --max-time 5 http://$NEW_CONTAINER:3000/api/health || echo "Failed")
   if [[ "$CONTAINER_NAME_CHECK" != *"OK"* ]]; then
     echo -e "${RED}Предупреждение: Бэкенд НЕ доступен по имени контейнера из nginx!${NC}"
     echo -e "${YELLOW}Попытка исправить путем подключения к той же сети...${NC}"
-    
+
     # Пробуем переподключить контейнеры к сети для улучшения DNS-резолвинга
     docker network disconnect $HOSTEL_NETWORK $NEW_CONTAINER 2>/dev/null || true
     docker network disconnect $HOSTEL_NETWORK hostel_nginx 2>/dev/null || true
     docker network connect $HOSTEL_NETWORK $NEW_CONTAINER || true
     docker network connect $HOSTEL_NETWORK hostel_nginx || true
-    
+
     # Проверяем еще раз после переподключения
     sleep 5
     CONTAINER_NAME_CHECK=$(docker exec hostel_nginx curl -s --max-time 5 http://$NEW_CONTAINER:3000/api/health || echo "Failed")
     if [[ "$CONTAINER_NAME_CHECK" != *"OK"* ]]; then
-      echo -e "${YELLOW}Предупреждение: Бэкенд все еще недоступен по имени контейнера. Будем использовать только IP-адрес.${NC}"
-      # Обновляем конфигурацию, чтобы использовать только IP-адрес
+      echo -e "${YELLOW}Предупреждение: Бэкенд все еще недоступен по имени контейнера. Попробуем использовать IP.${NC}"
+      # Обновляем конфигурацию с использованием только IP - временное решение!
       sed -i "s/upstream api_backend {[^}]*}/upstream api_backend {\n    server $NEW_CONTAINER_IP:3000;\n    keepalive 32;}/g" $WORK_DIR/nginx.conf.template
       cp $WORK_DIR/nginx.conf.template $WORK_DIR/nginx.conf.new
       cp $WORK_DIR/nginx.conf.new /opt/hostel-booking-system/nginx.conf
+      echo -e "${YELLOW}Обновили конфигурацию nginx на использование IP-адреса (временное решение)${NC}"
     else
       echo -e "${GREEN}Бэкенд теперь доступен по имени контейнера!${NC}"
     fi
@@ -520,9 +525,16 @@ if [ "$NGINX_RUNNING" -gt "0" ]; then
 
   # Перезапускаем nginx для применения изменений
   echo -e "${YELLOW}Перезапускаем nginx...${NC}"
+  # ИСПРАВЛЕНИЕ: Добавляем задержку для DNS
+  sleep 5
   docker restart hostel_nginx
+  echo "hostel_nginx"
 
-  # Также перезапустим бэкенд для сброса соединений
+  # ИСПРАВЛЕНИЕ: Также выводим имя контейнера
+  echo "$NEW_CONTAINER"
+
+  # ИСПРАВЛЕНИЕ: Также перезапустим бэкенд после задержки
+  sleep 5
   docker restart $NEW_CONTAINER
   echo -e "${YELLOW}Перезапустили контейнер бэкенда для сброса соединений...${NC}"
   sleep 5

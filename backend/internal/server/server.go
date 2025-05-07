@@ -361,7 +361,5 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-	services := globalService.NewService(nil, nil, nil)
-	services.Shutdown()
 	return s.app.Shutdown()
 }

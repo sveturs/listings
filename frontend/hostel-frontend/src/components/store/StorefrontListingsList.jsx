@@ -116,6 +116,70 @@ const StorefrontListingsList = ({ listings, selectedItems, onSelectItem, onSelec
     return listing[field];
   };
 
+  // Функция для получения URL изображения - скопировано из ListingCard.js
+  const getImageUrl = (image) => {
+    if (!image) {
+      return '/placeholder.jpg';
+    }
+
+    // Используем переменную окружения из window.ENV вместо process.env
+    const baseUrl = window.ENV?.REACT_APP_MINIO_URL || window.ENV?.REACT_APP_BACKEND_URL || '';
+
+    // 1. Если image это строка, это простой путь к файлу
+    if (typeof image === 'string') {
+      // Относительный путь MinIO
+      if (image.startsWith('/listings/')) {
+        return `${baseUrl}${image}`;
+      }
+
+      // ID/filename.jpg (прямой путь MinIO)
+      if (image.match(/^\d+\/[^\/]+$/)) {
+        return `${baseUrl}/listings/${image}`;
+      }
+
+      // Локальное хранилище (обратная совместимость)
+      return `${baseUrl}/uploads/${image}`;
+    }
+
+    // 2. Объект с информацией о файле
+    if (typeof image === 'object' && image !== null) {
+      // Приоритет 1: Используем PublicURL если он доступен
+      if (image.public_url && typeof image.public_url === 'string' && image.public_url.trim() !== '') {
+        const publicUrl = image.public_url;
+
+        // Абсолютный URL
+        if (publicUrl.startsWith('http')) {
+          return publicUrl;
+        }
+        // Относительный URL с /listings/
+        else if (publicUrl.startsWith('/listings/')) {
+          return `${baseUrl}${publicUrl}`;
+        }
+        // Другой относительный URL
+        else {
+          return `${baseUrl}${publicUrl}`;
+        }
+      }
+
+      // Приоритет 2: Формируем URL на основе типа хранилища и пути к файлу
+      if (image.file_path) {
+        if (image.storage_type === 'minio' || image.file_path.includes('listings/')) {
+          // Учитываем возможность наличия префикса listings/ в пути
+          const filePath = image.file_path.includes('listings/')
+            ? image.file_path.replace('listings/', '')
+            : image.file_path;
+
+          return `${baseUrl}/listings/${filePath}`;
+        }
+
+        // Локальное хранилище
+        return `${baseUrl}/uploads/${image.file_path}`;
+      }
+    }
+
+    return '/placeholder.jpg';
+  };
+
   // Функция для получения переведенного названия категории
   const getTranslatedCategoryName = (category) => {
     if (!category) return '';
@@ -297,7 +361,7 @@ const StorefrontListingsList = ({ listings, selectedItems, onSelectItem, onSelec
                       {listing.images && listing.images.length > 0 ? (
                         <Avatar
                           variant="rounded"
-                          src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${listing.images[0].file_path}`}
+                          src={getImageUrl(listing.images[0])}
                           alt={localizedTitle}
                           sx={{ width: 60, height: 60, mr: 2 }}
                         />

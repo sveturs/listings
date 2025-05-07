@@ -107,6 +107,11 @@ func (r *Repository) DeleteListing(ctx context.Context, listingID string) error 
 	return r.client.DeleteDocument(r.indexName, listingID)
 }
 
+// GetClient возвращает клиент OpenSearch
+func (r *Repository) GetClient() *osClient.OpenSearchClient {
+	return r.client
+}
+
 // Метод для извлечения ID из документа OpenSearch
 func (r *Repository) extractDocumentID(hit map[string]interface{}) (int, error) {
 	if idStr, ok := hit["_id"].(string); ok {

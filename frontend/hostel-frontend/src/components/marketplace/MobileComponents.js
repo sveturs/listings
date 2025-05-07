@@ -21,7 +21,8 @@ import {
   Grid as GridIcon,
   MapPin,
   Calendar,
-  Percent
+  Percent,
+  Eye
 } from 'lucide-react';
 import { debounce } from 'lodash';
 
@@ -303,16 +304,26 @@ export const MobileListingCard = ({ listing, viewMode = 'grid' }) => {
             </Typography>
 
             <Box sx={{ mt: 0.5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  color: 'primary.main'
-                }}
-              >
-                {formatPrice(listing.price)}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    color: 'primary.main'
+                  }}
+                >
+                  {formatPrice(listing.price)}
+                </Typography>
+                
+                {/* View count indicator - always show even if zero */}
+                <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                  <Eye size={12} color="#666" />
+                  <Typography variant="caption" color="text.secondary" sx={{ ml: 0.25 }}>
+                    {listing.views_count || 0}
+                  </Typography>
+                </Box>
+              </Box>
 
               {/* Бейдж магазина */}
               {listing.storefront_id && (
@@ -499,17 +510,26 @@ export const MobileListingCard = ({ listing, viewMode = 'grid' }) => {
           {getTranslatedText('title')}
         </Typography>
 
-        <Typography
-          variant="subtitle1"
-          sx={{
-            fontSize: '1rem',
-            fontWeight: 600,
-            color: 'primary.main',
-            mt: 0.5
-          }}
-        >
-          {formatPrice(listing.price)}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontSize: '1rem',
+              fontWeight: 600,
+              color: 'primary.main'
+            }}
+          >
+            {formatPrice(listing.price)}
+          </Typography>
+          
+          {/* View count indicator - always show even if zero */}
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+            <Eye size={12} color="#666" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 0.25 }}>
+              {listing.views_count || 0}
+            </Typography>
+          </Box>
+        </Box>
 
         {/* Старая цена со скидкой */}
         {discount && (
