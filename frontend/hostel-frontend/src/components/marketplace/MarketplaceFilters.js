@@ -1,7 +1,7 @@
 // frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.js
 import React, { useMemo, useEffect, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AutocompleteInput from '../shared/AutocompleteInput';
+import AutocompleteInput from '../shared/AutocompleteInput.tsx';
 import { Search, X, Map } from 'lucide-react';
 import {
     Paper,

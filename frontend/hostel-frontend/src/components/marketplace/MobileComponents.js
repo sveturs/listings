@@ -1,7 +1,7 @@
 // frontend/hostel-frontend/src/components/marketplace/MobileComponents.js
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import AutocompleteInput from '../shared/AutocompleteInput';
+import AutocompleteInput from '../shared/AutocompleteInput.tsx';
 import { Link } from 'react-router-dom';
 import {
   Box, Button, IconButton, Typography, InputBase, Toolbar, TextField, Select, MenuItem,

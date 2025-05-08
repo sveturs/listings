@@ -9,11 +9,11 @@ import axios from '../../api/axios';
 import { Bookmark } from '@mui/icons-material';
 import UserProfile from "../user/UserProfile";
 import { useChat } from '../../contexts/ChatContext';
-import LanguageSwitcher from '../shared/LanguageSwitcher';
+import LanguageSwitcher from '../shared/LanguageSwitcher.tsx';
 import NotificationDrawer from '../notifications/NotificationDrawer';
 import { Settings } from '@mui/icons-material';
 import { AccountBalanceWallet } from '@mui/icons-material';
-import SveTuLogo from '../icons/SveTuLogo';
+import SveTuLogo from '../icons/SveTuLogo.tsx';
 import { ShoppingBag, Store } from '@mui/icons-material';
 import { useLocation as useGeoLocation } from '../../contexts/LocationContext'; // Добавляем импорт
 import CitySelector from './CitySelector';

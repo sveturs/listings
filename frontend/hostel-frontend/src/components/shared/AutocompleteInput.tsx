@@ -1,19 +1,69 @@
-// frontend/hostel-frontend/src/components/shared/AutocompleteInput.js
+// frontend/hostel-frontend/src/components/shared/AutocompleteInput.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { TextField, InputAdornment, IconButton, Box, Paper, List, ListItem, ListItemText, Typography, CircularProgress } from '@mui/material';
 import { Search, X } from 'lucide-react';
 import axios from '../../api/axios';
 import { useTranslation } from 'react-i18next';
 
-const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTime = 300 }) => {
+// Define interfaces for our component
+interface AutocompleteInputProps {
+    value?: string;
+    onChange?: (value: string) => void;
+    onSearch?: (query: string) => void;
+    placeholder?: string;
+    debounceTime?: number;
+}
+
+interface Suggestion {
+    id?: number | string;
+    type: 'product' | 'category' | 'attribute';
+    title: string;
+    display?: string;
+    priority?: number;
+    category_id?: number | string;
+    category_path_ids?: (number | string)[];
+    path?: Category[];
+    attribute_name?: string;
+    attribute_value?: string;
+}
+
+interface Category {
+    id: number | string;
+    name: string;
+    parent_id?: number | string;
+    children?: Category[];
+}
+
+interface ListingAttribute {
+    attribute_name: string;
+    display_name?: string;
+    text_value?: string;
+    display_value?: string;
+}
+
+interface Listing {
+    id: number | string;
+    title: string;
+    category_id?: number | string;
+    category_path_ids?: (number | string)[];
+    attributes?: ListingAttribute[];
+}
+
+const AutocompleteInput: React.FC<AutocompleteInputProps> = ({ 
+    value, 
+    onChange, 
+    onSearch, 
+    placeholder, 
+    debounceTime = 300 
+}) => {
     const { t } = useTranslation('common');
-    const [inputValue, setInputValue] = useState(value || '');
-    const [suggestions, setSuggestions] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [categorySuggestions, setCategorySuggestions] = useState([]);
-    const inputRef = useRef(null);
-    const debounceRef = useRef(null);
+    const [inputValue, setInputValue] = useState<string>(value || '');
+    const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+    const [categorySuggestions, setCategorySuggestions] = useState<Suggestion[]>([]);
+    const inputRef = useRef<HTMLDivElement>(null);
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
     // Синхронизация с внешним значением
     useEffect(() => {
@@ -21,13 +71,13 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
     }, [value]);
 
     // Функция форматирования категорий - просто возвращает название
-    const formatCategoryDisplay = (category) => {
+    const formatCategoryDisplay = (category: Category | null): string => {
         if (!category || !category.name) return "";
         return category.name;
     };
 
     // Функция для получения подсказок при вводе
-    const fetchSuggestions = async (text) => {
+    const fetchSuggestions = async (text: string): Promise<void> => {
         console.log('fetchSuggestions called with text:', text);
         
         if (!text || text.length < 2) {
@@ -77,15 +127,14 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                     console.log('Response data keys:', Object.keys(enhancedResponse.data || {}));
                 }
             } catch (err) {
-                console.error('Enhanced suggestions API error:', err.message);
-                console.error('Enhanced suggestions API full error:', err);
+                console.error('Enhanced suggestions API error:', err instanceof Error ? err.message : String(err));
                 console.log('Enhanced suggestions API not available, falling back to standard search');
                 // Продолжаем с обычным поиском, если API расширенных подсказок недоступно
             }
 
-            let productSuggestions = [];
-            let attributeSuggestions = [];
-            let allListings = [];
+            let productSuggestions: Suggestion[] = [];
+            let attributeSuggestions: Suggestion[] = [];
+            let allListings: Listing[] = [];
 
             // 1. Запрос на товары (через обычный поиск)
             const searchResponse = await axios.get('/api/v1/marketplace/search', {
@@ -96,7 +145,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
 
             // Извлекаем товары из результатов поиска
             if (searchResponse.data && searchResponse.data.data) {
-                let listings = [];
+                let listings: Listing[] = [];
 
                 if (Array.isArray(searchResponse.data.data)) {
                     listings = searchResponse.data.data;
@@ -110,7 +159,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                 productSuggestions = listings
                     .map(listing => ({
                         id: listing.id,
-                        type: 'product',
+                        type: 'product' as const,
                         title: listing.title,
                         category_id: listing.category_id,
                         category_path_ids: listing.category_path_ids || []
@@ -157,7 +206,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
 
             // 2. Запрос на категории 
             // Получаем все категории (или используем уже загруженные)
-            let allCategories = [];
+            let allCategories: Category[] = [];
             try {
                 const categoriesResponse = await axios.get('/api/v1/marketplace/category-tree');
                 if (categoriesResponse.data?.data) {
@@ -168,19 +217,17 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             }
 
             // Функция для плоского представления категорий (включая все подкатегории)
-            const flattenCategories = (categories, parentPath = []) => {
-                let result = [];
+            const flattenCategories = (categories: Category[], parentPath: Category[] = []): Category[] => {
+                let result: Category[] = [];
 
                 for (const category of categories) {
                     const currentPath = [...parentPath, category];
                     result.push({
                         id: category.id,
                         name: category.name,
-                        type: 'category',
-                        depth: parentPath.length,
-                        path: currentPath,
-                        parent_id: category.parent_id
-                    });
+                        parent_id: category.parent_id,
+                        path: currentPath
+                    } as Category & { path: Category[] });
 
                     if (category.children && Array.isArray(category.children) && category.children.length > 0) {
                         result = [...result, ...flattenCategories(category.children, currentPath)];
@@ -204,14 +251,14 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                     if (aStartsWith !== bStartsWith) return aStartsWith - bStartsWith;
 
                     // Затем по глубине (более специфичные категории сначала)
-                    return b.depth - a.depth;
+                    return ((b as any).depth || 0) - ((a as any).depth || 0);
                 })
                 .slice(0, 3); // Ограничиваем количество категорий
 
             // 3. Формируем массив подсказок в нужном порядке
 
             // Сначала добавляем конкретные товары
-            let finalSuggestions = productSuggestions.map(product => ({
+            let finalSuggestions: Suggestion[] = productSuggestions.map(product => ({
                 ...product,
                 display: product.title,
                 priority: 1
@@ -223,7 +270,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             });
 
             // Затем добавляем категории товаров из результатов поиска
-            const productCategoryIds = new Set();
+            const productCategoryIds = new Set<number | string>();
 
             for (const product of productSuggestions) {
                 if (product.category_id) {
@@ -238,7 +285,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                             title: category.name,
                             display: formatCategoryDisplay(category),
                             priority: 2,
-                            path: category.path
+                            path: (category as any).path
                         });
                     }
 
@@ -252,7 +299,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                                 title: parentCategory.name,
                                 display: formatCategoryDisplay(parentCategory),
                                 priority: 3,
-                                path: parentCategory.path
+                                path: (parentCategory as any).path
                             });
                         }
                     }
@@ -267,14 +314,14 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                         type: 'category',
                         title: category.name,
                         display: formatCategoryDisplay(category),
-                        priority: category.depth === 0 ? 4 : 3,
-                        path: category.path
+                        priority: (category as any).depth === 0 ? 4 : 3,
+                        path: (category as any).path
                     });
                 }
             }
 
             // Сортируем по приоритету
-            finalSuggestions.sort((a, b) => a.priority - b.priority);
+            finalSuggestions.sort((a, b) => (a.priority || 0) - (b.priority || 0));
 
             // Ограничиваем общее количество подсказок
             finalSuggestions = finalSuggestions.slice(0, 8);
@@ -303,7 +350,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
     };
 
     // Обработка изменения ввода с дебаунсом
-    const handleInputChange = (e) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
         setInputValue(newValue);
 
@@ -337,7 +384,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
     };
 
     // Обработка отправки формы
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (onSearch && inputValue.trim()) {
             onSearch(inputValue.trim());
@@ -346,7 +393,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
     };
 
     // Обработчик клика по подсказке
-    const handleSuggestionClick = (suggestion) => {
+    const handleSuggestionClick = (suggestion: Suggestion) => {
         if (suggestion.type === 'product') {
             // Для товара - переходим на страницу товара
             setInputValue(suggestion.title);
@@ -376,7 +423,9 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             const params = new URLSearchParams(url.search);
             
             // Устанавливаем ID категории
-            params.set('category_id', suggestion.id);
+            if (suggestion.id) {
+                params.set('category_id', String(suggestion.id));
+            }
             
             // Удаляем поисковый запрос если он есть
             params.delete('query');
@@ -404,7 +453,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             
             // Если есть ID категории, устанавливаем и его
             if (suggestion.category_id) {
-                params.set('category_id', suggestion.category_id);
+                params.set('category_id', String(suggestion.category_id));
             }
             
             // Если есть имя атрибута, добавляем специальный параметр для фильтрации по атрибуту
@@ -431,8 +480,8 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
 
     // Скрытие подсказок при клике вне компонента
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (inputRef.current && !inputRef.current.contains(e.target)) {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (inputRef.current && e.target instanceof Node && !inputRef.current.contains(e.target)) {
                 setShowSuggestions(false);
             }
         };

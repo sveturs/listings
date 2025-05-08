@@ -1,23 +1,45 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const SveTuLogo = ({ width = 40, height = 40 }) => {
+interface TilePosition {
+  id: number;
+  x: number;
+  y: number;
+  color: string;
+  icon: string;
+  scale: number;
+}
+
+interface IntermediatePoint {
+  id: number;
+  t: number;
+  x: number;
+  y: number;
+  scale: number;
+}
+
+interface SveTuLogoProps {
+  width?: number;
+  height?: number;
+}
+
+const SveTuLogo: React.FC<SveTuLogoProps> = ({ width = 40, height = 40 }) => {
   // Состояния для хранения случайного квадрата и его размера
-  const [hovering, setHovering] = useState(false);
-  const [randomTile, setRandomTile] = useState(null);
-  const [positions, setPositions] = useState([]);
-  const [animatingPositions, setAnimatingPositions] = useState([]);
-  const [targetPositions, setTargetPositions] = useState(null);
-  const [animationProgress, setAnimationProgress] = useState(0);
-  const [animationCompleted, setAnimationCompleted] = useState(true);
+  const [hovering, setHovering] = useState<boolean>(false);
+  const [randomTile, setRandomTile] = useState<number | null>(null);
+  const [positions, setPositions] = useState<TilePosition[]>([]);
+  const [animatingPositions, setAnimatingPositions] = useState<TilePosition[]>([]);
+  const [targetPositions, setTargetPositions] = useState<TilePosition[] | null>(null);
+  const [animationProgress, setAnimationProgress] = useState<number>(0);
+  const [animationCompleted, setAnimationCompleted] = useState<boolean>(true);
   
-  const animationFrameRef = useRef(null);
-  const animationStartTimeRef = useRef(null);
-  const touchTimeoutRef = useRef(null);
-  const intermediatePositionsRef = useRef(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const animationStartTimeRef = useRef<number | null>(null);
+  const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const intermediatePositionsRef = useRef<IntermediatePoint[] | null>(null);
   
   // Инициализируем начальные позиции
   useEffect(() => {
-    const initialPositions = [
+    const initialPositions: TilePosition[] = [
         { id: 0, x: 0, y: 0, color: "#2196F3", icon: "🛒", scale: 1 },     // Синий
         { id: 1, x: 74, y: 0, color: "#4CAF50", icon: "🏪", scale: 1 },    // Зеленый
         { id: 2, x: 148, y: 0, color: "#F44336", icon: "🛍️", scale: 1 },   // Красный
@@ -33,10 +55,10 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
   }, []);
 
   // Генерирует промежуточные точки для плавной анимации
-  const createIntermediatePositions = (startPos, endPos, numPoints = 5) => {
+  const createIntermediatePositions = (startPos: TilePosition[], endPos: TilePosition[], numPoints = 5): IntermediatePoint[] => {
   if (!startPos || !endPos) return [];
   
-  const points = [];
+  const points: IntermediatePoint[] = [];
   
   const selectedStartTile = startPos.find(tile => tile.id === randomTile);
   const selectedEndTile = endPos.find(tile => tile.id === randomTile);
@@ -65,7 +87,7 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
       
       // Start scaling earlier and use a custom easing for scale
       // This creates a more pleasant "anticipation" and "follow-through" effect
-      const scaleEasing = (progress) => {
+      const scaleEasing = (progress: number): number => {
         // Bell curve-like function for scaling - rises gradually, peaks, then falls gradually
         if (progress < 0.5) {
           // Rise phase: slow start, accelerate
@@ -92,9 +114,9 @@ const SveTuLogo = ({ width = 40, height = 40 }) => {
 };
 
 // 2. Improved calculateCurrentPositions function for smoother interpolation
-const calculateCurrentPositions = (startPos, endPos, progress) => {
+const calculateCurrentPositions = (startPos: TilePosition[], endPos: TilePosition[], progress: number): TilePosition[] => {
   // Using cubic bezier easing function for more natural movement
-  const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const easeInOutCubic = (t: number): number => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const easedProgress = easeInOutCubic(progress);
   
   const intermediatePos = intermediatePositionsRef.current || [];
@@ -171,41 +193,41 @@ const calculateCurrentPositions = (startPos, endPos, progress) => {
   }, []);
 
   // Функция для запуска анимации
-const runAnimation = (startPositions, endPositions, duration = 1500, afterComplete = null) => {
-  // Clean up previous animation
-  if (animationFrameRef.current) {
-    cancelAnimationFrame(animationFrameRef.current);
-  }
-  
-  // Generate more intermediate points for smoother animation
-  intermediatePositionsRef.current = createIntermediatePositions(startPositions, endPositions, 15);
-  
-  const startTime = performance.now();
-  setAnimationCompleted(false);
-  
-  const animate = (timestamp) => {
-    const elapsedTime = timestamp - startTime;
-    const progress = Math.min(elapsedTime / duration, 1);
-    
-    const currentPositions = calculateCurrentPositions(startPositions, endPositions, progress);
-    setAnimatingPositions(currentPositions);
-    setAnimationProgress(progress);
-    
-    if (progress < 1) {
-      animationFrameRef.current = requestAnimationFrame(animate);
-    } else {
-      setPositions(endPositions);
-      setAnimatingPositions(endPositions);
-      setAnimationCompleted(true);
-      
-      if (afterComplete) {
-        afterComplete();
-      }
+  const runAnimation = (startPositions: TilePosition[], endPositions: TilePosition[], duration = 1500, afterComplete: (() => void) | null = null) => {
+    // Clean up previous animation
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
     }
+    
+    // Generate more intermediate points for smoother animation
+    intermediatePositionsRef.current = createIntermediatePositions(startPositions, endPositions, 15);
+    
+    const startTime = performance.now();
+    setAnimationCompleted(false);
+    console.log("dsfsdfsdfsdfdfsdfsdfsdfsdfsdfsdfdsdfsdfsdffsdsdfsdf999")
+    const animate = (timestamp: number) => {
+      const elapsedTime = timestamp - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+      
+      const currentPositions = calculateCurrentPositions(startPositions, endPositions, progress);
+      setAnimatingPositions(currentPositions);
+      setAnimationProgress(progress);
+      
+      if (progress < 1) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      } else {
+        setPositions(endPositions);
+        setAnimatingPositions(endPositions);
+        setAnimationCompleted(true);
+        
+        if (afterComplete) {
+          afterComplete();
+        }
+      }
+    };
+    
+    animationFrameRef.current = requestAnimationFrame(animate);
   };
-  
-  animationFrameRef.current = requestAnimationFrame(animate);
-};
 
 // Общая функция для анимации, используемая для hover и touch
 const animateShuffle = () => {
@@ -309,7 +331,7 @@ const animateShuffle = () => {
   };
   
   // Обработчики touch-событий для мобильных устройств
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     // Предотвращаем скролл при касании логотипа
     e.preventDefault();
     animateShuffle();
@@ -349,7 +371,7 @@ const animateShuffle = () => {
       
       <g transform="translate(24,24)">
         {/* Рендерим сначала все обычные плитки */}
-        {animatingPositions.map((tile, index) => {
+        {animatingPositions.map((tile) => {
           // Пропускаем увеличенную плитку, чтобы отрисовать её последней
           if (tile.id === randomTile) return null;
           
@@ -396,6 +418,8 @@ const animateShuffle = () => {
           >
             {(() => {
               const tile = animatingPositions.find(t => t.id === randomTile);
+              
+              if (!tile) return null;
               
               // Рассчитываем центр для трансформации
               const centerX = tile.x + 32;

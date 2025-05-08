@@ -7,21 +7,28 @@ import {
     Box,
     Typography,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    SelectChangeEvent
 } from '@mui/material';
 
-const LANGUAGES = [
+interface Language {
+    code: string;
+    name: string;
+    flag: string;
+}
+
+const LANGUAGES: Language[] = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
     { code: 'ru', name: 'Русский', flag: '🇷🇺' },
     { code: 'sr', name: 'Српски', flag: '🇷🇸' }
 ];
 
-const LanguageSwitcher = () => {
+const LanguageSwitcher: React.FC = () => {
     const { i18n } = useTranslation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const handleLanguageChange = (event) => {
+    const handleLanguageChange = (event: SelectChangeEvent<string>) => {
         const newLang = event.target.value;
         i18n.changeLanguage(newLang);
         localStorage.setItem('preferredLanguage', newLang);
@@ -35,7 +42,7 @@ const LanguageSwitcher = () => {
             <Select
                 value={i18n.language}
                 onChange={handleLanguageChange}
-                IconComponent={isMobile ? () => null : undefined}
+                IconComponent={isMobile ? (() => null) : undefined}
                 sx={{
                     minWidth: isMobile ? '40px' : 120,
                     width: isMobile ? '40px' : 'auto',
