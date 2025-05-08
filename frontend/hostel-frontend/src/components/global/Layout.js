@@ -1,13 +1,13 @@
 // frontend/hostel-frontend/src/components/global/Layout.js
 import React, { useState, useEffect } from "react";
 import { Storefront } from '@mui/icons-material';
-import NewMessageIndicator from './NewMessageIndicator';
+import NewMessageIndicator from './NewMessageIndicator.tsx';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import axios from '../../api/axios';
 import { Bookmark } from '@mui/icons-material';
-import UserProfile from "../user/UserProfile";
+import UserProfile from "../user/UserProfile.tsx";
 import { useChat } from '../../contexts/ChatContext';
 import LanguageSwitcher from '../shared/LanguageSwitcher.tsx';
 import NotificationDrawer from '../notifications/NotificationDrawer';
@@ -16,7 +16,7 @@ import { AccountBalanceWallet } from '@mui/icons-material';
 import SveTuLogo from '../icons/SveTuLogo.tsx';
 import { ShoppingBag, Store } from '@mui/icons-material';
 import { useLocation as useGeoLocation } from '../../contexts/LocationContext'; // Добавляем импорт
-import CitySelector from './CitySelector';
+import CitySelector from './CitySelector.tsx';
 import Breadcrumbs from '../../components/marketplace/Breadcrumbs';
 import CategoryMenu from '../marketplace/CategoryMenu'; // Импортируем компонент меню категорий
 import { Plus } from 'lucide-react';

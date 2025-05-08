@@ -204,7 +204,6 @@ const calculateCurrentPositions = (startPos: TilePosition[], endPos: TilePositio
     
     const startTime = performance.now();
     setAnimationCompleted(false);
-    console.log("dsfsdfsdfsdfdfsdfsdfsdfsdfsdfsdfdsdfsdfsdffsdsdfsdf999")
     const animate = (timestamp: number) => {
       const elapsedTime = timestamp - startTime;
       const progress = Math.min(elapsedTime / duration, 1);

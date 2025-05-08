@@ -31,4 +31,10 @@ declare module '*.json' {
 interface Window {
   // Add any custom window properties here
   googleMapsLoaded?: boolean;
+  ENV?: {
+    REACT_APP_BACKEND_URL?: string;
+    REACT_APP_AUTH_URL?: string;
+    REACT_APP_API_URL?: string;
+    [key: string]: string | undefined;
+  };
 }
