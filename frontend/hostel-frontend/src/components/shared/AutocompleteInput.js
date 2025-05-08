@@ -28,9 +28,13 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
 
     // Функция для получения подсказок при вводе
     const fetchSuggestions = async (text) => {
+        console.log('fetchSuggestions called with text:', text);
+        
         if (!text || text.length < 2) {
+            console.log('Text too short, clearing suggestions');
             setSuggestions([]);
             setCategorySuggestions([]);
+            setShowSuggestions(false);
             return;
         }
 
@@ -39,17 +43,42 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
 
             // Пробуем использовать API расширенных подсказок
             try {
+                console.log('Calling enhanced suggestions API with query:', text);
                 const enhancedResponse = await axios.get('/api/v1/marketplace/enhanced-suggestions', {
                     params: { q: text, size: 8 }
                 });
 
-                if (enhancedResponse.data && enhancedResponse.data.data) {
-                    console.log('Using enhanced suggestions API, query:', text, 'results:', enhancedResponse.data.data);
-                    setSuggestions(enhancedResponse.data.data);
-                    setLoading(false);
-                    return;
+                // Проверяем разные возможные форматы ответа
+                if (enhancedResponse.data && enhancedResponse.data.data && Array.isArray(enhancedResponse.data.data)) {
+                    // Стандартный формат {data: [...]}
+                    console.log('Enhanced suggestions API standard format response:', enhancedResponse.data.data);
+                    
+                    // Обновляем состояние только если есть данные
+                    if (enhancedResponse.data.data.length > 0) {
+                        setSuggestions(enhancedResponse.data.data);
+                        setShowSuggestions(true);
+                        setLoading(false);
+                        return;
+                    }
+                } else if (enhancedResponse.data && Array.isArray(enhancedResponse.data)) {
+                    // Альтернативный формат - прямой массив
+                    console.log('Enhanced suggestions API direct array response:', enhancedResponse.data);
+                    
+                    // Обновляем состояние только если есть данные
+                    if (enhancedResponse.data.length > 0) {
+                        setSuggestions(enhancedResponse.data);
+                        setShowSuggestions(true);
+                        setLoading(false);
+                        return;
+                    }
+                } else {
+                    console.log('Enhanced suggestions API returned no data or wrong format:', enhancedResponse.data);
+                    // Проверяем наличие данных в других полях
+                    console.log('Response data keys:', Object.keys(enhancedResponse.data || {}));
                 }
             } catch (err) {
+                console.error('Enhanced suggestions API error:', err.message);
+                console.error('Enhanced suggestions API full error:', err);
                 console.log('Enhanced suggestions API not available, falling back to standard search');
                 // Продолжаем с обычным поиском, если API расширенных подсказок недоступно
             }
@@ -250,13 +279,24 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             // Ограничиваем общее количество подсказок
             finalSuggestions = finalSuggestions.slice(0, 8);
 
-            setSuggestions(finalSuggestions);
-            console.log('Generated enhanced suggestions:', finalSuggestions);
+            console.log('Generated enhanced suggestions count:', finalSuggestions.length);
+            
+            // Обновляем состояния единым блоком, чтобы избежать лишних перерисовок
+            if (finalSuggestions.length > 0) {
+                console.log('Setting suggestions and showSuggestions=true');
+                setSuggestions(finalSuggestions);
+                setShowSuggestions(true);
+            } else {
+                console.log('No suggestions found');
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
 
         } catch (error) {
             console.error('Ошибка при получении подсказок:', error);
             setSuggestions([]);
             setCategorySuggestions([]);
+            setShowSuggestions(false);
         } finally {
             setLoading(false);
         }
@@ -274,6 +314,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
         if (!newValue) {
             setSuggestions([]);
             setCategorySuggestions([]);
+            setShowSuggestions(false);
             return;
         }
 
@@ -434,7 +475,8 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
             </form>
 
             {/* Выпадающие подсказки */}
-            {showSuggestions && suggestions.length > 0 && (
+            {/* Используем проверку условий без дополнительных вызовов setState */}
+            {showSuggestions && suggestions && suggestions.length > 0 ? (
                 <Paper
                     elevation={4}
                     sx={{
@@ -545,7 +587,7 @@ const AutocompleteInput = ({ value, onChange, onSearch, placeholder, debounceTim
                         })}
                     </List>
                 </Paper>
-            )}
+            ) : null}
         </Box>
     );
 };

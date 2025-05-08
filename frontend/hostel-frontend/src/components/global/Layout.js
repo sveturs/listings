@@ -449,6 +449,91 @@ const Layout = ({ children }) => {
         open={notificationDrawerOpen}
         onClose={() => setNotificationDrawerOpen(false)}
       />
+      
+      {/* Footer */}
+      <Box 
+        component="footer" 
+        sx={{
+          mt: 4,
+          py: 3,
+          bgcolor: 'background.paper',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          color: 'text.secondary'
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: {xs: 'column', md: 'row'}, 
+            justifyContent: 'space-between',
+            alignItems: {xs: 'center', md: 'flex-start'},
+            textAlign: {xs: 'center', md: 'left'},
+            gap: 2
+          }}>
+            <Box>
+              <SveTuLogo width={50} height={50} />
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                &copy; {new Date().getFullYear()} Sve Tu Platforma DOO
+              </Typography>
+              <Typography variant="body2">
+                {t('footer.allRightsReserved', { defaultValue: 'All rights reserved' })}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                {t('footer.links', { defaultValue: 'Links' })}
+              </Typography>
+              <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Typography variant="body2" sx={{ '&:hover': { color: 'primary.main' } }}>
+                  {t('navigation.home', { defaultValue: 'Home' })}
+                </Typography>
+              </Link>
+              <Link to="/marketplace" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Typography variant="body2" sx={{ '&:hover': { color: 'primary.main' } }}>
+                  {t('navigation.marketplace', { defaultValue: 'Marketplace' })}
+                </Typography>
+              </Link>
+              <Link to="/gis" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Typography variant="body2" sx={{ '&:hover': { color: 'primary.main' } }}>
+                  {t('gis:title', { defaultValue: 'Map Search' })}
+                </Typography>
+              </Link>
+            </Box>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                {t('footer.legal', { defaultValue: 'Legal' })}
+              </Typography>
+              <Link to="/privacy-policy" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Typography variant="body2" sx={{ '&:hover': { color: 'primary.main' } }}>
+                  {t('footer.privacyPolicy', { defaultValue: 'Privacy Policy' })}
+                </Typography>
+              </Link>
+              <Link to="/terms" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Typography variant="body2" sx={{ '&:hover': { color: 'primary.main' } }}>
+                  {t('footer.terms', { defaultValue: 'Terms of Service' })}
+                </Typography>
+              </Link>
+            </Box>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                {t('footer.contact', { defaultValue: 'Contact' })}
+              </Typography>
+              <Typography variant="body2">
+                Novi Sad, Serbia
+              </Typography>
+              <Typography variant="body2">
+                <a href="mailto:info@svetu.rs" style={{ textDecoration: 'none', color: 'inherit', '&:hover': { color: 'primary.main' } }}>
+                  info@svetu.rs
+                </a>
+              </Typography>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
     </Box>
   );
 };

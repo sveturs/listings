@@ -420,7 +420,7 @@ echo -e "${YELLOW}Актуальный IP-адрес нового контейн
 if grep -q "upstream api_backend" $WORK_DIR/nginx.conf.template; then
   echo -e "${YELLOW}Заменяем upstream api_backend в конфигурации nginx...${NC}"
   # Используем актуальный IP-адрес
-  sed -i "s/upstream api_backend {[^}]*}/upstream api_backend {\n    server $NEW_CONTAINER_IP_ACTUAL:3000;\n    keepalive 32;}/g" $WORK_DIR/nginx.conf.template
+  sed -i "s/upstream api_backend {[^}]*}/upstream api_backend {\n    server $NEW_CONTAINER:3000;\n    keepalive 32;}/g" $WORK_DIR/nginx.conf.template
 else
   echo -e "${YELLOW}Добавляем upstream api_backend в конфигурацию nginx...${NC}"
   # Добавляем блок upstream в начало файла с актуальным IP-адресом
@@ -501,7 +501,8 @@ if [ "$NGINX_RUNNING" -gt "0" ]; then
     if [[ "$CONTAINER_NAME_CHECK" != *"OK"* ]]; then
       echo -e "${YELLOW}Предупреждение: Бэкенд все еще недоступен по имени контейнера. Попробуем использовать IP.${NC}"
       # Обновляем конфигурацию с использованием только IP - временное решение!
-      sed -i "s/upstream api_backend {[^}]*}/upstream api_backend {\n    server $NEW_CONTAINER_IP:3000;\n    keepalive 32;}/g" $WORK_DIR/nginx.conf.template
+      sed -i "s/upstream api_backend {[^}]*}/upstream api_backend {\n    server $NEW_CONTAINER:3000;\n    keepalive 32;}/g" $WORK_DIR/nginx.conf.template
+
       cp $WORK_DIR/nginx.conf.template $WORK_DIR/nginx.conf.new
       cp $WORK_DIR/nginx.conf.new /opt/hostel-booking-system/nginx.conf
       echo -e "${YELLOW}Обновили конфигурацию nginx на использование IP-адреса (временное решение)${NC}"
@@ -527,7 +528,8 @@ if [ "$NGINX_RUNNING" -gt "0" ]; then
   echo -e "${YELLOW}Перезапускаем nginx...${NC}"
   # ИСПРАВЛЕНИЕ: Добавляем задержку для DNS
   sleep 5
-  docker restart hostel_nginx
+  docker exec hostel_nginx nginx -s reload
+
   echo "hostel_nginx"
 
   # ИСПРАВЛЕНИЕ: Также выводим имя контейнера
@@ -581,7 +583,8 @@ if [ "$NGINX_RUNNING" -gt "0" ]; then
   if [ "$API_CHECK_OK" != "true" ]; then
     echo -e "${RED}Ошибка: API не доступен через nginx! Восстанавливаем оригинальную конфигурацию...${NC}"
     cp $WORK_DIR/nginx.conf.original /opt/hostel-booking-system/nginx.conf
-    docker restart hostel_nginx
+    docker exec hostel_nginx nginx -s reload
+
 
     echo -e "${YELLOW}Останавливаем новый контейнер...${NC}"
     docker stop $NEW_CONTAINER
@@ -744,7 +747,8 @@ rm -rf $WORK_DIR
 # Перезапуск nginx для применения изменений
 if docker ps -q --filter "name=hostel_nginx" | grep -q .; then
   echo -e "${YELLOW}Перезапуск nginx для применения изменений...${NC}"
-  docker restart hostel_nginx
+  docker exec hostel_nginx nginx -s reload
+
 
   # Проверка доступности frontend
   echo -e "${YELLOW}Проверка доступности frontend...${NC}"

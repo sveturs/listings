@@ -113,51 +113,69 @@ const GISMapPage = () => {
 
   // Инициализация карты
   useEffect(() => {
+    // Проверяем все необходимые условия для инициализации карты
     if (!mapContainerRef.current || !mapCenter || mapRef.current) return;
     
-    try {
-      // Создаем карту с настройками для высокой производительности
-      mapRef.current = L.map(mapContainerRef.current, {
-        preferCanvas: true,
-        zoomControl: false,
-        attributionControl: false
-      }).setView([mapCenter.latitude, mapCenter.longitude], mapZoom);
-      
-      // Добавляем базовый слой карты
-      L.tileLayer(TILE_LAYER_URL, {
-        attribution: TILE_LAYER_ATTRIBUTION,
-        maxZoom: 19
-      }).addTo(mapRef.current);
-      
-      // Добавляем элементы управления
-      L.control.zoom({
-        position: 'bottomright'
-      }).addTo(mapRef.current);
-      
-      // Создаем слой маркеров
-      markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
-      
-      // Настраиваем обработчики событий
-      mapRef.current.on('moveend', handleMapMoveEnd);
-      mapRef.current.on('zoomend', handleMapZoomEnd);
-      
-      setMapReady(true);
-      
-    } catch (error) {
-      console.error("Error initializing map:", error);
-      setError("Не удалось инициализировать карту");
-    }
+    // Добавляем задержку для уверенности, что DOM-элемент полностью готов
+    const initMapTimer = setTimeout(() => {
+      try {
+        console.log("Initializing GIS map with center:", mapCenter);
+        
+        // Создаем карту с настройками для высокой производительности
+        mapRef.current = L.map(mapContainerRef.current, {
+          preferCanvas: true,
+          zoomControl: false,
+          attributionControl: false
+        }).setView([mapCenter.latitude, mapCenter.longitude], mapZoom);
+        
+        // Добавляем базовый слой карты
+        L.tileLayer(TILE_LAYER_URL, {
+          attribution: TILE_LAYER_ATTRIBUTION,
+          maxZoom: 19
+        }).addTo(mapRef.current);
+        
+        // Добавляем элементы управления
+        L.control.zoom({
+          position: 'bottomright'
+        }).addTo(mapRef.current);
+        
+        // Создаем слой маркеров
+        markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
+        
+        // Перерисовываем карту для уверенности в корректных размерах
+        mapRef.current.invalidateSize();
+        
+        // Настраиваем обработчики событий
+        mapRef.current.on('moveend', handleMapMoveEnd);
+        mapRef.current.on('zoomend', handleMapZoomEnd);
+        
+        setMapReady(true);
+        console.log("GIS map successfully initialized");
+        
+      } catch (error) {
+        console.error("Error initializing map:", error);
+        setError("Не удалось инициализировать карту: " + error.message);
+      }
+    }, 100); // Небольшая задержка для уверенности, что DOM готов
     
+    // Функция очистки
     return () => {
+      clearTimeout(initMapTimer);
+      
       if (mapRef.current) {
-        mapRef.current.off('moveend', handleMapMoveEnd);
-        mapRef.current.off('zoomend', handleMapZoomEnd);
-        mapRef.current.remove();
+        try {
+          console.log("Cleaning up GIS map");
+          mapRef.current.off('moveend', handleMapMoveEnd);
+          mapRef.current.off('zoomend', handleMapZoomEnd);
+          mapRef.current.remove();
+        } catch (err) {
+          console.error("Error removing map:", err);
+        }
         mapRef.current = null;
       }
       setMapReady(false);
     };
-  }, [mapCenter, mapContainerRef.current]);
+  }, [mapCenter]);
 
   // Обработчики событий карты
   const handleMapMoveEnd = () => {

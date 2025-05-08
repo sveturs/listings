@@ -205,7 +205,7 @@ const GISCategoryPanel = ({ open, onClose, onCategorySelect }) => {
         ) : (
           <Box p={3} textAlign="center">
             <Typography color="textSecondary">
-              {searchQuery ? t('search.noResults') : t('categories.all')}
+              {searchQuery ? t('search.noResults') : t('categories.title')}
             </Typography>
           </Box>
         )}

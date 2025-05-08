@@ -1,40 +1,50 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
+/**
+ * Упрощенный setupProxy для локальной разработки - направляет все
+ * /api, /ws и /auth запросы на backend
+ */
 module.exports = function(app) {
-    app.use(
-        '/api',
-        createProxyMiddleware({
-            target: process.env.NODE_ENV === 'development'
-            ? 'http://backend:3000'  // Используем имя сервиса из docker-compose
-            : 'https://svetu.rs',
-            changeOrigin: true,
-            onProxyReq: function(proxyReq, req, res) {
-                console.log('Proxying to:', proxyReq.path);
-            },
-            onError: function(err, req, res) {
-                console.error('Proxy Error:', err);
-                if (err.code === 'ECONNREFUSED') {
-                    // Пробуем альтернативный URL если основной недоступен
-                    const altProxy = createProxyMiddleware({
-                        target: 'http://localhost:3000',
-                        changeOrigin: true
-                    });
-                    return altProxy(req, res);
-                }
-                res.status(500).send('Proxy Error');
-            }
-        })
-    );
-
-    // Добавляем прокси для WebSocket соединений
-    app.use(
-        '/ws',
-        createProxyMiddleware({
-            target: process.env.NODE_ENV === 'development'
-                ? 'http://backend:3000'
-                : 'https://svetu.rs',
-            ws: true,
-            changeOrigin: true
-        })
-    );
+  // Используем простое прямое проксирование на бэкенд
+  console.log('Setting up proxy for development environment');
+  
+  // Определяем бэкенд URL
+  // Порядок: сначала пробуем localhost, потом контейнер
+  const BACKEND_URL = 'http://localhost:3000';
+  
+  // Общие настройки прокси
+  const proxyOptions = {
+    target: BACKEND_URL,
+    changeOrigin: true,
+    logLevel: 'debug',
+    onProxyReq: (proxyReq, req) => {
+      console.log(`[PROXY] ${req.method} ${req.url} -> ${BACKEND_URL}${proxyReq.path}`);
+    },
+    onError: (err, req, res) => {
+      console.error('[PROXY ERROR]', err);
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end(`Proxy Error: ${err.message}`);
+    }
+  };
+  
+  // API эндпоинты
+  app.use('/api', createProxyMiddleware({
+    ...proxyOptions,
+    pathRewrite: { '^/api': '/api' }
+  }));
+  
+  // WebSocket соединения
+  app.use('/ws', createProxyMiddleware({
+    ...proxyOptions,
+    ws: true,
+    pathRewrite: { '^/ws': '/ws' }
+  }));
+  
+  // Auth эндпоинты - КРИТИЧНО для Google OAuth!
+  app.use('/auth', createProxyMiddleware({
+    ...proxyOptions,
+    pathRewrite: { '^/auth': '/auth' }
+  }));
+  
+  console.log('Proxy setup complete!');
 };

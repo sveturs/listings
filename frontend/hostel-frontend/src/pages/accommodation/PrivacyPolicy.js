@@ -137,10 +137,10 @@ const policyTexts = {
         title: "9. Contact Us",
         content: `For any questions about this Privacy Policy or our data practices, contact us at:`,
         items: [
-          "Email: privacy@SveTu.rs",
-          "Address: [Your Legal Address], Novi Sad, Serbia",
-          "Phone: +381 XX XXX XXX",
-          "Data Protection Officer: dpo@SveTu.rs"
+          "Email: info@svetu.rs",
+          "Company: Sve Tu Platforma DOO",
+          "Address: Novi Sad, Serbia",
+          "Data Protection Officer: info@svetu.rs"
         ]
       }
     ]
@@ -245,10 +245,10 @@ const policyTexts = {
         title: "8. Kontakt",
         content: "Za sva pitanja o zaštiti podataka, kontaktirajte nas:",
         items: [
-          "Email: privacy@SveTu.rs",
-          "Adresa: [Vaša adresa], Novi Sad, Srbija",
-          "Telefon: +381 XX XXX XXX",
-          "Lice za zaštitu podataka: dpo@SveTu.rs"
+          "Email: info@svetu.rs",
+          "Kompanija: Sve Tu Platforma DOO",
+          "Adresa: Novi Sad, Srbija",
+          "Lice za zaštitu podataka: info@svetu.rs"
         ]
       }
     ]
@@ -353,10 +353,10 @@ const policyTexts = {
         title: "8. Контакты",
         content: "По всем вопросам о защите данных обращайтесь:",
         items: [
-          "Email: privacy@SveTu.rs",
-          "Адрес: [Ваш адрес], Нови-Сад, Сербия",
-          "Телефон: +381 XX XXX XXX",
-          "Ответственный за защиту данных: dpo@SveTu.rs"
+          "Email: info@svetu.rs",
+          "Компания: Sve Tu Platforma DOO",
+          "Адрес: Нови-Сад, Сербия",
+          "Ответственный за защиту данных: info@svetu.rs"
         ]
       }
     ]
