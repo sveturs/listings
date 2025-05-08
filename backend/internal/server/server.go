@@ -186,7 +186,10 @@ func (s *Server) setupRoutes() {
 	})
 
 	s.app.Get("/ws/chat", websocket.New(s.marketplace.Chat.HandleWebSocket, websocket.Config{
-		HandshakeTimeout: 10 * time.Second,
+		HandshakeTimeout:  10 * time.Second,
+		ReadBufferSize:    1024,
+		WriteBufferSize:   1024,
+		EnableCompression: false,
 	}))
 
 	s.app.Post("/reindex-ratings-public", s.marketplace.Marketplace.ReindexRatings)

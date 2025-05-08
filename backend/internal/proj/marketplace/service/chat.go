@@ -3,13 +3,12 @@ package service
 
 import (
 	"backend/internal/domain/models"
- 	"backend/internal/storage"
+	"backend/internal/storage"
 	"context"
 	"fmt"
 	"sync"
 
-    "backend/internal/proj/notifications/service"
-
+	"backend/internal/proj/notifications/service"
 )
 
 type ChatService struct {
@@ -19,11 +18,11 @@ type ChatService struct {
 }
 
 func NewChatService(storage storage.Storage, notificationService service.NotificationServiceInterface) *ChatService {
-    return &ChatService{
-        storage: storage,
-        notificationService: notificationService,
-        subscribers: sync.Map{},
-    }
+	return &ChatService{
+		storage:             storage,
+		notificationService: notificationService,
+		subscribers:         sync.Map{},
+	}
 }
 
 // Реализация методов для сообщений
@@ -43,24 +42,44 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 		return err
 	}
 
-	// Отправляем сообщение через WebSocket
+	// Отправляем сообщение через WebSocket сразу, не дожидаясь отправки уведомлений
 	s.BroadcastMessage(msg)
 
-    if msg.ReceiverID != msg.SenderID {
-		notificationText := fmt.Sprintf(
-			"Новое сообщение от %s\nТовар: %s\n\n%s",
-			msg.Sender.Name,
-			listing.Title,
-			msg.Content,
-		)
-		
-		s.notificationService.SendNotification(
-			ctx,
-			msg.ReceiverID,
-			models.NotificationTypeNewMessage,
-			notificationText,
-			listing.ID,
-		)
+	// Асинхронная отправка уведомлений
+	if msg.ReceiverID != msg.SenderID {
+		// Создаем копию контекста, чтобы его можно было использовать в горутине
+		ctxCopy := context.Background()
+
+		// Копируем нужные данные для формирования уведомления
+		listingID := listing.ID
+		listingTitle := listing.Title
+		senderName := msg.Sender.Name
+		messageContent := msg.Content
+		receiverID := msg.ReceiverID
+
+		// Запускаем отправку уведомлений в отдельной горутине
+		go func() {
+			notificationText := fmt.Sprintf(
+				"Новое сообщение от %s\nТовар: %s\n\n%s",
+				senderName,
+				listingTitle,
+				messageContent,
+			)
+
+			// Игнорируем ошибки при отправке уведомлений, они не должны влиять на основной поток
+			err := s.notificationService.SendNotification(
+				ctxCopy,
+				receiverID,
+				models.NotificationTypeNewMessage,
+				notificationText,
+				listingID,
+			)
+
+			if err != nil {
+				// Просто логируем ошибку, не возвращаем ее в основной поток
+				fmt.Printf("Error sending notification: %v\n", err)
+			}
+		}()
 	}
 
 	return nil

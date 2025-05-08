@@ -6,11 +6,13 @@ class ChatService {
         this.ws = null;
         this.messageHandlers = new Set();
         this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 5;
+        this.maxReconnectAttempts = 10; // Увеличено максимальное количество попыток
         this.reconnectTimer = null;
         this.isConnecting = false;
         this.isActive = true;
         this.chatListHandlers = new Set();
+        this.lastPingTime = 0;
+        this.pingInterval = null;
     }
 
     connect() {
@@ -50,6 +52,9 @@ class ChatService {
                     type: 'auth',
                     user_id: this.userId
                 }));
+                
+                // Устанавливаем интервал для отправки ping-сообщений
+                this.startPingInterval();
             };
 
             this.ws.onmessage = (event) => {
@@ -57,6 +62,14 @@ class ChatService {
 
                 try {
                     const message = JSON.parse(event.data);
+                    
+                    // Обработка pong-сообщений
+                    if (message.type === 'pong') {
+                        console.log('Получен pong от сервера');
+                        this.lastPingTime = Date.now(); // Обновляем время последнего ping/pong
+                        return;
+                    }
+                    
                     this.messageHandlers.forEach(handler => handler(message));
                 } catch (error) {
                     console.error('Ошибка обработки сообщения:', error);
@@ -100,20 +113,83 @@ class ChatService {
             return;
         }
 
-        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
+        // Остановим ping-интервал при переподключении
+        this.stopPingInterval();
+
+        // Увеличиваем задержку только до определенного предела и линейный рост вместо экспоненциального
+        const delay = Math.min(2000 + (this.reconnectAttempts * 1000), 15000);
         console.log(`Попытка переподключения через ${delay}ms (попытка ${this.reconnectAttempts + 1})`);
 
         clearTimeout(this.reconnectTimer);
         this.reconnectTimer = setTimeout(() => {
             this.reconnectAttempts++;
+            
+            // Если WebSocket все еще существует, закрываем его перед новым подключением
+            if (this.ws) {
+                try {
+                    this.ws.close();
+                } catch (e) {
+                    console.error('Ошибка при закрытии старого WebSocket:', e);
+                }
+                this.ws = null;
+            }
+            
             this.connect();
         }, delay);
+    }
+
+    startPingInterval() {
+        // Очищаем предыдущий интервал, если он существует
+        this.stopPingInterval();
+        
+        // Установка интервала для отправки ping каждые 30 секунд
+        this.pingInterval = setInterval(() => {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                try {
+                    console.log('Отправка ping');
+                    this.ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+                    this.lastPingTime = Date.now();
+                    
+                    // Проверяем, получен ли ответ на предыдущий ping в течение 15 секунд
+                    setTimeout(() => {
+                        // Если последний ping был давно и не получен ответ
+                        const pingTimeout = 15000; // 15 секунд
+                        if (Date.now() - this.lastPingTime > pingTimeout && this.ws?.readyState === WebSocket.OPEN) {
+                            console.log('Не получен ответ на ping, переподключение...');
+                            // Закрываем соединение и пытаемся переподключиться
+                            try {
+                                this.ws.close(1000);
+                            } catch (err) {
+                                console.error('Ошибка при закрытии неотвечающего WebSocket:', err);
+                            }
+                            this.ws = null;
+                            this.handleReconnect();
+                        }
+                    }, 15000);
+                    
+                } catch (e) {
+                    console.error('Ошибка при отправке ping:', e);
+                    this.handleReconnect();
+                }
+            } else {
+                // Если соединение закрыто, пытаемся переподключиться
+                this.handleReconnect();
+            }
+        }, 30000); // 30 секунд
+    }
+    
+    stopPingInterval() {
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
     }
 
     disconnect() {
         console.log('Отключение WebSocket...');
         this.isActive = false;
         clearTimeout(this.reconnectTimer);
+        this.stopPingInterval();
 
         if (this.ws) {
             try {
