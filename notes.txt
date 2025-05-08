@@ -7,6 +7,10 @@
 4000 0000 0000 9995
 Платеж требует аутентификации
 
+
+docker compose up --build -d backend
+cd /data/hostel-booking-system && docker compose -f docker-compose.yml up --build frontend -d)
+
 Для тестовой карты вы можете указать:
 - Любую будущую дату для срока действия (например, 12/25)
 - Любые 3 цифры для CVC кода (например, 123)

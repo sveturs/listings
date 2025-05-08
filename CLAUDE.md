@@ -1,24 +1,34 @@
-# Hostel Booking System Development Guidelines
+Инструкция по работе с проектом для AI агента
 
-## Build Commands
-- Backend build: `go build -o main ./cmd/api`
-- Backend run: `docker-compose up --build -d backend`
-- Frontend dev: `cd frontend/hostel-frontend && npm start`
-- Frontend build: `cd frontend/hostel-frontend && npm run build`
+Проект называется Sve Tu Platform
+сейчас в разработке маркетплейс
 
-## Test Commands
-- Backend tests: `go test ./...`
-- Single test: `go test ./path/to/package -run TestName`
-- Frontend tests: `cd frontend/hostel-frontend && npm test`
+Рабочие окружения
 
-## Lint/Format Commands
-- Check Go imports: `./backend/check_imports.sh`
-- Frontend lint: Uses ESLint with react-app config
+1. Локальная разработка: /data/hostel-booking-system/
+2. Боевой сервер: ssh root@svetu.rs, проект в /opt/hostel-booking-system/
 
-## Code Style Guidelines
-- **Go Imports**: Standard lib first, project imports second, third-party last
-- **Go Naming**: CamelCase, interfaces with "Interface" suffix
-- **Go Functions**: New* constructors, descriptive names, context as first param
-- **Go Errors**: If err != nil pattern, utils.ErrorResponse for HTTP errors
-- **React Components**: Functional components with hooks, consistent prop types
-- **Frontend Structure**: Component/page separation, context for global state
+Команды сборки
+
+- Backend: go build -o main ./cmd/api
+- Frontend: cd frontend/hostel-frontend && npm run build
+- Запуск: docker-compose up -d
+
+Деплой
+
+- На сервер: ./harbor-scripts/blue_green_deploy_on_svetu.rs.sh [backend|frontend|all]
+- Синий-зеленый деплой для нулевого простоя
+
+Конфигурация
+
+- Frontend-настройки: frontend/hostel-frontend/public/env.js
+- Nginx: /opt/hostel-booking-system/nginx.conf (на сервере)
+- Docker: docker-compose.yml, docker-compose.prod.yml
+
+Технологии
+
+- Backend: Go, PostgreSQL, OpenSearch, MinIO
+- Frontend: React, MUI, Leaflet
+- Инфраструктура: Docker, Nginx, Harbor, mail
+
+и пиши мне на русском.

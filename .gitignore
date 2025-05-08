@@ -21,6 +21,7 @@ go.mod
 .env
 .env.local
 .local.env
+.env.development
 .env.development.local
 .env.test.local
 .env.production.local
@@ -64,3 +65,5 @@ all.sh
 filtered_project_code.txt
 
 **/.claude/settings.local.json
+
+**/CLAUDE.local.md
