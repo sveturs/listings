@@ -736,7 +736,7 @@ const MapView: React.FC<MapViewProps> = ({ listings, filters, onFilterChange, on
 
       console.log(`0945=> ${storefrontUniqueLocations.size} C=8:0;L=KE <5AB>?>;>65=89 B>20@>2 28B@8=`);
       storefrontUniqueLocations.forEach((location, key) => {
-        console.log(`#=8:0;L=>5 <5AB>?>;>65=85: ${key}, 28B@8=0 ID: ${location.storefront_id}, >1JO2;5=89: ${location.listings.length}`);
+        console.log(`675: ${key}, 9856 ID: ${location.storefront_id}, >1JO2;5=89: ${location.listings.length}`);
       });
 
       // >102;O5< <0@:5@K 4;O 28B@8=

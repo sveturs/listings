@@ -269,12 +269,24 @@ func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, er
 		}
 		resp, err = req.Do(context.Background(), c.client)
 	case "POST":
-		req := opensearchapi.IndexRequest{
-			Index:      path,
-			DocumentID: "",
-			Body:       &bodyReader,
+		// Проверяем, содержит ли путь "_search" - если да, то это запрос поиска
+		if strings.Contains(path, "_search") {
+			parts := strings.Split(path, "/_search")
+			index := parts[0]
+			req := opensearchapi.SearchRequest{
+				Index: []string{index},
+				Body:  &bodyReader,
+			}
+			resp, err = req.Do(context.Background(), c.client)
+		} else {
+			// Обычный запрос индексации
+			req := opensearchapi.IndexRequest{
+				Index:      path,
+				DocumentID: "",
+				Body:       &bodyReader,
+			}
+			resp, err = req.Do(context.Background(), c.client)
 		}
-		resp, err = req.Do(context.Background(), c.client)
 	case "PUT":
 		req := opensearchapi.IndexRequest{
 			Index:      path,

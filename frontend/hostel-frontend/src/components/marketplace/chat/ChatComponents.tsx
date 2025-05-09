@@ -434,7 +434,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ messages = [], onSendMes
                                 boxShadow: 1
                             })
                         }}>
-                            <MessageContent content={message.content} />
+                            <MessageContent content={message.content || ''} />
                             <Typography
                                 variant="caption"
                                 sx={{
@@ -597,10 +597,40 @@ export const ChatList: React.FC<ChatListProps> = ({ chats, selectedChatId, onSel
                                     variant="rounded"
                                     sx={{ width: 48, height: 48, mr: 1.5 }}
                                 />
-                                <Box sx={{ flex: 1 }}>
-                                    <Typography variant="subtitle2" noWrap>
-                                        {chat.listing?.title}
-                                    </Typography>
+                                <Box sx={{
+                                    flex: 1,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    overflow: 'hidden',
+                                    maxWidth: { xs: '65%', sm: '75%' } // Ограничиваем ширину
+                                }}>
+                                    <Box sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        width: '100%'
+                                    }}>
+                                        <Typography
+                                            variant="subtitle2"
+                                            noWrap
+                                            sx={{ flex: '1 1 auto', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                        >
+                                            {chat.listing?.title}
+                                        </Typography>
+                                        {/* Счетчик непрочитанных сообщений */}
+                                        {chat.unread_count && chat.unread_count > 0 && (
+                                            <Chip
+                                                size="small"
+                                                label={chat.unread_count}
+                                                color="primary"
+                                                sx={{
+                                                    ml: 1,
+                                                    flexShrink: 0, // Запрещаем сжиматься
+                                                    minWidth: 'auto',
+                                                    width: 'auto'
+                                                }}
+                                            />
+                                        )}
+                                    </Box>
                                     <Typography
                                         variant="body2"
                                         color="primary"
@@ -609,14 +639,6 @@ export const ChatList: React.FC<ChatListProps> = ({ chats, selectedChatId, onSel
                                         {chat.listing && formatPrice(chat.listing.price)}
                                     </Typography>
                                 </Box>
-                                {chat.unread_count && chat.unread_count > 0 && (
-                                    <Chip
-                                        size="small"
-                                        label={chat.unread_count}
-                                        color="primary"
-                                        sx={{ ml: 1 }}
-                                    />
-                                )}
                             </Box>
 
                             <Box sx={{
@@ -652,7 +674,7 @@ export const ChatList: React.FC<ChatListProps> = ({ chats, selectedChatId, onSel
                                         WebkitBoxOrient: 'vertical',
                                     }}
                                 >
-                                    {chat.last_message.content}
+                                    {chat.last_message.content || ''}
                                 </Typography>
                             )}
                         </Box>

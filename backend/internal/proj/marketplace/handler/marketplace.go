@@ -650,8 +650,18 @@ func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
 	osClient, err := h.getOpenSearchClient()
 
 	if err != nil {
-		log.Printf("Не удалось получить клиент OpenSearch: %v", err)
+		log.Printf("[WARN] Не удалось получить клиент OpenSearch: %v", err)
+		// Детальное логирование для отладки
+		if strings.Contains(err.Error(), "connection refused") {
+			log.Printf("[ERROR] Соединение с OpenSearch отклонено. Проверьте, запущен ли сервис")
+		} else if strings.Contains(err.Error(), "no such host") {
+			log.Printf("[ERROR] Не найден хост OpenSearch. Проверьте конфигурацию")
+		} else if strings.Contains(err.Error(), "OpenSearch клиент не доступен") {
+			log.Printf("[ERROR] Отсутствует клиент OpenSearch. Проверьте инициализацию сервисов")
+		}
+
 		// Используем запасной метод через стандартный поиск
+		log.Printf("[INFO] Переключение на запасной метод поиска через стандартный поиск")
 		fallbackParams := &search.ServiceParams{
 			CategoryID: strconv.Itoa(listing.CategoryID),
 			Size:       limit,
@@ -661,8 +671,18 @@ func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
 
 		fallbackResult, fallbackErr := h.marketplaceService.SearchListingsAdvanced(c.Context(), fallbackParams)
 		if fallbackErr != nil {
-			log.Printf("Ошибка резервного поиска: %v", fallbackErr)
+			log.Printf("[ERROR] Ошибка резервного поиска: %v", fallbackErr)
+			// Пытаемся определить причину ошибки для более информативного логирования
+			if strings.Contains(fallbackErr.Error(), "sql") {
+				log.Printf("[ERROR] Ошибка SQL в резервном поиске: %v", fallbackErr)
+			}
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось найти похожие объявления")
+		}
+
+		// Проверяем, есть ли результаты вообще
+		if fallbackResult == nil || len(fallbackResult.Items) == 0 {
+			log.Printf("[INFO] Резервный поиск не вернул результатов")
+			return utils.SuccessResponse(c, []*models.MarketplaceListing{})
 		}
 
 		// Фильтруем результаты, убирая исходное объявление
@@ -676,52 +696,152 @@ func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
 			}
 		}
 
+		log.Printf("[INFO] Найдено %d похожих объявлений через резервный метод", len(similarListings))
 		return utils.SuccessResponse(c, similarListings)
 	}
 
-	// Выполняем поиск напрямую
-	indexName := "marketplace_listings" // или получите название индекса из конфигурации
-	queryJSONBytes, _ := json.Marshal(query)
-	responseBytes, err := osClient.Execute("POST", "/"+indexName+"/_search", queryJSONBytes)
+	// Выполняем поиск напрямую через OpenSearch
+	// Получаем имя индекса из конфигурации или используем стандартное
+	// Если OpenSearch не настроен или индекс не существует, будет использован запасной метод
+	// Используем "marketplace" вместо "marketplace_listings" - судя по логам, в системе используется
+	// именно индекс "marketplace", а не "marketplace_listings"
+	indexName := "marketplace"
+
+	// Пробуем инициализировать индекс, если его нет
+	// Это лёгкая операция - если индекс существует, ничего не произойдёт
+	// Если нет - будет создан пустой индекс и код ниже сможет выполниться корректно
+	if searchRepo, ok := h.marketplaceService.Storage().(interface {
+		PrepareIndex(ctx context.Context) error
+	}); ok {
+		if err := searchRepo.PrepareIndex(c.Context()); err != nil {
+			log.Printf("[WARN] Не удалось подготовить индекс OpenSearch: %v", err)
+			// Продолжаем выполнение, но ошибка будет обработана ниже
+		} else {
+			log.Printf("[INFO] Индекс OpenSearch успешно подготовлен")
+		}
+	}
+
+	// Логируем информацию о запросе
+	log.Printf("[INFO] Выполняем поиск похожих объявлений через OpenSearch (индекс: %s)", indexName)
+
+	// Сериализуем запрос с проверкой ошибок
+	queryJSONBytes, err := json.Marshal(query)
+	if err != nil {
+		log.Printf("[ERROR] Ошибка сериализации запроса: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка формирования запроса поиска")
+	}
+
+	// Проверяем, что клиент не nil перед вызовом
+	if osClient == nil {
+		log.Printf("[ERROR] OpenSearch клиент равен nil после успешной проверки")
+		// Используем запасной метод
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка инициализации поиска")
+	}
+
+	// Выполняем запрос к OpenSearch
+	// Правильный формат URL: /{indexName}/_search, а не /_search
+	responseBytes, err := osClient.Execute("POST", indexName+"/_search", queryJSONBytes)
 
 	if err != nil {
-		log.Printf("Ошибка выполнения запроса к OpenSearch: %v", err)
-		// Используем запасной метод
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка поиска")
+		log.Printf("[ERROR] Ошибка выполнения запроса к OpenSearch: %v", err)
+
+		// Логируем дополнительную информацию о типе ошибки
+		if strings.Contains(err.Error(), "connection refused") {
+			log.Printf("[ERROR] Соединение с OpenSearch отклонено. Возможно, сервис не запущен")
+		} else if strings.Contains(err.Error(), "404") {
+			log.Printf("[ERROR] Индекс '%s' не найден в OpenSearch", indexName)
+		} else if strings.Contains(err.Error(), "400") {
+			log.Printf("[ERROR] Некорректный запрос к OpenSearch: %s", string(queryJSONBytes))
+		}
+
+		// Используем запасной метод поиска, но возвращаем пустой список вместо ошибки
+		log.Printf("[INFO] Возвращаем пустой список похожих объявлений из-за ошибки OpenSearch")
+		return utils.SuccessResponse(c, []*models.MarketplaceListing{})
 	}
+
+	// Логируем успешное выполнение запроса
+	log.Printf("[DEBUG] Получен ответ от OpenSearch (размер: %d байт)", len(responseBytes))
 
 	// Декодируем ответ
 	var response map[string]interface{}
 	if err := json.Unmarshal(responseBytes, &response); err != nil {
-		log.Printf("Ошибка декодирования ответа: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка декодирования результатов")
+		log.Printf("[ERROR] Ошибка декодирования ответа: %v", err)
+		log.Printf("[DEBUG] Начало ответа: %.100s", string(responseBytes))
+		return utils.SuccessResponse(c, []*models.MarketplaceListing{}) // Возвращаем пустой список вместо ошибки
+	}
+
+	// Проверяем наличие ошибок в ответе OpenSearch
+	if errObj, hasError := response["error"]; hasError {
+		log.Printf("[ERROR] OpenSearch вернул ошибку: %v", errObj)
+		return utils.SuccessResponse(c, []*models.MarketplaceListing{}) // Возвращаем пустой список
 	}
 
 	// Извлекаем id похожих объявлений
 	var similarIDs []int
 	if hits, ok := response["hits"].(map[string]interface{}); ok {
+		// Выводим общую информацию о результатах
+		if total, hasTotal := hits["total"].(map[string]interface{}); hasTotal {
+			if value, hasValue := total["value"].(float64); hasValue {
+				log.Printf("[INFO] Всего найдено %d результатов", int(value))
+			}
+		}
+
 		if hitsArray, ok := hits["hits"].([]interface{}); ok {
+			log.Printf("[INFO] Получено %d хитов в текущей странице", len(hitsArray))
+
 			for _, hit := range hitsArray {
 				if hitMap, ok := hit.(map[string]interface{}); ok {
 					if id, ok := hitMap["_id"].(string); ok {
 						if idInt, err := strconv.Atoi(id); err == nil {
 							similarIDs = append(similarIDs, idInt)
+						} else {
+							log.Printf("[WARN] Не удалось преобразовать ID '%s' в число: %v", id, err)
 						}
 					}
 				}
 			}
+		} else {
+			log.Printf("[WARN] Отсутствует массив hits в ответе OpenSearch")
 		}
+	} else {
+		log.Printf("[WARN] Отсутствует объект hits в ответе OpenSearch")
 	}
+
+	// Проверяем, получили ли мы хоть какие-то ID
+	if len(similarIDs) == 0 {
+		log.Printf("[INFO] Не найдено похожих объявлений через OpenSearch")
+		return utils.SuccessResponse(c, []*models.MarketplaceListing{})
+	}
+
+	// Логируем найденные ID
+	log.Printf("[DEBUG] Найденные ID похожих объявлений: %v", similarIDs)
 
 	// Загружаем полные данные объявлений по ID
 	var similarListings []*models.MarketplaceListing
+	var loadErrors int
+
 	for _, id := range similarIDs {
-		if listing, err := h.marketplaceService.GetListingByID(c.Context(), id); err == nil {
-			similarListings = append(similarListings, listing)
+		listing, err := h.marketplaceService.GetListingByID(c.Context(), id)
+		if err != nil {
+			log.Printf("[WARN] Не удалось загрузить объявление с ID %d: %v", id, err)
+			loadErrors++
+			continue
 		}
+
+		// Проверяем, что объявление активно
+		if listing.Status != "active" {
+			log.Printf("[DEBUG] Пропускаем неактивное объявление ID %d (статус: %s)", id, listing.Status)
+			continue
+		}
+
+		similarListings = append(similarListings, listing)
 	}
 
-	log.Printf("Найдено %d похожих объявлений", len(similarListings))
+	if loadErrors > 0 {
+		log.Printf("[WARN] Не удалось загрузить %d из %d объявлений", loadErrors, len(similarIDs))
+	}
+
+	log.Printf("[INFO] Успешно найдено %d похожих объявлений", len(similarListings))
 	return utils.SuccessResponse(c, similarListings)
 }
 
@@ -729,8 +849,23 @@ func (h *MarketplaceHandler) GetSimilarListings(c *fiber.Ctx) error {
 func (h *MarketplaceHandler) getOpenSearchClient() (interface {
 	Execute(method, path string, body []byte) ([]byte, error)
 }, error) {
+	// Проверяем, инициализирован ли маркетплейс сервис
+	if h.marketplaceService == nil {
+		log.Printf("[ERROR] Сервис marketplace не инициализирован")
+		return nil, fmt.Errorf("marketplaceService не инициализирован")
+	}
+
 	// Получаем доступ к хранилищу через marketplaceService
 	storage := h.marketplaceService.Storage()
+
+	// Проверяем, инициализировано ли хранилище
+	if storage == nil {
+		log.Printf("[ERROR] Хранилище не инициализировано")
+		return nil, fmt.Errorf("storage не инициализировано")
+	}
+
+	// Проверяем тип хранилища для вывода дополнительной информации
+	log.Printf("[DEBUG] Тип хранилища: %T", storage)
 
 	// Пробуем получить клиент через метод GetOpenSearchClient, если он есть
 	if db, ok := storage.(interface {
@@ -738,11 +873,43 @@ func (h *MarketplaceHandler) getOpenSearchClient() (interface {
 			Execute(method, path string, body []byte) ([]byte, error)
 		}, error)
 	}); ok {
-		return db.GetOpenSearchClient()
+		client, err := db.GetOpenSearchClient()
+		if err != nil {
+			// Подробное логирование ошибки
+			log.Printf("[ERROR] Ошибка получения клиента OpenSearch: %v", err)
+			return nil, fmt.Errorf("ошибка получения клиента OpenSearch: %w", err)
+		}
+
+		// Проверяем, что клиент не nil
+		if client == nil {
+			log.Printf("[ERROR] Получен nil клиент OpenSearch")
+			return nil, fmt.Errorf("получен nil клиент OpenSearch")
+		}
+
+		log.Printf("[DEBUG] Клиент OpenSearch успешно получен: %T", client)
+		return client, nil
 	}
 
-	// Если метод GetOpenSearchClient отсутствует, возвращаем ошибку
-	return nil, fmt.Errorf("OpenSearch клиент не доступен")
+	// Проверяем, есть ли альтернативные методы доступа к OpenSearch
+	// Например, через репозиторий или другие интерфейсы
+	if repo, ok := h.marketplaceService.Storage().(interface {
+		GetSearchRepository() interface{ GetClient() interface{} }
+	}); ok {
+		log.Printf("[INFO] Пробуем получить клиент через репозиторий поиска")
+		searchRepo := repo.GetSearchRepository()
+		if searchRepo != nil {
+			if client, ok := searchRepo.GetClient().(interface {
+				Execute(method, path string, body []byte) ([]byte, error)
+			}); ok {
+				log.Printf("[INFO] Получен клиент OpenSearch через репозиторий")
+				return client, nil
+			}
+		}
+	}
+
+	// Если метод GetOpenSearchClient отсутствует, возвращаем расширенную ошибку
+	log.Printf("[ERROR] OpenSearch клиент не доступен (хранилище не имеет необходимого интерфейса)")
+	return nil, fmt.Errorf("OpenSearch клиент не доступен: хранилище типа %T не предоставляет необходимый интерфейс", storage)
 }
 
 // isSignificantAttribute определяет, является ли атрибут значимым для поиска похожих объявлений

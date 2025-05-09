@@ -53,7 +53,7 @@ interface AttributeDefinition {
 }
 
 // Значение атрибута, которое используется в компоненте
-interface AttributeValue {
+export interface AttributeValue {
     attribute_id: number | string;
     attribute_name: string;
     attribute_type: string;

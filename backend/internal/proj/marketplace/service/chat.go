@@ -27,16 +27,38 @@ func NewChatService(storage storage.Storage, notificationService service.Notific
 
 // Реализация методов для сообщений
 func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
-	// Проверяем, что отправитель имеет доступ к объявлению
+	var listing *models.MarketplaceListing
+	var listingExists bool = false
+
+	// Пытаемся найти листинг, но не выходим с ошибкой, если не найден
 	listing, err := s.storage.GetListingByID(ctx, msg.ListingID)
 	if err != nil {
-		return err
+		// Проверяем, уже существует ли чат для этого сообщения
+		// Если chat_id уже есть, значит это сообщение в существующем чате
+		if msg.ChatID > 0 {
+			// Если чат существует, разрешаем отправку даже если листинг не найден
+			listingExists = false
+			// Создаем пустой листинг для подстановки информации в уведомления
+			listing = &models.MarketplaceListing{
+				ID:    msg.ListingID,
+				Title: "Удаленное объявление",
+			}
+		} else {
+			// Если это новый чат и листинг не найден, возвращаем ошибку
+			return err
+		}
+	} else {
+		listingExists = true
+
+		// Проверяем права доступа, только если листинг существует
+		if msg.ReceiverID != listing.UserID && msg.SenderID != listing.UserID {
+			return fmt.Errorf("permission denied")
+		}
 	}
 
-	// Проверяем, что получатель либо владелец объявления, либо отправитель - владелец
-	if msg.ReceiverID != listing.UserID && msg.SenderID != listing.UserID {
-		return fmt.Errorf("permission denied")
-	}
+	// Добавляем информацию о том, существует ли листинг в контекст
+	// Это будет использовано в CreateMessage
+	ctx = context.WithValue(ctx, "listing_exists", listingExists)
 
 	if err := s.storage.CreateMessage(ctx, msg); err != nil {
 		return err

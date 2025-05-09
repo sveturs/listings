@@ -78,10 +78,39 @@ const SimilarListings: React.FC<SimilarListingsProps> = ({ listingId, initialLim
                     // Заменяем существующие элементы
                     setSimilarListings(newListings);
                 }
+            } else {
+                // Если data отсутствует или пустой, но статус 200 - просто показываем пустой результат
+                setSimilarListings([]);
+                setHasMore(false);
+                setError(null); // Сбрасываем ошибку, если она была
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error fetching similar listings:', err);
-            setError(t('listings.similar.error', { defaultValue: 'Не удалось загрузить похожие объявления' }));
+
+            // Расширенное логирование для отладки
+            if (err.response) {
+                console.error('Server response error:', {
+                    status: err.response.status,
+                    data: err.response.data,
+                    headers: err.response.headers
+                });
+
+                // Если ошибка на стороне сервера (500), но клиент продолжает работать
+                if (err.response.status === 500) {
+                    // Не показываем сообщение об ошибке пользователю, просто скрываем компонент
+                    setSimilarListings([]);
+                } else {
+                    setError(t('listings.similar.error', { defaultValue: 'Не удалось загрузить похожие объявления' }));
+                }
+            } else if (err.request) {
+                // Запрос был сделан, но ответ не получен
+                console.error('No response from server:', err.request);
+                setError(t('listings.similar.networkError', { defaultValue: 'Проблема с сетью при загрузке похожих объявлений' }));
+            } else {
+                // Произошла ошибка при настройке запроса
+                console.error('Request setup error:', err.message);
+                setError(t('listings.similar.error', { defaultValue: 'Не удалось загрузить похожие объявления' }));
+            }
         } finally {
             setLoading(false);
             setLoadingMore(false);

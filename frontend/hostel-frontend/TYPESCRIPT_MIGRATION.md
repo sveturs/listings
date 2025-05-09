@@ -64,30 +64,43 @@ The following components have been migrated to TypeScript:
 
 ## Latest Component Updates
 
-### Review Components Converted (May 2025)
+### Marketplace Pages Converted (May 2025)
 
-#### PhotoViewer.tsx
-- Converted from PhotoViewer.js to TypeScript with proper interface
-- Added strong typing for component props and state
-- Added event type annotations for click handlers
-- Implemented type-safe image rendering and navigation
-
-#### ReviewComponents.tsx
-- Converted from ReviewComponents.jsx to TypeScript with comprehensive interfaces
-- Created detailed interfaces for review data, votes, and responses
-- Added proper typing for form handling and event callbacks
+#### FavoriteListingsPage.tsx
+- Converted from FavoriteListingsPage.js to TypeScript with comprehensive interfaces
+- Added proper typing for React hooks (useState, useEffect, useCallback)
+- Created detailed interfaces for API responses and state management
+- Implemented type-safe event handling for sorting, loading, and UI interactions
+- Added proper type annotations for async functions
 - Implemented type-safe internationalization with i18next
-- Added type safety for conditional rendering based on mobile detection
-- Created proper interfaces for review form data, stats, and card props
+- Used TypeScript union types to constrain view modes to 'grid' | 'list'
 
-#### ReviewsSection.tsx
-- Converted from ReviewsSection.js to TypeScript with comprehensive interfaces
-- Created detailed interfaces for Review, ReviewStat, ReviewResponse, and other data structures
-- Added proper typing for API interactions and state management
+#### MyListingsPage.tsx
+- Converted from MyListingsPage.js to TypeScript with comprehensive interfaces
+- Created detailed interfaces for listing data, API responses, and state
+- Implemented proper typing for action handlers and callbacks
+- Added type safety for bulk operations on listings
+- Implemented type-safe menu and dialog interactions
+- Created type-safe handling for promotion and translation actions
+- Used TypeScript union types for constrained values (sort directions, status filters)
+
+#### ChatPage.tsx
+- Converted from ChatPage.js to TypeScript with comprehensive interfaces
+- Created detailed interfaces for chat messages, items, and API responses
+- Implemented type-safe WebSocket message handling
+- Added proper typing for chat service interactions
+- Used TypeScript refs with proper typing
 - Implemented type-safe event handling for various user actions
-- Created strongly typed SnackbarState interface for notification handling
 - Added proper return type annotations for all async functions
-- Implemented type safety for different vote types with union type 'helpful' | 'not_helpful'
+
+#### CreateListingPage.tsx
+- Converted from CreateListingPage.js to TypeScript with comprehensive interfaces
+- Created detailed interfaces for listing data, form state, and attributes
+- Implemented type-safe form handling and validation
+- Added proper type handling for location selection and image uploads
+- Created type-safe API interactions for submission
+- Implemented type guards and null checks for optional fields
+- Used TypeScript union types for constrained values (condition: 'new' | 'used')
 
 ### Chat Components Migration Completed
 
@@ -215,6 +228,29 @@ All marketplace components have now been successfully migrated to TypeScript:
    - Used type assertions to handle dynamic content from backend APIs
 
 The migration has significantly improved code quality and developer experience by catching type-related errors at compile time rather than runtime.
+
+### Marketplace Pages Migration in Progress
+
+We are gradually migrating marketplace pages to TypeScript. Current progress:
+
+1. **Converted Pages**:
+   - `FavoriteListingsPage.tsx` - User's favorite listings view
+   - `MyListingsPage.tsx` - User's own listings management page
+   - `ChatPage.tsx` - Marketplace messaging system
+   - `CreateListingPage.tsx` - Form for creating new listings
+   - `MarketplacePage.tsx` - Main marketplace listings view
+
+2. **Remaining Pages**:
+   - `EditListingPage.js` - Form for editing existing listings
+   - `ListingDetailsPage.js` - Detailed view of a specific listing
+
+Common patterns implemented in these conversions:
+- Comprehensive interfaces for API responses and data structures
+- Type-safe hooks (useState, useEffect, useCallback)
+- Proper typing for form handling and event callbacks
+- Type-safe internationalization
+- TypeScript union types for constrained values
+- Proper handling of null/undefined values
 
 ### Review Components Migration Completed
 

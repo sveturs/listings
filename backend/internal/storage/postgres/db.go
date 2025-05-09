@@ -465,8 +465,11 @@ func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int
 	var count int
 	err := db.pool.QueryRow(ctx, `
         SELECT COUNT(*)
-        FROM marketplace_messages
-        WHERE receiver_id = $1 AND is_read = false
+        FROM marketplace_messages m
+        JOIN marketplace_chats c ON m.chat_id = c.id
+        WHERE m.receiver_id = $1
+        AND NOT m.is_read
+        AND NOT c.is_archived
     `, userID).Scan(&count)
 
 	if err != nil {

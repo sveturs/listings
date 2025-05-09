@@ -10,9 +10,9 @@ cd "$DIR"
 if [ $# -gt 0 ]; then
   # Run TypeScript compiler on specific files
   echo "Checking TypeScript files: $@"
-  npx tsc --noEmit --skipLibCheck --jsx react --jsxFactory React.createElement --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports --ignoreDeprecations 5.0 $@
+  npx tsc --noEmit --skipLibCheck --jsx react --jsxFactory React.createElement --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports --ignoreDeprecations 5.0 --skipDefaultLibCheck $@
 else
   # Run TypeScript compiler on all files
   echo "Checking all TypeScript files"
-  npx tsc --noEmit --skipLibCheck --jsx react --jsxFactory React.createElement --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports --ignoreDeprecations 5.0
+  npx tsc --noEmit --skipLibCheck --jsx react --jsxFactory React.createElement --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports --ignoreDeprecations 5.0 --skipDefaultLibCheck
 fi
