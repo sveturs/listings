@@ -58,159 +58,185 @@ The following components have been migrated to TypeScript:
 - `src/components/marketplace/VirtualizedCategoryTree.tsx` - Virtual scroll category tree component
 - `src/components/marketplace/CentralAttributeFilters.tsx` - Centralized attribute filters component
 - `src/components/marketplace/AttributeFilters.tsx` - Attribute-based filter controls component
+- `src/components/reviews/PhotoViewer.tsx` - Photo viewer with navigation
+- `src/components/reviews/ReviewComponents.tsx` - Review form, card, and stats components
+- `src/components/reviews/ReviewsSection.tsx` - Review section management component
 
 ## Latest Component Updates
 
-### New TypeScript Components Converted (May 2025)
+### Review Components Converted (May 2025)
 
-#### CategorySelect.tsx
-- Converted to TypeScript with proper interfaces and type definitions
-- Added proper typing for category objects including translations
-- Added types for event handlers
+#### PhotoViewer.tsx
+- Converted from PhotoViewer.js to TypeScript with proper interface
+- Added strong typing for component props and state
+- Added event type annotations for click handlers
+- Implemented type-safe image rendering and navigation
 
-#### InfiniteScroll.tsx
-- Implemented TypeScript interfaces for component props
-- Added proper typing for Intersection Observer
-- Added types for refs and state
+#### ReviewComponents.tsx
+- Converted from ReviewComponents.jsx to TypeScript with comprehensive interfaces
+- Created detailed interfaces for review data, votes, and responses
+- Added proper typing for form handling and event callbacks
+- Implemented type-safe internationalization with i18next
+- Added type safety for conditional rendering based on mobile detection
+- Created proper interfaces for review form data, stats, and card props
 
-#### Breadcrumbs.tsx
-- Created interfaces for category paths and props
-- Added type safety to navigation and event handling
-- Added types for translated content
+#### ReviewsSection.tsx
+- Converted from ReviewsSection.js to TypeScript with comprehensive interfaces
+- Created detailed interfaces for Review, ReviewStat, ReviewResponse, and other data structures
+- Added proper typing for API interactions and state management
+- Implemented type-safe event handling for various user actions
+- Created strongly typed SnackbarState interface for notification handling
+- Added proper return type annotations for all async functions
+- Implemented type safety for different vote types with union type 'helpful' | 'not_helpful'
 
-#### SimilarListings.tsx
-- Converted component to TypeScript with comprehensive interfaces
-- Added proper typing for listings and image handling
-- Implemented typed event handlers for load more functionality
-- Reused existing Listing interface from ListingCard component
-- Added proper typing for async data fetching
+### Chat Components Migration Completed
 
-#### PriceHistoryChart.tsx
-- Converted chart component to TypeScript with proper interfaces for price history data
-- Added typed props for Recharts components including custom tooltip
-- Implemented proper typing for async API calls and data transformation
-- Added return type annotations for functions like formatPrice
-- Created proper interfaces for component props and internal data structures
+Chat system components have been fully migrated to TypeScript:
 
-#### CategoryTree.tsx
-- Converted tree component to TypeScript with proper interfaces for category data
-- Extended base Category interface with tree-specific properties
-- Added proper typing for recursive tree rendering functions
-- Implemented type-safe event handlers
-- Added proper return type annotations for utility functions
+1. **Chat UI Components**:
+   - ChatButton.tsx - Button for starting new chat conversations
+   - ChatComponents.tsx - Chat interface components (ChatWindow, ChatList, ChatHeader)
 
-#### AttributeFields.tsx
-- Converted complex dynamic form fields component to TypeScript
-- Created comprehensive interfaces for attribute definitions and values
-- Implemented type safety for various input field types
-- Added proper typing for attribute transformations and validations
-- Created type-safe event handlers for all form controls
+2. **Chat Service and Context**:
+   - ChatService.ts - WebSocket and HTTP chat communication service
+   - ChatContext.tsx - Global chat state and service management
 
-#### ItemDetails.tsx
-- Converted product details component with image gallery to TypeScript
-- Reused Listing and ImageObject interfaces from ListingCard
-- Added proper typing for component state management
-- Implemented type-safe image URL handling logic
-- Added null-safety with optional chaining
+### Global Components Migration in Progress
 
-#### AutoDetails.tsx
-- Converted vehicle details component to TypeScript
-- Created comprehensive interface for auto properties
-- Added proper typing for translation functions
-- Implemented type-safe rendering with nullable properties
-- Added return type annotations for all utility functions
+We've started migrating global components that are used across the application:
 
-#### PhonePopup.tsx
-- Converted phone number popup component to TypeScript
-- Added interface for component props
-- Added proper typing for canvas ref using HTMLCanvasElement
-- Implemented null safety for context initialization
-- Added type-safe animation with Material UI keyframes
+1. **Core Layout Component**:
+   - Layout.tsx - Main application layout with header and navigation
+   - LocationPicker.tsx - Map-based location selector with geocoding
 
-#### ImageEnhancementOffer.tsx
-- Converted image enhancement service component to TypeScript
-- Created interfaces for image objects and API responses
-- Added proper typing for async functions with Promise<void> return types
-- Implemented type-safe handling of API errors
-- Added proper typing for form data and file uploads
+2. **User Interface Components**:
+   - CitySelector.tsx - City selector with geolocation and search
+   - NewMessageIndicator.tsx - Notification badge for new messages
+   
+3. **Authentication Components**:
+   - PrivateRoute.tsx - Protected route wrapper for authentication
+   - AdminRoute.tsx - Admin route protection wrapper
 
-#### ImageUploader.tsx
-- Converted image upload component to TypeScript
-- Created reusable ProcessedImage interface exported for other components
-- Added proper typing for File objects and image compression
-- Added event handler types for input events
-- Integrated with ImageEnhancementOffer component
-- Added type-safe refs with useRef<HTMLInputElement>
+4. **Context Providers**:
+   - NotificationContext.tsx - Global notification state management and API integrations
 
-#### VirtualizedCategoryTree.tsx
-- Converted virtualized tree component to TypeScript with proper interfaces
-- Reused existing Category interface from HierarchicalCategorySelect
-- Added proper typing for react-window List and ListChildComponentProps
-- Implemented type-safe callback functions with useCallback
-- Added type safety for Sets and Maps used for tracking expanded items
-- Improved translation function with proper type checking
+### Balance Components Migration in Progress
 
-#### CentralAttributeFilters.tsx
-- Converted attribute filters component to TypeScript with proper interfaces
-- Created a DebugData interface for API response data structure
-- Implemented type-safe event handlers for button clicks
-- Added proper typing for useCallback and useEffect hooks
-- Added type annotations for all state variables
-- Added null safety checks for filter handling
+Financial components have also been migrated:
 
-#### AttributeFilters.tsx
-- Converted complex filter component to TypeScript with comprehensive interfaces
-- Created detailed interfaces for attribute structures, options, and translations
-- Implemented strict typing for attribute ranges and option handling
-- Added proper event typing for form controls and sliders
-- Improved type safety for async data fetching and processing
-- Added type-safe callbacks with proper parameter types
+1. **Balance Management**:
+   - BalanceWidget.tsx - User balance display widget
+   - DepositDialog.tsx - Payment deposit dialog with method selection
 
-#### MarketplaceListingsList.tsx
-- Converted complex marketplace listings table component to TypeScript
-- Created extensive interfaces for listings, images, filters, and discount information
-- Added proper typing for sorting and filtering functionality
-- Implemented type-safe event handlers for row and checkbox clicks
-- Added comprehensive typing for ratings and reviews data fetching
-- Created proper typing for localization and column display logic
-- Implemented typed utility functions for formatting prices and dates
-- Added type-safe image URL processing with proper null handling
+### Notification Components Migration Completed
 
-#### MobileComponents.tsx
-- Converted mobile UI components to TypeScript with comprehensive interfaces
-- Created multiple type-safe components in one file: MobileHeader, MobileListingCard, MobileListingGrid, and MobileFilters
-- Added proper typing for event handlers with MouseEvent and TouchEvent types
-- Implemented type-safe state management with useState<T> generics
-- Created reusable interfaces for listings, categories, and filter options
-- Added proper typing for UI-specific features like view modes ('grid' | 'list')
-- Implemented proper type safety for browser detection and conditional rendering
-- Added internationalization support with typed translation functions
-- Created proper typing for touch events and click handling
-- Improved type safety for dynamic data structures with optional chaining
+Notification system components have been fully migrated to TypeScript:
 
-#### MarketplaceFilters.tsx
-- Converted marketplace filtering component to TypeScript with typed state and callbacks
-- Created interfaces for filter options and attribute filters
-- Added type safety for SelectChangeEvent and form events
-- Implemented proper typing for async geolocation functions with Promise<void>
-- Used typed generic React.FC<MarketplaceFiltersProps> for component definition
-- Added proper type safety for Location context usage
-- Implemented proper typing for callback functions with useCallback
-- Added type-safe boolean checks for conditional rendering
-- Added proper typing for i18n translations with string literals
-- Created type-safe memoization with useMemo
+1. **Notification UI Components**:
+   - NotificationBadge.tsx - Notification count indicator with badge
+   - NotificationDrawer.tsx - Slide-out drawer to display notifications
+   - NotificationSettings.tsx - Settings panel for configuring notification preferences
 
-### Fixed TypeScript Errors in ListingCard.tsx
+2. **Notification Hook**:
+   - useNotifications.tsx - Custom hook for notification management with TypeScript interfaces
 
-- Added interfaces for listings, attributes, and other data structures
-- Fixed Modal component to properly handle children with correct JSX structure
-- Added proper event typing for all click handlers
-- Added typings for image objects and discount data
+### Map Components Migration Completed
+
+Map components for location display have been migrated to TypeScript:
+
+1. **Map Display Components**:
+   - MiniMap.tsx - Compact map component with expandable fullscreen view
+   - FullscreenMap.tsx - Large map view with interactive markers and listing previews
+   
+2. **Map Utilities**:
+   - map-constants.ts - Constants for tile providers and attribution
+   - leaflet-icons.ts - Custom Leaflet icon configurations and utilities
 
 ### Fixed TypeScript Errors in CitySelector.tsx
 
 - Fixed issue with Tooltip component requiring children by adding placement prop
 - Fixed auth check by deriving isAuthenticated from user presence
+
+### Fixed TypeScript Errors in MiniMap.tsx
+
+- Completely removed Material UI Modal component and replaced it with Box-based custom modal
+- Added proper event handler for modal backdrop click with stopPropagation on content
+- Created a lightweight, TypeScript-compatible custom modal implementation that works with strict typing
+
+### Fixed TypeScript Errors in Layout.tsx
+
+- Fixed type comparison between string and number in ChatMessage handling
+- Replaced Material UI Modal with conditional rendering to avoid TypeScript errors
+- Replaced Slide component with conditional rendering for better TypeScript compatibility
+- Improved type safety for event handlers using React.MouseEvent
+
+## Component Migration Progress
+
+### Marketplace Components Migration Completed
+
+All marketplace components have now been successfully migrated to TypeScript:
+
+1. **Core Interface Components**:
+   - ListingCard.tsx
+   - MapView.tsx
+   - MarketplaceListingsList.tsx
+   - MarketplaceFilters.tsx
+   - MobileComponents.tsx (including MobileHeader, MobileListingCard, MobileListingGrid, and MobileFilters)
+   - CategoryMenu.tsx
+   - AttributeFilters.tsx
+   - CentralAttributeFilters.tsx
+   - VirtualizedCategoryTree.tsx
+
+2. **Auxiliary Components**:
+   - PhonePopup.tsx
+   - ImageEnhancementOffer.tsx
+   - ImageUploader.tsx
+   - ShareButton.tsx
+   - Breadcrumbs.tsx
+   - CategorySelect.tsx
+   - InfiniteScroll.tsx
+   - SimilarListings.tsx
+   - PriceHistoryChart.tsx
+   - CategoryTree.tsx
+   - AttributeFields.tsx
+   - ItemDetails.tsx
+   - AutoDetails.tsx
+   - CallButton.tsx
+
+3. **Common Issues Resolved**:
+   - Properly typed API responses with interfaces
+   - Fixed array type safety issues with union and intersection types
+   - Added proper type predicates for runtime type checking
+   - Created comprehensive interfaces for complex nested data structures
+   - Addressed Material UI component typing challenges
+   - Fixed event handling with proper React event types
+   - Added proper typing for internationalization with i18next
+   - Implemented type-safe state management with useState<T>
+   - Used type assertions to handle dynamic content from backend APIs
+
+The migration has significantly improved code quality and developer experience by catching type-related errors at compile time rather than runtime.
+
+### Review Components Migration Completed
+
+All review components have been successfully migrated to TypeScript:
+
+1. **Core Review Components**:
+   - PhotoViewer.tsx - Full-screen image viewer with navigation
+   - ReviewComponents.tsx - Container for review form, card, and stats components
+   - ReviewsSection.tsx - Review section management with API integration
+
+2. **Review Sub-Components**:
+   - ReviewForm - Dynamic form for creating and editing reviews
+   - ReviewCard - Individual review display with rating, content, and interaction options
+   - RatingStats - Statistical visualization of ratings distribution
+
+3. **Common Patterns**:
+   - Created comprehensive interfaces for review data structures
+   - Added proper typing for form submissions and API interactions
+   - Implemented type-safe event handling for various user actions
+   - Added proper typing for conditional rendering based on device type
+   - Created reusable interfaces for review stats, votes, and responses
+   - Implemented proper error handling with type-safe API error responses
 
 ## Migration Strategy
 
@@ -343,6 +369,41 @@ If you encounter type errors in dependencies (like i18next), you can:
 
 ### JSX Compilation Issues
 Ensure that the `jsx` option in tsconfig.json is set to `"preserve"` for use with Babel.
+
+### i18next Library Type Definition Issues
+
+When working with i18next and TypeScript, you may encounter type definition errors in the library itself. These are common issues when the library's type definitions are not fully compatible with the TypeScript version used.
+
+To work around these issues:
+
+1. **Use type assertions** for i18next functions:
+```typescript
+const { t } = useTranslation() as any;
+```
+
+2. **Skip library checking** when running TypeScript compiler:
+```bash
+npx tsc --noEmit --skipLibCheck src/components/*.tsx
+```
+
+3. **Create custom type definitions** for i18next in your project:
+```typescript
+// src/types/i18next.d.ts
+import 'i18next';
+
+declare module 'i18next' {
+  // Add your custom type definitions here
+}
+```
+
+4. **Add i18next typescript definitions to the exclude list** in tsconfig.json:
+```json
+{
+  "exclude": [
+    "node_modules/i18next/typescript/**/*"
+  ]
+}
+```
 
 ### Window Properties
 When accessing custom window properties (like `window.ENV`), use type assertions to avoid TypeScript errors:
@@ -505,6 +566,73 @@ This script includes flags to:
 - Handle JSX properly
 - Resolve module resolution issues
 - Allow synthetic default imports
+
+## Known Issues and Solutions
+
+### lucide-react Named Export Issue
+
+When building the project with TypeScript, you may encounter the following error:
+
+```
+Failed to compile.
+
+./node_modules/lucide-react/dist/esm/createLucideIcon.mjs
+Can't import the named export 'createElement' from non EcmaScript module (only default export is available)
+```
+
+This is a common issue when mixing ESM and CommonJS modules. There are several solutions:
+
+1. **Use a specific version of lucide-react**:
+```bash
+npm install lucide-react@0.263.1
+```
+
+2. **Add a transpile module in webpack config**:
+```js
+// In react-scripts eject or craco config
+module.exports = {
+  webpack: {
+    configure: (webpackConfig) => {
+      webpackConfig.module.rules.push({
+        test: /\.mjs$/,
+        include: /node_modules/,
+        type: 'javascript/auto',
+      });
+      return webpackConfig;
+    },
+  },
+};
+```
+
+3. **Use icon components from a different library** like @mui/icons-material if available
+
+### Material-UI Type Errors
+
+When using Material-UI components like Modal and Slide, you may encounter TypeScript errors related to the children prop. Solutions include:
+
+1. **Use conditional rendering instead of Modal/Slide components**:
+```tsx
+{isModalOpen && (
+  <Box sx={{ /* modal styles */ }}>
+    {children}
+  </Box>
+)}
+```
+
+2. **Use a wrapper component with proper type declarations**:
+```tsx
+const ModalWrapper: React.FC<{ open: boolean; onClose: () => void; children: React.ReactNode }> = ({
+  open,
+  onClose,
+  children
+}) => {
+  return (
+    <Modal open={open} onClose={onClose}>
+      <Box>{children}</Box>
+    </Modal>
+  );
+};
+```
 
 ## Resources
 
