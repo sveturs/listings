@@ -23,7 +23,7 @@ HARBOR_PASSWORD="SveTu2025"
 PROD_SERVER="161.97.89.28"
 PROD_SERVER_USER="root"
 PROD_SERVER_PATH="/opt/hostel-booking-system"
-LOCAL_BACKEND_DIR="/data/hostel-booking-system/backend"
+LOCAL_BACKEND_DIR="./backend"
 LOCAL_FRONTEND_DIR="/data/hostel-booking-system/frontend/hostel-frontend"
 
 # Проверяем флаг миграций
@@ -251,20 +251,6 @@ docker login -u admin -p SveTu2025 harbor.svetu.rs
 echo -e "${YELLOW}Загрузка нового образа backend:latest...${NC}"
 docker pull harbor.svetu.rs/svetu/backend/api:latest
 
-# Создаем специальную конфигурацию для blue-green deployment с правильным разделением WebSocket и API
-cat > $WORK_DIR/bluegreen.env << EOF
-# Переменные окружения для blue-green деплоя
-APP_MODE=production
-WS_ENABLED=true
-FILE_STORAGE_PROVIDER=minio
-MINIO_USE_SSL=false
-MINIO_BUCKET_NAME=listings
-MINIO_LOCATION=eu-central-1
-FILE_STORAGE_PUBLIC_URL=https://svetu.rs
-PORT=3000
-SERVER_HOST=https://svetu.rs
-EOF
-
 # Получаем IP-адрес сети хоста
 HOST_IP=$(hostname -I | awk '{print $1}')
 echo -e "${YELLOW}IP-адрес хоста: $HOST_IP${NC}"
@@ -279,7 +265,16 @@ docker run -d --name $NEW_CONTAINER \
   -v /opt/hostel-data/uploads:/app/uploads \
   -v /opt/hostel-data/minio:/data/minio \
   -v /opt/hostel-data/credentials:/app/credentials \
-  --env-file $WORK_DIR/bluegreen.env \
+  -e APP_MODE=production \
+  -e ENV=production \
+  -e WS_ENABLED=true \
+  -e FILE_STORAGE_PROVIDER=minio \
+  -e MINIO_USE_SSL=false \
+  -e MINIO_BUCKET_NAME=listings \
+  -e MINIO_LOCATION=eu-central-1 \
+  -e FILE_STORAGE_PUBLIC_URL=https://svetu.rs \
+  -e PORT=3000 \
+  -e SERVER_HOST=https://svetu.rs \
   -e POSTGRES_HOST=$DB_CONTAINER \
   -e POSTGRES_PASSWORD=c9XWc7Cm \
   -e POSTGRES_USER=postgres \
@@ -302,6 +297,17 @@ docker run -d --name $NEW_CONTAINER \
   -e GOOGLE_OAUTH_REDIRECT_URL=https://svetu.rs/auth/google/callback \
   -e FRONTEND_URL=https://svetu.rs \
   -e JWT_SECRET=yoursecretkey \
+  -e GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/neat-environs-140712-40c581381093.json \
+  -e GOOGLE_TRANSLATE_API_KEY=AIzaSyCBFx7eUrqoUjFzsVIDrGXgqxmtymWhlpE \
+  -e OPENAI_API_KEY=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 \
+  -e TELEGRAM_BOT_TOKEN=8091644299:AAHHqzkVxgwLr_E5xwaTP_UQUzKWhVPXfi8 \
+  -e STRIPE_API_KEY=sk_test_51Qw4kpEFv5ruKgVJwdkgenH8UU32QLw3o5QOBiicGm40jtI33Kv6fIouhx2r6g489e9iaqwqybApFvXvA6X4BYMR00egncZOqk \
+  -e STRIPE_PUBLISHABLE_KEY=pk_test_51Qw4kpEFv5ruKgVJ1cLiCo0M4ztd1PmCFPi6ZG8JROm9TncM8tVffrrkxc5mM96egSxSsErFhjIqYMNrS4iePhY7005VezvaYe \
+  -e STRIPE_WEBHOOK_SECRET=whsec_25fd811f9022a61563d4acf52e4dd2ced797a4e029828502b585bcb612b9bd81 \
+  -e OPENSEARCH_USERNAME=admin \
+  -e OPENSEARCH_PASSWORD=admin \
+  -e OPENSEARCH_MARKETPLACE_INDEX=marketplace \
+  -e EMAIL_PASSWORD=Pass4ma!l \
   harbor.svetu.rs/svetu/backend/api:latest
 
 # Проверяем, что контейнер подключен к нужной сети
@@ -906,6 +912,12 @@ fi
 case "$SERVICE" in
   "backend")
     build_backend
+    blue_green_backend
+    ;;
+  "build-backend")
+    build_backend
+    ;;
+  "deploy-backend")
     blue_green_backend
     ;;
   "frontend")

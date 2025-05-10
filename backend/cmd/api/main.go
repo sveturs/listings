@@ -31,6 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+	log.Printf("Config loaded successfully: %v", cfg)
 
 	// Создание и запуск сервера
 	// Удаляем второй аргумент fileStorage, так как NewServer инициализирует его внутри себя
