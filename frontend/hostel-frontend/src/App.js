@@ -34,6 +34,7 @@ import { LocationProvider } from './contexts/LocationContext';
 import AdminRoute from "./components/global/AdminRoute.tsx";
 import AdminPage from "./pages/admin/AdminPage";
 import UsersManagementPage from "./pages/admin/UsersManagementPage";
+import AdminManagerPage from "./pages/admin/AdminManagerPage";
 import { GISMapPage } from './pages/gis';
 
 const queryClient = new QueryClient({
@@ -113,6 +114,7 @@ function App() {
                         <Route path="/gis" element={<GISMapPage />} />
                         <Route path="/admin" element={<AdminRoute>      <AdminPage />    </AdminRoute>} />
                         <Route path="/admin/users" element={<AdminRoute>      <UsersManagementPage />    </AdminRoute>} />
+                        <Route path="/admin/admins" element={<AdminRoute>      <AdminManagerPage />    </AdminRoute>} />
                       </Routes>
                     </Layout>
                   </NotificationProvider>

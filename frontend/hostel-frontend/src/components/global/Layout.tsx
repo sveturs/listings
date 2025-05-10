@@ -12,6 +12,7 @@ import { useChat } from '../../contexts/ChatContext';
 import LanguageSwitcher from '../shared/LanguageSwitcher';
 import NotificationDrawer from '../notifications/NotificationDrawer';
 import { Settings } from '@mui/icons-material';
+import { isAdmin, checkAdminStatus } from '../../utils/adminUtils';
 import { AccountBalanceWallet } from '@mui/icons-material';
 import SveTuLogo from '../icons/SveTuLogo';
 import { ShoppingBag, Store } from '@mui/icons-material';
@@ -86,6 +87,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [chatService, setChatService] = useState<any>(null);
   const { getChatService } = useChat();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  // Состояние для проверки статуса администратора
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [categoryPath] = useState<string[]>([]);
 
@@ -140,6 +143,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       }
     };
   }, [user?.id, getChatService]);
+
+  // Эффект для проверки статуса администратора
+  useEffect(() => {
+    const verifyAdminStatus = async () => {
+      if (user?.email) {
+        // Проверяем статус администратора асинхронно
+        try {
+          const adminStatus = await checkAdminStatus(user.email);
+          setIsUserAdmin(adminStatus);
+        } catch (error) {
+          console.error('Error checking admin status:', error);
+          setIsUserAdmin(false);
+        }
+      } else {
+        setIsUserAdmin(false);
+      }
+    };
+
+    verifyAdminStatus();
+  }, [user?.email]);
 
   const handleOpenMenu = (e: React.MouseEvent<HTMLElement>): void => {
     setAnchorEl(e.currentTarget);
@@ -377,7 +400,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       {t('gis:title', { defaultValue: 'Map Search' })}
                     </MenuItem>
 
-                    {user.email === 'voroshilovdo@gmail.com' && (
+                    {/* Используем состояние isUserAdmin для проверки */}
+                    {isUserAdmin && (
                       <MenuItem component={Link} to="/admin" onClick={handleCloseMenu}>
                         <Settings fontSize="small" sx={{ mr: 1 }} />
                         Администрирование

@@ -1,12 +1,12 @@
 // frontend/hostel-frontend/src/pages/admin/AdminPage.js
 import React, { useState } from 'react';
 import { Box, Button, Paper, Typography, Alert, CircularProgress, Grid } from '@mui/material';
-import { People as PeopleIcon } from '@mui/icons-material';
+import { People as PeopleIcon, AdminPanelSettings as AdminIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
-import { getAdminEmails } from '../../utils/adminUtils';
+import { isAdmin } from '../../utils/adminUtils';
 
 const AdminPage = () => {
   const { t } = useTranslation(['common', 'marketplace']);
@@ -80,7 +80,7 @@ const AdminPage = () => {
         </Typography>
 
         <Alert severity="info" sx={{ mb: 3 }}>
-          Эта страница доступна только для администраторов! ({getAdminEmails().join(', ')})
+          Эта страница доступна только для администраторов!
         </Alert>
 
         <Box sx={{ mt: 4, mb: 4 }}>
@@ -109,6 +109,31 @@ const AdminPage = () => {
                 </Typography>
                 <Typography variant="body2" align="center" color="text.secondary">
                   Управление пользователями, блокировка, редактирование профилей
+                </Typography>
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4} lg={3}>
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 3,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  height: '100%',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  '&:hover': { transform: 'translateY(-5px)', boxShadow: 6 }
+                }}
+                onClick={() => navigate('/admin/admins')}
+              >
+                <AdminIcon sx={{ fontSize: 48, color: 'secondary.main', mb: 2 }} />
+                <Typography variant="h6" align="center" gutterBottom>
+                  Администраторы
+                </Typography>
+                <Typography variant="body2" align="center" color="text.secondary">
+                  Управление администраторами системы, добавление и удаление
                 </Typography>
               </Paper>
             </Grid>
