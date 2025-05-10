@@ -35,7 +35,9 @@ export function useLocation(): LocationContextType {
   return context;
 }
 
-export function LocationProvider({ children }: LocationProviderProps): React.ReactNode {
+export const LocationProvider: React.FC<LocationProviderProps> = (props) => {
+  const { children } = props;
+  
   const [userLocation, setUserLocation] = useState<LocationData | null>(null);
   const [isGeolocating, setIsGeolocating] = useState<boolean>(false);
   const [locationDismissed, setLocationDismissed] = useState<boolean>(

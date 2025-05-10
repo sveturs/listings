@@ -23,6 +23,34 @@ declare module 'i18next' {
     };
   }
 
+  // Type for i18next init options
+  interface InitOptions {
+    resources?: Record<string, Record<string, Record<string, any>>>;
+    fallbackLng?: string | string[] | false;
+    supportedLngs?: string[];
+    ns?: string | string[];
+    defaultNS?: string;
+    lng?: string;
+    interpolation?: {
+      escapeValue?: boolean;
+      [key: string]: any;
+    };
+    backend?: {
+      loadPath?: string;
+      [key: string]: any;
+    };
+    detection?: {
+      order?: string[];
+      caches?: string[];
+      [key: string]: any;
+    };
+    react?: {
+      useSuspense?: boolean;
+      [key: string]: any;
+    };
+    [key: string]: any;
+  }
+
   // i18n interface
   interface i18n {
     changeLanguage(lng?: string): Promise<TFunction>;
@@ -31,6 +59,7 @@ declare module 'i18next' {
     exists(key: string, options?: any): boolean;
     getFixedT(lng: string, ns?: string | string[]): TFunction;
     use(module: any): i18n;
+    init(options: InitOptions): i18n;
   }
 
   // Translation function
@@ -43,6 +72,8 @@ declare module 'i18next' {
 // Additional declarations for react-i18next
 declare module 'react-i18next' {
   import { TFunction, i18n } from 'i18next';
+  
+  export const initReactI18next: any;
 
   export function useTranslation(ns?: string | string[], options?: any): {
     t: TFunction;
