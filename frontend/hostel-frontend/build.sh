@@ -1,3 +1,3 @@
 #!/bin/bash
-export NODE_OPTIONS=--openssl-legacy-provider
+# В Node.js 20 флаг --openssl-legacy-provider не требуется
 npm run build

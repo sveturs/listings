@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:20
 
 WORKDIR /app
 
@@ -10,10 +10,10 @@ RUN npm cache clean --force && \
     npm install --legacy-peer-deps --force && \
     npm install --save --legacy-peer-deps --force \
         react-scripts@5.0.1 \
-        react-window@1.8.9 \
+        react-window@1.8.11 \
         react-query@3.39.3 \
         typescript@4.9.5 \
-        i18next@23.7.11 \
+        i18next@24.2.2 \
         ajv@6.12.6 \
         ajv-keywords@3.5.2
 
