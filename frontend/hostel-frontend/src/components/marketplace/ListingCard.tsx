@@ -121,7 +121,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, isMobile = false, on
         } else if (listing && listing.has_discount) {
             console.log('Has discount flag is true, but no old_price or metadata');
         } else {
-            console.log('No discount data found for listing:', listing.id);
+          //  console.log('No discount data found for listing:', listing.id);
         }
     }, [listing]);
 
@@ -296,7 +296,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, isMobile = false, on
     // Оптимизированная функция получения URL главного изображения
     const getMainImageUrl = (): string => {
         if (!listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
-            console.log('No images found, using placeholder');
+            //console.log('No images found, using placeholder');
             return '/placeholder.jpg';
         }
 

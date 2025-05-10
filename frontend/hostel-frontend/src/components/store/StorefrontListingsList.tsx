@@ -409,7 +409,7 @@ const StorefrontListingsList: React.FC<StorefrontListingsListProps> = ({
                             WebkitLineClamp: 2,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            '&:hover': { color: theme.palette.primary.main }
+                            '&:hover': { color: theme.palette.primary?.main }
                           }}>
                             {localizedTitle}
                           </Typography>

@@ -79,9 +79,9 @@ const CategoryTreeItem: React.FC<CategoryTreeItemProps> = ({
           minHeight: 32,
           color: isSelected ? 'primary.main' : 'text.primary',
           '&.Mui-selected': {
-            backgroundColor: theme.palette.primary.main + '08',
+            backgroundColor: theme.palette.primary?.main + '08',
             '&:hover': {
-              backgroundColor: theme.palette.primary.main + '12',
+              backgroundColor: theme.palette.primary?.main + '12',
             }
           }
         }}

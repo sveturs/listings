@@ -1,6 +1,7 @@
 // frontend/hostel-frontend/src/contexts/LanguageContext.tsx
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import i18n from '../i18n/config';
+import { useTranslation } from 'react-i18next';
+import i18nInstance from '../i18n/config';
 
 // Типы для языкового контекста
 export interface Language {
@@ -23,6 +24,9 @@ interface LanguageProviderProps {
 const LanguageContext = createContext<LanguageContextType | null>(null);
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  // Используем хук useTranslation для доступа к функции i18n
+  const { i18n } = useTranslation();
+
   // Определяем поддерживаемые языки
   const supportedLanguages: Language[] = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -36,13 +40,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     if (savedLang && supportedLanguages.some(lang => lang.code === savedLang)) {
       return savedLang;
     }
-    
+
     // Проверяем язык браузера
     const browserLang = navigator.language.split('-')[0];
     if (supportedLanguages.some(lang => lang.code === browserLang)) {
       return browserLang;
     }
-    
+
     // Возвращаем язык по умолчанию
     return 'sr';
   });
@@ -50,10 +54,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   useEffect(() => {
     localStorage.setItem('preferredLanguage', language);
     document.documentElement.lang = language;
-    
-    // Обновляем i18next
+
+    // Обновляем язык через useTranslation hook
     i18n.changeLanguage(language);
-  }, [language]);
+  }, [language, i18n]);
 
   const value: LanguageContextType = {
     language,

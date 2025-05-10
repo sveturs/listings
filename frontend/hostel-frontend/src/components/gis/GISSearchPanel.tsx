@@ -31,7 +31,65 @@ import {
 import { styled } from '@mui/material/styles';
 import axios from '../../api/axios';
 
-const SearchContainer = styled(Box)(({ theme, drawerOpen, drawerWidth }) => ({
+// Define interfaces for props and data
+interface SearchOptions {
+  listingId?: number | string;
+  categoryId?: number | string;
+  attributeFilters?: Record<string, string>;
+}
+
+interface Location {
+  latitude: number;
+  longitude: number;
+  address?: string;
+}
+
+interface GISSearchPanelProps {
+  onSearch: (query: string, options?: SearchOptions) => void;
+  onLocationSelect?: (location: Location) => void;
+  drawerOpen?: boolean;
+  drawerWidth?: number;
+}
+
+interface RecentSearch {
+  query: string;
+  timestamp: number;
+}
+
+interface SearchResult {
+  id?: number | string;
+  type?: string;
+  title?: string;
+  name?: string;
+  display?: string;
+  icon?: React.ReactNode;
+  secondaryText?: string;
+  borderColor?: string;
+  priority?: number;
+  address?: string;
+  city?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lon?: number;
+  path?: Array<{name: string}>;
+  attribute_name?: string;
+  attribute_value?: string;
+  price?: number | string;
+  parent_name?: string;
+}
+
+// Styled components
+interface SearchContainerProps {
+  drawerOpen?: boolean;
+  drawerWidth?: number;
+  children?: React.ReactNode;
+}
+
+const SearchContainer = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'drawerOpen' && prop !== 'drawerWidth'
+})<SearchContainerProps>(({ theme, drawerOpen, drawerWidth }) => ({
   position: 'absolute',
   zIndex: 1000,
   top: theme.spacing(3), // Увеличение отступа сверху
@@ -44,19 +102,36 @@ const SearchContainer = styled(Box)(({ theme, drawerOpen, drawerWidth }) => ({
     top: theme.spacing(1),
     width: '95%',
   }
-}));
+})) as React.ComponentType<SearchContainerProps>;
 
-const SearchField = styled(TextField)(({ theme }) => ({
+interface SearchFieldProps {
+  fullWidth?: boolean;
+  placeholder?: string;
+  variant?: 'outlined' | 'standard' | 'filled';
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  InputProps?: object;
+}
+
+const SearchField = styled(TextField)<SearchFieldProps>(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
     borderRadius: 24,
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: theme.palette.background?.paper,
     '&.Mui-focused': {
       boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)'
     }
   }
-}));
+})) as React.ComponentType<SearchFieldProps>;
 
-const SearchResults = styled(Paper)(({ theme }) => ({
+interface SearchResultsProps {
+  elevation?: number;
+  sx?: object;
+  children?: React.ReactNode;
+}
+
+const SearchResults = styled(Paper)<SearchResultsProps>(({ theme }) => ({
   marginTop: theme.spacing(1),
   maxHeight: 400,
   overflow: 'auto',
@@ -64,31 +139,40 @@ const SearchResults = styled(Paper)(({ theme }) => ({
   position: 'absolute',
   width: '100%',
   zIndex: 1010, // Higher than the search box
-  backgroundColor: theme.palette.background.paper, // White background 
+  backgroundColor: theme.palette.background?.paper, // White background 
   [theme.breakpoints.down('sm')]: {
     maxHeight: 300
   }
-}));
+})) as React.ComponentType<SearchResultsProps>;
 
-const RecentSearches = styled(Box)(({ theme }) => ({
+interface RecentSearchesProps {
+  children?: React.ReactNode;
+}
+
+const RecentSearches = styled(Box)<RecentSearchesProps>(({ theme }) => ({
   display: 'flex',
   flexWrap: 'wrap',
   gap: theme.spacing(1),
   padding: theme.spacing(2)
-}));
+})) as React.ComponentType<RecentSearchesProps>;
 
-const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawerWidth = 400 }) => {
+const GISSearchPanel: React.FC<GISSearchPanelProps> = ({ 
+  onSearch, 
+  onLocationSelect, 
+  drawerOpen = false, 
+  drawerWidth = 400 
+}) => {
   const { t } = useTranslation('gis');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [query, setQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [recentSearches, setRecentSearches] = useState([]);
-  const [showResults, setShowResults] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [searchType, setSearchType] = useState('');
-  const inputRef = useRef(null);
-  const debounceRef = useRef(null);
+  const [query, setQuery] = useState<string>('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  const [showResults, setShowResults] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [searchType, setSearchType] = useState<string>('');
+  const inputRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Load recent searches from localStorage
@@ -136,18 +220,18 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
   // Focus the search field on component mount
   useEffect(() => {
     // Focus the search input on mount for better UX
-    const searchInput = document.querySelector('input[type="text"]');
+    const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
     if (searchInput && !isMobile) {
       setTimeout(() => {
         searchInput.focus();
       }, 500);
     }
-  }, []);
+  }, [isMobile]);
   
   // Add click-outside handler to hide search results
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (inputRef.current && !inputRef.current.contains(e.target)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
         setShowResults(false);
       }
     };
@@ -158,7 +242,7 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
     };
   }, []);
 
-  const performSearch = async () => {
+  const performSearch = async (): Promise<void> => {
     if (!query.trim() || query.trim().length < 2) return;
     
     setLoading(true);
@@ -174,9 +258,9 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
           console.log('Using enhanced suggestions API, query:', query.trim(), 'results:', enhancedResponse.data.data);
           
           // Map the enhanced suggestions to our format with appropriate icons
-          const enhancedResults = enhancedResponse.data.data.map(item => {
+          const enhancedResults = enhancedResponse.data.data.map((item: SearchResult) => {
             // Default values
-            let icon = <SearchIcon color="action" />;
+            let icon: React.ReactNode = <SearchIcon color="action" />;
             let secondaryText = '';
             let borderColor = '#808080'; // Default gray
             
@@ -207,7 +291,7 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
           });
           
           setSearchResults(enhancedResults);
-          setSearchType(enhancedResults.length > 0 ? enhancedResults[0].type : '');
+          setSearchType(enhancedResults.length > 0 ? enhancedResults[0].type || '' : '');
           setLoading(false);
           return;
         }
@@ -233,7 +317,7 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
       });
 
       // Process addresses with priority
-      const addressResults = (addressResponse.data?.data || []).map(item => ({
+      const addressResults = (addressResponse.data?.data || []).map((item: SearchResult) => ({
         ...item,
         type: 'address',
         title: item.city || item.address,
@@ -245,7 +329,7 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
       }));
 
       // Process listings with medium priority
-      const listingResults = (listingsResponse.data?.data || []).map(item => ({
+      const listingResults = (listingsResponse.data?.data || []).map((item: SearchResult) => ({
         ...item,
         type: 'listing',
         title: item.title || item.name,
@@ -257,7 +341,7 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
       }));
 
       // Process categories with lower priority
-      const categoryResults = (categoriesResponse.data?.data || []).map(item => ({
+      const categoryResults = (categoriesResponse.data?.data || []).map((item: SearchResult) => ({
         ...item,
         type: 'category',
         title: item.name,
@@ -273,10 +357,10 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
         ...addressResults,
         ...listingResults.slice(0, 3), // Limit to 3 listings
         ...categoryResults.slice(0, 3)  // Limit to 3 categories
-      ].sort((a, b) => a.priority - b.priority);
+      ].sort((a, b) => (a.priority || 0) - (b.priority || 0));
 
       setSearchResults(combinedResults);
-      setSearchType(combinedResults.length > 0 ? combinedResults[0].type : '');
+      setSearchType(combinedResults.length > 0 ? combinedResults[0].type || '' : '');
     } catch (error) {
       console.error('Search error:', error);
     } finally {
@@ -284,7 +368,7 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
     }
   };
 
-  const handleSearch = () => {
+  const handleSearch = (): void => {
     if (!query.trim()) return;
     
     // Add to recent searches
@@ -305,23 +389,23 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
     setShowResults(false);
   };
 
-  const handleResultClick = (result) => {
+  const handleResultClick = (result: SearchResult): void => {
     // Add to recent searches - use appropriate field based on result type
     let searchText = '';
     switch (result.type) {
       case 'address':
-        searchText = result.address || result.city || result.title;
+        searchText = result.address || result.city || result.title || '';
         break;
       case 'category':
-        searchText = result.name || result.title;
+        searchText = result.name || result.title || '';
         break;
       case 'attribute':
-        searchText = result.attribute_value || result.title;
+        searchText = result.attribute_value || result.title || '';
         break;
       case 'product':
       case 'listing':
       default:
-        searchText = result.title || result.name || result.display;
+        searchText = result.title || result.name || result.display || '';
         break;
     }
     
@@ -337,8 +421,8 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
     if (result.type === 'address' && onLocationSelect) {
       // For address - center map on location coordinates
       onLocationSelect({
-        latitude: result.latitude || result.lat,
-        longitude: result.longitude || result.lon,
+        latitude: result.latitude || result.lat || 0,
+        longitude: result.longitude || result.lon || 0,
         address: result.address || result.city || result.title
       });
       setQuery(searchText);
@@ -365,7 +449,7 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
       // Set up attribute filters if we have the attribute name
       if (result.attribute_name) {
         onSearch(searchText, { 
-          attributeFilters: { [result.attribute_name]: result.attribute_value || result.title }
+          attributeFilters: { [result.attribute_name]: result.attribute_value || result.title || '' }
         });
       } else {
         onSearch(searchText);
@@ -381,7 +465,7 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
     setShowResults(false);
   };
 
-  const handleRecentSearchClick = (searchItem) => {
+  const handleRecentSearchClick = (searchItem: RecentSearch): void => {
     setQuery(searchItem.query);
     if (onSearch) {
       onSearch(searchItem.query);
@@ -389,7 +473,7 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
     setShowResults(false);
   };
 
-  const handleClearSearch = () => {
+  const handleClearSearch = (): void => {
     setQuery('');
     setSearchResults([]);
     if (onSearch) {
@@ -397,11 +481,11 @@ const GISSearchPanel = ({ onSearch, onLocationSelect, drawerOpen = false, drawer
     }
   };
 
-  const handleInputFocus = () => {
+  const handleInputFocus = (): void => {
     setShowResults(true);
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter') {
       handleSearch();
     }

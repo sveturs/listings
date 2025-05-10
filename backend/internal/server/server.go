@@ -336,6 +336,14 @@ func (s *Server) setupRoutes() {
 	adminRoutes.Delete("/users/:id", s.users.User.DeleteUser)
 	adminRoutes.Get("/users/:id/balance", s.users.User.GetUserBalance)
 	adminRoutes.Get("/users/:id/transactions", s.users.User.GetUserTransactions)
+
+	// Управление администраторами
+	adminRoutes.Get("/admins", s.users.User.GetAllAdmins)
+	adminRoutes.Post("/admins", s.users.User.AddAdmin)
+	adminRoutes.Delete("/admins/:email", s.users.User.RemoveAdmin)
+	adminRoutes.Get("/admins/check/:email", s.users.User.IsAdmin)
+
+	// Индексация и прочие админские функции
 	adminRoutes.Post("/reindex-listings", s.marketplace.Marketplace.ReindexAll)
 	adminRoutes.Post("/reindex-listings-with-translations", s.marketplace.Marketplace.ReindexAllWithTranslations)
 	adminRoutes.Post("/sync-discounts", s.marketplace.Marketplace.SynchronizeDiscounts)

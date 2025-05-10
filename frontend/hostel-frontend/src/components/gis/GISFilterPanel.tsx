@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Drawer,
@@ -24,7 +24,37 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
-const FilterDrawer = styled(Drawer)(({ theme }) => ({
+interface PriceRange {
+  min: number;
+  max: number;
+}
+
+interface GISFilters {
+  price: PriceRange;
+  condition: 'any' | 'new' | 'used';
+  radius: number;
+  sort: 'newest' | 'priceAsc' | 'priceDesc' | 'distanceAsc' | 'popularityDesc' | 'id';
+  sort_direction?: 'asc' | 'desc';
+  [key: string]: any;
+}
+
+interface GISFilterPanelProps {
+  open: boolean;
+  onClose: () => void;
+  filters: GISFilters;
+  onFiltersChange?: (filters: GISFilters) => void;
+  onApplyFilters?: (filters: GISFilters) => void;
+  onResetFilters?: (filters: GISFilters) => void;
+}
+
+interface FilterDrawerProps {
+  anchor?: 'left' | 'right' | 'top' | 'bottom';
+  open?: boolean;
+  onClose?: () => void;
+  variant?: 'permanent' | 'persistent' | 'temporary';
+}
+
+const FilterDrawer = styled(Drawer)<FilterDrawerProps>(({ theme }) => ({
   '& .MuiDrawer-paper': {
     width: 320,
     boxSizing: 'border-box',
@@ -32,16 +62,32 @@ const FilterDrawer = styled(Drawer)(({ theme }) => ({
       width: '100%'
     }
   }
-}));
+})) as React.ComponentType<FilterDrawerProps>;
 
-const FilterSection = styled(Box)(({ theme }) => ({
+interface FilterSectionProps {
+  children?: React.ReactNode;
+}
+
+const FilterSection = styled(Box)<FilterSectionProps>(({ theme }) => ({
   padding: theme.spacing(2),
   '&:not(:last-child)': {
     borderBottom: `1px solid ${theme.palette.divider}`
   }
-}));
+})) as React.ComponentType<FilterSectionProps>;
 
-const StyledSlider = styled(Slider)(({ theme }) => ({
+interface StyledSliderProps {
+  value?: number | number[];
+  onChange?: (event: Event, newValue: number | number[]) => void;
+  valueLabelDisplay?: 'auto' | 'on' | 'off';
+  min?: number;
+  max?: number;
+  step?: number;
+  marks?: boolean | { value: number; label?: React.ReactNode }[];
+  'aria-labelledby'?: string;
+  valueLabelFormat?: string | ((value: number, index: number) => React.ReactNode);
+}
+
+const StyledSlider = styled(Slider)<StyledSliderProps>(({ theme }) => ({
   '& .MuiSlider-valueLabel': {
     fontSize: 12,
     fontWeight: 'normal',
@@ -52,17 +98,26 @@ const StyledSlider = styled(Slider)(({ theme }) => ({
       display: 'none',
     },
   },
-}));
+})) as React.ComponentType<StyledSliderProps>;
 
-const PriceInput = styled(TextField)(({ theme }) => ({
+interface PriceInputProps {
+  label?: React.ReactNode;
+  value?: number;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  InputLabelProps?: object;
+  InputProps?: object;
+}
+
+const PriceInput = styled(TextField)<PriceInputProps>(({ theme }) => ({
   width: 110,
   marginTop: theme.spacing(2),
   '& input': {
     textAlign: 'right'
   }
-}));
+})) as React.ComponentType<PriceInputProps>;
 
-const GISFilterPanel = ({ 
+const GISFilterPanel: React.FC<GISFilterPanelProps> = ({ 
   open, 
   onClose, 
   filters, 
@@ -71,32 +126,34 @@ const GISFilterPanel = ({
   onResetFilters
 }) => {
   const { t } = useTranslation('gis');
-  const [localFilters, setLocalFilters] = useState({ ...filters });
+  const [localFilters, setLocalFilters] = useState<GISFilters>({ ...filters });
 
   // Reset local filters when props change
-  React.useEffect(() => {
+  useEffect(() => {
     setLocalFilters({ ...filters });
   }, [filters]);
 
-  const handleChange = (key, value) => {
+  const handleChange = (key: string, value: any): void => {
     setLocalFilters(prev => ({
       ...prev,
       [key]: value
     }));
   };
 
-  const handlePriceChange = (event, newValue) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      price: {
-        ...prev.price,
-        min: newValue[0],
-        max: newValue[1]
-      }
-    }));
+  const handlePriceChange = (_event: Event, newValue: number | number[]): void => {
+    if (Array.isArray(newValue)) {
+      setLocalFilters(prev => ({
+        ...prev,
+        price: {
+          ...prev.price,
+          min: newValue[0],
+          max: newValue[1]
+        }
+      }));
+    }
   };
 
-  const handleInputPriceChange = (type) => (event) => {
+  const handleInputPriceChange = (type: 'min' | 'max') => (event: ChangeEvent<HTMLInputElement>): void => {
     const value = event.target.value === '' ? 0 : Number(event.target.value);
     setLocalFilters(prev => ({
       ...prev,
@@ -107,7 +164,7 @@ const GISFilterPanel = ({
     }));
   };
 
-  const handleApply = () => {
+  const handleApply = (): void => {
     if (onFiltersChange) {
       onFiltersChange(localFilters);
     }
@@ -117,12 +174,13 @@ const GISFilterPanel = ({
     onClose();
   };
 
-  const handleReset = () => {
-    const resetFilters = {
+  const handleReset = (): void => {
+    const resetFilters: GISFilters = {
       price: { min: 0, max: 100000 },
       condition: 'any',
       radius: 0,
-      sort: 'newest'
+      sort: 'id',          // Используем id вместо newest для совместимости с OpenSearch
+      sort_direction: 'desc' // Новые объявления имеют бóльшие id
     };
     
     setLocalFilters(resetFilters);

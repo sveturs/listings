@@ -854,19 +854,19 @@ const MyListingsPage: React.FC = () => {
                 {/* Free actions */}
                 <MenuItem onClick={() => handleBulkAction('activate')} disabled={statusFilter === 'active'}>
                     <ListItemIcon>
-                        <Check size={16} color={theme.palette.success.main} />
+                        <Check size={16} color={theme.palette.success?.main} />
                     </ListItemIcon>
                     <ListItemText primary={t('listings.actions.activate')} />
                 </MenuItem>
                 <MenuItem onClick={() => handleBulkAction('deactivate')} disabled={statusFilter === 'inactive'}>
                     <ListItemIcon>
-                        <AlertTriangle size={16} color={theme.palette.warning.main} />
+                        <AlertTriangle size={16} color={theme.palette.warning?.main} />
                     </ListItemIcon>
                     <ListItemText primary={t('listings.actions.deactivate')} />
                 </MenuItem>
                 <MenuItem onClick={() => handleBulkAction('delete')}>
                     <ListItemIcon>
-                        <Trash2 size={16} color={theme.palette.error.main} />
+                        <Trash2 size={16} color={theme.palette.error?.main} />
                     </ListItemIcon>
                     <ListItemText primary={t('listings.actions.delete')} />
                 </MenuItem>
@@ -882,13 +882,13 @@ const MyListingsPage: React.FC = () => {
                 {/* Paid actions */}
                 <MenuItem onClick={() => handleBulkAction('promote')}>
                     <ListItemIcon>
-                        <ArrowUp size={16} color={theme.palette.primary.main} />
+                        <ArrowUp size={16} color={theme.palette.primary?.main} />
                     </ListItemIcon>
                     <ListItemText primary={t('listings.actions.promote')} />
                 </MenuItem>
                 <MenuItem onClick={() => handleBulkAction('translate')}>
                     <ListItemIcon>
-                        <Zap size={16} color={theme.palette.secondary.main} />
+                        <Zap size={16} color={theme.palette.secondary?.main} />
                     </ListItemIcon>
                     <ListItemText primary={t('listings.actions.translate')} />
                 </MenuItem>
@@ -961,7 +961,7 @@ const MyListingsPage: React.FC = () => {
                         {/* Highlight color */}
                         <Button
                             variant="outlined"
-                            startIcon={<Star color={theme.palette.warning.main} />}
+                            startIcon={<Star color={theme.palette.warning?.main} />}
                             onClick={() => handlePromoteListings('highlight')}
                             sx={{ justifyContent: 'space-between' }}
                         >
@@ -977,7 +977,7 @@ const MyListingsPage: React.FC = () => {
                         {/* VIP status */}
                         <Button
                             variant="outlined"
-                            startIcon={<Star color={theme.palette.primary.main} />}
+                            startIcon={<Star color={theme.palette.primary?.main} />}
                             onClick={() => handlePromoteListings('vip')}
                             sx={{ justifyContent: 'space-between' }}
                         >
@@ -1009,7 +1009,7 @@ const MyListingsPage: React.FC = () => {
                         {/* Turbo sale */}
                         <Button
                             variant="outlined"
-                            startIcon={<Zap color={theme.palette.error.main} />}
+                            startIcon={<Zap color={theme.palette.error?.main} />}
                             onClick={() => handlePromoteListings('turbo')}
                             sx={{ justifyContent: 'space-between' }}
                         >

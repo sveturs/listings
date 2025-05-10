@@ -24,7 +24,36 @@ import {
 import { styled } from '@mui/material/styles';
 import axios from '../../api/axios';
 
-const CategoryDrawer = styled(Drawer)(({ theme }) => ({
+interface Category {
+  id: number | string;
+  name: string;
+  children?: Category[];
+  [key: string]: any;
+}
+
+interface ExpandedCategories {
+  [key: string]: boolean;
+}
+
+interface GISCategoryPanelProps {
+  open: boolean;
+  onClose: () => void;
+  onCategorySelect: (category: Category) => void;
+}
+
+interface CategoryListItemProps {
+  depth?: number;
+}
+
+// Правильное типизирование styled-компонентов
+interface CategoryDrawerProps {
+  anchor?: 'left' | 'right' | 'top' | 'bottom';
+  open?: boolean;
+  onClose?: () => void;
+  variant?: 'permanent' | 'persistent' | 'temporary';
+}
+
+const CategoryDrawer = styled(Drawer)<CategoryDrawerProps>(({ theme }) => ({
   '& .MuiDrawer-paper': {
     width: 320,
     boxSizing: 'border-box',
@@ -32,33 +61,50 @@ const CategoryDrawer = styled(Drawer)(({ theme }) => ({
       width: '100%'
     }
   }
-}));
+})) as React.ComponentType<CategoryDrawerProps>;
 
-const SearchInput = styled(TextField)(({ theme }) => ({
+interface SearchInputProps {
+  variant?: 'outlined' | 'standard' | 'filled';
+  placeholder?: string;
+  fullWidth?: boolean;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  InputProps?: any;
+}
+
+const SearchInput = styled(TextField)<SearchInputProps>(({ theme }) => ({
   margin: theme.spacing(2),
   '& .MuiOutlinedInput-root': {
     borderRadius: 20
   }
-}));
+})) as React.ComponentType<SearchInputProps>;
 
-const CategoryListItem = styled(ListItem)(({ theme, depth = 0 }) => ({
+interface CategoryListItemProps {
+  depth?: number;
+  onClick?: () => void;
+}
+
+// Create a typed styled component for CategoryListItem
+const CategoryListItem = styled(ListItem, {
+  shouldForwardProp: (prop) => prop !== 'depth'
+})<CategoryListItemProps>(({ theme, depth = 0 }) => ({
   paddingLeft: theme.spacing(2 + (depth * 2)),
   cursor: 'pointer',
   '&:hover': {
     backgroundColor: theme.palette.action.hover
   }
-}));
+})) as React.ComponentType<CategoryListItemProps>;
 
-const GISCategoryPanel = ({ open, onClose, onCategorySelect }) => {
+const GISCategoryPanel: React.FC<GISCategoryPanelProps> = ({ open, onClose, onCategorySelect }) => {
   const { t } = useTranslation('gis');
-  const [categories, setCategories] = useState([]);
-  const [expandedCategories, setExpandedCategories] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<ExpandedCategories>({});
+  const [loading, setLoading] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchCategories = async (): Promise<void> => {
       setLoading(true);
       try {
         // We'll fetch categories from the API
@@ -85,7 +131,7 @@ const GISCategoryPanel = ({ open, onClose, onCategorySelect }) => {
     }
 
     const query = searchQuery.toLowerCase();
-    const filterCategoriesRecursive = (items) => {
+    const filterCategoriesRecursive = (items: Category[]): Category[] => {
       return items.filter(item => {
         const nameMatches = item.name.toLowerCase().includes(query);
         let childrenMatch = false;
@@ -107,14 +153,14 @@ const GISCategoryPanel = ({ open, onClose, onCategorySelect }) => {
     setFilteredCategories(filtered);
   }, [searchQuery, categories]);
 
-  const handleToggle = (categoryId) => {
+  const handleToggle = (categoryId: string | number): void => {
     setExpandedCategories(prev => ({
       ...prev,
-      [categoryId]: !prev[categoryId]
+      [categoryId.toString()]: !prev[categoryId.toString()]
     }));
   };
 
-  const handleCategorySelect = (category) => {
+  const handleCategorySelect = (category: Category): void => {
     if (onCategorySelect) {
       onCategorySelect(category);
     }
@@ -123,7 +169,7 @@ const GISCategoryPanel = ({ open, onClose, onCategorySelect }) => {
     }
   };
 
-  const renderCategoryItem = (category, depth = 0) => {
+  const renderCategoryItem = (category: Category, depth = 0): React.ReactNode => {
     const hasChildren = category.children && category.children.length > 0;
     const isExpanded = expandedCategories[category.id];
 
@@ -193,7 +239,7 @@ const GISCategoryPanel = ({ open, onClose, onCategorySelect }) => {
         }}
       />
       
-      <Box overflow="auto" flexGrow={1}>
+      <Box sx={{ overflow: "auto", flexGrow: 1 }}>
         {loading ? (
           <Box display="flex" justifyContent="center" my={4}>
             <CircularProgress />

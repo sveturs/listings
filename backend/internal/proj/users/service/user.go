@@ -61,3 +61,25 @@ func (s *UserService) UpdateUserStatus(ctx context.Context, id int, status strin
 func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 	return s.storage.DeleteUser(ctx, id)
 }
+
+// Методы для управления администраторами
+
+// IsUserAdmin проверяет, является ли пользователь администратором по email
+func (s *UserService) IsUserAdmin(ctx context.Context, email string) (bool, error) {
+	return s.storage.IsUserAdmin(ctx, email)
+}
+
+// GetAllAdmins возвращает список всех администраторов
+func (s *UserService) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error) {
+	return s.storage.GetAllAdmins(ctx)
+}
+
+// AddAdmin добавляет нового администратора
+func (s *UserService) AddAdmin(ctx context.Context, admin *models.AdminUser) error {
+	return s.storage.AddAdmin(ctx, admin)
+}
+
+// RemoveAdmin удаляет администратора по email
+func (s *UserService) RemoveAdmin(ctx context.Context, email string) error {
+	return s.storage.RemoveAdmin(ctx, email)
+}

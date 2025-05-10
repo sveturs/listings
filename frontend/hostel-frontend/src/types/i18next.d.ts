@@ -1,14 +1,18 @@
-import 'i18next';
-
 // Enhanced type definitions for i18next to fix TypeScript errors
 declare module 'i18next' {
-  // @ts-ignore
+  // Suppress TypeScript checking for the CustomTypeOptions interface
   interface CustomTypeOptions {
     defaultNS: 'common';
     resources: {
       common: {
         buttons: Record<string, string>;
         common: Record<string, string>;
+      };
+      gis: {
+        layers: Record<string, string>;
+        filters: Record<string, string>;
+        categories: Record<string, string>;
+        search: Record<string, string>;
       };
       marketplace: {
         store: {
@@ -19,6 +23,7 @@ declare module 'i18next' {
     };
   }
 
+  // i18n interface
   interface i18n {
     changeLanguage(lng?: string): Promise<TFunction>;
     language: string;
@@ -28,10 +33,9 @@ declare module 'i18next' {
     use(module: any): i18n;
   }
 
+  // Translation function
   interface TFunction {
-    // @ts-ignore
     (key: string | string[], options?: any): string;
-    // @ts-ignore
     (key: string | string[], defaultValue: string, options?: any): string;
   }
 }
@@ -39,7 +43,7 @@ declare module 'i18next' {
 // Additional declarations for react-i18next
 declare module 'react-i18next' {
   import { TFunction, i18n } from 'i18next';
-  
+
   export function useTranslation(ns?: string | string[], options?: any): {
     t: TFunction;
     i18n: i18n;
@@ -51,7 +55,7 @@ declare module 'react-i18next' {
     i18n: i18n;
     tReady: boolean;
   }
-  
-  export function withTranslation(ns?: string | string[], options?: any): 
+
+  export function withTranslation(ns?: string | string[], options?: any):
     <P extends WithTranslation>(component: React.ComponentType<P>) => React.ComponentType<P>;
 }

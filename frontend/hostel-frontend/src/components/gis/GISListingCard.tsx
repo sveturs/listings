@@ -23,10 +23,49 @@ import {
   Message as MessageIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, Locale } from 'date-fns';
 import { enUS, ru, sr } from 'date-fns/locale';
 
-const StyledCard = styled(Card)(({ theme }) => ({
+// Define interfaces for props and data structure
+interface ListingImage {
+  public_url?: string;
+  file_path?: string;
+  storage_type?: string;
+}
+
+export interface GISListing {
+  id: number | string;
+  title: string;
+  price: number | string;
+  condition: 'new' | 'used';
+  location?: string;
+  createdAt?: string;
+  images?: (string | ListingImage)[];
+  latitude?: number;
+  longitude?: number;
+  [key: string]: any; // Allow additional properties
+}
+
+interface GISListingCardProps {
+  listing: GISListing;
+  compact?: boolean;
+  isFavorite?: boolean;
+  showMap?: boolean;
+  onFavoriteToggle?: (id: string | number, isFavorite: boolean) => void;
+  onShowOnMap?: (listing: GISListing) => void;
+  onContactClick?: (listing: GISListing) => void;
+}
+
+interface ConditionChipProps {
+  condition?: 'new' | 'used';
+}
+
+// Styled components
+interface StyledCardProps {
+  children?: React.ReactNode;
+}
+
+const StyledCard = styled(Card)<StyledCardProps>(({ theme }) => ({
   width: '100%',
   display: 'flex',
   marginBottom: theme.spacing(1.5),
@@ -42,9 +81,14 @@ const StyledCard = styled(Card)(({ theme }) => ({
     flexDirection: 'column',
     height: 'auto'
   }
-}));
+})) as React.ComponentType<StyledCardProps>;
 
-const CardImage = styled(CardMedia)(({ theme }) => ({
+interface CardImageProps {
+  image?: string;
+  title?: string;
+}
+
+const CardImage = styled(CardMedia)<CardImageProps>(({ theme }) => ({
   width: 160,
   height: 160,
   borderRadius: `${theme.spacing(1)}px 0 0 ${theme.spacing(1)}px`,
@@ -54,46 +98,66 @@ const CardImage = styled(CardMedia)(({ theme }) => ({
     height: 180,
     borderRadius: `${theme.spacing(1)}px ${theme.spacing(1)}px 0 0`
   }
-}));
+})) as React.ComponentType<CardImageProps>;
 
-const ContentContainer = styled(Box)(({ theme }) => ({
+interface ContentContainerProps {
+  children?: React.ReactNode;
+}
+
+const ContentContainer = styled(Box)<ContentContainerProps>(({ theme }) => ({
   flex: 1,
   display: 'flex',
   flexDirection: 'column',
   padding: theme.spacing(1.5),
   overflow: 'hidden'
-}));
+})) as React.ComponentType<ContentContainerProps>;
 
-const PriceText = styled(Typography)(({ theme }) => ({
+interface PriceTextProps {
+  children?: React.ReactNode;
+  variant?: any;
+}
+
+const PriceText = styled(Typography)<PriceTextProps>(({ theme }) => ({
   fontWeight: 'bold',
-  color: theme.palette.primary.main,
+  color: theme.palette.primary?.main,
   marginRight: theme.spacing(1)
-}));
+})) as React.ComponentType<PriceTextProps>;
 
-const ConditionChip = styled(Chip)(({ theme, condition }) => ({
+const ConditionChip = styled(Chip, {
+  shouldForwardProp: (prop) => prop !== 'condition'
+})<ConditionChipProps>(({ theme, condition }) => ({
   backgroundColor: condition === 'new' 
-    ? theme.palette.success.light 
-    : theme.palette.grey[300],
+    ? theme.palette.success?.light 
+    : theme.palette.grey?.[300],
   color: condition === 'new' 
-    ? theme.palette.success.contrastText 
-    : theme.palette.text.primary,
+    ? theme.palette.success?.contrastText 
+    : theme.palette.text?.primary,
   fontSize: '0.75rem',
   height: 24
-}));
+})) as React.ComponentType<ConditionChipProps & Omit<React.ComponentProps<typeof Chip>, 'condition'>>;
 
-const LocationText = styled(Typography)(({ theme }) => ({
+interface LocationTextProps {
+  children?: React.ReactNode;
+  variant?: any;
+}
+
+const LocationText = styled(Typography)<LocationTextProps>(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  color: theme.palette.text.secondary,
+  color: theme.palette.text?.secondary,
   fontSize: '0.875rem',
   marginTop: theme.spacing(0.5),
   '& svg': {
     fontSize: '1rem',
     marginRight: theme.spacing(0.5)
   }
-}));
+})) as React.ComponentType<LocationTextProps>;
 
-const ActionButtons = styled(Box)(({ theme }) => ({
+interface ActionButtonsProps {
+  children?: React.ReactNode;
+}
+
+const ActionButtons = styled(Box)<ActionButtonsProps>(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
@@ -104,18 +168,29 @@ const ActionButtons = styled(Box)(({ theme }) => ({
     alignItems: 'stretch',
     gap: theme.spacing(1)
   }
-}));
+})) as React.ComponentType<ActionButtonsProps>;
 
-const DateText = styled(Typography)(({ theme }) => ({
+interface DateTextProps {
+  children?: React.ReactNode;
+}
+
+const DateText = styled(Typography)<DateTextProps>(({ theme }) => ({
   fontSize: '0.75rem',
-  color: theme.palette.text.secondary,
+  color: theme.palette.text?.secondary,
   marginLeft: theme.spacing(1),
   [theme.breakpoints.down('sm')]: {
     marginLeft: 0
   }
-}));
+})) as React.ComponentType<DateTextProps>;
 
-const FavoriteButton = styled(IconButton)(({ theme }) => ({
+interface FavoriteButtonProps {
+  size?: 'small' | 'medium' | 'large';
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  'aria-label'?: string;
+  children?: React.ReactNode;
+}
+
+const FavoriteButton = styled(IconButton)<FavoriteButtonProps>(({ theme }) => ({
   position: 'absolute',
   top: theme.spacing(1),
   right: theme.spacing(1),
@@ -124,17 +199,23 @@ const FavoriteButton = styled(IconButton)(({ theme }) => ({
   '&:hover': {
     backgroundColor: 'rgba(255, 255, 255, 1)'
   }
-}));
+})) as React.ComponentType<FavoriteButtonProps>;
 
-const TruncatedTitle = styled(Typography)(({ theme }) => ({
+interface TruncatedTitleProps {
+  variant?: any;
+  component?: React.ElementType;
+  children?: React.ReactNode;
+}
+
+const TruncatedTitle = styled(Typography)<TruncatedTitleProps>(({ theme }) => ({
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   display: '-webkit-box',
   WebkitLineClamp: 2,
   WebkitBoxOrient: 'vertical'
-}));
+})) as React.ComponentType<TruncatedTitleProps>;
 
-const GISListingCard = ({ 
+const GISListingCard: React.FC<GISListingCardProps> = ({ 
   listing, 
   compact = false,
   isFavorite = false,
@@ -147,7 +228,7 @@ const GISListingCard = ({
   const navigate = useNavigate();
 
   // Handle different date-fns locales
-  const getLocale = () => {
+  const getLocale = (): Locale => {
     switch(i18n.language) {
       case 'ru': return ru;
       case 'en': return enUS;
@@ -156,7 +237,7 @@ const GISListingCard = ({
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString?: string): string => {
     try {
       if (!dateString) return '';
       
@@ -180,25 +261,25 @@ const GISListingCard = ({
     }
   };
 
-  const handleCardClick = () => {
+  const handleCardClick = (): void => {
     navigate(`/marketplace/listings/${listing.id}`);
   };
 
-  const handleFavoriteClick = (e) => {
+  const handleFavoriteClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     if (onFavoriteToggle) {
       onFavoriteToggle(listing.id, !isFavorite);
     }
   };
 
-  const handleShowOnMap = (e) => {
+  const handleShowOnMap = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     if (onShowOnMap) {
       onShowOnMap(listing);
     }
   };
 
-  const handleContactClick = (e) => {
+  const handleContactClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     if (onContactClick) {
       onContactClick(listing);
@@ -208,7 +289,7 @@ const GISListingCard = ({
   const placeholderImage = '/placeholder-listing.jpg';
   
   // Оптимизированная функция получения URL изображения, полностью совместимая с ListingCard
-  const getImageUrl = (imageData) => {
+  const getImageUrl = (imageData: string | ListingImage | undefined): string => {
     if (!imageData) {
       return placeholderImage;
     }

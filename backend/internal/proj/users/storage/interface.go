@@ -23,8 +23,17 @@ type ProfileRepository interface {
     UpdateLastSeen(ctx context.Context, id int) error
 }
 
+// AdminRepository определяет интерфейс для работы с администраторами
+type AdminRepository interface {
+    IsUserAdmin(ctx context.Context, email string) (bool, error)
+    GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error)
+    AddAdmin(ctx context.Context, admin *models.AdminUser) error
+    RemoveAdmin(ctx context.Context, email string) error
+}
+
 // Repository объединяет все репозитории для домена users
 type Repository interface {
     UserRepository
     ProfileRepository
+    AdminRepository
 }

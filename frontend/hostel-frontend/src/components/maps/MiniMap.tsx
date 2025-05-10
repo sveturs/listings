@@ -30,53 +30,76 @@ const MiniMap: React.FC<MiniMapProps> = ({ latitude, longitude, address }) => {
       console.log('Invalid map coordinates:', { latitude, longitude });
       return; // Пропускаем инициализацию карты, если координаты невалидны
     }
-    // Конвертируем строковые координаты в числа для точности
-    const lat = Number(latitude);
-    const lng = Number(longitude);
-    // Если карта уже инициализирована, удаляем её перед созданием новой
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
-    // Проверяем, существует ли DOM-элемент
-    if (!mapRef.current) {
-      console.log('Map container element not found');
-      return;
-    }
-    try {
-      // Создаем карту с защитой от ошибок
-      const map = L.map(mapRef.current, {
-        center: [lat, lng],
-        zoom: 13,
-        scrollWheelZoom: false,
-        dragging: false,
-        touchZoom: false,
-        doubleClickZoom: false,
-        boxZoom: false,
-        tap: false,
-        keyboard: false,
-        zoomControl: false,
-        attributionControl: false
-      });
-      mapInstanceRef.current = map;
-      // Добавляем OpenStreetMap тайлы
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
-      // Добавляем маркер
-      L.marker([lat, lng]).addTo(map);
-      
-      // Правильно обрабатываем очистку при размонтировании
-      return () => {
-        if (mapInstanceRef.current) {
+
+    // Добавляем небольшую задержку перед инициализацией карты, чтобы DOM успел полностью смонтироваться
+    const initMapTimer = setTimeout(() => {
+      // Конвертируем строковые координаты в числа для точности
+      const lat = Number(latitude);
+      const lng = Number(longitude);
+
+      // Если карта уже инициализирована, удаляем её перед созданием новой
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+
+      // Проверяем, существует ли DOM-элемент
+      if (!mapRef.current) {
+        console.log('Map container element not found');
+        return;
+      }
+
+      try {
+        // Создаем карту с защитой от ошибок и улучшенной производительностью
+        const map = L.map(mapRef.current, {
+          center: [lat, lng],
+          zoom: 13,
+          scrollWheelZoom: false,
+          dragging: false,
+          touchZoom: false,
+          doubleClickZoom: false,
+          boxZoom: false,
+          tap: false,
+          keyboard: false,
+          zoomControl: false,
+          attributionControl: false,
+          fadeAnimation: true,           // Плавные переходы прозрачности
+          zoomAnimation: true,           // Плавное масштабирование
+          markerZoomAnimation: true,     // Плавная анимация маркеров
+          preferCanvas: true,            // Использовать Canvas для лучшей производительности
+          renderer: L.canvas()            // Явно указываем Canvas renderer
+        });
+        mapInstanceRef.current = map;
+
+        // Добавляем OpenStreetMap тайлы с оптимизированными параметрами
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap contributors',
+          subdomains: 'abc',            // Распределение запросов
+          updateWhenIdle: true,         // Обновление тайлов только в состоянии покоя
+          updateWhenZooming: false,     // Отключаем обновление при масштабировании
+          keepBuffer: 2                 // Буфер тайлов
+        }).addTo(map);
+
+        // Добавляем маркер
+        L.marker([lat, lng]).addTo(map);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
+    }, 100); // задержка в 100мс
+
+    // Правильно обрабатываем очистку при размонтировании
+    return () => {
+      clearTimeout(initMapTimer);
+      if (mapInstanceRef.current) {
+        try {
           mapInstanceRef.current.remove();
-          mapInstanceRef.current = null;
+        } catch (err) {
+          console.error('Error removing map:', err);
         }
-      };
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
+        mapInstanceRef.current = null;
+      }
+    };
   }, [latitude, longitude]); // Пересоздаем карту только при изменении координат
 
   // Функция для открытия полноэкранной карты

@@ -1,12 +1,21 @@
-// frontend/hostel-frontend/src/components/maps/MapProvider.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// frontend/hostel-frontend/src/components/maps/MapProvider.ts
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import 'leaflet/dist/leaflet.css';
 
-// Создаем контекст для карты
-const MapContext = createContext(null);
+// Определяем интерфейс для контекста карты
+interface MapContextType {
+  isLoaded: boolean;
+}
 
-export const MapProvider = ({ children }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
+// Создаем контекст для карты
+const MapContext = createContext<MapContextType | null>(null);
+
+interface MapProviderProps {
+  children: ReactNode;
+}
+
+export const MapProvider: React.FC<MapProviderProps> = ({ children }) => {
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   // Эффект для подтверждения, что Leaflet доступен в браузере
   useEffect(() => {
@@ -24,7 +33,7 @@ export const MapProvider = ({ children }) => {
       const shadowUrl = 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png';
       
       // Предзагрузка изображений
-      const preloadImage = (url) => {
+      const preloadImage = (url: string): void => {
         const img = new Image();
         img.src = url;
       };
@@ -51,7 +60,7 @@ export const MapProvider = ({ children }) => {
   );
 };
 
-export const useMap = () => {
+export const useMap = (): MapContextType => {
   const context = useContext(MapContext);
   if (!context) {
     throw new Error('useMap must be used within a MapProvider');

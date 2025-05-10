@@ -233,122 +233,152 @@ const FullscreenMap: React.FC<FullscreenMapProps> = ({ latitude, longitude, titl
     // Проверяем условия внутри хука
     if (!hasCoordinates || !mapContainerRef.current) return;
 
-    // Инициализируем карту только если её еще нет
-    if (!mapRef.current) {
-      mapRef.current = L.map(mapContainerRef.current).setView([latitude, longitude], 15);
+    // Добавляем небольшую задержку перед инициализацией карты, чтобы DOM успел полностью смонтироваться
+    const initMapTimer = setTimeout(() => {
+      // Инициализируем карту только если её еще нет
+      if (!mapRef.current) {
+        try {
+          // Создаем карту с улучшенными параметрами для более плавного зума
+          mapRef.current = L.map(mapContainerRef.current!, {
+            zoomAnimation: true,         // Включаем анимацию зума
+            fadeAnimation: true,         // Включаем анимацию прозрачности
+            markerZoomAnimation: true,   // Анимация маркеров при зуме
+            zoom: 15,                    // Начальный уровень масштабирования
+            center: [latitude, longitude], // Начальный центр
+            zoomSnap: 0.5,               // Более плавный зум (шаг масштабирования)
+            zoomDelta: 0.5,              // Меньший шаг колесика мыши
+            wheelDebounceTime: 40,       // Уменьшаем задержку колесика мыши
+            wheelPxPerZoomLevel: 60,     // Больше пикселей на уровень масштаба
+            preferCanvas: true,          // Использовать Canvas для лучшей производительности
+            renderer: L.canvas()          // Явно указываем Canvas renderer
+          });
 
-      // Добавляем слой тайлов OpenStreetMap
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      }).addTo(mapRef.current);
+          // Добавляем слой тайлов OpenStreetMap с улучшенными параметрами для плавности
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+            subdomains: 'abc',        // Используем все поддомены для распределения запросов
+            updateWhenIdle: true,     // Обновляем тайлы только когда карта неподвижна
+            updateWhenZooming: false, // Не обновляем тайлы во время масштабирования
+            keepBuffer: 4             // Сохраняем больше тайлов в буфере
+          }).addTo(mapRef.current);
 
-      // Если есть список маркеров, добавляем их
-      if (markers && markers.length > 0) {
-        const markerGroup = L.featureGroup();
+          // Если есть список маркеров, добавляем их
+          if (markers && markers.length > 0) {
+            const markerGroup = L.featureGroup();
 
-        markers.forEach(marker => {
-          const leafletMarker = L.marker([marker.latitude, marker.longitude]);
+            markers.forEach(marker => {
+              const leafletMarker = L.marker([marker.latitude, marker.longitude]);
 
-          // Если у маркера есть всплывающая подсказка
-          if (marker.tooltip) {
-            leafletMarker.bindTooltip(marker.tooltip);
+              // Если у маркера есть всплывающая подсказка
+              if (marker.tooltip) {
+                leafletMarker.bindTooltip(marker.tooltip);
+              }
+
+              // Обработчик клика по маркеру для показа карточки
+              leafletMarker.on('click', () => {
+                // Если у маркера есть полные данные объявления
+                if (marker.listing) {
+                  setSelectedListing(marker.listing);
+                }
+                // Если есть только ID, то можно запросить данные с сервера
+                else if (marker.id) {
+                  // Перенаправляем на страницу объявления
+                  navigate(`/marketplace/listings/${marker.id}`);
+                }
+                // Если нет полных данных, но есть заголовок, показываем его в попапе
+                else if (marker.title) {
+                  leafletMarker.bindPopup(marker.title).openPopup();
+                }
+              });
+
+              leafletMarker.addTo(mapRef.current!);
+              markerGroup.addLayer(leafletMarker);
+            });
+
+            // Масштабируем карту, чтобы видеть все маркеры
+            if (markers.length > 1) {
+              mapRef.current.fitBounds(markerGroup.getBounds(), {
+                padding: [50, 50],
+                maxZoom: 15
+              });
+            }
+          } else if (title) {
+            // Если маркеров нет, но есть центральная точка с заголовком
+            const marker = L.marker([latitude, longitude]).addTo(mapRef.current);
+            marker.bindPopup(title);
           }
+        } catch (error) {
+          console.error("Ошибка при инициализации карты:", error);
+          setError("Ошибка при инициализации карты");
+        }
+      } else {
+        try {
+          // Если карта уже существует, обновляем вид и маркеры
+          console.log("Обновление карты с координатами:", [latitude, longitude]);
+          // Обновляем центр и масштаб карты
+          mapRef.current.setView([latitude, longitude], 15);
 
-          // Обработчик клика по маркеру для показа карточки
-          leafletMarker.on('click', () => {
-            // Если у маркера есть полные данные объявления
-            if (marker.listing) {
-              setSelectedListing(marker.listing);
-            }
-            // Если есть только ID, то можно запросить данные с сервера
-            else if (marker.id) {
-              // Перенаправляем на страницу объявления
-              navigate(`/marketplace/listings/${marker.id}`);
-            }
-            // Если нет полных данных, но есть заголовок, показываем его в попапе
-            else if (marker.title) {
-              leafletMarker.bindPopup(marker.title).openPopup();
+          // Сначала очищаем все существующие маркеры
+          mapRef.current.eachLayer(layer => {
+            if (layer instanceof L.Marker) {
+              mapRef.current!.removeLayer(layer);
             }
           });
 
-          leafletMarker.addTo(mapRef.current!);
-          markerGroup.addLayer(leafletMarker);
-        });
+          // Затем добавляем новые маркеры
+          if (markers && markers.length > 0) {
+            const markerGroup = L.featureGroup();
 
-        // Масштабируем карту, чтобы видеть все маркеры
-        if (markers.length > 1) {
-          mapRef.current.fitBounds(markerGroup.getBounds(), {
-            padding: [50, 50],
-            maxZoom: 15
-          });
-        }
-      } else if (title) {
-        // Если маркеров нет, но есть центральная точка с заголовком
-        const marker = L.marker([latitude, longitude]).addTo(mapRef.current);
-        marker.bindPopup(title);
-      }
-    } else {
-      // Если карта уже существует, обновляем вид и маркеры
-      console.log("Обновление карты с координатами:", [latitude, longitude]);
-      // Обновляем центр и масштаб карты
-      mapRef.current.setView([latitude, longitude], 15);
+            markers.forEach(marker => {
+              const leafletMarker = L.marker([marker.latitude, marker.longitude]);
 
-      // Сначала очищаем все существующие маркеры
-      mapRef.current.eachLayer(layer => {
-        if (layer instanceof L.Marker) {
-          mapRef.current!.removeLayer(layer);
-        }
-      });
+              if (marker.tooltip) {
+                leafletMarker.bindTooltip(marker.tooltip);
+              }
 
-      // Затем добавляем новые маркеры
-      if (markers && markers.length > 0) {
-        const markerGroup = L.featureGroup();
+              // Обработчик клика по маркеру для показа карточки
+              leafletMarker.on('click', () => {
+                // Если у маркера есть полные данные объявления
+                if (marker.listing) {
+                  setSelectedListing(marker.listing);
+                }
+                // Если есть только ID, то можно запросить данные с сервера
+                else if (marker.id) {
+                  // Перенаправляем на страницу объявления
+                  navigate(`/marketplace/listings/${marker.id}`);
+                }
+                // Если нет полных данных, но есть заголовок, показываем его в попапе
+                else if (marker.title) {
+                  leafletMarker.bindPopup(marker.title).openPopup();
+                }
+              });
 
-        markers.forEach(marker => {
-          const leafletMarker = L.marker([marker.latitude, marker.longitude]);
+              leafletMarker.addTo(mapRef.current!);
+              markerGroup.addLayer(leafletMarker);
+            });
 
-          if (marker.tooltip) {
-            leafletMarker.bindTooltip(marker.tooltip);
+            // Масштабируем карту, чтобы видеть все маркеры
+            if (markers.length > 1) {
+              mapRef.current.fitBounds(markerGroup.getBounds(), {
+                padding: [50, 50],
+                maxZoom: 15
+              });
+            }
+          } else if (title) {
+            // Если маркеров нет, но есть центральная точка с заголовком
+            const marker = L.marker([latitude, longitude]).addTo(mapRef.current);
+            marker.bindPopup(title);
           }
-
-          // Обработчик клика по маркеру для показа карточки
-          leafletMarker.on('click', () => {
-            // Если у маркера есть полные данные объявления
-            if (marker.listing) {
-              setSelectedListing(marker.listing);
-            }
-            // Если есть только ID, то можно запросить данные с сервера
-            else if (marker.id) {
-              // Перенаправляем на страницу объявления
-              navigate(`/marketplace/listings/${marker.id}`);
-            }
-            // Если нет полных данных, но есть заголовок, показываем его в попапе
-            else if (marker.title) {
-              leafletMarker.bindPopup(marker.title).openPopup();
-            }
-          });
-
-          leafletMarker.addTo(mapRef.current!);
-          markerGroup.addLayer(leafletMarker);
-        });
-
-        // Масштабируем карту, чтобы видеть все маркеры
-        if (markers.length > 1) {
-          mapRef.current.fitBounds(markerGroup.getBounds(), {
-            padding: [50, 50],
-            maxZoom: 15
-          });
+        } catch (error) {
+          console.error("Ошибка при обновлении карты:", error);
         }
-      } else if (title) {
-        // Если маркеров нет, но есть центральная точка с заголовком
-        const marker = L.marker([latitude, longitude]).addTo(mapRef.current);
-        marker.bindPopup(title);
       }
-    }
+    }, 100); // Задержка в 100 мс для полной инициализации DOM
 
     // Очистка при размонтировании компонента
     return () => {
+      clearTimeout(initMapTimer);
       if (mapRef.current) {
         try {
           mapRef.current.remove();

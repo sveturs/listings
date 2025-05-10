@@ -30,17 +30,21 @@ import {
   ViewList as ViewListIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import GISListingCard from './GISListingCard';
+import GISListingCard, { GISListing } from './GISListingCard';
 
 // Width of the drawer - full width on the page
 const drawerWidth = 400;
 
-const ResultsDrawer = styled(Box)(({ theme }) => ({
+interface ResultsDrawerProps {
+  children?: React.ReactNode;
+}
+
+const ResultsDrawer = styled(Box)<ResultsDrawerProps>(({ theme }) => ({
   width: drawerWidth,
   height: '100%',
   flexShrink: 0,
   position: 'relative',
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.palette.background?.paper,
   boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
   borderRight: `1px solid ${theme.palette.divider}`,
   zIndex: 10,
@@ -53,30 +57,54 @@ const ResultsDrawer = styled(Box)(({ theme }) => ({
     width: '100%',
     zIndex: 1000
   }
-}));
+})) as React.ComponentType<ResultsDrawerProps>;
 
-const DrawerContent = styled(Box)(({ theme }) => ({
+interface DrawerContentProps {
+  children?: React.ReactNode;
+}
+
+const DrawerContent = styled(Box)<DrawerContentProps>(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   height: '100%'
-}));
+})) as React.ComponentType<DrawerContentProps>;
 
-const DrawerHeader = styled(Box)(({ theme }) => ({
+interface DrawerHeaderProps {
+  children?: React.ReactNode;
+}
+
+const DrawerHeader = styled(Box)<DrawerHeaderProps>(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: theme.spacing(1, 2),
   // necessary for content to be below app bar
   ...theme.mixins.toolbar
-}));
+})) as React.ComponentType<DrawerHeaderProps>;
 
-const ListingsContainer = styled(Box)(({ theme }) => ({
+interface ListingsContainerProps {
+  children?: React.ReactNode;
+}
+
+const ListingsContainer = styled(Box)<ListingsContainerProps>(({ theme }) => ({
   flexGrow: 1,
   padding: theme.spacing(2),
   overflowY: 'auto'
-}));
+})) as React.ComponentType<ListingsContainerProps>;
 
-const ToggleDrawerButton = styled(Fab)(({ theme, drawerOpen }) => ({
+interface ToggleDrawerButtonProps {
+  drawerOpen?: boolean;
+  color?: string;
+  'aria-label'?: string;
+  onClick?: () => void;
+  size?: 'small' | 'medium' | 'large';
+  sx?: object;
+  children?: React.ReactNode;
+}
+
+const ToggleDrawerButton = styled(Fab, {
+  shouldForwardProp: (prop) => prop !== 'drawerOpen'
+})<ToggleDrawerButtonProps>(({ theme, drawerOpen }) => ({
   position: 'fixed', // Use fixed positioning to keep it visible regardless of drawer state
   top: theme.spacing(10), // Position below the top app bar
   left: drawerOpen ? drawerWidth : theme.spacing(2), // If drawer is open, place at edge of drawer, otherwise near left edge
@@ -87,9 +115,13 @@ const ToggleDrawerButton = styled(Fab)(({ theme, drawerOpen }) => ({
   [theme.breakpoints.down('md')]: {
     display: 'none'
   }
-}));
+})) as React.ComponentType<ToggleDrawerButtonProps>;
 
-const MobileDrawerToggle = styled(Paper)(({ theme }) => ({
+interface MobileDrawerToggleProps {
+  children?: React.ReactNode;
+}
+
+const MobileDrawerToggle = styled(Paper)<MobileDrawerToggleProps>(({ theme }) => ({
   position: 'absolute',
   bottom: theme.spacing(12),
   left: '50%',
@@ -99,13 +131,38 @@ const MobileDrawerToggle = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(0.5),
   borderRadius: theme.spacing(3),
   boxShadow: theme.shadows[3]
-}));
+})) as React.ComponentType<MobileDrawerToggleProps>;
 
-const ViewToggleButtons = styled(ToggleButtonGroup)(({ theme }) => ({
+interface ViewToggleButtonsProps {
+  value?: string;
+  exclusive?: boolean;
+  onChange?: (event: React.MouseEvent<HTMLElement>, value: string | null) => void;
+  'aria-label'?: string;
+  size?: 'small' | 'medium' | 'large';
+  children?: React.ReactNode;
+}
+
+const ViewToggleButtons = styled(ToggleButtonGroup)<ViewToggleButtonsProps>(({ theme }) => ({
   marginLeft: theme.spacing(2)
-}));
+})) as React.ComponentType<ViewToggleButtonsProps>;
 
-const GISResultsDrawer = ({ 
+interface GISResultsDrawerProps {
+  open: boolean;
+  onToggleDrawer: () => void;
+  listings?: GISListing[];
+  loading?: boolean;
+  onShowOnMap?: (listing: GISListing) => void;
+  onFilterClick?: () => void;
+  onSortClick?: () => void;
+  onRefresh?: () => void;
+  favoriteListings?: (number | string)[];
+  onFavoriteToggle?: (id: number | string, isFavorite: boolean) => void;
+  onContactClick?: (listing: GISListing) => void;
+  totalCount?: number;
+  expandToEdge?: boolean;
+}
+
+const GISResultsDrawer: React.FC<GISResultsDrawerProps> = ({ 
   open, 
   onToggleDrawer, 
   listings = [], 
@@ -123,9 +180,9 @@ const GISResultsDrawer = ({
   const { t } = useTranslation('gis');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [viewType, setViewType] = useState('list');
+  const [viewType, setViewType] = useState<string>('list');
 
-  const handleViewTypeChange = (event, newViewType) => {
+  const handleViewTypeChange = (_event: React.MouseEvent<HTMLElement>, newViewType: string | null): void => {
     if (newViewType !== null) {
       setViewType(newViewType);
     }
@@ -237,8 +294,8 @@ const GISResultsDrawer = ({
       )}
 
       {/* Always show the toggle button */}
-      {isMobile ? (
-        <Zoom in={!open}>
+      {isMobile ?
+        <Zoom in={!open} children={
           <MobileDrawerToggle>
             <Button
               startIcon={<ListIcon />}
@@ -249,8 +306,8 @@ const GISResultsDrawer = ({
               {totalCount > 0 && ` (${totalCount})`}
             </Button>
           </MobileDrawerToggle>
-        </Zoom>
-      ) : (
+        } />
+       :
         <Fab
           color="primary"
           aria-label={open ? t('drawer.close') : t('drawer.open')}
@@ -266,7 +323,7 @@ const GISResultsDrawer = ({
         >
           {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </Fab>
-      )}
+      }
     </>
   );
 };

@@ -28,6 +28,12 @@ type Storage interface {
 	UpdateUserStatus(ctx context.Context, id int, status string) error
 	DeleteUser(ctx context.Context, id int) error
 
+	// Методы для работы с администраторами
+	IsUserAdmin(ctx context.Context, email string) (bool, error)
+	GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error)
+	AddAdmin(ctx context.Context, admin *models.AdminUser) error
+	RemoveAdmin(ctx context.Context, email string) error
+
 	// Reviews
 	CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)
 	GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)

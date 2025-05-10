@@ -501,7 +501,7 @@ const PublicStorefrontPage: React.FC = () => {
                             <Typography variant="h6" component="h3" sx={{ mb: 2 }}>
                                 {t('marketplace:store.highlightedListing', { defaultValue: 'Выбранное объявление' })}
                             </Typography>
-                            <Paper elevation={1} sx={{ p: 2, mb: 2, bgcolor: theme.palette.primary.light + '22' }}>
+                            <Paper elevation={1} sx={{ p: 2, mb: 2, bgcolor: theme.palette.primary?.light + '22' }}>
                                 {viewMode === 'grid' ? (
                                     <Grid container>
                                         <Grid item xs={12} sm={6} md={4}>

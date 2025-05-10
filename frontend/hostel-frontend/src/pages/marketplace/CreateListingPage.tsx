@@ -516,7 +516,7 @@ const CreateListing: React.FC = () => {
                                 {/* Google Translate limits information */}
                                 {translationProvider === 'google' && (
                                     <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Info size={16} color={theme.palette.info.main} />
+                                        <Info size={16} color={theme.palette.info?.main} />
                                         <Typography variant="caption" color="text.secondary">
                                             {loadingLimits ? (
                                                 <CircularProgress size={12} />

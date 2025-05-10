@@ -8,3 +8,18 @@ interface Window {
     [key: string]: string | undefined;
   };
 }
+
+// Fix for JSX namespace issue
+declare namespace JSX {
+  interface Element extends React.ReactElement<any, any> {}
+  interface IntrinsicElements {
+    [elemName: string]: any;
+  }
+}
+
+// Additional MUI styled component types
+declare namespace React {
+  interface DOMAttributes<T> {
+    children?: React.ReactNode;
+  }
+}

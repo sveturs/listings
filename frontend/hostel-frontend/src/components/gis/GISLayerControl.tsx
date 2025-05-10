@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ChangeEvent, MouseEvent, SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -23,7 +23,23 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
-const LayerCard = styled(Card)(({ theme }) => ({
+export type LayerType = 'standard' | 'satellite' | 'terrain' | 'traffic' | 'heatmap' | 'carto';
+
+interface GISLayerControlProps {
+  layers: LayerType;
+  onLayerChange?: (layer: LayerType) => void;
+  clusterMarkers: boolean;
+  onClusteringToggle?: (clustered: boolean) => void;
+  onClose?: () => void;
+  minimized?: boolean;
+  onToggleMinimize?: () => void;
+}
+
+interface LayerCardProps {
+  children?: React.ReactNode;
+}
+
+const LayerCard = styled(Card)<LayerCardProps>(({ theme }) => ({
   position: 'absolute',
   zIndex: 1000,
   bottom: theme.spacing(2),
@@ -35,9 +51,17 @@ const LayerCard = styled(Card)(({ theme }) => ({
     width: 'calc(100% - 16px)',
     maxWidth: 250
   }
-}));
+})) as React.ComponentType<LayerCardProps>;
 
-const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
+interface StyledToggleButtonGroupProps {
+  value?: string;
+  exclusive?: boolean;
+  onChange?: (event: React.MouseEvent<HTMLElement>, value: any) => void;
+  'aria-label'?: string;
+  children?: React.ReactNode;
+}
+
+const StyledToggleButtonGroup = styled(ToggleButtonGroup)<StyledToggleButtonGroupProps>(({ theme }) => ({
   display: 'flex',
   flexWrap: 'wrap',
   justifyContent: 'center',
@@ -54,9 +78,15 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
     minWidth: 50,
     padding: theme.spacing(0.5)
   },
-}));
+})) as React.ComponentType<StyledToggleButtonGroupProps>;
 
-const LayerToggleButton = styled(ToggleButton)(({ theme }) => ({
+interface LayerToggleButtonProps {
+  value: string;
+  'aria-label'?: string;
+  children?: React.ReactNode;
+}
+
+const LayerToggleButton = styled(ToggleButton)<LayerToggleButtonProps>(({ theme }) => ({
   width: 70,
   height: 70,
   flexDirection: 'column',
@@ -67,9 +97,9 @@ const LayerToggleButton = styled(ToggleButton)(({ theme }) => ({
   '& .MuiTypography-root': {
     fontSize: 12
   }
-}));
+})) as React.ComponentType<LayerToggleButtonProps>;
 
-const GISLayerControl = ({ 
+const GISLayerControl: React.FC<GISLayerControlProps> = ({ 
   layers, 
   onLayerChange, 
   clusterMarkers, 
@@ -80,13 +110,13 @@ const GISLayerControl = ({
 }) => {
   const { t } = useTranslation('gis');
 
-  const handleLayerChange = (event, newLayer) => {
+  const handleLayerChange = (_event: MouseEvent<HTMLElement>, newLayer: LayerType | null) => {
     if (newLayer && onLayerChange) {
       onLayerChange(newLayer);
     }
   };
 
-  const handleClusteringToggle = (event) => {
+  const handleClusteringToggle = (event: ChangeEvent<HTMLInputElement>) => {
     if (onClusteringToggle) {
       onClusteringToggle(event.target.checked);
     }
@@ -139,25 +169,30 @@ const GISLayerControl = ({
             <MapIcon />
             <Typography>{t('layers.standard')}</Typography>
           </LayerToggleButton>
-          
+
           <LayerToggleButton value="satellite" aria-label="satellite map">
             <SatelliteIcon />
             <Typography>{t('layers.satellite')}</Typography>
           </LayerToggleButton>
-          
+
           <LayerToggleButton value="terrain" aria-label="terrain map">
             <TerrainIcon />
             <Typography>{t('layers.terrain')}</Typography>
           </LayerToggleButton>
-          
+
           <LayerToggleButton value="traffic" aria-label="traffic map">
             <TrafficIcon />
             <Typography>{t('layers.traffic')}</Typography>
           </LayerToggleButton>
-          
+
           <LayerToggleButton value="heatmap" aria-label="heatmap">
             <HeatmapIcon />
             <Typography>{t('layers.heatmap')}</Typography>
+          </LayerToggleButton>
+
+          <LayerToggleButton value="carto" aria-label="carto map">
+            <MapIcon color="primary" />
+            <Typography>{t('layers.carto') || 'CartoDB'}</Typography>
           </LayerToggleButton>
         </StyledToggleButtonGroup>
         

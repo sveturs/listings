@@ -532,8 +532,8 @@ const MarketplaceListingsList: React.FC<MarketplaceListingsListProps> = ({
                                                         </Typography>
                                                         <Star
                                                             size={16}
-                                                            fill={listing.average_rating && listing.average_rating > 0 ? theme.palette.warning.main : 'none'}
-                                                            color={listing.average_rating && listing.average_rating > 0 ? theme.palette.warning.main : theme.palette.text.disabled}
+                                                            fill={listing.average_rating && listing.average_rating > 0 ? theme.palette.warning?.main : 'none'}
+                                                            color={listing.average_rating && listing.average_rating > 0 ? theme.palette.warning?.main : theme.palette.text?.disabled}
                                                         />
                                                     </Box>
                                                     <Typography variant="caption" color="text.secondary">

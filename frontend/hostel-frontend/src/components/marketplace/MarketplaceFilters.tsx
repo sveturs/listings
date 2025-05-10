@@ -42,7 +42,6 @@ interface FilterOptions {
   condition?: '' | 'new' | 'used';
   latitude?: number;
   longitude?: number;
-  attributeFilters?: AttributeFiltersType;
   [key: string]: any; // For dynamic attribute filters
 }
 
@@ -55,13 +54,13 @@ interface MarketplaceFiltersProps {
   onFilterChange: (newFilters: FilterOptions | ((prevFilters: FilterOptions) => FilterOptions)) => void;
   selectedCategoryId: number | string | null;
   onToggleMapView: () => void;
-  setSearchParams: (params: any) => void;
+  setSearchParams: (params: Record<string, string>) => void;
   fetchListings: () => void;
   viewMode: 'grid' | 'list';
   handleViewModeChange: (event: React.MouseEvent<HTMLElement>, newViewMode: 'grid' | 'list' | null) => void;
 }
 
-const CompactMarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
+const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
     filters,
     onFilterChange,
     selectedCategoryId,
@@ -73,12 +72,8 @@ const CompactMarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
 }) => {
     const { t } = useTranslation(['marketplace', 'common']);
     const { userLocation, detectUserLocation } = useLocation();
-    const [attributeFilters, setAttributeFilters] = useState<AttributeFiltersType>({});
-
-    const handleSearchChange = useCallback((value: string): void => {
-        onFilterChange({ ...filters, query: value });
-    }, [filters, onFilterChange]);
-
+    
+    // Обработчик для выбора категории
     const handleCategorySelect = useCallback((id: number | string): void => {
         console.log(`MarketplaceFilters: Выбрана категория с ID: ${id}`);
 
@@ -105,10 +100,6 @@ const CompactMarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
             return updated;
         });
     }, [onFilterChange]);
-
-    const resetAttributeFilters = useCallback((): void => {
-        handleFilterChange({ attributeFilters: {} });
-    }, [handleFilterChange]);
 
     const handleDistanceChange = async (value: string): Promise<void> => {
         // Если выбрано расстояние, но нет координат, используем геолокацию
@@ -295,7 +286,7 @@ const CompactMarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
                 borderColor: 'divider'
             }}>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    {t('listings.create.сategories')}                     {selectedCategoryId}
+                    {t('listings.create.categories')}
                 </Typography>
                 <VirtualizedCategoryTree
                     selectedId={selectedCategoryId}
@@ -306,4 +297,4 @@ const CompactMarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
     );
 };
 
-export default React.memo(CompactMarketplaceFilters);
+export default React.memo(MarketplaceFilters);
