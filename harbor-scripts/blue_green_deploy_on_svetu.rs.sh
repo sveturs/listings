@@ -1,6 +1,6 @@
 #!/bin/bash
 # Улучшенный скрипт для blue-green deployment с поддержкой всех сервисов
-# Использование: ./blue_green_deploy_on_svetu.rs.sh [backend|frontend|all]
+# Использование: ./blue_green_deploy_on_svetu.rs.sh [backend|frontend|all] [-m]
 
 set -e
 
@@ -25,6 +25,13 @@ PROD_SERVER_USER="root"
 PROD_SERVER_PATH="/opt/hostel-booking-system"
 LOCAL_BACKEND_DIR="/data/hostel-booking-system/backend"
 LOCAL_FRONTEND_DIR="/data/hostel-booking-system/frontend/hostel-frontend"
+
+# Проверяем флаг миграций
+RUN_MIGRATIONS=false
+if [[ "$2" == "-m" ]]; then
+  RUN_MIGRATIONS=true
+  echo -e "${YELLOW}Включен режим миграций. После деплоя будут применены миграции базы данных.${NC}"
+fi
 
 # Текущая дата и время для тегов
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
@@ -105,6 +112,13 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+# Проверяем параметры
+RUN_MIGRATIONS=false
+if [[ "$1" == "run-migrations" ]]; then
+  RUN_MIGRATIONS=true
+  echo -e "${YELLOW}Включен режим миграций. После деплоя будут применены миграции базы данных.${NC}"
+fi
 
 # Создаем рабочую директорию
 WORK_DIR="/tmp/bluegreen"
@@ -600,6 +614,101 @@ else
   echo -e "${YELLOW}Для ручного запуска выполните: docker start hostel_nginx${NC}"
 fi
 
+# Если все проверки прошли успешно, мы можем запустить миграции, если был передан флаг
+if [ "$RUN_MIGRATIONS" = "true" ]; then
+  echo -e "${YELLOW}Запуск миграций...${NC}"
+  
+  # Клонируем репозиторий во временную директорию для получения актуальных миграций
+  TEMP_DIR="/tmp/svetu-migrations"
+  rm -rf $TEMP_DIR
+  mkdir -p $TEMP_DIR
+
+  # Проверяем наличие токена GitHub
+  GITHUB_TOKEN_FILE="/root/.github_token"
+
+  if [ -f "$GITHUB_TOKEN_FILE" ]; then
+    # Используем токен из защищенного файла
+    GITHUB_TOKEN=$(cat $GITHUB_TOKEN_FILE)
+    echo -e "${YELLOW}Получение свежих миграций из GitHub с использованием токена...${NC}"
+    git clone --depth 1 https://${GITHUB_TOKEN}@github.com/DmitruNS/hostel-booking-system.git $TEMP_DIR
+  else
+    echo -e "${RED}Ошибка: Не найден токен GitHub для аутентификации${NC}"
+    echo -e "${YELLOW}Для настройки доступа к GitHub, выполните следующие команды на сервере:${NC}"
+    echo -e "${YELLOW}  echo \"ваш_github_токен\" > $GITHUB_TOKEN_FILE${NC}"
+    echo -e "${YELLOW}  chmod 600 $GITHUB_TOKEN_FILE${NC}"
+    echo -e "${YELLOW}Миграции пропущены из-за отсутствия доступа к репозиторию.${NC}"
+    # Пропускаем миграции, но продолжаем работу скрипта
+    echo -e "${YELLOW}Продолжаем выполнение скрипта без применения миграций...${NC}"
+    RUN_MIGRATIONS=false
+  fi
+  
+  # Если флаг RUN_MIGRATIONS изменен на false, пропускаем дальнейшие действия
+  if [ "$RUN_MIGRATIONS" = "false" ]; then
+    echo -e "${YELLOW}Пропускаем миграции по указанным выше причинам.${NC}"
+  else
+    # Проверяем результат клонирования
+    CLONE_RESULT=$?
+    if [ $CLONE_RESULT -ne 0 ]; then
+      echo -e "${RED}Ошибка при клонировании репозитория!${NC}"
+      echo -e "${RED}Проверьте токен в $GITHUB_TOKEN_FILE и доступность репозитория.${NC}"
+      # Пропускаем миграции при ошибке клонирования
+      echo -e "${YELLOW}Продолжаем выполнение скрипта без применения миграций...${NC}"
+      RUN_MIGRATIONS=false
+    else
+    # Создаем директорию для миграций, если её нет
+    mkdir -p /opt/hostel-booking-system/backend/migrations
+
+    # Проверяем, что директория с миграциями существует в клонированном репозитории
+    if [ ! -d "$TEMP_DIR/backend/migrations" ]; then
+      echo -e "${RED}Ошибка: В репозитории не найдена директория с миграциями!${NC}"
+      echo -e "${YELLOW}Продолжаем выполнение скрипта без применения миграций...${NC}"
+      RUN_MIGRATIONS=false
+    fi
+
+    # Проверяем наличие миграций в репозитории (только если флаг RUN_MIGRATIONS всё еще true)
+    if [ "$RUN_MIGRATIONS" = "true" ]; then
+      MIGRATION_COUNT=$(ls -1 $TEMP_DIR/backend/migrations/*.up.sql 2>/dev/null | wc -l)
+      if [ "$MIGRATION_COUNT" -eq "0" ]; then
+        echo -e "${YELLOW}Предупреждение: В репозитории не найдены файлы миграций (.up.sql).${NC}"
+        echo -e "${YELLOW}Миграции не будут применены.${NC}"
+        echo -e "${YELLOW}Продолжаем выполнение скрипта без применения миграций...${NC}"
+        RUN_MIGRATIONS=false
+      fi
+    fi
+
+    # Копируем все файлы миграций из репозитория, только если RUN_MIGRATIONS всё еще true
+    if [ "$RUN_MIGRATIONS" = "true" ]; then
+      echo -e "${YELLOW}Копирование файлов миграций из репозитория...${NC}"
+      cp -f $TEMP_DIR/backend/migrations/*.up.sql /opt/hostel-booking-system/backend/migrations/
+    fi
+    
+    # Запускаем миграции только если флаг всё еще true
+    if [ "$RUN_MIGRATIONS" = "true" ]; then
+      echo -e "${YELLOW}Запуск контейнера migrate/migrate для выполнения миграций...${NC}"
+      docker run --rm --network $HOSTEL_NETWORK \
+        -v /opt/hostel-booking-system/backend/migrations:/migrations \
+        migrate/migrate \
+        -path=/migrations/ \
+        -database="postgres://postgres:c9XWc7Cm@$DB_CONTAINER:5432/hostel_db?sslmode=disable" \
+        up
+
+      # Проверяем статус выполнения
+      MIGRATION_RESULT=$?
+      if [ $MIGRATION_RESULT -ne 0 ]; then
+        echo -e "${RED}Ошибка при выполнении миграций!${NC}"
+        echo -e "${YELLOW}Тем не менее, продолжаем выполнение скрипта...${NC}"
+      else
+        echo -e "${GREEN}Миграции успешно выполнены!${NC}"
+      fi
+    else
+      echo -e "${YELLOW}Миграции пропущены.${NC}"
+    fi
+
+    # Очистка временных файлов, независимо от статуса миграций
+    rm -rf $TEMP_DIR
+  fi
+fi
+
 # Если проверки прошли успешно, останавливаем старый контейнер
 if [ "$CURRENT_COLOR" = "original" ]; then
   echo -e "${YELLOW}Останавливаем оригинальный контейнер backend...${NC}"
@@ -621,11 +730,17 @@ EOT
   # Делаем скрипт исполняемым
   chmod +x /tmp/server_deploy.sh
 
+  # Добавляем параметр миграций
+  MIGRATIONS_PARAM=""
+  if [ "$RUN_MIGRATIONS" = "true" ]; then
+    MIGRATIONS_PARAM="run-migrations"
+  fi
+
   # Отправляем скрипт на сервер
   scp /tmp/server_deploy.sh $PROD_SERVER_USER@$PROD_SERVER:$PROD_SERVER_PATH/server_deploy.sh
 
   # Запускаем скрипт на сервере
-  ssh $PROD_SERVER_USER@$PROD_SERVER "cd $PROD_SERVER_PATH && chmod +x server_deploy.sh && ./server_deploy.sh"
+  ssh $PROD_SERVER_USER@$PROD_SERVER "cd $PROD_SERVER_PATH && chmod +x server_deploy.sh && ./server_deploy.sh $MIGRATIONS_PARAM"
 
   # Удаляем временный скрипт
   rm /tmp/server_deploy.sh
