@@ -20,14 +20,24 @@ export const checkAdminStatus = async (email: string | null | undefined): Promis
     }
 
     try {
-        const response = await axios.get<AdminCheckResponse>(`/api/v1/admin/admins/check/${email}`);
+        // URL эндпоинта API для проверки администратора (новый публичный эндпоинт)
+        const response = await axios.get<AdminCheckResponse>(`/api/v1/admin-check/${email}`);
         const isAdmin = response.data.is_admin;
 
         // Сохраняем результат в кеш
         adminStatusCache.set(email, isAdmin);
 
         return isAdmin;
-    } catch (error) {
+    } catch (error: any) {
+        // Если ошибка авторизации (401) или доступа (403) - пользователь не админ
+        if (error.response && (error.response.status === 401 || error.response.status === 403 || error.response.status === 404)) {
+            console.log('User is not an admin or not authorized');
+            // Кешируем отрицательный результат
+            adminStatusCache.set(email, false);
+            return false;
+        }
+
+        // Другие ошибки логгируем
         console.error('Error checking admin status:', error);
         return false;
     }

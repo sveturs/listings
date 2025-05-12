@@ -169,6 +169,9 @@ func (s *Server) setupRoutes() {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
+	// Публичный маршрут для проверки статуса администратора (без авторизации и AdminRequired)
+	s.app.Get("/api/v1/admin-check/:email", s.users.User.IsAdminPublic)
+
 	s.app.Get("/listings/*", func(c *fiber.Ctx) error {
 		path := c.Params("*")
 		log.Printf("Serving MinIO file: %s", path)

@@ -5,7 +5,7 @@ import (
 	"backend/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 	//    "log"
-	//"context"
+	"context"
 )
 
 func (m *Middleware) AuthRequired(c *fiber.Ctx) error {
@@ -32,7 +32,10 @@ func (m *Middleware) AuthRequired(c *fiber.Ctx) error {
 
 	c.Locals("user_id", session.UserID)
 	c.Locals("session_token", sessionToken)
-
+	go func() {
+		ctx := context.Background()
+		_ = m.services.User().UpdateLastSeen(ctx, session.UserID)
+	}()
 	// Обновляем cookie при каждом запросе, чтобы сессия не истекала
 	c.Cookie(&fiber.Cookie{
 		Name:     "session_token",

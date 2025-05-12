@@ -155,3 +155,36 @@ func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
 		"is_admin": isAdmin,
 	})
 }
+
+// IsAdminPublic проверяет, является ли пользователь администратором (публичный метод без авторизации)
+// @Summary Публичная проверка статуса администратора
+// @Description Проверяет, является ли пользователь с указанным email администратором (без авторизации)
+// @Tags Admins
+// @Accept json
+// @Produce json
+// @Param email path string true "Email пользователя"
+// @Success 200 {object} fiber.Map
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/v1/admin-check/{email} [get]
+func (h *UserHandler) IsAdminPublic(c *fiber.Ctx) error {
+	ctx := context.Background()
+
+	// Получаем email из параметров пути
+	email := c.Params("email")
+	if email == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Email обязателен")
+	}
+
+	// Проверяем, является ли пользователь администратором
+	isAdmin, err := h.userService.IsUserAdmin(ctx, email)
+	if err != nil {
+		log.Printf("Error checking admin status: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при проверке статуса администратора")
+	}
+
+	return c.JSON(fiber.Map{
+		"email":    email,
+		"is_admin": isAdmin,
+	})
+}

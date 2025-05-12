@@ -109,3 +109,25 @@ func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
 		"created_at":  user.CreatedAt,
 	})
 }
+
+// IsAdminSimple проверяет, является ли пользователь администратором (простая реализация)
+func (h *UserHandler) IsAdminSimple(c *fiber.Ctx) error {
+	email := c.Params("email")
+	if email == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Email не указан")
+	}
+
+	// Получаем пользователя по email
+	user, err := h.userService.GetUserByEmail(c.Context(), email)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "Пользователь не найден")
+	}
+
+	// Проверяем, является ли пользователь администратором
+	// В этой простой версии считаем администраторами только пользователей с ID 1, 2, 3
+	isAdmin := user.ID == 1 || user.ID == 2 || user.ID == 3
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"is_admin": isAdmin,
+	})
+}

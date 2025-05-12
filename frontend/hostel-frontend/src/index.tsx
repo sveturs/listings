@@ -6,16 +6,15 @@ import './i18n/config';
 
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { CssBaseline } from '@mui/material';
-import { createTheme, Theme } from '@mui/material/styles';
 
 // Примечание: Глобальный тип window.ENV уже определен в src/types/global.d.ts
 
 console.log('Environment check:', window.ENV);
 
 // Создание темы Material UI
-const theme: Theme = createTheme({
+const theme = createTheme({
   // Кастомные настройки темы
   palette: {
     primary: {

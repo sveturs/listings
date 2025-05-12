@@ -2,14 +2,14 @@
 package handler
 
 import (
- 	"backend/pkg/utils"
-    globalService "backend/internal/proj/global/service"
-    "backend/internal/proj/users/service" 
+	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/users/service"
+	"backend/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 type AuthHandler struct {
-    services globalService.ServicesInterface
+	services    globalService.ServicesInterface
 	authService service.AuthServiceInterface
 }
 
@@ -86,39 +86,61 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	return c.Redirect(returnTo)
 }
 
+// backend/internal/proj/users/handler/auth.go
 func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
-    sessionToken := c.Cookies("session_token")
-    if sessionToken == "" {
-        return c.JSON(fiber.Map{
-            "authenticated": false,
-        })
-    }
+	sessionToken := c.Cookies("session_token")
+	if sessionToken == "" {
+		return c.JSON(fiber.Map{
+			"authenticated": false,
+		})
+	}
 
-    // Исправляем вызов метода GetSession, добавляя контекст
-    sessionData, err := h.services.Auth().GetSession(c.Context(), sessionToken)
-    if err != nil {
-        return c.JSON(fiber.Map{
-            "authenticated": false,
-        })
-    }
+	// Исправляем вызов метода GetSession, добавляя контекст
+	sessionData, err := h.services.Auth().GetSession(c.Context(), sessionToken)
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"authenticated": false,
+		})
+	}
 
-    // Проверяем на nil вместо проверки ошибки
-    if sessionData == nil {
-        return c.JSON(fiber.Map{
-            "authenticated": false,
-        })
-    }
+	// Проверяем на nil вместо проверки ошибки
+	if sessionData == nil {
+		return c.JSON(fiber.Map{
+			"authenticated": false,
+		})
+	}
 
-    return c.JSON(fiber.Map{
-        "authenticated": true,
-        "user": fiber.Map{
-            "id":          sessionData.UserID,
-            "name":        sessionData.Name,
-            "email":       sessionData.Email,
-            "provider":    sessionData.Provider,
-            "picture_url": sessionData.PictureURL,
-        },
-    })
+	// Проверяем, является ли пользователь администратором
+	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), sessionData.Email)
+	if err != nil {
+		isAdmin = false // По умолчанию не администратор в случае ошибки
+	}
+
+	// Проверяем, есть ли у пользователя дополнительная информация
+	userProfile, err := h.services.User().GetUserProfile(c.Context(), sessionData.UserID)
+	var city, country, phone string
+	if err == nil && userProfile != nil {
+		city = userProfile.City
+		country = userProfile.Country
+		if userProfile.Phone != nil {
+			phone = *userProfile.Phone
+		}
+	}
+
+	return c.JSON(fiber.Map{
+		"authenticated": true,
+		"user": fiber.Map{
+			"id":          sessionData.UserID,
+			"name":        sessionData.Name,
+			"email":       sessionData.Email,
+			"provider":    sessionData.Provider,
+			"picture_url": sessionData.PictureURL,
+			"is_admin":    isAdmin, // Добавляем поле is_admin!
+			"city":        city,    // Добавляем поля профиля
+			"country":     country,
+			"phone":       phone,
+		},
+	})
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {

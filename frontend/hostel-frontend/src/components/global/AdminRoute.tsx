@@ -10,28 +10,39 @@ interface AdminRouteProps {
 }
 
 const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, checkAuth } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
     const verifyAdmin = async () => {
+      setLoading(true);
+
       if (!user) {
         setLoading(false);
         return;
       }
 
-      // Первая проверка - по жесткому списку для быстрого доступа
-      if (isAdmin(user.email)) {
+      // Проверяем флаг is_admin напрямую сначала
+      if (user.is_admin) {
         setIsAuthorized(true);
         setLoading(false);
         return;
       }
 
-      // Вторая проверка - через API для проверки динамического списка админов
+      // Если нет флага, проверяем через API
       try {
-        const isAdminFromApi = await checkAdminStatus(user.email);
-        setIsAuthorized(isAdminFromApi);
+        // Обновим данные пользователя для получения актуального статуса
+        await checkAuth();
+
+        // Если после обновления появился флаг is_admin
+        if (user?.is_admin) {
+          setIsAuthorized(true);
+        } else {
+          // Только если флага все еще нет, делаем отдельный запрос
+          const isAdminFromApi = await checkAdminStatus(user.email);
+          setIsAuthorized(isAdminFromApi);
+        }
       } catch (error) {
         console.error('Error verifying admin status:', error);
         setIsAuthorized(false);
@@ -41,7 +52,8 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     };
 
     verifyAdmin();
-  }, [user]);
+  }, [user, checkAuth]);
+
 
   // Показываем загрузку во время проверки
   if (loading) {

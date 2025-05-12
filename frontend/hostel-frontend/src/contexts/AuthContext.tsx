@@ -56,28 +56,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Check authentication status
+  // frontend/hostel-frontend/src/contexts/AuthContext.tsx
   const checkAuth = async (): Promise<void> => {
     try {
       // First check URL for session token
       const urlParams = new URLSearchParams(window.location.search);
       const sessionTokenFromUrl = urlParams.get('session_token');
-      
+
       // If token found in URL, save it
       if (sessionTokenFromUrl) {
         localStorage.setItem('user_session_token', sessionTokenFromUrl);
       }
-  
+
       // Then check local session
       const savedSession = loadSession();
       if (savedSession) {
         setUser(savedSession);
       }
-  
+
       // Then verify with server
       const response = await axios.get('/auth/session');
       if (response.data.authenticated) {
-        setUser(response.data.user);
-        saveSession(response.data.user);
+        // Убедимся, что поле is_admin правильно обрабатывается
+        const userData = response.data.user;
+
+        // Также проверим статус администратора, если нужно
+        if (userData.email && !userData.is_admin) {
+          try {
+            // Дополнительная проверка для администраторов
+            const adminCheck = await axios.get(`/api/v1/admin-check/${userData.email}`);
+            if (adminCheck.data && adminCheck.data.is_admin) {
+              userData.is_admin = true;
+            }
+          } catch (error) {
+            console.error('Error checking admin status:', error);
+          }
+        }
+
+        setUser(userData);
+        saveSession(userData);
       } else {
         // If server says user is not authenticated, clear local session
         localStorage.removeItem('user_session');
