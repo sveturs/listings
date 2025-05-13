@@ -113,15 +113,23 @@ const MobileListingGrid: React.FC<MobileListingGridProps> = ({ listings, viewMod
         return (
             <Box sx={{ px: 1 }}>
                 {listings.map((listing, index) => {
-                    const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                    // Проверяем наличие данных
+                    if (!listing) {
+                        console.error("Обнаружено неопределенное объявление в массиве listings:", listing);
+                        return null;
+                    }
+
+                    // Создаем безопасный effectiveId
+                    const effectiveId = listing.id || `temp-${listing.category_id || 'unknown'}-${listing.user_id || 'unknown'}-${index}`;
+
                     return (
                         <Box
                             key={effectiveId}
                             onClick={() => {
                                 if (listing.id) {
                                     navigate(`/marketplace/listings/${listing.id}`);
-                                } else {
-                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                } else if (listing.category_id) {
+                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title || '')}`;
                                     console.log("Переход к объявлению с временным URL:", url);
                                 }
                             }}
@@ -143,19 +151,27 @@ const MobileListingGrid: React.FC<MobileListingGridProps> = ({ listings, viewMod
         );
     }
 
-    // Режим сетки (grid) - стандартное отображение
+    // Режим сетки (grid) - аналогичная защита от null
     return (
         <Grid container spacing={1}>
             {listings.map((listing, index) => {
-                const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                // Проверяем наличие данных
+                if (!listing) {
+                    console.error("Обнаружено неопределенное объявление в массиве listings:", listing);
+                    return null;
+                }
+
+                // Создаем безопасный effectiveId
+                const effectiveId = listing.id || `temp-${listing.category_id || 'unknown'}-${listing.user_id || 'unknown'}-${index}`;
+
                 return (
                     <Grid item xs={6} key={effectiveId}>
                         <Box
                             onClick={() => {
                                 if (listing.id) {
                                     navigate(`/marketplace/listings/${listing.id}`);
-                                } else {
-                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                } else if (listing.category_id) {
+                                    const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title || '')}`;
                                     console.log("Переход к объявлению с временным URL:", url);
                                 }
                             }}
@@ -353,19 +369,19 @@ const MarketplacePage: React.FC = () => {
                     setPage(1);
                 }
 
-                // Обновляем информацию о пагинации
+// Обновляем информацию о пагинации
                 if (response.data.meta) {
                     setTotalListings(response.data.meta.total || 0);
 
-                    // ВАЖНОЕ ИЗМЕНЕНИЕ - проверяем, есть ли еще страницы
-                    // Если больше нет страниц или если данных меньше, чем размер страницы, устанавливаем hasMore в false
-                    const hasMore = response.data.meta.has_more === true;
-                    if (!hasMore || receivedListings.length < (params.size || 25)) {
-                        setHasMoreListings(false);
-                        console.log('Устанавливаем hasMoreListings = false, так как нет больше страниц или данных меньше размера страницы');
-                    } else {
-                        setHasMoreListings(true);
-                    }
+                    // Получаем общее количество страниц
+                    const totalPages = Math.ceil((response.data.meta.total || 0) / (params.size || 25));
+
+                    // Проверяем, есть ли еще страницы для загрузки
+                    const hasMore = page < totalPages;
+
+                    console.log(`Обновляем пагинацию: общий объем=${response.data.meta.total}, текущая страница=${page}, всего страниц=${totalPages}, есть ли еще=${hasMore}`);
+
+                    setHasMoreListings(hasMore);
 
                     if (response.data.meta.spelling_suggestion) {
                         setSpellingSuggestion(response.data.meta.spelling_suggestion);
@@ -375,6 +391,8 @@ const MarketplacePage: React.FC = () => {
                     if (receivedListings.length < (params.size || 25)) {
                         setHasMoreListings(false);
                         console.log('Устанавливаем hasMoreListings = false, так как данных меньше размера страницы и meta отсутствует');
+                    } else {
+                        setHasMoreListings(true);
                     }
                 }
             } else {
@@ -901,15 +919,33 @@ const MarketplacePage: React.FC = () => {
                             ) : viewMode === 'grid' ? (
                                 <Grid container spacing={3}>
                                     {listings.map((listing, index) => {
-                                        const effectiveId = listing.id || `temp-${listing.category_id}-${listing.user_id}-${index}`;
+                                        // Проверяем, что listing не null и не undefined
+                                        if (!listing) {
+                                            console.error("Обнаружено неопределенное объявление в массиве listings:", listing);
+                                            return null; // Пропускаем этот элемент
+                                        }
+
+                                        // Проверяем наличие id, category_id и user_id
+                                        const hasValidId = Boolean(listing.id);
+                                        const hasValidCategoryId = Boolean(listing.category_id);
+                                        const hasValidUserId = Boolean(listing.user_id);
+
+                                        // Создаем безопасный effectiveId
+                                        const effectiveId = hasValidId ? listing.id :
+                                            (hasValidCategoryId && hasValidUserId ?
+                                                `temp-${listing.category_id}-${listing.user_id}-${index}` :
+                                                `temp-${index}`);
+
                                         return (
                                             <Grid item xs={12} sm={6} md={4} key={effectiveId}>
                                                 <Box onClick={() => {
-                                                    if (listing.id) {
+                                                    if (hasValidId) {
                                                         navigate(`/marketplace/listings/${listing.id}`);
-                                                    } else {
-                                                        const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title)}`;
+                                                    } else if (hasValidCategoryId) {
+                                                        const url = `/api/v1/marketplace/listings?category_id=${listing.category_id}&title=${encodeURIComponent(listing.title || '')}`;
                                                         console.log("Переход к объявлению с временным URL:", url);
+                                                    } else {
+                                                        console.warn("Недостаточно данных для перехода к объявлению:", listing);
                                                     }
                                                 }}>
                                                     <ListingCard listing={listing} />

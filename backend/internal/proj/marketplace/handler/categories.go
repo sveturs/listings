@@ -40,10 +40,7 @@ func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить категории")
 	}
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data":    categories,
-	})
+	return utils.SuccessResponse(c, categories)
 }
 
 // GetCategoryTree получает дерево категорий
@@ -55,10 +52,7 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 	categoryTreeMutex.RUnlock()
 
 	if cacheValid {
-		return c.JSON(fiber.Map{
-			"success": true,
-			"data":    cachedTree,
-		})
+		return utils.SuccessResponse(c, cachedTree)
 	}
 
 	// Если кеш устарел или пуст, загружаем дерево категорий из хранилища
@@ -74,10 +68,7 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 	categoryTreeLastUpdate = time.Now()
 	categoryTreeMutex.Unlock()
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data":    categoryTree,
-	})
+	return utils.SuccessResponse(c, categoryTree)
 }
 
 // GetCategoryAttributes получает атрибуты для категории
@@ -95,10 +86,7 @@ func (h *CategoriesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить атрибуты категории")
 	}
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data":    attributes,
-	})
+	return utils.SuccessResponse(c, attributes)
 }
 
 // GetAttributeRanges получает диапазоны значений для числовых атрибутов
@@ -116,10 +104,7 @@ func (h *CategoriesHandler) GetAttributeRanges(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить диапазоны значений атрибутов")
 	}
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data":    ranges,
-	})
+	return utils.SuccessResponse(c, ranges)
 }
 
 // InvalidateCategoryCache инвалидирует кеш категорий

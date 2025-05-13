@@ -9,6 +9,7 @@ import (
 	"backend/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 	"log"
+	"math"
 	"strconv"
 )
 
@@ -106,6 +107,13 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	// Устанавливаем язык
 	params.Language = lang
 
+	// Проверяем режим просмотра карты
+	viewMode := c.Query("view_mode")
+	if viewMode == "map" {
+		// Для режима карты увеличиваем лимит
+		params.Size = 5000
+	}
+
 	// Создаем контекст с языком
 	ctx := c.Context()
 	ctx.SetUserValue("language", lang)
@@ -123,8 +131,45 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		items = []*models.MarketplaceListing{}
 	}
 
-	// Форматируем результаты
-	return utils.SuccessResponse(c, items)
+	// Вычисляем метаданные пагинации
+	total := results.Total
+	totalPages := int(math.Ceil(float64(total) / float64(params.Size)))
+	hasMore := params.Page < totalPages
+
+	// Получаем текущую страницу из параметров (или значение по умолчанию)
+	page := params.Page
+	if page <= 0 {
+		page = 1
+	}
+
+	// Получаем размер страницы из параметров (или значение по умолчанию)
+	size := params.Size
+	if size <= 0 {
+		size = 20
+	}
+
+	// Логируем метаданные пагинации для отладки
+	log.Printf("Метаданные пагинации: total=%d, total_pages=%d, page=%d, size=%d, has_more=%v",
+		total, totalPages, page, size, hasMore)
+
+	// ВАЖНОЕ ИЗМЕНЕНИЕ: структура, соответствующая ожиданиям фронтенда
+	response := fiber.Map{
+		"data": items,
+		"meta": fiber.Map{
+			"total":               total,
+			"page":                page,
+			"size":                size,
+			"total_pages":         totalPages,
+			"has_more":            hasMore,
+			"facets":              results.Facets,
+			"suggestions":         results.Suggestions,
+			"spelling_suggestion": results.SpellingSuggestion,
+			"took_ms":             results.Took,
+		},
+	}
+
+	// ИЗМЕНЕНИЕ: теперь прямой возврат response вместо utils.SuccessResponse
+	return c.JSON(response)
 }
 
 // parseIntOrDefault преобразует строку в число, возвращая значение по умолчанию в случае ошибки

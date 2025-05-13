@@ -60,8 +60,7 @@ func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 	}()
 
 	// Возвращаем успешный результат
-	return c.JSON(fiber.Map{
-		"success": true,
+	return utils.SuccessResponse(c, fiber.Map{
 		"message": "Переиндексация запущена",
 	})
 }
