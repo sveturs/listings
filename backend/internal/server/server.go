@@ -38,7 +38,6 @@ type Server struct {
 	payments      paymentService.PaymentServiceInterface
 	storefront    *storefrontHandler.Handler
 	geocode       *geocodeHandler.GeocodeHandler
-	translation   *marketplaceHandler.TranslationHandler
 	fileStorage   filestorage.FileStorageInterface
 }
 
@@ -141,7 +140,6 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		storefront:    storefrontHandler,
 		payments:      services.Payment(),
 		geocode:       geocodeHandler,
-		translation:   marketplaceHandler.Translation,
 		fileStorage:   fileStorage,
 	}
 
@@ -195,7 +193,8 @@ func (s *Server) setupRoutes() {
 		EnableCompression: false,
 	}))
 
-	s.app.Post("/reindex-ratings-public", s.marketplace.Marketplace.ReindexRatings)
+	// Изменено: теперь используем новый Indexing обработчик
+	s.app.Post("/reindex-ratings-public", s.marketplace.Indexing.ReindexRatings)
 
 	s.app.Post("/api/v1/notifications/telegram/webhook", func(c *fiber.Ctx) error {
 		log.Printf("Received webhook request: %s", string(c.Body()))
@@ -225,23 +224,25 @@ func (s *Server) setupRoutes() {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
+	// Обновлено: маршруты публичного API маркетплейса используют соответствующие обработчики
 	marketplace := s.app.Group("/api/v1/marketplace")
-	marketplace.Get("/listings", s.marketplace.Marketplace.GetListings)
-	marketplace.Get("/categories", s.marketplace.Marketplace.GetCategories)
-	marketplace.Get("/category-tree", s.marketplace.Marketplace.GetCategoryTree)
-	marketplace.Get("/listings/:id", s.marketplace.Marketplace.GetListing)
-	marketplace.Get("/search", s.marketplace.Marketplace.SearchListingsAdvanced) // маршрут поиска
-	marketplace.Get("/suggestions", s.marketplace.Marketplace.GetSuggestions)    // маршрут автодополнения
-	marketplace.Get("/category-suggestions", s.marketplace.Marketplace.GetCategorySuggestions)
-	marketplace.Get("/categories/:id/attributes", s.marketplace.Marketplace.GetCategoryAttributes)
-	marketplace.Get("/listings/:id/price-history", s.marketplace.Marketplace.GetPriceHistory)
-	marketplace.Get("/listings/:id/similar", s.marketplace.Marketplace.GetSimilarListings)
-	marketplace.Get("/categories/:id/attribute-ranges", s.marketplace.Marketplace.GetAttributeRanges)
-	marketplace.Get("/enhanced-suggestions", s.marketplace.Marketplace.GetEnhancedSuggestions)
+	marketplace.Get("/listings", s.marketplace.Listings.GetListings)
+	marketplace.Get("/categories", s.marketplace.Categories.GetCategories)
+	marketplace.Get("/category-tree", s.marketplace.Categories.GetCategoryTree)
+	marketplace.Get("/listings/:id", s.marketplace.Listings.GetListing)
+	marketplace.Get("/search", s.marketplace.Search.SearchListingsAdvanced) // маршрут поиска
+	marketplace.Get("/suggestions", s.marketplace.Search.GetSuggestions)    // маршрут автодополнения
+	marketplace.Get("/category-suggestions", s.marketplace.Search.GetCategorySuggestions)
+	marketplace.Get("/categories/:id/attributes", s.marketplace.Categories.GetCategoryAttributes)
+	marketplace.Get("/listings/:id/price-history", s.marketplace.Listings.GetPriceHistory)
+	marketplace.Get("/listings/:id/similar", s.marketplace.Search.GetSimilarListings)
+	marketplace.Get("/categories/:id/attribute-ranges", s.marketplace.Categories.GetAttributeRanges)
+	marketplace.Get("/enhanced-suggestions", s.marketplace.Search.GetEnhancedSuggestions)
 
+	// Обновлено: маршруты API переводов используют обработчик переводов
 	translation := s.app.Group("/api/v1/translation")
-	translation.Get("/limits", s.translation.GetTranslationLimits)
-	translation.Post("/provider", s.translation.SetTranslationProvider)
+	translation.Get("/limits", s.marketplace.Translations.GetTranslationLimits)
+	translation.Post("/provider", s.marketplace.Translations.SetTranslationProvider)
 
 	review := s.app.Group("/api/v1/reviews")
 	review.Get("/", s.review.Review.GetReviews)
@@ -304,28 +305,26 @@ func (s *Server) setupRoutes() {
 	users.Put("/profile", s.users.User.UpdateProfile)
 	users.Get("/:id/profile", s.users.User.GetProfileByID)
 
+	// Обновлено: маршруты защищенного API маркетплейса используют соответствующие обработчики
 	marketplaceProtected := api.Group("/marketplace")
-	marketplaceProtected.Post("/listings", s.marketplace.Marketplace.CreateListing)
-	marketplaceProtected.Put("/listings/:id", s.marketplace.Marketplace.UpdateListing)
-	marketplaceProtected.Delete("/listings/:id", s.marketplace.Marketplace.DeleteListing)
-	marketplaceProtected.Post("/listings/:id/images", s.marketplace.Marketplace.UploadImages)
-	marketplaceProtected.Post("/listings/:id/favorite", s.marketplace.Marketplace.AddToFavorites)
-	marketplaceProtected.Delete("/listings/:id/favorite", s.marketplace.Marketplace.RemoveFromFavorites)
-	marketplaceProtected.Get("/favorites", s.marketplace.Marketplace.GetFavorites)
-	marketplaceProtected.Put("/translations/:id", s.marketplace.Marketplace.UpdateTranslations)
-	marketplaceProtected.Post("/translations/batch", s.marketplace.Marketplace.BatchTranslateListings)
-	marketplaceProtected.Post("/moderate-image", s.marketplace.Marketplace.ModerateImage)
-	marketplaceProtected.Post("/enhance-preview", s.marketplace.Marketplace.EnhancePreview)
-	marketplaceProtected.Post("/enhance-images", s.marketplace.Marketplace.EnhanceImages)
+	marketplaceProtected.Post("/listings", s.marketplace.Listings.CreateListing)
+	marketplaceProtected.Put("/listings/:id", s.marketplace.Listings.UpdateListing)
+	marketplaceProtected.Delete("/listings/:id", s.marketplace.Listings.DeleteListing)
+	marketplaceProtected.Post("/listings/:id/images", s.marketplace.Images.UploadImages)
+	marketplaceProtected.Post("/listings/:id/favorite", s.marketplace.Favorites.AddToFavorites)
+	marketplaceProtected.Delete("/listings/:id/favorite", s.marketplace.Favorites.RemoveFromFavorites)
+	marketplaceProtected.Get("/favorites", s.marketplace.Favorites.GetFavorites)
+	marketplaceProtected.Put("/translations/:id", s.marketplace.Translations.UpdateTranslations)
+	marketplaceProtected.Post("/translations/batch", s.marketplace.Translations.TranslateText) // Предполагается, что этот метод переименован
+	marketplaceProtected.Post("/moderate-image", s.marketplace.Images.ModerateImage)
+	marketplaceProtected.Post("/enhance-preview", s.marketplace.Images.EnhancePreview)
+	marketplaceProtected.Post("/enhance-images", s.marketplace.Images.EnhanceImages)
 
-	// Тестовый маршрут
-	//	s.app.Get("/api/test-admin", s.middleware.AuthRequired, s.middleware.AdminRequired, func(c *fiber.Ctx) error {
-	//		log.Println("Test admin endpoint called")
-	//		return c.Status(200).JSON(fiber.Map{
-	//			"message": "Admin test successful",
-	//		})
-	//	})
-
+	// маршруты для новых методов в TranslationsHandler
+	marketplaceProtected.Post("/translations/batch-translate", s.marketplace.Translations.BatchTranslateListings)
+	marketplaceProtected.Post("/translations/translate", s.marketplace.Translations.TranslateText)
+	marketplaceProtected.Post("/translations/detect-language", s.marketplace.Translations.DetectLanguage)
+	marketplaceProtected.Get("/translations/:id", s.marketplace.Translations.GetTranslations)
 	// Административные маршруты
 	adminRoutes := s.app.Group("/api/v1/admin")
 	adminRoutes.Use(s.middleware.AuthRequired)
@@ -346,11 +345,11 @@ func (s *Server) setupRoutes() {
 	adminRoutes.Delete("/admins/:email", s.users.User.RemoveAdmin)
 	adminRoutes.Get("/admins/check/:email", s.users.User.IsAdmin)
 
-	// Индексация и прочие админские функции
-	adminRoutes.Post("/reindex-listings", s.marketplace.Marketplace.ReindexAll)
-	adminRoutes.Post("/reindex-listings-with-translations", s.marketplace.Marketplace.ReindexAllWithTranslations)
-	adminRoutes.Post("/sync-discounts", s.marketplace.Marketplace.SynchronizeDiscounts)
-	adminRoutes.Post("/reindex-ratings", s.marketplace.Marketplace.ReindexRatings)
+	// Обновлено: маршруты админских функций используют обработчик индексации
+	adminRoutes.Post("/reindex-listings", s.marketplace.Indexing.ReindexAll)
+	adminRoutes.Post("/reindex-listings-with-translations", s.marketplace.Indexing.ReindexAllWithTranslations)
+	adminRoutes.Post("/sync-discounts", s.marketplace.Listings.SynchronizeDiscounts) // Оставляем в Listings, т.к. это работа с объявлениями
+	adminRoutes.Post("/reindex-ratings", s.marketplace.Indexing.ReindexRatings)
 
 	chat := api.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)
