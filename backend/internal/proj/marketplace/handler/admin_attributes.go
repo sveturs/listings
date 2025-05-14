@@ -3,6 +3,7 @@ package handler
 
 import (
 	"backend/internal/domain/models"
+	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
@@ -16,9 +17,9 @@ type AdminAttributesHandler struct {
 }
 
 // NewAdminAttributesHandler создает новый обработчик админки для атрибутов
-func NewAdminAttributesHandler(categoriesHandler *CategoriesHandler) *AdminAttributesHandler {
+func NewAdminAttributesHandler(services globalService.ServicesInterface) *AdminAttributesHandler {
 	return &AdminAttributesHandler{
-		CategoriesHandler: categoriesHandler,
+		CategoriesHandler: NewCategoriesHandler(services),
 	}
 }
 
@@ -81,7 +82,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 	// поэтому можно создать запрос к базе данных напрямую
 	query := `
 		SELECT id, name, display_name, attribute_type, options, validation_rules, 
-		is_searchable, is_filterable, is_required, sort_order, created_at, custom_component
+		is_searchable, is_filterable, is_required, sort_order, created_at
 		FROM category_attributes
 		ORDER BY sort_order, id
 	`
@@ -110,7 +111,6 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 			&attribute.IsRequired,
 			&attribute.SortOrder,
 			&attribute.CreatedAt,
-			&attribute.CustomComponent,
 		)
 		if err != nil {
 			log.Printf("Failed to scan attribute: %v", err)

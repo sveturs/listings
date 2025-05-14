@@ -233,6 +233,9 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/search", s.marketplace.Search.SearchListingsAdvanced) // маршрут поиска
 	marketplace.Get("/suggestions", s.marketplace.Search.GetSuggestions)    // маршрут автодополнения
 	marketplace.Get("/category-suggestions", s.marketplace.Search.GetCategorySuggestions)
+
+	// Временный публичный маршрут для проверки
+	s.app.Get("/admin-categories-test", s.marketplace.AdminCategories.GetCategories)
 	marketplace.Get("/categories/:id/attributes", s.marketplace.Categories.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", s.marketplace.Listings.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", s.marketplace.Search.GetSimilarListings)
@@ -329,6 +332,51 @@ func (s *Server) setupRoutes() {
 	adminRoutes := s.app.Group("/api/v1/admin")
 	adminRoutes.Use(s.middleware.AuthRequired)
 	adminRoutes.Use(s.middleware.AdminRequired)
+
+	// Регистрируем маршруты администрирования категорий
+	adminRoutes.Post("/categories", s.marketplace.AdminCategories.CreateCategory)
+	adminRoutes.Get("/categories", s.marketplace.AdminCategories.GetCategories)
+	adminRoutes.Get("/categories/:id", s.marketplace.AdminCategories.GetCategoryByID)
+	adminRoutes.Put("/categories/:id", s.marketplace.AdminCategories.UpdateCategory)
+	adminRoutes.Delete("/categories/:id", s.marketplace.AdminCategories.DeleteCategory)
+	adminRoutes.Post("/categories/:id/reorder", s.marketplace.AdminCategories.ReorderCategories)
+	adminRoutes.Put("/categories/:id/move", s.marketplace.AdminCategories.MoveCategory)
+	adminRoutes.Post("/categories/:id/attributes", s.marketplace.AdminCategories.AddAttributeToCategory)
+	adminRoutes.Delete("/categories/:id/attributes/:attr_id", s.marketplace.AdminCategories.RemoveAttributeFromCategory)
+	adminRoutes.Put("/categories/:id/attributes/:attr_id", s.marketplace.AdminCategories.UpdateAttributeCategory)
+
+	// Регистрируем маршруты администрирования атрибутов
+	adminRoutes.Post("/attributes", s.marketplace.AdminAttributes.CreateAttribute)
+	adminRoutes.Get("/attributes", s.marketplace.AdminAttributes.GetAttributes)
+	adminRoutes.Get("/attributes/:id", s.marketplace.AdminAttributes.GetAttributeByID)
+	adminRoutes.Put("/attributes/:id", s.marketplace.AdminAttributes.UpdateAttribute)
+	adminRoutes.Delete("/attributes/:id", s.marketplace.AdminAttributes.DeleteAttribute)
+	adminRoutes.Post("/attributes/bulk-update", s.marketplace.AdminAttributes.BulkUpdateAttributes)
+
+	// Для обратной совместимости добавим маршруты без v1
+	legacyAdmin := s.app.Group("/api/admin")
+	legacyAdmin.Use(s.middleware.AuthRequired)
+	legacyAdmin.Use(s.middleware.AdminRequired)
+
+	// Все маршруты для категорий
+	legacyAdmin.Get("/categories", s.marketplace.AdminCategories.GetCategories)
+	legacyAdmin.Post("/categories", s.marketplace.AdminCategories.CreateCategory)
+	legacyAdmin.Get("/categories/:id", s.marketplace.AdminCategories.GetCategoryByID)
+	legacyAdmin.Put("/categories/:id", s.marketplace.AdminCategories.UpdateCategory)
+	legacyAdmin.Delete("/categories/:id", s.marketplace.AdminCategories.DeleteCategory)
+	legacyAdmin.Post("/categories/:id/reorder", s.marketplace.AdminCategories.ReorderCategories)
+	legacyAdmin.Put("/categories/:id/move", s.marketplace.AdminCategories.MoveCategory)
+	legacyAdmin.Post("/categories/:id/attributes", s.marketplace.AdminCategories.AddAttributeToCategory)
+	legacyAdmin.Delete("/categories/:id/attributes/:attr_id", s.marketplace.AdminCategories.RemoveAttributeFromCategory)
+	legacyAdmin.Put("/categories/:id/attributes/:attr_id", s.marketplace.AdminCategories.UpdateAttributeCategory)
+
+	// Маршруты для атрибутов
+	legacyAdmin.Post("/attributes", s.marketplace.AdminAttributes.CreateAttribute)
+	legacyAdmin.Get("/attributes", s.marketplace.AdminAttributes.GetAttributes)
+	legacyAdmin.Get("/attributes/:id", s.marketplace.AdminAttributes.GetAttributeByID)
+	legacyAdmin.Put("/attributes/:id", s.marketplace.AdminAttributes.UpdateAttribute)
+	legacyAdmin.Delete("/attributes/:id", s.marketplace.AdminAttributes.DeleteAttribute)
+	legacyAdmin.Post("/attributes/bulk-update", s.marketplace.AdminAttributes.BulkUpdateAttributes)
 
 	// Использовать реальный обработчик из UserHandler
 	adminRoutes.Get("/users", s.users.User.GetAllUsers)
