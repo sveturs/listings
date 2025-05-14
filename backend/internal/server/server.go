@@ -193,8 +193,9 @@ func (s *Server) setupRoutes() {
 		EnableCompression: false,
 	}))
 
-	// Изменено: теперь используем новый Indexing обработчик
+	// Изменено: публичные методы для реиндексации данных
 	s.app.Post("/reindex-ratings-public", s.marketplace.Indexing.ReindexRatings)
+	s.app.Post("/api/v1/public/reindex", s.marketplace.Indexing.ReindexAll)
 
 	s.app.Post("/api/v1/notifications/telegram/webhook", func(c *fiber.Ctx) error {
 		log.Printf("Received webhook request: %s", string(c.Body()))
@@ -203,6 +204,8 @@ func (s *Server) setupRoutes() {
 
 	s.app.Post("/api/v1/public/send-email", s.notifications.Notification.SendPublicEmail)
 	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
+	s.app.Get("/api/v1/public/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
+	s.app.Get("/api/v1/public/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
 	s.app.Get("/v1/notifications/telegram", s.notifications.Notification.GetTelegramStatus)
 
 	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequired)

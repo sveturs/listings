@@ -1,6 +1,6 @@
 // src/components/marketplace/ModalWrapper.tsx
 import React from 'react';
-import { Modal, Box } from '@mui/material';
+import { Modal, Box, Typography } from '@mui/material';
 
 interface ModalWrapperProps {
   open: boolean;
@@ -8,14 +8,16 @@ interface ModalWrapperProps {
   'aria-labelledby'?: string;
   children: React.ReactNode;
   isMobile?: boolean;
+  title?: React.ReactNode;
 }
 
-const ModalWrapper: React.FC<ModalWrapperProps> = ({ 
-  open, 
-  onClose, 
+const ModalWrapper: React.FC<ModalWrapperProps> = ({
+  open,
+  onClose,
   'aria-labelledby': ariaLabelledBy,
   children,
-  isMobile = false
+  isMobile = false,
+  title
 }) => {
   return (
     // @ts-ignore - Ignoring TypeScript error for Modal component
@@ -35,6 +37,11 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
         boxShadow: 24,
         p: 4,
       }}>
+        {title && (
+          <Typography variant="h6" component="h2" gutterBottom>
+            {title}
+          </Typography>
+        )}
         {children}
       </Box>
     </Modal>

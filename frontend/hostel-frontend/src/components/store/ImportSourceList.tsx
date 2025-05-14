@@ -34,7 +34,7 @@ import ImportModal from './ImportModal';
 import CategoryMappingModal from './CategoryMappingModal';
 
 export interface ImportSource {
-    id: string;
+    id: string | number;
     type: string;
     url?: string;
     schedule?: string;
@@ -45,11 +45,11 @@ export interface ImportSource {
 
 interface ImportSourceListProps {
     sources: ImportSource[];
-    storefrontId: string;
+    storefrontId: string | number;
     onUpdate: () => void;
-    onDelete: (sourceId: string) => Promise<void>;
-    onFetchHistory: (sourceId: string) => void;
-    onRunDirectSync: (sourceId: string) => void;
+    onDelete: (sourceId: string | number) => Promise<void>;
+    onFetchHistory: (sourceId: string | number) => void;
+    onRunDirectSync: (sourceId: string | number) => void;
 }
 
 const ImportSourceList: React.FC<ImportSourceListProps> = ({ 
@@ -93,7 +93,7 @@ const ImportSourceList: React.FC<ImportSourceListProps> = ({
         onUpdate();
     };
 
-    const handleDelete = async (sourceId: string): Promise<void> => {
+    const handleDelete = async (sourceId: string | number): Promise<void> => {
         if (window.confirm(t('marketplace:store.import.deleteConfirm'))) {
             await onDelete(sourceId);
         }

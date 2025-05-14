@@ -3,6 +3,7 @@ import React, { useState, useCallback, useEffect, MouseEvent, TouchEvent } from 
 import { useTranslation } from 'react-i18next';
 import AutocompleteInput from '../shared/AutocompleteInput';
 import { Link } from 'react-router-dom';
+import { Listing, ListingImage } from '../../types/listing';
 import {
   Box, Button, IconButton, Typography, InputBase, Toolbar, TextField, Select, MenuItem,
   Paper, Grid, Drawer, Stack, List, ListItem, ListItemText, ListItemAvatar, Avatar, Divider,
@@ -26,46 +27,7 @@ import {
 } from 'lucide-react';
 import { debounce } from 'lodash';
 
-// Common utility types
-interface ListingImage {
-  is_main?: boolean;
-  public_url?: string;
-  file_path?: string;
-  storage_type?: string;
-}
-
-interface Listing {
-  id: string | number;
-  title: string;
-  price: number;
-  old_price?: number;
-  has_discount?: boolean;
-  description?: string;
-  images?: Array<ListingImage | string>;
-  created_at: string;
-  city?: string;
-  condition?: string;
-  views_count?: number;
-  storefront_id?: string | number;
-  original_language?: string;
-  translations?: {
-    [language: string]: {
-      title?: string;
-      description?: string;
-      [key: string]: any;
-    };
-  };
-  metadata?: {
-    discount?: {
-      discount_percent: number;
-      previous_price: number;
-    };
-    promotions?: Record<string, any>;
-    [key: string]: any;
-  };
-  [key: string]: any; // For other fields that might be accessed dynamically
-}
-
+// Type definitions
 interface Category {
   id: string | number;
   name: string;
@@ -118,8 +80,9 @@ interface MobileFiltersProps {
   open: boolean;
   onClose: () => void;
   filters: FilterOptions;
-  onFilterChange: (filters: FilterOptions) => void;
+  onFilterChange: (filters: FilterOptions | Partial<FilterOptions>) => void;
   categories: Category[];
+  onToggleMapView?: () => void;
 }
 
 // Компонент MobileHeader
@@ -235,7 +198,7 @@ const formatPrice = (price?: number): string => {
 
 // Получаем URL изображения
 const getImageUrl = (listing?: Listing): string => {
-  if (!listing || !listing.images || !listing.images.length) {
+  if (!listing || !listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
     return '/placeholder.jpg';
   }
 
@@ -244,9 +207,20 @@ const getImageUrl = (listing?: Listing): string => {
   // Находим главное изображение или используем первое в списке
   const mainImage = listing.images.find(img => typeof img === 'object' && img.is_main) || listing.images[0];
 
+  // Если это строка URL
+  if (typeof mainImage === 'string') {
+    // Проверяем, абсолютный или относительный URL
+    if (mainImage.startsWith('http')) {
+      return mainImage;
+    } else {
+      return `${baseUrl}/uploads/${mainImage}`;
+    }
+  }
+
+  // Если это объект
   if (mainImage && typeof mainImage === 'object') {
-    // Если есть публичный URL, используем его напрямую
-    if (mainImage.public_url && mainImage.public_url !== '') {
+    // Проверяем на наличие публичного URL
+    if (mainImage.public_url) {
       // Проверяем, абсолютный или относительный URL
       if (mainImage.public_url.startsWith('http')) {
         return mainImage.public_url;
@@ -255,21 +229,16 @@ const getImageUrl = (listing?: Listing): string => {
       }
     }
 
-    // Для MinIO-объектов формируем URL на основе storage_type
+    // Проверяем на MinIO хранилище
     if (mainImage.storage_type === 'minio' ||
         (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
       return `${baseUrl}${mainImage.public_url}`;
     }
 
-    // Обычный файл
+    // Проверяем file_path
     if (mainImage.file_path) {
       return `${baseUrl}/uploads/${mainImage.file_path}`;
     }
-  }
-
-  // Для строк (обратная совместимость)
-  if (mainImage && typeof mainImage === 'string') {
-    return `${baseUrl}/uploads/${mainImage}`;
   }
 
   return '/placeholder.jpg';
@@ -284,8 +253,8 @@ const isFirefox = (): boolean => {
 const getDiscountInfo = (listing: Listing): DiscountInfo | null => {
   if (listing.metadata && listing.metadata.discount) {
     return {
-      percent: listing.metadata.discount.discount_percent,
-      oldPrice: listing.metadata.discount.previous_price
+      percent: listing.metadata.discount.discount_percent || listing.metadata.discount.percent || 0,
+      oldPrice: listing.metadata.discount.previous_price || listing.metadata.discount.oldPrice || 0
     };
   }
   if (listing.has_discount && listing.old_price) {
@@ -316,6 +285,19 @@ export const MobileListingCard: React.FC<MobileListingCardProps> = ({ listing, v
     return listing.translations?.[i18n.language]?.[field] || (listing[field] as string);
   };
 
+  // Функция для определения, является ли объявление частью витрины
+  // Временное решение, пока не будет исправлена серверная часть
+  const isStoreItem = (): boolean => {
+    // Единственное надежное условие - наличие storefront_id
+    return listing.storefront_id !== undefined && listing.storefront_id !== null;
+  };
+
+  // Получаем ID витрины
+  const getStoreId = (): number | string | null => {
+    // Просто возвращаем storefront_id, если он есть
+    return listing.storefront_id || null;
+  };
+
   const handleShopButtonClick = (e: React.MouseEvent | React.TouchEvent): boolean => {
     e.preventDefault();
     e.stopPropagation();
@@ -323,8 +305,8 @@ export const MobileListingCard: React.FC<MobileListingCardProps> = ({ listing, v
     if (e.nativeEvent) {
       e.nativeEvent.stopImmediatePropagation();
     }
-    // Используем прямой переход
-    window.location.href = `/shop/${listing.storefront_id}`;
+    // Используем прямой переход, с нашей функцией определения ID витрины
+    window.location.href = `/shop/${getStoreId()}`;
     // Предотвращаем дальнейшую обработку события
     return false;
   };
@@ -386,7 +368,6 @@ export const MobileListingCard: React.FC<MobileListingCardProps> = ({ listing, v
                   fontWeight: 'bold'
                 }}
               >
-                <Percent size={10} />
                 {`-${discount.percent}%`}
               </Box>
             )}
@@ -430,7 +411,8 @@ export const MobileListingCard: React.FC<MobileListingCardProps> = ({ listing, v
               </Box>
 
               {/* Бейдж магазина */}
-              {listing.storefront_id && (
+              {/* Проверяем бирку магазина для режима списка - используем функцию */}
+              {isStoreItem() && (
                 <Box
                   sx={{
                     bgcolor: 'primary.main',
@@ -502,88 +484,90 @@ export const MobileListingCard: React.FC<MobileListingCardProps> = ({ listing, v
           bgcolor: 'grey.100'
         }}
       >
-        {/* бейдж магазина */}
-        {listing.storefront_id && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 10,
-              right: 10,
-              zIndex: 100, // Очень высокий z-index
-              bgcolor: 'primary.main', // MUI тема для цвета
-              color: 'white',
-              borderRadius: '4px',
-              px: 1,
-              py: 0.5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              fontSize: '0.75rem',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              isolation: 'isolate' // Изоляция событий
-            }}
-            // Используем onMouseDown для более раннего перехвата события, чем onClick
-            onMouseDown={(e: React.MouseEvent) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (e.nativeEvent) {
-                e.nativeEvent.stopImmediatePropagation();
-              }
-              window.location.href = `/shop/${listing.storefront_id}`;
-              return false;
-            }}
-            // Дублируем на onClick для надежности
-            onClick={(e: React.MouseEvent) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (e.nativeEvent) {
-                e.nativeEvent.stopImmediatePropagation();
-              }
-              window.location.href = `/shop/${listing.storefront_id}`;
-              return false;
-            }}
-            // Дублируем на onTouchStart для надежности на мобильных
-            onTouchStart={(e: React.TouchEvent) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (e.nativeEvent) {
-                e.nativeEvent.stopImmediatePropagation();
-              }
-              window.location.href = `/shop/${listing.storefront_id}`;
-              return false;
-            }}
-            data-shop-button="true"
-          >
-            <Store size={14} />
-            {t('listings.details.goToStore')}
-          </Box>
-        )}
+        {/* Контейнер для бирок (магазин и скидка) */}
+        <Box>
+          {/* бейдж магазина - используем функцию определения товаров из витрины */}
+          {isStoreItem() && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 10,
+                left: 10,
+                zIndex: 100, // Очень высокий z-index
+                bgcolor: 'primary.main', // MUI тема для цвета
+                color: 'white',
+                borderRadius: '4px',
+                px: 1,
+                py: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                isolation: 'isolate' // Изоляция событий
+              }}
+              // Используем onMouseDown для более раннего перехвата события, чем onClick
+              onMouseDown={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.nativeEvent) {
+                  e.nativeEvent.stopImmediatePropagation();
+                }
+                window.location.href = `/shop/${getStoreId()}`;
+                return false;
+              }}
+              // Дублируем на onClick для надежности
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.nativeEvent) {
+                  e.nativeEvent.stopImmediatePropagation();
+                }
+                window.location.href = `/shop/${getStoreId()}`;
+                return false;
+              }}
+              // Дублируем на onTouchStart для надежности на мобильных
+              onTouchStart={(e: React.TouchEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.nativeEvent) {
+                  e.nativeEvent.stopImmediatePropagation();
+                }
+                window.location.href = `/shop/${getStoreId()}`;
+                return false;
+              }}
+              data-shop-button="true"
+            >
+              <Store size={14} />
+              {t('listings.details.goToStore')}
+            </Box>
+          )}
 
-        {/* Бейдж скидки */}
-        {discount && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              zIndex: 90,
-              bgcolor: 'warning.main',
-              color: 'warning.contrastText',
-              borderRadius: '4px',
-              px: 1,
-              py: 0.5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              fontSize: '0.75rem',
-              fontWeight: 'bold'
-            }}
-          >
-            <Percent size={14} />
-            {`-${discount.percent}%`}
-          </Box>
-        )}
+          {/* Бейдж скидки */}
+          {discount && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                zIndex: 90,
+                bgcolor: 'warning.main',
+                color: 'warning.contrastText',
+                borderRadius: '4px',
+                px: 1,
+                py: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                fontSize: '0.75rem',
+                fontWeight: 'bold'
+              }}
+            >
+              {`-${discount.percent}%`}
+            </Box>
+          )}
+        </Box>
 
         {/* Изображение */}
         <img
@@ -756,7 +740,7 @@ export const MobileListingGrid: React.FC<MobileListingGridProps> = ({ listings, 
   );
 };
 
-export const MobileFilters: React.FC<MobileFiltersProps> = ({ open, onClose, filters, onFilterChange, categories }) => {
+export const MobileFilters: React.FC<MobileFiltersProps> = ({ open, onClose, filters, onFilterChange, categories, onToggleMapView }) => {
   const { t, i18n } = useTranslation('marketplace'); // Добавляем i18n
 
   // Исправленная функция getTranslatedName в CategoryItem
@@ -810,7 +794,9 @@ export const MobileFilters: React.FC<MobileFiltersProps> = ({ open, onClose, fil
   };
 
   const handleCategoryClick = (category: Category): void => {
-    const hasChildren = category.children && category.children.length > 0;
+    const hasChildren = categories.some(c => 
+      c.parent_id && String(c.parent_id) === String(category.id)
+    );
 
     // Устанавливаем выбранную категорию в фильтрах, даже если у неё есть дочерние элементы
     setTempFilters(prev => ({
@@ -982,7 +968,9 @@ export const MobileFilters: React.FC<MobileFiltersProps> = ({ open, onClose, fil
           {/* Категории */}
           <Box sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
             {getCurrentCategories().map((category) => {
-              const hasChildren = category.children && category.children.length > 0;
+              const hasChildren = categories.some(c => 
+                c.parent_id && String(c.parent_id) === String(category.id)
+              );
               const isSelected = tempFilters.category_id === category.id;
 
               return (

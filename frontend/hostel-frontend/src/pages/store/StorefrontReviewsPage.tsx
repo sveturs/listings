@@ -78,12 +78,12 @@ const StorefrontReviewsPage: React.FC = () => {
         const storeResponse = await axios.get(`/api/v1/public/storefronts/${id}`);
         setStoreData(storeResponse.data.data);
 
-        // Получаем обзоры витрины
-        const reviewsResponse = await axios.get(`/api/v1/storefronts/${id}/reviews`);
+        // Получаем обзоры витрины через публичный API
+        const reviewsResponse = await axios.get(`/api/v1/public/storefronts/${id}/reviews`);
         setReviews(reviewsResponse.data.data || []);
 
-        // Получаем сводные данные о рейтинге
-        const summaryResponse = await axios.get(`/api/v1/storefronts/${id}/rating`);
+        // Получаем сводные данные о рейтинге через публичный API
+        const summaryResponse = await axios.get(`/api/v1/public/storefronts/${id}/rating`);
         setSummary(summaryResponse.data.data);
       } catch (err) {
         console.error('Error fetching storefront reviews:', err);

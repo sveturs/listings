@@ -6,6 +6,7 @@ import (
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
+	"context"
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"strconv"
@@ -111,14 +112,17 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 	}
 
 	// После обновления переводов, переиндексируем объявление
+	// Создаем новый контекст для фоновой задачи
+	bgCtx := context.Background()
 	go func() {
-		updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+		// Используем bgCtx для предотвращения утечки контекста запроса
+		updatedListing, err := h.marketplaceService.GetListingByID(bgCtx, listingID)
 		if err != nil {
 			log.Printf("Failed to get updated listing for reindexing: %v", err)
 			return
 		}
 
-		err = h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing)
+		err = h.marketplaceService.Storage().IndexListing(bgCtx, updatedListing)
 		if err != nil {
 			log.Printf("Failed to reindex listing after translation update: %v", err)
 		}
@@ -358,9 +362,12 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 	}
 
 	// Запускаем процесс перевода в фоне
+	// Создаем новый контекст для фоновой задачи
+	bgCtx := context.Background()
 	go func() {
+		// Используем bgCtx для предотвращения утечки контекста запроса
 		for _, listingID := range request.ListingIDs {
-			listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
+			listing, err := h.marketplaceService.GetListingByID(bgCtx, listingID)
 			if err != nil {
 				log.Printf("Failed to get listing %d for translation: %v", listingID, err)
 				continue
@@ -368,7 +375,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 
 			if listing.OriginalLanguage == "" {
 				// Определяем язык объявления
-				detectedLang, _, err := h.services.Translation().DetectLanguage(c.Context(), listing.Title+" "+listing.Description)
+				detectedLang, _, err := h.services.Translation().DetectLanguage(bgCtx, listing.Title+" "+listing.Description)
 				if err != nil {
 					log.Printf("Failed to detect language for listing %d: %v", listingID, err)
 					listing.OriginalLanguage = "en" // Используем английский по умолчанию
@@ -378,7 +385,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 
 				// Обновляем исходный язык в объявлении
 				listing.OriginalLanguage = detectedLang
-				err = h.marketplaceService.UpdateListing(c.Context(), listing)
+				err = h.marketplaceService.UpdateListing(bgCtx, listing)
 				if err != nil {
 					log.Printf("Failed to update listing %d with original language: %v", listingID, err)
 				}
@@ -396,7 +403,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 			var translatedTitle string
 			if isFactory {
 				translatedTitle, err = translationFactory.TranslateWithProvider(
-					c.Context(),
+					bgCtx,
 					listing.Title,
 					listing.OriginalLanguage,
 					request.TargetLang,
@@ -404,7 +411,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 				)
 			} else {
 				translatedTitle, err = h.services.Translation().Translate(
-					c.Context(),
+					bgCtx,
 					listing.Title,
 					listing.OriginalLanguage,
 					request.TargetLang,
@@ -425,9 +432,9 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 				}
 
 				if isFactory {
-					err = h.marketplaceService.UpdateTranslationWithProvider(c.Context(), titleTranslation, translationProvider)
+					err = h.marketplaceService.UpdateTranslationWithProvider(bgCtx, titleTranslation, translationProvider)
 				} else {
-					err = h.marketplaceService.UpdateTranslation(c.Context(), titleTranslation)
+					err = h.marketplaceService.UpdateTranslation(bgCtx, titleTranslation)
 				}
 
 				if err != nil {
@@ -439,7 +446,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 			var translatedDesc string
 			if isFactory {
 				translatedDesc, err = translationFactory.TranslateWithProvider(
-					c.Context(),
+					bgCtx,
 					listing.Description,
 					listing.OriginalLanguage,
 					request.TargetLang,
@@ -447,7 +454,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 				)
 			} else {
 				translatedDesc, err = h.services.Translation().Translate(
-					c.Context(),
+					bgCtx,
 					listing.Description,
 					listing.OriginalLanguage,
 					request.TargetLang,
@@ -468,9 +475,9 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 				}
 
 				if isFactory {
-					err = h.marketplaceService.UpdateTranslationWithProvider(c.Context(), descTranslation, translationProvider)
+					err = h.marketplaceService.UpdateTranslationWithProvider(bgCtx, descTranslation, translationProvider)
 				} else {
-					err = h.marketplaceService.UpdateTranslation(c.Context(), descTranslation)
+					err = h.marketplaceService.UpdateTranslation(bgCtx, descTranslation)
 				}
 
 				if err != nil {
@@ -479,13 +486,13 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 			}
 
 			// Переиндексируем объявление с новыми переводами
-			updatedListing, err := h.marketplaceService.GetListingByID(c.Context(), listing.ID)
+			updatedListing, err := h.marketplaceService.GetListingByID(bgCtx, listing.ID)
 			if err != nil {
 				log.Printf("Failed to get updated listing %d for reindexing: %v", listing.ID, err)
 				continue
 			}
 
-			err = h.marketplaceService.Storage().IndexListing(c.Context(), updatedListing)
+			err = h.marketplaceService.Storage().IndexListing(bgCtx, updatedListing)
 			if err != nil {
 				log.Printf("Failed to reindex listing %d after translations: %v", listing.ID, err)
 			}

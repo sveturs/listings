@@ -204,7 +204,7 @@ const StorefrontPage: React.FC = () => {
 
       {storefronts.length === 0 ? (
         <Card sx={{ p: 4, textAlign: 'center' }}>
-          <Store size={64} stroke={1} style={{ margin: '20px auto', opacity: 0.5 }} />
+          <Store size={64} stroke="1" style={{ margin: '20px auto', opacity: 0.5 }} />
           <Typography variant="h6" gutterBottom>
             {t('marketplace:store.noStorefronts')}
           </Typography>

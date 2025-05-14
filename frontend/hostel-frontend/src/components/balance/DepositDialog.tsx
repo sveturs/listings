@@ -38,7 +38,7 @@ interface PaymentSession {
 interface DepositDialogProps {
   open: boolean;
   onClose: () => void;
-  onBalanceUpdate?: () => void;
+  onBalanceUpdate?: (newBalance: number) => void;
 }
 
 const DepositDialog: React.FC<DepositDialogProps> = ({ open, onClose, onBalanceUpdate }) => {

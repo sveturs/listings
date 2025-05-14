@@ -1072,13 +1072,25 @@ func processMetadata(doc map[string]interface{}, listing *models.MarketplaceList
 
 				log.Printf("Recalculated discount percent for OpenSearch: %d%% (listing %d)",
 					discountPercent, listing.ID)
+
+				// Проверяем, чтобы storefront_id сохранился для объявлений со скидками
+				if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+					log.Printf("ВАЖНО: Сохраняем storefront_id=%d после обработки скидки для объявления %d",
+						*listing.StorefrontID, listing.ID)
+				}
 			}
 		}
 	}
 }
 
 func processStorefrontData(doc map[string]interface{}, listing *models.MarketplaceListing, storage storage.Storage) {
+	// Всегда добавляем storefront_id в документ, если он есть
 	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+		// Явно проверяем и выводим информацию о том, что мы добавляем storefront_id
+		doc["storefront_id"] = *listing.StorefrontID
+		log.Printf("ВАЖНО: Устанавливаем storefront_id=%d для объявления %d с скидкой=%v",
+			*listing.StorefrontID, listing.ID, listing.HasDiscount)
+
 		needStorefrontInfo := listing.City == "" || listing.Country == "" || listing.Location == "" ||
 			listing.Latitude == nil || listing.Longitude == nil
 
@@ -1118,9 +1130,20 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 					}
 					doc["show_on_map"] = true
 				}
+			} else {
+				log.Printf("WARNING: Failed to load storefront data for listing %d: %v", listing.ID, err)
 			}
 		}
+	} else {
+		log.Printf("DEBUG: Listing %d has no storefront_id", listing.ID)
+	}
+
+	// Дополнительная проверка после обработки всех метаданных и скидок
+	if listing.HasDiscount && listing.StorefrontID != nil &&
+		doc["storefront_id"] == nil {
 		doc["storefront_id"] = *listing.StorefrontID
+		log.Printf("КРИТИЧНО: Добавлен storefront_id=%d для объявления %d со скидкой в конце обработки",
+			*listing.StorefrontID, listing.ID)
 	}
 }
 

@@ -77,7 +77,7 @@ const DrawerHeader = styled(Box)<DrawerHeaderProps>(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: theme.spacing(1, 2),
+  padding: `${theme.spacing(1)} ${theme.spacing(2)}`,
   // necessary for content to be below app bar
   ...theme.mixins.toolbar
 })) as React.ComponentType<DrawerHeaderProps>;

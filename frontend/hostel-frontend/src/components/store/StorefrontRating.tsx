@@ -52,7 +52,7 @@ const StorefrontRating: React.FC<StorefrontRatingProps> = ({ storefrontId }) => 
     const fetchRating = async (): Promise<void> => {
       try {
         setLoading(true);
-        const response = await axios.get(`/api/v1/storefronts/${storefrontId}/rating`);
+        const response = await axios.get(`/api/v1/public/storefronts/${storefrontId}/rating`);
         setRatingData(response.data.data);
       } catch (err) {
         console.error('Error fetching storefront rating:', err);
@@ -75,7 +75,7 @@ const StorefrontRating: React.FC<StorefrontRatingProps> = ({ storefrontId }) => 
 
     try {
       setLoadingReviews(true);
-      const response = await axios.get(`/api/v1/storefronts/${storefrontId}/reviews`);
+      const response = await axios.get(`/api/v1/public/storefronts/${storefrontId}/reviews`);
       setReviews(response.data.data);
       setShowAllReviews(true);
     } catch (err) {

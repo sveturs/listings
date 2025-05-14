@@ -90,7 +90,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Состояние для проверки статуса администратора
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
-  const [categoryPath] = useState<string[]>([]);
+  const [categoryPath] = useState<{ id: string; name: string }[]>([]);
 
   const handleOpenProfile = (): void => {
     setIsProfileOpen(true);
@@ -183,7 +183,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <NewMessageIndicator unreadCount={unreadCount} />
-        <Chat size={20} />
+        <Chat sx={{ fontSize: 20 }} />
         <Typography>{t('navigation.messages')}</Typography>
       </Box>
     </MenuItem>
@@ -450,7 +450,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}
 
       <Container maxWidth="lg" sx={{ py: 0, px: { xs: 1, sm: 2, md: 3 }, width: '100%', boxSizing: 'border-box' }}>
-        {currentPath !== '/' && (
+        {currentPath !== '/' && categoryPath.length > 0 && (
           <Box
             sx={{
               display: 'flex',
@@ -460,7 +460,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               mt: 2
             }}
           >
-            <Breadcrumbs categoryPath={categoryPath} />
+            <Breadcrumbs paths={categoryPath} />
           </Box>
         )}
         {children}
@@ -566,9 +566,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 Novi Sad, Serbia
               </Typography>
               <Typography variant="body2">
-                <a href="mailto:info@svetu.rs" style={{ textDecoration: 'none', color: 'inherit', '&:hover': { color: 'primary.main' } }}>
+                <Box
+                  component="a"
+                  href="mailto:info@svetu.rs"
+                  sx={{
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    '&:hover': {
+                      color: 'primary.main'
+                    }
+                  }}
+                >
                   info@svetu.rs
-                </a>
+                </Box>
               </Typography>
             </Box>
           </Box>

@@ -1,4 +1,5 @@
 // frontend/hostel-frontend/src/components/marketplace/MarketplaceFilters.tsx
+import { FilterOptions } from '../../types/listing';
 import React, { useMemo, useEffect, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AutocompleteInput from '../shared/AutocompleteInput';
@@ -33,17 +34,7 @@ import VirtualizedCategoryTree from './VirtualizedCategoryTree';
 import AttributeFilters from './AttributeFilters';
 
 // TypeScript interfaces
-interface FilterOptions {
-  query?: string;
-  category_id?: number | string;
-  min_price?: string | number;
-  max_price?: string | number;
-  distance?: string; // Values like "1km", "3km", etc.
-  condition?: '' | 'new' | 'used';
-  latitude?: number;
-  longitude?: number;
-  [key: string]: any; // For dynamic attribute filters
-}
+// FilterOptions импортирован из types/listing.ts
 
 interface AttributeFiltersType {
   [key: string]: any; // Dynamic nature of attribute filters
@@ -51,7 +42,7 @@ interface AttributeFiltersType {
 
 interface MarketplaceFiltersProps {
   filters: FilterOptions;
-  onFilterChange: (newFilters: FilterOptions | ((prevFilters: FilterOptions) => FilterOptions)) => void;
+  onFilterChange: (newFilters: FilterOptions | Partial<FilterOptions> | ((prevFilters: FilterOptions) => FilterOptions)) => void;
   selectedCategoryId: number | string | null;
   onToggleMapView: () => void;
   setSearchParams: (params: Record<string, string>) => void;

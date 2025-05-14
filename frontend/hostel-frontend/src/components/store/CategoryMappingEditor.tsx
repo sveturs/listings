@@ -110,7 +110,7 @@ interface MobileCategorySelectionModalProps {
 }
 
 interface CategoryMappingEditorProps {
-  sourceId?: string;
+  sourceId?: string | number;
   onClose: () => void;
   onSave?: (mappings: Record<string, number>) => void;
 }

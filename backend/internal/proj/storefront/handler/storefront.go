@@ -159,6 +159,17 @@ func (h *StorefrontHandler) GetPublicStorefront(c *fiber.Ctx) error {
 
 	storefront, err := h.services.Storefront().GetPublicStorefrontByID(c.Context(), id)
 	if err != nil {
+		// Проверяем различные типы ошибок
+		if err.Error() == "storefront not found" {
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "Storefront not found")
+		}
+		if err.Error() == "storefront is not active" {
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "Storefront is not active")
+		}
+
+		// Логируем детали ошибки для отладки
+		fmt.Printf("Error getting public storefront %d: %v\n", id, err)
+
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get storefront")
 	}
 

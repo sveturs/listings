@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { Listing, ListingImage } from '../../types/listing';
 import {
     Box,
     Table,
@@ -22,47 +23,13 @@ import { Edit, Trash2, Eye, Calendar, Percent, ArrowUpDown, Star } from 'lucide-
 import axios from '../../api/axios';
 
 // Interfaces for the component
-interface ListingImage {
-    id?: string;
-    file_path?: string;
-    is_main?: boolean;
-    storage_type?: string;
-    public_url?: string;
-}
-
-interface ListingMetadata {
-    discount?: {
-        discount_percent: number;
-        previous_price: number;
-    };
-    promotions?: Record<string, any>;
-}
-
-interface Listing {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    old_price?: number;
-    has_discount?: boolean;
-    status: 'active' | 'inactive';
-    created_at: string;
-    images?: Array<ListingImage | string>;
-    original_language?: string;
-    translations?: Record<string, Record<string, string>>;
-    metadata?: ListingMetadata;
-    review_count?: number;
-    average_rating?: number;
-    [key: string]: any; // For dynamic access to properties
-}
-
 interface DiscountInfo {
     percent: number;
     oldPrice: number;
 }
 
 interface RatingData {
-    id: string;
+    id: string | number;
     review_count: number;
     average_rating: number;
 }
@@ -86,8 +53,8 @@ type ColumnType = 'image' | 'title' | 'price' | 'reviews' | 'date' | 'status' | 
 
 interface MarketplaceListingsListProps {
     listings: Listing[];
-    selectedItems?: string[];
-    onSelectItem?: (id: string) => void;
+    selectedItems?: (string | number)[];
+    onSelectItem?: (id: string | number) => void;
     onSelectAll?: (checked: boolean) => void;
     showSelection?: boolean;
     onSortChange?: (property: string, order: 'asc' | 'desc') => void;
@@ -118,30 +85,48 @@ const formatReviewCount = (count?: number): string => {
 };
 
 const getImageUrl = (listing?: Listing): string => {
-    if (!listing || !listing.images || listing.images.length === 0) {
+    if (!listing || !listing.images || !Array.isArray(listing.images) || listing.images.length === 0) {
         return '/placeholder.jpg';
     }
 
     const baseUrl = (window as any)?.ENV?.REACT_APP_MINIO_URL || (window as any)?.ENV?.REACT_APP_BACKEND_URL || '';
-    // Найдем главное изображение или используем первое
-    const mainImage = Array.isArray(listing.images) ? 
-        (listing.images.find((img): img is ListingImage => 
-            typeof img !== 'string' && img.is_main !== undefined) || 
-            listing.images[0]) : 
-        null;
 
+    // Найдем главное изображение или используем первое
+    const mainImage = listing.images.find(img =>
+        typeof img === 'object' && img && img.is_main === true
+    ) || listing.images[0];
+
+    // Если это строка URL
     if (typeof mainImage === 'string') {
-        return `${baseUrl}/uploads/${mainImage}`;
+        // Проверяем, абсолютный или относительный URL
+        if (mainImage.startsWith('http')) {
+            return mainImage;
+        } else {
+            return `${baseUrl}/uploads/${mainImage}`;
+        }
     }
 
-    if (mainImage && typeof mainImage !== 'string') {
-        // Проверяем на Minio хранилище
-        if (mainImage.storage_type === 'minio' ||
-            (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
-            console.log('Using MinIO URL:', `${baseUrl}${mainImage.public_url}`);
-            return `${baseUrl}${mainImage.public_url}`;
+    // Если это объект
+    if (mainImage && typeof mainImage === 'object') {
+        // Проверяем на наличие публичного URL
+        if (mainImage.public_url) {
+            // Проверяем, абсолютный или относительный URL
+            if (mainImage.public_url.startsWith('http')) {
+                return mainImage.public_url;
+            } else {
+                return `${baseUrl}${mainImage.public_url}`;
+            }
         }
 
+        // Проверяем на MinIO хранилище
+        if (mainImage.storage_type === 'minio' ||
+            (mainImage.file_path && mainImage.file_path.includes('listings/'))) {
+            if (mainImage.public_url) {
+                return `${baseUrl}${mainImage.public_url}`;
+            }
+        }
+
+        // Проверяем file_path
         if (mainImage.file_path) {
             return `${baseUrl}/uploads/${mainImage.file_path}`;
         }
@@ -308,7 +293,7 @@ const MarketplaceListingsList: React.FC<MarketplaceListingsListProps> = ({
     const isAllSelected = listings.length > 0 && selectedItems.length === listings.length;
 
     // Обработчик клика по строке - переход к объявлению
-    const handleRowClick = (id: string): void => {
+    const handleRowClick = (id: string | number): void => {
         navigate(`/marketplace/listings/${id}`);
     };
 
@@ -345,8 +330,8 @@ const MarketplaceListingsList: React.FC<MarketplaceListingsListProps> = ({
     const getDiscountInfo = (listing: Listing): DiscountInfo | null => {
         if (listing.metadata && listing.metadata.discount) {
             return {
-                percent: listing.metadata.discount.discount_percent,
-                oldPrice: listing.metadata.discount.previous_price
+                percent: listing.metadata.discount.discount_percent || listing.metadata.discount.percent || 0,
+                oldPrice: listing.metadata.discount.previous_price || listing.metadata.discount.oldPrice || 0
             };
         }
         if (listing.has_discount && listing.old_price) {

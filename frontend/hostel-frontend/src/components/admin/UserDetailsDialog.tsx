@@ -441,73 +441,82 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ open, onClose, us
 
                   {/* Вкладка Профиль */}
                   <TabPanel value={tabValue} index={0}>
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="h6" gutterBottom>О пользователе</Typography>
-                      <Paper variant="outlined" sx={{ p: 2 }}>
-                        <Typography variant="body1">
-                          {userData.bio || 'Информация отсутствует'}
-                        </Typography>
-                      </Paper>
-                    </Box>
+                    {(() => {
+                      return (
+                        <>
+                          <Box sx={{ mb: 3 }}>
+                            <Typography variant="h6" gutterBottom>О пользователе</Typography>
+                            <Paper variant="outlined" sx={{ p: 2 }}>
+                              <Typography variant="body1">
+                                {userData.bio || 'Информация отсутствует'}
+                              </Typography>
+                            </Paper>
+                          </Box>
 
-                    {userData.settings && (
-                        <Box sx={{ mb: 3 }}>
-                          <Typography variant="h6" gutterBottom>Настройки пользователя</Typography>
-                          <Paper variant="outlined" sx={{ p: 2 }}>
-                      <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-                        {renderJsonData(userData.settings)}
-                      </pre>
-                          </Paper>
-                        </Box>
-                    )}
+                          {userData.settings && (
+                              <Box sx={{ mb: 3 }}>
+                                <Typography variant="h6" gutterBottom>Настройки пользователя</Typography>
+                                <Paper variant="outlined" sx={{ p: 2 }}>
+                            <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+                              {renderJsonData(userData.settings)}
+                            </pre>
+                                </Paper>
+                              </Box>
+                          )}
+                        </>
+                      );
+                    })()}
                   </TabPanel>
 
                   {/* Вкладка Отзывы */}
                   <TabPanel value={tabValue} index={1}>
-                    {loadingData.reviews ? (
-                        <Box display="flex" justifyContent="center" p={3}>
-                          <CircularProgress />
-                        </Box>
-                    ) : reviews.length > 0 ? (
-                        <TableContainer component={Paper}>
-                          <Table>
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>ID</TableCell>
-                                <TableCell>Рейтинг</TableCell>
-                                <TableCell>Комментарий</TableCell>
-                                <TableCell>Объект</TableCell>
-                                <TableCell>Дата</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {reviews.map((review) => (
-                                  <TableRow key={review.id}>
-                                    <TableCell>{review.id}</TableCell>
-                                    <TableCell>{review.rating}/5</TableCell>
-                                    <TableCell>
-                                      {review.comment ? review.comment.substring(0, 100) + (review.comment.length > 100 ? '...' : '') : '-'}
-                                    </TableCell>
-                                    <TableCell>
-                                      {review.entity_type} #{review.entity_id}
-                                    </TableCell>
-                                    <TableCell>{formatDate(review.created_at)}</TableCell>
-                                  </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                    ) : (
-                        <Typography>У пользователя нет отзывов</Typography>
-                    )}
+                    {(() => {
+                      return loadingData.reviews ? (
+                          <Box display="flex" justifyContent="center" p={3}>
+                            <CircularProgress />
+                          </Box>
+                      ) : reviews.length > 0 ? (
+                          <TableContainer component={Paper}>
+                            <Table>
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>ID</TableCell>
+                                  <TableCell>Рейтинг</TableCell>
+                                  <TableCell>Комментарий</TableCell>
+                                  <TableCell>Объект</TableCell>
+                                  <TableCell>Дата</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {reviews.map((review) => (
+                                    <TableRow key={review.id}>
+                                      <TableCell>{review.id}</TableCell>
+                                      <TableCell>{review.rating}/5</TableCell>
+                                      <TableCell>
+                                        {review.comment ? review.comment.substring(0, 100) + (review.comment.length > 100 ? '...' : '') : '-'}
+                                      </TableCell>
+                                      <TableCell>
+                                        {review.entity_type} #{review.entity_id}
+                                      </TableCell>
+                                      <TableCell>{formatDate(review.created_at)}</TableCell>
+                                    </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                      ) : (
+                          <Typography>У пользователя нет отзывов</Typography>
+                      );
+                    })()}
                   </TabPanel>
 
                   {/* Вкладка Объявления */}
                   <TabPanel value={tabValue} index={2}>
-                    {console.log('Отображение вкладки объявлений. Данные:', listings)}
-                    {console.log('Количество объявлений:', listings ? listings.length : 0)}
-                    
-                    {loadingData.listings ? (
+                    {(() => {
+                      console.log('Отображение вкладки объявлений. Данные:', listings);
+                      console.log('Количество объявлений:', listings ? listings.length : 0);
+
+                      return loadingData.listings ? (
                         <Box display="flex" justifyContent="center" p={3}>
                           <CircularProgress />
                         </Box>
@@ -549,90 +558,93 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ open, onClose, us
                         </TableContainer>
                     ) : (
                         <Typography>У пользователя нет объявлений</Typography>
-                    )}
+                    );
+                    })()}
                   </TabPanel>
 
                   {/* Вкладка Финансы */}
                   <TabPanel value={tabValue} index={3}>
-                    {loadingData.balance || loadingData.transactions ? (
-                        <Box display="flex" justifyContent="center" p={3}>
-                          <CircularProgress />
-                        </Box>
-                    ) : (
-                        <>
-                          {balance ? (
-                              <Box sx={{ mb: 4 }}>
-                                <Typography variant="h6" gutterBottom>Баланс</Typography>
-                                <Paper variant="outlined" sx={{ p: 2 }}>
-                                  <Grid container spacing={2}>
-                                    <Grid item xs={6} md={4}>
-                                      <Typography variant="subtitle2" color="text.secondary">Доступно</Typography>
-                                      <Typography variant="h5">{balance.balance} {balance.currency}</Typography>
+                    {(() => {
+                      return loadingData.balance || loadingData.transactions ? (
+                          <Box display="flex" justifyContent="center" p={3}>
+                            <CircularProgress />
+                          </Box>
+                      ) : (
+                          <>
+                            {balance ? (
+                                <Box sx={{ mb: 4 }}>
+                                  <Typography variant="h6" gutterBottom>Баланс</Typography>
+                                  <Paper variant="outlined" sx={{ p: 2 }}>
+                                    <Grid container spacing={2}>
+                                      <Grid item xs={6} md={4}>
+                                        <Typography variant="subtitle2" color="text.secondary">Доступно</Typography>
+                                        <Typography variant="h5">{balance.balance} {balance.currency}</Typography>
+                                      </Grid>
+                                      <Grid item xs={6} md={4}>
+                                        <Typography variant="subtitle2" color="text.secondary">Заморожено</Typography>
+                                        <Typography variant="h5">{balance.frozen_balance} {balance.currency}</Typography>
+                                      </Grid>
+                                      <Grid item xs={12} md={4}>
+                                        <Typography variant="subtitle2" color="text.secondary">Обновлено</Typography>
+                                        <Typography variant="body2">{formatDate(balance.updated_at)}</Typography>
+                                      </Grid>
                                     </Grid>
-                                    <Grid item xs={6} md={4}>
-                                      <Typography variant="subtitle2" color="text.secondary">Заморожено</Typography>
-                                      <Typography variant="h5">{balance.frozen_balance} {balance.currency}</Typography>
-                                    </Grid>
-                                    <Grid item xs={12} md={4}>
-                                      <Typography variant="subtitle2" color="text.secondary">Обновлено</Typography>
-                                      <Typography variant="body2">{formatDate(balance.updated_at)}</Typography>
-                                    </Grid>
-                                  </Grid>
-                                </Paper>
-                              </Box>
-                          ) : (
-                              <Alert severity="info" sx={{ mb: 3 }}>
-                                Информация о балансе недоступна
-                              </Alert>
-                          )}
+                                  </Paper>
+                                </Box>
+                            ) : (
+                                <Alert severity="info" sx={{ mb: 3 }}>
+                                  Информация о балансе недоступна
+                                </Alert>
+                            )}
 
-                          {transactions.length > 0 ? (
-                              <Box>
-                                <Typography variant="h6" gutterBottom>История транзакций</Typography>
-                                <TableContainer component={Paper}>
-                                  <Table>
-                                    <TableHead>
-                                      <TableRow>
-                                        <TableCell>ID</TableCell>
-                                        <TableCell>Тип</TableCell>
-                                        <TableCell>Сумма</TableCell>
-                                        <TableCell>Статус</TableCell>
-                                        <TableCell>Метод</TableCell>
-                                        <TableCell>Дата</TableCell>
-                                      </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                      {transactions.map((tx) => (
-                                          <TableRow key={tx.id}>
-                                            <TableCell>{tx.id}</TableCell>
-                                            <TableCell>{tx.type}</TableCell>
-                                            <TableCell>
-                                              {tx.amount} {tx.currency}
-                                            </TableCell>
-                                            <TableCell>
-                                              <Chip
-                                                  label={tx.status}
-                                                  color={
-                                                    tx.status === 'completed' ? 'success' :
-                                                        tx.status === 'pending' ? 'warning' :
-                                                            'error'
-                                                  }
-                                                  size="small"
-                                              />
-                                            </TableCell>
-                                            <TableCell>{tx.payment_method || '-'}</TableCell>
-                                            <TableCell>{formatDate(tx.created_at)}</TableCell>
-                                          </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </TableContainer>
-                              </Box>
-                          ) : (
-                              <Typography>История транзакций отсутствует</Typography>
-                          )}
-                        </>
-                    )}
+                            {transactions.length > 0 ? (
+                                <Box>
+                                  <Typography variant="h6" gutterBottom>История транзакций</Typography>
+                                  <TableContainer component={Paper}>
+                                    <Table>
+                                      <TableHead>
+                                        <TableRow>
+                                          <TableCell>ID</TableCell>
+                                          <TableCell>Тип</TableCell>
+                                          <TableCell>Сумма</TableCell>
+                                          <TableCell>Статус</TableCell>
+                                          <TableCell>Метод</TableCell>
+                                          <TableCell>Дата</TableCell>
+                                        </TableRow>
+                                      </TableHead>
+                                      <TableBody>
+                                        {transactions.map((tx) => (
+                                            <TableRow key={tx.id}>
+                                              <TableCell>{tx.id}</TableCell>
+                                              <TableCell>{tx.type}</TableCell>
+                                              <TableCell>
+                                                {tx.amount} {tx.currency}
+                                              </TableCell>
+                                              <TableCell>
+                                                <Chip
+                                                    label={tx.status}
+                                                    color={
+                                                      tx.status === 'completed' ? 'success' :
+                                                          tx.status === 'pending' ? 'warning' :
+                                                              'error'
+                                                    }
+                                                    size="small"
+                                                />
+                                              </TableCell>
+                                              <TableCell>{tx.payment_method || '-'}</TableCell>
+                                              <TableCell>{formatDate(tx.created_at)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </TableContainer>
+                                </Box>
+                            ) : (
+                                <Typography>История транзакций отсутствует</Typography>
+                            )}
+                          </>
+                      );
+                    })()}
                   </TabPanel>
                 </Box>
               </>

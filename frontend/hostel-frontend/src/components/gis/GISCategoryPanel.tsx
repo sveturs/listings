@@ -41,9 +41,7 @@ interface GISCategoryPanelProps {
   onCategorySelect: (category: Category) => void;
 }
 
-interface CategoryListItemProps {
-  depth?: number;
-}
+// Это объявление теперь не нужно, так как есть более полное ниже
 
 // Правильное типизирование styled-компонентов
 interface CategoryDrawerProps {
@@ -51,6 +49,7 @@ interface CategoryDrawerProps {
   open?: boolean;
   onClose?: () => void;
   variant?: 'permanent' | 'persistent' | 'temporary';
+  children?: React.ReactNode;
 }
 
 const CategoryDrawer = styled(Drawer)<CategoryDrawerProps>(({ theme }) => ({
@@ -70,6 +69,7 @@ interface SearchInputProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   InputProps?: any;
+  children?: React.ReactNode;
 }
 
 const SearchInput = styled(TextField)<SearchInputProps>(({ theme }) => ({
@@ -82,6 +82,7 @@ const SearchInput = styled(TextField)<SearchInputProps>(({ theme }) => ({
 interface CategoryListItemProps {
   depth?: number;
   onClick?: () => void;
+  children?: React.ReactNode;
 }
 
 // Create a typed styled component for CategoryListItem

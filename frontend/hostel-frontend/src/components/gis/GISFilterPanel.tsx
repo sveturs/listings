@@ -52,6 +52,7 @@ interface FilterDrawerProps {
   open?: boolean;
   onClose?: () => void;
   variant?: 'permanent' | 'persistent' | 'temporary';
+  children?: React.ReactNode;
 }
 
 const FilterDrawer = styled(Drawer)<FilterDrawerProps>(({ theme }) => ({

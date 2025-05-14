@@ -196,7 +196,7 @@ const StorefrontDetailPage: React.FC = () => {
         try {
             setLoading(true);
             const [storefrontResponse, sourcesResponse, listingsResponse] = await Promise.all([
-                axios.get(`/api/v1/storefronts/${id}`),
+                axios.get(`/api/v1/public/storefronts/${id}`),
                 axios.get(`/api/v1/storefronts/${id}/import-sources`),
                 axios.get('/api/v1/marketplace/listings', {
                     params: {

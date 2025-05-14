@@ -34,7 +34,7 @@ import PriceHistoryChart from '../../components/marketplace/PriceHistoryChart';
 
 // API и типы
 import axios from '../../api/axios';
-import type { Listing as ListingBase } from '../../components/marketplace/ListingCard';
+import type { Listing } from '../../types/listing';
 
 // Определяем наши собственные типы, чтобы избежать конфликтов имен
 interface ListingImageObject {
@@ -92,17 +92,56 @@ interface CategoryPath {
 }
 
 // Обновляем интерфейс с новыми именами типов
-interface DetailedListing extends ListingBase {
+interface DetailedListing {
+    // Базовые поля из Listing
+    id: string | number;
+    title: string;
+    description?: string;
+    price: number;
+    old_price?: number;
+    category_id?: string | number;
+    user_id?: string | number;
+    created_at?: string;
+    updated_at?: string;
+    condition?: string;
+    status?: string;
+
+    // Местоположение
+    location?: string;
+    city?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
+    show_on_map?: boolean;
+
+    // Изображения и атрибуты
     images?: (string | ListingImageObject)[];
     attributes?: ListingAttribute[];
+
+    // Категории и переводы
     category_path_ids?: string[];
     category_path_names?: string[];
     category_path_slugs?: string[];
-    show_on_map?: boolean;
+    original_language?: string;
+    translations?: {
+        [language: string]: {
+            [field: string]: string;
+        };
+    };
+
+    // Магазин
+    storefront_id?: number | string;
+    storefront_name?: string;
+
+    // Избранное и метаданные
+    is_favorite?: boolean;
     metadata?: {
         discount?: ListingDiscountInfo;
         [key: string]: any;
     };
+    has_discount?: boolean;
+
+    // Информация о пользователе
     user?: {
         id: number | string;
         name: string;
@@ -111,6 +150,9 @@ interface DetailedListing extends ListingBase {
         picture_url?: string;
         created_at?: string;
     };
+
+    // Для совместимости с другими компонентами
+    [key: string]: any;
 }
 
 interface AttributeIconMapping {
@@ -392,25 +434,9 @@ const ListingDetailsPage: React.FC = () => {
     };
 
     // Преобразование атрибутов в формат для AutoDetails компонента
-    interface AutoProps {
-        brand?: string;
-        model?: string;
-        year?: number | null;
-        mileage?: number;
-        engine_capacity?: number | null;
-        power?: number | null;
-        fuel_type?: string;
-        transmission?: string;
-        body_type?: string;
-        color?: string;
-        drive_type?: string;
-        number_of_doors?: string | number;
-        number_of_seats?: string | number;
-        [key: string]: any;
-    }
-
-    const convertAttributesToAutoProps = (attributes: ListingAttribute[]): AutoProps => {
-        const props: AutoProps = {};
+    // Функция конвертации атрибутов в свойства авто для компонента AutoDetails
+    const convertAttributesToAutoProps = (attributes: ListingAttribute[] = []): any => {
+        const props: any = {};
 
         console.log("Преобразуемые атрибуты:", attributes);
 
@@ -427,6 +453,11 @@ const ListingDetailsPage: React.FC = () => {
                 if (attr.attribute_name === 'mileage' && typeof value === 'number') {
                     // Округляем пробег до целого числа
                     value = Math.round(value);
+                }
+
+                // Убеждаемся, что number_of_doors и number_of_seats будут числами
+                if (attr.attribute_name === 'number_of_doors' || attr.attribute_name === 'number_of_seats') {
+                    value = Number(value);
                 }
             } else if (attr.attribute_type === 'select' || attr.attribute_type === 'text') {
                 // Для текстовых атрибутов берем text_value

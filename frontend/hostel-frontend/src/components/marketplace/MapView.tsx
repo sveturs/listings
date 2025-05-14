@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useMemo, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigation, X, List, Maximize2, Store } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Listing } from '../../types/listing';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -32,34 +33,6 @@ import { useLocation } from '../../contexts/LocationContext';
 import CentralAttributeFilters from './CentralAttributeFilters';
 
 // TypeScript interfaces
-export interface ImageObject {
-  id?: number | string;
-  file_path?: string;
-  public_url?: string;
-  is_main?: boolean;
-  storage_type?: string;
-  [key: string]: any;
-}
-
-export interface Listing {
-  id: number | string;
-  title: string;
-  price: number;
-  latitude?: number;
-  longitude?: number;
-  location?: string;
-  address?: string;
-  condition?: string;
-  images?: (string | ImageObject)[];
-  storefront_id?: number | string;
-  storefront_name?: string;
-  isPartOfStorefront?: boolean;
-  isUniqueLocation?: boolean;
-  storefrontName?: string;
-  storefrontItemCount?: number;
-  show_on_map?: boolean;
-  [key: string]: any;
-}
 
 interface MapFilters {
   category_id?: string | number;
@@ -79,6 +52,12 @@ interface ListingPreviewProps {
 interface MapViewProps {
   listings: Listing[];
   filters: MapFilters;
+  userLocation?: {
+    latitude: number | null;
+    longitude: number | null;
+    city?: string;
+    country?: string;
+  };
   onFilterChange: (filters: MapFilters) => void;
   onMapClose: () => void;
 }

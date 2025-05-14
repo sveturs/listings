@@ -11,7 +11,7 @@ import CategoryMappingEditor from './CategoryMappingEditor';
 interface CategoryMappingModalProps {
   open: boolean;
   onClose: () => void;
-  sourceId?: string;
+  sourceId?: string | number;
   onSave: () => void;
 }
 

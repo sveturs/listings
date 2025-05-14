@@ -14,17 +14,7 @@ import {
 } from '@mui/material';
 import { Favorite, Share, ShoppingCart } from '@mui/icons-material';
 import axios from '../../api/axios';
-import { Listing } from './ListingCard';
-
-// Определяем локально интерфейс ImageObject
-interface ImageObject {
-  id?: number | string;
-  file_path?: string;
-  public_url?: string;
-  is_main?: boolean;
-  storage_type?: string;
-  [key: string]: any;
-}
+import { Listing, ListingImage } from '../../types/listing';
 
 const ItemDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,42 +45,62 @@ const ItemDetails: React.FC = () => {
   }, [id]);
 
   // Функция для получения URL изображения
-  const getImageUrl = (image: string | ImageObject): string => {
+  const getImageUrl = (image: string | ListingImage): string => {
     if (!image) {
+      console.log('No image provided, using placeholder');
       return '/placeholder.png';
     }
 
     // Строковый формат (обратная совместимость)
     if (typeof image === 'string') {
+      console.log('Processing string image:', image);
       // Проверяем, это путь к Minio или обычному хранилищу
       if (image.includes('listings/')) {
-        return `${BACKEND_URL}/listings/${image.split('/').pop()}`;
+        const url = `${BACKEND_URL}/listings/${image.split('/').pop()}`;
+        console.log('String image (listings):', url);
+        return url;
       }
-      return `${BACKEND_URL}/uploads/${image}`;
+      const url = `${BACKEND_URL}/uploads/${image}`;
+      console.log('String image (uploads):', url);
+      return url;
     }
+
+    console.log('Processing object image:', image);
 
     // Объектный формат
     if (image.public_url) {
       // Проверяем, является ли URL абсолютным
       if (image.public_url.startsWith('http')) {
+        console.log('Object with absolute public_url:', image.public_url);
         return image.public_url;
       } else {
-        return `${BACKEND_URL}${image.public_url}`;
+        const url = `${BACKEND_URL}${image.public_url}`;
+        console.log('Object with relative public_url:', url);
+        return url;
       }
     }
 
     // Для MinIO-объектов
-    if (image.storage_type === 'minio' ||
-      (image.file_path && image.file_path.includes('listings/'))) {
-      console.log('Using MinIO URL:', `${BACKEND_URL}${image.public_url}`);
-      return `${BACKEND_URL}${image.public_url}`;
+    if (image.storage_type === 'minio' && image.public_url) {
+      const url = `${BACKEND_URL}${image.public_url}`;
+      console.log('MinIO object with public_url:', url);
+      return url;
+    }
+
+    if (image.file_path && image.file_path.includes('listings/')) {
+      const url = `${BACKEND_URL}/listings/${image.file_path.split('/').pop()}`;
+      console.log('Object with listings file_path:', url);
+      return url;
     }
 
     // Для локального хранилища
     if (image.file_path) {
-      return `${BACKEND_URL}/uploads/${image.file_path}`;
+      const url = `${BACKEND_URL}/uploads/${image.file_path}`;
+      console.log('Object with file_path:', url);
+      return url;
     }
 
+    console.log('No matching image format, using placeholder');
     return '/placeholder.png';
   };
 
@@ -151,7 +161,7 @@ const ItemDetails: React.FC = () => {
             }}
           >
             <img
-              src={currentImage ? getImageUrl(currentImage) : (item?.image ? getImageUrl(item.image) : '/placeholder.png')}
+              src={currentImage ? getImageUrl(currentImage) : (item?.images && item.images.length > 0 ? getImageUrl(item.images[0]) : '/placeholder.png')}
               alt={item?.title || 'Товар'}
               style={{
                 maxWidth: '100%',

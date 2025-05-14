@@ -87,7 +87,8 @@ interface SearchContainerProps {
   children?: React.ReactNode;
 }
 
-const SearchContainer = styled(Box, {
+// Создаём компонент с поддержкой ref
+const StyledBox = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'drawerOpen' && prop !== 'drawerWidth'
 })<SearchContainerProps>(({ theme, drawerOpen, drawerWidth }) => ({
   position: 'absolute',
@@ -102,7 +103,12 @@ const SearchContainer = styled(Box, {
     top: theme.spacing(1),
     width: '95%',
   }
-})) as React.ComponentType<SearchContainerProps>;
+}));
+
+// Создаем компонент-обертку с forwardRef
+const SearchContainer = React.forwardRef<HTMLDivElement, SearchContainerProps>(
+  (props, ref) => <StyledBox ref={ref} {...props} />
+);
 
 interface SearchFieldProps {
   fullWidth?: boolean;

@@ -519,6 +519,9 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		if tempStorefrontID.Valid {
 			sfID := int(tempStorefrontID.Int32)
 			listing.StorefrontID = &sfID
+			log.Printf("DEBUG: Listing %d has storefront_id: %d", listing.ID, *listing.StorefrontID)
+		} else {
+			log.Printf("DEBUG: Listing %d has no storefront_id", listing.ID)
 		}
 		if tempLatitude.Valid {
 			listing.Latitude = &tempLatitude.Float64
@@ -1867,12 +1870,13 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 
 	// Получаем основные данные объявления с original_language
 	err := s.pool.QueryRow(ctx, `
-        SELECT 
+        SELECT
             l.id, l.user_id, l.category_id, l.title, l.description,
             l.price, l.condition, l.status, l.location, l.latitude,
             l.longitude, l.address_city, l.address_country, l.views_count,
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
-            u.name, u.email, u.created_at as user_created_at, 
+            l.storefront_id, -- Добавляем поле storefront_id
+            u.name, u.email, u.created_at as user_created_at,
             COALESCE(u.picture_url, ''), u.phone,
             c.name as category_name, c.slug as category_slug, l.metadata
         FROM marketplace_listings l
@@ -1884,7 +1888,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&listing.Description, &listing.Price, &listing.Condition, &listing.Status,
 		&listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
 		&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
-		&listing.ShowOnMap, &listing.OriginalLanguage,
+		&listing.ShowOnMap, &listing.OriginalLanguage, &listing.StorefrontID,
 		&listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
 		&listing.User.PictureURL, &listing.User.Phone,
 		&listing.Category.Name, &listing.Category.Slug, &listing.Metadata,

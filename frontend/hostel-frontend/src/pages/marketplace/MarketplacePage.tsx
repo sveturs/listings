@@ -6,6 +6,7 @@ import { Map as MapIcon } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocation } from '../../contexts/LocationContext';
 import { debounce } from 'lodash';
+import { Listing, FilterState, FilterOptions } from '../../types/listing';
 
 import {
     Container,
@@ -42,25 +43,6 @@ import InfiniteScroll from '../../components/marketplace/InfiniteScroll';
 import MarketplaceListingsList from '../../components/marketplace/MarketplaceListingsList';
 
 // Типы для компонентов
-interface Listing {
-    id?: string | number;
-    title: string;
-    description?: string;
-    price?: number;
-    category_id: string | number;
-    user_id: string | number;
-    images?: string[];
-    created_at?: string;
-    condition?: string;
-    city?: string;
-    country?: string;
-    coordinates?: {
-        latitude: number;
-        longitude: number;
-    };
-    [key: string]: any;
-}
-
 interface Category {
     id: string | number;
     name: string;
@@ -81,23 +63,7 @@ interface AttributeFilters {
     [key: string]: string | number | boolean;
 }
 
-interface FilterState {
-    query: string;
-    category_id: string;
-    min_price: string;
-    max_price: string;
-    city: string;
-    country: string;
-    condition: string;
-    sort_by: string;
-    distance: string;
-    latitude?: number | null;
-    longitude?: number | null;
-    attributeFilters: AttributeFilters;
-    view_mode?: string;
-    size?: number;
-    [key: string]: any;
-}
+// FilterState импортирован из types/listing.ts
 
 interface MobileListingGridProps {
     listings: Listing[];

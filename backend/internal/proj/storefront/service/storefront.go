@@ -376,7 +376,11 @@ func (s *StorefrontService) GetStorefrontByID(ctx context.Context, id int, userI
 func (s *StorefrontService) GetPublicStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
 	storefront, err := s.storage.GetStorefrontByID(ctx, id)
 	if err != nil {
-		return nil, err
+		// Проверяем на ошибку "no rows in result set"
+		if err.Error() == "no rows in result set" {
+			return nil, fmt.Errorf("storefront not found")
+		}
+		return nil, fmt.Errorf("error getting storefront: %w", err)
 	}
 
 	if storefront.Status != "active" {

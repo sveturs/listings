@@ -45,7 +45,8 @@ import {
 import Checkbox from '@mui/material/Checkbox';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import ListingCard, { Listing } from '../../components/marketplace/ListingCard';
+import ListingCard from '../../components/marketplace/ListingCard';
+import { Listing } from '../../types/listing';
 import MarketplaceListingsList from '../../components/marketplace/MarketplaceListingsList';
 import InfiniteScroll from '../../components/marketplace/InfiniteScroll';
 import axios from '../../api/axios';
