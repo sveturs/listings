@@ -67,14 +67,16 @@ type MarketplaceListing struct {
 }
 
 type MarketplaceCategory struct {
-	ID           int               `json:"id"`
-	Name         string            `json:"name"`
-	Slug         string            `json:"slug"`
-	ParentID     *int              `json:"parent_id,omitempty"`
-	Icon         string            `json:"icon,omitempty"`
-	CreatedAt    time.Time         `json:"created_at"`
-	Translations map[string]string `json:"translations,omitempty"`
-	ListingCount int               `json:"listing_count"`
+	ID                int               `json:"id"`
+	Name              string            `json:"name"`
+	Slug              string            `json:"slug"`
+	ParentID          *int              `json:"parent_id,omitempty"`
+	Icon              string            `json:"icon,omitempty"`
+	CreatedAt         time.Time         `json:"created_at"`
+	Translations      map[string]string `json:"translations,omitempty"`
+	ListingCount      int               `json:"listing_count"`
+	HasCustomUI       bool              `json:"has_custom_ui,omitempty"`
+	CustomUIComponent string            `json:"custom_ui_component,omitempty"`
 }
 
 type MarketplaceImage struct {
@@ -92,16 +94,18 @@ type MarketplaceImage struct {
 }
 
 type CategoryTreeNode struct {
-	ID            int                `json:"id"`
-	Name          string             `json:"name"`
-	Slug          string             `json:"slug"`
-	Icon          string             `json:"icon,omitempty"`
-	ParentID      *int               `json:"parent_id,omitempty"`
-	CreatedAt     string             `json:"created_at"`
-	Level         int                `json:"level"`
-	Path          string             `json:"path"`
-	ListingCount  int                `json:"listing_count"`
-	Children      []CategoryTreeNode `json:"children,omitempty"`
-	ChildrenCount int                `json:"children_count"` // Новое поле
-	Translations  map[string]string  `json:"translations,omitempty"`
+	ID                int                `json:"id"`
+	Name              string             `json:"name"`
+	Slug              string             `json:"slug"`
+	Icon              string             `json:"icon,omitempty"`
+	ParentID          *int               `json:"parent_id,omitempty"`
+	CreatedAt         string             `json:"created_at"`
+	Level             int                `json:"level"`
+	Path              string             `json:"path"`
+	ListingCount      int                `json:"listing_count"`
+	Children          []CategoryTreeNode `json:"children,omitempty"`
+	ChildrenCount     int                `json:"children_count"` // Новое поле
+	Translations      map[string]string  `json:"translations,omitempty"`
+	HasCustomUI       bool               `json:"has_custom_ui,omitempty"`
+	CustomUIComponent string             `json:"custom_ui_component,omitempty"`
 }

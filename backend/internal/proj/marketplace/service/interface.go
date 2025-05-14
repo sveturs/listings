@@ -35,6 +35,7 @@ type MarketplaceServiceInterface interface {
 	ReindexAllListings(ctx context.Context) error
 	GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error)
 	Storage() storage.Storage
+
 	//атрибуты
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
 	SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
@@ -42,4 +43,23 @@ type MarketplaceServiceInterface interface {
 
 	UploadImage(ctx context.Context, file *multipart.FileHeader, listingID int, isMain bool) (*models.MarketplaceImage, error)
 	DeleteImage(ctx context.Context, imageID int) error
+
+	// Новые методы для управления категориями и атрибутами (админка)
+	CreateCategory(ctx context.Context, category *models.MarketplaceCategory) (int, error)
+	UpdateCategory(ctx context.Context, category *models.MarketplaceCategory) error
+	DeleteCategory(ctx context.Context, id int) error
+	ReorderCategories(ctx context.Context, orderedIDs []int) error
+	MoveCategory(ctx context.Context, id int, newParentID int) error
+
+	// Новые методы для управления атрибутами
+	CreateAttribute(ctx context.Context, attribute *models.CategoryAttribute) (int, error)
+	UpdateAttribute(ctx context.Context, attribute *models.CategoryAttribute) error
+	DeleteAttribute(ctx context.Context, id int) error
+	GetAttributeByID(ctx context.Context, id int) (*models.CategoryAttribute, error)
+
+	// Новые методы для управления связями
+	AddAttributeToCategory(ctx context.Context, categoryID int, attributeID int, isRequired bool) error
+	RemoveAttributeFromCategory(ctx context.Context, categoryID int, attributeID int) error
+	UpdateAttributeCategory(ctx context.Context, categoryID int, attributeID int, isRequired bool, isEnabled bool) error
+	InvalidateAttributeCache(ctx context.Context, categoryID int) error
 }
