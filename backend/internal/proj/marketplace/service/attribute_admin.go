@@ -464,3 +464,266 @@ func (s *MarketplaceService) InvalidateAttributeCache(ctx context.Context, categ
 	// но метод оставлен для будущих расширений
 	return nil
 }
+
+// GetCategoryByID получает информацию о категории по ID
+func (s *MarketplaceService) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
+	query := `
+		SELECT id, name, slug, parent_id, icon, created_at, has_custom_ui, custom_ui_component, 
+                       0 as listing_count, sort_order, COALESCE(level, 0) as level, COALESCE(count, 0) as count, 
+                       COALESCE(external_id, '') as external_id
+		FROM marketplace_categories
+		WHERE id = $1
+	`
+
+	var category models.MarketplaceCategory
+	err := s.storage.QueryRow(ctx, query, id).Scan(
+		&category.ID,
+		&category.Name,
+		&category.Slug,
+		&category.ParentID,
+		&category.Icon,
+		&category.CreatedAt,
+		&category.HasCustomUI,
+		&category.CustomUIComponent,
+		&category.ListingCount,
+		&category.SortOrder,
+		&category.Level,
+		&category.Count,
+		&category.ExternalID,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("не удалось получить категорию: %w", err)
+	}
+
+	// Получаем переводы для категории
+	translationsQuery := `
+		SELECT language, field_name, translated_text
+		FROM translations
+		WHERE entity_type = 'category' AND entity_id = $1 AND field_name = 'name'
+	`
+	rows, err := s.storage.Query(ctx, translationsQuery, id)
+	if err != nil {
+		return &category, fmt.Errorf("не удалось получить переводы: %w", err)
+	}
+	defer rows.Close()
+
+	category.Translations = make(map[string]string)
+	for rows.Next() {
+		var lang, field, text string
+		if err := rows.Scan(&lang, &field, &text); err != nil {
+			return &category, fmt.Errorf("не удалось прочитать перевод: %w", err)
+		}
+		category.Translations[lang] = text
+	}
+
+	return &category, nil
+}
+
+// GetCategoryAttributes получает все атрибуты для указанной категории
+func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
+	// Запрос для получения атрибутов категории
+	query := `
+		SELECT a.id, a.name, a.display_name, a.attribute_type, a.options, a.validation_rules,
+		       a.is_searchable, a.is_filterable, cam.is_required, a.sort_order, a.created_at, a.custom_component
+		FROM category_attributes a
+		JOIN category_attribute_mapping cam ON a.id = cam.attribute_id
+		WHERE cam.category_id = $1 AND cam.is_enabled = true
+		ORDER BY a.sort_order, a.id
+	`
+
+	rows, err := s.storage.Query(ctx, query, categoryID)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось получить атрибуты категории: %w", err)
+	}
+	defer rows.Close()
+
+	attributes := make([]models.CategoryAttribute, 0)
+	for rows.Next() {
+		var attribute models.CategoryAttribute
+		var optionsJSON, validRulesJSON []byte
+
+		err := rows.Scan(
+			&attribute.ID,
+			&attribute.Name,
+			&attribute.DisplayName,
+			&attribute.AttributeType,
+			&optionsJSON,
+			&validRulesJSON,
+			&attribute.IsSearchable,
+			&attribute.IsFilterable,
+			&attribute.IsRequired,
+			&attribute.SortOrder,
+			&attribute.CreatedAt,
+			&attribute.CustomComponent,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("не удалось прочитать атрибут: %w", err)
+		}
+
+		// Устанавливаем Options и ValidRules
+		attribute.Options = optionsJSON
+		attribute.ValidRules = validRulesJSON
+
+		// Получаем переводы для атрибута
+		translationsQuery := `
+			SELECT language, field_name, translated_text
+			FROM translations
+			WHERE entity_type = 'attribute' AND entity_id = $1 AND field_name = 'display_name'
+		`
+		tRows, err := s.storage.Query(ctx, translationsQuery, attribute.ID)
+		if err == nil {
+			attribute.Translations = make(map[string]string)
+			for tRows.Next() {
+				var lang, field, text string
+				if err := tRows.Scan(&lang, &field, &text); err == nil {
+					attribute.Translations[lang] = text
+				}
+			}
+			tRows.Close()
+		}
+
+		// Получаем переводы для опций атрибута
+		optionTranslationsQuery := `
+			SELECT language, field_name, translated_text
+			FROM translations
+			WHERE entity_type = 'attribute_option' AND entity_id = $1
+		`
+		oRows, err := s.storage.Query(ctx, optionTranslationsQuery, attribute.ID)
+		if err == nil {
+			attribute.OptionTranslations = make(map[string]map[string]string)
+			for oRows.Next() {
+				var lang, option, text string
+				if err := oRows.Scan(&lang, &option, &text); err == nil {
+					if attribute.OptionTranslations[lang] == nil {
+						attribute.OptionTranslations[lang] = make(map[string]string)
+					}
+					attribute.OptionTranslations[lang][option] = text
+				}
+			}
+			oRows.Close()
+		}
+
+		attributes = append(attributes, attribute)
+	}
+
+	return attributes, nil
+}
+
+// GetAttributeRanges получает минимальные и максимальные значения числовых атрибутов для категории
+func (s *MarketplaceService) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
+	// Получаем все атрибуты категории
+	attributes, err := s.GetCategoryAttributes(ctx, categoryID)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось получить атрибуты категории: %w", err)
+	}
+
+	// Фильтруем числовые атрибуты и атрибуты с диапазоном
+	numericAttributeIDs := make([]int, 0)
+	numericAttributeNames := make(map[int]string)
+	for _, attr := range attributes {
+		if attr.AttributeType == "number" || attr.AttributeType == "range" {
+			numericAttributeIDs = append(numericAttributeIDs, attr.ID)
+			numericAttributeNames[attr.ID] = attr.Name
+		}
+	}
+
+	if len(numericAttributeIDs) == 0 {
+		return make(map[string]map[string]interface{}), nil
+	}
+
+	// Создаем результат
+	result := make(map[string]map[string]interface{})
+
+	// Вычисляем минимальные и максимальные значения для каждого числового атрибута
+	for _, attrID := range numericAttributeIDs {
+		attrName := numericAttributeNames[attrID]
+
+		// Запрос для получения минимального и максимального значения
+		query := `
+			SELECT MIN(numeric_value), MAX(numeric_value)
+			FROM listing_attribute_values
+			JOIN marketplace_listings ON listing_attribute_values.listing_id = marketplace_listings.id
+			WHERE attribute_id = $1 AND marketplace_listings.category_id = $2 AND marketplace_listings.status = 'active'
+		`
+
+		var min, max *float64
+		err := s.storage.QueryRow(ctx, query, attrID, categoryID).Scan(&min, &max)
+		if err != nil {
+			// Если значения не найдены, просто пропускаем этот атрибут
+			continue
+		}
+
+		if min != nil && max != nil {
+			result[attrName] = map[string]interface{}{
+				"min": *min,
+				"max": *max,
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// SaveListingAttributes сохраняет значения атрибутов для объявления
+func (s *MarketplaceService) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
+	// Начинаем транзакцию
+	tx, err := s.storage.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("не удалось начать транзакцию: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Удаляем существующие атрибуты для данного объявления
+	_, err = tx.Exec(ctx, "DELETE FROM listing_attribute_values WHERE listing_id = $1", listingID)
+	if err != nil {
+		return fmt.Errorf("не удалось удалить существующие атрибуты: %w", err)
+	}
+
+	// Добавляем новые атрибуты
+	for _, attr := range attributes {
+		var valueType string
+		var textValue *string
+		var numValue *float64
+		var boolValue *bool
+		var jsonValue []byte
+
+		// Определяем тип значения и устанавливаем соответствующее поле
+		switch attr.AttributeType {
+		case "text", "textarea", "select", "multiselect":
+			valueType = "text"
+			textValue = attr.TextValue
+		case "number", "range":
+			valueType = "numeric"
+			numValue = attr.NumericValue
+		case "boolean", "checkbox":
+			valueType = "boolean"
+			boolValue = attr.BooleanValue
+		case "json", "complex":
+			valueType = "json"
+			jsonValue = attr.JSONValue
+		default:
+			valueType = "text"
+			textValue = attr.TextValue
+		}
+
+		// Добавляем запись в базу данных
+		_, err = tx.Exec(ctx, `
+			INSERT INTO listing_attribute_values (
+				listing_id, attribute_id, value_type, text_value, numeric_value, boolean_value, json_value, unit
+			)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		`, listingID, attr.AttributeID, valueType, textValue, numValue, boolValue, jsonValue, attr.Unit)
+
+		if err != nil {
+			return fmt.Errorf("не удалось сохранить значение атрибута %d: %w", attr.AttributeID, err)
+		}
+	}
+
+	// Фиксируем транзакцию
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("не удалось зафиксировать транзакцию: %w", err)
+	}
+
+	return nil
+}

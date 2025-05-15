@@ -232,42 +232,11 @@ func (s *MarketplaceService) GetOpenSearchRepository() (interface {
 	}
 	return nil, false
 }
-func (s *MarketplaceService) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
-	return s.storage.GetAttributeRanges(ctx, categoryID)
-}
 
-// GetCategoryAttributes получает атрибуты для указанной категории
-func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-	attributes, err := s.storage.GetCategoryAttributes(ctx, categoryID)
-
-	// Добавляем проверку и логирование JSON полей
-	for _, attr := range attributes { // Заменяем i, attr на _, attr
-		if attr.Options != nil {
-			log.Printf("Attribute %s options (raw): %s", attr.Name, string(attr.Options))
-
-			// Если нужно можно распарсить для проверки
-			var options map[string]interface{}
-			if err := json.Unmarshal(attr.Options, &options); err != nil {
-				log.Printf("Error parsing options for attribute %s: %v", attr.Name, err)
-			} else {
-				log.Printf("Parsed options: %+v", options)
-			}
-		}
-	}
-
-	return attributes, err
-}
-
-func (s *MarketplaceService) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
-	log.Printf("Saving %d attributes for listing %d", len(attributes), listingID)
-
-	for i, attr := range attributes {
-		log.Printf("Attribute %d: ID=%d, Name=%s, Type=%s",
-			i, attr.AttributeID, attr.AttributeName, attr.AttributeType)
-	}
-
-	return s.storage.SaveListingAttributes(ctx, listingID, attributes)
-}
+// Методы для работы с атрибутами перенесены в attribute_admin.go:
+// - GetAttributeRanges
+// - GetCategoryAttributes
+// - SaveListingAttributes
 
 // GetCategorySuggestions возвращает предложения категорий на основе поискового запроса
 func (s *MarketplaceService) GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error) {

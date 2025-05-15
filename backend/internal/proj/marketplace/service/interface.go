@@ -50,6 +50,7 @@ type MarketplaceServiceInterface interface {
 	DeleteCategory(ctx context.Context, id int) error
 	ReorderCategories(ctx context.Context, orderedIDs []int) error
 	MoveCategory(ctx context.Context, id int, newParentID int) error
+	GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error)
 
 	// Новые методы для управления атрибутами
 	CreateAttribute(ctx context.Context, attribute *models.CategoryAttribute) (int, error)

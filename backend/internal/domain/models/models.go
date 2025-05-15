@@ -77,6 +77,10 @@ type MarketplaceCategory struct {
 	ListingCount      int               `json:"listing_count"`
 	HasCustomUI       bool              `json:"has_custom_ui,omitempty"`
 	CustomUIComponent string            `json:"custom_ui_component,omitempty"`
+	SortOrder         int               `json:"sort_order"`
+	Level             int               `json:"level"`
+	Count             int               `json:"count"`
+	ExternalID        string            `json:"external_id,omitempty"`
 }
 
 type MarketplaceImage struct {

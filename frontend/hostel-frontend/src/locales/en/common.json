@@ -24,6 +24,49 @@
      "balance": "Balance",
      "storefronts": "My Stores"
   },
+  "admin": {
+     "common": {
+       "refresh": "Refresh",
+       "adminArea": "Admin Area",
+       "accessDenied": "Access Denied",
+       "adminOnly": "This page is available only for administrators",
+       "save": "Save",
+       "cancel": "Cancel"
+     },
+     "categoryAttributes": {
+       "title": "Category Attributes Management",
+       "description": "Manage attributes assigned to categories, set priorities and requirements",
+       "fetchError": "Error loading data",
+       "fetchMappingsError": "Error loading attribute mappings",
+       "removeAttributeError": "Error removing attribute from category",
+       "updateAttributeError": "Error updating attribute settings",
+       "selectCategory": "Select Category",
+       "selectCategoryPrompt": "Please select a category to manage its attributes",
+       "categoryAttributes": "{{category}} Attributes",
+       "addAttribute": "Add Attribute to Category",
+       "attributePriority": "Priority",
+       "attributeRequired": "Required",
+       "attributeEnabled": "Enabled",
+       "addSuccess": "Attribute successfully added to category",
+       "removeSuccess": "Attribute successfully removed from category",
+       "updateSuccess": "Attribute settings successfully updated",
+       "customUI": "Custom UI Components",
+       "customUIDescription": "Configure custom components for displaying and editing this category",
+       "exportAttributes": "Export/Import Configuration",
+       "copyFromCategory": "Copy from another category",
+       "selectSourceCategory": "Select source category",
+       "confirmCopy": "Confirm Copy",
+       "copySuccess": "Attributes successfully copied from selected category",
+       "copyWarning": "This will override existing attributes. Are you sure?"
+     },
+     "menu": {
+       "users": "Users",
+       "admins": "Administrators",
+       "categories": "Categories",
+       "attributes": "Attributes",
+       "categoryAttributes": "Category Attributes Management"
+     }
+  },
   "balance": {
      "title": "Balance and Transactions",
      "available": "Available Balance",
@@ -95,5 +138,10 @@
      "hours": "hours",
      "day": "day",
      "days": "days"
+  },
+  "language": {
+     "ru": "Russian",
+     "en": "English",
+     "sr": "Serbian"
   }
  }
