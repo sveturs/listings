@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from '../../api/axios';
 import {
   List,
   ListItem,
@@ -18,6 +19,7 @@ import {
   CardContent,
   Chip,
   Fade,
+  Button,
   useTheme,
   alpha
 } from '@mui/material';
@@ -51,7 +53,7 @@ interface CategoryTreeNode extends Category {
 }
 
 interface CategorySelectorProps {
-  categories: Category[];
+  categories: Category[] | { data: Category[] };
   onCategorySelect: (category: Category) => void;
   selectedCategoryId?: number;
 }
@@ -74,14 +76,18 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
     
     // Даже если категорий нет, мы всё равно создаем пустое дерево, чтобы компонент отрендерился
     const buildCategoryTree = (parentId: number | null = null): CategoryTreeNode[] => {
-      if (!categories || categories.length === 0) {
+      if (!categories) {
         return [];
       }
       
       // Проверяем формат данных - если это API-ответ с полем data, используем его
       const categoriesArray = Array.isArray(categories) ? categories : 
-                             (categories && 'data' in categories && Array.isArray(categories.data)) ? 
+                             ('data' in categories && Array.isArray(categories.data)) ? 
                              categories.data : [];
+                             
+      if (categoriesArray.length === 0) {
+        return [];
+      }
       
       return categoriesArray
         // Отфильтруем категории с соответствующим parent_id
@@ -106,13 +112,18 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
 
     // Если есть выбранная категория, расширяем её родителей и сохраняем данные категории
     if (selectedCategoryId) {
-      const selectedCat = categories.find(cat => cat.id === selectedCategoryId);
+      // Получаем список категорий в зависимости от формата данных
+      const categoriesList = Array.isArray(categories) ? categories : 
+                            ('data' in categories && Array.isArray(categories.data)) ? 
+                            categories.data : [];
+                            
+      const selectedCat = categoriesList.find(cat => cat.id === selectedCategoryId);
       if (selectedCat) {
         setSelectedCategory(selectedCat);
       }
       
       const expandParents = (categoryId: number) => {
-        const category = categories.find(cat => cat.id === categoryId);
+        const category = categoriesList.find(cat => cat.id === categoryId);
         if (category && category.parent_id) {
           setExpandedIds(prev => {
             const newSet = new Set(prev);
@@ -165,7 +176,12 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
     const path: string[] = [];
     
     const findPath = (id: number) => {
-      const category = categories.find(cat => cat.id === id);
+      // Получаем список категорий в зависимости от формата данных
+      const categoriesList = Array.isArray(categories) ? categories : 
+                           ('data' in categories && Array.isArray(categories.data)) ? 
+                           categories.data : [];
+                           
+      const category = categoriesList.find(cat => cat.id === id);
       if (!category) return;
       
       path.unshift(category.name);
@@ -270,6 +286,22 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       });
   };
 
+  // Тестовая функция для проверки правильной работы GET /categories/:categoryId/attributes/export
+  const testExportEndpoint = async (categoryId: number) => {
+    try {
+      // Явно указываем метод GET и корректный URL
+      const response = await axios.request({
+        method: 'GET',
+        url: `/api/admin/categories/${categoryId}/attributes/export`,
+      });
+      console.log('Export endpoint test response:', response.data);
+      return true;
+    } catch (err) {
+      console.error('Export endpoint test error:', err);
+      return false;
+    }
+  };
+
   // Функция рендеринга панели с детальной информацией о выбранной категории
   const renderCategoryDetails = () => {
     if (!selectedCategory) return null;
@@ -290,6 +322,17 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
             
             <Divider sx={{ my: 1 }} />
             
+            <Box sx={{ mt: 1, mb: 1 }}>
+              <Button 
+                size="small" 
+                variant="outlined" 
+                onClick={() => testExportEndpoint(selectedCategory.id)}
+                sx={{ mr: 1 }}
+              >
+                Test Export API
+              </Button>
+            </Box>
+            
             <Grid container spacing={1} sx={{ mt: 1 }}>
               <Grid item xs={6}>
                 <Typography variant="body2">
@@ -306,7 +349,9 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                   <Typography variant="body2">
                     <strong>{t('admin.categories.parent')}:</strong> {
                       selectedCategory.parent_id ? 
-                        categories.find(c => c.id === selectedCategory.parent_id)?.name || selectedCategory.parent_id : 
+                        (Array.isArray(categories) ? categories : 
+                           ('data' in categories && Array.isArray(categories.data)) ? 
+                           categories.data : []).find(c => c.id === selectedCategory.parent_id)?.name || selectedCategory.parent_id : 
                         t('admin.categories.noParent')
                     }
                   </Typography>
@@ -374,7 +419,9 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                 ),
               }}
             />
-            {searchQuery && categories.length > 0 && (
+            {searchQuery && (Array.isArray(categories) ? categories.length > 0 : 
+                           ('data' in categories && Array.isArray(categories.data)) ? 
+                           categories.data.length > 0 : false) && (
               <Box sx={{ mt: 1 }}>
                 <Typography variant="caption" color="text.secondary">
                   {categoryTree.flatMap(cat => [cat, ...cat.children]).filter(filterCategories).length} {t('admin.categories.searchResults')}
@@ -384,7 +431,9 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
           </Box>
           <Divider />
           <Box sx={{ overflow: 'auto', flexGrow: 1, p: 1 }}>
-            {!categories || categories.length === 0 ? (
+            {!categories || (Array.isArray(categories) ? categories.length === 0 : 
+                             ('data' in categories && Array.isArray(categories.data)) ? 
+                             categories.data.length === 0 : true) ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 3 }}>
                 <CategoryIcon color="disabled" sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
                 <Typography variant="body1" color="text.secondary" align="center" gutterBottom>

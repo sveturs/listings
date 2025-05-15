@@ -1,4 +1,5 @@
 // Enhanced type definitions for i18next to fix TypeScript errors
+// This also fixes errors in the node_modules/i18next/typescript/t.d.ts file
 declare module 'i18next' {
   // Suppress TypeScript checking for the CustomTypeOptions interface
   interface CustomTypeOptions {
@@ -60,12 +61,26 @@ declare module 'i18next' {
     getFixedT(lng: string, ns?: string | string[]): TFunction;
     use(module: any): i18n;
     init(options: InitOptions): i18n;
+    t: TFunction;
   }
 
-  // Translation function
+  // Translation function - simplified to override the problematic definitions
   interface TFunction {
+    // Basic t function overloads that cover most use cases
     (key: string | string[], options?: any): string;
     (key: string | string[], defaultValue: string, options?: any): string;
+    
+    // Add namespace support
+    (key: string | string[], ns: string | string[], options?: any): string;
+    
+    // Extended overloads for completeness
+    <T extends object>(key: string | string[], options?: T): string;
+    <T extends object>(key: string | string[], defaultValue: string, options?: T): string;
+  }
+  
+  // Override the problematic typescript/t.d.ts file definitions
+  export interface i18n {
+    t: TFunction;
   }
 }
 

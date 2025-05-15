@@ -114,7 +114,11 @@ const CategoryAttributeExporter: React.FC<CategoryAttributeExporterProps> = ({
       setSuccess(null);
       
       // Запрашиваем атрибуты для текущей категории
-      const response = await axios.get(`/api/admin/categories/${categoryId}/attributes/export`);
+      // Явно указываем метод GET
+      const response = await axios.request({
+        method: 'GET',
+        url: `/api/admin/categories/${categoryId}/attributes/export`
+      });
       const data = response.data.data || response.data;
       
       // Форматируем данные для экспорта

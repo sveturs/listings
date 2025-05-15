@@ -776,6 +776,13 @@
     "nis": "Niš",
     "kragujevac": "Kragujevac"
   },
+  "admin": {
+    "attributes": {
+      "customComponent": "Prilagođena komponenta",
+      "customComponentPlaceholder": "Ime komponente",
+      "customComponentHelp": "Navedite ime prilagođene komponente za prikaz atributa u ovoj kategoriji"
+    }
+  },
   "countries": {
     "serbia": "Srbija"
   },

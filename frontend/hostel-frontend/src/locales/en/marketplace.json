@@ -777,6 +777,13 @@
     "nis": "Niš",
     "kragujevac": "Kragujevac"
   },
+  "admin": {
+    "attributes": {
+      "customComponent": "Custom Component",
+      "customComponentPlaceholder": "Component name",
+      "customComponentHelp": "Specify the name of a custom component for displaying the attribute in this category"
+    }
+  },
   "countries": {
     "serbia": "Serbia"
   },

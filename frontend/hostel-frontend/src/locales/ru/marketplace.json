@@ -776,6 +776,13 @@
     "nis": "Ниш",
     "kragujevac": "Крагуевац"
   },
+  "admin": {
+    "attributes": {
+      "customComponent": "Пользовательский компонент",
+      "customComponentPlaceholder": "Имя компонента",
+      "customComponentHelp": "Укажите имя пользовательского компонента для отображения атрибута в категории"
+    }
+  },
   "countries": {
     "serbia": "Сербия"
   },

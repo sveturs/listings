@@ -62,6 +62,7 @@ interface CategoryAttributeMapping {
   is_required: boolean;
   is_enabled: boolean;
   sort_order: number;
+  custom_component?: string;
   attribute?: Attribute;
   hint?: string; 
   description?: string;
@@ -229,6 +230,15 @@ const EditAttributeInCategory: React.FC<EditAttributeInCategoryProps> = ({
       setMapping({
         ...mapping,
         description: e.target.value
+      });
+    }
+  };
+
+  const handleCustomComponentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (mapping) {
+      setMapping({
+        ...mapping,
+        custom_component: e.target.value
       });
     }
   };
@@ -415,6 +425,7 @@ const EditAttributeInCategory: React.FC<EditAttributeInCategoryProps> = ({
         hint: mapping.hint,
         description: mapping.description,
         unit: mapping.unit,
+        custom_component: mapping.custom_component,
         translations: mapping.translations,
         unit_translations: mapping.unit_translations,
         options: mapping.options
@@ -530,6 +541,16 @@ const EditAttributeInCategory: React.FC<EditAttributeInCategoryProps> = ({
                     onChange={handleSortOrderChange}
                     InputProps={{ inputProps: { min: 0 } }}
                     margin="normal"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label={t('admin.attributes.customComponent')}
+                    value={mapping?.custom_component || ''}
+                    onChange={handleCustomComponentChange}
+                    margin="normal"
+                    helperText={t('admin.attributes.customComponentHelp')}
                   />
                 </Grid>
               </Grid>

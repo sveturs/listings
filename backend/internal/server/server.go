@@ -356,6 +356,11 @@ func (s *Server) setupRoutes() {
 	adminRoutes.Delete("/attributes/:id", s.marketplace.AdminAttributes.DeleteAttribute)
 	adminRoutes.Post("/attributes/bulk-update", s.marketplace.AdminAttributes.BulkUpdateAttributes)
 
+	// Маршруты для экспорта/импорта настроек атрибутов
+	adminRoutes.Get("/categories/:categoryId/attributes/export", s.marketplace.AdminAttributes.ExportCategoryAttributes)
+	adminRoutes.Post("/categories/:categoryId/attributes/import", s.marketplace.AdminAttributes.ImportCategoryAttributes)
+	adminRoutes.Post("/categories/:targetCategoryId/attributes/copy", s.marketplace.AdminAttributes.CopyAttributesSettings)
+
 	// Для обратной совместимости добавим маршруты без v1
 	legacyAdmin := s.app.Group("/api/admin")
 	legacyAdmin.Use(s.middleware.AuthRequired)
@@ -380,6 +385,11 @@ func (s *Server) setupRoutes() {
 	legacyAdmin.Put("/attributes/:id", s.marketplace.AdminAttributes.UpdateAttribute)
 	legacyAdmin.Delete("/attributes/:id", s.marketplace.AdminAttributes.DeleteAttribute)
 	legacyAdmin.Post("/attributes/bulk-update", s.marketplace.AdminAttributes.BulkUpdateAttributes)
+
+	// Добавляем маршруты для экспорта/импорта настроек атрибутов
+	legacyAdmin.Get("/categories/:categoryId/attributes/export", s.marketplace.AdminAttributes.ExportCategoryAttributes)
+	legacyAdmin.Post("/categories/:categoryId/attributes/import", s.marketplace.AdminAttributes.ImportCategoryAttributes)
+	legacyAdmin.Post("/categories/:targetCategoryId/attributes/copy", s.marketplace.AdminAttributes.CopyAttributesSettings)
 
 	// Использовать реальный обработчик из UserHandler
 	adminRoutes.Get("/users", s.users.User.GetAllUsers)

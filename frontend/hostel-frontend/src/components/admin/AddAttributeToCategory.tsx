@@ -79,14 +79,25 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
         // Загружаем все атрибуты и текущие привязки через API
         const [allAttributesResponse, categoryMappingsResponse] = await Promise.all([
           axios.get('/api/admin/attributes'),
-          axios.get(`/api/admin/categories/${categoryId}/attributes/export`)
+          // Явно указываем метод GET для экспорта атрибутов
+          axios.request({
+            method: 'GET',
+            url: `/api/admin/categories/${categoryId}/attributes/export`
+          })
         ]);
         
         console.log('All attributes:', allAttributesResponse.data);
         console.log('Category mappings:', categoryMappingsResponse.data);
         
-        const allAttributes = allAttributesResponse.data;
-        const categoryMappings = categoryMappingsResponse.data;
+        // Проверяем, содержит ли ответ атрибутов поле data или это непосредственно массив
+        const allAttributes = Array.isArray(allAttributesResponse.data) 
+          ? allAttributesResponse.data 
+          : allAttributesResponse.data && allAttributesResponse.data.data 
+            ? allAttributesResponse.data.data 
+            : [];
+            
+        // Проверяем, что полученные данные являются массивом
+        const categoryMappings = Array.isArray(categoryMappingsResponse.data) ? categoryMappingsResponse.data : [];
         
         setExistingMappings(categoryMappings);
         
@@ -188,7 +199,8 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
         await axios.post(`/api/admin/categories/${categoryId}/attributes/${selectedAttribute.id}`, {
           is_required: isRequired,
           is_enabled: isEnabled,
-          sort_order: sortOrder
+          sort_order: sortOrder,
+          custom_component: selectedAttribute.custom_component
         });
         
         console.log(`Attribute ${selectedAttribute.id} added to category ${categoryId}`, {

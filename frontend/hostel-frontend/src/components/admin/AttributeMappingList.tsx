@@ -45,6 +45,7 @@ interface CategoryAttributeMapping {
   is_required: boolean;
   is_enabled: boolean;
   sort_order: number;
+  custom_component?: string;
   attribute?: Attribute; // Extended info about the attribute
 }
 
@@ -85,6 +86,7 @@ const AttributeMappingList: React.FC<AttributeMappingListProps> = ({
     is_enabled: false,
     sort_order: 0
   });
+  const [customComponentValue, setCustomComponentValue] = useState<string>('');
   const [advancedEditState, setAdvancedEditState] = useState<AdvancedEditState>({
     open: false,
     attributeId: null
@@ -131,6 +133,7 @@ const AttributeMappingList: React.FC<AttributeMappingListProps> = ({
       is_enabled: mapping.is_enabled,
       sort_order: mapping.sort_order
     });
+    setCustomComponentValue(mapping.custom_component || '');
   };
 
   const handleCancelEdit = () => {
@@ -140,6 +143,7 @@ const AttributeMappingList: React.FC<AttributeMappingListProps> = ({
       is_enabled: false,
       sort_order: 0
     });
+    setCustomComponentValue('');
   };
 
   const handleOpenAdvancedEdit = (attributeId: number) => {
@@ -179,7 +183,8 @@ const AttributeMappingList: React.FC<AttributeMappingListProps> = ({
         await axios.put(`/api/admin/categories/${categoryId}/attributes/${editState.attributeId}`, {
           is_required: editState.is_required,
           is_enabled: editState.is_enabled,
-          sort_order: editState.sort_order
+          sort_order: editState.sort_order,
+          custom_component: customComponentValue
         });
         
         // Если нет переданной функции, то обновим данные
@@ -288,6 +293,7 @@ const AttributeMappingList: React.FC<AttributeMappingListProps> = ({
               <TableCell align="center">{t('admin.attributes.required')}</TableCell>
               <TableCell align="center">{t('admin.attributes.enabled')}</TableCell>
               <TableCell align="center">{t('admin.attributes.sortOrder')}</TableCell>
+              <TableCell align="center">{t('admin.attributes.customComponent')}</TableCell>
               <TableCell align="right">{t('admin.actions')}</TableCell>
             </TableRow>
           </TableHead>
@@ -345,6 +351,20 @@ const AttributeMappingList: React.FC<AttributeMappingListProps> = ({
                     />
                   ) : (
                     mapping.sort_order
+                  )}
+                </TableCell>
+                <TableCell align="center">
+                  {editState.attributeId === mapping.attribute_id ? (
+                    <TextField
+                      value={customComponentValue || ''}
+                      onChange={(e) => setCustomComponentValue(e.target.value)}
+                      variant="outlined"
+                      size="small"
+                      sx={{ width: '120px' }}
+                      placeholder={t('admin.attributes.customComponentPlaceholder')}
+                    />
+                  ) : (
+                    mapping.custom_component || '-'
                   )}
                 </TableCell>
                 <TableCell align="right">
