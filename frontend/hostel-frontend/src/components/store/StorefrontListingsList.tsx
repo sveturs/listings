@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from '../../api/axios';
-import { Listing } from '../marketplace/ListingCard';
+import { Listing } from '../../types/listing';
 
 interface Category {
   id: number | string;

@@ -131,13 +131,8 @@ const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
                 <AutocompleteInput
                     value={filters.query || ''}
                     onChange={(value) => onFilterChange({ ...filters, query: value })}
-                    onSearch={(value, categoryId) => {
-                        // Если предоставлен categoryId, обновляем и категорию
-                        if (categoryId) {
-                            onFilterChange({ query: value, category_id: categoryId });
-                        } else {
-                            onFilterChange({ query: value });
-                        }
+                    onSearch={(value) => {
+                        onFilterChange({ query: value });
                     }}
                     placeholder={t('buttons.search', { ns: 'common' })}
                 />

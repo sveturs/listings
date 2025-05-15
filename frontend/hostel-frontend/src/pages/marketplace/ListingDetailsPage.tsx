@@ -1237,7 +1237,11 @@ const ListingDetailsPage: React.FC = () => {
                                         <CallButton phone={listing.user?.phone} isMobile={isMobile} />
                                     </Box>
                                     <Box sx={{ flex: 1 }}>
-                                        <ChatButton listing={listing} isMobile={isMobile} />
+                                        <ChatButton listing={{
+                                            id: listing.id,
+                                            user_id: listing.user_id as number | string,
+                                            title: listing.title
+                                        }} isMobile={isMobile} />
                                     </Box>
                                 </Stack>
 
@@ -1296,7 +1300,6 @@ const ListingDetailsPage: React.FC = () => {
                                             <MiniMap
                                                 latitude={listing.latitude}
                                                 longitude={listing.longitude}
-                                                title={listing.title}
                                                 address={listing.location}
                                                 onClick={() => setIsMapExpanded(true)}
                                                 onExpand={() => setIsMapExpanded(true)}
@@ -1343,8 +1346,8 @@ const ListingDetailsPage: React.FC = () => {
                                             }}
                                         >
                                             <FullscreenMap
-                                                latitude={listing.latitude}
-                                                longitude={listing.longitude}
+                                                latitude={listing.latitude || 0}
+                                                longitude={listing.longitude || 0}
                                                 title={listing.title}
                                             />
                                         </Paper>

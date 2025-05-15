@@ -20,7 +20,7 @@ import MarketplaceListingsList from '../../components/marketplace/MarketplaceLis
 import InfiniteScroll from '../../components/marketplace/InfiniteScroll';
 import axios from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
-import { Listing } from '../../components/marketplace/ListingCard';
+import { Listing } from '../../types/listing';
 
 // Define the view mode type
 type ViewMode = 'grid' | 'list';

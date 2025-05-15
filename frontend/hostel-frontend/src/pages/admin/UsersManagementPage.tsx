@@ -183,7 +183,7 @@ const UsersManagementPage: React.FC = () => {
     }));
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+  const handleStatusChange = (e: SelectChangeEvent): void => {
     setEditFormData(prev => ({
       ...prev,
       status: e.target.value
@@ -444,7 +444,7 @@ const UsersManagementPage: React.FC = () => {
             fullWidth
             variant="outlined"
             value={editFormData.status}
-            onChange={handleStatusChange}
+            onChange={handleStatusChange as any}
             SelectProps={{
               native: true,
             }}

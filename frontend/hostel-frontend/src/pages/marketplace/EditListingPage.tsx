@@ -566,7 +566,7 @@ const EditListingPage: React.FC = () => {
                                     fullWidth
                                     required
                                     value={listing.price || ''}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setListing({ ...listing, price: e.target.value })}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setListing({ ...listing, price: Number(e.target.value) })}
                                 />
                             </Grid>
 
@@ -589,7 +589,6 @@ const EditListingPage: React.FC = () => {
                                         value={listing.category_id}
                                         onChange={(value: string | number) => setListing({ ...listing, category_id: value })}
                                         error={!listing.category_id}
-                                        displaySelectedValueOnly={true}
                                     />
                                 </FormControl>
                             </Grid>
@@ -616,7 +615,11 @@ const EditListingPage: React.FC = () => {
                                     initialLocation={{
                                         latitude: listing.latitude,
                                         longitude: listing.longitude,
-                                        formatted_address: listing.location
+                                        formatted_address: listing.location,
+                                        address_components: {
+                                            city: listing.city || '',
+                                            country: listing.country || ''
+                                        }
                                     }}
                                 />
 

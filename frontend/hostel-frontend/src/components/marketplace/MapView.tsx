@@ -34,6 +34,15 @@ import CentralAttributeFilters from './CentralAttributeFilters';
 
 // TypeScript interfaces
 
+interface ImageObject {
+  id?: number | string;
+  file_path?: string;
+  is_main?: boolean;
+  storage_type?: string;
+  public_url?: string;
+  [key: string]: any;
+}
+
 interface MapFilters {
   category_id?: string | number;
   latitude?: number;
@@ -1302,7 +1311,30 @@ const MapView: React.FC<MapViewProps> = ({ listings, filters, onFilterChange, on
                 latitude={expandedMapCenter.latitude}
                 longitude={expandedMapCenter.longitude}
                 title={expandedMapCenter.title}
-                markers={expandedMapMarkers}
+                markers={expandedMapMarkers.map(marker => {
+                  // Создаем новый объект маркера с точными типами
+                  const newMarker: any = {
+                    latitude: marker.latitude,
+                    longitude: marker.longitude,
+                    title: marker.title,
+                    tooltip: marker.tooltip,
+                    id: marker.id
+                  };
+
+                  // Если есть данные объявления, преобразуем их
+                  if (marker.listing) {
+                    newMarker.listing = {
+                      id: marker.listing.id,
+                      title: marker.listing.title,
+                      price: marker.listing.price,
+                      // Принудительно преобразуем тип condition
+                      condition: (marker.listing.condition === 'new' ? 'new' : 'used') as 'new' | 'used',
+                      images: marker.listing.images
+                    };
+                  }
+
+                  return newMarker;
+                })}
               />
             )}
           </Paper>

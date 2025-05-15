@@ -60,7 +60,13 @@ const AddImportSourceModal: React.FC<AddImportSourceModalProps> = ({
           onClose={onClose}
           onSuccess={onSuccess}
           storefrontId={storefrontId}
-          initialData={initialData}
+          initialData={initialData ? {
+            id: initialData.id,
+            type: initialData.source_type as 'csv' | 'xml',
+            url: initialData.url || '',
+            schedule: initialData.update_interval ? 'daily' : '',
+            storefront_id: initialData.storefront_id
+          } : null}
         />
       </Box>
     </Dialog>

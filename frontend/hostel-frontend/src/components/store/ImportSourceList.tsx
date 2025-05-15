@@ -29,7 +29,7 @@ import {
     ExternalLink,
     Tag
 } from 'lucide-react';
-import AddImportSourceModal from './AddImportSourceModal';
+import AddImportSourceModal, { ImportSource as ModalImportSource } from './AddImportSourceModal';
 import ImportModal from './ImportModal';
 import CategoryMappingModal from './CategoryMappingModal';
 
@@ -41,6 +41,9 @@ export interface ImportSource {
     created_at: string;
     last_import_status?: string;
     last_import_at?: string;
+    name: string;
+    source_type: 'csv' | 'xml' | 'api';
+    storefront_id: number | string;
 }
 
 interface ImportSourceListProps {
@@ -67,10 +70,19 @@ const ImportSourceList: React.FC<ImportSourceListProps> = ({
     const [openImportModal, setOpenImportModal] = useState<boolean>(false);
     const [openMappingModal, setOpenMappingModal] = useState<boolean>(false);
     const [selectedSource, setSelectedSource] = useState<ImportSource | null>(null);
-    const [editingSource, setEditingSource] = useState<ImportSource | null>(null);
+    const [editingSource, setEditingSource] = useState<ModalImportSource | null>(null);
 
     const handleEdit = (source: ImportSource): void => {
-        setEditingSource(source);
+        // Преобразуем в формат, ожидаемый в AddImportSourceModal
+        const modalSource: ModalImportSource = {
+            id: source.id,
+            name: source.name,
+            source_type: source.source_type,
+            url: source.url,
+            storefront_id: source.storefront_id,
+            // Дополнительные поля при необходимости
+        };
+        setEditingSource(modalSource);
         setOpenAddModal(true);
     };
 
@@ -149,7 +161,7 @@ const ImportSourceList: React.FC<ImportSourceListProps> = ({
 
             {sources.length === 0 ? (
                 <Paper sx={{ p: 4, textAlign: 'center' }}>
-                    <Database size={64} stroke={1} style={{ margin: '20px auto', opacity: 0.5 }} />
+                    <Database size={64} stroke="1" style={{ margin: '20px auto', opacity: 0.5 }} />
                     <Typography variant="h6" gutterBottom>
                         {t('marketplace:store.import.noSources')}
                     </Typography>

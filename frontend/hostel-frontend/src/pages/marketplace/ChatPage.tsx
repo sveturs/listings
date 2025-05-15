@@ -627,7 +627,7 @@ const ChatPage: React.FC = () => {
                             overflow: 'hidden'
                         }}>
                             <ChatWindow
-                                messages={messages}
+                                messages={messages as any}
                                 onSendMessage={handleSendMessage}
                                 currentUser={user}
                                 chat={selectedChat}
@@ -689,7 +689,7 @@ const ChatPage: React.FC = () => {
                             <ChatHeader chat={selectedChat} onArchive={handleArchiveChat} />
                             <Box sx={{ flex: 1, overflow: 'hidden' }}>
                                 <ChatWindow
-                                    messages={messages}
+                                    messages={messages as any}
                                     onSendMessage={handleSendMessage}
                                     currentUser={user}
                                     chat={selectedChat}

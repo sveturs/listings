@@ -36,8 +36,10 @@ interface CategoryData {
   currentLanguage: string;
 }
 
-interface CategoryItemProps extends ListChildComponentProps {
+interface CategoryItemProps {
   data: CategoryData;
+  index: number;
+  style: React.CSSProperties;
 }
 
 interface VirtualizedCategoryTreeProps {

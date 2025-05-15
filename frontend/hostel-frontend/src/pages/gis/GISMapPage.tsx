@@ -20,25 +20,29 @@ import {
 } from '@mui/icons-material';
 
 import axios from '../../api/axios';
-import { 
-  TILE_LAYER_URL, 
+import {
+  TILE_LAYER_URL,
   TILE_LAYER_ATTRIBUTION,
   CARTO_VOYAGER_URL,
   CARTO_VOYAGER_ATTRIBUTION
 } from '../../components/maps/map-constants';
 import '../../components/maps/leaflet-icons';
 // Import GIS components
-import { 
-  GISCategoryPanel, 
-  GISLayerControl, 
-  GISSearchPanel, 
-  GISListingCard, 
+import {
+  GISCategoryPanel,
+  GISLayerControl,
+  GISSearchPanel,
+  GISListingCard,
   GISFilterPanel,
   GISResultsDrawer
 } from '../../components/gis';
 
 // Define drawer width to match the drawer component
 const drawerWidth = 400;
+
+// Гарантированно работающие источники тайлов
+const FALLBACK_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const FALLBACK_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 interface Listing {
   id: number;
@@ -99,17 +103,16 @@ const GISMapPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { userLocation, detectUserLocation } = useLocation();
-  
+
   // Состояния для карты
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
-  const clustersRef = useRef<any>(null);
-  const wheelHandlerRef = useRef<((e: WheelEvent) => void) | null>(null); // Создаем wheelHandlerRef на уровне компонента
   const [mapReady, setMapReady] = useState<boolean>(false);
   const [mapCenter, setMapCenter] = useState<MapCenter | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(13);
-  
+  const [mapInitialized, setMapInitialized] = useState<boolean>(false);
+
   // Состояния для интерфейса
   const [drawerOpen, setDrawerOpen] = useState<boolean>(!isMobile);
   const [searchDrawerOpen, setSearchDrawerOpen] = useState<boolean>(false);
@@ -118,14 +121,14 @@ const GISMapPage: React.FC = () => {
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [selectedListingId, setSelectedListingId] = useState<number | null>(null);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  
+
   // Состояния для данных
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [totalListings, setTotalListings] = useState<number>(0);
   const [activeLayers, setActiveLayers] = useState<string[]>(['listings']);
-  
+
   // Фильтры
   const [filters, setFilters] = useState<Filters>({
     query: searchParams.get('query') || '',
@@ -141,7 +144,7 @@ const GISMapPage: React.FC = () => {
     sort_direction: searchParams.get('sort_direction') || 'desc',
     attributeFilters: {}
   });
-  
+
   // Также сохраняем id избранных объявлений
   const [favoriteListings, setFavoriteListings] = useState<number[]>([]);
 
@@ -149,7 +152,7 @@ const GISMapPage: React.FC = () => {
   useEffect(() => {
     const lat = searchParams.get('latitude');
     const lon = searchParams.get('longitude');
-    
+
     if (lat && lon) {
       setMapCenter({
         latitude: parseFloat(lat),
@@ -167,478 +170,414 @@ const GISMapPage: React.FC = () => {
         longitude: 19.8335
       });
     }
+
+    const zoom = searchParams.get('zoom');
+    if (zoom) {
+      setMapZoom(parseFloat(zoom));
+    }
   }, [searchParams, userLocation]);
 
-  // Глобальная настройка для предотвращения ошибки _leaflet_pos
+  // Супер простая инициализация карты - минимальный надежный вариант
   useEffect(() => {
-    // Патч 1: Безопасная обработка _leaflet_pos
-    const originalGetPosition = L.DomUtil.getPosition;
-    L.DomUtil.getPosition = function(el) {
-      if (!el || typeof el !== 'object' || el === null) {
-        return new L.Point(0, 0);
-      }
-
-      try {
-        if (!el._leaflet_pos) {
-          return new L.Point(0, 0);
-        }
-        return originalGetPosition(el);
-      } catch (e) {
-        return new L.Point(0, 0);
-      }
-    };
-
-    // Патч 2: Безопасная установка позиции
-    const originalSetPosition = L.DomUtil._setPosition;
-    L.DomUtil._setPosition = function(el, point) {
-      if (!el) return;
-      try {
-        originalSetPosition(el, point);
-      } catch (e) {}
-    };
-
-    // Патч 3: Безопасное преобразование координат
-    const originalContainerPointToLayerPoint = L.Map.prototype.containerPointToLayerPoint;
-    L.Map.prototype.containerPointToLayerPoint = function(point) {
-      try {
-        return originalContainerPointToLayerPoint.call(this, point);
-      } catch (e) {
-        return point;
-      }
-    };
-
-    // Патч 4: Безопасный зум
-    const originalPerformZoom = L.Map.prototype._performZoom;
-    L.Map.prototype._performZoom = function() {
-      try {
-        return originalPerformZoom.apply(this, arguments);
-      } catch (e) {
-        // В случае ошибки отменяем анимацию
-        if (this._animatingZoom) {
-          this._animatingZoom = false;
-        }
-        return this;
-      }
-    };
-  }, []); // Пустой массив зависимостей - эффект выполнится только один раз
-
-  // Отключение нативного обработчика масштабирования колесиком не требуется
-  // теперь Leaflet полностью патчирован для предотвращения ошибок
-
-  // Инициализация карты
-  useEffect(() => {
-    // Если нет mapCenter или DOM контейнера, выходим
+    // Если нет контейнера или координат, ничего не делаем
     if (!mapContainerRef.current || !mapCenter) return;
 
-    // Если карта уже создана, просто обновляем вид и выходим
-    if (mapRef.current) {
-      try {
-        // Обновляем вид безопасно, с отключением анимации для предотвращения ошибок
-        mapRef.current.setView([mapCenter.latitude, mapCenter.longitude], mapZoom, {
-          animate: false
-        });
-      } catch (e) {
-        console.error("Ошибка при обновлении вида карты:", e);
-      }
-      return;
-    }
+    console.log("Инициализация карты...");
 
     try {
-      // Инициализируем карту с безопасными настройками
-      mapRef.current = L.map(mapContainerRef.current, {
-        // Основные настройки рендера
-        preferCanvas: true,            // Canvas для производительности
-        renderer: L.canvas(),          // Принудительно используем Canvas
+      // Если карта уже существует, удаляем ее
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
 
-        // Настройки отображения
-        zoomControl: false,            // Отключаем встроенные контролы
-        attributionControl: false,     // Отключаем копирайты
+      // Очищаем контейнер
+      mapContainerRef.current.innerHTML = '';
 
-        // Настройки для стабильности
-        zoomSnap: 0.5,                 // Более плавный зум
-        wheelPxPerZoomLevel: 120,      // Более грубое изменение зума колесом
-        wheelDebounceTime: 100,        // Задержка для обработки вращения колеса
-
-        // Анимации и эффекты
-        zoomAnimation: false,         // Отключаем анимацию зума для стабильности
-        fadeAnimation: false,         // Отключаем анимации для стабильности
-        markerZoomAnimation: false,   // Отключаем анимацию маркеров
-        inertia: false,               // Отключаем инерцию для стабильности
-
-        // Другие настройки
-        worldCopyJump: true,          // Перемещение через границу
-        tap: false,                   // Отключаем tap для мобильных
-        trackResize: true,            // Отслеживание изменения размеров
-        maxZoom: 19,                  // Максимальный зум
-        minZoom: 3,                   // Минимальный зум
-        doubleClickZoom: true,        // Включаем стандартный зум по двойному клику
-        scrollWheelZoom: true,        // Включаем стандартный зум колесиком
-        dragging: true,                // Оставляем возможность перетаскивания
-        keyboard: false                // Отключаем зум с клавиатуры
+      // Создаем карту
+      const map = L.map(mapContainerRef.current, {
+        center: [mapCenter.latitude, mapCenter.longitude],
+        zoom: mapZoom,
+        zoomControl: false, // Отключаем стандартный контрол зума
+        preferCanvas: true,  // Используем canvas для лучшей производительности
       });
 
-      // Устанавливаем начальный вид безопасно, без анимации
-      mapRef.current.setView([mapCenter.latitude, mapCenter.longitude], mapZoom, {
-        animate: false
-      });
-
-      // Добавляем базовый слой
-      L.tileLayer(TILE_LAYER_URL, {
-        attribution: TILE_LAYER_ATTRIBUTION,
+      // Добавляем тайловый слой - используем OpenStreetMap как самый надежный
+      L.tileLayer(FALLBACK_TILE_URL, {
+        attribution: FALLBACK_ATTRIBUTION,
         maxZoom: 19,
-        subdomains: 'abc',
-        updateWhenZooming: false,   // Отключаем обновление при зуме
-        keepBuffer: 4               // Буфер тайлов
-      }).addTo(mapRef.current);
+      }).addTo(map);
 
-      // Полагаемся на стандартное поведение scrollWheelZoom Leaflet
+      // Добавляем слой маркеров
+      const markersLayer = L.layerGroup().addTo(map);
 
-      // Используем стандартные обработчики зума с нашими патчами для Leaflet
-      // которые должны предотвратить ошибки _leaflet_pos
-
-      // Добавляем стандартный контрол зума без переопределений
+      // Добавляем контрол зума
       L.control.zoom({
-        position: 'bottomright',
-        zoomInTitle: 'Приблизить',
-        zoomOutTitle: 'Отдалить'
-      }).addTo(mapRef.current);
+        position: 'bottomright'
+      }).addTo(map);
 
-      /* Удаляем переопределение контрола зума, используем стандартное поведение
-      const originalZoomIn = zoomControl.getContainer;
-      zoomControl.getContainer = function() {
-        const container = originalZoomIn.call(this);
-        if (container) {
-          // Находим кнопки зума
-          const zoomInButton = container.querySelector('.leaflet-control-zoom-in');
-          const zoomOutButton = container.querySelector('.leaflet-control-zoom-out');
+      // Сохраняем ссылки
+      mapRef.current = map;
+      markersLayerRef.current = markersLayer;
 
-          if (zoomInButton) {
-            // Очищаем существующие обработчики
-            zoomInButton.parentNode.replaceChild(zoomInButton.cloneNode(true), zoomInButton);
-            const newZoomInButton = container.querySelector('.leaflet-control-zoom-in');
+      // Устанавливаем обработчики событий только после полной загрузки карты
+      map.on('load', function() {
+        console.log("Карта полностью загружена (событие load)");
+      });
 
-            // Добавляем новый безопасный обработчик
-            newZoomInButton.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
+      // Обработчик moveend - срабатывает при перемещении карты
+      map.on('moveend', function() {
+        if (!map._loaded) return; // Проверяем, что карта загружена
 
-              try {
-                // Безопасное увеличение зума
-                if (mapRef.current) {
-                  const currentZoom = mapRef.current.getZoom();
-                  mapRef.current.setZoom(currentZoom + 1, { animate: false });
-                }
-              } catch (error) {
-                console.warn("Ошибка при увеличении зума:", error);
-              }
+        try {
+          const center = map.getCenter();
+          if (center) {
+            setMapCenter({
+              latitude: center.lat,
+              longitude: center.lng
             });
-          }
 
-          if (zoomOutButton) {
-            // Очищаем существующие обработчики
-            zoomOutButton.parentNode.replaceChild(zoomOutButton.cloneNode(true), zoomOutButton);
-            const newZoomOutButton = container.querySelector('.leaflet-control-zoom-out');
+            // Обновляем URL с задержкой
+            if (window.updateUrlTimeout) {
+              clearTimeout(window.updateUrlTimeout);
+            }
 
-            // Добавляем новый безопасный обработчик
-            newZoomOutButton.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
+            window.updateUrlTimeout = setTimeout(() => {
+              setSearchParams(prev => {
+                const newParams = new URLSearchParams(prev);
+                const currentZoom = map.getZoom();
 
-              try {
-                // Безопасное уменьшение зума
-                if (mapRef.current) {
-                  const currentZoom = mapRef.current.getZoom();
-                  mapRef.current.setZoom(currentZoom - 1, { animate: false });
-                }
-              } catch (error) {
-                console.warn("Ошибка при уменьшении зума:", error);
+                newParams.set('latitude', center.lat.toFixed(6));
+                newParams.set('longitude', center.lng.toFixed(6));
+                newParams.set('zoom', currentZoom.toString());
+
+                return newParams;
+              }, { replace: true });
+
+              // Загружаем новые данные
+              if (mapReady) {
+                fetchListingsInViewport();
               }
-            });
+            }, 300);
           }
+        } catch (e) {
+          console.error("Ошибка в обработчике moveend:", e);
         }
-        return container;
-      };
+      });
 
-      // Добавляем контрол на карту
-      */
+      // Обработчик zoomend - срабатывает при изменении масштаба
+      map.on('zoomend', function() {
+        if (!map._loaded) return; // Проверяем, что карта загружена
 
-      // Создаем слой маркеров
-      markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
+        try {
+          setMapZoom(map.getZoom());
 
-      // Обновляем размеры для уверенности
-      setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.invalidateSize({ animate: false });
-        }
-      }, 100);
-
-      // Подписываемся на события с проверкой состояния карты
-      const safeEventHandler = (handler: (e: L.LeafletEvent) => void) => {
-        return (e: L.LeafletEvent) => {
-          if (mapRef.current && mapContainerRef.current) {
-            handler(e);
+          // Обновляем URL с задержкой
+          if (window.updateUrlTimeout) {
+            clearTimeout(window.updateUrlTimeout);
           }
-        };
-      };
 
-      mapRef.current.on('moveend', safeEventHandler(handleMapMoveEnd));
-      mapRef.current.on('zoomend', safeEventHandler(handleMapZoomEnd));
+          window.updateUrlTimeout = setTimeout(() => {
+            setSearchParams(prev => {
+              const newParams = new URLSearchParams(prev);
+              const center = map.getCenter();
+              const currentZoom = map.getZoom();
 
-      // Отмечаем, что карта готова
-      setMapReady(true);
+              newParams.set('latitude', center.lat.toFixed(6));
+              newParams.set('longitude', center.lng.toFixed(6));
+              newParams.set('zoom', currentZoom.toString());
 
-      // Загружаем данные
+              return newParams;
+            }, { replace: true });
+
+            // Загружаем новые данные
+            if (mapReady) {
+              fetchListingsInViewport();
+            }
+          }, 300);
+        } catch (e) {
+          console.error("Ошибка в обработчике zoomend:", e);
+        }
+      });
+
+      // Отслеживаем загрузку тайлов
+      map.on('tileload', function() {
+        // Помечаем, что карта готова после загрузки первых тайлов
+        if (!mapReady) {
+          setMapReady(true);
+          setMapInitialized(true);
+          console.log("Карта готова (загружены первые тайлы)");
+
+          // Загружаем данные с небольшой задержкой
+          setTimeout(() => {
+            if (mapRef.current) {
+              fetchListingsInViewport();
+            }
+          }, 500);
+        }
+      });
+
+      // Обработка ошибок загрузки тайлов
+      map.on('tileerror', function(error) {
+        console.error("Ошибка загрузки тайла:", error);
+      });
+
+      // Задаем таймаут для принудительной отметки карты как готовой,
+      // если по какой-то причине не сработали события загрузки тайлов
       setTimeout(() => {
-        if (mapRef.current) {
+        if (!mapReady && mapRef.current) {
+          console.log("Принудительная отметка карты как готовой по таймауту");
+          setMapReady(true);
+          setMapInitialized(true);
+
+          // Загружаем данные
           fetchListingsInViewport();
         }
-      }, 500);
+      }, 3000);
+
+      console.log("Карта инициализирована успешно");
     } catch (error) {
       console.error("Ошибка при инициализации карты:", error);
+      setError("Не удалось загрузить карту");
     }
-
-    // wheelHandlerRef уже объявлен на уровне компонента
 
     // Очистка при размонтировании
     return () => {
-      // Используем стандартные обработчики Leaflet, так что очистка не требуется
+      console.log("Размонтирование компонента карты");
+
+      // Очищаем все таймауты
+      if (window.updateUrlTimeout) {
+        clearTimeout(window.updateUrlTimeout);
+      }
+      if (window.fetchListingsTimeout) {
+        clearTimeout(window.fetchListingsTimeout);
+      }
 
       // Удаляем карту
       if (mapRef.current) {
         try {
-          mapRef.current.off('moveend', handleMapMoveEnd);
-          mapRef.current.off('zoomend', handleMapZoomEnd);
           mapRef.current.remove();
-        } catch (error) {
-          console.error("Ошибка при удалении карты:", error);
+          mapRef.current = null;
+        } catch (e) {
+          console.error("Ошибка при удалении карты:", e);
         }
-        mapRef.current = null;
       }
+
+      // Сбрасываем состояние
       setMapReady(false);
+      setMapInitialized(false);
     };
-  }, [mapCenter]); // Зависимость от mapCenter с проверкой mapRef.current внутри
-
-  // Обработчик перемещения карты
-  const handleMapMoveEnd = (e: L.LeafletEvent): void => {
-    try {
-      if (!mapRef.current || !mapContainerRef.current) return;
-
-      const center = mapRef.current.getCenter();
-      const zoom = mapRef.current.getZoom();
-
-      // Обновляем mapCenter только при существенном изменении
-      if (
-        !mapCenter ||
-        Math.abs(center.lat - mapCenter.latitude) > 0.001 ||
-        Math.abs(center.lng - mapCenter.longitude) > 0.001
-      ) {
-        setMapCenter({
-          latitude: center.lat,
-          longitude: center.lng
-        });
-      }
-
-      // Обновляем URL с задержкой, чтобы не мешать плавности
-      if (window.updateUrlTimeout) {
-        clearTimeout(window.updateUrlTimeout);
-      }
-
-      window.updateUrlTimeout = setTimeout(() => {
-        try {
-          if (mapRef.current) {
-            setSearchParams(prev => {
-              const newParams = new URLSearchParams(prev);
-              const currentCenter = mapRef.current!.getCenter();
-              const currentZoom = mapRef.current!.getZoom();
-              newParams.set('latitude', currentCenter.lat.toFixed(6));
-              newParams.set('longitude', currentCenter.lng.toFixed(6));
-              newParams.set('zoom', currentZoom.toString());
-              return newParams;
-            }, { replace: true });
-          }
-        } catch (e) {
-          console.error("Ошибка при обновлении URL:", e);
-        }
-      }, 300);
-
-      // Загружаем новые данные с небольшой задержкой
-      if (window.fetchListingsTimeout) {
-        clearTimeout(window.fetchListingsTimeout);
-      }
-
-      window.fetchListingsTimeout = setTimeout(() => {
-        try {
-          if (mapRef.current && mapReady) {
-            fetchListingsInViewport();
-          }
-        } catch (e) {
-          console.error("Ошибка при загрузке объявлений:", e);
-        }
-      }, 400);
-    } catch (e) {
-      console.error("Ошибка в обработчике moveend:", e);
-    }
-  };
-
-  // Обработчик масштабирования карты
-  const handleMapZoomEnd = (e: L.LeafletEvent): void => {
-    try {
-      if (!mapRef.current || !mapContainerRef.current) return;
-
-      // Получаем текущий зум
-      const newZoom = mapRef.current.getZoom();
-
-      // Обновляем состояние зума только при реальном изменении
-      if (Math.abs(newZoom - mapZoom) > 0.1) {
-        setMapZoom(newZoom);
-      }
-
-      // Обновляем URL с задержкой
-      if (window.updateUrlTimeout) {
-        clearTimeout(window.updateUrlTimeout);
-      }
-
-      window.updateUrlTimeout = setTimeout(() => {
-        try {
-          if (mapRef.current) {
-            setSearchParams(prev => {
-              const newParams = new URLSearchParams(prev);
-              const currentCenter = mapRef.current!.getCenter();
-              const currentZoom = mapRef.current!.getZoom();
-              newParams.set('latitude', currentCenter.lat.toFixed(6));
-              newParams.set('longitude', currentCenter.lng.toFixed(6));
-              newParams.set('zoom', currentZoom.toString());
-              return newParams;
-            }, { replace: true });
-          }
-        } catch (e) {
-          console.error("Ошибка при обновлении URL после зума:", e);
-        }
-      }, 300);
-
-      // Загружаем новые данные с небольшой задержкой
-      if (window.fetchListingsTimeout) {
-        clearTimeout(window.fetchListingsTimeout);
-      }
-
-      window.fetchListingsTimeout = setTimeout(() => {
-        try {
-          if (mapRef.current && mapReady) {
-            fetchListingsInViewport();
-          }
-        } catch (e) {
-          console.error("Ошибка при загрузке объявлений после зума:", e);
-        }
-      }, 400);
-    } catch (e) {
-      console.error("Ошибка в обработчике zoomend:", e);
-    }
-  };
+  }, [mapCenter, mapZoom]); // Перерисовываем карту при изменении центра или зума
 
   // Загрузка объявлений в текущей области видимости
   const fetchListingsInViewport = async (): Promise<void> => {
-    if (!mapRef.current || !mapReady || !mapContainerRef.current) return;
+    // Проверка готовности карты
+    if (!mapRef.current) {
+      console.warn("Попытка загрузить объявления без инициализированной карты");
+      return;
+    }
+
+    if (!mapReady) {
+      console.warn("Попытка загрузить объявления до готовности карты");
+      return;
+    }
+
+    if (!mapContainerRef.current) {
+      console.warn("Попытка загрузить объявления без контейнера карты");
+      return;
+    }
 
     try {
+      // Включаем индикатор загрузки
       setLoading(true);
 
-      // Получаем границы видимой области
-      try {
-        const bounds = mapRef.current.getBounds();
-        const northEast = bounds.getNorthEast();
-        const southWest = bounds.getSouthWest();
+      // Проверяем, что карта полностью загружена
+      if (!mapRef.current._loaded) {
+        console.warn("Карта еще не полностью загружена, отложим загрузку объявлений");
+        setTimeout(() => {
+          if (mapRef.current && mapReady && mapContainerRef.current) {
+            fetchListingsInViewport();
+          }
+        }, 300);
+        return;
+      }
 
-        // Проверка валидности координат
-        if (!isFinite(northEast.lat) || !isFinite(northEast.lng) ||
-            !isFinite(southWest.lat) || !isFinite(southWest.lng)) {
-          console.warn("Получены невалидные координаты границ карты.");
+      // Получаем границы видимой области с проверкой ошибок
+      let bounds, northEast, southWest;
+
+      try {
+        bounds = mapRef.current.getBounds();
+        if (!bounds) {
+          console.warn("Не удалось получить границы карты");
           setLoading(false);
           return;
         }
 
-        // Формируем параметры запроса
-        const params = {
-          view_mode: 'map',
-          bbox: `${southWest.lat},${southWest.lng},${northEast.lat},${northEast.lng}`,
-          size: 1000, // Запрашиваем большое количество объявлений для карты
-          status: 'active', // Только активные объявления
-          query: filters.query,
-          category_id: activeCategoryId || filters.category_id,
-          min_price: filters.price.min,
-          max_price: filters.price.max,
-          condition: filters.condition !== 'any' ? filters.condition : '',
-          sort_by: filters.sort, // Используем значение из фильтров (которое уже преобразовано для OpenSearch)
-          sort_direction: filters.sort_direction || 'desc', // Используем направление из фильтров или desc по умолчанию
-          radius: filters.radius > 0 ? filters.radius : '',
-          city: filters.city
-        };
+        northEast = bounds.getNorthEast();
+        southWest = bounds.getSouthWest();
 
-        // Делаем запрос к API
-        const response = await axios.get('/api/v1/marketplace/search', { params });
-
-        if (response.data && response.data.data) {
-          const fetchedListings = Array.isArray(response.data.data)
-            ? response.data.data
-            : response.data.data.data || [];
-
-          // Проверяем, что карта и компонент все еще существуют
-          if (mapRef.current && mapContainerRef.current) {
-            // Логируем количество полученных объявлений для отладки
-            console.log(`Получено ${fetchedListings.length} объявлений от API`);
-
-            setListings(fetchedListings);
-            setTotalListings(response.data.meta?.total || fetchedListings.length);
-
-            // Обновляем маркеры на карте
-            updateMapMarkers(fetchedListings);
-          }
+        // Проверка валидности координат
+        if (!northEast || !southWest ||
+            !isFinite(northEast.lat) || !isFinite(northEast.lng) ||
+            !isFinite(southWest.lat) || !isFinite(southWest.lng)) {
+          console.warn("Получены невалидные координаты границ карты");
+          setLoading(false);
+          return;
         }
       } catch (boundsError) {
         console.error("Ошибка при получении границ карты:", boundsError);
+        setLoading(false);
+        return;
+      }
+
+      // Формируем параметры запроса
+      const params = {
+        view_mode: 'map',
+        bbox: `${southWest.lat},${southWest.lng},${northEast.lat},${northEast.lng}`,
+        size: 1000, // Большое количество объявлений для карты
+        status: 'active',
+        query: filters.query || '',
+        category_id: activeCategoryId || filters.category_id || '',
+        min_price: filters.price?.min || 0,
+        max_price: filters.price?.max || 100000,
+        condition: filters.condition !== 'any' ? filters.condition : '',
+        sort_by: filters.sort || 'id',
+        sort_direction: filters.sort_direction || 'desc',
+        radius: filters.radius > 0 ? filters.radius : '',
+        city: filters.city || ''
+      };
+
+      try {
+        // Делаем запрос к API с таймаутом
+        const response = await axios.get('/api/v1/marketplace/search', {
+          params,
+          timeout: 15000 // 15-секундный таймаут
+        });
+
+        // Проверяем, что компонент всё еще смонтирован
+        if (!mapRef.current || !mapContainerRef.current) {
+          console.warn("Компонент размонтирован во время загрузки данных");
+          return;
+        }
+
+        // Обрабатываем ответ
+        if (response.data) {
+          let fetchedListings = [];
+
+          // Извлекаем данные из ответа с учетом возможных форматов
+          if (Array.isArray(response.data.data)) {
+            fetchedListings = response.data.data;
+          } else if (response.data.data && response.data.data.data) {
+            fetchedListings = response.data.data.data;
+          } else if (response.data.data) {
+            fetchedListings = [response.data.data];
+          }
+
+          // Проверяем и фильтруем объявления
+          const validListings = fetchedListings.filter(listing =>
+              listing &&
+              typeof listing.id === 'number' &&
+              typeof listing.latitude === 'number' &&
+              typeof listing.longitude === 'number' &&
+              isFinite(listing.latitude) &&
+              isFinite(listing.longitude)
+          );
+
+          console.log(`Получено ${validListings.length} валидных объявлений из ${fetchedListings.length} от API`);
+
+          // Обновляем состояние и маркеры
+          setListings(validListings);
+          setTotalListings(response.data.meta?.total || validListings.length);
+
+          // Обновляем маркеры только если компонент всё еще смонтирован
+          if (mapRef.current && mapContainerRef.current && markersLayerRef.current) {
+            updateMapMarkers(validListings);
+          }
+        }
+      } catch (apiError) {
+        // Обработка ошибки API
+        console.error("Ошибка при запросе к API:", apiError);
+        setError("Ошибка при загрузке объявлений");
+
+        // Если ошибка связана с сетью, пробуем загрузить еще раз через некоторое время
+        if (apiError.code === 'ECONNABORTED' || !apiError.response) {
+          setTimeout(() => {
+            if (mapRef.current && mapReady && mapContainerRef.current) {
+              console.log("Повторная попытка загрузки объявлений после ошибки сети");
+              fetchListingsInViewport();
+            }
+          }, 5000);
+        }
       }
     } catch (error) {
-      console.error("Ошибка при загрузке объявлений:", error);
+      console.error("Общая ошибка при загрузке объявлений:", error);
       setError("Ошибка при загрузке объявлений");
     } finally {
+      // Выключаем индикатор загрузки
       setLoading(false);
     }
   };
 
-  // Обновление маркеров на карте - быстрый способ без задержек и анимаций
+  // Обновление маркеров на карте
   const updateMapMarkers = (listings: Listing[]): void => {
     try {
-      if (!mapRef.current || !markersLayerRef.current || !mapContainerRef.current) return;
-
-      // Очищаем текущие маркеры безопасно
-      try {
-        markersLayerRef.current.clearLayers();
-      } catch (e) {
-        console.error("Ошибка при очистке слоя маркеров:", e);
-        // В случае ошибки пробуем пересоздать слой маркеров
-        if (mapRef.current) {
-          markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
-        } else {
-          return; // Если нет карты, просто выходим
-        }
+      // Проверяем все необходимые зависимости
+      if (!mapRef.current || !mapContainerRef.current) {
+        console.warn("Попытка обновить маркеры без инициализированной карты");
+        return;
       }
 
-      // Проверка входных данных
+      // Валидация входных данных
       if (!Array.isArray(listings)) {
         console.warn("updateMapMarkers: получен неверный формат данных listings", listings);
         return;
       }
 
-      // Логируем количество объявлений для обработки
-      console.log(`Обрабатываем ${listings.length} объявлений для отображения на карте`);
+      // Создаем или пересоздаем слой маркеров, если нужно
+      if (!markersLayerRef.current) {
+        try {
+          markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
+        } catch (error) {
+          console.error("Ошибка при создании слоя маркеров:", error);
+          return;
+        }
+      } else {
+        // Безопасно очищаем существующий слой маркеров
+        try {
+          markersLayerRef.current.clearLayers();
+        } catch (e) {
+          console.error("Ошибка при очистке слоя маркеров:", e);
+          // Пересоздаем слой в случае ошибки
+          try {
+            if (mapRef.current) {
+              markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
+            } else {
+              return; // Выходим, если нет карты
+            }
+          } catch (recreateError) {
+            console.error("Ошибка при пересоздании слоя маркеров:", recreateError);
+            return;
+          }
+        }
+      }
+
+      // Используем валидные объявления (только с корректными координатами)
+      const validListings = listings.filter(listing =>
+          listing &&
+          typeof listing.latitude === 'number' &&
+          typeof listing.longitude === 'number' &&
+          isFinite(listing.latitude) &&
+          isFinite(listing.longitude)
+      );
+
+      console.log(`Обрабатываем ${validListings.length} валидных объявлений из ${listings.length} для отображения на карте`);
 
       // Группируем объявления по витринам
       const storefronts = new Map<number, StorefrontInfo>();
       const individualListings: Listing[] = [];
 
-      listings.forEach(listing => {
-        if (!listing || !listing.latitude || !listing.longitude ||
-            !isFinite(listing.latitude) || !isFinite(listing.longitude)) return;
-
+      // Безопасно группируем объявления
+      validListings.forEach(listing => {
         if (listing.storefront_id) {
           if (!storefronts.has(listing.storefront_id)) {
             storefronts.set(listing.storefront_id, {
@@ -654,16 +593,28 @@ const GISMapPage: React.FC = () => {
         }
       });
 
-      // Добавляем все маркеры непосредственно, без отложенной анимации
-      // Создаем маркеры для витрин
+      // Безопасно создаем все маркеры с обработкой ошибок
+      const createMarkerSafely = (
+          latitude: number,
+          longitude: number,
+          icon: L.Icon | L.DivIcon,
+          clickHandler: () => void
+      ): L.Marker | null => {
+        try {
+          const marker = L.marker([latitude, longitude], { icon });
+          marker.on('click', clickHandler);
+          return marker;
+        } catch (e) {
+          console.error("Ошибка при создании маркера:", e);
+          return null;
+        }
+      };
+
+      // Обработка маркеров витрин
       storefronts.forEach((storefront, id) => {
         try {
           if (storefront.listings.length > 0) {
-            const storeMarker = L.marker([storefront.latitude, storefront.longitude], {
-              icon: createCustomIcon('store', storefront.listings.length)
-            });
-
-            storeMarker.on('click', () => {
+            const clickHandler = () => {
               if (mapRef.current && mapContainerRef.current && storefront.listings.length > 0) {
                 setSelectedListing({
                   ...storefront.listings[0],
@@ -673,43 +624,72 @@ const GISMapPage: React.FC = () => {
                 });
                 setSelectedListingId(storefront.listings[0].id);
               }
-            });
+            };
 
-            if (markersLayerRef.current) {
+            const storeMarker = createMarkerSafely(
+                storefront.latitude,
+                storefront.longitude,
+                createCustomIcon('store', storefront.listings.length),
+                clickHandler
+            );
+
+            if (storeMarker && markersLayerRef.current) {
               markersLayerRef.current.addLayer(storeMarker);
             }
           }
         } catch (e) {
-          console.error("Ошибка при создании маркера для витрины:", e);
+          console.error("Ошибка при обработке маркера для витрины:", e);
         }
       });
 
-      // Создаем маркеры для отдельных объявлений - пакетами, чтобы не блокировать рендеринг
-      const chunkSize = 50; // Обрабатываем по 50 маркеров за раз
+      // Создаем маркеры для отдельных объявлений пакетами
+      const chunkSize = 50; // Оптимальный размер пакета для производительности
 
-      for (let i = 0; i < individualListings.length; i += chunkSize) {
-        const chunk = individualListings.slice(i, i + chunkSize);
+      // Обрабатываем маркеры отдельных объявлений асинхронно пакетами
+      const processListingsChunk = (startIdx: number) => {
+        try {
+          // Проверяем, что все системы все еще доступны
+          if (!mapRef.current || !markersLayerRef.current || !mapContainerRef.current) {
+            return;
+          }
 
-        chunk.forEach(listing => {
-          try {
-            const marker = L.marker([listing.latitude, listing.longitude], {
-              icon: createMarkerIcon(listing)
-            });
+          const endIdx = Math.min(startIdx + chunkSize, individualListings.length);
+          if (startIdx >= individualListings.length) return;
 
-            marker.on('click', () => {
+          const chunk = individualListings.slice(startIdx, endIdx);
+
+          chunk.forEach(listing => {
+            const clickHandler = () => {
               if (mapRef.current && mapContainerRef.current) {
                 setSelectedListing(listing);
                 setSelectedListingId(listing.id);
               }
-            });
+            };
 
-            if (markersLayerRef.current) {
+            const marker = createMarkerSafely(
+                listing.latitude,
+                listing.longitude,
+                createMarkerIcon(listing),
+                clickHandler
+            );
+
+            if (marker && markersLayerRef.current) {
               markersLayerRef.current.addLayer(marker);
             }
-          } catch (e) {
-            console.error("Ошибка при создании маркера для объявления:", e);
+          });
+
+          // Обрабатываем следующий пакет асинхронно, чтобы не блокировать UI
+          if (endIdx < individualListings.length) {
+            setTimeout(() => processListingsChunk(endIdx), 0);
           }
-        });
+        } catch (e) {
+          console.error("Ошибка при обработке пакета маркеров:", e);
+        }
+      };
+
+      // Запускаем обработку первого пакета
+      if (individualListings.length > 0) {
+        processListingsChunk(0);
       }
     } catch (e) {
       console.error("Общая ошибка в updateMapMarkers:", e);
@@ -719,7 +699,7 @@ const GISMapPage: React.FC = () => {
   // Создание иконки маркера в зависимости от типа объявления
   const createMarkerIcon = (listing: Listing): L.DivIcon => {
     let iconType = 'default';
-    
+
     // Определяем тип иконки на основе категории
     if (listing.category_id) {
       const categoryId = listing.category_id;
@@ -728,7 +708,7 @@ const GISMapPage: React.FC = () => {
       else if (categoryId === 3) iconType = 'electronics';
       else iconType = 'shopping';
     }
-    
+
     return createCustomIcon(iconType);
   };
 
@@ -736,7 +716,7 @@ const GISMapPage: React.FC = () => {
   const createCustomIcon = (type: string, count: number = 0): L.DivIcon => {
     // Определяем цвет и иконку в зависимости от типа
     let color, iconHtml;
-    
+
     switch (type) {
       case 'store':
         color = '#4CAF50';
@@ -769,7 +749,7 @@ const GISMapPage: React.FC = () => {
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10h-8a1 1 0 01-1-1V3L21 10z"></path><path d="M21 18v-8h-8v8z"></path><path d="M3 3v8h8V3"></path><path d="M3 21h8v-8H3z"></path></svg>
         </div>`;
     }
-    
+
     return L.divIcon({
       className: `custom-marker-${type}`,
       html: `<div style="background-color:${color};width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;box-shadow:0 2px 5px rgba(0,0,0,0.3);">${iconHtml}</div>`,
@@ -785,7 +765,7 @@ const GISMapPage: React.FC = () => {
       ...prev,
       category_id: categoryId ? categoryId.toString() : ''
     }));
-    
+
     // Обновляем URL
     setSearchParams(prev => {
       const newParams = new URLSearchParams(prev);
@@ -796,7 +776,7 @@ const GISMapPage: React.FC = () => {
       }
       return newParams;
     });
-    
+
     // Загружаем новые данные
     fetchListingsInViewport();
   };
@@ -856,13 +836,13 @@ const GISMapPage: React.FC = () => {
   const handleDetectLocation = async (): Promise<void> => {
     try {
       await detectUserLocation();
-      
+
       if (userLocation) {
         // Центрируем карту на местоположении пользователя
         if (mapRef.current) {
           mapRef.current.setView([userLocation.lat, userLocation.lon], 15);
         }
-        
+
         // Обновляем фильтры с местоположением
         setFilters(prev => ({
           ...prev,
@@ -871,7 +851,7 @@ const GISMapPage: React.FC = () => {
           city: userLocation.city || '',
           country: userLocation.country || ''
         }));
-        
+
         // Загружаем новые данные
         fetchListingsInViewport();
       }
@@ -887,7 +867,7 @@ const GISMapPage: React.FC = () => {
       ...prev,
       query
     }));
-    
+
     // Обновляем URL
     setSearchParams(prev => {
       const newParams = new URLSearchParams(prev);
@@ -898,10 +878,10 @@ const GISMapPage: React.FC = () => {
       }
       return newParams;
     });
-    
+
     // Загружаем новые данные
     fetchListingsInViewport();
-    
+
     // Закрываем панель поиска на мобильных устройствах
     if (isMobile) {
       setSearchDrawerOpen(false);
@@ -936,23 +916,23 @@ const GISMapPage: React.FC = () => {
   const handleLayerChange = (newLayer: TileLayerType): void => {
     // Change map tile layer based on selection
     if (!mapRef.current) return;
-    
+
     // Remove existing tile layers
     mapRef.current.eachLayer(layer => {
       if (layer instanceof L.TileLayer) {
         mapRef.current!.removeLayer(layer);
       }
     });
-    
+
     // Общие оптимизированные параметры тайлов для всех типов карт
     const optimizedTileOptions = {
       maxZoom: 19,
       minZoom: 3,
       subdomains: 'abc',          // Поддомены для распределения запросов
-      updateWhenZooming: true,    // Обновление при зуме
+      updateWhenZooming: false,    // Обновление при зуме
       keepBuffer: 4               // Буфер тайлов
     };
-    
+
     // Add new tile layer based on selection
     switch(newLayer) {
       case 'satellite':
@@ -969,31 +949,31 @@ const GISMapPage: React.FC = () => {
         break;
       case 'traffic':
         // Default map with traffic layer
-        L.tileLayer(TILE_LAYER_URL, {
+        L.tileLayer(FALLBACK_TILE_URL, {
           ...optimizedTileOptions,
-          attribution: TILE_LAYER_ATTRIBUTION
+          attribution: FALLBACK_ATTRIBUTION
         }).addTo(mapRef.current);
         // Add traffic layer if available (example only)
         break;
       case 'heatmap':
         // Default map
-        L.tileLayer(TILE_LAYER_URL, {
+        L.tileLayer(FALLBACK_TILE_URL, {
           ...optimizedTileOptions,
-          attribution: TILE_LAYER_ATTRIBUTION
+          attribution: FALLBACK_ATTRIBUTION
         }).addTo(mapRef.current);
         // Add heatmap layer if data available
         break;
       case 'carto':
-        // Использование альтернативного провайдера - CartoDB Voyager для более быстрой загрузки
-        L.tileLayer(CARTO_VOYAGER_URL, {
+        // Использование альтернативного провайдера
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
           ...optimizedTileOptions,
-          attribution: CARTO_VOYAGER_ATTRIBUTION
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         }).addTo(mapRef.current);
         break;
       default: // standard
-        L.tileLayer(TILE_LAYER_URL, {
+        L.tileLayer(FALLBACK_TILE_URL, {
           ...optimizedTileOptions,
-          attribution: TILE_LAYER_ATTRIBUTION
+          attribution: FALLBACK_ATTRIBUTION
         }).addTo(mapRef.current);
     }
   };
@@ -1001,218 +981,213 @@ const GISMapPage: React.FC = () => {
   // Handler for clustering toggle
   const handleClusteringToggle = (enableClustering: boolean): void => {
     if (!mapRef.current || !markersLayerRef.current) return;
-    
-    // Implement marker clustering based on the enableClustering flag
-    if (enableClustering) {
-      // Convert existing markers to a cluster group
-      if (!clustersRef.current) {
-        // Create cluster group if it doesn't exist
-        // This would use Leaflet.markercluster in a real implementation
-        console.log("Clustering enabled - would implement MarkerClusterGroup");
-      }
-    } else {
-      // Remove clustering and show individual markers
-      console.log("Clustering disabled - would remove MarkerClusterGroup");
-    }
-    
-    // Refresh markers on the map
+
+    // Обновляем маркеры на карте
     updateMapMarkers(listings);
   };
 
   // Render the selected listing info
   const renderListingInfo = (): React.ReactNode => {
     if (!selectedListing) return null;
-    
+
     return (
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 16,
-          left: isMobile ? 16 : (drawerOpen ? 336 : 16),
-          right: isMobile ? 16 : 'auto',
-          maxWidth: isMobile ? 'auto' : 400,
-          transition: 'left 0.3s',
-          zIndex: 1000,
-        }}
-      >
-        <GISListingCard
-          listing={selectedListing}
-          isFavorite={favoriteListings.includes(selectedListing.id)}
-          onFavoriteToggle={handleFavoriteToggle}
-          onShowOnMap={handleShowOnMap}
-          onContactClick={handleContactClick}
-          compact={false}
-        />
-      </Box>
+        <Box
+            sx={{
+              position: 'absolute',
+              bottom: 16,
+              left: isMobile ? 16 : (drawerOpen ? 336 : 16),
+              right: isMobile ? 16 : 'auto',
+              maxWidth: isMobile ? 'auto' : 400,
+              transition: 'left 0.3s',
+              zIndex: 1000,
+            }}
+        >
+          <GISListingCard
+              listing={selectedListing as any}
+              isFavorite={favoriteListings.includes(selectedListing.id)}
+              onFavoriteToggle={handleFavoriteToggle}
+              onShowOnMap={(listing: any) => handleShowOnMap(listing)}
+              onContactClick={(listing: any) => handleContactClick(listing)}
+              compact={false}
+          />
+        </Box>
     );
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: '80px', // Увеличил отступ сверху на 5px
-      left: 0,
-      right: 0,
-      bottom: 0,
-      display: 'flex',
-      padding: 0,
-      margin: 0,
-      overflow: 'hidden'
-    }}>
-      {/* Results Drawer - Putting this first in layout flow */}
-      <GISResultsDrawer
-        open={drawerOpen}
-        onToggleDrawer={() => setDrawerOpen(!drawerOpen)}
-        listings={listings}
-        loading={loading}
-        onShowOnMap={handleShowOnMap}
-        onFilterClick={() => setFilterDrawerOpen(true)}
-        onSortClick={() => setFilterDrawerOpen(true)}
-        onRefresh={fetchListingsInViewport}
-        favoriteListings={favoriteListings}
-        onFavoriteToggle={handleFavoriteToggle}
-        onContactClick={handleContactClick}
-        totalCount={totalListings}
-        expandToEdge={true} // Signal to expand drawer to full width
-      />
-      
-      {/* Left Categories Panel */}
-      <GISCategoryPanel
-        open={searchDrawerOpen}
-        onClose={() => setSearchDrawerOpen(false)}
-        onCategorySelect={handleCategoryChange}
-      />
-      
-      {/* Right Filter Panel */}
-      <GISFilterPanel
-        open={filterDrawerOpen}
-        onClose={() => setFilterDrawerOpen(false)}
-        filters={filters}
-        onFiltersChange={handleFilterChange}
-        onApplyFilters={() => fetchListingsInViewport()}
-        onResetFilters={() => {
-          handleFilterChange({
-            price: { min: 0, max: 100000 },
-            condition: 'any',
-            radius: 0,
-            sort: 'id',  // Используем id вместо created_at для совместимости с OpenSearch
-            sort_direction: 'desc'  // Новые объявления имеют бóльшие id
-          });
-        }}
-      />
-      
-      {/* Main map container - takes all remaining space */}
       <div style={{
-        flexGrow: 1,
-        height: '100%',
-        width: '100%',
-        position: 'relative',
-        margin: 0,
+        position: 'fixed',
+        top: '80px', // Увеличил отступ сверху на 5px
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
         padding: 0,
-        overflow: 'hidden',
-        zIndex: 5
-      }}
-      >
-        {/* Map */}
-        <div
-          ref={mapContainerRef}
-          style={{
-            height: '100%',
-            width: '100%',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
-          }}
+        margin: 0,
+        overflow: 'hidden'
+      }}>
+        {/* Results Drawer - Putting this first in layout flow */}
+        <GISResultsDrawer
+            open={drawerOpen}
+            onToggleDrawer={() => setDrawerOpen(!drawerOpen)}
+            listings={listings as any}
+            loading={loading}
+            onShowOnMap={(listing: any) => handleShowOnMap(listing)}
+            onFilterClick={() => setFilterDrawerOpen(true)}
+            onSortClick={() => setFilterDrawerOpen(true)}
+            onRefresh={fetchListingsInViewport}
+            favoriteListings={favoriteListings}
+            onFavoriteToggle={handleFavoriteToggle}
+            onContactClick={(listing: any) => handleContactClick(listing)}
+            totalCount={totalListings}
+            expandToEdge={true} // Signal to expand drawer to full width
         />
-        
-        {/* Search Panel */}
-        <GISSearchPanel
-          onSearch={handleSearch}
-          onLocationSelect={(location) => {
-            if (mapRef.current && location) {
-              mapRef.current.setView([location.latitude, location.longitude], 15);
-            }
-          }}
-          drawerOpen={drawerOpen}
-          drawerWidth={drawerWidth}
+
+        {/* Left Categories Panel */}
+        <GISCategoryPanel
+            open={searchDrawerOpen}
+            onClose={() => setSearchDrawerOpen(false)}
+            onCategorySelect={(category: any) => handleCategoryChange(category.id)}
         />
-        
-        {/* Layer Control */}
-        <GISLayerControl
-          layers="standard"
-          onLayerChange={handleLayerChange}
-          clusterMarkers={false}
-          onClusteringToggle={handleClusteringToggle}
-          minimized={!layersOpen}
-          onToggleMinimize={() => setLayersOpen(!layersOpen)}
-          onClose={() => setLayersOpen(false)}
-        />
-        
-        {/* Mobile menu button */}
-        {isMobile && !drawerOpen && (
-          <Fab
-            size="medium"
-            color="primary"
-            aria-label="menu"
-            onClick={() => setDrawerOpen(true)}
-            sx={{
-              position: 'absolute',
-              top: 16,
-              left: 16,
-              zIndex: 1000
+
+        {/* Right Filter Panel */}
+        <GISFilterPanel
+            open={filterDrawerOpen}
+            onClose={() => setFilterDrawerOpen(false)}
+            filters={filters as any}
+            onFiltersChange={handleFilterChange}
+            onApplyFilters={() => fetchListingsInViewport()}
+            onResetFilters={() => {
+              handleFilterChange({
+                price: { min: 0, max: 100000 },
+                condition: 'any',
+                radius: 0,
+                sort: 'id',  // Используем id вместо created_at для совместимости с OpenSearch
+                sort_direction: 'desc'  // Новые объявления имеют бóльшие id
+              });
             }}
-          >
-            <MenuIcon />
-          </Fab>
-        )}
-        
-        {/* My location button */}
-        <Fab
-          size="medium"
-          color="default"
-          aria-label="my location"
-          onClick={handleDetectLocation}
-          sx={{
-            position: 'absolute',
-            bottom: 90,
-            right: 16,
-            zIndex: 1000
-          }}
+        />
+
+        {/* Main map container - takes all remaining space */}
+        <div style={{
+          flexGrow: 1,
+          height: '100%',
+          width: '100%',
+          position: 'relative',
+          margin: 0,
+          padding: 0,
+          overflow: 'hidden',
+          zIndex: 5
+        }}
         >
-          <Navigation />
-        </Fab>
-        
-        {/* Loading indicator */}
-        {loading && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 80,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 1000,
-              bgcolor: 'background.paper',
-              borderRadius: 8,
-              p: 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              boxShadow: 2,
-            }}
+          {/* Map container with enhanced styling for reliable rendering */}
+          <div
+              ref={mapContainerRef}
+              style={{
+                height: '100%',
+                width: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 5,
+                background: '#f5f5f5', // Фон, видимый во время загрузки карты
+                minHeight: '300px', // Минимальная высота для гарантии отрисовки
+                border: '1px solid #e0e0e0', // Визуальное обозначение границ карты
+                visibility: 'visible', // Гарантия видимости
+                display: 'block', // Гарантия отображения
+                overflow: 'hidden' // Предотвращение прокрутки внутри контейнера
+              }}
+              data-testid="map-container" // Атрибут для тестирования
+          />
+
+          {/* Search Panel */}
+          <GISSearchPanel
+              onSearch={handleSearch}
+              onLocationSelect={(location) => {
+                if (mapRef.current && location) {
+                  mapRef.current.setView([location.latitude, location.longitude], 15);
+                }
+              }}
+              drawerOpen={drawerOpen}
+              drawerWidth={drawerWidth}
+          />
+
+          {/* Layer Control */}
+          <GISLayerControl
+              layers="standard"
+              onLayerChange={handleLayerChange}
+              clusterMarkers={false}
+              onClusteringToggle={handleClusteringToggle}
+              minimized={!layersOpen}
+              onToggleMinimize={() => setLayersOpen(!layersOpen)}
+              onClose={() => setLayersOpen(false)}
+          />
+
+          {/* Mobile menu button */}
+          {isMobile && !drawerOpen && (
+              <Fab
+                  size="medium"
+                  color="primary"
+                  aria-label="menu"
+                  onClick={() => setDrawerOpen(true)}
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    left: 16,
+                    zIndex: 1000
+                  }}
+              >
+                <MenuIcon />
+              </Fab>
+          )}
+
+          {/* My location button */}
+          <Fab
+              size="medium"
+              color="default"
+              aria-label="my location"
+              onClick={handleDetectLocation}
+              sx={{
+                position: 'absolute',
+                bottom: 90,
+                right: 16,
+                zIndex: 1000
+              }}
           >
-            <CircularProgress size={24} />
-            <Typography variant="body2">
-              {t('common:loading')}
-            </Typography>
-          </Box>
-        )}
-        
-        {/* Selected listing information */}
-        {renderListingInfo()}
+            <Navigation />
+          </Fab>
+
+          {/* Loading indicator */}
+          {loading && (
+              <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 80,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 1000,
+                    bgcolor: 'background.paper',
+                    borderRadius: 8,
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    boxShadow: 2,
+                  }}
+              >
+                <CircularProgress size={24} />
+                <Typography variant="body2">
+                  {t('common:loading')}
+                </Typography>
+              </Box>
+          )}
+
+          {/* Selected listing information */}
+          {renderListingInfo()}
+        </div>
       </div>
-    </div>
   );
 };
 

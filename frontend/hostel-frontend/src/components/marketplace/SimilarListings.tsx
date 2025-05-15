@@ -17,7 +17,7 @@ import {
     CircularProgress
 } from '@mui/material';
 import { MapPin, Percent, ChevronDown } from 'lucide-react';
-import { Listing } from './ListingCard';
+import { Listing } from '../../types/listing';
 
 // Define ImageObject interface locally to avoid dependency issues
 interface ImageObject {

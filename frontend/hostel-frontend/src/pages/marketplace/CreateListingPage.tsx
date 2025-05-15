@@ -544,7 +544,7 @@ const CreateListing: React.FC = () => {
                             <Grid item xs={12} sx={{ mb: 0.1 }}>
                                 <ImageUploader
                                     onImagesSelected={(processedImages) => {
-                                        setImages(processedImages.map(img => img.file));
+                                        setImages(processedImages.map(img => img.file).filter((file): file is File => file instanceof File));
                                         setPreviewUrls(processedImages.map(img => img.preview));
                                     }}
                                     maxImages={10}

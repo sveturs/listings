@@ -107,6 +107,11 @@ interface ImportSource {
     storefront_id: number;
     created_at: string;
     updated_at: string;
+    name: string;
+    source_type: 'csv' | 'xml' | 'api';
+    last_import_status?: string;
+    last_import_at?: string;
+    schedule?: string;
     [key: string]: any;
 }
 

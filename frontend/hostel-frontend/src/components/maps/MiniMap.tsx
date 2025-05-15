@@ -10,6 +10,8 @@ interface MiniMapProps {
   latitude?: string | number;
   longitude?: string | number;
   address?: string;
+  onClick?: () => void;
+  onExpand?: () => void;
 }
 
 interface Marker {
@@ -18,7 +20,7 @@ interface Marker {
   title?: string;
 }
 
-const MiniMap: React.FC<MiniMapProps> = ({ latitude, longitude, address }) => {
+const MiniMap: React.FC<MiniMapProps> = ({ latitude, longitude, address, onClick, onExpand }) => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   // Добавляем состояние для открытия полноэкранной карты
@@ -105,6 +107,7 @@ const MiniMap: React.FC<MiniMapProps> = ({ latitude, longitude, address }) => {
   // Функция для открытия полноэкранной карты
   const handleExpandMap = (): void => {
     setExpandedMapOpen(true);
+    if (onExpand) onExpand();
   };
 
   // Функция для закрытия полноэкранной карты
@@ -147,9 +150,11 @@ const MiniMap: React.FC<MiniMapProps> = ({ latitude, longitude, address }) => {
         
         <Box
           ref={mapRef}
+          onClick={() => onClick && onClick()}
           sx={{
             height: '100%',
-            width: '100%'
+            width: '100%',
+            cursor: onClick ? 'pointer' : 'default'
           }}
         />
       </Box>
