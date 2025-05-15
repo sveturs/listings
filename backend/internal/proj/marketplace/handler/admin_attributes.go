@@ -37,17 +37,18 @@ func (h *AdminAttributesHandler) RegisterRoutes(app *fiber.App, adminMiddleware 
 	adminGroup.Delete("/attributes/:id", h.DeleteAttribute)
 	adminGroup.Post("/attributes/bulk-update", h.BulkUpdateAttributes)
 
+	// Маршруты для экспорта/импорта настроек атрибутов - регистрируем до других маршрутов категорий и атрибутов
+	// чтобы избежать конфликта маршрутизации
+	adminGroup.Get("/categories/:categoryId/attributes/export", h.ExportCategoryAttributes)
+	adminGroup.Post("/categories/:categoryId/attributes/import", h.ImportCategoryAttributes)
+	
+	// Маршрут для копирования настроек между категориями
+	adminGroup.Post("/categories/:targetCategoryId/attributes/copy", h.CopyAttributesSettings)
+
 	// Маршруты для управления связями атрибутов с категориями
 	adminGroup.Post("/categories/:categoryId/attributes/:attributeId", h.AddAttributeToCategory)
 	adminGroup.Delete("/categories/:categoryId/attributes/:attributeId", h.RemoveAttributeFromCategory)
 	adminGroup.Put("/categories/:categoryId/attributes/:attributeId", h.UpdateAttributeCategory)
-
-	// Маршруты для экспорта/импорта настроек атрибутов
-	adminGroup.Get("/categories/:categoryId/attributes/export", h.ExportCategoryAttributes)
-	adminGroup.Post("/categories/:categoryId/attributes/import", h.ImportCategoryAttributes)
-
-	// Маршрут для копирования настроек между категориями
-	adminGroup.Post("/categories/:targetCategoryId/attributes/copy", h.CopyAttributesSettings)
 }
 
 // CreateAttribute создает новый атрибут

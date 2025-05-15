@@ -1,6 +1,6 @@
 #!/bin/bash
 # Улучшенный скрипт для blue-green deployment с поддержкой всех сервисов
-# Использование: ./blue_green_deploy_on_svetu.rs.sh [backend|frontend|all] [-m]
+# Использование: ./blue_green_deploy_on_svetu.rs.sh.improved [backend|frontend|all] [-m]
 
 set -e
 
@@ -62,18 +62,47 @@ LOG_FILE="${LOG_DIR}/blue_green_deploy_$(date +%Y%m%d%H%M%S).log"
 
 # Проверяем флаг миграций
 RUN_MIGRATIONS=false
-SPECIFIC_MIGRATION=""
 if [[ "$2" == "-m" ]]; then
   RUN_MIGRATIONS=true
-  SPECIFIC_MIGRATION="$3"
   log_info "Включен режим миграций. После деплоя будут применены миграции базы данных."
-  if [ ! -z "$SPECIFIC_MIGRATION" ]; then
-    log_info "Будет применена конкретная миграция: $SPECIFIC_MIGRATION"
-  fi
 fi
 
 # Текущая дата и время для тегов
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
+
+# Функция для подготовки и копирования файлов миграций на сервер
+prepare_migrations() {
+  if [ "$RUN_MIGRATIONS" = "true" ]; then
+    log_info "Подготовка файлов миграций для сервера..."
+    MIGRATIONS_DIR="/tmp/migrations_${TIMESTAMP}"
+    mkdir -p $MIGRATIONS_DIR
+    
+    # Копируем все файлы миграций в временную директорию
+    cp $LOCAL_BACKEND_DIR/migrations/*.up.sql $MIGRATIONS_DIR/ 2>/dev/null || true
+    
+    # Проверяем, что файлы миграций были скопированы
+    MIGRATION_COUNT=$(ls -1 $MIGRATIONS_DIR/*.up.sql 2>/dev/null | wc -l)
+    if [ "$MIGRATION_COUNT" -eq "0" ]; then
+      log_warn "Файлы миграций не найдены в локальной директории."
+      rm -rf $MIGRATIONS_DIR
+      return 1
+    fi
+    
+    # Создаем директорию для миграций на сервере
+    ssh $PROD_SERVER_USER@$PROD_SERVER "mkdir -p $PROD_SERVER_PATH/backend/migrations"
+    
+    # Отправляем файлы миграций на сервер
+    log_info "Отправка файлов миграций на сервер..."
+    scp -q $MIGRATIONS_DIR/*.up.sql $PROD_SERVER_USER@$PROD_SERVER:$PROD_SERVER_PATH/backend/migrations/
+    
+    # Очистка временных файлов
+    rm -rf $MIGRATIONS_DIR
+    
+    log_success "Файлы миграций успешно отправлены на сервер!"
+    return 0
+  fi
+  return 0
+}
 
 # Функция для сборки и загрузки backend
 build_backend() {
@@ -137,185 +166,6 @@ EOT
   log_success "Frontend успешно загружен в Harbor с тегами: latest и $TIMESTAMP"
 }
 
-# Функция для копирования файлов миграций на сервер
-prepare_migrations() {
-  log_info "Подготовка файлов миграций для сервера..."
-  
-  # Создаем временную директорию
-  MIGRATION_TEMP_DIR="/tmp/svetu-migrations"
-  rm -rf $MIGRATION_TEMP_DIR
-  mkdir -p $MIGRATION_TEMP_DIR/backend/migrations
-  
-  # Копируем все файлы миграций
-  if [ -d "$LOCAL_BACKEND_DIR/migrations" ]; then
-    cp -r $LOCAL_BACKEND_DIR/migrations/*.up.sql $MIGRATION_TEMP_DIR/backend/migrations/
-    cp -r $LOCAL_BACKEND_DIR/migrations/*.down.sql $MIGRATION_TEMP_DIR/backend/migrations/
-  else
-    log_error "Директория с миграциями не найдена! ($LOCAL_BACKEND_DIR/migrations)"
-    return 1
-  fi
-  
-  # Создаем скрипт для применения миграций
-  cat > $MIGRATION_TEMP_DIR/apply_migrations.sh << 'EOT'
-#!/bin/bash
-set -e
-
-# Цвета для вывода
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
-# Функция для логирования
-log_info() { echo -e "${YELLOW}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-log_warn() { echo -e "${RED}[WARNING]${NC} $1"; }
-
-# Параметры
-SPECIFIC_MIGRATION="$1"
-DB_CONTAINER="hostel_db"
-NETWORK=$(docker network ls --format "{{.Name}}" | grep -i hostel | head -n 1)
-
-if [ -z "$NETWORK" ]; then
-  NETWORK=$(docker network ls --format "{{.Name}}" | grep -i default | head -n 1)
-  log_info "Используем сеть по умолчанию: $NETWORK"
-fi
-
-# Получаем IP адрес базы данных для надежного подключения
-DB_IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $DB_CONTAINER 2>/dev/null || echo "")
-if [ -z "$DB_IP" ]; then
-  log_warn "IP-адрес базы данных не определен, будет использовано имя хоста"
-  DB_CONNECTION="$DB_CONTAINER"
-else
-  log_info "Используем IP-адрес для подключения к базе данных: $DB_IP"
-  DB_CONNECTION="$DB_IP"
-fi
-
-# Проверяем статус текущих миграций
-log_info "Проверка текущего состояния миграций..."
-docker exec $DB_CONTAINER psql -U postgres -d hostel_db -c "SELECT version, dirty FROM schema_migrations ORDER BY version;"
-
-# Если обнаружены "грязные" миграции, предложить сбросить их
-DIRTY_MIGRATIONS=$(docker exec $DB_CONTAINER psql -U postgres -d hostel_db -t -c "SELECT version FROM schema_migrations WHERE dirty = true;")
-
-if [ ! -z "$DIRTY_MIGRATIONS" ]; then
-  log_warn "Обнаружены 'грязные' миграции: $DIRTY_MIGRATIONS"
-  log_info "Сбрасываем флаг dirty для проблемных миграций..."
-  
-  for version in $DIRTY_MIGRATIONS; do
-    log_info "Сброс флага dirty для миграции $version..."
-    docker exec $DB_CONTAINER psql -U postgres -d hostel_db -c "UPDATE schema_migrations SET dirty = false WHERE version = $version;"
-  done
-  
-  log_info "Состояние миграций после сброса:"
-  docker exec $DB_CONTAINER psql -U postgres -d hostel_db -c "SELECT version, dirty FROM schema_migrations ORDER BY version;"
-fi
-
-# Создаем директории для миграций если их нет
-mkdir -p /opt/hostel-booking-system/backend/migrations
-
-# Копируем миграции из временной директории
-log_info "Копирование миграций..."
-cp -f /tmp/svetu-migrations/backend/migrations/*.up.sql /opt/hostel-booking-system/backend/migrations/
-cp -f /tmp/svetu-migrations/backend/migrations/*.down.sql /opt/hostel-booking-system/backend/migrations/
-
-# Применяем конкретную миграцию или все миграции
-if [ ! -z "$SPECIFIC_MIGRATION" ]; then
-  log_info "Применение конкретной миграции: $SPECIFIC_MIGRATION"
-  
-  # Проверяем существование файла миграции
-  if [ ! -f "/opt/hostel-booking-system/backend/migrations/${SPECIFIC_MIGRATION}.up.sql" ]; then
-    log_error "Файл миграции не найден: ${SPECIFIC_MIGRATION}.up.sql"
-    exit 1
-  fi
-  
-  # Применяем миграцию вручную через SQL
-  log_info "Применение SQL миграции ${SPECIFIC_MIGRATION}.up.sql..."
-  cat "/opt/hostel-booking-system/backend/migrations/${SPECIFIC_MIGRATION}.up.sql" | docker exec -i $DB_CONTAINER psql -U postgres -d hostel_db
-  
-  # Обновляем таблицу schema_migrations
-  MIGRATION_NUMBER=$(echo $SPECIFIC_MIGRATION | grep -oE '^[0-9]+')
-  if [ ! -z "$MIGRATION_NUMBER" ]; then
-    log_info "Обновление таблицы schema_migrations для миграции $MIGRATION_NUMBER..."
-    docker exec $DB_CONTAINER psql -U postgres -d hostel_db -c "INSERT INTO schema_migrations (version, dirty) VALUES ($MIGRATION_NUMBER, false) ON CONFLICT (version) DO UPDATE SET dirty = false;"
-  else
-    log_warn "Не удалось определить номер миграции из названия файла: $SPECIFIC_MIGRATION"
-  fi
-  
-  log_info "Состояние миграций после применения:"
-  docker exec $DB_CONTAINER psql -U postgres -d hostel_db -c "SELECT version, dirty FROM schema_migrations ORDER BY version;"
-else
-  # Применяем все миграции с помощью migrate/migrate
-  log_info "Применение всех миграций..."
-  
-  # Используем контейнер migrate/migrate для применения миграций
-  # Используем IP вместо имени хоста для надежного подключения
-  log_info "Запуск migrate/migrate с подключением к $DB_CONNECTION:5432"
-  docker run --rm --network $NETWORK \
-    -v /opt/hostel-booking-system/backend/migrations:/migrations \
-    migrate/migrate \
-    -path=/migrations/ \
-    -database="postgres://postgres:c9XWc7Cm@$DB_CONNECTION:5432/hostel_db?sslmode=disable" \
-    up
-  
-  MIGRATION_RESULT=$?
-  if [ $MIGRATION_RESULT -ne 0 ]; then
-    log_warn "Ошибка при выполнении миграций. Пробуем альтернативный метод..."
-    
-    # Альтернативный метод: применяем каждую миграцию вручную
-    log_info "Применение миграций вручную через SQL..."
-    
-    # Получаем список миграций и текущую версию
-    CURRENT_VERSION=$(docker exec $DB_CONTAINER psql -U postgres -d hostel_db -t -c "SELECT MAX(version) FROM schema_migrations WHERE dirty = false;" | xargs)
-    log_info "Текущая версия миграций: $CURRENT_VERSION"
-    
-    # Находим все .up.sql файлы и применяем их
-    for migration_file in $(ls -1 /opt/hostel-booking-system/backend/migrations/*.up.sql | sort); do
-      # Извлекаем номер версии из названия файла
-      file_name=$(basename "$migration_file")
-      version_number=$(echo "$file_name" | grep -oE '^[0-9]+')
-      
-      # Применяем только те, что выше текущей версии
-      if [ ! -z "$version_number" ] && [ "$version_number" -gt "$CURRENT_VERSION" ]; then
-        log_info "Применение миграции $file_name вручную..."
-        cat "$migration_file" | docker exec -i $DB_CONTAINER psql -U postgres -d hostel_db
-        
-        # Обновляем schema_migrations
-        docker exec $DB_CONTAINER psql -U postgres -d hostel_db -c "INSERT INTO schema_migrations (version, dirty) VALUES ($version_number, false) ON CONFLICT (version) DO UPDATE SET dirty = false;"
-      fi
-    done
-    
-    log_success "Миграции применены вручную!"
-  else
-    log_success "Миграции успешно выполнены!"
-  fi
-  
-  log_info "Состояние миграций после применения:"
-  docker exec $DB_CONTAINER psql -U postgres -d hostel_db -c "SELECT version, dirty FROM schema_migrations ORDER BY version;"
-fi
-
-# Проверяем столбцы в таблице marketplace_categories
-log_info "Проверка столбцов таблицы marketplace_categories:"
-docker exec $DB_CONTAINER psql -U postgres -d hostel_db -c "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'marketplace_categories' ORDER BY ordinal_position;"
-
-log_success "Процесс миграции завершен!"
-EOT
-
-  # Делаем скрипт исполняемым
-  chmod +x $MIGRATION_TEMP_DIR/apply_migrations.sh
-  
-  # Отправляем скрипт и миграции на сервер
-  log_info "Отправка файлов миграций на сервер..."
-  scp -q -r $MIGRATION_TEMP_DIR/* $PROD_SERVER_USER@$PROD_SERVER:$PROD_SERVER_PATH/
-  
-  log_success "Файлы миграций успешно отправлены на сервер!"
-  
-  # Удаляем временную директорию
-  rm -rf $MIGRATION_TEMP_DIR
-}
-
 # Функция для бесшовного обновления backend
 blue_green_backend() {
   log_info "Бесшовное обновление backend..."
@@ -368,14 +218,9 @@ run_quietly() {
 
 # Проверяем параметры
 RUN_MIGRATIONS=false
-SPECIFIC_MIGRATION=""
 if [[ "$1" == "run-migrations" ]]; then
   RUN_MIGRATIONS=true
-  SPECIFIC_MIGRATION="$2"
   log_info "Включен режим миграций. После деплоя будут применены миграции базы данных."
-  if [ ! -z "$SPECIFIC_MIGRATION" ]; then
-    log_info "Будет применена конкретная миграция: $SPECIFIC_MIGRATION"
-  fi
 fi
 
 # Создаем рабочую директорию
@@ -858,50 +703,38 @@ fi
 if [ "$RUN_MIGRATIONS" = "true" ]; then
   log_info "Запуск миграций..."
   
-  # Проверяем наличие скрипта миграций
-  if [ -f "/opt/hostel-booking-system/apply_migrations.sh" ]; then
-    log_info "Найден скрипт для миграций, запускаем..."
-    
-    # Запускаем скрипт миграций с нужными параметрами
-    chmod +x /opt/hostel-booking-system/apply_migrations.sh
-    /opt/hostel-booking-system/apply_migrations.sh "$SPECIFIC_MIGRATION"
-    
-    MIGRATION_RESULT=$?
-    if [ $MIGRATION_RESULT -ne 0 ]; then
-      log_error "Ошибка при выполнении миграций!"
-    else
-      log_success "Миграции успешно выполнены!"
-    fi
-  else
-    log_error "Скрипт для миграций не найден!"
-    
-    # Альтернативный подход для миграций через контейнер
-    log_info "Пробуем выполнить миграции через контейнер migrate/migrate..."
-    docker run --rm --network $HOSTEL_NETWORK \
-      -v /opt/hostel-booking-system/backend/migrations:/migrations \
-      migrate/migrate \
-      -path=/migrations/ \
-      -database="postgres://postgres:c9XWc7Cm@$DB_CONTAINER:5432/hostel_db?sslmode=disable" \
-      up
-      
-    MIGRATION_RESULT=$?
-    if [ $MIGRATION_RESULT -ne 0 ]; then
-      log_error "Ошибка при выполнении миграций через контейнер, но продолжаем деплой."
-    else
-      log_success "Миграции успешно выполнены через контейнер!"
-    fi
-  fi
-else
-  log_info "Миграции пропущены."
-fi
-
-# Выполняем еще одну проверку, чтобы убедиться, что все работает
-log_info "Финальная проверка API..."
-FINAL_CHECK=$(curl -k -s -m 5 https://svetu.rs/api/health || echo "Failed")
-if [[ "$FINAL_CHECK" == *"OK"* ]]; then
-  log_success "Финальная проверка API успешна! Система готова к работе."
-else
-  log_warn "Финальная проверка API не прошла успешно. Возможно, требуется ручная проверка."
+  # Проверка текущего состояния миграций
+  log_info "Проверка текущего состояния миграций..."
+  
+  # Определяем имя базы данных
+  DB_NAME="hostel_db"
+  
+  # Проверяем текущие миграции
+  docker exec $DB_CONTAINER psql -U postgres -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations ORDER BY version DESC LIMIT 3;"
+  
+  # Копируем миграции в контейнер с базой данных для более надежного применения
+  log_info "Копирование миграций..."
+  
+  # Создаем временную директорию в контейнере базы данных
+  docker exec $DB_CONTAINER mkdir -p /tmp/migrations
+  
+  # Копируем все .up.sql файлы из директории миграций в контейнер
+  for MIGRATION_FILE in /opt/hostel-booking-system/backend/migrations/*.up.sql; do
+    FILENAME=$(basename "$MIGRATION_FILE")
+    docker cp "$MIGRATION_FILE" "$DB_CONTAINER:/tmp/migrations/$FILENAME"
+  done
+  
+  # Применяем миграции напрямую через psql
+  log_info "Применение всех миграций..."
+  
+  # Запускаем контейнер migrate/migrate с подключением к DB_CONTAINER через сеть контейнера
+  docker run --rm \
+    --network $HOSTEL_NETWORK \
+    -v /opt/hostel-booking-system/backend/migrations:/migrations \
+    migrate/migrate \
+    -path=/migrations/ \
+    -database="postgres://postgres:c9XWc7Cm@$DB_CONTAINER:5432/$DB_NAME?sslmode=disable" \
+    up
 fi
 
 # Если проверки прошли успешно, останавливаем старый контейнер
@@ -915,11 +748,7 @@ elif [ "$CURRENT_COLOR" != "none" ]; then
   docker rm $CURRENT_CONTAINER > /dev/null 2>&1 || true
 fi
 
-log_success "Бесшовное обновление backend успешно завершено!"
-log_success "Новый активный контейнер: $NEW_CONTAINER с IP: $NEW_CONTAINER_IP"
-
-# Очистка временных файлов
-rm -rf $WORK_DIR
+log_success "Деплой бэкенда завершен!"
 EOT
 
   # Делаем скрипт исполняемым
@@ -929,9 +758,6 @@ EOT
   MIGRATIONS_PARAM=""
   if [ "$RUN_MIGRATIONS" = "true" ]; then
     MIGRATIONS_PARAM="run-migrations"
-    if [ ! -z "$SPECIFIC_MIGRATION" ]; then
-      MIGRATIONS_PARAM="$MIGRATIONS_PARAM $SPECIFIC_MIGRATION"
-    fi
   fi
 
   # Отправляем скрипт на сервер
@@ -1163,18 +989,14 @@ fi
 case "$SERVICE" in
   "backend")
     build_backend | tee -a $LOG_FILE | filter_logs
-    if [ "$RUN_MIGRATIONS" = "true" ]; then
-      prepare_migrations | tee -a $LOG_FILE | filter_logs
-    fi
+    prepare_migrations | tee -a $LOG_FILE
     blue_green_backend | tee -a $LOG_FILE | filter_logs
     ;;
   "build-backend")
     build_backend | tee -a $LOG_FILE | filter_logs
     ;;
   "deploy-backend")
-    if [ "$RUN_MIGRATIONS" = "true" ]; then
-      prepare_migrations | tee -a $LOG_FILE | filter_logs
-    fi
+    prepare_migrations | tee -a $LOG_FILE
     blue_green_backend | tee -a $LOG_FILE | filter_logs
     ;;
   "frontend")
@@ -1184,9 +1006,7 @@ case "$SERVICE" in
   "all")
     build_backend | tee -a $LOG_FILE | filter_logs
     build_frontend | tee -a $LOG_FILE | filter_logs
-    if [ "$RUN_MIGRATIONS" = "true" ]; then
-      prepare_migrations | tee -a $LOG_FILE | filter_logs
-    fi
+    prepare_migrations | tee -a $LOG_FILE
     blue_green_backend | tee -a $LOG_FILE | filter_logs
     blue_green_frontend | tee -a $LOG_FILE | filter_logs
     ;;
