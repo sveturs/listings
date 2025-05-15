@@ -60,7 +60,9 @@ type MarketplaceServiceInterface interface {
 
 	// Новые методы для управления связями
 	AddAttributeToCategory(ctx context.Context, categoryID int, attributeID int, isRequired bool) error
+	AddAttributeToCategoryWithOrder(ctx context.Context, categoryID int, attributeID int, isRequired bool, sortOrder int) error
 	RemoveAttributeFromCategory(ctx context.Context, categoryID int, attributeID int) error
 	UpdateAttributeCategory(ctx context.Context, categoryID int, attributeID int, isRequired bool, isEnabled bool) error
+	UpdateAttributeCategoryExtended(ctx context.Context, categoryID int, attributeID int, isRequired bool, isEnabled bool, sortOrder int, customComponent string) error
 	InvalidateAttributeCache(ctx context.Context, categoryID int) error
 }

@@ -78,8 +78,21 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
         return [];
       }
       
-      return categories
-        .filter(cat => cat.parent_id === parentId)
+      // Проверяем формат данных - если это API-ответ с полем data, используем его
+      const categoriesArray = Array.isArray(categories) ? categories : 
+                             (categories && 'data' in categories && Array.isArray(categories.data)) ? 
+                             categories.data : [];
+      
+      return categoriesArray
+        // Отфильтруем категории с соответствующим parent_id
+        // Важно: также проверим случай, когда parent_id === 0, undefined или null
+        .filter(cat => {
+          if (parentId === null) {
+            // Для корневого уровня показываем категории без родителя или с parent_id = 0
+            return cat.parent_id === null || cat.parent_id === 0 || cat.parent_id === undefined;
+          }
+          return cat.parent_id === parentId;
+        })
         .map(cat => ({
           ...cat,
           children: buildCategoryTree(cat.id)
@@ -343,9 +356,9 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   };
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       <Grid item xs={12} md={selectedCategory ? 7 : 12}>
-        <Paper variant="outlined" sx={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+        <Paper variant="outlined" sx={{ maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ p: 1.5, bgcolor: 'background.default' }}>
             <TextField
               fullWidth

@@ -80,33 +80,53 @@ const CategoryAttributeMappingPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Добавим тестовые категории для отладки UI
-        const mockCategories = [
-          { id: 1, name: 'Электроника', slug: 'electronics', parent_id: null, listing_count: 15, has_custom_ui: true, custom_ui_component: 'ElectronicsUI' },
-          { id: 2, name: 'Смартфоны', slug: 'smartphones', parent_id: 1, listing_count: 8, has_custom_ui: false },
-          { id: 3, name: 'Ноутбуки', slug: 'laptops', parent_id: 1, listing_count: 5, has_custom_ui: true, custom_ui_component: 'LaptopsUI' },
-          { id: 4, name: 'Одежда', slug: 'clothing', parent_id: null, listing_count: 20, has_custom_ui: false },
-          { id: 5, name: 'Мужская', slug: 'mens', parent_id: 4, listing_count: 12, has_custom_ui: false },
-          { id: 6, name: 'Женская', slug: 'womens', parent_id: 4, listing_count: 8, has_custom_ui: false },
-          { id: 7, name: 'Детская', slug: 'kids', parent_id: 4, listing_count: 0, has_custom_ui: false },
-        ];
+        // Параллельная загрузка категорий и атрибутов
+        const [categoriesResponse, attributesResponse] = await Promise.all([
+          axios.get('/api/admin/categories'),
+          axios.get('/api/admin/attributes')
+        ]);
         
-        const mockAttributes: Attribute[] = [
-          { id: 1, name: 'brand', display_name: 'Бренд', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: true, sort_order: 1, created_at: new Date().toISOString() },
-          { id: 2, name: 'price', display_name: 'Цена', attribute_type: 'number', is_searchable: true, is_filterable: true, is_required: true, sort_order: 2, created_at: new Date().toISOString() },
-          { id: 3, name: 'color', display_name: 'Цвет', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 3, created_at: new Date().toISOString() },
-          { id: 4, name: 'condition', display_name: 'Состояние', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: true, sort_order: 4, created_at: new Date().toISOString() },
-          { id: 5, name: 'size', display_name: 'Размер', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 5, created_at: new Date().toISOString() },
-        ];
+        console.log('Loaded categories:', categoriesResponse.data);
+        console.log('Loaded attributes:', attributesResponse.data);
         
-        // Используем мок-данные для отладки UI
-        console.log('Используем мок-данные для категорий и атрибутов');
-        setCategories(mockCategories);
-        setAttributes(mockAttributes);
+        // Извлекаем данные из ответа API, если они в формате { data: [...] }
+        const categoryData = categoriesResponse.data && categoriesResponse.data.data ? 
+                            categoriesResponse.data.data : categoriesResponse.data;
+        const attributeData = attributesResponse.data && attributesResponse.data.data ? 
+                             attributesResponse.data.data : attributesResponse.data;
+                             
+        setCategories(categoryData);
+        setAttributes(attributeData);
         
       } catch (err) {
         console.error('Ошибка загрузки данных:', err);
-        setError(`Ошибка загрузки данных: ${err.message}`);
+        setError(t('admin.common.fetchError'));
+        
+        // Используем мок-данные только в режиме разработки, если запросы не удались
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Используем мок-данные для режима разработки');
+          
+          const mockCategories = [
+            { id: 1, name: 'Электроника', slug: 'electronics', parent_id: null, listing_count: 15, has_custom_ui: true, custom_ui_component: 'ElectronicsUI' },
+            { id: 2, name: 'Смартфоны', slug: 'smartphones', parent_id: 1, listing_count: 8, has_custom_ui: false },
+            { id: 3, name: 'Ноутбуки', slug: 'laptops', parent_id: 1, listing_count: 5, has_custom_ui: true, custom_ui_component: 'LaptopsUI' },
+            { id: 4, name: 'Одежда', slug: 'clothing', parent_id: null, listing_count: 20, has_custom_ui: false },
+            { id: 5, name: 'Мужская', slug: 'mens', parent_id: 4, listing_count: 12, has_custom_ui: false },
+            { id: 6, name: 'Женская', slug: 'womens', parent_id: 4, listing_count: 8, has_custom_ui: false },
+            { id: 7, name: 'Детская', slug: 'kids', parent_id: 4, listing_count: 0, has_custom_ui: false },
+          ];
+          
+          const mockAttributes: Attribute[] = [
+            { id: 1, name: 'brand', display_name: 'Бренд', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: true, sort_order: 1, created_at: new Date().toISOString() },
+            { id: 2, name: 'price', display_name: 'Цена', attribute_type: 'number', is_searchable: true, is_filterable: true, is_required: true, sort_order: 2, created_at: new Date().toISOString() },
+            { id: 3, name: 'color', display_name: 'Цвет', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 3, created_at: new Date().toISOString() },
+            { id: 4, name: 'condition', display_name: 'Состояние', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: true, sort_order: 4, created_at: new Date().toISOString() },
+            { id: 5, name: 'size', display_name: 'Размер', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 5, created_at: new Date().toISOString() },
+          ];
+          
+          setCategories(mockCategories);
+          setAttributes(mockAttributes);
+        }
       } finally {
         setLoading(false);
       }
@@ -121,114 +141,135 @@ const CategoryAttributeMappingPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // Мок-данные для привязок атрибутов
-      const mockMappings = [
-        // Электроника (id=1)
-        ...(categoryId === 1 ? [
-          { 
-            category_id: 1, 
-            attribute_id: 1, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 1,
-            attribute: attributes.find(a => a.id === 1) 
-          },
-          { 
-            category_id: 1, 
-            attribute_id: 2, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 2,
-            attribute: attributes.find(a => a.id === 2)
-          },
-          { 
-            category_id: 1, 
-            attribute_id: 4, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 3,
-            attribute: attributes.find(a => a.id === 4)
-          },
-        ] : []),
+      try {
+        // Запрос к API для получения привязок атрибутов категории
+        const response = await axios.get(`/api/admin/categories/${categoryId}/attributes/export`);
+        console.log(`Загрузка привязок атрибутов для категории ID=${categoryId}:`, response.data);
         
-        // Смартфоны (id=2)
-        ...(categoryId === 2 ? [
-          { 
-            category_id: 2, 
-            attribute_id: 1, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 1,
-            attribute: attributes.find(a => a.id === 1)
-          },
-          { 
-            category_id: 2, 
-            attribute_id: 2, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 2,
-            attribute: attributes.find(a => a.id === 2)
-          },
-          { 
-            category_id: 2, 
-            attribute_id: 3, 
-            is_required: false, 
-            is_enabled: true, 
-            sort_order: 3,
-            attribute: attributes.find(a => a.id === 3)
-          },
-          { 
-            category_id: 2, 
-            attribute_id: 4, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 4,
-            attribute: attributes.find(a => a.id === 4)
-          },
-        ] : []),
+        // Преобразуем данные в нужный формат, добавляя информацию об атрибутах
+        const mappingsWithAttributes = response.data.map((mapping: CategoryAttributeMapping) => ({
+          ...mapping,
+          attribute: attributes.find(a => a.id === mapping.attribute_id)
+        }));
         
-        // Одежда (id=4)
-        ...(categoryId === 4 ? [
-          { 
-            category_id: 4, 
-            attribute_id: 1, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 1,
-            attribute: attributes.find(a => a.id === 1)
-          },
-          { 
-            category_id: 4, 
-            attribute_id: 2, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 2,
-            attribute: attributes.find(a => a.id === 2)
-          },
-          { 
-            category_id: 4, 
-            attribute_id: 3, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 3,
-            attribute: attributes.find(a => a.id === 3)
-          },
-          { 
-            category_id: 4, 
-            attribute_id: 5, 
-            is_required: true, 
-            is_enabled: true, 
-            sort_order: 4,
-            attribute: attributes.find(a => a.id === 5)
-          },
-        ] : []),
+        setCategoryAttributeMappings(mappingsWithAttributes);
+      } catch (apiError) {
+        console.error('Error fetching category attributes from API:', apiError);
         
-        // Для остальных категорий - пустые массивы по умолчанию
-      ];
-      
-      // Используем мок-данные
-      console.log(`Загрузка привязок атрибутов для категории ID=${categoryId}:`, mockMappings);
-      setCategoryAttributeMappings(mockMappings);
+        // Используем мок-данные только в режиме разработки, если запрос не удался
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Используем мок-данные для привязок атрибутов в режиме разработки');
+          
+          const mockMappings = [
+            // Электроника (id=1)
+            ...(categoryId === 1 ? [
+              { 
+                category_id: 1, 
+                attribute_id: 1, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 1,
+                attribute: attributes.find(a => a.id === 1) 
+              },
+              { 
+                category_id: 1, 
+                attribute_id: 2, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 2,
+                attribute: attributes.find(a => a.id === 2)
+              },
+              { 
+                category_id: 1, 
+                attribute_id: 4, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 3,
+                attribute: attributes.find(a => a.id === 4)
+              },
+            ] : []),
+            
+            // Смартфоны (id=2)
+            ...(categoryId === 2 ? [
+              { 
+                category_id: 2, 
+                attribute_id: 1, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 1,
+                attribute: attributes.find(a => a.id === 1)
+              },
+              { 
+                category_id: 2, 
+                attribute_id: 2, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 2,
+                attribute: attributes.find(a => a.id === 2)
+              },
+              { 
+                category_id: 2, 
+                attribute_id: 3, 
+                is_required: false, 
+                is_enabled: true, 
+                sort_order: 3,
+                attribute: attributes.find(a => a.id === 3)
+              },
+              { 
+                category_id: 2, 
+                attribute_id: 4, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 4,
+                attribute: attributes.find(a => a.id === 4)
+              },
+            ] : []),
+            
+            // Одежда (id=4)
+            ...(categoryId === 4 ? [
+              { 
+                category_id: 4, 
+                attribute_id: 1, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 1,
+                attribute: attributes.find(a => a.id === 1)
+              },
+              { 
+                category_id: 4, 
+                attribute_id: 2, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 2,
+                attribute: attributes.find(a => a.id === 2)
+              },
+              { 
+                category_id: 4, 
+                attribute_id: 3, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 3,
+                attribute: attributes.find(a => a.id === 3)
+              },
+              { 
+                category_id: 4, 
+                attribute_id: 5, 
+                is_required: true, 
+                is_enabled: true, 
+                sort_order: 4,
+                attribute: attributes.find(a => a.id === 5)
+              },
+            ] : []),
+            
+            // Для остальных категорий - пустые массивы по умолчанию
+          ];
+          
+          setCategoryAttributeMappings(mockMappings);
+        } else {
+          // В продакшн-режиме показываем ошибку
+          throw apiError;
+        }
+      }
     } catch (err) {
       console.error('Error fetching category attributes:', err);
       setError(t('admin.categoryAttributes.fetchMappingsError'));
@@ -305,12 +346,12 @@ const CategoryAttributeMappingPage: React.FC = () => {
 
   // Рендеринг содержимого страницы
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 0, maxWidth: '100%' }}>
       <Paper 
         sx={{ 
-          p: 2, 
-          borderRadius: 2,
-          boxShadow: theme.shadows[2],
+          p: { xs: 1, sm: 2 }, 
+          borderRadius: 0,
+          boxShadow: 'none',
           bgcolor: 'background.paper'
         }}
       >
@@ -355,9 +396,9 @@ const CategoryAttributeMappingPage: React.FC = () => {
           </Alert>
         )}
 
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
             {/* Левая панель - Выбор категории */}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <Box>
                 <Typography variant="h6" gutterBottom display="flex" alignItems="center" gap={1}>
                   <LabelImportantIcon fontSize="small" color="primary" />
@@ -380,7 +421,7 @@ const CategoryAttributeMappingPage: React.FC = () => {
             </Grid>
 
             {/* Правая панель - Управление атрибутами */}
-            <Grid item xs={12} md={8}>
+            <Grid item xs={12} md={9}>
               {selectedCategory ? (
                 <Box>
                   <Paper 

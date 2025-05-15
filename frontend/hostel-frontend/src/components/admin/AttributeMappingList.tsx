@@ -279,7 +279,7 @@ const AttributeMappingList: React.FC<AttributeMappingListProps> = ({
         </Alert>
       )}
       
-      <TableContainer component={Paper} variant="outlined">
+      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
         <Table size="small">
           <TableHead>
             <TableRow>

@@ -1649,6 +1649,7 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
         COALESCE(m.is_required, a.is_required) as is_required,
         a.sort_order,
         a.created_at,
+        COALESCE(m.custom_component, a.custom_component) as custom_component,
         COALESCE(at.translations, '{}'::jsonb) as translations,
         COALESCE(ol.option_translations, '{}'::jsonb) as option_translations
     FROM category_attribute_mapping m
@@ -1671,7 +1672,7 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
 	var attributes []models.CategoryAttribute
 	for rows.Next() {
 		var attr models.CategoryAttribute
-		var options, validRules sql.NullString
+		var options, validRules, customComponent sql.NullString
 		var translationsJson, optionTranslationsJson []byte
 
 		if err := rows.Scan(
@@ -1686,6 +1687,7 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
 			&attr.IsRequired,
 			&attr.SortOrder,
 			&attr.CreatedAt,
+			&customComponent,
 			&translationsJson,
 			&optionTranslationsJson,
 		); err != nil {
@@ -1699,6 +1701,11 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
 		}
 		if validRules.Valid {
 			attr.ValidRules = json.RawMessage(validRules.String)
+		}
+		// Всегда инициализируем CustomComponent пустой строкой
+		attr.CustomComponent = ""
+		if customComponent.Valid {
+			attr.CustomComponent = customComponent.String
 		}
 
 		// Обработка переводов

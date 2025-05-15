@@ -449,7 +449,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </Alert>
       )}
 
-      <Container maxWidth="lg" sx={{ py: 0, px: { xs: 1, sm: 2, md: 3 }, width: '100%', boxSizing: 'border-box' }}>
+      <Box 
+        component="main"
+        sx={{ 
+          width: '100%',
+          boxSizing: 'border-box',
+          py: 0,
+          px: 0
+        }}
+      >
         {currentPath !== '/' && categoryPath.length > 0 && (
           <Box
             sx={{
@@ -464,7 +472,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Box>
         )}
         {children}
-      </Container>
+      </Box>
 
       {isProfileOpen && (
         <Box

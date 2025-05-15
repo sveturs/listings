@@ -75,59 +75,91 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
       setLoading(true);
       setError(null);
 
-      // В реальном приложении здесь будет API-запрос, но сейчас используем мок-данные
-      // Здесь мы эмулируем получение данных
-      
-      // Мок-данные для всех атрибутов
-      const mockAllAttributes: Attribute[] = [
-        { id: 1, name: 'brand', display_name: 'Бренд', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 1, created_at: new Date().toISOString() },
-        { id: 2, name: 'price', display_name: 'Цена', attribute_type: 'number', is_searchable: true, is_filterable: true, is_required: false, sort_order: 2, created_at: new Date().toISOString() },
-        { id: 3, name: 'color', display_name: 'Цвет', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 3, created_at: new Date().toISOString() },
-        { id: 4, name: 'condition', display_name: 'Состояние', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 4, created_at: new Date().toISOString() },
-        { id: 5, name: 'size', display_name: 'Размер', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 5, created_at: new Date().toISOString() },
-        { id: 6, name: 'material', display_name: 'Материал', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 6, created_at: new Date().toISOString() },
-        { id: 7, name: 'description', display_name: 'Описание', attribute_type: 'text', is_searchable: true, is_filterable: false, is_required: false, sort_order: 7, created_at: new Date().toISOString() },
-      ];
-      
-      // Мок-данные для существующих привязок атрибутов к категории
-      let mockMappings: CategoryAttributeMapping[] = [];
-      
-      // Например, для категории "Электроника" (id=1)
-      if (categoryId === 1) {
-        mockMappings = [
-          { category_id: 1, attribute_id: 1, is_required: true, is_enabled: true, sort_order: 1 },
-          { category_id: 1, attribute_id: 2, is_required: true, is_enabled: true, sort_order: 2 },
-          { category_id: 1, attribute_id: 4, is_required: true, is_enabled: true, sort_order: 3 },
-        ];
+      try {
+        // Загружаем все атрибуты и текущие привязки через API
+        const [allAttributesResponse, categoryMappingsResponse] = await Promise.all([
+          axios.get('/api/admin/attributes'),
+          axios.get(`/api/admin/categories/${categoryId}/attributes/export`)
+        ]);
+        
+        console.log('All attributes:', allAttributesResponse.data);
+        console.log('Category mappings:', categoryMappingsResponse.data);
+        
+        const allAttributes = allAttributesResponse.data;
+        const categoryMappings = categoryMappingsResponse.data;
+        
+        setExistingMappings(categoryMappings);
+        
+        // Filter out attributes that are already mapped to this category
+        const mappedAttributeIds = categoryMappings.map((mapping: CategoryAttributeMapping) => mapping.attribute_id);
+        const filteredAttributes = allAttributes.filter((attr: Attribute) => 
+          !mappedAttributeIds.includes(attr.id)
+        );
+        
+        setAvailableAttributes(filteredAttributes);
+      } catch (apiError) {
+        console.error('API error:', apiError);
+        
+        // В режиме разработки используем мок-данные при ошибке API
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Используем мок-данные в режиме разработки');
+          
+          // Мок-данные для всех атрибутов
+          const mockAllAttributes: Attribute[] = [
+            { id: 1, name: 'brand', display_name: 'Бренд', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 1, created_at: new Date().toISOString() },
+            { id: 2, name: 'price', display_name: 'Цена', attribute_type: 'number', is_searchable: true, is_filterable: true, is_required: false, sort_order: 2, created_at: new Date().toISOString() },
+            { id: 3, name: 'color', display_name: 'Цвет', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 3, created_at: new Date().toISOString() },
+            { id: 4, name: 'condition', display_name: 'Состояние', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 4, created_at: new Date().toISOString() },
+            { id: 5, name: 'size', display_name: 'Размер', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 5, created_at: new Date().toISOString() },
+            { id: 6, name: 'material', display_name: 'Материал', attribute_type: 'select', is_searchable: true, is_filterable: true, is_required: false, sort_order: 6, created_at: new Date().toISOString() },
+            { id: 7, name: 'description', display_name: 'Описание', attribute_type: 'text', is_searchable: true, is_filterable: false, is_required: false, sort_order: 7, created_at: new Date().toISOString() },
+          ];
+          
+          // Мок-данные для существующих привязок атрибутов к категории
+          let mockMappings: CategoryAttributeMapping[] = [];
+          
+          // Например, для категории "Электроника" (id=1)
+          if (categoryId === 1) {
+            mockMappings = [
+              { category_id: 1, attribute_id: 1, is_required: true, is_enabled: true, sort_order: 1 },
+              { category_id: 1, attribute_id: 2, is_required: true, is_enabled: true, sort_order: 2 },
+              { category_id: 1, attribute_id: 4, is_required: true, is_enabled: true, sort_order: 3 },
+            ];
+          }
+          // Для категории "Смартфоны" (id=2)
+          else if (categoryId === 2) {
+            mockMappings = [
+              { category_id: 2, attribute_id: 1, is_required: true, is_enabled: true, sort_order: 1 },
+              { category_id: 2, attribute_id: 2, is_required: true, is_enabled: true, sort_order: 2 },
+              { category_id: 2, attribute_id: 3, is_required: false, is_enabled: true, sort_order: 3 },
+              { category_id: 2, attribute_id: 4, is_required: true, is_enabled: true, sort_order: 4 },
+            ];
+          }
+          // Для категории "Одежда" (id=4)
+          else if (categoryId === 4) {
+            mockMappings = [
+              { category_id: 4, attribute_id: 1, is_required: true, is_enabled: true, sort_order: 1 },
+              { category_id: 4, attribute_id: 2, is_required: true, is_enabled: true, sort_order: 2 },
+              { category_id: 4, attribute_id: 3, is_required: true, is_enabled: true, sort_order: 3 },
+              { category_id: 4, attribute_id: 5, is_required: true, is_enabled: true, sort_order: 4 },
+            ];
+          }
+          
+          setExistingMappings(mockMappings);
+          
+          // Filter out attributes that are already mapped to this category
+          const mappedAttributeIds = mockMappings.map(mapping => mapping.attribute_id);
+          const filteredAttributes = mockAllAttributes.filter(attr => 
+            !mappedAttributeIds.includes(attr.id)
+          );
+          
+          setAvailableAttributes(filteredAttributes);
+        } else {
+          // В продакшн-режиме пробрасываем ошибку
+          throw apiError;
+        }
       }
-      // Для категории "Смартфоны" (id=2)
-      else if (categoryId === 2) {
-        mockMappings = [
-          { category_id: 2, attribute_id: 1, is_required: true, is_enabled: true, sort_order: 1 },
-          { category_id: 2, attribute_id: 2, is_required: true, is_enabled: true, sort_order: 2 },
-          { category_id: 2, attribute_id: 3, is_required: false, is_enabled: true, sort_order: 3 },
-          { category_id: 2, attribute_id: 4, is_required: true, is_enabled: true, sort_order: 4 },
-        ];
-      }
-      // Для категории "Одежда" (id=4)
-      else if (categoryId === 4) {
-        mockMappings = [
-          { category_id: 4, attribute_id: 1, is_required: true, is_enabled: true, sort_order: 1 },
-          { category_id: 4, attribute_id: 2, is_required: true, is_enabled: true, sort_order: 2 },
-          { category_id: 4, attribute_id: 3, is_required: true, is_enabled: true, sort_order: 3 },
-          { category_id: 4, attribute_id: 5, is_required: true, is_enabled: true, sort_order: 4 },
-        ];
-      }
       
-      setExistingMappings(mockMappings);
-      
-      // Filter out attributes that are already mapped to this category
-      const mappedAttributeIds = mockMappings.map(mapping => mapping.attribute_id);
-      const filteredAttributes = mockAllAttributes.filter(attr => 
-        !mappedAttributeIds.includes(attr.id)
-      );
-      
-      setAvailableAttributes(filteredAttributes);
     } catch (err) {
       console.error('Error fetching attributes data:', err);
       const errorMessage = t('admin.categoryAttributes.fetchAttributesError');
@@ -151,22 +183,37 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
       setLoading(true);
       setError(null);
       
-      // В реальном приложении будет API-запрос
-      // await axios.post(`/api/admin/categories/${categoryId}/attributes`, {
-      //   attribute_id: selectedAttribute.id,
-      //   is_required: isRequired,
-      //   is_enabled: isEnabled,
-      //   sort_order: sortOrder
-      // });
-      
-      // Симулируем успешное добавление атрибута
-      console.log(`${t('admin.categoryAttributes.addAttributeSimulation')}:`, {
-        categoryId,
-        attributeId: selectedAttribute.id,
-        isRequired,
-        isEnabled,
-        sortOrder
-      });
+      try {
+        // Добавляем атрибут к категории через API
+        await axios.post(`/api/admin/categories/${categoryId}/attributes/${selectedAttribute.id}`, {
+          is_required: isRequired,
+          is_enabled: isEnabled,
+          sort_order: sortOrder
+        });
+        
+        console.log(`Attribute ${selectedAttribute.id} added to category ${categoryId}`, {
+          is_required: isRequired,
+          is_enabled: isEnabled,
+          sort_order: sortOrder
+        });
+      } catch (apiError) {
+        console.error('API error while adding attribute:', apiError);
+        
+        // В режиме разработки симулируем успешное добавление
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Симуляция добавления атрибута в режиме разработки');
+          console.log(`${t('admin.categoryAttributes.addAttributeSimulation')}:`, {
+            categoryId,
+            attributeId: selectedAttribute.id,
+            isRequired,
+            isEnabled,
+            sortOrder
+          });
+        } else {
+          // В продакшн-режиме пробрасываем ошибку
+          throw apiError;
+        }
+      }
       
       // Reset form and refresh data
       setSelectedAttribute(null);
@@ -205,7 +252,7 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
   }, [existingMappings]);
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
+    <Paper variant="outlined" sx={{ p: { xs: 1, sm: 2 }, mt: 2 }}>
       <Typography variant="h6" gutterBottom>
         {t('admin.categoryAttributes.addAttribute')}
       </Typography>
@@ -216,7 +263,7 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
         </Alert>
       )}
       
-      <Grid container spacing={2}>
+      <Grid container spacing={{ xs: 1, sm: 2 }}>
         <Grid item xs={12}>
           <Autocomplete
             value={selectedAttribute}

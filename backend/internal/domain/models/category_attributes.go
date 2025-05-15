@@ -53,9 +53,11 @@ type ListingAttributeValue struct {
 
 // CategoryAttributeMapping связывает атрибуты с категориями
 type CategoryAttributeMapping struct {
-	CategoryID  int                `json:"category_id"`
-	AttributeID int                `json:"attribute_id"`
-	IsEnabled   bool               `json:"is_enabled"`
-	IsRequired  bool               `json:"is_required"`
-	Attribute   *CategoryAttribute `json:"attribute,omitempty"`
+	CategoryID      int                `json:"category_id"`
+	AttributeID     int                `json:"attribute_id"`
+	IsEnabled       bool               `json:"is_enabled"`
+	IsRequired      bool               `json:"is_required"`
+	SortOrder       int                `json:"sort_order"`
+	CustomComponent string             `json:"custom_component,omitempty"`
+	Attribute       *CategoryAttribute `json:"attribute,omitempty"`
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"backend/internal/domain/models"
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 )
@@ -372,6 +373,12 @@ func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*mod
 
 // AddAttributeToCategory привязывает атрибут к категории
 func (s *MarketplaceService) AddAttributeToCategory(ctx context.Context, categoryID int, attributeID int, isRequired bool) error {
+	// Используем новый метод с sortOrder=0 (будет использовано значение из атрибута)
+	return s.AddAttributeToCategoryWithOrder(ctx, categoryID, attributeID, isRequired, 0)
+}
+
+// AddAttributeToCategoryWithOrder привязывает атрибут к категории с указанием порядка сортировки
+func (s *MarketplaceService) AddAttributeToCategoryWithOrder(ctx context.Context, categoryID int, attributeID int, isRequired bool, sortOrder int) error {
 	// Проверяем, что категория и атрибут существуют
 	var categoryExists, attributeExists bool
 
@@ -393,13 +400,13 @@ func (s *MarketplaceService) AddAttributeToCategory(ctx context.Context, categor
 		return fmt.Errorf("атрибут с ID %d не существует", attributeID)
 	}
 
-	// Добавляем связь
+	// Добавляем связь с учетом sort_order и custom_component
 	_, err = s.storage.Exec(ctx, `
-		INSERT INTO category_attribute_mapping (category_id, attribute_id, is_enabled, is_required)
-		VALUES ($1, $2, true, $3)
+		INSERT INTO category_attribute_mapping (category_id, attribute_id, is_enabled, is_required, sort_order, custom_component)
+		VALUES ($1, $2, true, $3, $4, NULL)
 		ON CONFLICT (category_id, attribute_id)
-		DO UPDATE SET is_enabled = true, is_required = $3
-	`, categoryID, attributeID, isRequired)
+		DO UPDATE SET is_enabled = true, is_required = $3, sort_order = $4
+	`, categoryID, attributeID, isRequired, sortOrder)
 
 	if err != nil {
 		return fmt.Errorf("не удалось привязать атрибут к категории: %w", err)
@@ -449,6 +456,31 @@ func (s *MarketplaceService) UpdateAttributeCategory(ctx context.Context, catego
 		SET is_required = $1, is_enabled = $2
 		WHERE category_id = $3 AND attribute_id = $4
 	`, isRequired, isEnabled, categoryID, attributeID)
+
+	if err != nil {
+		return fmt.Errorf("не удалось обновить связь атрибута с категорией: %w", err)
+	}
+
+	// Инвалидируем кеш атрибутов для категории
+	return s.InvalidateAttributeCache(ctx, categoryID)
+}
+
+// UpdateAttributeCategoryExtended обновляет расширенные настройки связи атрибута с категорией
+func (s *MarketplaceService) UpdateAttributeCategoryExtended(
+	ctx context.Context,
+	categoryID int,
+	attributeID int,
+	isRequired bool,
+	isEnabled bool,
+	sortOrder int,
+	customComponent string,
+) error {
+	// Обновляем связь с дополнительными полями
+	_, err := s.storage.Exec(ctx, `
+		UPDATE category_attribute_mapping
+		SET is_required = $1, is_enabled = $2, sort_order = $3, custom_component = $4
+		WHERE category_id = $5 AND attribute_id = $6
+	`, isRequired, isEnabled, sortOrder, customComponent, categoryID, attributeID)
 
 	if err != nil {
 		return fmt.Errorf("не удалось обновить связь атрибута с категорией: %w", err)
@@ -522,14 +554,16 @@ func (s *MarketplaceService) GetCategoryByID(ctx context.Context, id int) (*mode
 
 // GetCategoryAttributes получает все атрибуты для указанной категории
 func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-	// Запрос для получения атрибутов категории
+	// Запрос для получения атрибутов категории с учетом sort_order из маппинга
 	query := `
 		SELECT a.id, a.name, a.display_name, a.attribute_type, a.options, a.validation_rules,
-		       a.is_searchable, a.is_filterable, cam.is_required, a.sort_order, a.created_at, a.custom_component
+		       a.is_searchable, a.is_filterable, cam.is_required, a.sort_order, a.created_at, 
+			   COALESCE(cam.custom_component, a.custom_component) as custom_component,
+			   cam.sort_order as mapping_sort_order
 		FROM category_attributes a
 		JOIN category_attribute_mapping cam ON a.id = cam.attribute_id
 		WHERE cam.category_id = $1 AND cam.is_enabled = true
-		ORDER BY a.sort_order, a.id
+		ORDER BY cam.sort_order, a.sort_order, a.id
 	`
 
 	rows, err := s.storage.Query(ctx, query, categoryID)
@@ -542,6 +576,8 @@ func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, category
 	for rows.Next() {
 		var attribute models.CategoryAttribute
 		var optionsJSON, validRulesJSON []byte
+		var mappingSortOrder int
+		var customComponent sql.NullString
 
 		err := rows.Scan(
 			&attribute.ID,
@@ -555,10 +591,22 @@ func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, category
 			&attribute.IsRequired,
 			&attribute.SortOrder,
 			&attribute.CreatedAt,
-			&attribute.CustomComponent,
+			&customComponent,
+			&mappingSortOrder,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("не удалось прочитать атрибут: %w", err)
+		}
+
+		// Если в маппинге задан sort_order, используем его вместо значения из атрибута
+		if mappingSortOrder > 0 {
+			attribute.SortOrder = mappingSortOrder
+		}
+
+		// Устанавливаем CustomComponent, обрабатывая NULL-значения
+		attribute.CustomComponent = ""
+		if customComponent.Valid {
+			attribute.CustomComponent = customComponent.String
 		}
 
 		// Устанавливаем Options и ValidRules

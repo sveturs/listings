@@ -294,18 +294,27 @@ func (h *AdminAttributesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 	// Парсим параметры из запроса
 	var input struct {
 		IsRequired bool `json:"is_required"`
+		SortOrder  int  `json:"sort_order"`
 	}
 
 	if err := c.BodyParser(&input); err != nil {
 		// Если JSON не передан, устанавливаем значение по умолчанию
 		input.IsRequired = false
+		input.SortOrder = 0
 	}
 
-	// Привязываем атрибут к категории
-	err = h.marketplaceService.AddAttributeToCategory(c.Context(), categoryID, attributeID, input.IsRequired)
-	if err != nil {
-		log.Printf("Failed to add attribute to category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось привязать атрибут к категории: "+err.Error())
+	// Если указан порядок сортировки, используем расширенный метод
+	var addErr error
+	if input.SortOrder > 0 {
+		addErr = h.marketplaceService.AddAttributeToCategoryWithOrder(c.Context(), categoryID, attributeID, input.IsRequired, input.SortOrder)
+	} else {
+		// Иначе используем обычный метод (порядок будет взят из атрибута)
+		addErr = h.marketplaceService.AddAttributeToCategory(c.Context(), categoryID, attributeID, input.IsRequired)
+	}
+
+	if addErr != nil {
+		log.Printf("Failed to add attribute to category: %v", addErr)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось привязать атрибут к категории: "+addErr.Error())
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
@@ -353,8 +362,10 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 
 	// Парсим параметры из запроса
 	var input struct {
-		IsRequired bool `json:"is_required"`
-		IsEnabled  bool `json:"is_enabled"`
+		IsRequired      bool   `json:"is_required"`
+		IsEnabled       bool   `json:"is_enabled"`
+		SortOrder       int    `json:"sort_order"`
+		CustomComponent string `json:"custom_component"`
 	}
 
 	if err := c.BodyParser(&input); err != nil {
@@ -362,7 +373,16 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 	}
 
 	// Обновляем настройки атрибута в категории
-	err = h.marketplaceService.UpdateAttributeCategory(c.Context(), categoryID, attributeID, input.IsRequired, input.IsEnabled)
+	err = h.marketplaceService.UpdateAttributeCategoryExtended(
+		c.Context(),
+		categoryID,
+		attributeID,
+		input.IsRequired,
+		input.IsEnabled,
+		input.SortOrder,
+		input.CustomComponent,
+	)
+
 	if err != nil {
 		log.Printf("Failed to update attribute category settings: %v", err)
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось обновить настройки атрибута в категории: "+err.Error())
@@ -406,13 +426,15 @@ func (h *AdminAttributesHandler) ExportCategoryAttributes(c *fiber.Ctx) error {
 func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.Context, categoryID int) ([]models.CategoryAttributeMapping, error) {
 	// Запрос для получения атрибутов категории с их настройками
 	query := `
-		SELECT cam.category_id, cam.attribute_id, cam.is_enabled, cam.is_required,
+		SELECT cam.category_id, cam.attribute_id, cam.is_enabled, cam.is_required, cam.sort_order, 
+			   COALESCE(cam.custom_component, '') as mapping_custom_component,
 			   ca.id, ca.name, ca.display_name, ca.attribute_type, ca.options, ca.validation_rules,
-			   ca.is_searchable, ca.is_filterable, ca.is_required, ca.sort_order, ca.created_at, ca.custom_component
+			   ca.is_searchable, ca.is_filterable, ca.is_required, ca.sort_order, ca.created_at, 
+			   COALESCE(ca.custom_component, '') as attribute_custom_component
 		FROM category_attribute_mapping cam
 		JOIN category_attributes ca ON cam.attribute_id = ca.id
 		WHERE cam.category_id = $1
-		ORDER BY ca.sort_order, ca.id
+		ORDER BY cam.sort_order, ca.sort_order, ca.id
 	`
 
 	rows, err := h.marketplaceService.Storage().Query(ctx, query, categoryID)
@@ -426,12 +448,15 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 		var mapping models.CategoryAttributeMapping
 		var attribute models.CategoryAttribute
 		var optionsJSON, validRulesJSON []byte
+		var mappingCustomComponent, attributeCustomComponent string
 
 		err := rows.Scan(
 			&mapping.CategoryID,
 			&mapping.AttributeID,
 			&mapping.IsEnabled,
 			&mapping.IsRequired,
+			&mapping.SortOrder,
+			&mappingCustomComponent,
 			&attribute.ID,
 			&attribute.Name,
 			&attribute.DisplayName,
@@ -443,10 +468,17 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 			&attribute.IsRequired,
 			&attribute.SortOrder,
 			&attribute.CreatedAt,
-			&attribute.CustomComponent,
+			&attributeCustomComponent,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("не удалось прочитать атрибут: %w", err)
+		}
+
+		// Используем пользовательский компонент из маппинга, если он есть, иначе из атрибута
+		if mappingCustomComponent != "" {
+			attribute.CustomComponent = mappingCustomComponent
+		} else {
+			attribute.CustomComponent = attributeCustomComponent
 		}
 
 		// Устанавливаем Options и ValidRules как json.RawMessage
@@ -557,11 +589,11 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 			continue
 		}
 
-		// Добавляем связь
+		// Добавляем связь с учетом sort_order и custom_component
 		_, err = tx.Exec(c.Context(), `
-			INSERT INTO category_attribute_mapping (category_id, attribute_id, is_enabled, is_required)
-			VALUES ($1, $2, $3, $4)
-		`, categoryID, mapping.AttributeID, mapping.IsEnabled, mapping.IsRequired)
+			INSERT INTO category_attribute_mapping (category_id, attribute_id, is_enabled, is_required, sort_order, custom_component)
+			VALUES ($1, $2, $3, $4, $5, $6)
+		`, categoryID, mapping.AttributeID, mapping.IsEnabled, mapping.IsRequired, mapping.SortOrder, mapping.CustomComponent)
 
 		if err != nil {
 			errors = append(errors, fmt.Sprintf("Не удалось добавить атрибут %d: %s", mapping.AttributeID, err.Error()))
@@ -651,10 +683,10 @@ func (h *AdminAttributesHandler) CopyAttributesSettings(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось очистить существующие связи атрибутов")
 	}
 
-	// Копируем связи из исходной категории в целевую
+	// Копируем связи из исходной категории в целевую с учетом sort_order и custom_component
 	query := `
-		INSERT INTO category_attribute_mapping (category_id, attribute_id, is_enabled, is_required)
-		SELECT $1, attribute_id, is_enabled, is_required
+		INSERT INTO category_attribute_mapping (category_id, attribute_id, is_enabled, is_required, sort_order, custom_component)
+		SELECT $1, attribute_id, is_enabled, is_required, sort_order, custom_component
 		FROM category_attribute_mapping
 		WHERE category_id = $2
 	`

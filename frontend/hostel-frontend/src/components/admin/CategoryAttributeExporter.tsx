@@ -271,8 +271,8 @@ const CategoryAttributeExporter: React.FC<CategoryAttributeExporterProps> = ({
     <Paper 
       variant="outlined" 
       sx={{ 
-        p: 2, 
-        mt: 3, 
+        p: { xs: 1, sm: 2 }, 
+        mt: 2, 
         borderRadius: 1,
         position: 'relative'
       }}
@@ -305,9 +305,9 @@ const CategoryAttributeExporter: React.FC<CategoryAttributeExporterProps> = ({
         </Alert>
       )}
       
-      <Grid container spacing={2}>
+      <Grid container spacing={{ xs: 1, sm: 2 }}>
         {/* Экспорт атрибутов */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Paper 
             variant="outlined" 
             sx={{ 
@@ -341,7 +341,7 @@ const CategoryAttributeExporter: React.FC<CategoryAttributeExporterProps> = ({
         </Grid>
         
         {/* Импорт атрибутов */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Paper 
             variant="outlined" 
             sx={{ 
@@ -375,7 +375,7 @@ const CategoryAttributeExporter: React.FC<CategoryAttributeExporterProps> = ({
         </Grid>
         
         {/* Копирование атрибутов */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Paper 
             variant="outlined" 
             sx={{ 
