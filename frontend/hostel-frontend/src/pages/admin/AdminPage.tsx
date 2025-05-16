@@ -9,7 +9,8 @@ import {
   Discount as DiscountIcon,
   Star as RatingIcon,
   Info as InfoIcon,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Extension as ExtensionIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -225,6 +226,31 @@ const AdminPage: React.FC = () => {
                 </Typography>
                 <Typography variant="body2" align="center" color="text.secondary">
                   Привязка атрибутов к категориям, настройка приоритетов и требований
+                </Typography>
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4} lg={3}>
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 3,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  height: '100%',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  '&:hover': { transform: 'translateY(-5px)', boxShadow: 6 }
+                }}
+                onClick={() => navigate('/admin/custom-components')}
+              >
+                <ExtensionIcon sx={{ fontSize: 48, color: '#9c27b0', mb: 2 }} />
+                <Typography variant="h6" align="center" gutterBottom>
+                  Кастомные компоненты
+                </Typography>
+                <Typography variant="body2" align="center" color="text.secondary">
+                  Управление кастомными UI компонентами, шаблонами и их использованием
                 </Typography>
               </Paper>
             </Grid>

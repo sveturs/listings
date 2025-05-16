@@ -296,15 +296,22 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
             }}
             options={filteredAttributes}
             getOptionLabel={(option) => option.display_name || option.name}
-            renderInput={(params) => (
-              <TextField 
-                {...params} 
-                label={t('admin.categoryAttributes.selectAttribute')}
-                variant="outlined"
-                fullWidth
-                size="small"
-              />
-            )}
+            renderInput={(params) => {
+              const { InputLabelProps, ...restParams } = params;
+              return (
+                <TextField 
+                  {...restParams} 
+                  InputLabelProps={{
+                    ...InputLabelProps,
+                    children: String(t('admin.categoryAttributes.selectAttribute'))
+                  }}
+                  label={String(t('admin.categoryAttributes.selectAttribute'))}
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                />
+              );
+            }}
             renderOption={(props, option) => (
               <li {...props} key={option.id}>
                 <Box>
@@ -319,7 +326,7 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
             )}
             loading={loading}
             disabled={loading || availableAttributes.length === 0}
-            noOptionsText={t('admin.categoryAttributes.noAttributesAvailable')}
+            noOptionsText={String(t('admin.categoryAttributes.noAttributesAvailable'))}
           />
         </Grid>
         
@@ -332,7 +339,7 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
                 disabled={loading || !selectedAttribute}
               />
             }
-            label={t('admin.attributes.required')}
+            label={String(t('admin.attributes.required'))}
           />
         </Grid>
         
@@ -345,13 +352,13 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
                 disabled={loading || !selectedAttribute}
               />
             }
-            label={t('admin.attributes.enabled')}
+            label={String(t('admin.attributes.enabled'))}
           />
         </Grid>
         
         <Grid item xs={12} sm={4}>
           <TextField
-            label={t('admin.attributes.sortOrder')}
+            label={String(t('admin.attributes.sortOrder'))}
             type="number"
             value={sortOrder}
             onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}

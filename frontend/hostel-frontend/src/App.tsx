@@ -37,6 +37,7 @@ import AdminManagerPage from "./pages/admin/AdminManagerPage";
 import CategoryManagementPage from "./pages/admin/CategoryManagementPage";
 import AttributeManagementPage from "./pages/admin/AttributeManagementPage";
 import CategoryAttributeMappingPage from "./pages/admin/CategoryAttributeMappingPage";
+import CustomComponentsPage from "./pages/admin/CustomComponentsPage";
 import { GISMapPage } from './pages/gis';
 
 // Настройка клиента запросов
@@ -125,6 +126,7 @@ const App: React.FC = () => {
                         <Route path="/admin/categories" element={<AdminRoute><CategoryManagementPage /></AdminRoute>} />
                         <Route path="/admin/attributes" element={<AdminRoute><AttributeManagementPage /></AdminRoute>} />
                         <Route path="/admin/category-attributes" element={<AdminRoute><CategoryAttributeMappingPage /></AdminRoute>} />
+                        <Route path="/admin/custom-components" element={<AdminRoute><CustomComponentsPage /></AdminRoute>} />
                       </Routes>
                     </Layout>
                   </NotificationProvider>

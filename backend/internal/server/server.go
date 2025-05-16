@@ -390,6 +390,26 @@ func (s *Server) setupRoutes() {
 	legacyAdmin.Get("/categories/:categoryId/attributes/export", s.marketplace.AdminAttributes.ExportCategoryAttributes)
 	legacyAdmin.Post("/categories/:categoryId/attributes/import", s.marketplace.AdminAttributes.ImportCategoryAttributes)
 	legacyAdmin.Post("/categories/:targetCategoryId/attributes/copy", s.marketplace.AdminAttributes.CopyAttributesSettings)
+		
+	// Маршруты для кастомных UI компонентов
+	// ВАЖНО: Более специфичные роуты должны идти раньше параметризованных
+	
+	// Маршруты для шаблонов (должны быть перед :id, чтобы не конфликтовать)
+	adminRoutes.Get("/custom-components/templates", s.marketplace.CustomComponents.ListTemplates)
+	adminRoutes.Post("/custom-components/templates", s.marketplace.CustomComponents.CreateTemplate)
+	
+	// Маршруты для использования компонентов
+	adminRoutes.Post("/custom-components/usage", s.marketplace.CustomComponents.AddComponentUsage)
+	adminRoutes.Delete("/custom-components/usage/:id", s.marketplace.CustomComponents.RemoveComponentUsage)
+	
+	// Основные маршруты компонентов (параметризованные идут последними)
+	adminRoutes.Post("/custom-components", s.marketplace.CustomComponents.CreateComponent)
+	adminRoutes.Get("/custom-components", s.marketplace.CustomComponents.ListComponents)
+	adminRoutes.Get("/custom-components/:id", s.marketplace.CustomComponents.GetComponent)
+	adminRoutes.Put("/custom-components/:id", s.marketplace.CustomComponents.UpdateComponent)
+	adminRoutes.Delete("/custom-components/:id", s.marketplace.CustomComponents.DeleteComponent)
+	
+	adminRoutes.Get("/categories/:category_id/components", s.marketplace.CustomComponents.GetCategoryComponents)
 
 	// Использовать реальный обработчик из UserHandler
 	adminRoutes.Get("/users", s.users.User.GetAllUsers)

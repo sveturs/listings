@@ -9,4 +9,5 @@ ADD COLUMN IF NOT EXISTS custom_component VARCHAR(255);
 
 -- Индексы для оптимизации запросов в админке
 CREATE INDEX IF NOT EXISTS idx_category_attributes_name ON category_attributes(name);
-CREATE INDEX IF NOT EXISTS idx_categories_path ON marketplace_categories USING GIN (category_path);
+-- Убираем индекс для несуществующей колонки category_path
+-- CREATE INDEX IF NOT EXISTS idx_categories_path ON marketplace_categories USING GIN (category_path);
