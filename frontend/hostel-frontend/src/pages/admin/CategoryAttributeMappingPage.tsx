@@ -271,7 +271,7 @@ const CategoryAttributeMappingPage: React.FC = () => {
 
         <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
             {/* Левая панель - Выбор категории */}
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4}>
               <Box>
                 <Typography variant="h6" gutterBottom display="flex" alignItems="center" gap={1}>
                   <LabelImportantIcon fontSize="small" color="primary" />
@@ -294,7 +294,7 @@ const CategoryAttributeMappingPage: React.FC = () => {
             </Grid>
 
             {/* Правая панель - Управление атрибутами */}
-            <Grid item xs={12} md={9}>
+            <Grid item xs={12} md={8}>
               {selectedCategory ? (
                 <Box>
                   <Paper 

@@ -196,12 +196,20 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
       
       try {
         // Добавляем атрибут к категории через API
-        await axios.post(`/api/admin/categories/${categoryId}/attributes/${selectedAttribute.id}`, {
-          is_required: isRequired,
-          is_enabled: isEnabled,
-          sort_order: sortOrder,
-          custom_component: selectedAttribute.custom_component
+        await axios.post(`/api/admin/categories/${categoryId}/attributes`, {
+          attribute_id: selectedAttribute.id,
+          is_required: isRequired
         });
+        
+        // Если нужно обновить дополнительные параметры, делаем это через PUT
+        if (isEnabled !== true || sortOrder !== 0 || selectedAttribute.custom_component) {
+          await axios.put(`/api/admin/categories/${categoryId}/attributes/${selectedAttribute.id}`, {
+            is_required: isRequired,
+            is_enabled: isEnabled,
+            sort_order: sortOrder,
+            custom_component: selectedAttribute.custom_component
+          });
+        }
         
         console.log(`Attribute ${selectedAttribute.id} added to category ${categoryId}`, {
           is_required: isRequired,
@@ -298,7 +306,7 @@ const AddAttributeToCategory: React.FC<AddAttributeToCategoryProps> = ({
               />
             )}
             renderOption={(props, option) => (
-              <li {...props}>
+              <li {...props} key={option.id}>
                 <Box>
                   <Typography variant="body1">
                     {option.display_name || option.name}

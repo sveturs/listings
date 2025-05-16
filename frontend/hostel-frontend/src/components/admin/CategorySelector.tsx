@@ -401,9 +401,9 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   };
 
   return (
-    <Grid container spacing={1}>
-      <Grid item xs={12} md={selectedCategory ? 7 : 12}>
-        <Paper variant="outlined" sx={{ maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+    <Grid container spacing={2}>
+      <Grid item xs={12} md={selectedCategory ? 6 : 12}>
+        <Paper variant="outlined" sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <Box sx={{ p: 1.5, bgcolor: 'background.default' }}>
             <TextField
               fullWidth
@@ -430,7 +430,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
             )}
           </Box>
           <Divider />
-          <Box sx={{ overflow: 'auto', flexGrow: 1, p: 1 }}>
+          <Box sx={{ p: 1 }}>
             {!categories || (Array.isArray(categories) ? categories.length === 0 : 
                              ('data' in categories && Array.isArray(categories.data)) ? 
                              categories.data.length === 0 : true) ? (
@@ -457,7 +457,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       </Grid>
       
       {selectedCategory && (
-        <Grid item xs={12} md={5}>
+        <Grid item xs={12} md={6}>
           {renderCategoryDetails()}
         </Grid>
       )}
