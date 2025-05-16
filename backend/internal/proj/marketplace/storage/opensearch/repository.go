@@ -805,7 +805,12 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
 	}
 
 	doc["attributes"] = attributesArray
-	doc["all_attributes_text"] = getUniqueValues(flattenAttributeValues(attributeTextValues))
+	allAttrsText := getUniqueValues(flattenAttributeValues(attributeTextValues))
+	doc["all_attributes_text"] = allAttrsText
+	
+	// Отладочный вывод для проверки индексации атрибутов
+	log.Printf("ИНДЕКСАЦИЯ объявления %d: attributes=%d, all_attributes_text=%v", 
+		listingID, len(attributesArray), allAttrsText)
 
 	if len(realEstateText) > 0 {
 		doc["real_estate_attributes_text"] = realEstateText
@@ -1430,7 +1435,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"brand^4",
 			"property_type^3",
 			"body_type^3",
-			"rooms^3",
+				// удалил rooms^3, т.к. оно числовое
 			"cpu^3",
 			"gpu^3",
 			"memory^3",
@@ -1453,14 +1458,14 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"attr_screen_size_text^3",
 			"real_estate_attributes_text^3",
 			"real_estate_attributes_combined^3",
-			"rooms^4",
-			"area^3",
-			"floor^3",
-			"total_floors^3",
+				// удалил rooms^4, т.к. оно дублирует и оно числовое
+				// удалил area^3, т.к. оно числовое
+				// удалил floor^3, т.к. оно числовое
+				// удалил total_floors^3, т.к. оно числовое
 			"property_type^4",
-			"land_area^3",
-			"year_built^3",
-			"bathrooms^3",
+				// удалил land_area^3, т.к. оно числовое
+				// удалил year_built^3, т.к. оно числовое
+				// удалил bathrooms^3, т.к. оно числовое
 			"heating_type^3",
 			"parking^3",
 			"balcony^3",
