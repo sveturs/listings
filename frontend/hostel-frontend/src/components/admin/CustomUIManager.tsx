@@ -237,6 +237,16 @@ const CustomUIManager: React.FC<CustomUIManagerProps> = ({ categoryId, onCategor
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   {t('admin.customUI.componentDescription')}
                 </Typography>
+                
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ mt: 2 }}
+                  href="/admin/custom-components-constructor"
+                  target="_blank"
+                >
+                  Управление UI компонентами
+                </Button>
               </Box>
             )}
             

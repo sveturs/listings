@@ -25,7 +25,10 @@ import {
   Tab,
   Tooltip,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Grid,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -401,6 +404,541 @@ const CustomComponentsPage: React.FC = () => {
       );
     };
 
+  const UsageTab = () => {
+    const [componentUsages, setComponentUsages] = useState<ComponentUsage[]>([]);
+    const [selectedUsageComponent, setSelectedUsageComponent] = useState<number | null>(null);
+    const [usageLoading, setUsageLoading] = useState(false);
+    const [filters, setFilters] = useState({ component_id: '', category_id: '' });
+    const [usageCategories, setUsageCategories] = useState<any[]>([]);
+    const [openUsageDialog, setOpenUsageDialog] = useState(false);
+    const [usageForm, setUsageForm] = useState({
+      component_id: '',
+      category_id: '',
+      usage_context: 'listing',
+      placement: 'default',
+      priority: 0,
+      is_active: true,
+      configuration: '{}'
+    });
+
+    useEffect(() => {
+      fetchComponentUsages();
+      fetchCategories();
+    }, []);
+
+    const fetchComponentUsages = async () => {
+      setUsageLoading(true);
+      try {
+        const response = await axios.get('/api/v1/admin/custom-components/usage');
+        console.log('API response:', response.data);
+        const usages = response.data;
+        setComponentUsages(Array.isArray(usages) ? usages : []);
+      } catch (err) {
+        console.error('Ошибка загрузки использований:', err);
+        setComponentUsages([]);
+      } finally {
+        setUsageLoading(false);
+      }
+    };
+
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('/api/admin/categories');
+        setUsageCategories(response.data.data || []);
+      } catch (err) {
+        console.error('Ошибка загрузки категорий:', err);
+      }
+    };
+
+    const removeUsage = async (usageId: number) => {
+      if (window.confirm('Удалить привязку компонента?')) {
+        try {
+          await axios.delete(`/api/v1/admin/custom-components/usage/${usageId}`);
+          fetchComponentUsages();
+        } catch (err) {
+          setError('Ошибка удаления привязки');
+        }
+      }
+    };
+
+    if (usageLoading) {
+      return (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    return (
+      <Box>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h5">
+            Использование компонентов
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenUsageDialog(true)}
+          >
+            Добавить привязку
+          </Button>
+        </Box>
+        
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Здесь отображаются все места использования кастомных компонентов в системе
+        </Alert>
+
+        <Box display="flex" gap={2} mb={3}>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Компонент</InputLabel>
+            <Select
+              value={filters.component_id}
+              onChange={(e) => setFilters({ ...filters, component_id: e.target.value })}
+              label="Компонент"
+            >
+              <MenuItem value="">Все компоненты</MenuItem>
+              {components.map(comp => (
+                <MenuItem key={comp.id} value={comp.id}>
+                  {comp.display_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Категория</InputLabel>
+            <Select
+              value={filters.category_id}
+              onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
+              label="Категория"
+            >
+              <MenuItem value="">Все категории</MenuItem>
+              {usageCategories.map(cat => (
+                <MenuItem key={cat.id} value={cat.id}>
+                  {cat.display_name || cat.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Компонент</TableCell>
+                <TableCell>Тип</TableCell>
+                <TableCell>Используется в</TableCell>
+                <TableCell>Контекст</TableCell>
+                <TableCell>Приоритет</TableCell>
+                <TableCell>Статус</TableCell>
+                <TableCell>Действия</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {componentUsages
+                .filter(usage => {
+                  if (filters.component_id && usage.component_id !== parseInt(filters.component_id)) return false;
+                  if (filters.category_id && usage.category_id !== parseInt(filters.category_id)) return false;
+                  return true;
+                })
+                .map((usage) => {
+                  const component = components.find(c => c.id === usage.component_id);
+                  return (
+                    <TableRow key={usage.id}>
+                      <TableCell>
+                        {component?.display_name || 'Неизвестный компонент'}
+                      </TableCell>
+                      <TableCell>
+                        <ComponentTypeBadge
+                          label={component?.component_type || 'unknown'}
+                          componentType={component?.component_type || 'filter'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {usage.category_id ? `Категория #${usage.category_id}` : 'Глобальный'}
+                      </TableCell>
+                      <TableCell>{usage.usage_context}</TableCell>
+                      <TableCell>{usage.priority}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={usage.is_active ? 'Активен' : 'Неактивен'}
+                          color={usage.is_active ? 'success' : 'default'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Настройки">
+                          <IconButton>
+                            <SettingsIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Удалить">
+                          <IconButton onClick={() => removeUsage(usage.id)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {componentUsages.length === 0 && (
+          <Box textAlign="center" py={4}>
+            <Typography variant="body1" color="text.secondary">
+              Нет активных использований компонентов
+            </Typography>
+          </Box>
+        )}
+
+        <Box mt={4}>
+          <Typography variant="h6" gutterBottom>
+            Статистика использования
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle1">Всего использований</Typography>
+                <Typography variant="h4">{componentUsages.length}</Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle1">Активных компонентов</Typography>
+                <Typography variant="h4">
+                  {componentUsages.filter(u => u.is_active).length}
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle1">Категорий с кастомными UI</Typography>
+                <Typography variant="h4">
+                  {new Set(componentUsages.map(u => u.category_id).filter(Boolean)).size}
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Диалог добавления привязки */}
+        <Dialog
+          open={openUsageDialog}
+          onClose={() => setOpenUsageDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Добавить привязку компонента</DialogTitle>
+          <DialogContent>
+            <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 2 }}>
+              <FormControl fullWidth required>
+                <InputLabel>Компонент</InputLabel>
+                <Select
+                  value={usageForm.component_id}
+                  onChange={(e) => setUsageForm({ ...usageForm, component_id: e.target.value })}
+                  label="Компонент"
+                >
+                  {components.map(comp => (
+                    <MenuItem key={comp.id} value={comp.id}>
+                      {comp.display_name} ({comp.component_type})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel>Категория (опционально)</InputLabel>
+                <Select
+                  value={usageForm.category_id}
+                  onChange={(e) => setUsageForm({ ...usageForm, category_id: e.target.value })}
+                  label="Категория (опционально)"
+                >
+                  <MenuItem value="">Глобальный</MenuItem>
+                  {usageCategories.map(cat => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.display_name || cat.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel>Контекст использования</InputLabel>
+                <Select
+                  value={usageForm.usage_context}
+                  onChange={(e) => setUsageForm({ ...usageForm, usage_context: e.target.value })}
+                  label="Контекст использования"
+                >
+                  <MenuItem value="listing">Листинг</MenuItem>
+                  <MenuItem value="filter">Фильтр</MenuItem>
+                  <MenuItem value="form">Форма</MenuItem>
+                  <MenuItem value="view">Просмотр</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Приоритет"
+                type="number"
+                value={usageForm.priority}
+                onChange={(e) => setUsageForm({ ...usageForm, priority: parseInt(e.target.value) || 0 })}
+                fullWidth
+              />
+
+              <TextField
+                label="Конфигурация (JSON)"
+                value={usageForm.configuration}
+                onChange={(e) => setUsageForm({ ...usageForm, configuration: e.target.value })}
+                multiline
+                rows={3}
+                fullWidth
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={usageForm.is_active}
+                    onChange={(e) => setUsageForm({ ...usageForm, is_active: e.target.checked })}
+                  />
+                }
+                label="Активен"
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenUsageDialog(false)}>Отмена</Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={async () => {
+                try {
+                  const data = {
+                    ...usageForm,
+                    configuration: JSON.parse(usageForm.configuration)
+                  };
+                  await axios.post('/api/v1/admin/custom-components/usage', data);
+                  setOpenUsageDialog(false);
+                  fetchComponentUsages();
+                } catch (err) {
+                  setError('Ошибка создания привязки');
+                }
+              }}
+            >
+              Добавить
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  };
+
+  const DocumentationTab = () => (
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        Инструкция по созданию кастомных UI компонентов
+      </Typography>
+      
+      <Alert severity="info" sx={{ mb: 3 }}>
+        Кастомные UI компоненты позволяют создавать уникальные интерфейсы для категорий и атрибутов в маркетплейсе
+      </Alert>
+
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Типы компонентов
+        </Typography>
+        <Box display="flex" gap={2} mb={2}>
+          <Chip label="category" color="primary" />
+          <Typography>Для целой категории (например, автомобили)</Typography>
+        </Box>
+        <Box display="flex" gap={2} mb={2}>
+          <Chip label="attribute" color="secondary" />
+          <Typography>Для отдельного атрибута (например, выбор цвета)</Typography>
+        </Box>
+        <Box display="flex" gap={2}>
+          <Chip label="filter" color="info" />
+          <Typography>Для фильтров (специальные фильтры)</Typography>
+        </Box>
+      </Paper>
+
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Пример компонента категории
+        </Typography>
+        <Box component="pre" sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1, overflow: 'auto' }}>
+          <code>{`// AutoCategoryUI.jsx
+export default function AutoCategoryUI({ categoryId, values, onChange }) {
+  const [makes, setMakes] = useState([]);
+  const [models, setModels] = useState([]);
+  
+  // Загружаем список марок при монтировании
+  useEffect(() => {
+    fetchMakes().then(setMakes);
+  }, []);
+  
+  // Загружаем модели при изменении марки
+  useEffect(() => {
+    if (values.make) {
+      fetchModels(values.make).then(setModels);
+    }
+  }, [values.make]);
+  
+  return (
+    <Grid container spacing={2}>
+      <Grid item xs={12} md={6}>
+        <FormControl fullWidth>
+          <InputLabel>Марка</InputLabel>
+          <Select
+            value={values.make || ''}
+            onChange={(e) => onChange({ ...values, make: e.target.value })}
+          >
+            {makes.map(make => (
+              <MenuItem key={make.id} value={make.id}>
+                {make.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      <Grid item xs={12} md={6}>
+        <FormControl fullWidth disabled={!values.make}>
+          <InputLabel>Модель</InputLabel>
+          <Select
+            value={values.model || ''}
+            onChange={(e) => onChange({ ...values, model: e.target.value })}
+          >
+            {models.map(model => (
+              <MenuItem key={model.id} value={model.id}>
+                {model.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+    </Grid>
+  );
+}`}</code>
+        </Box>
+      </Paper>
+
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Пример компонента атрибута
+        </Typography>
+        <Box component="pre" sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1, overflow: 'auto' }}>
+          <code>{`// ColorPickerAttribute.jsx
+export default function ColorPickerAttribute({ attribute, value, onChange }) {
+  const colors = [
+    { value: 'red', label: 'Красный', hex: '#FF0000' },
+    { value: 'blue', label: 'Синий', hex: '#0000FF' },
+    { value: 'green', label: 'Зеленый', hex: '#00FF00' },
+    { value: 'yellow', label: 'Желтый', hex: '#FFFF00' },
+    { value: 'black', label: 'Черный', hex: '#000000' },
+    { value: 'white', label: 'Белый', hex: '#FFFFFF' }
+  ];
+  
+  return (
+    <FormControl fullWidth>
+      <InputLabel>{attribute.display_name}</InputLabel>
+      <Box display="flex" gap={1} flexWrap="wrap" mt={2}>
+        {colors.map(color => (
+          <Tooltip key={color.value} title={color.label}>
+            <Box
+              onClick={() => onChange(color.value)}
+              sx={{
+                width: 40,
+                height: 40,
+                backgroundColor: color.hex,
+                border: value === color.value ? '3px solid #1976d2' : '1px solid #ccc',
+                borderRadius: 1,
+                cursor: 'pointer',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                  transition: 'transform 0.2s'
+                }
+              }}
+            />
+          </Tooltip>
+        ))}
+      </Box>
+    </FormControl>
+  );
+}`}</code>
+        </Box>
+      </Paper>
+
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Структура компонента
+        </Typography>
+        <Typography variant="body1" paragraph>
+          Каждый компонент должен экспортировать функцию по умолчанию и принимать соответствующие пропсы:
+        </Typography>
+        
+        <Box mb={2}>
+          <Typography variant="subtitle1" fontWeight="bold">
+            Для компонентов категорий:
+          </Typography>
+          <Box component="pre" sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+            <code>{`function YourCategoryComponent({ categoryId, values, onChange }) {
+  // categoryId - ID категории
+  // values - текущие значения всех полей
+  // onChange - функция для обновления значений
+  return <div>...</div>;
+}`}</code>
+          </Box>
+        </Box>
+
+        <Box mb={2}>
+          <Typography variant="subtitle1" fontWeight="bold">
+            Для компонентов атрибутов:
+          </Typography>
+          <Box component="pre" sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+            <code>{`function YourAttributeComponent({ attribute, value, onChange }) {
+  // attribute - объект атрибута
+  // value - текущее значение
+  // onChange - функция для обновления значения
+  return <div>...</div>;
+}`}</code>
+          </Box>
+        </Box>
+      </Paper>
+
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Использование в категории
+        </Typography>
+        <Typography variant="body1" paragraph>
+          После создания компонента:
+        </Typography>
+        <ol>
+          <li>Перейдите в <strong>Управление категориями</strong></li>
+          <li>Выберите нужную категорию</li>
+          <li>В разделе <strong>Пользовательские UI компоненты</strong> включите опцию</li>
+          <li>Выберите созданный компонент из списка</li>
+          <li>Сохраните изменения</li>
+        </ol>
+      </Paper>
+
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom color="warning.main">
+          Важные советы
+        </Typography>
+        <ul>
+          <li>Используйте Material-UI компоненты для единообразия интерфейса</li>
+          <li>Обрабатывайте ошибки и показывайте их пользователю</li>
+          <li>Учитывайте мобильную адаптацию</li>
+          <li>Сохраняйте минимальный размер кода</li>
+          <li>Тестируйте компонент перед использованием в продакшене</li>
+        </ul>
+      </Paper>
+    </Box>
+  );
+
   const TemplatesTab = () => (
     <>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -481,11 +1019,13 @@ const CustomComponentsPage: React.FC = () => {
           <Tab label="Компоненты" />
           <Tab label="Шаблоны" />
           <Tab label="Использование" />
+          <Tab label="Документация" />
         </Tabs>
 
         {selectedTab === 0 && <ComponentsTab />}
         {selectedTab === 1 && <TemplatesTab />}
-        {selectedTab === 2 && <div>Использование компонентов (в разработке)</div>}
+        {selectedTab === 2 && <UsageTab />}
+        {selectedTab === 3 && <DocumentationTab />}
       </StyledPaper>
 
       {/* Component Dialog */}

@@ -391,6 +391,21 @@ func (s *Server) setupRoutes() {
 	legacyAdmin.Post("/categories/:categoryId/attributes/import", s.marketplace.AdminAttributes.ImportCategoryAttributes)
 	legacyAdmin.Post("/categories/:targetCategoryId/attributes/copy", s.marketplace.AdminAttributes.CopyAttributesSettings)
 		
+	// Маршруты для групп атрибутов
+	legacyAdmin.Get("/attribute-groups", s.marketplace.MarketplaceHandler.ListAttributeGroups)
+	legacyAdmin.Post("/attribute-groups", s.marketplace.MarketplaceHandler.CreateAttributeGroup)
+	legacyAdmin.Get("/attribute-groups/:id", s.marketplace.MarketplaceHandler.GetAttributeGroup)
+	legacyAdmin.Put("/attribute-groups/:id", s.marketplace.MarketplaceHandler.UpdateAttributeGroup)
+	legacyAdmin.Delete("/attribute-groups/:id", s.marketplace.MarketplaceHandler.DeleteAttributeGroup)
+	legacyAdmin.Get("/attribute-groups/:id/items", s.marketplace.MarketplaceHandler.GetAttributeGroupWithItems)
+	legacyAdmin.Post("/attribute-groups/:id/items", s.marketplace.MarketplaceHandler.AddItemToGroup)
+	legacyAdmin.Delete("/attribute-groups/:id/items/:attributeId", s.marketplace.MarketplaceHandler.RemoveItemFromGroup)
+		
+	// Маршруты для привязки групп к категориям
+	legacyAdmin.Get("/categories/:id/attribute-groups", s.marketplace.MarketplaceHandler.GetCategoryGroups)
+	legacyAdmin.Post("/categories/:id/attribute-groups", s.marketplace.MarketplaceHandler.AttachGroupToCategory)
+	legacyAdmin.Delete("/categories/:id/attribute-groups/:groupId", s.marketplace.MarketplaceHandler.DetachGroupFromCategory)
+		
 	// Маршруты для кастомных UI компонентов
 	// ВАЖНО: Более специфичные роуты должны идти раньше параметризованных
 	
@@ -399,6 +414,7 @@ func (s *Server) setupRoutes() {
 	adminRoutes.Post("/custom-components/templates", s.marketplace.CustomComponents.CreateTemplate)
 	
 	// Маршруты для использования компонентов
+	adminRoutes.Get("/custom-components/usage", s.marketplace.CustomComponents.GetComponentUsages)
 	adminRoutes.Post("/custom-components/usage", s.marketplace.CustomComponents.AddComponentUsage)
 	adminRoutes.Delete("/custom-components/usage/:id", s.marketplace.CustomComponents.RemoveComponentUsage)
 	
@@ -410,6 +426,21 @@ func (s *Server) setupRoutes() {
 	adminRoutes.Delete("/custom-components/:id", s.marketplace.CustomComponents.DeleteComponent)
 	
 	adminRoutes.Get("/categories/:category_id/components", s.marketplace.CustomComponents.GetCategoryComponents)
+		
+	// Маршруты для групп атрибутов
+	adminRoutes.Get("/attribute-groups", s.marketplace.MarketplaceHandler.ListAttributeGroups)
+	adminRoutes.Post("/attribute-groups", s.marketplace.MarketplaceHandler.CreateAttributeGroup)
+	adminRoutes.Get("/attribute-groups/:id", s.marketplace.MarketplaceHandler.GetAttributeGroup)
+	adminRoutes.Put("/attribute-groups/:id", s.marketplace.MarketplaceHandler.UpdateAttributeGroup)
+	adminRoutes.Delete("/attribute-groups/:id", s.marketplace.MarketplaceHandler.DeleteAttributeGroup)
+	adminRoutes.Get("/attribute-groups/:id/items", s.marketplace.MarketplaceHandler.GetAttributeGroupWithItems)
+	adminRoutes.Post("/attribute-groups/:id/items", s.marketplace.MarketplaceHandler.AddItemToGroup)
+	adminRoutes.Delete("/attribute-groups/:id/items/:attributeId", s.marketplace.MarketplaceHandler.RemoveItemFromGroup)
+	
+	// Маршруты для привязки групп к категориям
+	adminRoutes.Get("/categories/:id/attribute-groups", s.marketplace.MarketplaceHandler.GetCategoryGroups)
+	adminRoutes.Post("/categories/:id/attribute-groups", s.marketplace.MarketplaceHandler.AttachGroupToCategory)
+	adminRoutes.Delete("/categories/:id/attribute-groups/:groupId", s.marketplace.MarketplaceHandler.DetachGroupFromCategory)
 
 	// Использовать реальный обработчик из UserHandler
 	adminRoutes.Get("/users", s.users.User.GetAllUsers)

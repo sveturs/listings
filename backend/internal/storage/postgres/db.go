@@ -38,6 +38,7 @@ type Database struct {
 	osClient          *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
 	db                *sql.DB
 	marketplaceIndex  string
+	attributeGroups   AttributeGroupStorage
 	fsStorage         filestorage.FileStorageInterface
 }
 
@@ -62,6 +63,7 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 		osClient:         osClient,    // Сохраняем клиент OpenSearch
 		marketplaceIndex: indexName,   // Сохраняем имя индекса
 		fsStorage:        fileStorage, // Используем переданный параметр
+		attributeGroups:  NewAttributeGroupStorage(pool),
 	}
 
 	// Инициализируем репозиторий OpenSearch, если клиент передан
@@ -388,6 +390,10 @@ func (db *Database) GetUserReviewVote(ctx context.Context, userId int, reviewId 
 
 func (db *Database) GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error) {
 	return db.reviewDB.GetEntityRating(ctx, entityType, entityId)
+}
+
+func (db *Database) GetAttributeGroups() AttributeGroupStorage {
+	return db.attributeGroups
 }
 
 // User methods

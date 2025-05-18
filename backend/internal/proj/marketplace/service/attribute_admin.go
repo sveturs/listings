@@ -554,16 +554,49 @@ func (s *MarketplaceService) GetCategoryByID(ctx context.Context, id int) (*mode
 
 // GetCategoryAttributes получает все атрибуты для указанной категории
 func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-	// Запрос для получения атрибутов категории с учетом sort_order из маппинга
+	// Обновленный запрос, который получает атрибуты из обоих источников:
+	// 1. Из прямого маппинга (category_attribute_mapping)
+	// 2. Из групп атрибутов (через category_attribute_groups -> attribute_group_items)
 	query := `
-		SELECT a.id, a.name, a.display_name, a.attribute_type, a.options, a.validation_rules,
-		       a.is_searchable, a.is_filterable, cam.is_required, a.sort_order, a.created_at, 
-			   COALESCE(cam.custom_component, a.custom_component) as custom_component,
-			   cam.sort_order as mapping_sort_order
-		FROM category_attributes a
-		JOIN category_attribute_mapping cam ON a.id = cam.attribute_id
-		WHERE cam.category_id = $1 AND cam.is_enabled = true
-		ORDER BY cam.sort_order, a.sort_order, a.id
+		WITH combined_attributes AS (
+			-- Атрибуты из прямого маппинга
+			SELECT 
+				a.id, a.name, a.display_name, a.attribute_type, a.options, a.validation_rules,
+				a.is_searchable, a.is_filterable, cam.is_required, a.sort_order, a.created_at,
+				COALESCE(cam.custom_component, a.custom_component) as custom_component,
+				cam.sort_order as effective_sort_order,
+				'direct' as source
+			FROM category_attributes a
+			JOIN category_attribute_mapping cam ON a.id = cam.attribute_id
+			WHERE cam.category_id = $1 AND cam.is_enabled = true
+			
+			UNION
+			
+			-- Атрибуты из групп
+			SELECT 
+				a.id, a.name, 
+				COALESCE(agi.custom_display_name, a.display_name) as display_name,
+				a.attribute_type, a.options, a.validation_rules,
+				a.is_searchable, a.is_filterable, a.is_required, a.sort_order, a.created_at,
+				a.custom_component,
+				-- Сортировка для групп: сначала по группе, потом по атрибуту внутри группы
+				(cag.sort_order * 1000 + agi.sort_order) as effective_sort_order,
+				'group' as source
+			FROM category_attributes a
+			JOIN attribute_group_items agi ON a.id = agi.attribute_id
+			JOIN attribute_groups ag ON agi.group_id = ag.id
+			JOIN category_attribute_groups cag ON ag.id = cag.group_id
+			WHERE cag.category_id = $1 
+				AND cag.is_active = true 
+				AND ag.is_active = true
+		)
+		SELECT DISTINCT id, name, display_name, attribute_type, options, validation_rules,
+			is_searchable, is_filterable, is_required, sort_order, created_at, 
+			custom_component, MIN(effective_sort_order) as final_sort_order
+		FROM combined_attributes
+		GROUP BY id, name, display_name, attribute_type, options, validation_rules,
+			is_searchable, is_filterable, is_required, sort_order, created_at, custom_component
+		ORDER BY final_sort_order, id
 	`
 
 	rows, err := s.storage.Query(ctx, query, categoryID)
@@ -576,7 +609,7 @@ func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, category
 	for rows.Next() {
 		var attribute models.CategoryAttribute
 		var optionsJSON, validRulesJSON []byte
-		var mappingSortOrder int
+		var finalSortOrder int
 		var customComponent sql.NullString
 
 		err := rows.Scan(
@@ -592,16 +625,14 @@ func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, category
 			&attribute.SortOrder,
 			&attribute.CreatedAt,
 			&customComponent,
-			&mappingSortOrder,
+			&finalSortOrder,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("не удалось прочитать атрибут: %w", err)
 		}
 
-		// Если в маппинге задан sort_order, используем его вместо значения из атрибута
-		if mappingSortOrder > 0 {
-			attribute.SortOrder = mappingSortOrder
-		}
+		// Используем финальный sort_order из запроса
+		attribute.SortOrder = finalSortOrder
 
 		// Устанавливаем CustomComponent, обрабатывая NULL-значения
 		attribute.CustomComponent = ""

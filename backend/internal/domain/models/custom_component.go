@@ -9,20 +9,16 @@ import (
 type CustomUIComponent struct {
 	ID               int                    `json:"id" db:"id"`
 	Name             string                 `json:"name" db:"name"`
-	DisplayName      string                 `json:"display_name" db:"display_name"`
-	Description      string                 `json:"description" db:"description"`
 	ComponentType    string                 `json:"component_type" db:"component_type"`
-	ComponentCode    string                 `json:"component_code" db:"component_code"`
-	Configuration    json.RawMessage        `json:"configuration" db:"configuration"`
-	Dependencies     json.RawMessage        `json:"dependencies" db:"dependencies"`
+	Description      string                 `json:"description" db:"description"`
+	TemplateCode     string                 `json:"template_code" db:"template_code"`
+	Styles           string                 `json:"styles" db:"styles"`
+	PropsSchema      json.RawMessage        `json:"props_schema" db:"props_schema"`
 	IsActive         bool                   `json:"is_active" db:"is_active"`
 	CreatedAt        time.Time              `json:"created_at" db:"created_at"`
 	UpdatedAt        time.Time              `json:"updated_at" db:"updated_at"`
 	CreatedBy        *int                   `json:"created_by" db:"created_by"`
 	UpdatedBy        *int                   `json:"updated_by" db:"updated_by"`
-	CompiledCode     *string                `json:"compiled_code,omitempty" db:"compiled_code"`
-	CompilationErrors json.RawMessage       `json:"compilation_errors,omitempty" db:"compilation_errors"`
-	LastCompiledAt   *time.Time             `json:"last_compiled_at,omitempty" db:"last_compiled_at"`
 }
 
 // CustomUIComponentUsage представляет использование компонента
@@ -41,6 +37,8 @@ type CustomUIComponentUsage struct {
 	CreatedBy       *int               `json:"created_by" db:"created_by"`
 	UpdatedBy       *int               `json:"updated_by" db:"updated_by"`
 	Component       *CustomUIComponent `json:"component,omitempty"`
+	ComponentName   string             `json:"component_name,omitempty"`
+	CategoryName    string             `json:"category_name,omitempty"`
 }
 
 // CustomUITemplate представляет шаблон для создания компонентов
@@ -78,24 +76,22 @@ const (
 // CreateCustomComponentRequest представляет запрос на создание компонента
 type CreateCustomComponentRequest struct {
 	Name          string          `json:"name" validate:"required,min=1,max=255"`
-	DisplayName   string          `json:"display_name" validate:"required,min=1,max=255"`
-	Description   string          `json:"description"`
 	ComponentType string          `json:"component_type" validate:"required,oneof=category attribute filter"`
-	ComponentCode string          `json:"component_code" validate:"required"`
-	Configuration json.RawMessage `json:"configuration"`
-	Dependencies  json.RawMessage `json:"dependencies"`
+	Description   string          `json:"description"`
+	TemplateCode  string          `json:"template_code" validate:"required"`
+	Styles        string          `json:"styles"`
+	PropsSchema   json.RawMessage `json:"props_schema"`
 	IsActive      bool            `json:"is_active"`
 }
 
 // UpdateCustomComponentRequest представляет запрос на обновление компонента
 type UpdateCustomComponentRequest struct {
 	Name          string          `json:"name"`
-	DisplayName   string          `json:"display_name" validate:"min=1,max=255"`
-	Description   string          `json:"description"`
 	ComponentType string          `json:"component_type"`
-	ComponentCode string          `json:"component_code"`
-	Configuration json.RawMessage `json:"configuration"`
-	Dependencies  json.RawMessage `json:"dependencies"`
+	Description   string          `json:"description"`
+	TemplateCode  string          `json:"template_code"`
+	Styles        string          `json:"styles"`
+	PropsSchema   json.RawMessage `json:"props_schema"`
 	IsActive      bool            `json:"is_active"`
 }
 
@@ -113,8 +109,21 @@ type CreateComponentUsageRequest struct {
 
 // CreateTemplateRequest представляет запрос на создание шаблона
 type CreateTemplateRequest struct {
+	ComponentID  int             `json:"component_id" validate:"required"`
 	Name         string          `json:"name" validate:"required"`
 	Description  string          `json:"description"`
-	TemplateCode string          `json:"template_code" validate:"required"`
 	Variables    json.RawMessage `json:"variables"`
+}
+
+// ComponentTemplate представляет шаблон компонента
+type ComponentTemplate struct {
+	ID             int             `json:"id" db:"id"`
+	ComponentID    int             `json:"component_id" db:"component_id"`
+	Name           string          `json:"name" db:"name"`
+	Description    string          `json:"description" db:"description"`
+	TemplateConfig json.RawMessage `json:"template_config" db:"template_config"`
+	PreviewImage   string          `json:"preview_image" db:"preview_image"`
+	CategoryID     *int            `json:"category_id" db:"category_id"`
+	CreatedAt      time.Time       `json:"created_at" db:"created_at"`
+	CreatedBy      *int            `json:"created_by" db:"created_by"`
 }

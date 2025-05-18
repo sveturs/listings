@@ -8,11 +8,13 @@ import (
 type Storage struct {
     pool *pgxpool.Pool
     translationService service.TranslationServiceInterface
+    AttributeGroups AttributeGroupStorage
 }
 
 func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServiceInterface) *Storage {
     return &Storage{
         pool: pool,
         translationService: translationService,
+        AttributeGroups: NewAttributeGroupStorage(pool),
     }
 }

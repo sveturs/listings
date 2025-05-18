@@ -44,12 +44,11 @@ func (h *CustomComponentHandler) CreateComponent(c *fiber.Ctx) error {
 
 	component := &models.CustomUIComponent{
 		Name:          req.Name,
-		DisplayName:   req.DisplayName,
-		Description:   req.Description,
 		ComponentType: req.ComponentType,
-		ComponentCode: req.ComponentCode,
-		Configuration: req.Configuration,
-		Dependencies:  req.Dependencies,
+		Description:   req.Description,
+		TemplateCode:  req.TemplateCode,
+		Styles:        req.Styles,
+		PropsSchema:   req.PropsSchema,
 		IsActive:      req.IsActive,
 		CreatedBy:     &userID,
 		UpdatedBy:     &userID,
@@ -120,23 +119,20 @@ func (h *CustomComponentHandler) UpdateComponent(c *fiber.Ctx) error {
 	if req.Name != "" {
 		updates["name"] = req.Name
 	}
-	if req.DisplayName != "" {
-		updates["display_name"] = req.DisplayName
-	}
 	if req.Description != "" {
 		updates["description"] = req.Description
 	}
 	if req.ComponentType != "" {
 		updates["component_type"] = req.ComponentType
 	}
-	if req.ComponentCode != "" {
-		updates["component_code"] = req.ComponentCode
+	if req.TemplateCode != "" {
+		updates["template_code"] = req.TemplateCode
 	}
-	if req.Configuration != nil {
-		updates["configuration"] = req.Configuration
+	if req.Styles != "" {
+		updates["styles"] = req.Styles
 	}
-	if req.Dependencies != nil {
-		updates["dependencies"] = req.Dependencies
+	if req.PropsSchema != nil {
+		updates["props_schema"] = req.PropsSchema
 	}
 	updates["is_active"] = req.IsActive
 
@@ -247,6 +243,36 @@ func (h *CustomComponentHandler) AddComponentUsage(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(usage)
 }
 
+// GetComponentUsages получает все использования компонентов
+// @Summary Получение всех использований компонентов
+// @Description Возвращает список всех использований компонентов с фильтрацией
+// @Tags CustomComponents
+// @Produce json
+// @Param component_id query int false "ID компонента"
+// @Param category_id query int false "ID категории"
+// @Success 200 {array} models.CustomUIComponentUsage
+// @Failure 500 {object} utils.ErrorResponse
+// @Security BearerAuth
+// @Router /api/admin/custom-components/usage [get]
+func (h *CustomComponentHandler) GetComponentUsages(c *fiber.Ctx) error {
+	var componentID, categoryID *int
+	
+	if compID := c.QueryInt("component_id", 0); compID > 0 {
+		componentID = &compID
+	}
+	
+	if catID := c.QueryInt("category_id", 0); catID > 0 {
+		categoryID = &catID
+	}
+	
+	usages, err := h.storage.GetComponentUsages(c.Context(), componentID, categoryID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+	
+	return c.JSON(usages)
+}
+
 // RemoveComponentUsage удаляет использование компонента
 // @Summary Удаление использования компонента
 // @Description Удаляет использование компонента для категории
@@ -313,13 +339,12 @@ func (h *CustomComponentHandler) CreateTemplate(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
 	}
 
-	template := &models.CustomUITemplate{
-		Name:         req.Name,
-		Description:  req.Description,
-		TemplateCode: req.TemplateCode,
-		Variables:    req.Variables,
-		CreatedBy:    &userID,
-		UpdatedBy:    &userID,
+	template := &models.ComponentTemplate{
+		ComponentID:    req.ComponentID,
+		Name:           req.Name,
+		Description:    req.Description,
+		TemplateConfig: req.Variables,
+		CreatedBy:      &userID,
 	}
 
 	id, err := h.storage.CreateTemplate(c.Context(), template)
@@ -342,7 +367,8 @@ func (h *CustomComponentHandler) CreateTemplate(c *fiber.Ctx) error {
 func (h *CustomComponentHandler) ListTemplates(c *fiber.Ctx) error {
 	log.Printf("ListTemplates called")
 	
-	templates, err := h.storage.ListTemplates(c.Context())
+	componentID := c.QueryInt("component_id", 0)
+	templates, err := h.storage.ListTemplates(c.Context(), componentID)
 	if err != nil {
 		// Добавляем логирование ошибки
 		log.Printf("Error listing templates: %v", err)

@@ -29,6 +29,7 @@ type Handler struct {
 	AdminCategories  *AdminCategoriesHandler
 	AdminAttributes  *AdminAttributesHandler
 	CustomComponents *CustomComponentHandler
+	MarketplaceHandler *MarketplaceHandler
 }
 
 // NewHandler создает новый обработчик маркетплейса
@@ -41,7 +42,13 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 	
 	// Приводим storage к postgres.Database для доступа к pool
 	if postgresDB, ok := marketplaceService.Storage().(*postgres.Database); ok {
-		customComponentStorage := postgres.NewCustomComponentStorage(postgresDB.GetPool())
+		// Создаем Storage с AttributeGroups
+		storage := postgres.NewStorage(postgresDB.GetPool(), services.Translation())
+		
+		// Создаем MarketplaceHandler
+		marketplaceHandler := NewMarketplaceHandler(storage)
+		
+		customComponentStorage := postgres.NewCustomComponentStorage(postgresDB)
 		customComponentHandler := NewCustomComponentHandler(customComponentStorage)
 		return &Handler{
 			Listings:         NewListingsHandler(services),
@@ -55,6 +62,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			AdminCategories:  NewAdminCategoriesHandler(categoriesHandler),
 			AdminAttributes:  NewAdminAttributesHandler(services),
 			CustomComponents: customComponentHandler,
+			MarketplaceHandler: marketplaceHandler,
 		}
 	}
 
@@ -71,5 +79,6 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		AdminCategories:  NewAdminCategoriesHandler(categoriesHandler),
 		AdminAttributes:  NewAdminAttributesHandler(services),
 		CustomComponents: nil,
+		MarketplaceHandler: nil,
 	}
 }
