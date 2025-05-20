@@ -32,6 +32,12 @@ jobs:
             -   name: Set up Docker Buildx
                 uses: docker/setup-buildx-action@v2
 
+            # Настройка SSH ключа для подключения к серверу
+            -   name: Setup SSH key
+                uses: webfactory/ssh-agent@v0.7.0
+                with:
+                    ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
             # Копирование скрипта blue_green_backend.sh на сервер
             -   name: Copy deployment script to server
                 run: |
@@ -46,12 +52,6 @@ jobs:
             #                    context: ./frontend
             #                    push: true
             #                    tags: ${{ secrets.DOCKER_REGISTRY }}/frontend:${{ github.sha }}, ${{ secrets.DOCKER_REGISTRY }}/frontend:latest
-            #
-            #            # Настройка SSH ключа для подключения к серверу
-            #            -   name: Setup SSH key
-            #                uses: webfactory/ssh-agent@v0.7.0
-            #                with:
-            #                    ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             #
             #            # Добавление сервера в известные хосты
             #            -   name: Add server to known hosts
