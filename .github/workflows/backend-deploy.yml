@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy Backend to Production
 
 # Можно запустить вручную из интерфейса GitHub
 on:
