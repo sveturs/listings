@@ -170,11 +170,11 @@ fi
 
 # Авторизация в Harbor
 log_info "Авторизация в Harbor..."
-run_quietly docker login -u admin -p harbor_password harbor.my_favorite_site.com
+run_quietly docker login -u "${HARBOR_USER}" -p "${HARBOR_PASSWORD}" "${HARBOR_URL}"
 
 # Получаем новый образ
 log_info "Загрузка нового образа backend:latest..."
-run_quietly docker pull harbor.my_favorite_site.com/svetu/backend/api:latest
+run_quietly docker pull "${HARBOR_URL}/svetu/backend/api:latest"
 
 # Получаем IP-адрес сети хоста
 HOST_IP=$(hostname -I | awk '{print $1}')
@@ -190,50 +190,50 @@ docker run -d --name $NEW_CONTAINER \
   -v /opt/hostel-data/uploads:/app/uploads \
   -v /opt/hostel-data/minio:/data/minio \
   -v /opt/hostel-data/credentials:/app/credentials \
-  -e APP_MODE=production \
-  -e ENV=production \
-  -e WS_ENABLED=true \
-  -e FILE_STORAGE_PROVIDER=minio \
-  -e MINIO_USE_SSL=false \
-  -e MINIO_BUCKET_NAME=listings \
-  -e MINIO_LOCATION=eu-central-1 \
-  -e FILE_STORAGE_PUBLIC_URL=https://my_favorite_site.com \
-  -e PORT=3000 \
-  -e SERVER_HOST=https://my_favorite_site.com \
-  -e POSTGRES_HOST=$DB_CONTAINER \
-  -e POSTGRES_PASSWORD=posgres_password \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_DB=hostel_db \
-  -e DATABASE_URL="postgres://postgres:posgres_password@$DB_CONTAINER:5432/hostel_db?sslmode=disable" \
+  -e APP_MODE="${APP_MODE}" \
+  -e ENV="${ENV}" \
+  -e WS_ENABLED="${WS_ENABLED}" \
+  -e FILE_STORAGE_PROVIDER="${FILE_STORAGE_PROVIDER}" \
+  -e MINIO_USE_SSL="${MINIO_USE_SSL}" \
+  -e MINIO_BUCKET_NAME="${MINIO_BUCKET_NAME}" \
+  -e MINIO_LOCATION="${MINIO_LOCATION}" \
+  -e FILE_STORAGE_PUBLIC_URL="${FILE_STORAGE_PUBLIC_URL}" \
+  -e PORT="${PORT}" \
+  -e SERVER_HOST="${SERVER_HOST}" \
+  -e POSTGRES_HOST="$DB_CONTAINER" \
+  -e POSTGRES_PASSWORD="${POSTGRES_PASSWORD}" \
+  -e POSTGRES_USER="${POSTGRES_USER}" \
+  -e POSTGRES_DB="${POSTGRES_DB}" \
+  -e DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@$DB_CONTAINER:5432/${POSTGRES_DB}?sslmode=disable" \
   -e DB_IP="$DB_IP" \
-  -e MINIO_ROOT_USER=minioadmin \
-  -e MINIO_ROOT_PASSWORD=minio_password \
-  -e MINIO_ACCESS_KEY=minioadmin \
-  -e MINIO_SECRET_KEY=minio_password \
+  -e MINIO_ROOT_USER="${MINIO_ROOT_USER}" \
+  -e MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD}" \
+  -e MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
+  -e MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
   -e MINIO_ENDPOINT="$MINIO_CONTAINER:9000" \
   -e MINIO_IP="$MINIO_IP" \
   -e OPENSEARCH_URL="http://$OPENSEARCH_CONTAINER:9200" \
   -e OPENSEARCH_IP="$OPENSEARCH_IP" \
-  -e OPENSEARCH_USERNAME=opensearch_user \
-  -e OPENSEARCH_PASSWORD=opensearch_password \
-  -e OPENSEARCH_MARKETPLACE_INDEX=marketplace \
-  -e GOOGLE_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com \
-  -e GOOGLE_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxx \
-  -e GOOGLE_OAUTH_REDIRECT_URL=https://my_favorite_site.com/auth/google/callback \
-  -e FRONTEND_URL=https://my_favorite_site.com \
-  -e JWT_SECRET=xxxxxxxxxxxxxxxxxxxxxx \
-  -e GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/neat-environs-140712-40c581381093.json \
-  -e GOOGLE_TRANSLATE_API_KEY=xxxxxxxxxxxxxxxxxxxxxx \
-  -e OPENAI_API_KEY=xxxxxxxxxxxxxxxxxxxxxx \
-  -e TELEGRAM_BOT_TOKEN=xxxxxxxxxxxxxxxxxxxxxx \
-  -e STRIPE_API_KEY=xxxxxxxxxxxxxxxx \
-  -e STRIPE_PUBLISHABLE_KEY=xxxxxxxxxxxxxxxxxxxxxx \
-  -e STRIPE_WEBHOOK_SECRET=xxxxxxxxxxxxxxxxxxxxxx \
-  -e OPENSEARCH_USERNAME=opensearch_user \
-  -e OPENSEARCH_PASSWORD=opensearch_password \
-  -e OPENSEARCH_MARKETPLACE_INDEX=marketplace \
-  -e EMAIL_PASSWORD=email_password \
-  harbor.my_favorite_site.com/svetu/backend/api:latest > /dev/null
+  -e OPENSEARCH_USERNAME="${OPENSEARCH_USERNAME}" \
+  -e OPENSEARCH_PASSWORD="${OPENSEARCH_PASSWORD}" \
+  -e OPENSEARCH_MARKETPLACE_INDEX="${OPENSEARCH_MARKETPLACE_INDEX}" \
+  -e GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
+  -e GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}" \
+  -e GOOGLE_OAUTH_REDIRECT_URL="${GOOGLE_OAUTH_REDIRECT_URL}" \
+  -e FRONTEND_URL="${FRONTEND_URL}" \
+  -e JWT_SECRET="${JWT_SECRET}" \
+  -e GOOGLE_APPLICATION_CREDENTIALS="${GOOGLE_APPLICATION_CREDENTIALS}" \
+  -e GOOGLE_TRANSLATE_API_KEY="${GOOGLE_TRANSLATE_API_KEY}" \
+  -e OPENAI_API_KEY="${OPENAI_API_KEY}" \
+  -e TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN}" \
+  -e STRIPE_API_KEY="${STRIPE_API_KEY}" \
+  -e STRIPE_PUBLISHABLE_KEY="${STRIPE_PUBLISHABLE_KEY}" \
+  -e STRIPE_WEBHOOK_SECRET="${STRIPE_WEBHOOK_SECRET}" \
+  -e OPENSEARCH_USERNAME="${OPENSEARCH_USERNAME}" \
+  -e OPENSEARCH_PASSWORD="${OPENSEARCH_PASSWORD}" \
+  -e OPENSEARCH_MARKETPLACE_INDEX="${OPENSEARCH_MARKETPLACE_INDEX}" \
+  -e EMAIL_PASSWORD="${EMAIL_PASSWORD}" \
+  ${HARBOR_URL}/svetu/backend/api:latest > /dev/null
 
 # Проверяем, что контейнер подключен к нужной сети
 NETWORK_CHECK=$(docker inspect -f '{{range $key, $value := .NetworkSettings.Networks}}{{$key}}{{end}}' $NEW_CONTAINER 2>/dev/null || echo "")
@@ -427,7 +427,7 @@ if [ "$NGINX_RUNNING" -eq "0" ]; then
     -v /opt/hostel-booking-system/certbot/conf:/etc/letsencrypt \
     -v /opt/hostel-booking-system/certbot/www:/var/www/certbot \
     -v /opt/hostel-data/uploads:/usr/share/nginx/uploads \
-    harbor.my_favorite_site.com/svetu/nginx/nginx:latest > /dev/null 2>&1 || log_error "Не удалось запустить контейнер Nginx"
+    ${HARBOR_URL}/svetu/nginx/nginx:latest > /dev/null 2>&1 || log_error "Не удалось запустить контейнер Nginx"
 
   sleep 5
   NGINX_RUNNING=$(docker ps --filter name=hostel_nginx --filter status=running -q | wc -l)
@@ -488,7 +488,7 @@ API_CHECK_OK=false
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
   # Проверяем health endpoint - без полного вывода ответа
-  API_HEALTH=$(curl -k -s https://my_favorite_site.com/api/health || echo "Failed")
+  API_HEALTH=$(curl -k -s "${FRONTEND_URL}/api/health" || echo "Failed")
   if [[ "$API_HEALTH" == *"OK"* ]]; then
     log_success "API health endpoint доступен через Nginx!"
     API_CHECK_OK=true
@@ -536,7 +536,7 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
   DB_NAME="hostel_db"
 
   # Проверяем текущие миграции
-  docker exec $DB_CONTAINER psql -U postgres -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations ORDER BY version DESC LIMIT 3;"
+  docker exec $DB_CONTAINER psql -U ${POSTGRES_USER} -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations ORDER BY version DESC LIMIT 3;"
 
   # Копируем миграции в контейнер с базой данных для более надежного применения
   log_info "Копирование миграций..."
@@ -559,7 +559,7 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
     -v /opt/hostel-booking-system/backend/migrations:/migrations \
     migrate/migrate \
     -path=/migrations/ \
-    -database="postgres://postgres:posgres_password@$DB_CONTAINER:5432/$DB_NAME?sslmode=disable" \
+    -database="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@$DB_CONTAINER:5432/$DB_NAME?sslmode=disable" \
     up
 fi
 

@@ -51,16 +51,10 @@ jobs:
                     ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "chmod +x /tmp/blue_green_backend.sh"
                     echo "Script успешно скопирован на сервер в директорию /tmp/"
 
-            -   name: Copy deployment script to server
+            # Запуск скрипта blue_green_backend.sh на сервере
+            -   name: Execute blue_green_backend.sh script on server
                 run: |
-                    scp scripts/env.sh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/tmp/env.sh
-                    ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "chmod +x /tmp/env.sh"
-                    echo "Script успешно скопирован на сервер в директорию /tmp/"
-
-            # Запуск скрипта env.sh на сервере
-            -   name: Execute env.sh script on server
-                run: |
-                    ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "source ~/.profile && /tmp/env.sh"
+                    ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "source ~/.profile && /tmp/blue_green_backend.sh"
 
             # Оповещение о завершении деплоя
             -   name: Deployment notification
