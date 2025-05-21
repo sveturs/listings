@@ -38,6 +38,12 @@ jobs:
                 with:
                     ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+            # Добавление host key в known hosts
+            -   name: Add host key to known hosts
+                run: |
+                    mkdir -p ~/.ssh
+                    ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
             # Копирование скрипта blue_green_backend.sh на сервер
             -   name: Copy deployment script to server
                 run: |
@@ -45,75 +51,16 @@ jobs:
                     ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "chmod +x /tmp/blue_green_backend.sh"
                     echo "Script успешно скопирован на сервер в директорию /tmp/"
 
-            #            # Сборка и отправка Frontend образа
-            #            -   name: Build and push Frontend Docker image
-            #                uses: docker/build-push-action@v4
-            #                with:
-            #                    context: ./frontend
-            #                    push: true
-            #                    tags: ${{ secrets.DOCKER_REGISTRY }}/frontend:${{ github.sha }}, ${{ secrets.DOCKER_REGISTRY }}/frontend:latest
-            #
-            #            # Добавление сервера в известные хосты
-            #            -   name: Add server to known hosts
-            #                run: |
-            #                    mkdir -p ~/.ssh
-            #                    ssh-keyscan -H ${{ secrets.PRODUCTION_SERVER_IP }} >> ~/.ssh/known_hosts
-            #
-            #            # Бесшовный деплой на сервер
-            #            -   name: Zero-downtime deploy to production server
-            #                run: |
-            #                    ssh ${{ secrets.SSH_USER }}@${{ secrets.PRODUCTION_SERVER_IP }} "
-            #                      # Подготовка к деплою
-            #                      echo 'DOCKER_REGISTRY=${{ secrets.DOCKER_REGISTRY }}' > .env
-            #                      echo 'IMAGE_TAG=${{ github.sha }}' >> .env
-            #
-            #                      # Загрузка новых образов
-            #                      docker pull ${{ secrets.DOCKER_REGISTRY }}/backend:${{ github.sha }}
-            #                      docker pull ${{ secrets.DOCKER_REGISTRY }}/frontend:${{ github.sha }}
-            #
-            #                      # Создание резервной копии текущего docker-compose
-            #                      cp docker-compose.yml docker-compose.yml.bak
-            #
-            #                      # Запуск новых контейнеров с другими именами
-            #                      export COMPOSE_PROJECT_NAME=new
-            #                      docker-compose up -d
-            #
-            #                      # Проверка состояния новых сервисов
-            #                      echo 'Проверка работоспособности новой версии'
-            #                      timeout 30s bash -c 'until curl -s http://localhost:8080/health | grep -q \"status\":\"UP\"; do sleep 2; done'
-            #                      HEALTH_CHECK_RESULT=$?
-            #
-            #                      if [ $HEALTH_CHECK_RESULT -eq 0 ]; then
-            #                        echo 'Новая версия запущена успешно, переключаем трафик'
-            #
-            #                        # Обновление прокси/балансировщика для переключения трафика
-            #                        # Пример с Nginx:
-            #                        sed -i 's/proxy_pass http:\/\/old_/proxy_pass http:\/\/new_/g' /etc/nginx/conf.d/app.conf
-            #                        nginx -s reload
-            #
-            #                        # Удаление старых контейнеров
-            #                        export COMPOSE_PROJECT_NAME=old
-            #                        # Сначала правильно завершаем соединения и только потом останавливаем
-            #                        docker-compose down --timeout 30
-            #
-            #                        # Переименование новых контейнеров для следующего деплоя
-            #                        export COMPOSE_PROJECT_NAME=new
-            #                        docker-compose stop
-            #                        export COMPOSE_PROJECT_NAME=old
-            #                        docker-compose up -d
-            #                      else
-            #                        echo 'Новая версия не прошла проверку здоровья, отмена деплоя'
-            #                        export COMPOSE_PROJECT_NAME=new
-            #                        docker-compose down
-            #                        mv docker-compose.yml.bak docker-compose.yml
-            #                      fi
-            #
-            #                      # Очистка неиспользуемых образов для экономии места
-            #                      docker image prune -a -f --filter 'until=24h'
+            -   name: Copy deployment script to server
+                run: |
+                    scp scripts/env.sh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/tmp/env.sh
+                    ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "chmod +x /tmp/env.sh"
+                    echo "Script успешно скопирован на сервер в директорию /tmp/"
 
-            #           # Проверка финального статуса
-            #           docker-compose ps
-            #         "
+            # Запуск скрипта env.sh на сервере
+            -   name: Execute env.sh script on server
+                run: |
+                    ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "/tmp/env.sh"
 
             # Оповещение о завершении деплоя
             -   name: Deployment notification
