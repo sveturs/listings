@@ -1,11 +1,10 @@
-name: Just Deploy Backend to Production
+name: Build & Deploy Backend
 
-# Можно запустить вручную из интерфейса GitHub
 on:
     workflow_dispatch:
         inputs:
             version:
-                description: 'Версия для деплоя (необязательно)'
+                description: 'Build & Deploy Backend'
                 required: false
                 default: 'latest'
 
@@ -31,6 +30,16 @@ jobs:
             # Настройка Docker Buildx
             -   name: Set up Docker Buildx
                 uses: docker/setup-buildx-action@v2
+
+            # Сборка и отправка Backend образа
+            -   name: Build and push Backend Docker image
+                uses: docker/build-push-action@v4
+                with:
+                    context: ./backend
+                    push: true
+                    tags: |
+                        ${{ secrets.DOCKER_REGISTRY }}/svetu/backend/api:${{ env.TIMESTAMP }}
+                        ${{ secrets.DOCKER_REGISTRY }}/svetu/backend/api:latest
 
             # Настройка SSH ключа для подключения к серверу
             -   name: Setup SSH key
