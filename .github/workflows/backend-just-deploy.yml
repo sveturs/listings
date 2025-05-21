@@ -60,7 +60,7 @@ jobs:
             # Запуск скрипта env.sh на сервере
             -   name: Execute env.sh script on server
                 run: |
-                    ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "/tmp/env.sh"
+                    ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "source ~/.profile && /tmp/env.sh"
 
             # Оповещение о завершении деплоя
             -   name: Deployment notification
