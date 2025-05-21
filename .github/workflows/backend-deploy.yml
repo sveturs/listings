@@ -1,10 +1,10 @@
-name: Deploy Backend
+name: Backend Deploy
 
 on:
     workflow_dispatch:
         inputs:
             version:
-                description: 'Deploy Backend'
+                description: 'Backend Deploy'
                 required: false
                 default: 'latest'
 

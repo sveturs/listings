@@ -1,10 +1,10 @@
-name: Build Frontend
+name: Frontend Build
 
 on:
     workflow_dispatch:
         inputs:
             version:
-                description: 'Build Frontend'
+                description: 'Frontend Build'
                 required: false
                 default: 'latest'
 
