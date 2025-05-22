@@ -65,4 +65,8 @@ type MarketplaceServiceInterface interface {
 	UpdateAttributeCategory(ctx context.Context, categoryID int, attributeID int, isRequired bool, isEnabled bool) error
 	UpdateAttributeCategoryExtended(ctx context.Context, categoryID int, attributeID int, isRequired bool, isEnabled bool, sortOrder int, customComponent string) error
 	InvalidateAttributeCache(ctx context.Context, categoryID int) error
+
+	// Карта - геопространственные методы
+	GetListingsInBounds(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapMarker, error)
+	GetMapClusters(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapCluster, error)
 }

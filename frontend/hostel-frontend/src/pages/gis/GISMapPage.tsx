@@ -4,6 +4,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocation } from '../../contexts/LocationContext';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster/dist/leaflet.markercluster';
+import '../../styles/marker-cluster.css';
 import {
   Box,
   Fab,
@@ -108,10 +112,12 @@ const GISMapPage: React.FC = () => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const markerClusterRef = useRef<L.MarkerClusterGroup | null>(null);
   const [mapReady, setMapReady] = useState<boolean>(false);
   const [mapCenter, setMapCenter] = useState<MapCenter | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(13);
   const [mapInitialized, setMapInitialized] = useState<boolean>(false);
+  const [clusteringEnabled, setClusteringEnabled] = useState<boolean>(true);
 
   // Состояния для интерфейса
   const [drawerOpen, setDrawerOpen] = useState<boolean>(!isMobile);
@@ -198,18 +204,62 @@ const GISMapPage: React.FC = () => {
       const map = L.map(mapContainerRef.current, {
         center: [mapCenter.latitude, mapCenter.longitude],
         zoom: mapZoom,
-        zoomControl: false, // Отключаем стандартный контрол зума
-        preferCanvas: true,  // Используем canvas для лучшей производительности
+        zoomControl: false,        // Отключаем стандартный контрол зума
+        preferCanvas: true,        // Используем canvas для лучшей производительности
+        zoomAnimation: true,       // Включаем плавную анимацию зума
+        fadeAnimation: true,       // Включаем плавную анимацию появления
+        markerZoomAnimation: true, // Включаем анимацию маркеров при зуме
+        zoomSnap: 1,              // Возвращаем стандартный шаг зума
+        zoomDelta: 1,             // Стандартная дельта зума
+        wheelPxPerZoomLevel: 60,  // Стандартная чувствительность колесика
+        renderer: L.canvas(),     // Принудительно используем canvas renderer
+        inertia: true,            // Плавная инерция при перетаскивании
+        inertiaDeceleration: 3000, // Быстрая остановка инерции
+        inertiaMaxSpeed: 1500,    // Максимальная скорость инерции
+        worldCopyJump: false      // Отключаем копирование мира для стабильности
       });
 
       // Добавляем тайловый слой - используем OpenStreetMap как самый надежный
       L.tileLayer(FALLBACK_TILE_URL, {
         attribution: FALLBACK_ATTRIBUTION,
         maxZoom: 19,
+        updateWhenZooming: false,    // НЕ обновлять при зуме для плавности
+        keepBuffer: 4,              // Стандартный буфер тайлов
+        updateWhenIdle: true,       // Обновлять только когда карта неактивна
+        updateInterval: 200         // Интервал обновления в мс
       }).addTo(map);
 
       // Добавляем слой маркеров
       const markersLayer = L.layerGroup().addTo(map);
+      
+      // Создаем группу кластеризации маркеров
+      const markerCluster = L.markerClusterGroup({
+        maxClusterRadius: 50,       // Максимальное расстояние для кластеризации
+        disableClusteringAtZoom: 16, // Отключать кластеризацию на зуме >= 16
+        spiderfyOnMaxZoom: true,    // Раскрывать кластер при максимальном зуме
+        showCoverageOnHover: false, // Не показывать область покрытия
+        zoomToBoundsOnClick: true,  // Зумить к границам кластера при клике
+        removeOutsideVisibleBounds: false, // Не удалять маркеры за пределами видимости
+        animate: true,              // Анимировать кластеризацию
+        animateAddingMarkers: false, // Не анимировать добавление отдельных маркеров
+        chunkedLoading: true,       // Загружать маркеры порциями для производительности
+        iconCreateFunction: function(cluster) {
+          const count = cluster.getChildCount();
+          let size = 'small';
+          
+          if (count > 50) {
+            size = 'large';
+          } else if (count > 10) {
+            size = 'medium';
+          }
+          
+          return L.divIcon({
+            html: `<div><span>${count}</span></div>`,
+            className: `marker-cluster marker-cluster-${size}`,
+            iconSize: [40, 40]
+          });
+        }
+      }).addTo(map);
 
       // Добавляем контрол зума
       L.control.zoom({
@@ -219,44 +269,53 @@ const GISMapPage: React.FC = () => {
       // Сохраняем ссылки
       mapRef.current = map;
       markersLayerRef.current = markersLayer;
+      markerClusterRef.current = markerCluster;
 
       // Устанавливаем обработчики событий только после полной загрузки карты
       map.on('load', function() {
         console.log("Карта полностью загружена (событие load)");
       });
 
-      // Обработчик moveend - срабатывает при перемещении карты
+      // Обработчик moveend - срабатывает при изменении положения карты
       map.on('moveend', function() {
-        if (!map._loaded) return; // Проверяем, что карта загружена
+        // Дополнительная проверка готовности карты
+        if (!map._loaded || !mapRef.current || !mapContainerRef.current) {
+          return;
+        }
 
         try {
           const center = map.getCenter();
-          if (center) {
+          const currentZoom = map.getZoom();
+          
+          if (center && isFinite(center.lat) && isFinite(center.lng)) {
             setMapCenter({
               latitude: center.lat,
               longitude: center.lng
             });
+            setMapZoom(currentZoom);
 
-            // Обновляем URL с задержкой
-            if (window.updateUrlTimeout) {
-              clearTimeout(window.updateUrlTimeout);
+            // Дебаунс для URL и загрузки данных
+            if (window.mapUpdateTimeout) {
+              clearTimeout(window.mapUpdateTimeout);
             }
 
-            window.updateUrlTimeout = setTimeout(() => {
-              setSearchParams(prev => {
-                const newParams = new URLSearchParams(prev);
-                const currentZoom = map.getZoom();
+            window.mapUpdateTimeout = setTimeout(() => {
+              try {
+                // Обновляем URL
+                setSearchParams(prev => {
+                  const newParams = new URLSearchParams(prev);
+                  newParams.set('latitude', center.lat.toFixed(6));
+                  newParams.set('longitude', center.lng.toFixed(6));
+                  newParams.set('zoom', currentZoom.toString());
+                  return newParams;
+                }, { replace: true });
 
-                newParams.set('latitude', center.lat.toFixed(6));
-                newParams.set('longitude', center.lng.toFixed(6));
-                newParams.set('zoom', currentZoom.toString());
-
-                return newParams;
-              }, { replace: true });
-
-              // Загружаем новые данные
-              if (mapReady) {
-                fetchListingsInViewport();
+                // Загружаем данные только если карта не в процессе анимации
+                if (!map._animatingZoom && !map._zooming && !map._panAnim && !map.dragging) {
+                  fetchListingsInViewport();
+                }
+              } catch (urlError) {
+                console.error("Ошибка при обновлении URL:", urlError);
               }
             }, 300);
           }
@@ -265,55 +324,53 @@ const GISMapPage: React.FC = () => {
         }
       });
 
-      // Обработчик zoomend - срабатывает при изменении масштаба
+      // Добавляем отдельный обработчик zoomend для обновления маркеров
       map.on('zoomend', function() {
-        if (!map._loaded) return; // Проверяем, что карта загружена
+        if (!map._loaded || !mapRef.current || !mapContainerRef.current) {
+          return;
+        }
 
         try {
-          setMapZoom(map.getZoom());
-
-          // Обновляем URL с задержкой
-          if (window.updateUrlTimeout) {
-            clearTimeout(window.updateUrlTimeout);
-          }
-
-          window.updateUrlTimeout = setTimeout(() => {
-            setSearchParams(prev => {
-              const newParams = new URLSearchParams(prev);
-              const center = map.getCenter();
-              const currentZoom = map.getZoom();
-
-              newParams.set('latitude', center.lat.toFixed(6));
-              newParams.set('longitude', center.lng.toFixed(6));
-              newParams.set('zoom', currentZoom.toString());
-
-              return newParams;
-            }, { replace: true });
-
-            // Загружаем новые данные
-            if (mapReady) {
-              fetchListingsInViewport();
+          // Принудительно обновляем маркеры после завершения зума
+          setTimeout(() => {
+            if (mapRef.current && mapContainerRef.current && listings.length > 0) {
+              console.log("Принудительное обновление маркеров после зума");
+              updateMapMarkers(listings);
             }
-          }, 300);
+          }, 100);
         } catch (e) {
           console.error("Ошибка в обработчике zoomend:", e);
         }
       });
 
-      // Отслеживаем загрузку тайлов
-      map.on('tileload', function() {
-        // Помечаем, что карта готова после загрузки первых тайлов
+      // Добавляем обработчик dragend для обновления маркеров при перетаскивании
+      map.on('dragend', function() {
+        if (!map._loaded || !mapRef.current || !mapContainerRef.current) {
+          return;
+        }
+
+        try {
+          // Принудительно обновляем маркеры после перетаскивания
+          setTimeout(() => {
+            if (mapRef.current && mapContainerRef.current && listings.length > 0) {
+              console.log("Принудительное обновление маркеров после перетаскивания");
+              updateMapMarkers(listings);
+            }
+          }, 50);
+        } catch (e) {
+          console.error("Ошибка в обработчике dragend:", e);
+        }
+      });
+
+      // Используем whenReady для более надежной инициализации
+      map.whenReady(() => {
         if (!mapReady) {
           setMapReady(true);
           setMapInitialized(true);
-          console.log("Карта готова (загружены первые тайлы)");
-
-          // Загружаем данные с небольшой задержкой
-          setTimeout(() => {
-            if (mapRef.current) {
-              fetchListingsInViewport();
-            }
-          }, 500);
+          console.log("Карта готова");
+          
+          // Немедленно загружаем данные
+          fetchListingsInViewport();
         }
       });
 
@@ -322,18 +379,15 @@ const GISMapPage: React.FC = () => {
         console.error("Ошибка загрузки тайла:", error);
       });
 
-      // Задаем таймаут для принудительной отметки карты как готовой,
-      // если по какой-то причине не сработали события загрузки тайлов
+      // Резервный таймаут
       setTimeout(() => {
         if (!mapReady && mapRef.current) {
-          console.log("Принудительная отметка карты как готовой по таймауту");
+          console.log("Принудительная инициализация карты");
           setMapReady(true);
           setMapInitialized(true);
-
-          // Загружаем данные
           fetchListingsInViewport();
         }
-      }, 3000);
+      }, 1000);
 
       console.log("Карта инициализирована успешно");
     } catch (error) {
@@ -346,8 +400,8 @@ const GISMapPage: React.FC = () => {
       console.log("Размонтирование компонента карты");
 
       // Очищаем все таймауты
-      if (window.updateUrlTimeout) {
-        clearTimeout(window.updateUrlTimeout);
+      if (window.mapUpdateTimeout) {
+        clearTimeout(window.mapUpdateTimeout);
       }
       if (window.fetchListingsTimeout) {
         clearTimeout(window.fetchListingsTimeout);
@@ -377,30 +431,27 @@ const GISMapPage: React.FC = () => {
       return;
     }
 
-    if (!mapReady) {
-      console.warn("Попытка загрузить объявления до готовности карты");
-      return;
-    }
-
     if (!mapContainerRef.current) {
       console.warn("Попытка загрузить объявления без контейнера карты");
       return;
     }
 
-    try {
-      // Включаем индикатор загрузки
-      setLoading(true);
+    // Дебаунс для избежания слишком частых вызовов API
+    if (window.fetchListingsTimeout) {
+      clearTimeout(window.fetchListingsTimeout);
+    }
 
-      // Проверяем, что карта полностью загружена
-      if (!mapRef.current._loaded) {
-        console.warn("Карта еще не полностью загружена, отложим загрузку объявлений");
-        setTimeout(() => {
-          if (mapRef.current && mapReady && mapContainerRef.current) {
-            fetchListingsInViewport();
-          }
-        }, 300);
-        return;
-      }
+    window.fetchListingsTimeout = setTimeout(async () => {
+      try {
+        // Включаем индикатор загрузки
+        setLoading(true);
+
+        // Проверяем готовность карты
+        if (!mapRef.current._loaded && mapReady === false) {
+          console.warn("Карта еще не готова для загрузки данных");
+          setLoading(false);
+          return;
+        }
 
       // Получаем границы видимой области с проверкой ошибок
       let bounds, northEast, southWest;
@@ -499,23 +550,19 @@ const GISMapPage: React.FC = () => {
         console.error("Ошибка при запросе к API:", apiError);
         setError("Ошибка при загрузке объявлений");
 
-        // Если ошибка связана с сетью, пробуем загрузить еще раз через некоторое время
+        // Убираем рекурсивный вызов для избежания бесконечного цикла
         if (apiError.code === 'ECONNABORTED' || !apiError.response) {
-          setTimeout(() => {
-            if (mapRef.current && mapReady && mapContainerRef.current) {
-              console.log("Повторная попытка загрузки объявлений после ошибки сети");
-              fetchListingsInViewport();
-            }
-          }, 5000);
+          console.log("Ошибка сети при загрузке объявлений, повторная попытка отменена");
         }
       }
-    } catch (error) {
-      console.error("Общая ошибка при загрузке объявлений:", error);
-      setError("Ошибка при загрузке объявлений");
-    } finally {
-      // Выключаем индикатор загрузки
-      setLoading(false);
-    }
+      } catch (error) {
+        console.error("Общая ошибка при загрузке объявлений:", error);
+        setError("Ошибка при загрузке объявлений");
+      } finally {
+        // Выключаем индикатор загрузки
+        setLoading(false);
+      }
+    }, 200); // Дебаунс 200ms
   };
 
   // Обновление маркеров на карте
@@ -533,7 +580,14 @@ const GISMapPage: React.FC = () => {
         return;
       }
 
-      // Создаем или пересоздаем слой маркеров, если нужно
+      // Очищаем существующие маркеры
+      if (clusteringEnabled && markerClusterRef.current) {
+        markerClusterRef.current.clearLayers();
+      } else if (markersLayerRef.current) {
+        markersLayerRef.current.clearLayers();
+      }
+
+      // Создаем или пересоздаем слои, если нужно
       if (!markersLayerRef.current) {
         try {
           markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
@@ -541,23 +595,40 @@ const GISMapPage: React.FC = () => {
           console.error("Ошибка при создании слоя маркеров:", error);
           return;
         }
-      } else {
-        // Безопасно очищаем существующий слой маркеров
+      }
+
+      if (clusteringEnabled && !markerClusterRef.current) {
         try {
-          markersLayerRef.current.clearLayers();
-        } catch (e) {
-          console.error("Ошибка при очистке слоя маркеров:", e);
-          // Пересоздаем слой в случае ошибки
-          try {
-            if (mapRef.current) {
-              markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
-            } else {
-              return; // Выходим, если нет карты
+          markerClusterRef.current = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            disableClusteringAtZoom: 16,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true,
+            removeOutsideVisibleBounds: false,
+            animate: true,
+            animateAddingMarkers: false,
+            chunkedLoading: true,
+            iconCreateFunction: function(cluster) {
+              const count = cluster.getChildCount();
+              let size = 'small';
+              
+              if (count > 50) {
+                size = 'large';
+              } else if (count > 10) {
+                size = 'medium';
+              }
+              
+              return L.divIcon({
+                html: `<div><span>${count}</span></div>`,
+                className: `marker-cluster marker-cluster-${size}`,
+                iconSize: [40, 40]
+              });
             }
-          } catch (recreateError) {
-            console.error("Ошибка при пересоздании слоя маркеров:", recreateError);
-            return;
-          }
+          }).addTo(mapRef.current);
+        } catch (error) {
+          console.error("Ошибка при создании группы кластеризации:", error);
+          return;
         }
       }
 
@@ -633,8 +704,12 @@ const GISMapPage: React.FC = () => {
                 clickHandler
             );
 
-            if (storeMarker && markersLayerRef.current) {
-              markersLayerRef.current.addLayer(storeMarker);
+            if (storeMarker) {
+              if (clusteringEnabled && markerClusterRef.current) {
+                markerClusterRef.current.addLayer(storeMarker);
+              } else if (markersLayerRef.current) {
+                markersLayerRef.current.addLayer(storeMarker);
+              }
             }
           }
         } catch (e) {
@@ -673,8 +748,12 @@ const GISMapPage: React.FC = () => {
                 clickHandler
             );
 
-            if (marker && markersLayerRef.current) {
-              markersLayerRef.current.addLayer(marker);
+            if (marker) {
+              if (clusteringEnabled && markerClusterRef.current) {
+                markerClusterRef.current.addLayer(marker);
+              } else if (markersLayerRef.current) {
+                markersLayerRef.current.addLayer(marker);
+              }
             }
           });
 
@@ -929,8 +1008,10 @@ const GISMapPage: React.FC = () => {
       maxZoom: 19,
       minZoom: 3,
       subdomains: 'abc',          // Поддомены для распределения запросов
-      updateWhenZooming: false,    // Обновление при зуме
-      keepBuffer: 4               // Буфер тайлов
+      updateWhenZooming: false,    // НЕ обновлять при зуме для плавности
+      keepBuffer: 2,              // Стандартный буфер тайлов
+      updateWhenIdle: true,       // Обновлять только когда карта неактивна
+      updateInterval: 200         // Интервал обновления в мс
     };
 
     // Add new tile layer based on selection
@@ -980,7 +1061,60 @@ const GISMapPage: React.FC = () => {
 
   // Handler for clustering toggle
   const handleClusteringToggle = (enableClustering: boolean): void => {
-    if (!mapRef.current || !markersLayerRef.current) return;
+    if (!mapRef.current) return;
+
+    setClusteringEnabled(enableClustering);
+
+    // Переключаем между кластеризованными и обычными маркерами
+    if (enableClustering) {
+      // Создаем группу кластеризации если её нет
+      if (!markerClusterRef.current) {
+        markerClusterRef.current = L.markerClusterGroup({
+          maxClusterRadius: 50,
+          disableClusteringAtZoom: 16,
+          spiderfyOnMaxZoom: true,
+          showCoverageOnHover: false,
+          zoomToBoundsOnClick: true,
+          removeOutsideVisibleBounds: false,
+          animate: true,
+          animateAddingMarkers: false,
+          chunkedLoading: true,
+          iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            let size = 'small';
+            
+            if (count > 50) {
+              size = 'large';
+            } else if (count > 10) {
+              size = 'medium';
+            }
+            
+            return L.divIcon({
+              html: `<div><span>${count}</span></div>`,
+              className: `marker-cluster marker-cluster-${size}`,
+              iconSize: [40, 40]
+            });
+          }
+        }).addTo(mapRef.current);
+      } else {
+        mapRef.current.addLayer(markerClusterRef.current);
+      }
+      
+      // Убираем обычный слой маркеров
+      if (markersLayerRef.current && mapRef.current.hasLayer(markersLayerRef.current)) {
+        mapRef.current.removeLayer(markersLayerRef.current);
+      }
+    } else {
+      // Убираем кластеризацию
+      if (markerClusterRef.current && mapRef.current.hasLayer(markerClusterRef.current)) {
+        mapRef.current.removeLayer(markerClusterRef.current);
+      }
+      
+      // Добавляем обычный слой маркеров
+      if (markersLayerRef.current) {
+        mapRef.current.addLayer(markersLayerRef.current);
+      }
+    }
 
     // Обновляем маркеры на карте
     updateMapMarkers(listings);
@@ -1118,7 +1252,7 @@ const GISMapPage: React.FC = () => {
           <GISLayerControl
               layers="standard"
               onLayerChange={handleLayerChange}
-              clusterMarkers={false}
+              clusterMarkers={clusteringEnabled}
               onClusteringToggle={handleClusteringToggle}
               minimized={!layersOpen}
               onToggleMinimize={() => setLayersOpen(!layersOpen)}
@@ -1192,11 +1326,5 @@ const GISMapPage: React.FC = () => {
 };
 
 // Global Declarations to avoid TypeScript errors with window properties
-declare global {
-  interface Window {
-    updateUrlTimeout: NodeJS.Timeout;
-    fetchListingsTimeout: NodeJS.Timeout;
-  }
-}
 
 export default GISMapPage;

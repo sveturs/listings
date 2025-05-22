@@ -5,12 +5,14 @@ import (
 	"log"
 	"net/http"
 
+	"backend/internal/proj/marketplace/service"
 	postgres "backend/internal/storage/postgres"
 )
 
 // MarketplaceHandler представляет основной обработчик для маркетплейса
 type MarketplaceHandler struct {
 	storage *postgres.Storage
+	service service.MarketplaceServiceInterface
 }
 
 // NewMarketplaceHandler создает новый основной обработчик маркетплейса

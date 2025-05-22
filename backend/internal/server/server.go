@@ -245,6 +245,10 @@ func (s *Server) setupRoutes() {
 	marketplace.Get("/categories/:id/attribute-ranges", s.marketplace.Categories.GetAttributeRanges)
 	marketplace.Get("/enhanced-suggestions", s.marketplace.Search.GetEnhancedSuggestions)
 
+	// Карта - геопространственные маршруты
+	marketplace.Get("/map/bounds", s.marketplace.GetListingsInBounds)
+	marketplace.Get("/map/clusters", s.marketplace.GetMapClusters)
+
 	// Обновлено: маршруты API переводов используют обработчик переводов
 	translation := s.app.Group("/api/v1/translation")
 	translation.Get("/limits", s.marketplace.Translations.GetTranslationLimits)
@@ -390,7 +394,7 @@ func (s *Server) setupRoutes() {
 	legacyAdmin.Get("/categories/:categoryId/attributes/export", s.marketplace.AdminAttributes.ExportCategoryAttributes)
 	legacyAdmin.Post("/categories/:categoryId/attributes/import", s.marketplace.AdminAttributes.ImportCategoryAttributes)
 	legacyAdmin.Post("/categories/:targetCategoryId/attributes/copy", s.marketplace.AdminAttributes.CopyAttributesSettings)
-		
+
 	// Маршруты для групп атрибутов
 	legacyAdmin.Get("/attribute-groups", s.marketplace.MarketplaceHandler.ListAttributeGroups)
 	legacyAdmin.Post("/attribute-groups", s.marketplace.MarketplaceHandler.CreateAttributeGroup)
@@ -400,33 +404,33 @@ func (s *Server) setupRoutes() {
 	legacyAdmin.Get("/attribute-groups/:id/items", s.marketplace.MarketplaceHandler.GetAttributeGroupWithItems)
 	legacyAdmin.Post("/attribute-groups/:id/items", s.marketplace.MarketplaceHandler.AddItemToGroup)
 	legacyAdmin.Delete("/attribute-groups/:id/items/:attributeId", s.marketplace.MarketplaceHandler.RemoveItemFromGroup)
-		
+
 	// Маршруты для привязки групп к категориям
 	legacyAdmin.Get("/categories/:id/attribute-groups", s.marketplace.MarketplaceHandler.GetCategoryGroups)
 	legacyAdmin.Post("/categories/:id/attribute-groups", s.marketplace.MarketplaceHandler.AttachGroupToCategory)
 	legacyAdmin.Delete("/categories/:id/attribute-groups/:groupId", s.marketplace.MarketplaceHandler.DetachGroupFromCategory)
-		
+
 	// Маршруты для кастомных UI компонентов
 	// ВАЖНО: Более специфичные роуты должны идти раньше параметризованных
-	
+
 	// Маршруты для шаблонов (должны быть перед :id, чтобы не конфликтовать)
 	adminRoutes.Get("/custom-components/templates", s.marketplace.CustomComponents.ListTemplates)
 	adminRoutes.Post("/custom-components/templates", s.marketplace.CustomComponents.CreateTemplate)
-	
+
 	// Маршруты для использования компонентов
 	adminRoutes.Get("/custom-components/usage", s.marketplace.CustomComponents.GetComponentUsages)
 	adminRoutes.Post("/custom-components/usage", s.marketplace.CustomComponents.AddComponentUsage)
 	adminRoutes.Delete("/custom-components/usage/:id", s.marketplace.CustomComponents.RemoveComponentUsage)
-	
+
 	// Основные маршруты компонентов (параметризованные идут последними)
 	adminRoutes.Post("/custom-components", s.marketplace.CustomComponents.CreateComponent)
 	adminRoutes.Get("/custom-components", s.marketplace.CustomComponents.ListComponents)
 	adminRoutes.Get("/custom-components/:id", s.marketplace.CustomComponents.GetComponent)
 	adminRoutes.Put("/custom-components/:id", s.marketplace.CustomComponents.UpdateComponent)
 	adminRoutes.Delete("/custom-components/:id", s.marketplace.CustomComponents.DeleteComponent)
-	
+
 	adminRoutes.Get("/categories/:category_id/components", s.marketplace.CustomComponents.GetCategoryComponents)
-		
+
 	// Маршруты для групп атрибутов
 	adminRoutes.Get("/attribute-groups", s.marketplace.MarketplaceHandler.ListAttributeGroups)
 	adminRoutes.Post("/attribute-groups", s.marketplace.MarketplaceHandler.CreateAttributeGroup)
@@ -436,7 +440,7 @@ func (s *Server) setupRoutes() {
 	adminRoutes.Get("/attribute-groups/:id/items", s.marketplace.MarketplaceHandler.GetAttributeGroupWithItems)
 	adminRoutes.Post("/attribute-groups/:id/items", s.marketplace.MarketplaceHandler.AddItemToGroup)
 	adminRoutes.Delete("/attribute-groups/:id/items/:attributeId", s.marketplace.MarketplaceHandler.RemoveItemFromGroup)
-	
+
 	// Маршруты для привязки групп к категориям
 	adminRoutes.Get("/categories/:id/attribute-groups", s.marketplace.MarketplaceHandler.GetCategoryGroups)
 	adminRoutes.Post("/categories/:id/attribute-groups", s.marketplace.MarketplaceHandler.AttachGroupToCategory)
