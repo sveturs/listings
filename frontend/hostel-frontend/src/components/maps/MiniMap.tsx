@@ -61,7 +61,6 @@ const MiniMap: React.FC<MiniMapProps> = ({ latitude, longitude, address, onClick
           touchZoom: false,
           doubleClickZoom: false,
           boxZoom: false,
-          tap: false,
           keyboard: false,
           zoomControl: false,
           attributionControl: false,

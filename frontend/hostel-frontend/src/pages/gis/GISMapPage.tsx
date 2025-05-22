@@ -280,7 +280,7 @@ const GISMapPage: React.FC = () => {
       // Обработчик moveend - срабатывает при изменении положения карты
       map.on('moveend', function() {
         // Дополнительная проверка готовности карты
-        if (!map._loaded || !mapRef.current || !mapContainerRef.current) {
+        if (!(map as any)._loaded || !mapRef.current || !mapContainerRef.current) {
           return;
         }
 
@@ -319,7 +319,7 @@ const GISMapPage: React.FC = () => {
                 }, { replace: true });
 
                 // Загружаем данные только если карта не в процессе анимации
-                if (!map._animatingZoom && !map._zooming && !map._panAnim && !map.dragging) {
+                if (!(map as any)._animatingZoom && !(map as any)._zooming && !(map as any)._panAnim && !map.dragging) {
                   fetchListingsInViewport();
                 }
               } catch (urlError) {
@@ -335,7 +335,7 @@ const GISMapPage: React.FC = () => {
 
       // Добавляем отдельный обработчик zoomend для обновления маркеров
       map.on('zoomend', function() {
-        if (!map._loaded || !mapRef.current || !mapContainerRef.current) {
+        if (!(map as any)._loaded || !mapRef.current || !mapContainerRef.current) {
           return;
         }
 
@@ -354,7 +354,7 @@ const GISMapPage: React.FC = () => {
 
       // Добавляем обработчик dragend для обновления маркеров при перетаскивании
       map.on('dragend', function() {
-        if (!map._loaded || !mapRef.current || !mapContainerRef.current) {
+        if (!(map as any)._loaded || !mapRef.current || !mapContainerRef.current) {
           return;
         }
 
@@ -434,7 +434,20 @@ const GISMapPage: React.FC = () => {
 
   // Отдельный useEffect для обновления позиции карты без пересоздания
   useEffect(() => {
-    if (!mapRef.current || !mapCenter) return;
+    if (!mapRef.current || !mapCenter || !mapReady) return;
+
+    // Проверяем, нужно ли обновлять позицию карты
+    const currentCenter = mapRef.current.getCenter();
+    const currentZoom = mapRef.current.getZoom();
+    
+    const positionChanged = Math.abs(currentCenter.lat - mapCenter.latitude) > 0.0001 || 
+                           Math.abs(currentCenter.lng - mapCenter.longitude) > 0.0001 ||
+                           currentZoom !== mapZoom;
+
+    if (!positionChanged) {
+      console.log("Позиция карты не изменилась, пропускаем обновление");
+      return;
+    }
 
     console.log("Обновляем позицию карты:", mapCenter, "зум:", mapZoom);
     
@@ -447,7 +460,7 @@ const GISMapPage: React.FC = () => {
     } catch (error) {
       console.error("Ошибка при обновлении позиции карты:", error);
     }
-  }, [mapCenter, mapZoom]);
+  }, [mapCenter, mapZoom, mapReady]);
 
   // Загрузка объявлений в текущей области видимости
   const fetchListingsInViewport = async (): Promise<void> => {
@@ -473,7 +486,7 @@ const GISMapPage: React.FC = () => {
         setLoading(true);
 
         // Проверяем готовность карты
-        if (!mapRef.current._loaded && mapReady === false) {
+        if (!(mapRef.current as any)._loaded && mapReady === false) {
           console.warn("Карта еще не готова для загрузки данных");
           setLoading(false);
           return;

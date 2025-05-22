@@ -236,7 +236,7 @@ const ProMapEngine: React.FC<ProMapEngineProps> = ({
   const [mapReady, setMapReady] = useState(false);
 
   // Refs
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersLayerRef = useRef<L.LayerGroup>(null);
   const superclusterRef = useRef<Supercluster<any> | null>(null);
@@ -346,7 +346,10 @@ const ProMapEngine: React.FC<ProMapEngineProps> = ({
       setCurrentZoom(zoom);
       
       const bounds = map.getBounds();
-      onBoundsChange?.(bounds);
+      onBoundsChange?.({
+        northEast: { lat: bounds.getNorthEast().lat, lng: bounds.getNorthEast().lng },
+        southWest: { lat: bounds.getSouthWest().lat, lng: bounds.getSouthWest().lng }
+      });
       debouncedFetchMapData(bounds, zoom);
     });
 

@@ -26,3 +26,14 @@ declare namespace React {
     children?: React.ReactNode;
   }
 }
+
+// Расширяем типы Leaflet для доступа к приватным свойствам
+declare module 'leaflet' {
+  namespace Icon {
+    namespace Default {
+      interface DefaultIconOptions {
+        _getIconUrl?: () => string;
+      }
+    }
+  }
+}
