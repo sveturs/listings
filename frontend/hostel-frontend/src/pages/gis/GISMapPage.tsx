@@ -183,27 +183,28 @@ const GISMapPage: React.FC = () => {
     }
   }, [searchParams, userLocation]);
 
-  // Супер простая инициализация карты - минимальный надежный вариант
+  // Инициализация карты - только один раз при монтировании
   useEffect(() => {
-    // Если нет контейнера или координат, ничего не делаем
-    if (!mapContainerRef.current || !mapCenter) return;
+    // Если нет контейнера, ничего не делаем
+    if (!mapContainerRef.current) return;
 
     console.log("Инициализация карты...");
 
     try {
-      // Если карта уже существует, удаляем ее
+      // Если карта уже существует, НЕ удаляем ее - просто выходим
       if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
+        console.log("Карта уже создана, пропускаем инициализацию");
+        return;
       }
 
-      // Очищаем контейнер
-      mapContainerRef.current.innerHTML = '';
+      // Используем значения по умолчанию если mapCenter еще не готов
+      const initialCenter = mapCenter || { latitude: 45.2671, longitude: 19.8335 };
+      const initialZoom = mapZoom || 13;
 
       // Создаем карту
       const map = L.map(mapContainerRef.current, {
-        center: [mapCenter.latitude, mapCenter.longitude],
-        zoom: mapZoom,
+        center: [initialCenter.latitude, initialCenter.longitude],
+        zoom: initialZoom,
         zoomControl: false,        // Отключаем стандартный контрол зума
         preferCanvas: true,        // Используем canvas для лучшей производительности
         zoomAnimation: true,       // Включаем плавную анимацию зума
@@ -288,18 +289,25 @@ const GISMapPage: React.FC = () => {
           const currentZoom = map.getZoom();
           
           if (center && isFinite(center.lat) && isFinite(center.lng)) {
-            setMapCenter({
-              latitude: center.lat,
-              longitude: center.lng
-            });
-            setMapZoom(currentZoom);
+            // Обновляем состояние только если позиция действительно изменилась
+            const currentCenter = mapCenter || { latitude: 0, longitude: 0 };
+            const positionChanged = Math.abs(currentCenter.latitude - center.lat) > 0.0001 || 
+                                   Math.abs(currentCenter.longitude - center.lng) > 0.0001 ||
+                                   currentZoom !== mapZoom;
+            
+            if (positionChanged) {
+              setMapCenter({
+                latitude: center.lat,
+                longitude: center.lng
+              });
+              setMapZoom(currentZoom);
 
-            // Дебаунс для URL и загрузки данных
-            if (window.mapUpdateTimeout) {
-              clearTimeout(window.mapUpdateTimeout);
-            }
+              // Дебаунс для URL и загрузки данных
+              if (window.mapUpdateTimeout) {
+                clearTimeout(window.mapUpdateTimeout);
+              }
 
-            window.mapUpdateTimeout = setTimeout(() => {
+              window.mapUpdateTimeout = setTimeout(() => {
               try {
                 // Обновляем URL
                 setSearchParams(prev => {
@@ -317,7 +325,8 @@ const GISMapPage: React.FC = () => {
               } catch (urlError) {
                 console.error("Ошибка при обновлении URL:", urlError);
               }
-            }, 300);
+              }, 300);
+            }
           }
         } catch (e) {
           console.error("Ошибка в обработчике moveend:", e);
@@ -421,7 +430,24 @@ const GISMapPage: React.FC = () => {
       setMapReady(false);
       setMapInitialized(false);
     };
-  }, [mapCenter, mapZoom]); // Перерисовываем карту при изменении центра или зума
+  }, []); // Создаем карту только один раз при монтировании!
+
+  // Отдельный useEffect для обновления позиции карты без пересоздания
+  useEffect(() => {
+    if (!mapRef.current || !mapCenter) return;
+
+    console.log("Обновляем позицию карты:", mapCenter, "зум:", mapZoom);
+    
+    try {
+      // Плавно перемещаем карту к новым координатам
+      mapRef.current.setView([mapCenter.latitude, mapCenter.longitude], mapZoom, {
+        animate: true,
+        duration: 0.5
+      });
+    } catch (error) {
+      console.error("Ошибка при обновлении позиции карты:", error);
+    }
+  }, [mapCenter, mapZoom]);
 
   // Загрузка объявлений в текущей области видимости
   const fetchListingsInViewport = async (): Promise<void> => {

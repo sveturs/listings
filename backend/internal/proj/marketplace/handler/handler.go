@@ -33,8 +33,7 @@ type Handler struct {
 	AdminAttributes    *AdminAttributesHandler
 	CustomComponents   *CustomComponentHandler
 	MarketplaceHandler *MarketplaceHandler
-	service            globalService.ServicesInterface // добавляем прямой доступ к сервисам
-	AdminAttributes    *AdminAttributesHandler
+	service            globalService.ServicesInterface
 }
 
 // NewHandler создает новый обработчик маркетплейса
@@ -225,4 +224,31 @@ func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
 			maxPriceFloat = &parsed
 		}
 	}
+
+	// Получаем кластеры в указанных границах
+	_ = neLat64       // используем переменную
+	_ = neLng64       // используем переменную
+	_ = swLat64       // используем переменную
+	_ = swLng64       // используем переменную
+	_ = zoom          // используем переменную
+	_ = categoryIDs   // используем переменную
+	_ = condition     // используем переменную
+	_ = minPriceFloat // используем переменную
+
+	clusters, err := h.service.Marketplace().GetListingsInBounds(c.Context(),
+		neLat64, neLng64, swLat64, swLng64, zoom,
+		categoryIDs, condition, minPriceFloat, maxPriceFloat)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get clusters")
+	}
+
+	return utils.SuccessResponse(c, map[string]interface{}{
+		"clusters": clusters,
+		"bounds": map[string]interface{}{
+			"ne": map[string]float64{"lat": neLat64, "lng": neLng64},
+			"sw": map[string]float64{"lat": swLat64, "lng": swLng64},
+		},
+		"zoom":  zoom,
+		"count": len(clusters),
+	})
 }
