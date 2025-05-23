@@ -296,50 +296,50 @@ const GISListingCard: React.FC<GISListingCardProps> = ({
 
     // Используем переменную окружения из window.ENV вместо process.env
     const baseUrl = window.ENV?.REACT_APP_MINIO_URL || window.ENV?.REACT_APP_BACKEND_URL || '';
-    console.log('GISListingCard: Using baseUrl from env:', baseUrl);
+    // console.log('GISListingCard: Using baseUrl from env:', baseUrl);
 
     // 1. Строковые пути (для обратной совместимости)
     if (typeof imageData === 'string') {
-      console.log('GISListingCard: Processing string image path:', imageData);
+      // console.log('GISListingCard: Processing string image path:', imageData);
 
       // Относительный путь MinIO
       if (imageData.startsWith('/listings/')) {
         const url = `${baseUrl}${imageData}`;
-        console.log('GISListingCard: Using MinIO relative path:', url);
+        // console.log('GISListingCard: Using MinIO relative path:', url);
         return url;
       }
 
       // ID/filename.jpg (прямой путь MinIO)
       if (imageData.match(/^\d+\/[^\/]+$/)) {
         const url = `${baseUrl}/listings/${imageData}`;
-        console.log('GISListingCard: Using direct MinIO path pattern:', url);
+        // console.log('GISListingCard: Using direct MinIO path pattern:', url);
         return url;
       }
 
       // Локальное хранилище (обратная совместимость)
       const url = `${baseUrl}/uploads/${imageData}`;
-      console.log('GISListingCard: Using local storage path:', url);
+      // console.log('GISListingCard: Using local storage path:', url);
       return url;
     }
 
     // 2. Объекты с информацией о файле
     if (typeof imageData === 'object' && imageData !== null) {
-      console.log('GISListingCard: Processing image object:', imageData);
+      // console.log('GISListingCard: Processing image object:', imageData);
 
       // Приоритет 1: Используем PublicURL если он доступен
       if (imageData.public_url && typeof imageData.public_url === 'string' && imageData.public_url.trim() !== '') {
         const publicUrl = imageData.public_url;
-        console.log('GISListingCard: Found public_url string:', publicUrl);
+        // console.log('GISListingCard: Found public_url string:', publicUrl);
 
         // Абсолютный URL
         if (publicUrl.startsWith('http')) {
-          console.log('GISListingCard: Using absolute URL:', publicUrl);
+          // console.log('GISListingCard: Using absolute URL:', publicUrl);
           return publicUrl;
         }
         // Относительный URL с /listings/
         else if (publicUrl.startsWith('/listings/')) {
           const url = `${baseUrl}${publicUrl}`;
-          console.log('GISListingCard: Using public_url with listings path:', url);
+          // console.log('GISListingCard: Using public_url with listings path:', url);
           return url;
         }
         // Другой относительный URL

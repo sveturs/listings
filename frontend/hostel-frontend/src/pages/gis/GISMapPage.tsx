@@ -8,6 +8,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster/dist/leaflet.markercluster';
 import '../../styles/marker-cluster.css';
+import '../../styles/map.css';
 import {
   Box,
   Fab,
@@ -210,24 +211,34 @@ const GISMapPage: React.FC = () => {
         zoomAnimation: true,       // Включаем плавную анимацию зума
         fadeAnimation: true,       // Включаем плавную анимацию появления
         markerZoomAnimation: true, // Включаем анимацию маркеров при зуме
-        zoomSnap: 1,              // Возвращаем стандартный шаг зума
-        zoomDelta: 1,             // Стандартная дельта зума
-        wheelPxPerZoomLevel: 60,  // Стандартная чувствительность колесика
+        zoomSnap: 0.5,            // Более плавный шаг зума
+        zoomDelta: 0.5,           // Более плавная дельта зума
+        wheelPxPerZoomLevel: 120, // Более плавная прокрутка колесиком
+        wheelDebounceTime: 40,    // Дебаунс для колесика мыши
         renderer: L.canvas(),     // Принудительно используем canvas renderer
         inertia: true,            // Плавная инерция при перетаскивании
         inertiaDeceleration: 3000, // Быстрая остановка инерции
         inertiaMaxSpeed: 1500,    // Максимальная скорость инерции
-        worldCopyJump: false      // Отключаем копирование мира для стабильности
+        worldCopyJump: false,     // Отключаем копирование мира для стабильности
+        // Важные настройки для предотвращения проблем с тайлами
+        keepBuffer: 4,            // Держим больше тайлов в памяти
+        updateWhenZooming: true,  // Обновляем во время зума
+        updateWhenIdle: false     // Не ждем окончания движения
       });
 
       // Добавляем тайловый слой - используем OpenStreetMap как самый надежный
       L.tileLayer(FALLBACK_TILE_URL, {
         attribution: FALLBACK_ATTRIBUTION,
         maxZoom: 19,
-        updateWhenZooming: false,    // НЕ обновлять при зуме для плавности
-        keepBuffer: 4,              // Стандартный буфер тайлов
-        updateWhenIdle: true,       // Обновлять только когда карта неактивна
-        updateInterval: 200         // Интервал обновления в мс
+        updateWhenZooming: true,     // Обновлять при зуме для непрерывности отображения
+        keepBuffer: 8,               // Увеличенный буфер тайлов для предзагрузки
+        updateWhenIdle: false,       // Обновлять сразу, не ждать неактивности
+        updateInterval: 50,          // Быстрое обновление для плавности
+        tileSize: 256,              // Стандартный размер тайлов
+        zoomOffset: 0,              // Без смещения зума
+        crossOrigin: true,          // Разрешить кросс-доменные запросы
+        errorTileUrl: '',           // Не показывать заглушки при ошибках
+        className: 'map-tiles'      // CSS класс для стилизации
       }).addTo(map);
 
       // Добавляем слой маркеров
@@ -277,10 +288,26 @@ const GISMapPage: React.FC = () => {
         console.log("Карта полностью загружена (событие load)");
       });
 
+      // Флаг для предотвращения циклических обновлений
+      let isUpdating = false;
+      let lastUpdateTime = 0;
+      const UPDATE_THROTTLE = 500; // Минимальный интервал между обновлениями
+
       // Обработчик moveend - срабатывает при изменении положения карты
       map.on('moveend', function() {
         // Дополнительная проверка готовности карты
         if (!(map as any)._loaded || !mapRef.current || !mapContainerRef.current) {
+          return;
+        }
+
+        // Предотвращаем слишком частые обновления
+        const now = Date.now();
+        if (now - lastUpdateTime < UPDATE_THROTTLE) {
+          return;
+        }
+
+        // Предотвращаем циклические обновления
+        if (isUpdating) {
           return;
         }
 
@@ -293,9 +320,12 @@ const GISMapPage: React.FC = () => {
             const currentCenter = mapCenter || { latitude: 0, longitude: 0 };
             const positionChanged = Math.abs(currentCenter.latitude - center.lat) > 0.0001 || 
                                    Math.abs(currentCenter.longitude - center.lng) > 0.0001 ||
-                                   currentZoom !== mapZoom;
+                                   Math.abs(currentZoom - mapZoom) > 0.01; // Добавляем порог для зума
             
             if (positionChanged) {
+              isUpdating = true;
+              lastUpdateTime = now;
+
               setMapCenter({
                 latitude: center.lat,
                 longitude: center.lng
@@ -308,28 +338,32 @@ const GISMapPage: React.FC = () => {
               }
 
               window.mapUpdateTimeout = setTimeout(() => {
-              try {
-                // Обновляем URL
-                setSearchParams(prev => {
-                  const newParams = new URLSearchParams(prev);
-                  newParams.set('latitude', center.lat.toFixed(6));
-                  newParams.set('longitude', center.lng.toFixed(6));
-                  newParams.set('zoom', currentZoom.toString());
-                  return newParams;
-                }, { replace: true });
+                try {
+                  // Обновляем URL
+                  setSearchParams(prev => {
+                    const newParams = new URLSearchParams(prev);
+                    newParams.set('latitude', center.lat.toFixed(6));
+                    newParams.set('longitude', center.lng.toFixed(6));
+                    newParams.set('zoom', currentZoom.toString());
+                    return newParams;
+                  }, { replace: true });
 
-                // Загружаем данные только если карта не в процессе анимации
-                if (!(map as any)._animatingZoom && !(map as any)._zooming && !(map as any)._panAnim && !map.dragging) {
-                  fetchListingsInViewport();
+                  // Загружаем данные только если карта не в процессе анимации
+                  if (!(map as any)._animatingZoom && !(map as any)._zooming && !(map as any)._panAnim && !map.dragging) {
+                    fetchListingsInViewport();
+                  }
+                } catch (urlError) {
+                  console.error("Ошибка при обновлении URL:", urlError);
+                } finally {
+                  // Сбрасываем флаг обновления
+                  isUpdating = false;
                 }
-              } catch (urlError) {
-                console.error("Ошибка при обновлении URL:", urlError);
-              }
               }, 300);
             }
           }
         } catch (e) {
           console.error("Ошибка в обработчике moveend:", e);
+          isUpdating = false;
         }
       });
 
@@ -339,14 +373,23 @@ const GISMapPage: React.FC = () => {
           return;
         }
 
+        // Проверяем, что не происходит анимация зума
+        if ((map as any)._animatingZoom || (map as any)._zooming) {
+          return;
+        }
+
         try {
-          // Принудительно обновляем маркеры после завершения зума
-          setTimeout(() => {
-            if (mapRef.current && mapContainerRef.current && listings.length > 0) {
+          // Принудительно обновляем маркеры после завершения зума с большей задержкой
+          if (window.zoomUpdateTimeout) {
+            clearTimeout(window.zoomUpdateTimeout);
+          }
+
+          window.zoomUpdateTimeout = setTimeout(() => {
+            if (mapRef.current && mapContainerRef.current && listings.length > 0 && !isUpdating) {
               console.log("Принудительное обновление маркеров после зума");
               updateMapMarkers(listings);
             }
-          }, 100);
+          }, 200);
         } catch (e) {
           console.error("Ошибка в обработчике zoomend:", e);
         }
@@ -360,12 +403,16 @@ const GISMapPage: React.FC = () => {
 
         try {
           // Принудительно обновляем маркеры после перетаскивания
-          setTimeout(() => {
-            if (mapRef.current && mapContainerRef.current && listings.length > 0) {
+          if (window.dragUpdateTimeout) {
+            clearTimeout(window.dragUpdateTimeout);
+          }
+
+          window.dragUpdateTimeout = setTimeout(() => {
+            if (mapRef.current && mapContainerRef.current && listings.length > 0 && !isUpdating) {
               console.log("Принудительное обновление маркеров после перетаскивания");
               updateMapMarkers(listings);
             }
-          }, 50);
+          }, 100);
         } catch (e) {
           console.error("Ошибка в обработчике dragend:", e);
         }
@@ -415,6 +462,12 @@ const GISMapPage: React.FC = () => {
       if (window.fetchListingsTimeout) {
         clearTimeout(window.fetchListingsTimeout);
       }
+      if (window.zoomUpdateTimeout) {
+        clearTimeout(window.zoomUpdateTimeout);
+      }
+      if (window.dragUpdateTimeout) {
+        clearTimeout(window.dragUpdateTimeout);
+      }
 
       // Удаляем карту
       if (mapRef.current) {
@@ -432,33 +485,53 @@ const GISMapPage: React.FC = () => {
     };
   }, []); // Создаем карту только один раз при монтировании!
 
+  // Флаг для предотвращения циклических обновлений позиции
+  const isUpdatingPositionRef = useRef(false);
+
   // Отдельный useEffect для обновления позиции карты без пересоздания
   useEffect(() => {
     if (!mapRef.current || !mapCenter || !mapReady) return;
+
+    // Предотвращаем циклические обновления
+    if (isUpdatingPositionRef.current) return;
 
     // Проверяем, нужно ли обновлять позицию карты
     const currentCenter = mapRef.current.getCenter();
     const currentZoom = mapRef.current.getZoom();
     
-    const positionChanged = Math.abs(currentCenter.lat - mapCenter.latitude) > 0.0001 || 
-                           Math.abs(currentCenter.lng - mapCenter.longitude) > 0.0001 ||
-                           currentZoom !== mapZoom;
+    const positionChanged = Math.abs(currentCenter.lat - mapCenter.latitude) > 0.001 || 
+                           Math.abs(currentCenter.lng - mapCenter.longitude) > 0.001 ||
+                           Math.abs(currentZoom - mapZoom) > 0.1; // Увеличиваем порог для зума
 
     if (!positionChanged) {
       console.log("Позиция карты не изменилась, пропускаем обновление");
       return;
     }
 
+    // Проверяем, что карта не находится в процессе анимации
+    if ((mapRef.current as any)._animatingZoom || (mapRef.current as any)._zooming || (mapRef.current as any)._panAnim) {
+      console.log("Карта в процессе анимации, пропускаем обновление");
+      return;
+    }
+
     console.log("Обновляем позицию карты:", mapCenter, "зум:", mapZoom);
     
     try {
+      isUpdatingPositionRef.current = true;
+      
       // Плавно перемещаем карту к новым координатам
       mapRef.current.setView([mapCenter.latitude, mapCenter.longitude], mapZoom, {
         animate: true,
         duration: 0.5
       });
+
+      // Сбрасываем флаг после завершения анимации
+      setTimeout(() => {
+        isUpdatingPositionRef.current = false;
+      }, 600);
     } catch (error) {
       console.error("Ошибка при обновлении позиции карты:", error);
+      isUpdatingPositionRef.current = false;
     }
   }, [mapCenter, mapZoom, mapReady]);
 
@@ -1047,10 +1120,15 @@ const GISMapPage: React.FC = () => {
       maxZoom: 19,
       minZoom: 3,
       subdomains: 'abc',          // Поддомены для распределения запросов
-      updateWhenZooming: false,    // НЕ обновлять при зуме для плавности
-      keepBuffer: 2,              // Стандартный буфер тайлов
-      updateWhenIdle: true,       // Обновлять только когда карта неактивна
-      updateInterval: 200         // Интервал обновления в мс
+      updateWhenZooming: true,    // Обновлять при зуме для непрерывности
+      keepBuffer: 8,              // Увеличенный буфер тайлов для предзагрузки
+      updateWhenIdle: false,      // Обновлять сразу для плавности
+      updateInterval: 50,         // Быстрое обновление
+      tileSize: 256,             // Стандартный размер тайлов
+      zoomOffset: 0,             // Без смещения зума
+      crossOrigin: true,         // Разрешить кросс-доменные запросы
+      errorTileUrl: '',          // Не показывать заглушки при ошибках
+      className: 'map-tiles'     // CSS класс для стилизации
     };
 
     // Add new tile layer based on selection
@@ -1365,5 +1443,13 @@ const GISMapPage: React.FC = () => {
 };
 
 // Global Declarations to avoid TypeScript errors with window properties
+declare global {
+  interface Window {
+    mapUpdateTimeout?: NodeJS.Timeout;
+    fetchListingsTimeout?: NodeJS.Timeout;
+    zoomUpdateTimeout?: NodeJS.Timeout;
+    dragUpdateTimeout?: NodeJS.Timeout;
+  }
+}
 
 export default GISMapPage;
