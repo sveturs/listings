@@ -7,6 +7,9 @@ interface Window {
     REACT_APP_MAPS_API_KEY?: string;
     [key: string]: string | undefined;
   };
+  mapUpdateTimeout?: NodeJS.Timeout;
+  fetchListingsTimeout?: NodeJS.Timeout;
+  updateUrlTimeout?: NodeJS.Timeout;
 }
 
 // Fix for JSX namespace issue
@@ -21,5 +24,16 @@ declare namespace JSX {
 declare namespace React {
   interface DOMAttributes<T> {
     children?: React.ReactNode;
+  }
+}
+
+// Расширяем типы Leaflet для доступа к приватным свойствам
+declare module 'leaflet' {
+  namespace Icon {
+    namespace Default {
+      interface DefaultIconOptions {
+        _getIconUrl?: () => string;
+      }
+    }
   }
 }

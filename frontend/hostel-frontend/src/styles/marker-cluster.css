@@ -1,0 +1,63 @@
+/* Кастомные стили для кластеров маркеров */
+.marker-cluster {
+  background-color: rgba(181, 226, 140, 0.8);
+  border-radius: 50%;
+  text-align: center;
+  color: #ffffff;
+  font-weight: bold;
+  border: 2px solid rgba(110, 204, 57, 0.8);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.marker-cluster div {
+  background-color: rgba(110, 204, 57, 0.9);
+  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marker-cluster-small {
+  background-color: rgba(181, 226, 140, 0.8);
+  border-color: rgba(110, 204, 57, 0.8);
+}
+
+.marker-cluster-small div {
+  background-color: rgba(110, 204, 57, 0.9);
+}
+
+.marker-cluster-medium {
+  background-color: rgba(241, 211, 87, 0.8);
+  border-color: rgba(240, 194, 12, 0.8);
+}
+
+.marker-cluster-medium div {
+  background-color: rgba(240, 194, 12, 0.9);
+}
+
+.marker-cluster-large {
+  background-color: rgba(253, 156, 115, 0.8);
+  border-color: rgba(241, 128, 23, 0.8);
+}
+
+.marker-cluster-large div {
+  background-color: rgba(241, 128, 23, 0.9);
+}
+
+.marker-cluster span {
+  line-height: 1;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Анимация для кластеров */
+.marker-cluster {
+  transition: all 0.3s ease;
+}
+
+.marker-cluster:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}

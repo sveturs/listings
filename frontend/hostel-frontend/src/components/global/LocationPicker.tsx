@@ -22,8 +22,8 @@ import 'leaflet/dist/leaflet.css';
 import '../maps/leaflet-icons'; // Импортируем файл с фиксом иконок
 
 // Исправляем проблему с маркерами Leaflet в React
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+(L.Icon.Default as any).mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
     iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
@@ -277,9 +277,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, initi
     // Реф для доступа к DOM-элементу карты
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     // Реф для хранения экземпляра карты Leaflet
-    const leafletMapRef = useRef<L.Map | null>(null);
+    const leafletMapRef = useRef<any>(null);
     // Реф для хранения маркера
-    const markerRef = useRef<L.Marker | null>(null);
+    const markerRef = useRef<any>(null);
     // Таймер для задержки поиска
     const searchTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -310,7 +310,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, initi
                 }
                 
                 // Создаем новый маркер
-                markerRef.current = L.marker([initialLocation.latitude, initialLocation.longitude], { draggable: true })
+                markerRef.current = (L as any).marker([initialLocation.latitude, initialLocation.longitude], { draggable: true })
                     .addTo(leafletMapRef.current)
                     .on('dragend', function(event) {
                         const marker = event.target;
@@ -326,16 +326,16 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, initi
         
         // Инициализируем карту только если её еще нет
         if (!leafletMapRef.current) {
-            leafletMapRef.current = L.map(mapContainerRef.current).setView([center.lat, center.lng], 13);
+            leafletMapRef.current = (L as any).map(mapContainerRef.current).setView([center.lat, center.lng], 13);
             
             // Добавляем слой тайлов OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            (L as any).tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 maxZoom: 19
             }).addTo(leafletMapRef.current);
             
             // Добавляем обработчик события клика
-            leafletMapRef.current.on('click', async (e: L.LeafletMouseEvent) => {
+            leafletMapRef.current.on('click', async (e: any) => {
                 const { lat, lng } = e.latlng;
                 await handleMapClick({ latlng: { lat, lng } });
             });
@@ -366,7 +366,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, initi
             }
             
             // Создаем новый маркер
-            markerRef.current = L.marker([lat, lng], { draggable: true })
+            markerRef.current = (L as any).marker([lat, lng], { draggable: true })
                 .addTo(leafletMapRef.current)
                 .on('dragend', function(event) {
                     const marker = event.target;
@@ -495,7 +495,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, initi
                             leafletMapRef.current.removeLayer(markerRef.current);
                         }
                         
-                        markerRef.current = L.marker([suggestion.latitude, suggestion.longitude], { draggable: true })
+                        markerRef.current = (L as any).marker([suggestion.latitude, suggestion.longitude], { draggable: true })
                             .addTo(leafletMapRef.current)
                             .on('dragend', function(event) {
                                 const marker = event.target;
@@ -554,7 +554,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, initi
                                 leafletMapRef.current.removeLayer(markerRef.current);
                             }
                             
-                            markerRef.current = L.marker([result.latitude, result.longitude], { draggable: true })
+                            markerRef.current = (L as any).marker([result.latitude, result.longitude], { draggable: true })
                                 .addTo(leafletMapRef.current)
                                 .on('dragend', function(event) {
                                     const marker = event.target;
@@ -624,7 +624,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, initi
                         }
                         
                         // Создаем новый маркер
-                        markerRef.current = L.marker([latitude, longitude], { draggable: true })
+                        markerRef.current = (L as any).marker([latitude, longitude], { draggable: true })
                             .addTo(leafletMapRef.current)
                             .on('dragend', function(event) {
                                 const marker = event.target;
@@ -657,7 +657,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, initi
     };
 
     // Обработчик перетаскивания маркера
-    const handleMarkerDragEnd = async (e: { target: L.Marker }): Promise<void> => {
+    const handleMarkerDragEnd = async (e: { target: any }): Promise<void> => {
         const position = e.target.getLatLng();
         const lat = position.lat;
         const lng = position.lng;
