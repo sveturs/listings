@@ -96,8 +96,8 @@ services:
       - ./roundcube/config:/var/www/html/config
       - roundcube_data:/var/roundcube
     environment:
-      - ROUNDCUBEMAIL_DEFAULT_HOST=ssl://mailserver:993
-      - ROUNDCUBEMAIL_SMTP_SERVER=tls://mailserver:587
+      - ROUNDCUBEMAIL_DEFAULT_HOST=ssl://svetu.rs:993
+      - ROUNDCUBEMAIL_SMTP_SERVER=tls://svetu.rs:587
       - ROUNDCUBEMAIL_SMTP_PORT=587
       - ROUNDCUBEMAIL_PLUGINS=archive,zipdownload
       - ROUNDCUBEMAIL_DES_KEY=random-string-for-encryption
