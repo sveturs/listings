@@ -575,7 +575,11 @@ func (s *Storage) GetUserReviewVote(ctx context.Context, userId int, reviewId in
 func (s *Storage) GetEntityRating(ctx context.Context, entityType string, entityId int) (float64, error) {
 	var rating float64
 	err := s.pool.QueryRow(ctx, `
-        SELECT calculate_entity_rating($1, $2)
+        SELECT COALESCE(AVG(rating)::NUMERIC(3,2), 0)
+        FROM reviews
+        WHERE entity_type = $1
+        AND entity_id = $2
+        AND status = 'published'
     `, entityType, entityId).Scan(&rating)
 	return rating, err
 }
