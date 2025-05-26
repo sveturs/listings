@@ -1,0 +1,52 @@
+{
+  "navigation": {
+    "home": "Početna",
+    "listing": "Lista",
+    "marketplace": "Tržište"
+  },
+  "home": {
+    "title": "Dobrodošli na naše tržište",
+    "description": "Pronađite sjajne ponude na neverovatne proizvode",
+    "greeting": "Zdravo, svete!",
+    "viewListings": "Pregledaj sve oglase",
+    "featuredListings": "Istaknuti oglasi",
+    "noListingsAvailable": "Trenutno nema dostupnih oglasa",
+    "viewAllListings": "Pregledaj sve oglase"
+  },
+  "listing": {
+    "title": "Lista proizvoda",
+    "description": "Pregledajte naše proizvode",
+    "noItems": "Nema pronađenih stavki",
+    "item": "Stavka {number}"
+  },
+  "marketplace": {
+    "listings": {
+      "title": "Svi oglasi",
+      "searchPlaceholder": "Pretražite oglase...",
+      "found": "Pronađeno {count} oglasa",
+      "noListingsFound": "Nema pronađenih oglasa",
+      "locationNotSpecified": "Lokacija nije navedena",
+      "details": {
+        "goToStore": "Poseti prodavnicu",
+        "seller": {
+          "title": "Prodavac",
+          "inStore": "U prodavnici"
+        }
+      },
+      "status": {
+        "active": "Aktivan",
+        "inactive": "Neaktivan"
+      },
+      "priceHistory": {
+        "title": "Istorija cene"
+      }
+    }
+  },
+  "common": {
+    "changeLanguage": "Promeni jezik",
+    "currentLanguage": "Srpski",
+    "search": "Pretraži",
+    "loading": "Učitavanje...",
+    "error": "Došlo je do greške"
+  }
+}

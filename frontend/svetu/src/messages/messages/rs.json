@@ -1,0 +1,18 @@
+{
+  "home": {
+    "title": "Dobrodošli u Svetu",
+    "description": "Pronađite svoje savršeno mesto",
+    "viewListings": "Pogledaj oglase"
+  },
+  "listing": {
+    "title": "Detalji oglasa",
+    "backToHome": "Nazad na početnu",
+    "price": "Cena",
+    "location": "Lokacija",
+    "description": "Opis"
+  },
+  "nav": {
+    "home": "Početna",
+    "listings": "Oglasi"
+  }
+}
