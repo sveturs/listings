@@ -20,6 +20,25 @@
     "item": "Stavka {number}"
   },
   "marketplace": {
+    "title": "Tržište",
+    "filters": {
+      "title": "Filteri",
+      "category": "Kategorija",
+      "priceRange": "Raspon cena",
+      "price": "Cena",
+      "minPrice": "Min",
+      "maxPrice": "Maks",
+      "location": "Lokacija",
+      "distance": "Udaljenost",
+      "anyDistance": "Bilo koja udaljenost",
+      "condition": "Stanje",
+      "any": "Bilo koje",
+      "new": "Novo",
+      "used": "Polovino",
+      "apply": "Primeni filtere",
+      "reset": "Resetuj",
+      "map": "Mapa"
+    },
     "listings": {
       "title": "Svi oglasi",
       "searchPlaceholder": "Pretražite oglase...",
@@ -39,7 +58,10 @@
       },
       "priceHistory": {
         "title": "Istorija cene"
-      }
+      },
+      "loadMore": "Učitaj još",
+      "noMoreListings": "Nema više oglasa",
+      "error": "Greška pri učitavanju oglasa"
     }
   },
   "common": {

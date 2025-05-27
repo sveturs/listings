@@ -11,6 +11,19 @@ interface GetListingsParams {
   sort?: ListingSort;
 }
 
+interface SearchListingsParams {
+  q?: string;
+  category_id?: string;
+  min_price?: string;
+  max_price?: string;
+  condition?: string;
+  distance?: string;
+  location?: string;
+  page?: number;
+  size?: number;
+  sort_by?: string;
+}
+
 class ListingService {
   async getListings(params: GetListingsParams = {}): Promise<PaginatedResponse<Listing>> {
     const { page = 1, pageSize = 12, filters = {}, sort } = params;
@@ -83,6 +96,55 @@ class ListingService {
       `/marketplace/listings/${id}/similar?limit=${limit}`
     );
     return response.data;
+  }
+
+  async searchListings(params: SearchListingsParams = {}): Promise<PaginatedResponse<Listing>> {
+    const queryParams = new URLSearchParams();
+
+    // Add all search parameters
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    try {
+      const response = await apiClient.get(`/api/v1/marketplace/search?${queryParams.toString()}`);
+      
+      // Handle the response structure from the backend
+      if (response.data && response.data.data) {
+        const listings = Array.isArray(response.data.data) ? response.data.data : response.data.data.data || [];
+        const total = response.data.data.total || listings.length;
+        const totalPages = response.data.data.totalPages || Math.ceil(total / (params.size || 20));
+        
+        return {
+          items: listings,
+          total,
+          page: params.page || 1,
+          pageSize: params.size || 20,
+          totalPages
+        };
+      }
+      
+      // Fallback to empty response if structure is unexpected
+      return {
+        items: [],
+        total: 0,
+        page: params.page || 1,
+        pageSize: params.size || 20,
+        totalPages: 0
+      };
+    } catch (error) {
+      console.error('Error searching listings:', error);
+      // Return empty results on error
+      return {
+        items: [],
+        total: 0,
+        page: params.page || 1,
+        pageSize: params.size || 20,
+        totalPages: 0
+      };
+    }
   }
 }
 

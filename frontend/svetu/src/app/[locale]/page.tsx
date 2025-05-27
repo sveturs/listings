@@ -65,11 +65,11 @@ export default function HomePage() {
         {!loading && !error && (
           <>
             <ListingGrid 
-              listings={listings.slice(0, 6)} 
+              listings={listings?.slice(0, 6) || []} 
               emptyMessage={t('noListingsAvailable')}
             />
             
-            {listings.length > 0 && (
+            {listings && listings.length > 0 && (
               <Box sx={{ textAlign: 'center', mt: 4 }}>
                 <Button
                   component={Link}

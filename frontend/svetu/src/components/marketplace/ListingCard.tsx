@@ -29,13 +29,15 @@ interface ListingCardProps {
   isMobile?: boolean;
   onClick?: (listing: Listing) => void;
   showStatus?: boolean;
+  viewMode?: 'grid' | 'list';
 }
 
 const ListingCard: React.FC<ListingCardProps> = ({ 
   listing, 
   isMobile = false, 
   onClick, 
-  showStatus = false 
+  showStatus = false,
+  viewMode = 'grid'
 }) => {
   const t = useTranslations('marketplace');
   const router = useRouter();
@@ -194,6 +196,153 @@ const ListingCard: React.FC<ListingCardProps> = ({
     setIsPriceHistoryOpen(false);
   };
 
+  // List view layout
+  if (viewMode === 'list') {
+    return (
+      <>
+        <Card
+          sx={{
+            width: '100%',
+            display: 'flex',
+            transition: 'box-shadow 0.2s',
+            cursor: 'pointer',
+            '&:hover': {
+              boxShadow: 3
+            },
+            mb: 2
+          }}
+          onClick={handleCardClick}
+        >
+          <Box sx={{ position: 'relative', width: isMobile ? 100 : 200, flexShrink: 0 }}>
+            <CardMedia
+              component="img"
+              sx={{
+                width: '100%',
+                height: isMobile ? 100 : 150,
+                objectFit: 'cover'
+              }}
+              image={getImageUrl()}
+              alt={listing.title}
+            />
+            {/* Store badge */}
+            {isStoreItem() && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 5,
+                  left: 5,
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  borderRadius: '4px',
+                  padding: '2px 6px',
+                  fontSize: '0.65rem',
+                }}
+              >
+                <Store size={12} />
+              </Box>
+            )}
+          </Box>
+          
+          <CardContent sx={{ flex: 1, py: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h6" component="h2" sx={{ mb: 1, fontSize: '1rem' }}>
+                  {listing.title}
+                </Typography>
+                
+                <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <LocationIcon size={16} style={{ marginRight: 4 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      {listing.city || listing.location || t('listings.locationNotSpecified')}
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <AccessTime size={16} style={{ marginRight: 4 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      {formatDate(listing.created_at || listing.createdAt)}
+                    </Typography>
+                  </Box>
+                  
+                  {(listing.views_count !== undefined || listing.viewCount !== undefined) && (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Eye size={16} style={{ marginRight: 4 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        {listing.views_count || listing.viewCount}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+              
+              <Box sx={{ textAlign: 'right' }}>
+                <Typography variant="h6" component="div" color="primary" fontWeight="bold">
+                  {new Intl.NumberFormat('sr-RS', {
+                    style: 'currency',
+                    currency: listing.currency || 'RSD',
+                    maximumFractionDigits: 0
+                  }).format(listing.price)}
+                </Typography>
+                
+                {discountData && (
+                  <>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ textDecoration: 'line-through' }}
+                    >
+                      {new Intl.NumberFormat('sr-RS', {
+                        style: 'currency',
+                        currency: listing.currency || 'RSD',
+                        maximumFractionDigits: 0
+                      }).format(discountData.oldPrice)}
+                    </Typography>
+                    <Chip
+                      label={`-${discountData.percent}%`}
+                      size="small"
+                      color="error"
+                      sx={{ mt: 0.5 }}
+                    />
+                  </>
+                )}
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+        
+        {/* Price history modal */}
+        <Modal
+          open={isPriceHistoryOpen}
+          onClose={handleClosePriceHistory}
+          aria-labelledby="price-history-modal"
+          aria-describedby="price-history-modal-description"
+        >
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            border: '2px solid #000',
+            boxShadow: 24,
+            p: 4,
+          }}>
+            <Typography id="price-history-modal" variant="h6" component="h2">
+              {t('listings.priceHistory.title')}
+            </Typography>
+            <Typography id="price-history-modal-description" sx={{ mt: 2 }}>
+              {/* Price history chart component would go here */}
+              Price history chart placeholder
+            </Typography>
+          </Box>
+        </Modal>
+      </>
+    );
+  }
+
+  // Grid view layout (original)
   return (
     <>
       <Card

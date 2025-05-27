@@ -20,6 +20,25 @@
     "item": "Item {number}"
   },
   "marketplace": {
+    "title": "Marketplace",
+    "filters": {
+      "title": "Filters",
+      "category": "Category",
+      "priceRange": "Price Range",
+      "price": "Price",
+      "minPrice": "Min",
+      "maxPrice": "Max",
+      "location": "Location",
+      "distance": "Distance",
+      "anyDistance": "Any distance",
+      "condition": "Condition",
+      "any": "Any",
+      "new": "New",
+      "used": "Used",
+      "apply": "Apply Filters",
+      "reset": "Reset",
+      "map": "Map"
+    },
     "listings": {
       "title": "All Listings",
       "searchPlaceholder": "Search listings...",
@@ -39,7 +58,10 @@
       },
       "priceHistory": {
         "title": "Price History"
-      }
+      },
+      "loadMore": "Load more",
+      "noMoreListings": "No more listings",
+      "error": "Error loading listings"
     }
   },
   "common": {

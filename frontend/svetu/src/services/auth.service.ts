@@ -58,14 +58,14 @@ class AuthService {
 
       const response = await apiClient.get<ApiResponse<{ authenticated: boolean; user?: User }>>('/auth/session');
       
-      if (response.data.data.authenticated && response.data.data.user) {
+      if (response.data?.data?.authenticated && response.data?.data?.user) {
         // Save user session
         if (typeof window !== 'undefined') {
           localStorage.setItem('user_session', JSON.stringify(response.data.data.user));
         }
       }
       
-      return response.data.data;
+      return response.data?.data || { authenticated: false };
     } catch (error) {
       console.error('Error checking auth status:', error);
       return { authenticated: false };

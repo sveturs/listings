@@ -1,12 +1,17 @@
 {
   "navigation": {
     "home": "Главная",
-    "listing": "Список"
+    "listing": "Список",
+    "marketplace": "Маркетплейс"
   },
   "home": {
-    "title": "Добро пожаловать в наше многоязычное приложение",
-    "description": "Это содержимое главной страницы на русском языке",
-    "greeting": "Привет, мир!"
+    "title": "Добро пожаловать на наш маркетплейс",
+    "description": "Найдите отличные предложения на удивительные товары",
+    "greeting": "Привет, мир!",
+    "viewListings": "Посмотреть все объявления",
+    "featuredListings": "Избранные объявления",
+    "noListingsAvailable": "На данный момент нет доступных объявлений",
+    "viewAllListings": "Посмотреть все объявления"
   },
   "listing": {
     "title": "Список товаров",
@@ -16,6 +21,54 @@
   },
   "common": {
     "changeLanguage": "Изменить язык",
-    "currentLanguage": "Русский"
+    "currentLanguage": "Русский",
+    "search": "Поиск",
+    "loading": "Загрузка...",
+    "error": "Произошла ошибка"
+  },
+  "marketplace": {
+    "title": "Маркетплейс",
+    "filters": {
+      "title": "Фильтры",
+      "category": "Категория",
+      "priceRange": "Диапазон цен",
+      "price": "Цена",
+      "minPrice": "Мин",
+      "maxPrice": "Макс",
+      "location": "Местоположение",
+      "distance": "Расстояние",
+      "anyDistance": "Любое расстояние",
+      "condition": "Состояние",
+      "any": "Любое",
+      "new": "Новое",
+      "used": "Б/у",
+      "apply": "Применить фильтры",
+      "reset": "Сбросить",
+      "map": "Карта"
+    },
+    "listings": {
+      "title": "Все объявления",
+      "searchPlaceholder": "Поиск объявлений...",
+      "found": "{count} объявлений найдено",
+      "noListingsFound": "Объявления не найдены",
+      "locationNotSpecified": "Местоположение не указано",
+      "details": {
+        "goToStore": "Посетить магазин",
+        "seller": {
+          "title": "Продавец",
+          "inStore": "В магазине"
+        }
+      },
+      "status": {
+        "active": "Активно",
+        "inactive": "Неактивно"
+      },
+      "priceHistory": {
+        "title": "История цен"
+      },
+      "loadMore": "Загрузить ещё",
+      "noMoreListings": "Больше нет объявлений",
+      "error": "Ошибка загрузки объявлений"
+    }
   }
 }
