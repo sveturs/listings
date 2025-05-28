@@ -58,12 +58,14 @@
         "inactive": "Inactive"
       },
       "priceHistory": {
-        "title": "Price History"
+        "title": "Price History",
+        "chartPlaceholder": "Price history chart will appear here"
       },
       "loadMore": "Load more",
       "noMoreListings": "No more listings",
       "error": "Error loading listings",
-      "listingsDisplayed": "listings displayed"
+      "listingsDisplayed": "listings displayed",
+      "showingXofY": "Showing {displayed} of {total}"
     }
   },
   "common": {

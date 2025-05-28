@@ -97,7 +97,7 @@ export default function MarketplacePage() {
         {/* Listings Grid */}
         <Grid size={{ xs: 12, md: 9 }}>
           <Typography variant="h4" component="h1" gutterBottom>
-            {t('title')}
+            {t('listings.title')}
           </Typography>
           <Suspense fallback={<Loading />}>
             <ListingGrid 

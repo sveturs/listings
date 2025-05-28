@@ -65,12 +65,14 @@
         "inactive": "Неактивно"
       },
       "priceHistory": {
-        "title": "История цен"
+        "title": "История цен",
+        "chartPlaceholder": "График истории цен появится здесь"
       },
       "loadMore": "Загрузить ещё",
       "noMoreListings": "Больше нет объявлений",
       "error": "Ошибка загрузки объявлений",
-      "listingsDisplayed": "объявлений отображено"
+      "listingsDisplayed": "объявлений отображено",
+      "showingXofY": "Показано {displayed} из {total}"
     }
   }
 }

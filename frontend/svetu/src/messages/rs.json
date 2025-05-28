@@ -58,12 +58,14 @@
         "inactive": "Neaktivan"
       },
       "priceHistory": {
-        "title": "Istorija cene"
+        "title": "Istorija cene",
+        "chartPlaceholder": "Grafik istorije cena će se pojaviti ovde"
       },
       "loadMore": "Učitaj još",
       "noMoreListings": "Nema više oglasa",
       "error": "Greška pri učitavanju oglasa",
-      "listingsDisplayed": "oglasa prikazano"
+      "listingsDisplayed": "oglasa prikazano",
+      "showingXofY": "Prikazano {displayed} od {total}"
     }
   },
   "common": {

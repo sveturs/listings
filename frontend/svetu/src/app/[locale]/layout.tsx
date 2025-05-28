@@ -13,7 +13,7 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
   const messages = await getMessages();
-  const t = await getTranslations('navigation');
+  const t = await getTranslations({ locale, namespace: 'navigation' });
 
   return (
     <NextIntlClientProvider messages={messages}>

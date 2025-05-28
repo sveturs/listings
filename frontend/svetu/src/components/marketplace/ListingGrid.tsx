@@ -185,7 +185,7 @@ export default function ListingGrid({ viewMode = 'grid', searchQuery = '', filte
         {isFetchingNextPage && <CircularProgress />}
         {!hasNextPage && allListings.length > 0 && (
           <p className="text-gray-500">
-            {t('noMoreListings')} (Showing {displayedCount} of {totalCount})
+            {t('noMoreListings')} ({t('showingXofY', { displayed: displayedCount, total: totalCount })})
           </p>
         )}
       </Box>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, MouseEvent } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { 
   MapPin as LocationIcon, 
@@ -40,6 +40,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
   viewMode = 'grid'
 }) => {
   const t = useTranslations('marketplace');
+  const locale = useLocale();
   const router = useRouter();
   const [, setStoreName] = useState<string>(t('listings.details.seller.title'));
   const [isPriceHistoryOpen, setIsPriceHistoryOpen] = useState<boolean>(false);
@@ -137,7 +138,6 @@ const ListingCard: React.FC<ListingCardProps> = ({
     if (!dateString) return '';
     try {
       const date = new Date(dateString);
-      const locale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : 'en';
       return date.toLocaleDateString(locale);
     } catch {
       return dateString;
@@ -299,7 +299,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
               
               <Box sx={{ textAlign: 'right' }}>
                 <Typography variant="h6" component="div" color="primary" fontWeight="bold">
-                  {new Intl.NumberFormat('sr-RS', {
+                  {new Intl.NumberFormat(locale, {
                     style: 'currency',
                     currency: listing.currency || 'RSD',
                     maximumFractionDigits: 0
@@ -313,7 +313,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                       color="text.secondary"
                       sx={{ textDecoration: 'line-through' }}
                     >
-                      {new Intl.NumberFormat('sr-RS', {
+                      {new Intl.NumberFormat(locale, {
                         style: 'currency',
                         currency: listing.currency || 'RSD',
                         maximumFractionDigits: 0
@@ -355,7 +355,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             </Typography>
             <Typography id="price-history-modal-description" sx={{ mt: 2 }}>
               {/* Price history chart component would go here */}
-              Price history chart placeholder
+              {t('listings.priceHistory.chartPlaceholder')}
             </Typography>
           </Box>
         </Modal>
@@ -518,7 +518,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
               fontWeight="bold"
               sx={{ fontSize: isMobile ? '1rem' : '1.25rem' }}
             >
-              {new Intl.NumberFormat('sr-RS', {
+              {new Intl.NumberFormat(locale, {
                 style: 'currency',
                 currency: listing.currency || 'RSD',
                 maximumFractionDigits: 0
@@ -535,7 +535,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                   fontSize: isMobile ? '0.75rem' : '0.875rem'
                 }}
               >
-                {new Intl.NumberFormat('sr-RS', {
+                {new Intl.NumberFormat(locale, {
                   style: 'currency',
                   currency: listing.currency || 'RSD',
                   maximumFractionDigits: 0
