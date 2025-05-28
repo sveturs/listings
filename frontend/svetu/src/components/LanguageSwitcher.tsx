@@ -12,7 +12,9 @@ export default function LanguageSwitcher({ currentLocale }: { currentLocale: str
     const newPath = `/${newLocale}${pathnameWithoutLocale ? `/${pathnameWithoutLocale}` : ''}`;
     
     document.cookie = `locale=${newLocale};path=/;max-age=31536000`;
-    router.push(newPath);
+    
+    // Force full page reload to ensure all translations are updated
+    window.location.href = newPath;
   };
 
   return (

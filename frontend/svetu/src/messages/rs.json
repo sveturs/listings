@@ -62,7 +62,8 @@
       },
       "loadMore": "Učitaj još",
       "noMoreListings": "Nema više oglasa",
-      "error": "Greška pri učitavanju oglasa"
+      "error": "Greška pri učitavanju oglasa",
+      "listingsDisplayed": "oglasa prikazano"
     }
   },
   "common": {

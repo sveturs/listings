@@ -62,7 +62,8 @@
       },
       "loadMore": "Load more",
       "noMoreListings": "No more listings",
-      "error": "Error loading listings"
+      "error": "Error loading listings",
+      "listingsDisplayed": "listings displayed"
     }
   },
   "common": {

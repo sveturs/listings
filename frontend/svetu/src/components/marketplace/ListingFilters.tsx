@@ -18,6 +18,7 @@ import {
   Divider
 } from '@mui/material';
 import { useTranslations, useLocale } from 'next-intl';
+import { useParams } from 'next/navigation';
 import { categoryService, Category } from '@/services/category.service';
 
 interface FilterProps {
@@ -26,7 +27,71 @@ interface FilterProps {
 
 export default function ListingFilters({ onFiltersChange }: FilterProps) {
   const t = useTranslations('marketplace.filters');
-  const locale = useLocale();
+  const nextIntlLocale = useLocale();
+  const params = useParams();
+  
+  // Get locale from URL params, fallback to next-intl locale
+  const locale = (params?.locale as string) || nextIntlLocale || 'en';
+  
+  // Manual translations object since useTranslations is not working with proper locale
+  const manualTranslations = {
+    en: {
+      title: 'Filters',
+      category: 'Category',
+      allCategories: 'All Categories',
+      price: 'Price',
+      minPrice: 'Min',
+      maxPrice: 'Max',
+      distance: 'Distance',
+      anyDistance: 'Any distance',
+      location: 'Location',
+      condition: 'Condition',
+      any: 'Any',
+      new: 'New',
+      used: 'Used',
+      apply: 'Apply Filters',
+      reset: 'Reset',
+      map: 'Map'
+    },
+    ru: {
+      title: 'Фильтры',
+      category: 'Категория',
+      allCategories: 'Все категории',
+      price: 'Цена',
+      minPrice: 'Мин',
+      maxPrice: 'Макс',
+      distance: 'Расстояние',
+      anyDistance: 'Любое расстояние',
+      location: 'Местоположение',
+      condition: 'Состояние',
+      any: 'Любое',
+      new: 'Новое',
+      used: 'Б/у',
+      apply: 'Применить фильтры',
+      reset: 'Сбросить',
+      map: 'Карта'
+    },
+    rs: {
+      title: 'Filteri',
+      category: 'Kategorija',
+      allCategories: 'Sve kategorije',
+      price: 'Cena',
+      minPrice: 'Min',
+      maxPrice: 'Maks',
+      distance: 'Udaljenost',
+      anyDistance: 'Bilo koja udaljenost',
+      location: 'Lokacija',
+      condition: 'Stanje',
+      any: 'Bilo koje',
+      new: 'Novo',
+      used: 'Polovino',
+      apply: 'Primeni filtere',
+      reset: 'Resetuj',
+      map: 'Mapa'
+    }
+  };
+  
+  const translations = manualTranslations[locale as keyof typeof manualTranslations] || manualTranslations.en;
   const [priceRange, setPriceRange] = useState<number[]>([0, 5000]);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -99,20 +164,20 @@ export default function ListingFilters({ onFiltersChange }: FilterProps) {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>
-        {t('title')}
+        {translations.title}
       </Typography>
 
       <Box sx={{ mt: 3 }}>
         {/* Category Filter */}
         <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel>{t('category')}</InputLabel>
+          <InputLabel>{translations.category}</InputLabel>
           <Select
             value={category}
-            label={t('category')}
+            label={translations.category}
             onChange={(e) => setCategory(e.target.value)}
             disabled={loading}
           >
-            <MenuItem value="">{t('allCategories') || 'All Categories'}</MenuItem>
+            <MenuItem value="">{translations.allCategories}</MenuItem>
             {categories.map((cat, index) => (
               <MenuItem key={`cat-${cat.id}-${index}`} value={cat.id.toString()}>
                 {'—'.repeat(Math.max(0, cat.level - 1))} {categoryService.getCategoryName(cat, locale)}
@@ -125,10 +190,10 @@ export default function ListingFilters({ onFiltersChange }: FilterProps) {
 
         {/* Price Filter */}
         <Box sx={{ mb: 3 }}>
-          <Typography gutterBottom>{t('price')}</Typography>
+          <Typography gutterBottom>{translations.price}</Typography>
           <Box display="flex" gap={2} mb={2}>
             <TextField
-              label={t('minPrice')}
+              label={translations.minPrice}
               type="number"
               value={minPrice}
               onChange={(e) => handleMinPriceChange(e.target.value)}
@@ -136,7 +201,7 @@ export default function ListingFilters({ onFiltersChange }: FilterProps) {
               fullWidth
             />
             <TextField
-              label={t('maxPrice')}
+              label={translations.maxPrice}
               type="number"
               value={maxPrice}
               onChange={(e) => handleMaxPriceChange(e.target.value)}
@@ -157,13 +222,13 @@ export default function ListingFilters({ onFiltersChange }: FilterProps) {
 
         {/* Distance Filter */}
         <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel>{t('distance')}</InputLabel>
+          <InputLabel>{translations.distance}</InputLabel>
           <Select
             value={distance}
-            label={t('distance')}
+            label={translations.distance}
             onChange={(e) => setDistance(e.target.value)}
           >
-            <MenuItem value="">{t('anyDistance')}</MenuItem>
+            <MenuItem value="">{translations.anyDistance}</MenuItem>
             <MenuItem value="5">5 km</MenuItem>
             <MenuItem value="10">10 km</MenuItem>
             <MenuItem value="25">25 km</MenuItem>
@@ -175,7 +240,7 @@ export default function ListingFilters({ onFiltersChange }: FilterProps) {
         {/* Location */}
         <TextField
           fullWidth
-          label={t('location')}
+          label={translations.location}
           variant="outlined"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
@@ -186,14 +251,14 @@ export default function ListingFilters({ onFiltersChange }: FilterProps) {
 
         {/* Condition Filter */}
         <Box sx={{ mb: 3 }}>
-          <Typography gutterBottom>{t('condition')}</Typography>
+          <Typography gutterBottom>{translations.condition}</Typography>
           <RadioGroup
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
           >
-            <FormControlLabel value="" control={<Radio />} label={t('any')} />
-            <FormControlLabel value="new" control={<Radio />} label={t('new')} />
-            <FormControlLabel value="used" control={<Radio />} label={t('used')} />
+            <FormControlLabel value="" control={<Radio />} label={translations.any} />
+            <FormControlLabel value="new" control={<Radio />} label={translations.new} />
+            <FormControlLabel value="used" control={<Radio />} label={translations.used} />
           </RadioGroup>
         </Box>
 
@@ -205,13 +270,13 @@ export default function ListingFilters({ onFiltersChange }: FilterProps) {
             color="primary"
             onClick={handleApply}
           >
-            {t('apply')}
+            {translations.apply}
           </Button>
           <Button 
             variant="outlined" 
             onClick={handleReset}
           >
-            {t('reset')}
+            {translations.reset}
           </Button>
         </Box>
       </Box>
