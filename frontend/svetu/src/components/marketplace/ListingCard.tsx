@@ -151,7 +151,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
     }
 
     const firstImage = listing.images[0] as string | ListingImage;
-    const baseUrl = process.env.NEXT_PUBLIC_MINIO_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const minioUrl = process.env.NEXT_PUBLIC_MINIO_URL || 'http://localhost:9000';
 
     if (typeof firstImage === 'string') {
       if (firstImage.startsWith('http')) {
@@ -162,25 +163,45 @@ const ListingCard: React.FC<ListingCardProps> = ({
     }
 
     if (firstImage && typeof firstImage === 'object') {
+      // For MinIO storage, use direct MinIO URL
+      if (firstImage.storage_type === 'minio') {
+        if (firstImage.public_url && firstImage.public_url.startsWith('/listings/')) {
+          // Direct MinIO URL for listings
+          return `${minioUrl}${firstImage.public_url}`;
+        } else if (firstImage.file_path) {
+          // Construct MinIO URL from file path
+          return `${minioUrl}/listings/${firstImage.file_path}`;
+        }
+      }
+
       if (firstImage.public_url) {
         if (firstImage.public_url.startsWith('http')) {
           return firstImage.public_url;
+        } else if (firstImage.public_url.startsWith('/listings/')) {
+          // This is likely a MinIO path
+          return `${minioUrl}${firstImage.public_url}`;
         } else {
           return `${baseUrl}${firstImage.public_url}`;
         }
       }
 
-      if (firstImage.storage_type === 'minio' ||
-          (firstImage.file_path && firstImage.file_path.includes('listings/'))) {
-        return `${baseUrl}${firstImage.public_url}`;
-      }
-
       if (firstImage.file_path) {
-        return `${baseUrl}/uploads/${firstImage.file_path}`;
+        // Check if it's a listing image pattern
+        if (firstImage.file_path.match(/^\d+/) || firstImage.file_path.includes('_image_')) {
+          return `${minioUrl}/listings/${firstImage.file_path}`;
+        }
+        
+        return firstImage.file_path.startsWith('/') 
+          ? `${baseUrl}${firstImage.file_path}`
+          : `${baseUrl}/uploads/${firstImage.file_path}`;
       }
 
       if (firstImage.url) {
-        return firstImage.url;
+        return firstImage.url.startsWith('http') 
+          ? firstImage.url
+          : firstImage.url.startsWith('/')
+            ? `${baseUrl}${firstImage.url}`
+            : `${baseUrl}/${firstImage.url}`;
       }
     }
 

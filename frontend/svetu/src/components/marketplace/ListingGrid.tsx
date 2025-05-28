@@ -30,7 +30,8 @@ export default function ListingGrid({ viewMode = 'grid', searchQuery = '', filte
     q: searchQuery,
     ...filters,
     page: 1,
-    size: 20
+    size: 20, // Changed from 25 to match backend pagination
+    sort_by: 'date_desc'
   };
 
   // Use infinite query for pagination
@@ -48,8 +49,23 @@ export default function ListingGrid({ viewMode = 'grid', searchQuery = '', filte
         ...queryParams,
         page: pageParam
       }),
-    getNextPageParam: (lastPage) => {
-      if (lastPage.page < lastPage.totalPages) {
+    getNextPageParam: (lastPage, allPages) => {
+      console.log('Pagination debug:', {
+        currentPage: lastPage.page,
+        totalPages: lastPage.totalPages,
+        total: lastPage.total,
+        pageSize: lastPage.pageSize,
+        itemsInPage: lastPage.items?.length || 0,
+        allPagesCount: allPages.length,
+        totalItemsSoFar: allPages.reduce((acc, page) => acc + page.items.length, 0)
+      });
+      
+      // Check if there are more pages
+      // Handle both 0-based and 1-based pagination
+      const hasMorePages = lastPage.page < lastPage.totalPages;
+      const hasMoreItems = lastPage.items.length === lastPage.pageSize;
+      
+      if (hasMorePages || (hasMoreItems && lastPage.totalPages === 0)) {
         return lastPage.page + 1;
       }
       return undefined;
@@ -59,9 +75,17 @@ export default function ListingGrid({ viewMode = 'grid', searchQuery = '', filte
 
   // Infinite scroll observer
   useEffect(() => {
+    console.log('Infinite scroll state:', {
+      hasNextPage,
+      isFetchingNextPage,
+      totalPages: data?.pages?.length || 0,
+      lastPage: data?.pages?.[data.pages.length - 1]
+    });
+    
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          console.log('Triggering fetchNextPage');
           fetchNextPage();
         }
       },
@@ -117,11 +141,17 @@ export default function ListingGrid({ viewMode = 'grid', searchQuery = '', filte
   }
 
   const totalCount = data?.pages[0]?.total || 0;
+  const displayedCount = allListings.length;
 
   return (
     <>
       <Box mb={2}>
-        <p className="text-gray-600">{t('found', { count: totalCount })}</p>
+        <p className="text-gray-600">
+          {totalCount > 0 
+            ? t('found', { count: totalCount })
+            : `${displayedCount} ${t('listingsDisplayed')}`
+          }
+        </p>
       </Box>
       
       {viewMode === 'grid' ? (
@@ -154,7 +184,9 @@ export default function ListingGrid({ viewMode = 'grid', searchQuery = '', filte
       <Box ref={loadMoreRef} sx={{ mt: 4, textAlign: 'center' }}>
         {isFetchingNextPage && <CircularProgress />}
         {!hasNextPage && allListings.length > 0 && (
-          <p className="text-gray-500">{t('noMoreListings')}</p>
+          <p className="text-gray-500">
+            {t('noMoreListings')} (Showing {displayedCount} of {totalCount})
+          </p>
         )}
       </Box>
 

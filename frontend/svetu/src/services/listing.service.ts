@@ -2,7 +2,7 @@ import { apiClient } from '@/lib/api-client';
 import { Listing, ListingFilters, ListingSort, PaginatedResponse } from '@/types/listing';
 import { getMockListings, getMockListingById } from '@/lib/mock-data';
 
-const USE_MOCK_DATA = process.env.NODE_ENV === 'development';
+const USE_MOCK_DATA = false; // Always use real API
 
 interface GetListingsParams {
   page?: number;
@@ -101,8 +101,16 @@ class ListingService {
   async searchListings(params: SearchListingsParams = {}): Promise<PaginatedResponse<Listing>> {
     const queryParams = new URLSearchParams();
 
+    // Set default values
+    const searchParams = {
+      sort_by: 'date_desc',
+      page: 1,
+      size: 20, // Changed from 25 to match typical pagination
+      ...params
+    };
+
     // Add all search parameters
-    Object.entries(params).forEach(([key, value]) => {
+    Object.entries(searchParams).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         queryParams.append(key, value.toString());
       }
@@ -110,34 +118,60 @@ class ListingService {
 
     try {
       const response = await apiClient.get<{
-        data?: {
-          data?: Listing[];
+        data?: Listing[];
+        meta?: {
           total?: number;
-          totalPages?: number;
-        }
+          total_pages?: number;
+          page?: number;
+          size?: number;
+          has_more?: boolean;
+        };
       }>(`/api/v1/marketplace/search?${queryParams.toString()}`);
       
+      console.log('API Response:', {
+        url: `/api/v1/marketplace/search?${queryParams.toString()}`,
+        responseData: response.data,
+        meta: response.data?.meta
+      });
+      
       // Handle the response structure from the backend
-      if (response.data && response.data.data) {
-        const listings = Array.isArray(response.data.data) ? response.data.data : response.data.data.data || [];
-        const total = response.data.data.total || listings.length;
-        const totalPages = response.data.data.totalPages || Math.ceil(total / (params.size || 20));
+      if (response.data) {
+        const listings = response.data.data || [];
+        const meta = response.data.meta || {};
+        const total = meta.total || listings.length;
+        const currentPage = meta.page || searchParams.page;
+        const pageSize = meta.size || searchParams.size;
         
-        return {
+        // Calculate totalPages correctly
+        // If backend provides total_pages, use it; otherwise calculate it
+        let totalPages = meta.total_pages;
+        if (!totalPages && total > 0) {
+          totalPages = Math.ceil(total / pageSize);
+        }
+        
+        const result = {
           items: listings,
           total,
-          page: params.page || 1,
-          pageSize: params.size || 20,
-          totalPages
+          page: currentPage,
+          pageSize: pageSize,
+          totalPages: totalPages || 0
         };
+        
+        console.log('Processed result:', {
+          ...result,
+          calculatedTotalPages: Math.ceil(total / pageSize),
+          metaTotalPages: meta.total_pages,
+          hasMore: meta.has_more
+        });
+        return result;
       }
       
       // Fallback to empty response if structure is unexpected
       return {
         items: [],
         total: 0,
-        page: params.page || 1,
-        pageSize: params.size || 20,
+        page: searchParams.page,
+        pageSize: searchParams.size,
         totalPages: 0
       };
     } catch (error) {
@@ -146,8 +180,8 @@ class ListingService {
       return {
         items: [],
         total: 0,
-        page: params.page || 1,
-        pageSize: params.size || 20,
+        page: searchParams.page,
+        pageSize: searchParams.size,
         totalPages: 0
       };
     }
