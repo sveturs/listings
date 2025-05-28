@@ -5,15 +5,14 @@ import { useTranslations } from 'next-intl';
 import { 
   Box, 
   Container, 
-  Grid, 
   TextField, 
   InputAdornment,
   ToggleButtonGroup,
   ToggleButton,
   Button,
-  Typography,
-  Paper
+  Typography
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { Search, Grid as GridIcon, List, Map } from 'lucide-react';
 import ListingGrid from '@/components/marketplace/ListingGrid';
 import ListingFilters from '@/components/marketplace/ListingFilters';
@@ -38,7 +37,7 @@ export default function MarketplacePage() {
     setSearchQuery(event.target.value);
   };
 
-  const handleFiltersChange = (newFilters: any) => {
+  const handleFiltersChange = (newFilters: Record<string, unknown>) => {
     setFilters(newFilters);
   };
   
@@ -47,7 +46,7 @@ export default function MarketplacePage() {
       {/* Search Bar and View Controls */}
       <Box sx={{ mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
               placeholder={t('listings.searchPlaceholder')}
@@ -62,7 +61,7 @@ export default function MarketplacePage() {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
               <Button 
                 variant="outlined" 
@@ -91,12 +90,12 @@ export default function MarketplacePage() {
 
       <Grid container spacing={3}>
         {/* Filters Sidebar */}
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ListingFilters onFiltersChange={handleFiltersChange} />
         </Grid>
         
         {/* Listings Grid */}
-        <Grid item xs={12} md={9}>
+        <Grid size={{ xs: 12, md: 9 }}>
           <Typography variant="h4" component="h1" gutterBottom>
             {t('title')}
           </Typography>

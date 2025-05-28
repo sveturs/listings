@@ -1,8 +1,8 @@
 'use client';
 
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { listingService } from '@/services/listing.service';
 import ListingCard from './ListingCard';
 import { 
@@ -18,7 +18,7 @@ import {
 interface ListingGridProps {
   viewMode?: 'grid' | 'list';
   searchQuery?: string;
-  filters?: any;
+  filters?: Record<string, unknown>;
 }
 
 export default function ListingGrid({ viewMode = 'grid', searchQuery = '', filters = {} }: ListingGridProps) {
@@ -48,7 +48,7 @@ export default function ListingGrid({ viewMode = 'grid', searchQuery = '', filte
         ...queryParams,
         page: pageParam
       }),
-    getNextPageParam: (lastPage, pages) => {
+    getNextPageParam: (lastPage) => {
       if (lastPage.page < lastPage.totalPages) {
         return lastPage.page + 1;
       }

@@ -109,7 +109,13 @@ class ListingService {
     });
 
     try {
-      const response = await apiClient.get(`/api/v1/marketplace/search?${queryParams.toString()}`);
+      const response = await apiClient.get<{
+        data?: {
+          data?: Listing[];
+          total?: number;
+          totalPages?: number;
+        }
+      }>(`/api/v1/marketplace/search?${queryParams.toString()}`);
       
       // Handle the response structure from the backend
       if (response.data && response.data.data) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { 
   Paper, 
   Typography, 
@@ -20,7 +20,7 @@ import {
 import { useTranslations } from 'next-intl';
 
 interface FilterProps {
-  onFiltersChange: (filters: any) => void;
+  onFiltersChange: (filters: Record<string, unknown>) => void;
 }
 
 export default function ListingFilters({ onFiltersChange }: FilterProps) {
