@@ -37,7 +37,8 @@
       "used": "Used",
       "apply": "Apply Filters",
       "reset": "Reset",
-      "map": "Map"
+      "map": "Map",
+      "allCategories": "All Categories"
     },
     "listings": {
       "title": "All Listings",

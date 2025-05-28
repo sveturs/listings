@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { 
   Paper, 
   Typography, 
@@ -17,7 +17,8 @@ import {
   Radio,
   Divider
 } from '@mui/material';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { categoryService, Category } from '@/services/category.service';
 
 interface FilterProps {
   onFiltersChange: (filters: Record<string, unknown>) => void;
@@ -25,6 +26,7 @@ interface FilterProps {
 
 export default function ListingFilters({ onFiltersChange }: FilterProps) {
   const t = useTranslations('marketplace.filters');
+  const locale = useLocale();
   const [priceRange, setPriceRange] = useState<number[]>([0, 5000]);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -32,6 +34,24 @@ export default function ListingFilters({ onFiltersChange }: FilterProps) {
   const [condition, setCondition] = useState('');
   const [distance, setDistance] = useState('');
   const [location, setLocation] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      setLoading(true);
+      try {
+        const categoryTree = await categoryService.getCategoryTree();
+        setCategories(categoryService.flattenCategories(categoryTree));
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const handlePriceChange = (event: Event, newValue: number | number[]) => {
     setPriceRange(newValue as number[]);
@@ -90,13 +110,14 @@ export default function ListingFilters({ onFiltersChange }: FilterProps) {
             value={category}
             label={t('category')}
             onChange={(e) => setCategory(e.target.value)}
+            disabled={loading}
           >
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="electronics">Electronics</MenuItem>
-            <MenuItem value="furniture">Furniture</MenuItem>
-            <MenuItem value="clothing">Clothing</MenuItem>
-            <MenuItem value="real_estate">Real Estate</MenuItem>
-            <MenuItem value="other">Other</MenuItem>
+            <MenuItem value="">{t('allCategories') || 'All Categories'}</MenuItem>
+            {categories.map((cat, index) => (
+              <MenuItem key={`cat-${cat.id}-${index}`} value={cat.id.toString()}>
+                {'—'.repeat(Math.max(0, cat.level - 1))} {categoryService.getCategoryName(cat, locale)}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
