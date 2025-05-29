@@ -1,0 +1,78 @@
+{
+  "navigation": {
+    "home": "Home",
+    "listing": "Listing",
+    "marketplace": "Marketplace"
+  },
+  "home": {
+    "title": "Welcome to our marketplace",
+    "description": "Find great deals on amazing products",
+    "greeting": "Hello, world!",
+    "viewListings": "View All Listings",
+    "featuredListings": "Featured Listings",
+    "noListingsAvailable": "No listings available at the moment",
+    "viewAllListings": "View All Listings"
+  },
+  "listing": {
+    "title": "Product Listing",
+    "description": "Browse our products",
+    "noItems": "No items found",
+    "item": "Item {number}"
+  },
+  "marketplace": {
+    "title": "Marketplace",
+    "filters": {
+      "title": "Filters",
+      "category": "Category",
+      "priceRange": "Price Range",
+      "price": "Price",
+      "minPrice": "Min",
+      "maxPrice": "Max",
+      "location": "Location",
+      "distance": "Distance",
+      "anyDistance": "Any distance",
+      "condition": "Condition",
+      "any": "Any",
+      "new": "New",
+      "used": "Used",
+      "apply": "Apply Filters",
+      "reset": "Reset",
+      "map": "Map",
+      "allCategories": "All Categories"
+    },
+    "listings": {
+      "title": "All Listings",
+      "searchPlaceholder": "Search listings...",
+      "found": "{count} listings found",
+      "noListingsFound": "No listings found",
+      "locationNotSpecified": "Location not specified",
+      "details": {
+        "goToStore": "Visit Store",
+        "seller": {
+          "title": "Seller",
+          "inStore": "In Store"
+        }
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "priceHistory": {
+        "title": "Price History",
+        "chartPlaceholder": "Price history chart will appear here"
+      },
+      "loadMore": "Load more",
+      "noMoreListings": "No more listings",
+      "error": "Error loading listings",
+      "listingsDisplayed": "listings displayed",
+      "showingXofY": "Showing {displayed} of {total}"
+    }
+  },
+  "common": {
+    "changeLanguage": "Change language",
+    "currentLanguage": "English",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "An error occurred"
+  }
+}

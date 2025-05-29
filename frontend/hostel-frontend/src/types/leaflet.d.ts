@@ -14,6 +14,20 @@ declare module 'leaflet' {
   export function canvas(options?: RendererOptions): Canvas;
   export function point(x: number, y: number, round?: boolean): Point;
   
+  // Экспортируем дополнительные типы
+  export class LatLngBounds {
+    extend(latlng: LatLngExpression | LatLngBoundsExpression): this;
+    getCenter(): LatLng;
+    getSouthWest(): LatLng;
+    getNorthEast(): LatLng;
+  }
+  
+  export interface Handler {
+    enable(): this;
+    disable(): this;
+    enabled(): boolean;
+  }
+  
   export const control: {
     zoom(options?: Control.ZoomOptions): Control.Zoom;
   };
@@ -23,14 +37,83 @@ declare module 'leaflet' {
     updateWhenZooming?: boolean;
     updateWhenIdle?: boolean;
     wheelDebounceTime?: number;
+    zoomAnimation?: boolean;
+    fadeAnimation?: boolean;
+    markerZoomAnimation?: boolean;
+    zoom?: number;
+    center?: LatLngExpression;
+    zoomSnap?: number;
+    zoomDelta?: number;
+    wheelPxPerZoomLevel?: number;
+    preferCanvas?: boolean;
+    renderer?: Renderer;
+    scrollWheelZoom?: boolean;
+    dragging?: boolean;
+    touchZoom?: boolean;
+    doubleClickZoom?: boolean;
+    boxZoom?: boolean;
+    keyboard?: boolean;
+    zoomControl?: boolean;
+    attributionControl?: boolean;
+    tap?: boolean;
+    tapTolerance?: number;
+    bounceAtZoomLimits?: boolean;
+    transform3DLimit?: number;
+    inertia?: boolean;
+    inertiaDeceleration?: number;
+    inertiaMaxSpeed?: number;
+    worldCopyJump?: boolean;
+    maxZoom?: number;
+    minZoom?: number;
+    updateInterval?: number;
   }
 
   // Экспортируем классы для instanceof проверок
-  export class Map {}
-  export class Marker {}
-  export class LayerGroup {}
-  export class FeatureGroup {}
-  export class TileLayer {}
+  export class Map {
+    addLayer(layer: Layer): this;
+    removeLayer(layer: Layer): this;
+    hasLayer(layer: Layer): boolean;
+    setView(center: LatLngExpression, zoom?: number, options?: ZoomPanOptions): this;
+    fitBounds(bounds: LatLngBoundsExpression, options?: FitBoundsOptions): this;
+    getBounds(): LatLngBounds;
+    getCenter(): LatLng;
+    getZoom(): number;
+    on(type: string, fn: Function, context?: any): this;
+    off(type: string, fn?: Function, context?: any): this;
+    invalidateSize(options?: boolean | InvalidateSizeOptions): this;
+    eachLayer(fn: (layer: Layer) => void, context?: any): this;
+    remove(): this;
+    whenReady(fn: () => void, context?: any): this;
+    dragging: Handler;
+  }
+  
+  export class Marker {
+    addTo(map: Map | LayerGroup): this;
+    bindPopup(content: string | HTMLElement | Function | Popup, options?: PopupOptions): this;
+    bindTooltip(content: string | HTMLElement | Function | Tooltip, options?: TooltipOptions): this;
+    openPopup(): this;
+    on(type: string, fn: Function, context?: any): this;
+    getLatLng(): LatLng;
+    setLatLng(latlng: LatLngExpression): this;
+  }
+  
+  export class LayerGroup {
+    addLayer(layer: Layer): this;
+    removeLayer(layer: Layer): this;
+    clearLayers(): this;
+    addTo(map: Map | LayerGroup): this;
+  }
+  
+  export class FeatureGroup extends LayerGroup {
+    getBounds(): LatLngBounds;
+    addLayer(layer: Layer): this;
+    getLayers(): Layer[];
+  }
+  
+  export class TileLayer {
+    addTo(map: Map | LayerGroup): this;
+  }
+  
   export class DivIcon {}
   export class Icon {
     static Default: typeof Icon & {
@@ -38,7 +121,9 @@ declare module 'leaflet' {
       mergeOptions(options: IconOptions): void;
     };
   }
-  export class Circle {}
+  export class Circle {
+    addTo(map: Map | LayerGroup): this;
+  }
   export class Canvas {}
   export class Point {}
   
