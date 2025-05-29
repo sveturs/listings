@@ -1,113 +1,26 @@
-'use client';
-
-import { Suspense, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { 
-  Box, 
-  Container, 
-  TextField, 
-  InputAdornment,
-  ToggleButtonGroup,
-  ToggleButton,
-  Button,
-  Typography
-} from '@mui/material';
-import Grid from '@mui/material/Grid';
-import { Search, Grid as GridIcon, List, Map } from 'lucide-react';
-import ListingGrid from '@/components/marketplace/ListingGrid';
-import ListingFilters from '@/components/marketplace/ListingFilters';
+import { Suspense } from 'react';
+import { getTranslations } from 'next-intl/server';
+import { Container, Typography } from '@mui/material';
+import MarketplaceContent from '@/components/marketplace/MarketplaceContent';
 import Loading from './loading';
 
-export default function MarketplacePage() {
-  const t = useTranslations('marketplace');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({});
-  
-  const handleViewModeChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newViewMode: 'grid' | 'list' | null,
-  ) => {
-    if (newViewMode !== null) {
-      setViewMode(newViewMode);
-    }
-  };
+export default async function MarketplacePage({
+  params
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'marketplace' });
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const handleFiltersChange = (newFilters: Record<string, unknown>) => {
-    setFilters(newFilters);
-  };
-  
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
-      {/* Search Bar and View Controls */}
-      <Box sx={{ mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              placeholder={t('listings.searchPlaceholder')}
-              value={searchQuery}
-              onChange={handleSearchChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-              <Button 
-                variant="outlined" 
-                startIcon={<Map />}
-                onClick={() => {/* TODO: Map view */}}
-              >
-                {t('filters.map')}
-              </Button>
-              <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={handleViewModeChange}
-                aria-label="view mode"
-              >
-                <ToggleButton value="grid" aria-label="grid view">
-                  <GridIcon />
-                </ToggleButton>
-                <ToggleButton value="list" aria-label="list view">
-                  <List />
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
-          </Grid>
-        </Grid>
-      </Box>
+      <Typography variant="h4" component="h1" gutterBottom>
+        {t('listings.title')}
+      </Typography>
 
-      <Grid container spacing={3}>
-        {/* Filters Sidebar */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <ListingFilters onFiltersChange={handleFiltersChange} />
-        </Grid>
-        
-        {/* Listings Grid */}
-        <Grid size={{ xs: 12, md: 9 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            {t('listings.title')}
-          </Typography>
-          <Suspense fallback={<Loading />}>
-            <ListingGrid 
-              viewMode={viewMode}
-              searchQuery={searchQuery}
-              filters={filters}
-            />
-          </Suspense>
-        </Grid>
-      </Grid>
+      <Suspense fallback={<Loading />}>
+        <MarketplaceContent />
+      </Suspense>
     </Container>
   );
 }
