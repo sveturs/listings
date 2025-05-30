@@ -39,7 +39,21 @@ class ConfigManager {
       'http:localhost:9000,https:svetu.rs:443,http:localhost:3000';
     const hosts = hostsString || defaultHosts;
 
-    return hosts.split(',').map((host) => {
+    // Добавляем Google domains для аватарок
+    const googleHosts: ImageHost[] = [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
+        pathname: '/**',
+      },
+    ];
+
+    const parsedHosts = hosts.split(',').map((host) => {
       const [protocol, hostname, port] = host.split(':');
       const imageHost: ImageHost = {
         protocol: protocol as 'http' | 'https',
@@ -58,6 +72,9 @@ class ConfigManager {
 
       return imageHost;
     });
+
+    // Объединяем списки хостов
+    return [...parsedHosts, ...googleHosts];
   }
 
   public getConfig(): Config {

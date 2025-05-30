@@ -2,17 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Important Workflow Rules
+## IMPORTANT WORKFLOW RULES
 
 - **Язык общения**: Use Russian in your answers
 
-- **Управление задачами**: Информацию о прогрессе текущей задачи храни в файле `/memory-bank/currentTask.md`. При начале новой сессии получай статус из этого файла. Прогресс сохраняй в `/memory-bank/tasks/<next_number_as_\d\d\d>-<task_name>.md`. После завершения задачи очищай `/memory-bank/current-task.md`
+- **Управление задачами**: ВСЕГДА Информацию о прогрессе текущей задачи храни в файле `/memory-bank/currentTask.md`. При начале новой сессии получай статус из этого файла. Прогресс сохраняй в `/memory-bank/tasks/<next_number_as_\d\d\d>-<task_name>.md`. После завершения задачи очищай `/memory-bank/current-task.md`
 
 - **Коммиты**: Подбирай описание для коммита на основании внесенных изменений. Не используй указание авторства Claude
 
 - **Разработка**:
-   - Запускай сервер командой `yarn dev` на порту 3999
-   - Останавливай сервер по порту 3999
+   - Запускай сервер командой `yarn dev -p 3001`
+   - Останавливай сервер по порту 3001
    - Используй mcp playwright для работы с браузером Google Chrome
    - Используй mcp context7 для поиска по документации daisyui при работе с версткой
 
@@ -35,7 +35,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development Commands
 
-- `yarn dev -p 3040` - Start the development server with Turbopack at http://localhost:3040
+- `yarn dev -p 3001` - Start the development server with Turbopack at http://localhost:3001
 - `yarn build` - Create an optimized production build
 - `yarn start` - Run the production server
 - `yarn lint` - Run ESLint for code quality checks
@@ -53,6 +53,7 @@ This is a Next.js 15.3.2 application using:
 - ESLint configured with Next.js and TypeScript rules
 - Internationalization with next-intl (en/ru locales)
 - Centralized configuration management in `src/config/`
+- Google OAuth 2.0 authentication
 
 
 ### Environment Variables for Frontend
@@ -71,6 +72,15 @@ All environment variables are centralized in the src/config/ module:
 - next-intl: For internationalization support
 - prettier: Code formatter with ESLint integration
 - daisyui: Component library for Tailwind CSS
+
+### Authentication System
+
+Authentication flow:
+1. User clicks "Sign in with Google" button
+2. Redirects to Google OAuth consent
+3. Google redirects back to backend callback
+4. Backend creates session and redirects to frontend
+5. Frontend fetches user data via `/auth/session`
 
 
 ## Backend (Go)

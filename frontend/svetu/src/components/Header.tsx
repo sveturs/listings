@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import LanguageSwitcher from './LanguageSwitcher';
+import { AuthButton } from './AuthButton';
 
 export default function Header() {
   const t = useTranslations('header');
@@ -35,7 +36,7 @@ export default function Header() {
 
       <div className="navbar-end space-x-2">
         <LanguageSwitcher />
-        <button className="btn btn-primary">{t('login')}</button>
+        <AuthButton />
       </div>
     </header>
   );

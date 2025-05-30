@@ -47,6 +47,43 @@
     },
     "readMore": "Подробнее"
   },
+  "auth": {
+    "login": "Войти через Google",
+    "logout": "Выйти",
+    "profile": "Профиль",
+    "adminPanel": "Панель администратора",
+    "loading": "Загрузка...",
+    "welcomeBack": "С возвращением",
+    "notAuthenticated": "Пожалуйста, войдите для продолжения"
+  },
+  "profile": {
+    "title": "Мой профиль",
+    "fields": {
+      "name": "Имя",
+      "email": "Email",
+      "phone": "Телефон",
+      "city": "Город",
+      "country": "Страна"
+    },
+    "actions": {
+      "edit": "Редактировать",
+      "save": "Сохранить",
+      "cancel": "Отмена"
+    },
+    "notProvided": "Не указано"
+  },
+  "admin": {
+    "title": "Панель администратора",
+    "manage": "Управление",
+    "sections": {
+      "users": "Пользователи",
+      "usersDescription": "Управление учетными записями и правами",
+      "listings": "Объявления",
+      "listingsDescription": "Модерация и управление объявлениями",
+      "categories": "Категории",
+      "categoriesDescription": "Настройка категорий и атрибутов"
+    }
+  },
   "contacts": {
     "title": "Контакты",
     "description": "Свяжитесь с нами любым удобным способом",
