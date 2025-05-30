@@ -2,11 +2,20 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
-import { redirect } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
+import { useEffect } from 'react';
 
 export default function AdminPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const t = useTranslations('admin');
+  const router = useRouter();
+
+  // Handle authentication redirect
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !user?.is_admin)) {
+      router.push('/');
+    }
+  }, [isAuthenticated, user?.is_admin, isLoading, router]);
 
   if (isLoading) {
     return (
@@ -19,7 +28,7 @@ export default function AdminPage() {
   }
 
   if (!isAuthenticated || !user?.is_admin) {
-    redirect('/');
+    return null; // Redirect handled by useEffect
   }
 
   return (
@@ -32,7 +41,9 @@ export default function AdminPage() {
             <h2 className="card-title">{t('sections.users')}</h2>
             <p>{t('sections.usersDescription')}</p>
             <div className="card-actions justify-end">
-              <button className="btn btn-primary">{t('manage')}</button>
+              <button className="btn btn-primary" disabled title="Coming soon">
+                {t('manage')}
+              </button>
             </div>
           </div>
         </div>
@@ -42,7 +53,9 @@ export default function AdminPage() {
             <h2 className="card-title">{t('sections.listings')}</h2>
             <p>{t('sections.listingsDescription')}</p>
             <div className="card-actions justify-end">
-              <button className="btn btn-primary">{t('manage')}</button>
+              <button className="btn btn-primary" disabled title="Coming soon">
+                {t('manage')}
+              </button>
             </div>
           </div>
         </div>
@@ -52,7 +65,9 @@ export default function AdminPage() {
             <h2 className="card-title">{t('sections.categories')}</h2>
             <p>{t('sections.categoriesDescription')}</p>
             <div className="card-actions justify-end">
-              <button className="btn btn-primary">{t('manage')}</button>
+              <button className="btn btn-primary" disabled title="Coming soon">
+                {t('manage')}
+              </button>
             </div>
           </div>
         </div>

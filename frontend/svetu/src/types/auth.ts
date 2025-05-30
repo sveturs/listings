@@ -38,3 +38,16 @@ export interface UpdateProfileRequest {
   notification_email?: boolean;
   timezone?: string;
 }
+
+export type UserUpdate = Pick<
+  User,
+  | 'id'
+  | 'name'
+  | 'email'
+  | 'provider'
+  | 'picture_url'
+  | 'is_admin'
+  | 'city'
+  | 'country'
+  | 'phone'
+>;

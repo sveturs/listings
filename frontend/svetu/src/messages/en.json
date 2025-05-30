@@ -49,7 +49,9 @@
   },
   "auth": {
     "login": "Sign in with Google",
+    "loginWithGoogle": "Sign in with Google",
     "logout": "Sign out",
+    "loggingOut": "Signing out...",
     "profile": "Profile",
     "adminPanel": "Admin Panel",
     "loading": "Loading...",
@@ -68,7 +70,14 @@
     "actions": {
       "edit": "Edit",
       "save": "Save",
+      "saving": "Saving...",
       "cancel": "Cancel"
+    },
+    "messages": {
+      "updateSuccess": "Profile updated successfully"
+    },
+    "errors": {
+      "updateFailed": "Failed to update profile. Please try again."
     },
     "notProvided": "Not provided"
   },
@@ -83,6 +92,14 @@
       "categories": "Categories",
       "categoriesDescription": "Configure categories and attributes"
     }
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "nameMinLength": "Name must be at least 2 characters long",
+    "nameMaxLength": "Name cannot exceed 100 characters",
+    "phoneInvalid": "Please enter a valid phone number",
+    "cityMaxLength": "City name cannot exceed 100 characters",
+    "countryMaxLength": "Country name cannot exceed 100 characters"
   },
   "contacts": {
     "title": "Contacts",
@@ -103,6 +120,18 @@
       "message": "Message",
       "messagePlaceholder": "Enter your message",
       "submit": "Submit"
+    }
+  },
+  "metadata": {
+    "title": "SveTu - Marketplace",
+    "description": "Sve Tu - marketplace for buying and selling goods"
+  },
+  "errors": {
+    "authError": {
+      "title": "Authentication Error",
+      "description": "An error occurred while loading the authentication system. Please try reloading the page.",
+      "details": "Error details",
+      "reload": "Reload page"
     }
   }
 }

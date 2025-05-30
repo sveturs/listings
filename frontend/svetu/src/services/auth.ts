@@ -1,28 +1,57 @@
 import configManager from '@/config';
 import type {
   SessionResponse,
-  UserProfile,
+  UserUpdate,
   UpdateProfileRequest,
 } from '@/types/auth';
 
 const API_BASE = configManager.getApiUrl();
 
 export class AuthService {
+  private static abortControllers = new Map<string, AbortController>();
+
+  static cleanup(): void {
+    this.abortControllers.forEach((controller) => controller.abort());
+    this.abortControllers.clear();
+  }
+
+  private static getAbortController(key: string): AbortController {
+    // Cancel any existing request with the same key
+    const existing = this.abortControllers.get(key);
+    if (existing) {
+      existing.abort();
+    }
+
+    // Create new controller
+    const controller = new AbortController();
+    this.abortControllers.set(key, controller);
+    return controller;
+  }
+
   static async getSession(): Promise<SessionResponse> {
+    const controller = this.getAbortController('session');
+
     try {
       const response = await fetch(`${API_BASE}/auth/session`, {
         method: 'GET',
         credentials: 'include',
+        signal: controller.signal,
       });
 
       if (!response.ok) {
         throw new Error('Failed to fetch session');
       }
 
-      return await response.json();
+      const data = await response.json();
+      this.abortControllers.delete('session');
+      return data;
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Session request was cancelled');
+        return { authenticated: false };
+      }
       console.error('Session fetch error:', error);
-      return { authenticated: false };
+      throw error;
     }
   }
 
@@ -37,32 +66,25 @@ export class AuthService {
     }
   }
 
-  static async loginWithGoogle(returnTo?: string): Promise<void> {
+  static async loginWithGoogle(
+    returnTo?: string,
+    redirect = true
+  ): Promise<string> {
     const params = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
-    window.location.href = `${API_BASE}/auth/google${params}`;
-  }
+    const url = `${API_BASE}/auth/google${params}`;
 
-  static async getProfile(): Promise<UserProfile | null> {
-    try {
-      const response = await fetch(`${API_BASE}/api/v1/users/me`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        return null;
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Profile fetch error:', error);
-      return null;
+    if (redirect && typeof window !== 'undefined') {
+      window.location.href = url;
     }
+
+    return url;
   }
 
   static async updateProfile(
     data: UpdateProfileRequest
-  ): Promise<UserProfile | null> {
+  ): Promise<UserUpdate | null> {
+    const controller = this.getAbortController('updateProfile');
+
     try {
       const response = await fetch(`${API_BASE}/api/v1/users/me`, {
         method: 'PUT',
@@ -71,16 +93,23 @@ export class AuthService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
         throw new Error('Failed to update profile');
       }
 
-      return await response.json();
+      const result = await response.json();
+      this.abortControllers.delete('updateProfile');
+      return result;
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Update profile request was cancelled');
+        return null;
+      }
       console.error('Profile update error:', error);
-      return null;
+      throw error;
     }
   }
 }
