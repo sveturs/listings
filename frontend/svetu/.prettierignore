@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+dist
+*.log
+yarn.lock
+package-lock.json
+.git
+.github
+coverage
+.env*
+public
+memory-bank

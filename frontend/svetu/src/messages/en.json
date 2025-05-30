@@ -1,0 +1,71 @@
+{
+  "home": {
+    "title": "Welcome",
+    "description": "This is the home page",
+    "getStarted": "Get started by editing",
+    "saveChanges": "Save and see your changes instantly.",
+    "deployNow": "Deploy now",
+    "readDocs": "Read our docs",
+    "learn": "Learn",
+    "examples": "Examples",
+    "goToNextjs": "Go to nextjs.org →",
+    "marketplace": "Marketplace",
+    "errorLoadingData": "Error loading data. Please try again later.",
+    "noItems": "No items found",
+    "loadMore": "Load more"
+  },
+  "header": {
+    "nav": {
+      "blog": "Blog",
+      "news": "News",
+      "contacts": "Contacts"
+    },
+    "login": "Login"
+  },
+  "blog": {
+    "title": "Blog",
+    "description": "Welcome to our blog. Here you'll find interesting articles and useful information.",
+    "latestPost": {
+      "title": "First Blog Post",
+      "date": "May 29, 2025",
+      "excerpt": "This is a brief description of the first post in our blog. Here we share interesting ideas and useful information."
+    },
+    "readMore": "Read more"
+  },
+  "news": {
+    "title": "News",
+    "description": "Latest news and events from our company",
+    "latestNews": {
+      "title": "Important Service Update",
+      "date": "May 29, 2025",
+      "content": "We are pleased to announce the launch of new features that will make using our service even more convenient."
+    },
+    "secondNews": {
+      "title": "Team Expansion",
+      "date": "May 28, 2025",
+      "content": "Our team is growing! We welcome new specialists who will help us develop even faster."
+    },
+    "readMore": "Read more"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "description": "Get in touch with us in any convenient way",
+    "contactInfo": {
+      "title": "Contact Information",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "addressText": "Moscow, Example Street, 123, office 45"
+    },
+    "contactForm": {
+      "title": "Contact Form",
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "message": "Message",
+      "messagePlaceholder": "Enter your message",
+      "submit": "Submit"
+    }
+  }
+}
