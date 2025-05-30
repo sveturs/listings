@@ -1,78 +1,71 @@
 {
-  "navigation": {
-    "home": "Home",
-    "listing": "Listing",
-    "marketplace": "Marketplace"
-  },
   "home": {
-    "title": "Welcome to our marketplace",
-    "description": "Find great deals on amazing products",
-    "greeting": "Hello, world!",
-    "viewListings": "View All Listings",
-    "featuredListings": "Featured Listings",
-    "noListingsAvailable": "No listings available at the moment",
-    "viewAllListings": "View All Listings"
-  },
-  "listing": {
-    "title": "Product Listing",
-    "description": "Browse our products",
+    "title": "Welcome",
+    "description": "This is the home page",
+    "getStarted": "Get started by editing",
+    "saveChanges": "Save and see your changes instantly.",
+    "deployNow": "Deploy now",
+    "readDocs": "Read our docs",
+    "learn": "Learn",
+    "examples": "Examples",
+    "goToNextjs": "Go to nextjs.org →",
+    "marketplace": "Marketplace",
+    "errorLoadingData": "Error loading data. Please try again later.",
     "noItems": "No items found",
-    "item": "Item {number}"
+    "loadMore": "Load more"
   },
-  "marketplace": {
-    "title": "Marketplace",
-    "filters": {
-      "title": "Filters",
-      "category": "Category",
-      "priceRange": "Price Range",
-      "price": "Price",
-      "minPrice": "Min",
-      "maxPrice": "Max",
-      "location": "Location",
-      "distance": "Distance",
-      "anyDistance": "Any distance",
-      "condition": "Condition",
-      "any": "Any",
-      "new": "New",
-      "used": "Used",
-      "apply": "Apply Filters",
-      "reset": "Reset",
-      "map": "Map",
-      "allCategories": "All Categories"
+  "header": {
+    "nav": {
+      "blog": "Blog",
+      "news": "News",
+      "contacts": "Contacts"
     },
-    "listings": {
-      "title": "All Listings",
-      "searchPlaceholder": "Search listings...",
-      "found": "{count} listings found",
-      "noListingsFound": "No listings found",
-      "locationNotSpecified": "Location not specified",
-      "details": {
-        "goToStore": "Visit Store",
-        "seller": {
-          "title": "Seller",
-          "inStore": "In Store"
-        }
-      },
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive"
-      },
-      "priceHistory": {
-        "title": "Price History",
-        "chartPlaceholder": "Price history chart will appear here"
-      },
-      "loadMore": "Load more",
-      "noMoreListings": "No more listings",
-      "error": "Error loading listings",
-      "listingsDisplayed": "listings displayed",
-      "showingXofY": "Showing {displayed} of {total}"
-    }
+    "login": "Login"
   },
-  "common": {
-    "changeLanguage": "Change language",
-    "currentLanguage": "English",
-    "search": "Search",
-    "loading": "Loading...",
-    "error": "An error occurred"
+  "blog": {
+    "title": "Blog",
+    "description": "Welcome to our blog. Here you'll find interesting articles and useful information.",
+    "latestPost": {
+      "title": "First Blog Post",
+      "date": "May 29, 2025",
+      "excerpt": "This is a brief description of the first post in our blog. Here we share interesting ideas and useful information."
+    },
+    "readMore": "Read more"
+  },
+  "news": {
+    "title": "News",
+    "description": "Latest news and events from our company",
+    "latestNews": {
+      "title": "Important Service Update",
+      "date": "May 29, 2025",
+      "content": "We are pleased to announce the launch of new features that will make using our service even more convenient."
+    },
+    "secondNews": {
+      "title": "Team Expansion",
+      "date": "May 28, 2025",
+      "content": "Our team is growing! We welcome new specialists who will help us develop even faster."
+    },
+    "readMore": "Read more"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "description": "Get in touch with us in any convenient way",
+    "contactInfo": {
+      "title": "Contact Information",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "addressText": "Moscow, Example Street, 123, office 45"
+    },
+    "contactForm": {
+      "title": "Contact Form",
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "message": "Message",
+      "messagePlaceholder": "Enter your message",
+      "submit": "Submit"
+    }
   }
 }

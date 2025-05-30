@@ -1,37 +1,60 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { locales, type Locale } from '@/i18n/request';
+import { useLocale } from 'next-intl';
+import { usePathname, useRouter } from '@/i18n/routing';
+import { useTransition } from 'react';
 
-export default function LanguageSwitcher({ currentLocale }: { currentLocale: string }) {
-  const pathname = usePathname();
+export default function LanguageSwitcher() {
+  const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
 
-  const handleLocaleChange = (newLocale: Locale) => {
-    const pathnameWithoutLocale = pathname.split('/').slice(2).join('/');
-    const newPath = `/${newLocale}${pathnameWithoutLocale ? `/${pathnameWithoutLocale}` : ''}`;
-    
-    document.cookie = `locale=${newLocale};path=/;max-age=31536000`;
-    
-    // Force full page reload to ensure all translations are updated
-    window.location.href = newPath;
+  const handleLocaleChange = (nextLocale: string) => {
+    startTransition(() => {
+      router.push(pathname, { locale: nextLocale });
+    });
   };
 
   return (
-    <div className="flex gap-2">
-      {locales.map((locale) => (
-        <button
-          key={locale}
-          onClick={() => handleLocaleChange(locale)}
-          className={`px-2 py-1 rounded ${
-            currentLocale === locale 
-              ? 'bg-blue-600 text-white' 
-              : 'hover:text-gray-300'
-          }`}
+    <div className="dropdown dropdown-end">
+      <button tabIndex={0} className="btn btn-ghost" disabled={isPending}>
+        {locale.toUpperCase()}
+        <svg
+          className="ml-1 h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
         >
-          {locale.toUpperCase()}
-        </button>
-      ))}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      <ul
+        tabIndex={0}
+        className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-24"
+      >
+        <li>
+          <button
+            onClick={() => handleLocaleChange('ru')}
+            className={locale === 'ru' ? 'active' : ''}
+          >
+            РУС
+          </button>
+        </li>
+        <li>
+          <button
+            onClick={() => handleLocaleChange('en')}
+            className={locale === 'en' ? 'active' : ''}
+          >
+            ENG
+          </button>
+        </li>
+      </ul>
     </div>
   );
 }

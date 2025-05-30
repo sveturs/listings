@@ -1,89 +1,71 @@
-'use client';
+import { getTranslations } from 'next-intl/server';
+import { MarketplaceService } from '@/services/marketplace';
+import MarketplaceCard from '@/components/MarketplaceCard';
 
-import { useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import Link from 'next/link';
-import { useDispatch, useSelector } from 'react-redux';
-import { Container, Typography, Button, Box, CircularProgress, Alert } from '@mui/material';
-import { AppDispatch, RootState } from '@/store/store';
-import { fetchListings } from '@/store/slices/listingsSlice';
-import ListingGrid from '@/components/listings/ListingGrid';
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations('home');
 
-export default function HomePage() {
-  const t = useTranslations('home');
-  const dispatch = useDispatch<AppDispatch>();
-  
-  const { listings, loading, error } = useSelector((state: RootState) => state.listings);
+  let marketplaceData;
+  let error: Error | null = null;
 
-  useEffect(() => {
-    // Fetch featured listings for homepage
-    dispatch(fetchListings({
-      filters: {},
-      pagination: { page: 0, size: 6 }
-    }));
-  }, [dispatch]);
-  
+  try {
+    marketplaceData = await MarketplaceService.search({
+      sort_by: 'date_desc',
+      page: 0,
+      size: 25,
+    });
+  } catch (err) {
+    error = err as Error;
+    console.error('Failed to fetch marketplace data:', error);
+  }
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Hero Section */}
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h2" component="h1" gutterBottom>
-          {t('title')}
-        </Typography>
-        <Typography variant="h5" color="text.secondary" paragraph>
-          {t('description')}
-        </Typography>
-        <Button
-          component={Link}
-          href="/marketplace/listings"
-          variant="contained"
-          size="large"
-          sx={{ mt: 2 }}
-        >
-          {t('viewListings')}
-        </Button>
-      </Box>
-      
-      {/* Featured Listings Section */}
-      <Box sx={{ mt: 8 }}>
-        <Typography variant="h4" component="h2" gutterBottom sx={{ mb: 4 }}>
-          {t('featuredListings')}
-        </Typography>
-        
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <CircularProgress />
-          </Box>
-        )}
-        
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        
-        {!loading && !error && (
-          <>
-            <ListingGrid 
-              listings={listings?.slice(0, 6) || []} 
-              emptyMessage={t('noListingsAvailable')}
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">{t('marketplace')}</h1>
+
+      {error && (
+        <div className="alert alert-error mb-8">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="stroke-current shrink-0 h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
             />
-            
-            {listings && listings.length > 0 && (
-              <Box sx={{ textAlign: 'center', mt: 4 }}>
-                <Button
-                  component={Link}
-                  href="/marketplace/listings"
-                  variant="outlined"
-                  size="large"
-                >
-                  {t('viewAllListings')}
-                </Button>
-              </Box>
-            )}
-          </>
-        )}
-      </Box>
-    </Container>
+          </svg>
+          <span>{t('errorLoadingData')}</span>
+        </div>
+      )}
+
+      {marketplaceData && marketplaceData.data.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {marketplaceData.data.map((item) => (
+            <MarketplaceCard key={item.id} item={item} locale={locale} />
+          ))}
+        </div>
+      ) : (
+        !error && (
+          <div className="text-center py-12">
+            <p className="text-lg text-base-content/70">{t('noItems')}</p>
+          </div>
+        )
+      )}
+
+      {marketplaceData && marketplaceData.meta.has_more && (
+        <div className="text-center mt-8">
+          <button className="btn btn-primary">{t('loadMore')}</button>
+        </div>
+      )}
+    </div>
   );
 }

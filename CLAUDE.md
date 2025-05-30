@@ -2,74 +2,78 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Проект: Sve Tu Platforma - Marketplace
+## Important Workflow Rules
 
-### Краткое описание проекта
+- **Язык общения**: Use Russian in your answers
 
-Этот проект — маркетплейс для продажи товаров (новых и БУ), аналог Авито. Платформа предназначена для размещения объявлений, поиска, покупки и продажи товаров между частными лицами и компаниями. Основная цель — создать удобную, безопасную и масштабируемую экосистему для продавцов и покупателей.
+- **Управление задачами**: Информацию о прогрессе текущей задачи храни в файле `/memory-bank/currentTask.md`. При начале новой сессии получай статус из этого файла. Прогресс сохраняй в `/memory-bank/tasks/<next_number_as_\d\d\d>-<task_name>.md`. После завершения задачи очищай `/memory-bank/current-task.md`
 
-#### Основные требования и цели
+- **Коммиты**: Подбирай описание для коммита на основании внесенных изменений. Не используй указание авторства Claude
 
-- Централизованное хранение и обработка данных о товарах, пользователях, сделках и платежах
-- Интеграция с внешними сервисами (оплата, доставка, уведомления)
-- Высокая производительность и отказоустойчивость
-- Гибкая архитектура для расширения функциональности
-- Безопасность пользовательских данных и сделок
-- Удобный пользовательский и административный интерфейс
+- **Разработка**:
+   - Запускай сервер командой `yarn dev` на порту 3999
+   - Останавливай сервер по порту 3999
+   - Используй mcp playwright для работы с браузером Google Chrome
+   - Используй mcp context7 для поиска по документации daisyui при работе с версткой
 
-### Контекст продукта
+- **Качество кода**: Проверяй `yarn lint` и `yarn build` перед завершением задачи. После успешного `yarn build` выполни `yarn format`
 
-#### Зачем существует проект
-Проект создан для упрощения покупки и продажи товаров (новых и БУ) между частными лицами и компаниями, предоставляя единую платформу для размещения объявлений, поиска, коммуникации и совершения сделок.
+- **Зависимости**: При добавлении ключевых зависимостей указывай их в разделе "Key Dependencies"
 
-#### Ключевые особенности, выделяющие проект среди конкурентов
-- Удобный поиск по атрибутам товаров (фильтрация по характеристикам, категориям, состоянию и т.д.)
-- Автоматический перевод объявлений и интерфейса на несколько языков
-- Поиск на разных языках благодаря структурированным атрибутам (независимость от языка ввода)
-- Удобный поиск по карте (геолокация, отображение объявлений на карте, фильтрация по району)
+- **Переменные окружения**: При добавлении новых переменных:
+   1. Обновляй `.env` и `.env.example` (с примерами и комментариями)
+   2. Обновляй интерфейсы в `src/config/types.ts` (`EnvVariables` и `Config`)
+   3. Добавляй обработку в `src/config/index.ts` в методе `loadConfig()`
 
-#### Проблемы, которые решает
-- Сложность поиска и покупки/продажи товаров на локальном рынке
-- Отсутствие единого пространства для безопасных сделок между частными лицами
-- Неэффективная коммуникация между продавцами и покупателями
-- Необходимость интеграции с сервисами оплаты и доставки
+## Проект: Sve Tu Platform - Marketplace
 
-#### Как должен работать продукт
-- Пользователь может быстро разместить объявление, найти нужный товар, связаться с продавцом и совершить покупку
-- Продавец управляет своими объявлениями, сделками и финансами через удобный интерфейс
-- Все процессы автоматизированы и прозрачны, поддерживается безопасная оплата и доставка
+Состоит из
+- frontend: React, NextJS, Tailwind, DaisyUI 
+- backend: Go, Postgres, Minio, OpenSearch
 
-#### Цели пользовательского опыта
-- Минимум шагов для размещения и поиска объявлений
-- Прозрачность и безопасность сделок
-- Поддержка нескольких языков и регионов
-- Интуитивно понятный интерфейс 
+## Frontend (NextJS)
 
-### Технологический контекст
+### Development Commands
 
-#### Используемые технологии
-- Backend: Go, PostgreSQL, MinIO, OpenSearch
-- Frontend: Next.js, React, TypeScript
-- Docker, docker-compose для контейнеризации
-- Nginx для проксирования
+- `yarn dev -p 3040` - Start the development server with Turbopack at http://localhost:3040
+- `yarn build` - Create an optimized production build
+- `yarn start` - Run the production server
+- `yarn lint` - Run ESLint for code quality checks
+- `yarn lint:fix` - Fix ESLint errors automatically
+- `yarn format` - Format all files with Prettier
+- `yarn format:check` - Check formatting without changes
 
-#### Окружение разработки
-- Локальная разработка через docker-compose
-- Использование Makefile и shell-скриптов для автоматизации
-- CI/CD через GitHub Actions
+### Frontend Architecture
 
-#### Технические ограничения
-- Необходимость поддержки нескольких языков
-- Высокие требования к безопасности данных
-- Масштабируемость и отказоустойчивость
+This is a Next.js 15.3.2 application using:
 
-#### Зависимости
-- Внешние API: платёжные системы, геокодинг, карты
-- Внутренние библиотеки: логирование, утилиты 
+- React 19 with TypeScript
+- Tailwind CSS v4 for styling
+- App Router (located in `src/app/`)
+- ESLint configured with Next.js and TypeScript rules
+- Internationalization with next-intl (en/ru locales)
+- Centralized configuration management in `src/config/`
 
-## Команды разработки
 
-### Backend (Go)
+### Environment Variables for Frontend
+
+Configuration is managed through environment variables.
+
+#### Configuration Management
+
+All environment variables are centralized in the src/config/ module:
+
+- `src/config/types.ts` - TypeScript interfaces for configuration
+- `src/config/index.ts` - Configuration manager with helper methods
+
+### Frontend Key Dependencies
+
+- next-intl: For internationalization support
+- prettier: Code formatter with ESLint integration
+- daisyui: Component library for Tailwind CSS
+
+
+## Backend (Go)
 ```bash
 # Сборка
 cd backend && go build -o main ./cmd/api
@@ -84,53 +88,7 @@ cd backend && go test ./...
 cd backend && migrate -path ./migrations -database "postgresql://..." up
 ```
 
-### Frontend (React)
-
-Это старая версия фронтенда. Мы отказываемся от нее. Но там реализована вся нужная логика работы фронта. 
-
-```bash
-# Установка зависимостей
-cd frontend/hostel-frontend && npm install
-
-# Разработка
-cd frontend/hostel-frontend && npm start
-
-# Сборка
-cd frontend/hostel-frontend && npm run build
-
-# Тесты
-cd frontend/hostel-frontend && npm test
-```
-
-### Frontend (Next.js) - новая версия
-
-Это старая версия фронтенда. Сюда мы переносим логику из старой версии.
-
-```bash
-# Установка зависимостей
-cd frontend/svetu && yarn
-
-# Линтер
-cd frontend/svetu && yarn lint
-
-# Сборка
-cd frontend/svetu && yarn build
-
-# Разработка
-cd frontend/svetu && PORT=3020 yarn dev
-```
-
-### Docker
-```bash
-# Локальная разработка
-docker-compose up -d
-```
-
-## Деплой
-
-Выполняется через Github Actions
-
-## Архитектура
+## Архитектура Backend
 
 ### Backend структура
 ```
@@ -160,25 +118,18 @@ backend/
 - **Nginx** - обратный прокси и статика
 - **Harbor** - приватный Docker registry
 
-### API структура
-```
-/api/v1/
-├── auth/         # Аутентификация и регистрация
-├── marketplace/  # Объявления и категории
-├── users/        # Профили пользователей
-├── reviews/      # Система отзывов
-├── storefronts/  # Витрины магазинов
-├── chats/        # Чаты между пользователями
-├── balance/      # Баланс и транзакции
-└── admin/        # Административная панель
-```
+### External Services
 
-## Конфигурация
+- **MinIO**: Object storage for images
+   - Local: http://localhost:9000
+   - Production: https://svetu.rs
+   - Images are served from `/listings/` path
 
-### Переменные окружения
+### Конфигурация Backend
+
+#### Переменные окружения
+
 - Backend: `.env` в корне backend/
-- Frontend React: `frontend/hostel-frontend/public/env.js`
-- Frontend Next.js: `frontend/svetu/.env.local`
 
 ### Важные файлы конфигурации
 - `docker-compose.yml` - локальная разработка
@@ -200,21 +151,6 @@ TODO: Нужно доработать
 TODO: Нужно доработать
 
 
-## Полезные команды
-
-### Логи и отладка
-
-```bash
-# Просмотр логов всех сервисов
-docker-compose logs -f
-
-# Логи конкретного сервиса
-docker-compose logs -f backend
-
-# Доступ к БД
-docker-compose exec db psql -U postgres -d marketplace_db
-```
-
 ### Harbor Registry
 
 ```bash
@@ -227,78 +163,3 @@ docker push harbor.svetu.rs/svetu/backend/api:latest
 
 ### Управление сервером
 TODO: Требуется доработать
-
-## Memory bank
-
-### Структура банка памяти
-
-Банк памяти состоит из обязательных основных файлов и дополнительных контекстных файлов, все в формате Markdown. Файлы построены друг на друге в четкой иерархии:
-
-
-```mermaid
-flowchart TD
-    projectBrief.md --> productContext.md
-    projectBrief.md --> systemPatterns.md
-    projectBrief.md --> techContext.md
-    
-    productContext.md --> activeContext.md
-    systemPatterns.md --> activeContext.md
-    techContext.md --> activeContext.md
-
-   activeContext.md --> progress.md
-```
-
-#### Основные файлы (обязательные)
-1. `projectBrief.md`
-    - Базовый документ, который формирует все остальные файлы.
-    - Создается в начале проекта, если он не существует.
-    - Определяет основные требования и цели.
-    - Источник достоверной информации о масштабах проекта.
-
-2. `productContext.md`
-    - Почему существует этот проект
-    - Проблемы, которые он решает
-    - Как он должен работать
-    - Цели пользовательского опыта
-
-3. `activeContext.md`
-    - Текущий фокус работы
-    - Последние изменения
-    - Следующие шаги
-    - Активные решения и соображения
-
-4. `systemPatterns.md`
-    - Архитектура системы
-    - Ключевые технические решения
-    - Используемые шаблоны проектирования
-    - Взаимосвязи компонентов
-
-5. `techContext.md`
-    - Используемые технологии
-    - Настройка разработки
-    - Технические ограничения
-    - Зависимости
-
-6. `progress.md`
-    - Что работает
-    - Что еще предстоит создать
-    - Текущий статус
-    - Известные проблемы
-
-
-## Важные замечания
-
-1. **Язык общения**: Используй русский язык в ответах
-2. **При каждой новой задачи**: Сверяйся с правилами из диретории /memory-bank
-3. **Процесс по задаче**: Веди в файле /memory-bank/activeContext.md и /memory-bank/progress.md
-4. **Frontend**: Есть две версии - React (стабильная) и Next.js (в разработке)
-5. **Деплой**: Всегда используй blue-green deployment для zero-downtime
-6. **Образы**: Все Docker образы хранятся в Harbor registry
-7. **Безопасность**: Не коммить секреты и пароли в репозиторий
-
-## Команды
-
-### Браузер
-
-Когда я прошу проверить в браузере, ты должен использовать mcp playwright для работы с браузером Google Chrome.
-

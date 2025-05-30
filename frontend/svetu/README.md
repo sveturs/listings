@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Svetu Frontend
 
-## Getting Started
+Современный веб-интерфейс маркетплейса Svetu, построенный на Next.js 15 с использованием App Router, React 19 и TypeScript.
 
-First, run the development server:
+## Архитектура
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Основные технологии
+
+- **Next.js 15.3.2** - фреймворк с App Router для SSR/SSG
+- **React 19** - последняя версия с поддержкой Server Components
+- **TypeScript** - строгая типизация для надежности кода
+- **Tailwind CSS v4 + DaisyUI** - utility-first стилизация с готовыми компонентами
+- **next-intl** - интернационализация (ru/en)
+
+### Структура приложения
+
+```
+src/
+├── app/[locale]/          # Локализованные страницы
+│   ├── page.tsx          # Главная страница (каталог товаров)
+│   ├── blog/             # Раздел блога
+│   ├── news/             # Новости платформы
+│   └── contacts/         # Контакты
+├── components/           # Переиспользуемые компоненты
+│   ├── Header.tsx       # Навигация и переключение языка
+│   ├── MarketplaceCard  # Карточка товара
+│   └── LanguageSwitcher # Переключатель языков
+├── services/            # API взаимодействие
+│   └── marketplace.ts   # Сервис для работы с товарами
+├── config/              # Централизованная конфигурация
+└── i18n/                # Настройки локализации
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Основной функционал
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Главная страница
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Отображение списка товаров из маркетплейса
+- Пагинация с подгрузкой контента
+- Обработка ошибок загрузки данных
+- Адаптивная сетка товаров (1-4 колонки)
 
-## Learn More
+### Компоненты
 
-To learn more about Next.js, take a look at the following resources:
+**Header**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Навигация по основным разделам
+- Переключатель языков (ru/en)
+- Кнопка входа в систему
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**MarketplaceCard**
 
-## Deploy on Vercel
+- Отображение информации о товаре
+- Изображения с fallback на placeholder
+- Цена, название, описание
+- Локализованное отображение данных
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Сервисы
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**MarketplaceService**
+
+- Поиск и фильтрация товаров
+- Поддержка параметров: категория, цена, сортировка
+- Интеграция с backend API
+- Обработка ошибок сети
+
+## Интернационализация
+
+- Поддержка русского (основной) и английского языков
+- Автоматическое определение языка пользователя
+- Локализованный routing через `[locale]`
+- Переводы в `messages/ru.json` и `messages/en.json`
+
+## Стилизация
+
+- **Tailwind CSS v4** для utility классов
+- **DaisyUI** для готовых компонентов (кнопки, карточки, навбар)
+- Responsive дизайн с breakpoints для всех устройств
+- Поддержка темной темы через DaisyUI
+
+## Конфигурация
+
+Централизованное управление через `ConfigManager`:
+
+- Переменные окружения с типизацией
+- Методы для получения API endpoints
+- Валидация конфигурации при запуске
+
+## Разработка
+
+```bash
+# Установка зависимостей
+yarn install
+
+# Запуск dev-сервера с Turbopack
+yarn dev -p 3040
+
+# Проверка кода
+yarn lint
+
+# Форматирование
+yarn format
+```
+
+## Production
+
+- Оптимизация через Next.js App Router
+- Server Components для уменьшения JS bundle
+- Автоматическая оптимизация изображений
+- Edge Runtime совместимость
