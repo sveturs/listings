@@ -81,6 +81,39 @@
     },
     "notProvided": "Not provided"
   },
+  "users": {
+    "profile": {
+      "success": {
+        "updated": "Profile updated successfully"
+      },
+      "error": {
+        "fetch": "Error fetching profile",
+        "invalid_data": "Invalid data format",
+        "validation": "Validation error",
+        "update": "Error updating profile",
+        "invalid_id": "Invalid user ID",
+        "not_found": "User not found"
+      }
+    },
+    "register": {
+      "success": {
+        "created": "User registered successfully"
+      },
+      "error": {
+        "invalid_data": "Invalid data format",
+        "name_required": "Name is required",
+        "email_required": "Email is required",
+        "email_exists": "Email already exists",
+        "create_failed": "Registration failed"
+      }
+    },
+    "admin_check": {
+      "error": {
+        "email_required": "Email is required",
+        "user_not_found": "User not found"
+      }
+    }
+  },
   "admin": {
     "title": "Admin Panel",
     "manage": "Manage",

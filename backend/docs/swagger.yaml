@@ -203,6 +203,79 @@ definitions:
       template_code:
         type: string
     type: object
+  backend_internal_domain_models.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      google_id:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phone:
+        type: string
+      picture_url:
+        type: string
+    type: object
+  backend_internal_domain_models.UserProfile:
+    properties:
+      account_status:
+        type: string
+      bio:
+        type: string
+      city:
+        description: Теперь используем обычные строки, а не указатели
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      google_id:
+        type: string
+      id:
+        type: integer
+      last_seen:
+        type: string
+      name:
+        type: string
+      notification_email:
+        type: boolean
+      phone:
+        type: string
+      picture_url:
+        type: string
+      settings:
+        items:
+          type: integer
+        type: array
+      timezone:
+        type: string
+    type: object
+  backend_internal_domain_models.UserProfileUpdate:
+    properties:
+      bio:
+        type: string
+      city:
+        description: Указатель правильный для обновлений
+        type: string
+      country:
+        type: string
+      notification_email:
+        type: boolean
+      phone:
+        type: string
+      settings:
+        items:
+          type: integer
+        type: array
+      timezone:
+        type: string
+    type: object
   backend_pkg_utils.ErrorResponseSwag:
     properties:
       error:
@@ -218,6 +291,89 @@ definitions:
     type: object
   fiber.Map:
     additionalProperties: true
+    type: object
+  internal_proj_users_handler.AdminCheckResponse:
+    properties:
+      is_admin:
+        example: false
+        type: boolean
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_users_handler.AdminCheckResponseWrapper:
+    properties:
+      data:
+        $ref: '#/definitions/internal_proj_users_handler.AdminCheckResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_users_handler.MessageResponse:
+    properties:
+      message:
+        example: Операция выполнена успешно
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_users_handler.PublicUserResponse:
+    properties:
+      created_at:
+        example: "2023-01-01T12:00:00Z"
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Иван Иванов
+        type: string
+      picture_url:
+        example: https://example.com/avatar.jpg
+        type: string
+    type: object
+  internal_proj_users_handler.PublicUserResponseWrapper:
+    properties:
+      data:
+        $ref: '#/definitions/internal_proj_users_handler.PublicUserResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_users_handler.RegisterRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: Иван Иванов
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  internal_proj_users_handler.RegisterResponse:
+    properties:
+      message:
+        example: Пользователь успешно зарегистрирован
+        type: string
+      success:
+        example: true
+        type: boolean
+      user:
+        $ref: '#/definitions/backend_internal_domain_models.User'
+    type: object
+  internal_proj_users_handler.UserProfileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/backend_internal_domain_models.UserProfile'
+      success:
+        example: true
+        type: boolean
     type: object
 host: localhost:8080
 info:
@@ -650,6 +806,173 @@ paths:
       summary: Проверить статус администратора
       tags:
       - Admins
+  /api/v1/users/{id}/profile:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает публичную информацию о пользователе по ID
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.PublicUserResponseWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получить публичный профиль пользователя
+      tags:
+      - Users
+  /api/v1/users/admin-check/{email}:
+    get:
+      consumes:
+      - application/json
+      description: Проверяет, является ли пользователь с указанным email администратором
+        (упрощенная проверка по ID)
+      parameters:
+      - description: Email пользователя
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.AdminCheckResponseWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Проверка статуса администратора (упрощенная)
+      tags:
+      - Users
+  /api/v1/users/profile:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает полный профиль авторизованного пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.UserProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получить профиль пользователя
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Обновляет профиль авторизованного пользователя
+      parameters:
+      - description: Данные для обновления профиля
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UserProfileUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Обновить профиль пользователя
+      tags:
+      - Users
+  /api/v1/users/register:
+    post:
+      consumes:
+      - application/json
+      description: Создает нового пользователя в системе
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_users_handler.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Регистрация пользователя
+      tags:
+      - Users
 securityDefinitions:
   Bearer:
     description: Bearer token для авторизации

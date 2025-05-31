@@ -12,9 +12,9 @@ import (
 	"github.com/gofiber/swagger"
 	"github.com/gofiber/websocket/v2"
 
+	_ "backend/docs"
 	"backend/internal/config"
 	"backend/internal/middleware"
-	_ "backend/docs"
 	balanceHandler "backend/internal/proj/balance/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	globalService "backend/internal/proj/global/service"
@@ -158,13 +158,13 @@ func (s *Server) setupMiddleware() {
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
 	s.app.Use("/ws", s.middleware.AuthRequired)
-	os.MkdirAll("./uploads", os.ModePerm)
-	os.MkdirAll("./public", os.ModePerm)
+	os.MkdirAll("./uploads", os.ModePerm) // TODO: Это еще надо? Вроде нет
+	os.MkdirAll("./public", os.ModePerm)  // TODO: Это еще надо? Вроде нет
 }
 
 func (s *Server) setupRoutes() {
 	s.app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hostel Booking System API")
+		return c.SendString("Svetu API")
 	})
 
 	s.app.Get("/api/health", func(c *fiber.Ctx) error {
@@ -177,9 +177,6 @@ func (s *Server) setupRoutes() {
 		URL:         "/swagger/doc.json",
 		DeepLinking: false,
 	}))
-
-	// Публичный маршрут для проверки статуса администратора (без авторизации и AdminRequired)
-	s.app.Get("/api/v1/admin-check/:email", s.users.User.IsAdminPublic)
 
 	s.app.Get("/listings/*", func(c *fiber.Ctx) error {
 		path := c.Params("*")
@@ -274,15 +271,9 @@ func (s *Server) setupRoutes() {
 	entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating)
 	entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)
 
-	auth := s.app.Group("/auth")
-	auth.Get("/session", s.users.Auth.GetSession)
-	auth.Get("/google", s.users.Auth.GoogleAuth)
-	auth.Get("/google/callback", s.users.Auth.GoogleCallback)
-	auth.Get("/logout", s.users.Auth.Logout)
+	authedAPIGroup := s.app.Group("/api/v1", s.middleware.AuthRequired)
 
-	api := s.app.Group("/api/v1", s.middleware.AuthRequired)
-
-	protectedReviews := api.Group("/reviews")
+	protectedReviews := authedAPIGroup.Group("/reviews")
 	protectedReviews.Post("/", s.review.Review.CreateReview)
 	protectedReviews.Put("/:id", s.review.Review.UpdateReview)
 	protectedReviews.Delete("/:id", s.review.Review.DeleteReview)
@@ -290,7 +281,7 @@ func (s *Server) setupRoutes() {
 	protectedReviews.Post("/:id/response", s.review.Review.AddResponse)
 	protectedReviews.Post("/:id/photos", s.review.Review.UploadPhotos)
 
-	storefronts := api.Group("/storefronts")
+	storefronts := authedAPIGroup.Group("/storefronts")
 	storefronts.Get("/", s.storefront.Storefront.GetUserStorefronts)
 	storefronts.Post("/", s.storefront.Storefront.CreateStorefront)
 	storefronts.Get("/:id", s.storefront.Storefront.GetStorefront)
@@ -307,10 +298,10 @@ func (s *Server) setupRoutes() {
 	storefronts.Get("/import-sources/:id/imported-categories", s.storefront.Storefront.GetImportedCategories)
 	storefronts.Post("/import-sources/:id/apply-category-mappings", s.storefront.Storefront.ApplyCategoryMappings)
 
-	api.Get("/users/:id/reviews", s.review.Review.GetUserReviews)
-	api.Get("/users/:id/rating", s.review.Review.GetUserRatingSummary)
-	api.Get("/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
-	api.Get("/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
+	authedAPIGroup.Get("/users/:id/reviews", s.review.Review.GetUserReviews)
+	authedAPIGroup.Get("/users/:id/rating", s.review.Review.GetUserRatingSummary)
+	authedAPIGroup.Get("/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
+	authedAPIGroup.Get("/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
 
 	geocodeApi := s.app.Group("/api/v1/geocode")
 	geocodeApi.Get("/reverse", s.geocode.ReverseGeocode)
@@ -318,16 +309,24 @@ func (s *Server) setupRoutes() {
 	citiesApi := s.app.Group("/api/v1/cities")
 	citiesApi.Get("/suggest", s.geocode.GetCitySuggestions)
 
-	users := api.Group("/users")
+	auth := s.app.Group("/auth")
+	auth.Get("/session", s.users.Auth.GetSession)
+	auth.Get("/google", s.users.Auth.GoogleAuth)
+	auth.Get("/google/callback", s.users.Auth.GoogleCallback)
+	auth.Get("/logout", s.users.Auth.Logout)
+
+	users := authedAPIGroup.Group("/users")
 	users.Post("/register", s.users.User.Register)
-	users.Get("/me", s.users.User.GetProfile)
-	users.Put("/me", s.users.User.UpdateProfile)
+	users.Get("/me", s.users.User.GetProfile)    // TODO: remove
+	users.Put("/me", s.users.User.UpdateProfile) // TODO: remove
 	users.Get("/profile", s.users.User.GetProfile)
 	users.Put("/profile", s.users.User.UpdateProfile)
 	users.Get("/:id/profile", s.users.User.GetProfileByID)
+	// Публичный маршрут для проверки статуса администратора (без авторизации и AdminRequired)
+	s.app.Get("/api/v1/admin-check/:email", s.users.User.IsAdminPublic)
 
 	// Обновлено: маршруты защищенного API маркетплейса используют соответствующие обработчики
-	marketplaceProtected := api.Group("/marketplace")
+	marketplaceProtected := authedAPIGroup.Group("/marketplace")
 	marketplaceProtected.Post("/listings", s.marketplace.Listings.CreateListing)
 	marketplaceProtected.Put("/listings/:id", s.marketplace.Listings.UpdateListing)
 	marketplaceProtected.Delete("/listings/:id", s.marketplace.Listings.DeleteListing)
@@ -347,9 +346,7 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Post("/translations/detect-language", s.marketplace.Translations.DetectLanguage)
 	marketplaceProtected.Get("/translations/:id", s.marketplace.Translations.GetTranslations)
 	// Административные маршруты
-	adminRoutes := s.app.Group("/api/v1/admin")
-	adminRoutes.Use(s.middleware.AuthRequired)
-	adminRoutes.Use(s.middleware.AdminRequired)
+	adminRoutes := s.app.Group("/api/v1/admin", s.middleware.AuthRequired, s.middleware.AdminRequired)
 
 	// Регистрируем маршруты администрирования категорий
 	adminRoutes.Post("/categories", s.marketplace.AdminCategories.CreateCategory)
@@ -478,7 +475,7 @@ func (s *Server) setupRoutes() {
 	adminRoutes.Post("/sync-discounts", s.marketplace.Listings.SynchronizeDiscounts) // Оставляем в Listings, т.к. это работа с объявлениями
 	adminRoutes.Post("/reindex-ratings", s.marketplace.Indexing.ReindexRatings)
 
-	chat := api.Group("/marketplace/chat")
+	chat := authedAPIGroup.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)
 	chat.Get("/messages", s.marketplace.Chat.GetMessages)
 	chat.Post("/messages", s.marketplace.Chat.SendMessage)
@@ -486,7 +483,7 @@ func (s *Server) setupRoutes() {
 	chat.Post("/:chat_id/archive", s.marketplace.Chat.ArchiveChat)
 	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
 
-	notifications := api.Group("/notifications")
+	notifications := authedAPIGroup.Group("/notifications")
 	notifications.Get("/", s.notifications.Notification.GetNotifications)
 	notifications.Get("/settings", s.notifications.Notification.GetSettings)
 	notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
