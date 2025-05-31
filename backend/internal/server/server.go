@@ -2,8 +2,19 @@
 package server
 
 import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
+	"github.com/gofiber/websocket/v2"
+
 	"backend/internal/config"
 	"backend/internal/middleware"
+	_ "backend/docs"
 	balanceHandler "backend/internal/proj/balance/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	globalService "backend/internal/proj/global/service"
@@ -17,13 +28,6 @@ import (
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
-	"context"
-	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/websocket/v2"
-	"log"
-	"os"
-	"time"
 )
 
 type Server struct {
@@ -166,6 +170,13 @@ func (s *Server) setupRoutes() {
 	s.app.Get("/api/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
+
+	// Swagger документация
+	s.app.Get("/swagger/*", swagger.HandlerDefault)
+	s.app.Get("/docs/*", swagger.New(swagger.Config{
+		URL:         "/swagger/doc.json",
+		DeepLinking: false,
+	}))
 
 	// Публичный маршрут для проверки статуса администратора (без авторизации и AdminRequired)
 	s.app.Get("/api/v1/admin-check/:email", s.users.User.IsAdminPublic)

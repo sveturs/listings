@@ -1,4 +1,23 @@
-// backend/cmd/api/main.go
+//	@title			Sve Tu Marketplace API
+//	@version		1.0
+//	@description	API для платформы Sve Tu - маркетплейс объявлений
+//	@termsOfService	https://svetu.rs/terms
+
+//	@contact.name	API Support
+//	@contact.url	https://svetu.rs/support
+//	@contact.email	support@svetu.rs
+
+//	@license.name	MIT
+//	@license.url	https://opensource.org/licenses/MIT
+
+//	@host		localhost:8080
+//	@BasePath	/api/v1
+
+//	@securityDefinitions.apikey	Bearer
+//	@in							header
+//	@name						Authorization
+//	@description				Bearer token для авторизации
+
 package main
 
 import (

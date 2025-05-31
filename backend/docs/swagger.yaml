@@ -1,0 +1,659 @@
+basePath: /api/v1
+definitions:
+  backend_internal_domain_models.AdminUser:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      email:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+    type: object
+  backend_internal_domain_models.CreateComponentUsageRequest:
+    properties:
+      category_id:
+        type: integer
+      component_id:
+        type: integer
+      conditions_logic:
+        items:
+          type: integer
+        type: array
+      configuration:
+        items:
+          type: integer
+        type: array
+      is_active:
+        type: boolean
+      placement:
+        type: string
+      priority:
+        type: integer
+      usage_context:
+        type: string
+    required:
+    - component_id
+    - usage_context
+    type: object
+  backend_internal_domain_models.CreateCustomComponentRequest:
+    properties:
+      component_type:
+        enum:
+        - category
+        - attribute
+        - filter
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      props_schema:
+        items:
+          type: integer
+        type: array
+      styles:
+        type: string
+      template_code:
+        type: string
+    required:
+    - component_type
+    - name
+    - template_code
+    type: object
+  backend_internal_domain_models.CreateTemplateRequest:
+    properties:
+      component_id:
+        type: integer
+      description:
+        type: string
+      name:
+        type: string
+      variables:
+        items:
+          type: integer
+        type: array
+    required:
+    - component_id
+    - name
+    type: object
+  backend_internal_domain_models.CustomUIComponent:
+    properties:
+      component_type:
+        example: category
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        example: Компонент для отображения автомобильных категорий
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Auto Category Component
+        type: string
+      props_schema:
+        items:
+          type: integer
+        type: array
+      styles:
+        type: string
+      template_code:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  backend_internal_domain_models.CustomUIComponentUsage:
+    properties:
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      component:
+        $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+      component_id:
+        type: integer
+      component_name:
+        type: string
+      conditions_logic:
+        items:
+          type: integer
+        type: array
+      configuration:
+        items:
+          type: integer
+        type: array
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      placement:
+        type: string
+      priority:
+        type: integer
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+      usage_context:
+        type: string
+    type: object
+  backend_internal_domain_models.CustomUITemplate:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: integer
+      is_shared:
+        type: boolean
+      name:
+        type: string
+      template_code:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+      variables:
+        items:
+          type: integer
+        type: array
+    type: object
+  backend_internal_domain_models.UpdateCustomComponentRequest:
+    properties:
+      component_type:
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      props_schema:
+        items:
+          type: integer
+        type: array
+      styles:
+        type: string
+      template_code:
+        type: string
+    type: object
+  backend_pkg_utils.ErrorResponseSwag:
+    properties:
+      error:
+        example: Описание ошибки
+        type: string
+    type: object
+  backend_pkg_utils.SuccessResponseSwag:
+    properties:
+      data: {}
+      success:
+        example: true
+        type: boolean
+    type: object
+  fiber.Map:
+    additionalProperties: true
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@svetu.rs
+    name: API Support
+    url: https://svetu.rs/support
+  description: API для платформы Sve Tu - маркетплейс объявлений
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://svetu.rs/terms
+  title: Sve Tu Marketplace API
+  version: "1.0"
+paths:
+  /api/admin/categories/{category_id}/components:
+    get:
+      description: Возвращает кастомные компоненты для конкретной категории
+      parameters:
+      - description: ID категории
+        in: path
+        name: category_id
+        required: true
+        type: integer
+      - description: Контекст использования
+        in: query
+        name: context
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Компоненты категории
+      tags:
+      - CustomComponents
+  /api/admin/custom-components:
+    get:
+      description: Возвращает список всех кастомных UI компонентов
+      parameters:
+      - description: Фильтр по типу компонента
+        in: query
+        name: component_type
+        type: string
+      - description: Фильтр по активности
+        in: query
+        name: active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Список компонентов
+      tags:
+      - CustomComponents
+    post:
+      consumes:
+      - application/json
+      description: Создает новый кастомный UI компонент
+      parameters:
+      - description: Данные компонента
+        in: body
+        name: component
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CreateCustomComponentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Создание кастомного компонента
+      tags:
+      - CustomComponents
+  /api/admin/custom-components/{id}:
+    delete:
+      description: Удаляет кастомный UI компонент
+      parameters:
+      - description: ID компонента
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Компонент удален
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Удаление компонента
+      tags:
+      - CustomComponents
+    get:
+      description: Получает кастомный UI компонент по ID
+      parameters:
+      - description: ID компонента
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получение компонента
+      tags:
+      - CustomComponents
+    put:
+      consumes:
+      - application/json
+      description: Обновляет кастомный UI компонент
+      parameters:
+      - description: ID компонента
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные компонента
+        in: body
+        name: component
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UpdateCustomComponentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Обновление компонента
+      tags:
+      - CustomComponents
+  /api/admin/custom-components/templates:
+    get:
+      description: Возвращает список всех шаблонов компонентов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.CustomUITemplate'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Список шаблонов
+      tags:
+      - CustomComponents
+    post:
+      consumes:
+      - application/json
+      description: Создает шаблон для кастомного компонента
+      parameters:
+      - description: Данные шаблона
+        in: body
+        name: template
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CreateTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.CustomUITemplate'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Создание шаблона
+      tags:
+      - CustomComponents
+  /api/admin/custom-components/usage:
+    get:
+      description: Возвращает список всех использований компонентов с фильтрацией
+      parameters:
+      - description: ID компонента
+        in: query
+        name: component_id
+        type: integer
+      - description: ID категории
+        in: query
+        name: category_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получение всех использований компонентов
+      tags:
+      - CustomComponents
+    post:
+      consumes:
+      - application/json
+      description: Добавляет использование компонента для конкретной категории
+      parameters:
+      - description: Данные использования
+        in: body
+        name: usage
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CreateComponentUsageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Добавление использования компонента
+      tags:
+      - CustomComponents
+  /api/admin/custom-components/usage/{id}:
+    delete:
+      description: Удаляет использование компонента для категории
+      parameters:
+      - description: ID использования
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Использование удалено
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Удаление использования компонента
+      tags:
+      - CustomComponents
+  /api/v1/admin-check/{email}:
+    get:
+      consumes:
+      - application/json
+      description: Проверяет, является ли пользователь с указанным email администратором
+        (без авторизации)
+      parameters:
+      - description: Email пользователя
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Публичная проверка статуса администратора
+      tags:
+      - Admins
+  /api/v1/admin/admins:
+    get:
+      consumes:
+      - application/json
+      description: Получает список всех администраторов системы
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.AdminUser'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Получить список администраторов
+      tags:
+      - Admins
+    post:
+      consumes:
+      - application/json
+      description: Добавляет нового администратора по email
+      parameters:
+      - description: Данные администратора
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.AdminUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.AdminUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Добавить администратора
+      tags:
+      - Admins
+  /api/v1/admin/admins/{email}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет администратора по email
+      parameters:
+      - description: Email администратора
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Удалить администратора
+      tags:
+      - Admins
+  /api/v1/admin/admins/check/{email}:
+    get:
+      consumes:
+      - application/json
+      description: Проверяет, является ли пользователь с указанным email администратором
+      parameters:
+      - description: Email пользователя
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Проверить статус администратора
+      tags:
+      - Admins
+securityDefinitions:
+  Bearer:
+    description: Bearer token для авторизации
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

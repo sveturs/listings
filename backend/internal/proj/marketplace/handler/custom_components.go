@@ -31,7 +31,7 @@ func NewCustomComponentHandler(storage postgres.CustomComponentStorage) *CustomC
 // @Produce json
 // @Param component body models.CreateCustomComponentRequest true "Данные компонента"
 // @Success 201 {object} models.CustomUIComponent
-// @Failure 400 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
 // @Security BearerAuth
 // @Router /api/admin/custom-components [post]
 func (h *CustomComponentHandler) CreateComponent(c *fiber.Ctx) error {
@@ -70,7 +70,7 @@ func (h *CustomComponentHandler) CreateComponent(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "ID компонента"
 // @Success 200 {object} models.CustomUIComponent
-// @Failure 404 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponseSwag
 // @Security BearerAuth
 // @Router /api/admin/custom-components/{id} [get]
 func (h *CustomComponentHandler) GetComponent(c *fiber.Ctx) error {
@@ -96,7 +96,7 @@ func (h *CustomComponentHandler) GetComponent(c *fiber.Ctx) error {
 // @Param id path int true "ID компонента"
 // @Param component body models.UpdateCustomComponentRequest true "Данные компонента"
 // @Success 200 {object} models.CustomUIComponent
-// @Failure 400 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
 // @Security BearerAuth
 // @Router /api/admin/custom-components/{id} [put]
 func (h *CustomComponentHandler) UpdateComponent(c *fiber.Ctx) error {
@@ -155,7 +155,7 @@ func (h *CustomComponentHandler) UpdateComponent(c *fiber.Ctx) error {
 // @Tags CustomComponents
 // @Param id path int true "ID компонента"
 // @Success 204 "Компонент удален"
-// @Failure 400 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
 // @Security BearerAuth
 // @Router /api/admin/custom-components/{id} [delete]
 func (h *CustomComponentHandler) DeleteComponent(c *fiber.Ctx) error {
@@ -183,7 +183,7 @@ func (h *CustomComponentHandler) DeleteComponent(c *fiber.Ctx) error {
 // @Router /api/admin/custom-components [get]
 func (h *CustomComponentHandler) ListComponents(c *fiber.Ctx) error {
 	log.Printf("ListComponents called")
-	
+
 	filters := map[string]interface{}{
 		"component_type": c.Query("component_type"),
 		"active":         c.Query("active"),
@@ -198,7 +198,7 @@ func (h *CustomComponentHandler) ListComponents(c *fiber.Ctx) error {
 
 	// Логируем успешный результат
 	log.Printf("Listed %d components", len(components))
-	
+
 	return c.JSON(components)
 }
 
@@ -210,7 +210,7 @@ func (h *CustomComponentHandler) ListComponents(c *fiber.Ctx) error {
 // @Produce json
 // @Param usage body models.CreateComponentUsageRequest true "Данные использования"
 // @Success 201 {object} models.CustomUIComponentUsage
-// @Failure 400 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
 // @Security BearerAuth
 // @Router /api/admin/custom-components/usage [post]
 func (h *CustomComponentHandler) AddComponentUsage(c *fiber.Ctx) error {
@@ -251,25 +251,25 @@ func (h *CustomComponentHandler) AddComponentUsage(c *fiber.Ctx) error {
 // @Param component_id query int false "ID компонента"
 // @Param category_id query int false "ID категории"
 // @Success 200 {array} models.CustomUIComponentUsage
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Security BearerAuth
 // @Router /api/admin/custom-components/usage [get]
 func (h *CustomComponentHandler) GetComponentUsages(c *fiber.Ctx) error {
 	var componentID, categoryID *int
-	
+
 	if compID := c.QueryInt("component_id", 0); compID > 0 {
 		componentID = &compID
 	}
-	
+
 	if catID := c.QueryInt("category_id", 0); catID > 0 {
 		categoryID = &catID
 	}
-	
+
 	usages, err := h.storage.GetComponentUsages(c.Context(), componentID, categoryID)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
-	
+
 	return c.JSON(usages)
 }
 
@@ -279,7 +279,7 @@ func (h *CustomComponentHandler) GetComponentUsages(c *fiber.Ctx) error {
 // @Tags CustomComponents
 // @Param id path int true "ID использования"
 // @Success 204 "Использование удалено"
-// @Failure 400 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
 // @Security BearerAuth
 // @Router /api/admin/custom-components/usage/{id} [delete]
 func (h *CustomComponentHandler) RemoveComponentUsage(c *fiber.Ctx) error {
@@ -328,7 +328,7 @@ func (h *CustomComponentHandler) GetCategoryComponents(c *fiber.Ctx) error {
 // @Produce json
 // @Param template body models.CreateTemplateRequest true "Данные шаблона"
 // @Success 201 {object} models.CustomUITemplate
-// @Failure 400 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
 // @Security BearerAuth
 // @Router /api/admin/custom-components/templates [post]
 func (h *CustomComponentHandler) CreateTemplate(c *fiber.Ctx) error {
@@ -366,7 +366,7 @@ func (h *CustomComponentHandler) CreateTemplate(c *fiber.Ctx) error {
 // @Router /api/admin/custom-components/templates [get]
 func (h *CustomComponentHandler) ListTemplates(c *fiber.Ctx) error {
 	log.Printf("ListTemplates called")
-	
+
 	componentID := c.QueryInt("component_id", 0)
 	templates, err := h.storage.ListTemplates(c.Context(), componentID)
 	if err != nil {
@@ -377,6 +377,6 @@ func (h *CustomComponentHandler) ListTemplates(c *fiber.Ctx) error {
 
 	// Логируем успешный результат
 	log.Printf("Listed %d templates", len(templates))
-	
+
 	return c.JSON(templates)
 }

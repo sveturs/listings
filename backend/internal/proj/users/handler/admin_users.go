@@ -17,7 +17,7 @@ import (
 // @Accept json
 // @Produce json
 // @Success 200 {array} models.AdminUser
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/admins [get]
 func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
 	ctx := context.Background()
@@ -45,8 +45,8 @@ func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
 // @Produce json
 // @Param admin body models.AdminUser true "Данные администратора"
 // @Success 200 {object} models.AdminUser
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/admins [post]
 func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
 	ctx := context.Background()
@@ -87,9 +87,9 @@ func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param email path string true "Email администратора"
-// @Success 200 {object} utils.SuccessResponse
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/admins/{email} [delete]
 func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
 	ctx := context.Background()
@@ -126,8 +126,8 @@ func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param email path string true "Email пользователя"
 // @Success 200 {object} fiber.Map
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/admins/check/{email} [get]
 func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
 	ctx := context.Background()
@@ -164,8 +164,8 @@ func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param email path string true "Email пользователя"
 // @Success 200 {object} fiber.Map
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin-check/{email} [get]
 func (h *UserHandler) IsAdminPublic(c *fiber.Ctx) error {
 	ctx := context.Background()
