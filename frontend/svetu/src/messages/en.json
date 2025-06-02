@@ -1,14 +1,5 @@
 {
   "home": {
-    "title": "Welcome",
-    "description": "This is the home page",
-    "getStarted": "Get started by editing",
-    "saveChanges": "Save and see your changes instantly.",
-    "deployNow": "Deploy now",
-    "readDocs": "Read our docs",
-    "learn": "Learn",
-    "examples": "Examples",
-    "goToNextjs": "Go to nextjs.org →",
     "marketplace": "Marketplace",
     "errorLoadingData": "Error loading data. Please try again later.",
     "noItems": "No items found",
@@ -19,8 +10,7 @@
       "blog": "Blog",
       "news": "News",
       "contacts": "Contacts"
-    },
-    "login": "Login"
+    }
   },
   "blog": {
     "title": "Blog",
@@ -48,15 +38,75 @@
     "readMore": "Read more"
   },
   "auth": {
-    "login": "Sign in with Google",
-    "loginWithGoogle": "Sign in with Google",
-    "logout": "Sign out",
-    "loggingOut": "Signing out...",
+    "login": "Login",
+    "logout": "Logout",
+    "loggingOut": "Logging out...",
     "profile": "Profile",
     "adminPanel": "Admin Panel",
-    "loading": "Loading...",
-    "welcomeBack": "Welcome back",
-    "notAuthenticated": "Please sign in to continue"
+    "common": {
+      "close": "Close"
+    },
+    "loginForm": {
+      "title": "Sign In",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign In",
+      "register": "Register",
+      "registerText": "Don't have an account?",
+      "loginText": "Already have an account?",
+      "switchToLogin": "Sign In",
+      "googleLogin": "Sign in with Google",
+      "or": "or",
+      "loggingIn": "Signing in..."
+    },
+    "registerForm": {
+      "title": "Sign Up",
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "phone": "Phone",
+      "phonePlaceholder": "Enter your phone (optional)",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter password (minimum 6 characters)",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Repeat your password",
+      "googleRegister": "Sign up with Google",
+      "submit": "Sign Up",
+      "submitting": "Signing up...",
+      "or": "or",
+      "successMessage": "Registration successful!",
+      "successDescription": "You can now log in using your email and password.",
+      "switchToLogin": "Go to Login",
+      "close": "Close",
+      "loginText": "Already have an account?"
+    },
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email address",
+      "passwordRequired": "Password is required",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "nameRequired": "Name is required",
+      "nameMinLength": "Name must be at least 2 characters",
+      "nameMaxLength": "Name cannot exceed 100 characters",
+      "phoneInvalid": "Invalid phone number format",
+      "cityMaxLength": "City name cannot exceed 100 characters",
+      "countryMaxLength": "Country name cannot exceed 100 characters"
+    },
+    "errors": {
+      "loginFailed": "Login failed. Please check your email and password.",
+      "registerFailed": "Registration failed. Please try again.",
+      "emailExists": "User with this email already exists",
+      "tooManyAttempts": "Too many attempts. Please try again later.",
+      "invalidCredentials": "Invalid email or password",
+      "nameRequired": "Name is required",
+      "emailRequired": "Email is required",
+      "passwordRequired": "Password is required",
+      "passwordTooShort": "Password must be at least 6 characters"
+    }
   },
   "profile": {
     "title": "My Profile",
@@ -79,39 +129,35 @@
     "errors": {
       "updateFailed": "Failed to update profile. Please try again."
     },
+    "validation": {
+      "nameRequired": "Name is required",
+      "nameMinLength": "Name must be at least 2 characters long",
+      "nameMaxLength": "Name cannot exceed 100 characters",
+      "phoneInvalid": "Please enter a valid phone number",
+      "cityMaxLength": "City name cannot exceed 100 characters",
+      "countryMaxLength": "Country name cannot exceed 100 characters"
+    },
     "notProvided": "Not provided"
   },
   "users": {
-    "profile": {
-      "success": {
-        "updated": "Profile updated successfully"
-      },
-      "error": {
-        "fetch": "Error fetching profile",
-        "invalid_data": "Invalid data format",
-        "validation": "Validation error",
-        "update": "Error updating profile",
-        "invalid_id": "Invalid user ID",
-        "not_found": "User not found"
-      }
-    },
     "register": {
-      "success": {
-        "created": "User registered successfully"
-      },
       "error": {
-        "invalid_data": "Invalid data format",
         "name_required": "Name is required",
         "email_required": "Email is required",
+        "password_required": "Password is required",
+        "password_too_short": "Password must be at least 6 characters",
         "email_exists": "Email already exists",
-        "create_failed": "Registration failed"
+        "tooManyAttempts": "Too many registration attempts from this IP. Please try again in 1 hour."
       }
     },
-    "admin_check": {
+    "login": {
       "error": {
-        "email_required": "Email is required",
-        "user_not_found": "User not found"
+        "invalid_credentials": "Invalid email or password"
       }
+    },
+    "errors": {
+      "tooManyAttempts": "Too many attempts. Please try again in a few minutes.",
+      "accountTemporarilyLocked": "Account temporarily locked due to multiple failed attempts. Please try again in 1 hour."
     }
   },
   "admin": {

@@ -6,7 +6,11 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 
-export function AuthButton() {
+interface AuthButtonProps {
+  onLoginClick?: () => void;
+}
+
+export function AuthButton({ onLoginClick }: AuthButtonProps) {
   const {
     user,
     isAuthenticated,
@@ -127,9 +131,9 @@ export function AuthButton() {
 
   return (
     <button
-      onClick={() => login()}
+      onClick={() => (onLoginClick ? onLoginClick() : login())}
       className="btn btn-primary btn-sm"
-      aria-label={t('loginWithGoogle')}
+      aria-label={t('login')}
     >
       {t('login')}
     </button>

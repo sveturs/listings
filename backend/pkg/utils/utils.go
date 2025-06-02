@@ -4,7 +4,11 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"time"
+
+	"backend/pkg/jwt"
 	"github.com/gofiber/fiber/v2"
+	"golang.org/x/crypto/bcrypt"
 	"strconv"
 )
 
@@ -48,4 +52,31 @@ func StringToInt(str string, defaultValue int) int {
 		return defaultValue
 	}
 	return val
+}
+
+// HashPassword хеширует пароль с использованием bcrypt
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
+
+// CheckPasswordHash проверяет пароль против хеша
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+// GenerateJWTToken генерирует JWT токен для пользователя с дефолтным временем жизни
+func GenerateJWTToken(userID int, email string, secret string) (string, error) {
+	return jwt.GenerateToken(userID, email, secret)
+}
+
+// GenerateJWTTokenWithDuration генерирует JWT токен для пользователя с заданным временем жизни
+func GenerateJWTTokenWithDuration(userID int, email string, secret string, duration time.Duration) (string, error) {
+	return jwt.GenerateTokenWithDuration(userID, email, secret, duration)
+}
+
+// ValidateJWTToken валидирует JWT токен
+func ValidateJWTToken(tokenString string, secret string) (*jwt.Claims, error) {
+	return jwt.ValidateToken(tokenString, secret)
 }

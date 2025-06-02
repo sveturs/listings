@@ -8,18 +8,21 @@ import (
 	"backend/internal/domain/models"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/users/service"
+	"backend/pkg/logger"
 	"backend/pkg/utils"
 )
 
 type UserHandler struct {
 	services    globalService.ServicesInterface
 	userService service.UserServiceInterface
+	logger      *logger.Logger
 }
 
 func NewUserHandler(services globalService.ServicesInterface) *UserHandler {
 	return &UserHandler{
 		services:    services,
 		userService: services.User(),
+		logger:      logger.New(),
 	}
 }
 
@@ -73,8 +76,25 @@ type AdminCheckResponseWrapper struct {
 
 // RegisterRequest представляет запрос на регистрацию
 type RegisterRequest struct {
-	Name  string `json:"name" validate:"required" example:"Иван Иванов"`
-	Email string `json:"email" validate:"required,email" example:"user@example.com"`
+	Name     string  `json:"name" validate:"required" example:"Иван Иванов"`
+	Email    string  `json:"email" validate:"required,email" example:"user@example.com"`
+	Password string  `json:"password" validate:"required,min=6" example:"password123"`
+	Phone    *string `json:"phone,omitempty" example:"+1234567890"`
+}
+
+// LoginRequest представляет запрос на вход
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required,email" example:"user@example.com"`
+	Password string `json:"password" validate:"required" example:"password123"`
+}
+
+// LoginResponse представляет ответ после успешной авторизации
+type LoginResponse struct {
+	Success   bool         `json:"success" example:"true"`
+	Message   string       `json:"message" example:"Вход выполнен успешно"`
+	Token     string       `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	ExpiresIn int          `json:"expires_in" example:"3600"`
+	User      *models.User `json:"user"`
 }
 
 // GetProfile получает профиль текущего пользователя
@@ -145,12 +165,10 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param user body RegisterRequest true "Данные для регистрации"
+// @Param user body RegisterRequest true "Данные для регистрации (name, email, password обязательны, phone опционален)"
 // @Success 201 {object} RegisterResponse
 // @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 401 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
-// @Security BearerAuth
 // @Router /api/v1/users/register [post]
 func (h *UserHandler) Register(c *fiber.Ctx) error {
 	var registerData RegisterRequest
@@ -166,13 +184,27 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	if registerData.Email == "" {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "users.register.error.email_required")
 	}
-
-	user := &models.User{
-		Name:  registerData.Name,
-		Email: registerData.Email,
+	if registerData.Password == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "users.register.error.password_required")
+	}
+	if len(registerData.Password) < 6 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "users.register.error.password_too_short")
 	}
 
-	err := h.services.User().CreateUser(c.Context(), user)
+	// Хеширование пароля
+	hashedPassword, err := utils.HashPassword(registerData.Password)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.register.error.password_hash_failed")
+	}
+
+	user := &models.User{
+		Name:     registerData.Name,
+		Email:    registerData.Email,
+		Password: hashedPassword,
+		Phone:    registerData.Phone,
+	}
+
+	err = h.services.User().CreateUser(c.Context(), user)
 	if err != nil {
 		if err.Error() == "email already exists" {
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "users.register.error.email_exists")
@@ -184,6 +216,66 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		Success: true,
 		Message: "users.register.success.created",
 		User:    user,
+	})
+}
+
+// Login авторизует пользователя по email и паролю
+// @Summary Авторизация пользователя
+// @Description Авторизует пользователя по email и паролю, возвращает JWT токен
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body LoginRequest true "Данные для авторизации (email и password обязательны)"
+// @Success 200 {object} LoginResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/users/login [post]
+func (h *UserHandler) Login(c *fiber.Ctx) error {
+	var loginData LoginRequest
+
+	if err := c.BodyParser(&loginData); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "users.login.error.invalid_data")
+	}
+
+	// Базовая валидация
+	if loginData.Email == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "users.login.error.email_required")
+	}
+	if loginData.Password == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "users.login.error.password_required")
+	}
+
+	// Получаем пользователя по email
+	user, err := h.services.User().GetUserByEmail(c.Context(), loginData.Email)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.login.error.invalid_credentials")
+	}
+
+	// Проверяем пароль
+	if !utils.CheckPasswordHash(loginData.Password, user.Password) {
+		h.logger.Info("Failed login attempt for user: %s (IP: %s, UserAgent: %s)", 
+			loginData.Email, c.IP(), c.Get("User-Agent"))
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.login.error.invalid_credentials")
+	}
+
+	// Генерируем JWT токен с настраиваемым временем жизни
+	jwtDuration := h.services.Config().GetJWTDuration()
+	token, err := utils.GenerateJWTTokenWithDuration(user.ID, user.Email, h.services.Config().JWTSecret, jwtDuration)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.login.error.token_generation")
+	}
+
+	// Логируем успешный логин
+	h.logger.Info("Successful login for user: %s (UserID: %d, IP: %s, TokenTTL: %v)", 
+		user.Email, user.ID, c.IP(), jwtDuration)
+
+	return c.JSON(LoginResponse{
+		Success:   true,
+		Message:   "users.login.success.authenticated",
+		Token:     token,
+		ExpiresIn: int(jwtDuration.Seconds()),
+		User:      user,
 	})
 }
 

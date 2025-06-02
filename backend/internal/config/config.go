@@ -4,6 +4,8 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 )
 
 type Config struct {
@@ -18,6 +20,8 @@ type Config struct {
 	GoogleTranslateAPIKey string
 	StripeAPIKey          string
 	StripeWebhookSecret   string
+	JWTSecret             string
+	JWTExpirationHours    int               `yaml:"jwt_expiration_hours"`
 	OpenSearch            OpenSearchConfig  `yaml:"opensearch"`
 	FileStorage           FileStorageConfig `yaml:"file_storage"`
 }
@@ -84,6 +88,23 @@ func NewConfig() (*Config, error) {
 	config.StripeAPIKey = os.Getenv("STRIPE_API_KEY")
 	config.StripeWebhookSecret = os.Getenv("STRIPE_WEBHOOK_SECRET")
 
+	// Получаем JWT секретный ключ
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "default-jwt-secret-change-in-production" // Дефолтное значение для разработки
+	}
+	config.JWTSecret = jwtSecret
+
+	// Получаем время жизни JWT токена (в часах)
+	jwtExpirationStr := os.Getenv("JWT_EXPIRATION_HOURS")
+	jwtExpirationHours := 1 // По умолчанию 1 час
+	if jwtExpirationStr != "" {
+		if parsed, err := strconv.Atoi(jwtExpirationStr); err == nil && parsed > 0 {
+			jwtExpirationHours = parsed
+		}
+	}
+	config.JWTExpirationHours = jwtExpirationHours
+
 	// Получаем ключ Google Translate API (необязательный)
 	config.GoogleTranslateAPIKey = os.Getenv("GOOGLE_TRANSLATE_API_KEY")
 
@@ -145,7 +166,14 @@ func NewConfig() (*Config, error) {
 		GoogleTranslateAPIKey: config.GoogleTranslateAPIKey,
 		StripeAPIKey:          config.StripeAPIKey,
 		StripeWebhookSecret:   config.StripeWebhookSecret,
+		JWTSecret:             config.JWTSecret,
+		JWTExpirationHours:    config.JWTExpirationHours,
 		OpenSearch:            config.OpenSearch,
 		FileStorage:           config.FileStorage,
 	}, nil
+}
+
+// GetJWTDuration возвращает время жизни JWT токена как time.Duration
+func (c *Config) GetJWTDuration() time.Duration {
+	return time.Duration(c.JWTExpirationHours) * time.Hour
 }

@@ -20,11 +20,13 @@ interface AuthContextType {
   isLoading: boolean;
   isLoggingOut: boolean;
   isUpdatingProfile: boolean;
+  isRefreshingSession: boolean;
   error: string | null;
   login: (returnTo?: string) => void;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   updateProfile: (data: UpdateProfileRequest) => Promise<boolean>;
+  updateUser: (userData: User | null) => void;
   clearError: () => void;
 }
 
@@ -33,33 +35,65 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
-  // Инициализация с кешированным состоянием из sessionStorage
+  // Безопасная инициализация с кешированным состоянием из sessionStorage
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = sessionStorage.getItem('svetu_user');
-        return cached ? JSON.parse(cached) : null;
-      } catch {
-        return null;
+        if (cached) {
+          const parsedUser = JSON.parse(cached);
+          // Проверяем, что объект пользователя имеет минимально необходимые поля
+          if (
+            parsedUser &&
+            typeof parsedUser === 'object' &&
+            parsedUser.id &&
+            parsedUser.email
+          ) {
+            return parsedUser;
+          }
+        }
+      } catch (error) {
+        console.warn(
+          'Failed to parse cached user data, clearing cache:',
+          error
+        );
+        // Очищаем поврежденный кеш
+        try {
+          sessionStorage.removeItem('svetu_user');
+        } catch {
+          // Игнорируем ошибки очистки
+        }
       }
     }
     return null;
   });
 
-  // Если есть кешированный пользователь, начинаем с false, иначе с true
+  // Если есть валидный кешированный пользователь, начинаем с false, иначе с true
   const [isLoading, setIsLoading] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = sessionStorage.getItem('svetu_user');
-        return !cached; // false если есть кеш, true если нет
+        if (cached) {
+          const parsedUser = JSON.parse(cached);
+          // Проверяем валидность кешированных данных
+          if (
+            parsedUser &&
+            typeof parsedUser === 'object' &&
+            parsedUser.id &&
+            parsedUser.email
+          ) {
+            return false; // Данные валидны, начинаем без загрузки
+          }
+        }
       } catch {
-        return true;
+        // Если не можем прочитать/парсить - требуется загрузка
       }
     }
-    return true;
+    return true; // По умолчанию показываем загрузку
   });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isRefreshingSession, setIsRefreshingSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Cooldown для предотвращения частых вызовов refreshSession
@@ -70,20 +104,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
   }, []);
 
-  // Функция для кеширования пользователя в sessionStorage
-  const cacheUser = useCallback((userData: User | null) => {
-    if (typeof window !== 'undefined') {
+  // Безопасная работа с sessionStorage с fallback механизмами
+  const storageUtils = useMemo(() => {
+    // Проверяем доступность sessionStorage
+    const isStorageAvailable = (() => {
+      if (typeof window === 'undefined') return false;
       try {
-        if (userData) {
-          sessionStorage.setItem('svetu_user', JSON.stringify(userData));
-        } else {
-          sessionStorage.removeItem('svetu_user');
-        }
-      } catch (error) {
-        console.warn('Failed to cache user data:', error);
+        const testKey = '__storage_test__';
+        sessionStorage.setItem(testKey, 'test');
+        sessionStorage.removeItem(testKey);
+        return true;
+      } catch {
+        return false;
       }
-    }
+    })();
+
+    return {
+      isAvailable: isStorageAvailable,
+
+      getItem: (key: string): string | null => {
+        if (!isStorageAvailable) return null;
+        try {
+          return sessionStorage.getItem(key);
+        } catch (error) {
+          console.warn(`Failed to read from sessionStorage (${key}):`, error);
+          return null;
+        }
+      },
+
+      setItem: (key: string, value: string): boolean => {
+        if (!isStorageAvailable) {
+          console.warn('SessionStorage is not available, skipping cache');
+          return false;
+        }
+        try {
+          sessionStorage.setItem(key, value);
+          return true;
+        } catch (error) {
+          console.warn(`Failed to write to sessionStorage (${key}):`, error);
+          // Попытка очистить место, если ошибка связана с переполнением
+          if (error instanceof Error && error.name === 'QuotaExceededError') {
+            try {
+              sessionStorage.clear();
+              sessionStorage.setItem(key, value);
+              console.info('Cleared sessionStorage and retried');
+              return true;
+            } catch {
+              console.error('Failed to clear and retry sessionStorage');
+            }
+          }
+          return false;
+        }
+      },
+
+      removeItem: (key: string): boolean => {
+        if (!isStorageAvailable) return false;
+        try {
+          sessionStorage.removeItem(key);
+          return true;
+        } catch (error) {
+          console.warn(`Failed to remove from sessionStorage (${key}):`, error);
+          return false;
+        }
+      },
+    };
   }, []);
+
+  // Функция для кеширования пользователя в sessionStorage
+  const cacheUser = useCallback(
+    (userData: User | null) => {
+      if (userData) {
+        const success = storageUtils.setItem(
+          'svetu_user',
+          JSON.stringify(userData)
+        );
+        if (!success) {
+          console.warn('User data was not cached due to storage issues');
+        }
+      } else {
+        storageUtils.removeItem('svetu_user');
+      }
+    },
+    [storageUtils]
+  );
 
   // Обертка для setUser с кешированием
   const updateUser = useCallback(
@@ -95,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const refreshSession = useCallback(
-    async (retries = 3) => {
+    async (retries = 3, skipLoadingState = false) => {
       const now = Date.now();
       if (now - lastRefreshAttempt.current < REFRESH_COOLDOWN) {
         if (process.env.NODE_ENV === 'development') {
@@ -105,47 +208,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       lastRefreshAttempt.current = now;
 
-      for (let i = 0; i < retries; i++) {
-        try {
-          const session = await AuthService.getSession();
-          if (session.authenticated && session.user) {
-            updateUser(session.user);
-            setError(null);
-          } else {
-            updateUser(null);
-          }
-          setIsLoading(false);
-          return;
-        } catch (error) {
-          console.error(
-            `Session refresh error (attempt ${i + 1}/${retries}):`,
-            error
-          );
-          if (i === retries - 1) {
-            setError('Failed to load session. Please try refreshing the page.');
-            updateUser(null);
+      // Устанавливаем состояние загрузки только если это не фоновое обновление
+      if (!skipLoadingState) {
+        setIsRefreshingSession(true);
+      }
+
+      try {
+        for (let i = 0; i < retries; i++) {
+          try {
+            const session = await AuthService.getSession();
+            if (session.authenticated && session.user) {
+              updateUser(session.user);
+              setError(null);
+            } else {
+              updateUser(null);
+            }
             setIsLoading(false);
-          } else {
-            // Exponential backoff
-            await new Promise((resolve) =>
-              setTimeout(resolve, 1000 * Math.pow(2, i))
+            return;
+          } catch (error) {
+            console.error(
+              `Session refresh error (attempt ${i + 1}/${retries}):`,
+              error
             );
+            if (i === retries - 1) {
+              setError(
+                'Failed to load session. Please try refreshing the page.'
+              );
+              updateUser(null);
+              setIsLoading(false);
+            } else {
+              // Exponential backoff
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * Math.pow(2, i))
+              );
+            }
           }
         }
+      } finally {
+        setIsRefreshingSession(false);
       }
     },
     [updateUser, REFRESH_COOLDOWN]
   );
 
   useEffect(() => {
-    // Проверяем наличие кешированного пользователя при первой загрузке
-    const hasCachedUser =
-      typeof window !== 'undefined' && sessionStorage.getItem('svetu_user');
-    if (hasCachedUser) {
-      // Проверяем актуальность в фоне, не блокируя UI
-      setTimeout(() => refreshSession(), 100);
+    // Проверяем наличие валидного кешированного пользователя при первой загрузке
+    const cachedData = storageUtils.getItem('svetu_user');
+    let hasValidCache = false;
+
+    if (cachedData) {
+      try {
+        const parsedUser = JSON.parse(cachedData);
+        hasValidCache =
+          parsedUser &&
+          typeof parsedUser === 'object' &&
+          parsedUser.id &&
+          parsedUser.email;
+      } catch {
+        // Поврежденный кеш, очищаем его
+        storageUtils.removeItem('svetu_user');
+      }
+    }
+
+    if (hasValidCache) {
+      // Проверяем актуальность в фоне, не блокируя UI (skipLoadingState = true)
+      setTimeout(() => refreshSession(3, true), 100);
     } else {
-      // Если нет кешированного пользователя, делаем полную проверку
+      // Если нет валидного кешированного пользователя, делаем полную проверку с loading state
       refreshSession();
     }
 
@@ -153,7 +282,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       AuthService.cleanup();
     };
-  }, [refreshSession]);
+  }, [refreshSession, storageUtils]);
 
   const login = useCallback((returnTo?: string) => {
     try {
@@ -186,8 +315,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const updatedProfile = await AuthService.updateProfile(data);
         if (updatedProfile) {
+          console.log('Profile update response:', updatedProfile);
+
+          // Обновляем пользователя с новыми данными от сервера
           const updatedUser = user ? { ...user, ...updatedProfile } : null;
+          console.log('Updated user data:', updatedUser);
           updateUser(updatedUser);
+
+          // Принудительно получаем свежие данные пользователя с сервера
+          // Сбрасываем cooldown для принудительного обновления
+          lastRefreshAttempt.current = 0;
+          try {
+            const session = await AuthService.getSession();
+            console.log('Fresh session data:', session);
+            if (session.authenticated && session.user) {
+              updateUser(session.user);
+            }
+          } catch (error) {
+            console.warn(
+              'Failed to refresh session after profile update:',
+              error
+            );
+            // Не показываем ошибку пользователю, так как основное обновление прошло успешно
+          }
+
           return true;
         }
         setError('Failed to update profile');
@@ -210,11 +361,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       isLoggingOut,
       isUpdatingProfile,
+      isRefreshingSession,
       error,
       login,
       logout,
       refreshSession,
       updateProfile,
+      updateUser,
       clearError,
     }),
     [
@@ -222,11 +375,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       isLoggingOut,
       isUpdatingProfile,
+      isRefreshingSession,
       error,
       login,
       logout,
       refreshSession,
       updateProfile,
+      updateUser,
       clearError,
     ]
   );

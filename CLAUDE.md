@@ -85,7 +85,7 @@ Authentication flow:
 ## Backend (Go)
 ```bash
 # Сборка
-cd backend && go build -o main ./cmd/api
+cd backend && go build -o bin/api ./cmd/api
 
 # Запуск с горячей перезагрузкой
 cd backend && air

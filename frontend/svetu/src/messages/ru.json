@@ -1,14 +1,5 @@
 {
   "home": {
-    "title": "Добро пожаловать",
-    "description": "Это стартовая страница",
-    "getStarted": "Начните с редактирования",
-    "saveChanges": "Сохраните и увидьте изменения мгновенно.",
-    "deployNow": "Развернуть сейчас",
-    "readDocs": "Читать документацию",
-    "learn": "Изучить",
-    "examples": "Примеры",
-    "goToNextjs": "Перейти на nextjs.org →",
     "marketplace": "Объявления",
     "errorLoadingData": "Ошибка загрузки данных. Пожалуйста, попробуйте позже.",
     "noItems": "Объявления не найдены",
@@ -19,8 +10,7 @@
       "blog": "Блог",
       "news": "Новости",
       "contacts": "Контакты"
-    },
-    "login": "Войти"
+    }
   },
   "blog": {
     "title": "Блог",
@@ -48,15 +38,75 @@
     "readMore": "Подробнее"
   },
   "auth": {
-    "login": "Войти через Google",
-    "loginWithGoogle": "Войти через Google",
+    "login": "Войти",
     "logout": "Выйти",
     "loggingOut": "Выход...",
     "profile": "Профиль",
     "adminPanel": "Панель администратора",
-    "loading": "Загрузка...",
-    "welcomeBack": "С возвращением",
-    "notAuthenticated": "Пожалуйста, войдите для продолжения"
+    "common": {
+      "close": "Закрыть"
+    },
+    "loginForm": {
+      "title": "Вход в систему",
+      "email": "Email",
+      "emailPlaceholder": "Введите ваш email",
+      "password": "Пароль",
+      "passwordPlaceholder": "Введите ваш пароль",
+      "submit": "Войти",
+      "register": "Зарегистрироваться",
+      "registerText": "Нет аккаунта?",
+      "loginText": "Уже есть аккаунт?",
+      "switchToLogin": "Войти",
+      "googleLogin": "Войти через Google",
+      "or": "или",
+      "loggingIn": "Вход..."
+    },
+    "registerForm": {
+      "title": "Регистрация",
+      "name": "Имя",
+      "namePlaceholder": "Введите ваше имя",
+      "phone": "Телефон",
+      "phonePlaceholder": "Введите ваш телефон (необязательно)",
+      "email": "Email",
+      "emailPlaceholder": "Введите ваш email",
+      "password": "Пароль",
+      "passwordPlaceholder": "Введите пароль (минимум 6 символов)",
+      "confirmPassword": "Подтвердите пароль",
+      "confirmPasswordPlaceholder": "Повторите пароль",
+      "googleRegister": "Зарегистрироваться через Google",
+      "submit": "Зарегистрироваться",
+      "submitting": "Регистрация...",
+      "or": "или",
+      "successMessage": "Регистрация прошла успешно!",
+      "successDescription": "Теперь вы можете войти в систему, используя свой email и пароль.",
+      "switchToLogin": "Войти в аккаунт",
+      "close": "Закрыть",
+      "loginText": "Уже есть аккаунт?"
+    },
+    "validation": {
+      "emailRequired": "Email обязателен",
+      "emailInvalid": "Некорректный email",
+      "passwordRequired": "Пароль обязателен",
+      "passwordTooShort": "Пароль должен содержать минимум 6 символов",
+      "passwordsDoNotMatch": "Пароли не совпадают",
+      "nameRequired": "Имя обязательно",
+      "nameMinLength": "Имя должно содержать минимум 2 символа",
+      "nameMaxLength": "Имя не может превышать 100 символов",
+      "phoneInvalid": "Некорректный формат номера телефона",
+      "cityMaxLength": "Название города не может превышать 100 символов",
+      "countryMaxLength": "Название страны не может превышать 100 символов"
+    },
+    "errors": {
+      "loginFailed": "Ошибка входа. Проверьте email и пароль.",
+      "registerFailed": "Ошибка регистрации. Попробуйте позже.",
+      "emailExists": "Пользователь с таким email уже существует",
+      "tooManyAttempts": "Слишком много попыток. Попробуйте позже.",
+      "invalidCredentials": "Неверный email или пароль",
+      "nameRequired": "Имя обязательно для заполнения",
+      "emailRequired": "Email обязателен для заполнения",
+      "passwordRequired": "Пароль обязателен для заполнения",
+      "passwordTooShort": "Пароль должен содержать минимум 6 символов"
+    }
   },
   "profile": {
     "title": "Мой профиль",
@@ -79,39 +129,35 @@
     "errors": {
       "updateFailed": "Не удалось обновить профиль. Пожалуйста, попробуйте еще раз."
     },
+    "validation": {
+      "nameRequired": "Имя обязательно для заполнения",
+      "nameMinLength": "Имя должно содержать минимум 2 символа",
+      "nameMaxLength": "Имя не может превышать 100 символов",
+      "phoneInvalid": "Пожалуйста, введите корректный номер телефона",
+      "cityMaxLength": "Название города не может превышать 100 символов",
+      "countryMaxLength": "Название страны не может превышать 100 символов"
+    },
     "notProvided": "Не указано"
   },
   "users": {
-    "profile": {
-      "success": {
-        "updated": "Профиль успешно обновлен"
-      },
-      "error": {
-        "fetch": "Ошибка загрузки профиля",
-        "invalid_data": "Неверный формат данных",
-        "validation": "Ошибка валидации данных",
-        "update": "Ошибка обновления профиля",
-        "invalid_id": "Неверный ID пользователя",
-        "not_found": "Пользователь не найден"
-      }
-    },
     "register": {
-      "success": {
-        "created": "Пользователь успешно зарегистрирован"
-      },
       "error": {
-        "invalid_data": "Неверный формат данных",
         "name_required": "Имя обязательно для заполнения",
         "email_required": "Email обязателен для заполнения",
+        "password_required": "Пароль обязателен для заполнения",
+        "password_too_short": "Пароль должен содержать минимум 6 символов",
         "email_exists": "Email уже используется",
-        "create_failed": "Ошибка регистрации пользователя"
+        "tooManyAttempts": "Слишком много попыток регистрации с этого IP. Попробуйте через 1 час."
       }
     },
-    "admin_check": {
+    "login": {
       "error": {
-        "email_required": "Email обязателен",
-        "user_not_found": "Пользователь не найден"
+        "invalid_credentials": "Неверный email или пароль"
       }
+    },
+    "errors": {
+      "tooManyAttempts": "Слишком много попыток. Попробуйте через несколько минут.",
+      "accountTemporarilyLocked": "Аккаунт временно заблокирован из-за множественных неудачных попыток. Попробуйте через 1 час."
     }
   },
   "admin": {

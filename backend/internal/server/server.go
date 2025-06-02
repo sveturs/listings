@@ -271,6 +271,13 @@ func (s *Server) setupRoutes() {
 	entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating)
 	entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)
 
+	// CSRF токен
+	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
+
+	// Применяем rate limiting для authentication endpoints
+	s.app.Post("/api/v1/users/register", s.middleware.RegistrationRateLimit(), s.users.User.Register)
+	s.app.Post("/api/v1/users/login", s.middleware.AuthRateLimit(), s.users.User.Login)
+
 	authedAPIGroup := s.app.Group("/api/v1", s.middleware.AuthRequired)
 
 	protectedReviews := authedAPIGroup.Group("/reviews")
@@ -316,7 +323,6 @@ func (s *Server) setupRoutes() {
 	auth.Get("/logout", s.users.Auth.Logout)
 
 	users := authedAPIGroup.Group("/users")
-	users.Post("/register", s.users.User.Register)
 	users.Get("/me", s.users.User.GetProfile)    // TODO: remove
 	users.Put("/me", s.users.User.UpdateProfile) // TODO: remove
 	users.Get("/profile", s.users.User.GetProfile)

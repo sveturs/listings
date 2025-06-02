@@ -2,21 +2,26 @@
 package handler
 
 import (
+	"github.com/gofiber/fiber/v2"
+
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/users/service"
+	"backend/internal/types"
+	"backend/pkg/logger"
 	"backend/pkg/utils"
-	"github.com/gofiber/fiber/v2"
 )
 
 type AuthHandler struct {
 	services    globalService.ServicesInterface
 	authService service.AuthServiceInterface
+	logger      *logger.Logger
 }
 
 func NewAuthHandler(services globalService.ServicesInterface) *AuthHandler {
 	return &AuthHandler{
 		services:    services,
 		authService: services.Auth(),
+		logger:      logger.New(),
 	}
 }
 
@@ -88,22 +93,52 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 
 // backend/internal/proj/users/handler/auth.go
 func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
+	var sessionData *types.SessionData
+	var err error
+
+	// Попробуем получить сессию через session cookie
 	sessionToken := c.Cookies("session_token")
-	if sessionToken == "" {
-		return c.JSON(fiber.Map{
-			"authenticated": false,
-		})
+	if sessionToken != "" {
+		sessionData, err = h.services.Auth().GetSession(c.Context(), sessionToken)
+		if err != nil || sessionData == nil {
+			sessionData = nil // Очищаем если ошибка
+		}
 	}
 
-	// Исправляем вызов метода GetSession, добавляя контекст
-	sessionData, err := h.services.Auth().GetSession(c.Context(), sessionToken)
-	if err != nil {
-		return c.JSON(fiber.Map{
-			"authenticated": false,
-		})
+	// Если сессия через cookie не найдена, проверяем JWT токен
+	if sessionData == nil {
+		authHeader := c.Get("Authorization")
+		if authHeader != "" && len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			jwtToken := authHeader[7:]
+
+			// Проверяем JWT токен
+			claims, err := utils.ValidateJWTToken(jwtToken, h.services.Config().JWTSecret)
+			if err != nil {
+				h.logger.Info("JWT token validation failed: %v (IP: %s, UserAgent: %s)", 
+					err, c.IP(), c.Get("User-Agent"))
+			} else if claims != nil {
+				// Получаем данные пользователя из базы
+				user, err := h.services.User().GetUserByEmail(c.Context(), claims.Email)
+				if err == nil && user != nil {
+					// Создаем временную sessionData для JWT пользователя
+					sessionData = &types.SessionData{
+						UserID:     claims.UserID,
+						Email:      claims.Email,
+						Name:       user.Name,
+						Provider:   "password", // Предполагаем что JWT = password login
+						PictureURL: user.PictureURL,
+					}
+					h.logger.Info("JWT session restored for user: %s (UserID: %d)", 
+						claims.Email, claims.UserID)
+				} else {
+					h.logger.Error("Failed to get user data for JWT claims: %v (Email: %s)", 
+						err, claims.Email)
+				}
+			}
+		}
 	}
 
-	// Проверяем на nil вместо проверки ошибки
+	// Если ни session cookie, ни JWT не дали результата
 	if sessionData == nil {
 		return c.JSON(fiber.Map{
 			"authenticated": false,

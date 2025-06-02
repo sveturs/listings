@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from '@/i18n/routing';
 import Image from 'next/image';
+import FormField from '@/components/FormField';
 import {
   validateProfileData,
   hasFormChanges,
@@ -171,203 +172,230 @@ export default function ProfilePage() {
           </div>
         )}
 
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body">
-            <div className="flex items-center mb-6">
-              {user?.picture_url && (
-                <div className="avatar mr-4">
-                  <div className="w-24 h-24 rounded-full relative">
-                    <Image
-                      src={user.picture_url}
-                      alt={`Profile picture of ${user.name}`}
-                      fill
-                      className="rounded-full object-cover"
-                      sizes="96px"
-                      priority={false}
-                      placeholder="empty"
-                    />
-                  </div>
-                </div>
-              )}
-              <div>
-                <h2 className="card-title">{user?.name || ''}</h2>
-                <p className="text-base-content/70">{user?.email || ''}</p>
+        {/* User Profile Header */}
+        <div className="flex items-center mb-8">
+          {user?.picture_url && (
+            <div className="avatar mr-6">
+              <div className="w-24 h-24 rounded-full relative">
+                <Image
+                  src={user.picture_url}
+                  alt={`Profile picture of ${user.name}`}
+                  fill
+                  className="rounded-full object-cover"
+                  sizes="96px"
+                  priority={false}
+                  placeholder="empty"
+                />
               </div>
             </div>
+          )}
+          <div>
+            <h2 className="text-2xl font-semibold">{user?.name || ''}</h2>
+            <p className="text-base-content/70">{user?.email || ''}</p>
+          </div>
+        </div>
 
-            <div className="divider"></div>
+        {isEditing ? (
+          <form className="space-y-6">
+            <FormField
+              label={t('fields.name')}
+              required
+              error={
+                getFieldError('name') ? t(getFieldError('name')!) : undefined
+              }
+            >
+              <input
+                id="name"
+                type="text"
+                className={`input input-bordered w-full ${
+                  getFieldError('name') ? 'input-error' : ''
+                }`}
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                required
+              />
+            </FormField>
 
-            {isEditing ? (
+            <div className="form-control">
+              <label className="label" htmlFor="email">
+                <span className="label-text">{t('fields.email')}</span>
+              </label>
+              <input
+                id="email"
+                type="email"
+                className="input input-bordered w-full"
+                value={user?.email || ''}
+                disabled
+                readOnly
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label" htmlFor="phone">
+                <span className="label-text">{t('fields.phone')}</span>
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                className={`input input-bordered w-full ${
+                  getFieldError('phone') ? 'input-error' : ''
+                }`}
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
+                placeholder="+1234567890"
+              />
+              {getFieldError('phone') && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {t(getFieldError('phone')!)}
+                  </span>
+                </label>
+              )}
+            </div>
+
+            <div className="form-control">
+              <label className="label" htmlFor="city">
+                <span className="label-text">{t('fields.city')}</span>
+              </label>
+              <input
+                id="city"
+                type="text"
+                className={`input input-bordered w-full ${
+                  getFieldError('city') ? 'input-error' : ''
+                }`}
+                value={formData.city}
+                onChange={(e) =>
+                  setFormData({ ...formData, city: e.target.value })
+                }
+              />
+              {getFieldError('city') && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {t(getFieldError('city')!)}
+                  </span>
+                </label>
+              )}
+            </div>
+
+            <div className="form-control">
+              <label className="label" htmlFor="country">
+                <span className="label-text">{t('fields.country')}</span>
+              </label>
+              <input
+                id="country"
+                type="text"
+                className={`input input-bordered w-full ${
+                  getFieldError('country') ? 'input-error' : ''
+                }`}
+                value={formData.country}
+                onChange={(e) =>
+                  setFormData({ ...formData, country: e.target.value })
+                }
+              />
+              {getFieldError('country') && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {t(getFieldError('country')!)}
+                  </span>
+                </label>
+              )}
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={handleCancel}
+                disabled={isUpdatingProfile}
+              >
+                {t('actions.cancel')}
+              </button>
+              <button
+                type="button"
+                className={`btn btn-primary ${isUpdatingProfile ? 'loading' : ''}`}
+                onClick={handleSave}
+                disabled={isUpdatingProfile || !hasChanges()}
+              >
+                {isUpdatingProfile ? t('actions.saving') : t('actions.save')}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <fieldset className="fieldset">
-                  <legend className="fieldset-legend">{t('title')}</legend>
-
-                  <label className="label" htmlFor="name">
-                    {t('fields.name')} <span className="text-error">*</span>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">
+                      {t('fields.name')}
+                    </span>
                   </label>
-                  <input
-                    id="name"
-                    type="text"
-                    className={`input ${
-                      getFieldError('name') ? 'input-error' : ''
-                    }`}
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
-                  {getFieldError('name') && (
-                    <p className="label text-error text-sm">
-                      {t(getFieldError('name')!)}
-                    </p>
-                  )}
-
-                  <label className="label" htmlFor="email">
-                    {t('fields.email')}
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    className="input input-disabled"
-                    value={user?.email || ''}
-                    disabled
-                    readOnly
-                  />
-
-                  <label className="label" htmlFor="phone">
-                    {t('fields.phone')}
-                  </label>
-                  <input
-                    id="phone"
-                    type="tel"
-                    className={`input ${
-                      getFieldError('phone') ? 'input-error' : ''
-                    }`}
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    placeholder="+1234567890"
-                  />
-                  {getFieldError('phone') && (
-                    <p className="label text-error text-sm">
-                      {t(getFieldError('phone')!)}
-                    </p>
-                  )}
-
-                  <label className="label" htmlFor="city">
-                    {t('fields.city')}
-                  </label>
-                  <input
-                    id="city"
-                    type="text"
-                    className={`input ${
-                      getFieldError('city') ? 'input-error' : ''
-                    }`}
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                  />
-                  {getFieldError('city') && (
-                    <p className="label text-error text-sm">
-                      {t(getFieldError('city')!)}
-                    </p>
-                  )}
-
-                  <label className="label" htmlFor="country">
-                    {t('fields.country')}
-                  </label>
-                  <input
-                    id="country"
-                    type="text"
-                    className={`input ${
-                      getFieldError('country') ? 'input-error' : ''
-                    }`}
-                    value={formData.country}
-                    onChange={(e) =>
-                      setFormData({ ...formData, country: e.target.value })
-                    }
-                  />
-                  {getFieldError('country') && (
-                    <p className="label text-error text-sm">
-                      {t(getFieldError('country')!)}
-                    </p>
-                  )}
-                </fieldset>
-
-                <div className="card-actions justify-end mt-6">
-                  <button
-                    className="btn btn-ghost"
-                    onClick={handleCancel}
-                    disabled={isUpdatingProfile}
-                  >
-                    {t('actions.cancel')}
-                  </button>
-                  <button
-                    className={`btn btn-primary ${isUpdatingProfile ? 'loading' : ''}`}
-                    onClick={handleSave}
-                    disabled={isUpdatingProfile || !hasChanges()}
-                  >
-                    {isUpdatingProfile
-                      ? t('actions.saving')
-                      : t('actions.save')}
-                  </button>
+                  <p className="text-lg">{user?.name || ''}</p>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-base-content/70">
-                    {t('fields.name')}
-                  </p>
-                  <p className="font-medium">{user?.name || ''}</p>
-                </div>
 
-                <div>
-                  <p className="text-sm text-base-content/70">
-                    {t('fields.email')}
-                  </p>
-                  <p className="font-medium">{user?.email || ''}</p>
+              <div>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">
+                      {t('fields.email')}
+                    </span>
+                  </label>
+                  <p className="text-lg">{user?.email || ''}</p>
                 </div>
+              </div>
 
-                <div>
-                  <p className="text-sm text-base-content/70">
-                    {t('fields.phone')}
-                  </p>
-                  <p className="font-medium">
+              <div>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">
+                      {t('fields.phone')}
+                    </span>
+                  </label>
+                  <p className="text-lg text-base-content/70">
                     {user?.phone || t('notProvided')}
                   </p>
                 </div>
+              </div>
 
-                <div>
-                  <p className="text-sm text-base-content/70">
-                    {t('fields.city')}
-                  </p>
-                  <p className="font-medium">
+              <div>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">
+                      {t('fields.city')}
+                    </span>
+                  </label>
+                  <p className="text-lg text-base-content/70">
                     {user?.city || t('notProvided')}
                   </p>
                 </div>
+              </div>
 
-                <div>
-                  <p className="text-sm text-base-content/70">
-                    {t('fields.country')}
-                  </p>
-                  <p className="font-medium">
+              <div>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">
+                      {t('fields.country')}
+                    </span>
+                  </label>
+                  <p className="text-lg text-base-content/70">
                     {user?.country || t('notProvided')}
                   </p>
                 </div>
-
-                <div className="card-actions justify-end mt-6">
-                  <button className="btn btn-primary" onClick={handleEdit}>
-                    {t('actions.edit')}
-                  </button>
-                </div>
               </div>
-            )}
+            </div>
+
+            <div className="flex pt-6">
+              <button className="btn btn-primary" onClick={handleEdit}>
+                {t('actions.edit')}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

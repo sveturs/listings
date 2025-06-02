@@ -2,6 +2,12 @@
  * Validation utilities for forms
  */
 
+import {
+  VALIDATION_PATTERNS,
+  VALIDATION_CONSTRAINTS,
+  VALIDATION_MESSAGES,
+} from '@/constants/validation';
+
 export interface ValidationError {
   field: string;
   message: string;
@@ -22,17 +28,17 @@ export function validateProfileData(data: {
   if (!data.name || !data.name.trim()) {
     errors.push({
       field: 'name',
-      message: 'validation.nameRequired',
+      message: VALIDATION_MESSAGES.PROFILE_NAME_REQUIRED,
     });
-  } else if (data.name.trim().length < 2) {
+  } else if (data.name.trim().length < VALIDATION_CONSTRAINTS.NAME_MIN_LENGTH) {
     errors.push({
       field: 'name',
-      message: 'validation.nameMinLength',
+      message: VALIDATION_MESSAGES.PROFILE_NAME_TOO_SHORT,
     });
-  } else if (data.name.trim().length > 100) {
+  } else if (data.name.trim().length > VALIDATION_CONSTRAINTS.NAME_MAX_LENGTH) {
     errors.push({
       field: 'name',
-      message: 'validation.nameMaxLength',
+      message: VALIDATION_MESSAGES.PROFILE_NAME_TOO_LONG,
     });
   }
 
@@ -41,24 +47,30 @@ export function validateProfileData(data: {
     if (!isValidPhone(data.phone.trim())) {
       errors.push({
         field: 'phone',
-        message: 'validation.phoneInvalid',
+        message: VALIDATION_MESSAGES.PROFILE_PHONE_INVALID,
       });
     }
   }
 
   // City validation (optional but reasonable length if provided)
-  if (data.city && data.city.trim().length > 100) {
+  if (
+    data.city &&
+    data.city.trim().length > VALIDATION_CONSTRAINTS.CITY_MAX_LENGTH
+  ) {
     errors.push({
       field: 'city',
-      message: 'validation.cityMaxLength',
+      message: VALIDATION_MESSAGES.CITY_TOO_LONG,
     });
   }
 
   // Country validation (optional but reasonable length if provided)
-  if (data.country && data.country.trim().length > 100) {
+  if (
+    data.country &&
+    data.country.trim().length > VALIDATION_CONSTRAINTS.COUNTRY_MAX_LENGTH
+  ) {
     errors.push({
       field: 'country',
-      message: 'validation.countryMaxLength',
+      message: VALIDATION_MESSAGES.COUNTRY_TOO_LONG,
     });
   }
 
@@ -66,9 +78,14 @@ export function validateProfileData(data: {
 }
 
 /**
- * Validate phone number with improved regex
+ * Validate phone number using centralized pattern with enhanced checks
  */
 function isValidPhone(phone: string): boolean {
+  // First check with the standard pattern
+  if (!VALIDATION_PATTERNS.PHONE.test(phone)) {
+    return false;
+  }
+
   // Remove all non-digit characters except +
   const cleanPhone = phone.replace(/[^\d+]/g, '');
 
