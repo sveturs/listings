@@ -27,6 +27,8 @@ export interface UserProfile extends User {
 export interface RegisterUserRequest {
   name: string;
   email: string;
+  password: string;
+  phone?: string;
 }
 
 export interface UpdateProfileRequest {

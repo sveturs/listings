@@ -1,0 +1,14 @@
+POST http://localhost:3000/api/v1/users/register
+Origin: http://localhost:3001
+Referer: http://localhost:3001/
+Sec-Fetch-Mode: cors
+Content-Type: application/json
+
+{
+  "name": "asdf@asdf.ru",
+  "email": "asdf@asdf.ru",
+  "password": "asdf@asdf.ru"
+}
+
+###
+

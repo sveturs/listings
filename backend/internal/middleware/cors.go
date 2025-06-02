@@ -18,7 +18,7 @@ func (m *Middleware) CORS() fiber.Handler {
             "http://backend:3000",  // для Docker
         }, ","),
         AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
-        AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-Requested-With",
+        AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-Token",
         ExposeHeaders:    "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type",
         AllowCredentials: true,
         MaxAge:           300,
