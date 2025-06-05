@@ -82,64 +82,66 @@ services:
       /usr/bin/mc config host add myminio http://minio:9000 minioadmin 1321321321321;
       /usr/bin/mc mb --ignore-existing myminio/listings;
       /usr/bin/mc policy set public myminio/listings;
+      /usr/bin/mc mb --ignore-existing myminio/chat-files;
+      /usr/bin/mc anonymous set public myminio/chat-files;
       exit 0;
       "
     networks:
       - hostel_network
 
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: backend
-    ports:
-      - "3000:3000"
-    env_file:
-      - ./backend/.env.local
-    depends_on:
-      db:
-        condition: service_healthy
-      opensearch:
-        condition: service_started
-    volumes:
-      - ./backend/uploads:/app/uploads
-      - minio_data:/app/minio-data
-    environment:
-      - APP_MODE=production
-      - ENV_FILE=.env
-      - WS_ENABLED=true
-      - UPLOAD_DIR=/app/uploads
-      - DATABASE_URL=postgres://postgres:password@db:5432/hostel_db?sslmode=disable
-      - OPENSEARCH_URL=http://opensearch:9200
-      - OPENSEARCH_MARKETPLACE_INDEX=marketplace
-      - FILE_STORAGE_PROVIDER=minio
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=1321321321321
-      - MINIO_USE_SSL=false
-      - MINIO_BUCKET_NAME=listings
-      - MINIO_LOCATION=eu-central-1
-      - FILE_STORAGE_PUBLIC_URL=http://localhost:3000
-    user: "101:101"
-    stop_grace_period: 10s
-    stop_signal: SIGTERM
-    init: true
-    networks:
-      - hostel_network
-
-  frontend:
-    build:
-      context: ./frontend/hostel-frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
-    env_file:
-      - ./frontend/hostel-frontend/.env.local
-    depends_on:
-      - backend
-    networks:
-      - hostel_network
+#  backend:
+#    build:
+#      context: ./backend
+#      dockerfile: Dockerfile
+#    container_name: backend
+#    ports:
+#      - "3000:3000"
+#    env_file:
+#      - ./backend/.env.local
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#      opensearch:
+#        condition: service_started
+#    volumes:
+#      - ./backend/uploads:/app/uploads
+#      - minio_data:/app/minio-data
+#    environment:
+#      - APP_MODE=production
+#      - ENV_FILE=.env
+#      - WS_ENABLED=true
+#      - UPLOAD_DIR=/app/uploads
+#      - DATABASE_URL=postgres://postgres:password@db:5432/hostel_db?sslmode=disable
+#      - OPENSEARCH_URL=http://opensearch:9200
+#      - OPENSEARCH_MARKETPLACE_INDEX=marketplace
+#      - FILE_STORAGE_PROVIDER=minio
+#      - MINIO_ENDPOINT=minio:9000
+#      - MINIO_ACCESS_KEY=minioadmin
+#      - MINIO_SECRET_KEY=1321321321321
+#      - MINIO_USE_SSL=false
+#      - MINIO_BUCKET_NAME=listings
+#      - MINIO_LOCATION=eu-central-1
+#      - FILE_STORAGE_PUBLIC_URL=http://localhost:3000
+#    user: "101:101"
+#    stop_grace_period: 10s
+#    stop_signal: SIGTERM
+#    init: true
+#    networks:
+#      - hostel_network
+#
+#  frontend:
+#    build:
+#      context: ./frontend/hostel-frontend
+#      dockerfile: Dockerfile
+#    ports:
+#      - "3001:3001"
+#    env_file:
+#      - ./frontend/hostel-frontend/.env.local
+#    depends_on:
+#      - backend
+#    networks:
+#      - hostel_network
   migrate:
     image: migrate/migrate
     volumes:

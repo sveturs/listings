@@ -4,9 +4,12 @@ package service
 import (
 	"backend/internal/domain/models"
 	"backend/internal/storage"
+	"backend/pkg/utils"
 	"context"
 	"fmt"
+	"log"
 	"sync"
+	"time"
 
 	"backend/internal/proj/notifications/service"
 )
@@ -15,6 +18,9 @@ type ChatService struct {
 	storage             storage.Storage
 	notificationService service.NotificationServiceInterface
 	subscribers         sync.Map
+	statusSubscribers   sync.Map
+	onlineUsers         sync.Map
+	userLastSeen        sync.Map
 }
 
 func NewChatService(storage storage.Storage, notificationService service.NotificationServiceInterface) *ChatService {
@@ -22,37 +28,61 @@ func NewChatService(storage storage.Storage, notificationService service.Notific
 		storage:             storage,
 		notificationService: notificationService,
 		subscribers:         sync.Map{},
+		statusSubscribers:   sync.Map{},
+		onlineUsers:         sync.Map{},
+		userLastSeen:        sync.Map{},
 	}
 }
 
 // Реализация методов для сообщений
 func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
+	// Санитизация контента сообщения для защиты от XSS
+	msg.Content = utils.SanitizeText(msg.Content)
+
+	// Валидация длины сообщения
+	if len(msg.Content) == 0 {
+		return fmt.Errorf("message content cannot be empty")
+	}
+	if len(msg.Content) > 10000 {
+		return fmt.Errorf("message content too long (max 10000 characters)")
+	}
+
 	var listing *models.MarketplaceListing
 	var listingExists bool = false
 
-	// Пытаемся найти листинг, но не выходим с ошибкой, если не найден
-	listing, err := s.storage.GetListingByID(ctx, msg.ListingID)
-	if err != nil {
-		// Проверяем, уже существует ли чат для этого сообщения
-		// Если chat_id уже есть, значит это сообщение в существующем чате
-		if msg.ChatID > 0 {
-			// Если чат существует, разрешаем отправку даже если листинг не найден
-			listingExists = false
-			// Создаем пустой листинг для подстановки информации в уведомления
-			listing = &models.MarketplaceListing{
-				ID:    msg.ListingID,
-				Title: "Удаленное объявление",
+	// Если есть ListingID, пытаемся найти объявление
+	if msg.ListingID > 0 {
+		var err error
+		listing, err = s.storage.GetListingByID(ctx, msg.ListingID)
+		if err != nil {
+			// Проверяем, уже существует ли чат для этого сообщения
+			// Если chat_id уже есть, значит это сообщение в существующем чате
+			if msg.ChatID > 0 {
+				// Если чат существует, разрешаем отправку даже если листинг не найден
+				listingExists = false
+				// Создаем пустой листинг для подстановки информации в уведомления
+				listing = &models.MarketplaceListing{
+					ID:    msg.ListingID,
+					Title: "__DELETED_LISTING__",
+				}
+			} else {
+				// Если это новый чат и листинг не найден, возвращаем ошибку
+				return err
 			}
 		} else {
-			// Если это новый чат и листинг не найден, возвращаем ошибку
-			return err
+			listingExists = true
+
+			// Проверяем права доступа, только если листинг существует
+			if msg.ReceiverID != listing.UserID && msg.SenderID != listing.UserID {
+				return fmt.Errorf("permission denied")
+			}
 		}
 	} else {
-		listingExists = true
-
-		// Проверяем права доступа, только если листинг существует
-		if msg.ReceiverID != listing.UserID && msg.SenderID != listing.UserID {
-			return fmt.Errorf("permission denied")
+		// Это прямое сообщение контакту без привязки к объявлению
+		listingExists = false
+		listing = &models.MarketplaceListing{
+			ID:    0,
+			Title: "Личное сообщение1",
 		}
 	}
 
@@ -73,9 +103,16 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 		ctxCopy := context.Background()
 
 		// Копируем нужные данные для формирования уведомления
-		listingID := listing.ID
-		listingTitle := listing.Title
-		senderName := msg.Sender.Name
+		listingID := 0
+		listingTitle := "Личное сообщение"
+		if listing != nil {
+			listingID = listing.ID
+			listingTitle = listing.Title
+		}
+		senderName := "Пользователь"
+		if msg.Sender != nil {
+			senderName = msg.Sender.Name
+		}
 		messageContent := msg.Content
 		receiverID := msg.ReceiverID
 
@@ -107,11 +144,10 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 	return nil
 }
 
-func (s *ChatService) GetMessages(ctx context.Context, listingID, userID int, page, limit int) ([]models.MarketplaceMessage, error) {
+func (s *ChatService) GetMessages(ctx context.Context, listingID, userID int, offset, limit int) ([]models.MarketplaceMessage, error) {
 	if limit == 0 {
 		limit = 20
 	}
-	offset := (page - 1) * limit
 
 	return s.storage.GetMessages(ctx, listingID, userID, offset, limit)
 }
@@ -140,18 +176,35 @@ func (s *ChatService) ArchiveChat(ctx context.Context, chatID, userID int) error
 
 // WebSocket методы
 func (s *ChatService) BroadcastMessage(msg *models.MarketplaceMessage) {
-	// Отправляем сообщение всем подписчикам
-	s.subscribers.Range(func(key, value interface{}) bool {
-		if ch, ok := value.(chan *models.MarketplaceMessage); ok {
-			// Неблокирующая отправка
+	log.Printf("BroadcastMessage called: messageID=%d, senderID=%d, receiverID=%d, hasAttachments=%v, attachmentsCount=%d, attachments=%+v",
+		msg.ID, msg.SenderID, msg.ReceiverID, msg.HasAttachments, msg.AttachmentsCount, msg.Attachments)
+
+	// Отправляем сообщение только получателю и отправителю
+	// Получатель должен получить сообщение
+	if receiverCh, ok := s.subscribers.Load(msg.ReceiverID); ok {
+		if ch, ok := receiverCh.(chan *models.MarketplaceMessage); ok {
+			select {
+			case ch <- msg:
+				log.Printf("Message sent to receiver %d", msg.ReceiverID)
+			default:
+				// Канал полный или закрыт, пропускаем
+				log.Printf("Failed to send message to receiver %d - channel full or closed", msg.ReceiverID)
+			}
+		}
+	} else {
+		log.Printf("No subscriber found for receiver %d", msg.ReceiverID)
+	}
+
+	// Отправитель также должен получить сообщение для обновления UI
+	if senderCh, ok := s.subscribers.Load(msg.SenderID); ok {
+		if ch, ok := senderCh.(chan *models.MarketplaceMessage); ok {
 			select {
 			case ch <- msg:
 			default:
 				// Канал полный или закрыт, пропускаем
 			}
 		}
-		return true
-	})
+	}
 }
 
 func (s *ChatService) SubscribeToMessages(userID int) chan *models.MarketplaceMessage {
@@ -163,6 +216,97 @@ func (s *ChatService) SubscribeToMessages(userID int) chan *models.MarketplaceMe
 func (s *ChatService) UnsubscribeFromMessages(userID int) {
 	if value, loaded := s.subscribers.LoadAndDelete(userID); loaded {
 		if ch, ok := value.(chan *models.MarketplaceMessage); ok {
+			close(ch)
+		}
+	}
+}
+
+// GetMessageByID возвращает сообщение по ID
+func (s *ChatService) GetMessageByID(ctx context.Context, messageID int) (*models.MarketplaceMessage, error) {
+	return s.storage.GetMessageByID(ctx, messageID)
+}
+
+// Online status methods
+func (s *ChatService) SetUserOnline(userID int) {
+	s.onlineUsers.Store(userID, true)
+	s.userLastSeen.Delete(userID) // Удаляем время последнего визита для онлайн пользователей
+	log.Printf("User %d is now online", userID)
+	s.BroadcastUserStatus(userID, "online")
+}
+
+func (s *ChatService) SetUserOffline(userID int) {
+	s.onlineUsers.Delete(userID)
+	s.userLastSeen.Store(userID, time.Now().Format(time.RFC3339))
+	log.Printf("User %d is now offline", userID)
+	s.BroadcastUserStatus(userID, "offline")
+}
+
+func (s *ChatService) GetOnlineUsers() []int {
+	var users []int
+	s.onlineUsers.Range(func(key, value interface{}) bool {
+		if userID, ok := key.(int); ok {
+			users = append(users, userID)
+		}
+		return true
+	})
+	return users
+}
+
+func (s *ChatService) IsUserOnline(userID int) bool {
+	_, ok := s.onlineUsers.Load(userID)
+	return ok
+}
+
+func (s *ChatService) BroadcastUserStatus(userID int, status string) {
+	statusMsg := map[string]interface{}{
+		"type": "user_" + status,
+		"payload": map[string]interface{}{
+			"user_id": userID,
+			"status":  status,
+		},
+	}
+
+	// Добавляем last_seen для offline статуса
+	if status == "offline" {
+		if lastSeen, ok := s.userLastSeen.Load(userID); ok {
+			statusMsg["payload"].(map[string]interface{})["last_seen"] = lastSeen
+		}
+	}
+
+	// Отправляем всем подписчикам
+	s.statusSubscribers.Range(func(key, value interface{}) bool {
+		if ch, ok := value.(chan map[string]interface{}); ok {
+			select {
+			case ch <- statusMsg:
+			default:
+				// Канал полный, пропускаем
+			}
+		}
+		return true
+	})
+}
+
+func (s *ChatService) SubscribeToStatusUpdates(userID int) chan map[string]interface{} {
+	ch := make(chan map[string]interface{}, 100)
+	s.statusSubscribers.Store(userID, ch)
+
+	// Отправляем текущий список онлайн пользователей
+	go func() {
+		onlineUsers := s.GetOnlineUsers()
+		ch <- map[string]interface{}{
+			"type": "online_users_list",
+			"payload": map[string]interface{}{
+				"users": onlineUsers,
+			},
+		}
+	}()
+
+	return ch
+}
+
+func (s *ChatService) UnsubscribeFromStatusUpdates(userID int) {
+	if value, loaded := s.statusSubscribers.LoadAndDelete(userID); loaded {
+		if ch, ok := value.(chan map[string]interface{}); ok {
 			close(ch)
 		}
 	}

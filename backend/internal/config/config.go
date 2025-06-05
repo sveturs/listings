@@ -24,6 +24,7 @@ type Config struct {
 	JWTExpirationHours    int               `yaml:"jwt_expiration_hours"`
 	OpenSearch            OpenSearchConfig  `yaml:"opensearch"`
 	FileStorage           FileStorageConfig `yaml:"file_storage"`
+	FileUpload            FileUploadConfig  `yaml:"file_upload"`
 }
 
 type FileStorageConfig struct {
@@ -43,6 +44,16 @@ type OpenSearchConfig struct {
 	Username         string `yaml:"username"`
 	Password         string `yaml:"password"`
 	MarketplaceIndex string `yaml:"marketplace_index"`
+}
+
+// FileUploadConfig содержит настройки для загрузки файлов
+type FileUploadConfig struct {
+	MaxImageSize         int64    // Максимальный размер изображения в байтах
+	MaxVideoSize         int64    // Максимальный размер видео в байтах
+	MaxDocumentSize      int64    // Максимальный размер документа в байтах
+	AllowedImageTypes    []string // Разрешенные MIME типы для изображений
+	AllowedVideoTypes    []string // Разрешенные MIME типы для видео
+	AllowedDocumentTypes []string // Разрешенные MIME типы для документов
 }
 
 func NewConfig() (*Config, error) {
@@ -125,7 +136,7 @@ func NewConfig() (*Config, error) {
 	if provider == "" {
 		provider = "minio" // По умолчанию используем MinIO
 	}
-	
+
 	config.FileStorage = FileStorageConfig{
 		Provider:        provider,
 		LocalBasePath:   os.Getenv("FILE_STORAGE_LOCAL_PATH"),
@@ -137,7 +148,7 @@ func NewConfig() (*Config, error) {
 		MinioBucketName: os.Getenv("MINIO_BUCKET_NAME"),
 		MinioLocation:   os.Getenv("MINIO_LOCATION"),
 	}
-	
+
 	// Валидация на основе выбранного провайдера
 	if config.FileStorage.Provider == "minio" {
 		if config.FileStorage.MinioEndpoint == "" {
@@ -152,6 +163,36 @@ func NewConfig() (*Config, error) {
 		if config.FileStorage.MinioBucketName == "" {
 			config.FileStorage.MinioBucketName = "listings" // По умолчанию
 		}
+	}
+
+	// Настройки загрузки файлов
+	fileUploadConfig := FileUploadConfig{
+		MaxImageSize:    10 * 1024 * 1024,  // 10 MB
+		MaxVideoSize:    100 * 1024 * 1024, // 100 MB
+		MaxDocumentSize: 20 * 1024 * 1024,  // 20 MB
+		AllowedImageTypes: []string{
+			"image/jpeg",
+			"image/png",
+			"image/gif",
+			"image/webp",
+		},
+		AllowedVideoTypes: []string{
+			"video/mp4",
+			"video/mpeg",
+			"video/quicktime",
+			"video/webm",
+		},
+		AllowedDocumentTypes: []string{
+			"application/pdf",
+			"application/msword",
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			"application/vnd.ms-excel",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+			"text/plain",
+			"text/markdown",
+			"text/csv",
+			"application/octet-stream", // Для неизвестных типов
+		},
 	}
 
 	return &Config{
@@ -170,10 +211,39 @@ func NewConfig() (*Config, error) {
 		JWTExpirationHours:    config.JWTExpirationHours,
 		OpenSearch:            config.OpenSearch,
 		FileStorage:           config.FileStorage,
+		FileUpload:            fileUploadConfig,
 	}, nil
 }
 
 // GetJWTDuration возвращает время жизни JWT токена как time.Duration
 func (c *Config) GetJWTDuration() time.Duration {
 	return time.Duration(c.JWTExpirationHours) * time.Hour
+}
+
+// IsProduction проверяет, работает ли приложение в production режиме
+func (c *Config) IsProduction() bool {
+	return c.Environment == "production"
+}
+
+// IsDevelopment проверяет, работает ли приложение в development режиме
+func (c *Config) IsDevelopment() bool {
+	return c.Environment == "development"
+}
+
+// GetCookieSecure возвращает значение Secure для cookie в зависимости от окружения
+func (c *Config) GetCookieSecure() bool {
+	// В production всегда true
+	// В development false для работы с HTTP
+	return c.IsProduction()
+}
+
+// GetCookieSameSite возвращает значение SameSite для cookie в зависимости от окружения
+func (c *Config) GetCookieSameSite() string {
+	// В development используем пустую строку для максимальной совместимости
+	// API Routes в Next.js будут проксировать запросы
+	// В production используем "Lax" для безопасности
+	if c.IsDevelopment() {
+		return "" // По умолчанию
+	}
+	return "Lax"
 }

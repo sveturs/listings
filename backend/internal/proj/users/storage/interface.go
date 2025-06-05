@@ -12,7 +12,7 @@ type UserRepository interface {
     GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error)
     GetUserByEmail(ctx context.Context, email string) (*models.User, error)
     GetUserByID(ctx context.Context, id int) (*models.User, error)
-    CreateUser(ctx context.Context, user *models.User) error
+    CreateUser(ctx context.Context, user *models.User) (*models.User, error)
     UpdateUser(ctx context.Context, user *models.User) error
 }
 

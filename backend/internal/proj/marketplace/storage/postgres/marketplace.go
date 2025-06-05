@@ -282,6 +282,29 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         ) t2
         WHERE t1.entity_type = 'listing'
         GROUP BY entity_id
+    ),
+    listing_images AS (
+        SELECT 
+            listing_id,
+            COALESCE(
+                jsonb_agg(
+                    jsonb_build_object(
+                        'id', id,
+                        'listing_id', listing_id,
+                        'file_path', file_path,
+                        'file_name', file_name,
+                        'file_size', file_size,
+                        'content_type', content_type,
+                        'is_main', is_main,
+                        'created_at', created_at,
+                        'storage_type', storage_type,
+                        'storage_bucket', storage_bucket,
+                        'public_url', public_url
+                    ) ORDER BY is_main DESC, id ASC
+                ), '[]'::jsonb
+            ) as images
+        FROM marketplace_images
+        GROUP BY listing_id
     )
     SELECT 
         l.id,
@@ -324,6 +347,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         c.name as category_name, 
         c.slug as category_slug,
         COALESCE(t.translations, '{}'::jsonb) as translations,
+        COALESCE(li.images, '[]'::jsonb) as images,
         EXISTS (
             SELECT 1 
             FROM marketplace_favorites mf 
@@ -335,6 +359,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
     JOIN users u ON l.user_id = u.id
     JOIN marketplace_categories c ON l.category_id = c.id
     LEFT JOIN translations_agg t ON t.entity_id = l.id
+    LEFT JOIN listing_images li ON li.listing_id = l.id
     WHERE 1=1
         AND CASE 
             WHEN $1::text = '' OR $1::text IS NULL THEN true
@@ -434,6 +459,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 	for rows.Next() {
 		var listing models.MarketplaceListing
 		var translationsJSON []byte
+		var imagesJSON []byte
 
 		listing.User = &models.User{}
 		listing.Category = &models.MarketplaceCategory{}
@@ -480,6 +506,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			&tempCategoryName,
 			&tempCategorySlug,
 			&translationsJSON,
+			&imagesJSON,
 			&listing.IsFavorite,
 			&totalCount,
 		)
@@ -503,13 +530,15 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			return nil, 0, fmt.Errorf("error scanning listing: %w", err)
 		}
 
-		// Получаем изображения
-		images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
-		if err != nil {
-			log.Printf("Error getting images for listing %d: %v", listing.ID, err)
-			listing.Images = []models.MarketplaceImage{}
-		} else {
-			listing.Images = images
+		// Парсим изображения из JSON
+		listing.Images = []models.MarketplaceImage{}
+		if len(imagesJSON) > 0 {
+			var images []models.MarketplaceImage
+			if err := json.Unmarshal(imagesJSON, &images); err != nil {
+				log.Printf("Error unmarshaling images for listing %d: %v", listing.ID, err)
+			} else {
+				listing.Images = images
+			}
 		}
 
 		// Обработка NULL значений
@@ -743,6 +772,27 @@ func (s *Storage) RemoveFromFavorites(ctx context.Context, userID int, listingID
 
 func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
 	query := `
+        WITH listing_images AS (
+            SELECT 
+                listing_id,
+                jsonb_agg(
+                    jsonb_build_object(
+                        'id', id,
+                        'listing_id', listing_id,
+                        'file_path', file_path,
+                        'file_name', file_name,
+                        'file_size', file_size,
+                        'content_type', content_type,
+                        'is_main', is_main,
+                        'storage_type', storage_type,
+                        'storage_bucket', storage_bucket,
+                        'public_url', public_url,
+                        'created_at', created_at
+                    ) ORDER BY is_main DESC, id ASC
+                ) as images
+            FROM marketplace_images
+            GROUP BY listing_id
+        )
         SELECT 
             l.id, 
             l.user_id, 
@@ -766,11 +816,13 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
             COALESCE(u.picture_url, ''),
             c.name as category_name, 
             c.slug as category_slug,
-            true as is_favorite
+            true as is_favorite,
+            COALESCE(li.images, '[]'::jsonb) as listing_images
         FROM marketplace_listings l
         JOIN marketplace_favorites f ON l.id = f.listing_id
         LEFT JOIN users u ON l.user_id = u.id
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
+        LEFT JOIN listing_images li ON li.listing_id = l.id
         WHERE f.user_id = $1
         ORDER BY f.created_at DESC
     `
@@ -788,6 +840,7 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 			Category: &models.MarketplaceCategory{},
 		}
 		var userPictureURL string
+		var imagesJSON json.RawMessage
 
 		err := rows.Scan(
 			&listing.ID,
@@ -813,6 +866,7 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 			&listing.Category.Name,
 			&listing.Category.Slug,
 			&listing.IsFavorite,
+			&imagesJSON,
 		)
 		if err != nil {
 			log.Printf("Error scanning listing: %v", err)
@@ -823,14 +877,13 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 		listing.User.PictureURL = userPictureURL
 		listing.User.ID = listing.UserID
 
-		// Получаем изображения для каждого объявления
-		images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
-		if err != nil {
-			log.Printf("Error getting images for listing %d: %v", listing.ID, err)
-			listing.Images = []models.MarketplaceImage{} // Пустой массив вместо nil
-		} else {
-			listing.Images = images
+		// Парсим изображения из JSON
+		var images []models.MarketplaceImage
+		if err := json.Unmarshal(imagesJSON, &images); err != nil {
+			log.Printf("Error unmarshalling images for listing %d: %v", listing.ID, err)
+			images = []models.MarketplaceImage{}
 		}
+		listing.Images = images
 
 		listings = append(listings, listing)
 	}

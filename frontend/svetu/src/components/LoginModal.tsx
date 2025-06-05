@@ -50,7 +50,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   initialMode = 'login',
 }) => {
   const t = useTranslations('auth');
-  const { updateUser, refreshSession } = useAuth();
+  const { updateUser } = useAuth();
 
   // Form state management
   const {
@@ -181,23 +181,39 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
           // Update user state with login response
           if (loginResponse.user) {
-            updateUser(loginResponse.user);
+            updateUser({
+              ...loginResponse.user,
+              provider: loginResponse.user.provider || '', // Ensure provider is always a string
+            });
           }
 
-          // Also refresh session to ensure consistency
-          await refreshSession();
-
-          // Login successful, close modal
-          onClose();
+          // Small delay to ensure cookies are set
+          setTimeout(() => {
+            // Login successful, close modal
+            onClose();
+          }, 100);
         } else {
-          await AuthService.register({
+          const registerResponse = await AuthService.register({
             name: formData.name,
             email: formData.email,
             password: formData.password,
             phone: formData.phone || undefined,
           });
 
+          // Update user state with register response
+          if (registerResponse.user) {
+            updateUser({
+              ...registerResponse.user,
+              provider: registerResponse.user.provider || '', // Ensure provider is always a string
+            });
+          }
+
           setSuccess(t('registerForm.successMessage'));
+
+          // Close modal after successful registration
+          setTimeout(() => {
+            onClose();
+          }, 1500);
         }
       } catch (error) {
         if (error instanceof Error) {
@@ -247,7 +263,6 @@ const LoginModal: React.FC<LoginModalProps> = ({
       onClose,
       t,
       updateUser,
-      refreshSession,
     ]
   );
 

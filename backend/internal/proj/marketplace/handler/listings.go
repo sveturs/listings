@@ -53,6 +53,13 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 
 	listing.UserID = userID
 	listing.Status = "active"
+	
+	// Санитизация полей для защиты от XSS
+	listing.Title = utils.SanitizeText(listing.Title)
+	listing.Description = utils.SanitizeText(listing.Description)
+	if listing.Location != "" {
+		listing.Location = utils.SanitizeText(listing.Location)
+	}
 
 	// Создаем объявление
 	id, err := h.marketplaceService.CreateListing(c.Context(), &listing)
@@ -239,6 +246,13 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	// Устанавливаем ID объявления и пользователя
 	listing.ID = id
 	listing.UserID = userID
+	
+	// Санитизация полей для защиты от XSS
+	listing.Title = utils.SanitizeText(listing.Title)
+	listing.Description = utils.SanitizeText(listing.Description)
+	if listing.Location != "" {
+		listing.Location = utils.SanitizeText(listing.Location)
+	}
 
 	// Обрабатываем изменение цены - если она отличается, сохраняем в историю
 	if currentListing.Price != listing.Price {

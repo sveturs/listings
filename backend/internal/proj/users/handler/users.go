@@ -8,6 +8,7 @@ import (
 	"backend/internal/domain/models"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/users/service"
+	"backend/internal/types"
 	"backend/pkg/logger"
 	"backend/pkg/utils"
 )
@@ -170,7 +171,8 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/users/register [post]
-func (h *UserHandler) Register(c *fiber.Ctx) error {
+// DEPRECATED: Используйте AuthHandler.Register вместо этого метода
+func (h *UserHandler) RegisterOld(c *fiber.Ctx) error {
 	var registerData RegisterRequest
 
 	if err := c.BodyParser(&registerData); err != nil {
@@ -200,7 +202,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	user := &models.User{
 		Name:     registerData.Name,
 		Email:    registerData.Email,
-		Password: hashedPassword,
+		Password: &hashedPassword,
 		Phone:    registerData.Phone,
 	}
 
@@ -221,7 +223,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 
 // Login авторизует пользователя по email и паролю
 // @Summary Авторизация пользователя
-// @Description Авторизует пользователя по email и паролю, возвращает JWT токен
+// @Description Авторизует пользователя по email и паролю, создает сессию и устанавливает session cookie
 // @Tags Users
 // @Accept json
 // @Produce json
@@ -231,7 +233,8 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 // @Failure 401 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/users/login [post]
-func (h *UserHandler) Login(c *fiber.Ctx) error {
+// DEPRECATED: Используйте AuthHandler.Login вместо этого метода
+func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
 	var loginData LoginRequest
 
 	if err := c.BodyParser(&loginData); err != nil {
@@ -253,29 +256,45 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 	}
 
 	// Проверяем пароль
-	if !utils.CheckPasswordHash(loginData.Password, user.Password) {
-		h.logger.Info("Failed login attempt for user: %s (IP: %s, UserAgent: %s)", 
+	if user.Password == nil || !utils.CheckPasswordHash(loginData.Password, *user.Password) {
+		h.logger.Info("Failed login attempt for user: %s (IP: %s, UserAgent: %s)",
 			loginData.Email, c.IP(), c.Get("User-Agent"))
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.login.error.invalid_credentials")
 	}
 
-	// Генерируем JWT токен с настраиваемым временем жизни
-	jwtDuration := h.services.Config().GetJWTDuration()
-	token, err := utils.GenerateJWTTokenWithDuration(user.ID, user.Email, h.services.Config().JWTSecret, jwtDuration)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.login.error.token_generation")
+	// Создаем сессию для пользователя (как и при Google auth)
+	sessionToken := utils.GenerateSessionToken()
+	sessionData := &types.SessionData{
+		UserID:     user.ID,
+		Email:      user.Email,
+		Name:       user.Name,
+		Provider:   "password",
+		PictureURL: user.PictureURL,
 	}
 
-	// Логируем успешный логин
-	h.logger.Info("Successful login for user: %s (UserID: %d, IP: %s, TokenTTL: %v)", 
-		user.Email, user.ID, c.IP(), jwtDuration)
+	// Сохраняем сессию
+	h.services.Auth().SaveSession(sessionToken, sessionData)
 
-	return c.JSON(LoginResponse{
-		Success:   true,
-		Message:   "users.login.success.authenticated",
-		Token:     token,
-		ExpiresIn: int(jwtDuration.Seconds()),
-		User:      user,
+	// Устанавливаем session cookie (как и при Google auth)
+	c.Cookie(&fiber.Cookie{
+		Name:     "session_token",
+		Value:    sessionToken,
+		Path:     "/",
+		MaxAge:   3600 * 24, // 24 часа
+		Secure:   h.services.Config().GetCookieSecure(),
+		HTTPOnly: true,
+		SameSite: h.services.Config().GetCookieSameSite(),
+	})
+
+	// Логируем успешный логин
+	h.logger.Info("Successful login for user: %s (UserID: %d, IP: %s, Provider: password)",
+		user.Email, user.ID, c.IP())
+
+	// Возвращаем ответ без JWT токена (используем только сессию)
+	return c.JSON(fiber.Map{
+		"success": true,
+		"message": "users.login.success.authenticated",
+		"user":    user,
 	})
 }
 

@@ -61,7 +61,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			Translations:       NewTranslationsHandler(services),
 			Favorites:          NewFavoritesHandler(services),
 			Indexing:           NewIndexingHandler(services),
-			Chat:               NewChatHandler(services),
+			Chat:               NewChatHandler(services, services.Config()),
 			AdminCategories:    NewAdminCategoriesHandler(categoriesHandler),
 			AdminAttributes:    NewAdminAttributesHandler(services),
 			CustomComponents:   customComponentHandler,
@@ -79,7 +79,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		Translations:       NewTranslationsHandler(services),
 		Favorites:          NewFavoritesHandler(services),
 		Indexing:           NewIndexingHandler(services),
-		Chat:               NewChatHandler(services),
+		Chat:               NewChatHandler(services, services.Config()),
 		AdminCategories:    NewAdminCategoriesHandler(categoriesHandler),
 		AdminAttributes:    NewAdminAttributesHandler(services),
 		CustomComponents:   nil,
@@ -252,3 +252,4 @@ func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
 		"count": len(clusters),
 	})
 }
+

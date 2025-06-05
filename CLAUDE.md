@@ -53,6 +53,10 @@ This is a Next.js 15.3.2 application using:
 - Internationalization with next-intl (en/ru locales)
 - Centralized configuration management in `src/config/`
 - Google OAuth 2.0 authentication
+- State management with Redux Toolkit (НЕ Zustand!)
+  - Store: `src/store/`
+  - Slices: `src/store/slices/`
+  - Hooks: `src/store/hooks.ts` и `src/hooks/useChat.ts`
 
 
 ### Environment Variables for Frontend
@@ -71,6 +75,20 @@ All environment variables are centralized in the src/config/ module:
 - next-intl: For internationalization support
 - prettier: Code formatter with ESLint integration
 - daisyui: Component library for Tailwind CSS
+- @reduxjs/toolkit: State management (Redux Toolkit)
+- react-redux: React bindings for Redux
+
+### Важная информация о поиске и индексировании
+
+**⚠️ ВАЖНО**: Главная страница маркетплейса получает данные из OpenSearch, а НЕ напрямую из PostgreSQL. 
+
+При изменении данных в базе PostgreSQL (например, user_id объявления) изменения НЕ отобразятся на главной странице до переиндексирования OpenSearch.
+
+Для переиндексирования используйте:
+```bash
+#  через команду
+cd backend && ./reindex
+```
 
 ### Authentication System
 
@@ -88,13 +106,13 @@ Authentication flow:
 cd backend && go build -o bin/api ./cmd/api
 
 # Запуск с горячей перезагрузкой
-cd backend && air
+cd backend && go run ./cmd/api/main.go
 
 # Тесты
 cd backend && go test ./...
 
 # Миграции базы данных
-cd backend && migrate -path ./migrations -database "postgresql://..." up
+cd backend && make migrate_up
 ```
 
 ## Архитектура Backend

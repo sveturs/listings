@@ -5,7 +5,9 @@ import (
 	"backend/internal/domain/models"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/jackc/pgx/v5"
@@ -19,9 +21,13 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
 	// Сначала пытаемся получить чат с листингом
 	err := s.pool.QueryRow(ctx, `
         SELECT
-            c.id, c.listing_id, c.buyer_id, c.seller_id,
+            c.id, COALESCE(c.listing_id, 0), c.buyer_id, c.seller_id,
             c.last_message_at, c.created_at, c.updated_at, c.is_archived,
-            COALESCE(l.title, 'Удаленное объявление') as listing_title,
+            CASE 
+                WHEN c.listing_id IS NULL THEN 'Личное сообщение'
+                WHEN l.id IS NULL THEN 'Удаленное объявление'
+                ELSE l.title
+            END as listing_title,
             (
                 SELECT COUNT(*)
                 FROM marketplace_messages m
@@ -85,39 +91,71 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
 }
 
 func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error) {
-	rows, err := s.pool.Query(ctx, `
-    WITH unread_counts AS (
-        SELECT
-            c.id as chat_id,
-            COUNT(*) as unread_count
-        FROM marketplace_chats c
-        JOIN marketplace_messages m ON m.chat_id = c.id
-        WHERE m.receiver_id = $1 AND NOT m.is_read
-        GROUP BY c.id
-    )
-    SELECT
-        c.id, c.listing_id, c.buyer_id, c.seller_id,
-        c.last_message_at, c.created_at, c.updated_at, c.is_archived,
-        COALESCE(l.title, 'Удаленное объявление') as listing_title,
-        COALESCE(l.price, 0) as listing_price,
-        COALESCE(uc.unread_count, 0) as unread_count,
-        -- Добавляем информацию о пользователе
-        CASE
-            WHEN c.buyer_id = $1 THEN seller.name
-            ELSE buyer.name
-        END as other_user_name,
-        CASE
-            WHEN c.buyer_id = $1 THEN seller.picture_url
-            ELSE buyer.picture_url
-        END as other_user_picture
-    FROM marketplace_chats c
-    LEFT JOIN marketplace_listings l ON c.listing_id = l.id
-    LEFT JOIN unread_counts uc ON c.id = uc.chat_id
-    LEFT JOIN users buyer ON c.buyer_id = buyer.id
-    LEFT JOIN users seller ON c.seller_id = seller.id
-    WHERE c.buyer_id = $1 OR c.seller_id = $1
-    ORDER BY c.last_message_at DESC
-    `, userID)
+	// Единый запрос с LEFT JOIN для получения всех данных включая изображения
+	query := `
+	WITH unread_counts AS (
+		SELECT
+			c.id as chat_id,
+			COUNT(*) as unread_count
+		FROM marketplace_chats c
+		JOIN marketplace_messages m ON m.chat_id = c.id
+		WHERE m.receiver_id = $1 AND NOT m.is_read
+		GROUP BY c.id
+	),
+	chat_images AS (
+		SELECT 
+			c.id as chat_id,
+			json_agg(
+				json_build_object(
+					'id', mi.id,
+					'listing_id', mi.listing_id,
+					'file_path', mi.file_path,
+					'file_name', mi.file_name,
+					'file_size', mi.file_size,
+					'content_type', mi.content_type,
+					'is_main', mi.is_main,
+					'storage_type', mi.storage_type,
+					'storage_bucket', mi.storage_bucket,
+					'public_url', mi.public_url,
+					'created_at', mi.created_at
+				) ORDER BY mi.is_main DESC, mi.id ASC
+			) as images
+		FROM marketplace_chats c
+		LEFT JOIN marketplace_images mi ON mi.listing_id = c.listing_id
+		WHERE c.buyer_id = $1 OR c.seller_id = $1
+		GROUP BY c.id
+	)
+	SELECT
+		c.id, COALESCE(c.listing_id, 0), c.buyer_id, c.seller_id,
+		c.last_message_at, c.created_at, c.updated_at, c.is_archived,
+		CASE 
+			WHEN c.listing_id IS NULL THEN '__DIRECT_MESSAGE__'
+			WHEN l.id IS NULL THEN '__DELETED_LISTING__'
+			ELSE l.title
+		END as listing_title,
+		COALESCE(l.price, 0) as listing_price,
+		COALESCE(uc.unread_count, 0) as unread_count,
+		-- Информация о пользователе
+		CASE
+			WHEN c.buyer_id = $1 THEN seller.name
+			ELSE buyer.name
+		END as other_user_name,
+		CASE
+			WHEN c.buyer_id = $1 THEN seller.picture_url
+			ELSE buyer.picture_url
+		END as other_user_picture,
+		-- Изображения листинга
+		COALESCE(ci.images, '[]'::json) as listing_images
+	FROM marketplace_chats c
+	LEFT JOIN marketplace_listings l ON c.listing_id = l.id
+	LEFT JOIN unread_counts uc ON c.id = uc.chat_id
+	LEFT JOIN users buyer ON c.buyer_id = buyer.id
+	LEFT JOIN users seller ON c.seller_id = seller.id
+	LEFT JOIN chat_images ci ON c.id = ci.chat_id
+	WHERE c.buyer_id = $1 OR c.seller_id = $1
+	ORDER BY c.last_message_at DESC`
+
+	rows, err := s.pool.Query(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("error querying chats: %w", err)
 	}
@@ -129,6 +167,7 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 			chat             models.MarketplaceChat
 			otherUserName    sql.NullString
 			otherUserPicture sql.NullString
+			imagesJSON       json.RawMessage
 		)
 		chat.Listing = &models.MarketplaceListing{}
 
@@ -139,10 +178,19 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 			&chat.UnreadCount,
 			&otherUserName,
 			&otherUserPicture,
+			&imagesJSON,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning chat: %w", err)
 		}
+
+		// Парсим изображения из JSON
+		var images []models.MarketplaceImage
+		if err := json.Unmarshal(imagesJSON, &images); err != nil {
+			log.Printf("Error unmarshalling images for chat %d: %v", chat.ID, err)
+			images = []models.MarketplaceImage{}
+		}
+		chat.Listing.Images = images
 
 		// Создаем структуру other_user
 		chat.OtherUser = &models.User{
@@ -168,8 +216,6 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 }
 
 func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
-	messages := []models.MarketplaceMessage{}
-
 	if offset < 0 {
 		offset = 0
 	}
@@ -194,6 +240,8 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 		}
 	}
 
+	log.Printf("GetMessages storage: chatID from context = %d, listingID = %d, userID = %d", chatID, listingID, userID)
+
 	var query string
 	var args []interface{}
 
@@ -201,76 +249,225 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 		// Если известен ID чата, получаем сообщения напрямую по chatID
 		// Это позволяет получать сообщения даже если листинг больше не существует
 		query = `
-            SELECT
-                m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
-                m.content, m.is_read, m.created_at,
-                sender.name as sender_name,
-                sender.picture_url as sender_picture,
-                receiver.name as receiver_name,
-                receiver.picture_url as receiver_picture
-            FROM marketplace_messages m
-            JOIN marketplace_chats c ON m.chat_id = c.id
-            JOIN users sender ON m.sender_id = sender.id
-            JOIN users receiver ON m.receiver_id = receiver.id
-            WHERE m.chat_id = $1
-            AND (c.buyer_id = $2 OR c.seller_id = $2)
-            ORDER BY m.created_at ASC
-            LIMIT $3 OFFSET $4
-        `
+		WITH ordered_messages AS (
+			SELECT
+				m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
+				m.content, m.is_read, m.created_at,
+				sender.name as sender_name,
+				sender.picture_url as sender_picture,
+				receiver.name as receiver_name,
+				receiver.picture_url as receiver_picture,
+				m.has_attachments, m.attachments_count
+			FROM marketplace_messages m
+			JOIN marketplace_chats c ON m.chat_id = c.id
+			JOIN users sender ON m.sender_id = sender.id
+			JOIN users receiver ON m.receiver_id = receiver.id
+			WHERE m.chat_id = $1
+			AND (c.buyer_id = $2 OR c.seller_id = $2)
+			ORDER BY m.created_at DESC
+			LIMIT $3 OFFSET $4
+		),
+		message_attachments AS (
+			SELECT 
+				om.id as message_id,
+				json_agg(
+					json_build_object(
+						'id', ca.id,
+						'message_id', ca.message_id,
+						'file_type', ca.file_type,
+						'file_path', ca.file_path,
+						'file_name', ca.file_name,
+						'file_size', ca.file_size,
+						'content_type', ca.content_type,
+						'storage_type', ca.storage_type,
+						'storage_bucket', ca.storage_bucket,
+						'public_url', ca.public_url,
+						'thumbnail_url', ca.thumbnail_url,
+						'metadata', ca.metadata,
+						'created_at', ca.created_at
+					) ORDER BY ca.created_at ASC
+				) as attachments
+			FROM ordered_messages om
+			LEFT JOIN chat_attachments ca ON ca.message_id = om.id
+			WHERE om.has_attachments = true
+			GROUP BY om.id
+		)
+		SELECT 
+			om.*,
+			COALESCE(ma.attachments, '[]'::json) as attachments_json
+		FROM ordered_messages om
+		LEFT JOIN message_attachments ma ON om.id = ma.message_id
+		ORDER BY om.created_at ASC`
 		args = []interface{}{chatID, userID, limit, offset}
 	} else {
 		// Если ID чата не известен, ищем чат по listingID и userID
 		query = `
-            WITH chat AS (
-                SELECT c.id
-                FROM marketplace_chats c
-                WHERE c.listing_id = $1
-                AND (c.buyer_id = $2 OR c.seller_id = $2)
-                LIMIT 1
-            )
-            SELECT
-                m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
-                m.content, m.is_read, m.created_at,
-                sender.name as sender_name,
-                sender.picture_url as sender_picture,
-                receiver.name as receiver_name,
-                receiver.picture_url as receiver_picture
-            FROM marketplace_messages m
-            JOIN chat c ON m.chat_id = c.id
-            JOIN users sender ON m.sender_id = sender.id
-            JOIN users receiver ON m.receiver_id = receiver.id
-            ORDER BY m.created_at ASC
-            LIMIT $3 OFFSET $4
-        `
+		WITH chat AS (
+			SELECT c.id
+			FROM marketplace_chats c
+			WHERE c.listing_id = $1
+			AND (c.buyer_id = $2 OR c.seller_id = $2)
+			LIMIT 1
+		),
+		ordered_messages AS (
+			SELECT
+				m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
+				m.content, m.is_read, m.created_at,
+				sender.name as sender_name,
+				sender.picture_url as sender_picture,
+				receiver.name as receiver_name,
+				receiver.picture_url as receiver_picture,
+				m.has_attachments, m.attachments_count
+			FROM marketplace_messages m
+			JOIN chat c ON m.chat_id = c.id
+			JOIN users sender ON m.sender_id = sender.id
+			JOIN users receiver ON m.receiver_id = receiver.id
+			ORDER BY m.created_at DESC
+			LIMIT $3 OFFSET $4
+		),
+		message_attachments AS (
+			SELECT 
+				om.id as message_id,
+				json_agg(
+					json_build_object(
+						'id', ca.id,
+						'message_id', ca.message_id,
+						'file_type', ca.file_type,
+						'file_path', ca.file_path,
+						'file_name', ca.file_name,
+						'file_size', ca.file_size,
+						'content_type', ca.content_type,
+						'storage_type', ca.storage_type,
+						'storage_bucket', ca.storage_bucket,
+						'public_url', ca.public_url,
+						'thumbnail_url', ca.thumbnail_url,
+						'metadata', ca.metadata,
+						'created_at', ca.created_at
+					) ORDER BY ca.created_at ASC
+				) as attachments
+			FROM ordered_messages om
+			LEFT JOIN chat_attachments ca ON ca.message_id = om.id
+			WHERE om.has_attachments = true
+			GROUP BY om.id
+		)
+		SELECT 
+			om.*,
+			COALESCE(ma.attachments, '[]'::json) as attachments_json
+		FROM ordered_messages om
+		LEFT JOIN message_attachments ma ON om.id = ma.message_id
+		ORDER BY om.created_at ASC`
 		args = []interface{}{listingID, userID, limit, offset}
 	}
 
 	rows, err := s.pool.Query(ctx, query, args...)
-
 	if err != nil {
-		return messages, fmt.Errorf("error querying messages: %w", err)
+		return nil, fmt.Errorf("error querying messages: %w", err)
 	}
 	defer rows.Close()
 
+	var messages []models.MarketplaceMessage
 	for rows.Next() {
 		var msg models.MarketplaceMessage
+		var listingID sql.NullInt64
+		var attachmentsJSON json.RawMessage
 		msg.Sender = &models.User{}
 		msg.Receiver = &models.User{}
 
 		err := rows.Scan(
-			&msg.ID, &msg.ChatID, &msg.ListingID, &msg.SenderID, &msg.ReceiverID,
+			&msg.ID, &msg.ChatID, &listingID, &msg.SenderID, &msg.ReceiverID,
 			&msg.Content, &msg.IsRead, &msg.CreatedAt,
 			&msg.Sender.Name, &msg.Sender.PictureURL,
 			&msg.Receiver.Name, &msg.Receiver.PictureURL,
+			&msg.HasAttachments, &msg.AttachmentsCount,
+			&attachmentsJSON,
 		)
 		if err != nil {
-			return messages, fmt.Errorf("error scanning message: %w", err)
+			return nil, fmt.Errorf("error scanning message: %w", err)
+		}
+
+		// Устанавливаем ListingID только если он не NULL
+		if listingID.Valid {
+			msg.ListingID = int(listingID.Int64)
+		} else {
+			msg.ListingID = 0
+		}
+
+		// Парсим вложения из JSON
+		if msg.HasAttachments && msg.AttachmentsCount > 0 {
+			var attachments []models.ChatAttachment
+			if err := json.Unmarshal(attachmentsJSON, &attachments); err != nil {
+				log.Printf("Error unmarshalling attachments for message %d: %v", msg.ID, err)
+				attachments = []models.ChatAttachment{}
+			}
+			msg.Attachments = attachments
 		}
 
 		messages = append(messages, msg)
 	}
 
 	return messages, nil
+}
+
+// GetMessageAttachments загружает вложения для сообщения
+func (s *Storage) GetMessageAttachments(ctx context.Context, messageID int) ([]*models.ChatAttachment, error) {
+	query := `
+		SELECT 
+			id, message_id, file_type, file_path, file_name,
+			file_size, content_type, storage_type, storage_bucket,
+			public_url, thumbnail_url, metadata, created_at
+		FROM chat_attachments
+		WHERE message_id = $1
+		ORDER BY created_at ASC
+	`
+
+	rows, err := s.pool.Query(ctx, query, messageID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting message attachments: %w", err)
+	}
+	defer rows.Close()
+
+	var attachments []*models.ChatAttachment
+
+	for rows.Next() {
+		attachment := &models.ChatAttachment{}
+		err := rows.Scan(
+			&attachment.ID,
+			&attachment.MessageID,
+			&attachment.FileType,
+			&attachment.FilePath,
+			&attachment.FileName,
+			&attachment.FileSize,
+			&attachment.ContentType,
+			&attachment.StorageType,
+			&attachment.StorageBucket,
+			&attachment.PublicURL,
+			&attachment.ThumbnailURL,
+			&attachment.Metadata,
+			&attachment.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning attachment: %w", err)
+		}
+
+		attachments = append(attachments, attachment)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating attachments: %w", err)
+	}
+
+	return attachments, nil
+}
+
+// GetMessagesCount возвращает общее количество сообщений в чате
+func (s *Storage) GetMessagesCount(ctx context.Context, chatID int) (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM marketplace_messages WHERE chat_id = $1`
+	err := s.pool.QueryRow(ctx, query, chatID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("error counting messages: %w", err)
+	}
+	return count, nil
 }
 
 // In chat.go
@@ -294,10 +491,13 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 	defer tx.Rollback(ctx)
 
 	// Validate input data
-	if msg.SenderID == 0 || msg.ReceiverID == 0 || msg.ListingID == 0 {
-		return fmt.Errorf("invalid message data: sender_id=%d, receiver_id=%d, listing_id=%d",
-			msg.SenderID, msg.ReceiverID, msg.ListingID)
+	if msg.SenderID == 0 || msg.ReceiverID == 0 {
+		return fmt.Errorf("invalid message data: sender_id=%d, receiver_id=%d",
+			msg.SenderID, msg.ReceiverID)
 	}
+
+	// Для прямых сообщений (без привязки к объявлению) разрешаем ListingID == 0
+	// Но если есть ChatID, проверяем, что чат существует
 
 	// Проверяем из контекста, существует ли листинг
 	var listingExists bool = true
@@ -308,6 +508,32 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 	}
 
 	var sellerID, buyerID int
+
+	// Для прямых сообщений без ChatID и ListingID сначала пытаемся найти существующий чат
+	if msg.ChatID == 0 && msg.ListingID == 0 {
+		// Определяем buyerID и sellerID для прямого чата
+		if msg.SenderID < msg.ReceiverID {
+			buyerID = msg.SenderID
+			sellerID = msg.ReceiverID
+		} else {
+			buyerID = msg.ReceiverID
+			sellerID = msg.SenderID
+		}
+
+		// Ищем существующий прямой чат
+		err = tx.QueryRow(ctx, `
+			SELECT id
+			FROM marketplace_chats
+			WHERE listing_id IS NULL
+			AND ((buyer_id = $1 AND seller_id = $2) OR (buyer_id = $2 AND seller_id = $1))
+			LIMIT 1
+		`, buyerID, sellerID).Scan(&msg.ChatID)
+
+		if err != nil && err != pgx.ErrNoRows {
+			return fmt.Errorf("error checking existing direct chat: %w", err)
+		}
+		// Если нашли чат, msg.ChatID теперь заполнен
+	}
 
 	// Определяем sellerID и buyerID
 	if msg.ChatID > 0 {
@@ -327,7 +553,7 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 		}
 	} else {
 		// Только для нового чата проверяем листинг
-		if listingExists {
+		if msg.ListingID > 0 && listingExists {
 			// Get seller ID and check listing existence
 			err = tx.QueryRow(ctx, `
                 SELECT user_id
@@ -349,16 +575,21 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 				buyerID = msg.SenderID
 			}
 		} else {
-			// Это существующий чат, но ChatID не был передан
-			// В таком случае определяем sellerID и buyerID из существующих данных
+			// Это прямое сообщение без привязки к объявлению или
+			// существующий чат с удаленным листингом
 			if msg.ReceiverID == msg.SenderID {
 				return fmt.Errorf("sender and receiver cannot be the same")
 			}
 
-			// Предполагаем, что отправитель - это продавец, а получатель - покупатель
-			// Или наоборот, это не имеет значения для существующего чата с удаленным листингом
-			sellerID = msg.SenderID
-			buyerID = msg.ReceiverID
+			// Для прямых сообщений используем SenderID и ReceiverID напрямую
+			// Условно назначаем seller и buyer для совместимости со структурой БД
+			if msg.SenderID < msg.ReceiverID {
+				sellerID = msg.SenderID
+				buyerID = msg.ReceiverID
+			} else {
+				sellerID = msg.ReceiverID
+				buyerID = msg.SenderID
+			}
 		}
 	}
 
@@ -418,7 +649,7 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
                     buyer_id,
                     seller_id,
                     last_message_at
-                ) VALUES ($3, $4, $5, CURRENT_TIMESTAMP)
+                ) VALUES (NULLIF($3, 0), $4, $5, CURRENT_TIMESTAMP)
                 ON CONFLICT (listing_id, buyer_id, seller_id)
                 DO UPDATE SET
                     last_message_at = CURRENT_TIMESTAMP,
@@ -464,7 +695,7 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
             content,
             is_read,
             original_language
-        ) VALUES ($1, $2, $3, $4, $5, false, $6)
+        ) VALUES ($1, NULLIF($2, 0), $3, $4, $5, false, $6)
         RETURNING id, created_at
     `,
 		msg.ChatID,

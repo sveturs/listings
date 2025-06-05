@@ -21,7 +21,8 @@ type User struct {
 	GoogleID   string    `json:"google_id"`
 	PictureURL string    `json:"picture_url"`
 	Phone      *string   `json:"phone,omitempty"`
-	Password   string    `json:"-"` // скрываем пароль в JSON ответах
+	Password   *string   `json:"-"` // скрываем пароль в JSON ответах, может быть NULL для OAuth пользователей
+	Provider   string    `json:"provider"`
 	CreatedAt  time.Time `json:"created_at"`
 }
 type TranslationMap map[string]map[string]string

@@ -9,7 +9,8 @@
     "nav": {
       "blog": "Блог",
       "news": "Новости",
-      "contacts": "Контакты"
+      "contacts": "Контакты",
+      "userContacts": "Мои контакты"
     }
   },
   "blog": {
@@ -212,5 +213,120 @@
       "details": "Детали ошибки",
       "reload": "Перезагрузить страницу"
     }
+  },
+  "Chat": {
+    "title": "Сообщения",
+    "selectChat": "Выберите чат для начала общения",
+    "chatsTab": "Чаты",
+    "contactsTab": "Контакты",
+    "searchPlaceholder": "Поиск чатов...",
+    "noChats": "Чатов пока нет",
+    "noContacts": "Контактов пока нет",
+    "noSearchResults": "Результатов не найдено",
+    "contactStatus": "Контакт",
+    "deletedListing": "Удаленное объявление",
+    "newChat": "Новый чат",
+    "directMessage": "Личное сообщение",
+    "startNewConversation": "Начать новый разговор",
+    "sendFirstMessage": "Отправьте сообщение, чтобы начать разговор",
+    "unknownUser": "Неизвестный пользователь",
+    "viewListing": "Перейти к объявлению",
+    "addToContacts": "Добавить в контакты",
+    "loadMore": "Загрузить предыдущие сообщения",
+    "loadingOldMessages": "Загрузка сообщений...",
+    "scrollUpToLoadMore": "Прокрутите вверх для загрузки предыдущих сообщений",
+    "userTyping": "{name} печатает...",
+    "usersTyping": "{count} пользователей печатают...",
+    "messagePlaceholder": "Введите сообщение...",
+    "keyboardShortcuts": "Enter - отправить, Shift+Enter - новая строка",
+    "attachFile": "Прикрепить файл",
+    "addEmoji": "Добавить эмодзи",
+    "sendMessage": "Отправить",
+    "searchEmoji": "Поиск эмодзи",
+    "noRecentEmojis": "Нет недавних эмодзи",
+    "noEmojisFound": "Эмодзи не найдены",
+    "emojiCategory": {
+      "all": "Все",
+      "recent": "Недавние",
+      "smileys": "Смайлы и эмоции",
+      "gestures": "Люди и жесты",
+      "hearts": "Сердечки",
+      "animals": "Животные и природа",
+      "food": "Еда и напитки",
+      "objects": "Объекты"
+    },
+    "initialMessage": "Здравствуйте! Меня интересует ваше объявление.",
+    "contactAdded": "Контакт успешно добавлен!",
+    "contactAddError": "Не удалось добавить контакт. Попробуйте еще раз.",
+    "contactAlreadyExists": "Этот контакт уже существует",
+    "pleaseLoginToAddContacts": "Пожалуйста, войдите в систему, чтобы добавлять контакты",
+    "failedToAddContact": "Не удалось добавить контакт. Попробуйте еще раз.",
+    "cannotAddYourself": "Вы не можете добавить себя в контакты",
+    "userDoesNotAllowContacts": "Этот пользователь не разрешает запросы на добавление в контакты",
+    "rateLimitMessage": "Слишком много сообщений. Подождите немного.",
+    "rateLimitFiles": "Слишком много загрузок файлов. Подождите немного.",
+    "sendError": "Не удалось отправить сообщение",
+    "uploadError": "Не удалось загрузить файлы",
+    "messageRead": "Прочитано",
+    "messageDelivered": "Доставлено",
+    "newMessages": "Новые",
+    "contactActive": "Активен",
+    "tryDifferentSearch": "Попробуйте изменить поисковый запрос",
+    "addContactsMessage": "Добавьте контакты для быстрого общения",
+    "online": "в сети",
+    "lastSeen": "был(а) {time}",
+    "lastSeenJustNow": "только что",
+    "lastSeenMinutesAgo": "{count, plural, =1 {# минуту назад} few {# минуты назад} many {# минут назад} other {# минут назад}}",
+    "lastSeenHoursAgo": "{count, plural, =1 {# час назад} few {# часа назад} many {# часов назад} other {# часов назад}}",
+    "lastSeenDaysAgo": "{count, plural, =1 {# день назад} few {# дня назад} many {# дней назад} other {# дней назад}}",
+    "lastSeenWeeksAgo": "{count, plural, =1 {# неделю назад} few {# недели назад} many {# недель назад} other {# недель назад}}",
+    "lastSeenMonthsAgo": "{count, plural, =1 {# месяц назад} few {# месяца назад} many {# месяцев назад} other {# месяцев назад}}",
+    "selectedFiles": "Выбранные файлы:",
+    "filesSelected": "{{count}} файл(ов) выбрано",
+    "deleteAttachment": "Удалить это вложение?",
+    "download": "Скачать",
+    "expand": "Развернуть",
+    "delete": "Удалить"
+  },
+  "userContacts": {
+    "title": "Мои контакты",
+    "auth": {
+      "required": "Требуется авторизация",
+      "loginMessage": "Пожалуйста, войдите в систему, чтобы просмотреть ваши контакты"
+    },
+    "tabs": {
+      "all": "Все",
+      "pending": "Ожидают",
+      "accepted": "Принятые",
+      "blocked": "Заблокированные"
+    },
+    "status": {
+      "pending": "Ожидает",
+      "accepted": "Принят",
+      "blocked": "Заблокирован"
+    },
+    "actions": {
+      "accept": "Принять",
+      "block": "Заблокировать",
+      "unblock": "Разблокировать",
+      "remove": "Удалить",
+      "cancel": "Отмена",
+      "save": "Сохранить"
+    },
+    "empty": {
+      "message": "Контакты не найдены"
+    },
+    "privacy": {
+      "title": "Настройки приватности",
+      "settings": "Настройки приватности",
+      "allowRequests": "Разрешить запросы на добавление в контакты",
+      "contactsOnly": "Принимать сообщения только от контактов"
+    }
+  },
+  "Marketplace": {
+    "title": "Объявления",
+    "loadMore": "Загрузить еще",
+    "noItems": "Объявления не найдены",
+    "errorLoadingData": "Ошибка загрузки данных. Пожалуйста, попробуйте позже."
   }
 }

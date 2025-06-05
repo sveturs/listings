@@ -70,3 +70,13 @@ type MarketplaceServiceInterface interface {
 	GetListingsInBounds(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapMarker, error)
 	GetMapClusters(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapCluster, error)
 }
+
+type ContactsServiceInterface interface {
+	AddContact(ctx context.Context, userID int, req *models.AddContactRequest) (*models.UserContact, error)
+	UpdateContactStatus(ctx context.Context, userID int, contactUserID int, req *models.UpdateContactRequest) error
+	GetContacts(ctx context.Context, userID int, status string, page, limit int) (*models.ContactsListResponse, error)
+	RemoveContact(ctx context.Context, userID, contactUserID int) error
+	GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error)
+	UpdatePrivacySettings(ctx context.Context, userID int, req *models.UpdatePrivacySettingsRequest) (*models.UserPrivacySettings, error)
+	AreContacts(ctx context.Context, userID1, userID2 int) (bool, error)
+}

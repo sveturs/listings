@@ -18,10 +18,7 @@ class ConfigManager {
       },
       storage: {
         minioUrl: env.NEXT_PUBLIC_MINIO_URL || 'http://localhost:9000',
-        imageHosts: this.parseImageHosts(
-          env.NEXT_PUBLIC_IMAGE_HOSTS,
-          imagePathPattern
-        ),
+        imageHosts: this.parseImageHosts(env.NEXT_PUBLIC_IMAGE_HOSTS),
         imagePathPattern,
       },
       env: {
@@ -31,10 +28,7 @@ class ConfigManager {
     };
   }
 
-  private parseImageHosts(
-    hostsString?: string,
-    pathname: string = '/listings/**'
-  ): ImageHost[] {
+  private parseImageHosts(hostsString?: string): ImageHost[] {
     const defaultHosts =
       'http:localhost:9000,https:svetu.rs:443,http:localhost:3000';
     const hosts = hostsString || defaultHosts;
@@ -53,24 +47,29 @@ class ConfigManager {
       },
     ];
 
-    const parsedHosts = hosts.split(',').map((host) => {
+    const parsedHosts = hosts.split(',').flatMap((host) => {
       const [protocol, hostname, port] = host.split(':');
-      const imageHost: ImageHost = {
-        protocol: protocol as 'http' | 'https',
-        hostname,
-        pathname,
-      };
+      // Создаем конфигурации для разных путей
+      const pathnames = ['/listings/**', '/chat-files/**'];
 
-      // Добавляем порт только если он указан и не является стандартным
-      if (
-        port &&
-        !(protocol === 'http' && port === '80') &&
-        !(protocol === 'https' && port === '443')
-      ) {
-        imageHost.port = port;
-      }
+      return pathnames.map((path) => {
+        const imageHost: ImageHost = {
+          protocol: protocol as 'http' | 'https',
+          hostname,
+          pathname: path,
+        };
 
-      return imageHost;
+        // Добавляем порт только если он указан и не является стандартным
+        if (
+          port &&
+          !(protocol === 'http' && port === '80') &&
+          !(protocol === 'https' && port === '443')
+        ) {
+          imageHost.port = port;
+        }
+
+        return imageHost;
+      });
     });
 
     // Объединяем списки хостов
@@ -83,6 +82,10 @@ class ConfigManager {
 
   // Удобные методы для доступа к часто используемым значениям
   public getApiUrl(): string {
+    // В разработке используем пустую строку, чтобы запросы шли через proxy
+    if (this.config.env.isDevelopment && typeof window !== 'undefined') {
+      return '';
+    }
     return this.config.api.url;
   }
 
@@ -117,8 +120,8 @@ class ConfigManager {
       return path;
     }
 
-    // Если путь начинается с /listings/, используем MinIO
-    if (path.startsWith('/listings/')) {
+    // Если путь начинается с /listings/ или /chat-files/, используем MinIO
+    if (path.startsWith('/listings/') || path.startsWith('/chat-files/')) {
       return `${this.getImageBaseUrl()}${path}`;
     }
 

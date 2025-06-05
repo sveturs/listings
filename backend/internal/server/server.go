@@ -42,6 +42,7 @@ type Server struct {
 	payments      paymentService.PaymentServiceInterface
 	storefront    *storefrontHandler.Handler
 	geocode       *geocodeHandler.GeocodeHandler
+	contacts      *marketplaceHandler.ContactsHandler
 	fileStorage   filestorage.FileStorageInterface
 }
 
@@ -101,10 +102,11 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	usersHandler := userHandler.NewHandler(services)
 	reviewHandler := reviewHandler.NewHandler(services)
-	marketplaceHandler := marketplaceHandler.NewHandler(services)
+	marketplaceHandlerInstance := marketplaceHandler.NewHandler(services)
 	notificationsHandler := notificationHandler.NewHandler(services)
 	balanceHandler := balanceHandler.NewHandler(services)
 	storefrontHandler := storefrontHandler.NewHandler(services)
+	contactsHandler := marketplaceHandler.NewContactsHandler(services)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
 
@@ -138,12 +140,13 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		users:         usersHandler,
 		middleware:    middleware,
 		review:        reviewHandler,
-		marketplace:   marketplaceHandler,
+		marketplace:   marketplaceHandlerInstance,
 		notifications: notificationsHandler,
 		balance:       balanceHandler,
 		storefront:    storefrontHandler,
 		payments:      services.Payment(),
 		geocode:       geocodeHandler,
+		contacts:      contactsHandler,
 		fileStorage:   fileStorage,
 	}
 
@@ -155,9 +158,11 @@ func NewServer(cfg *config.Config) (*Server, error) {
 }
 
 func (s *Server) setupMiddleware() {
+	// Security headers должны быть первыми
+	s.app.Use(s.middleware.SecurityHeaders())
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
-	s.app.Use("/ws", s.middleware.AuthRequired)
+	s.app.Use("/ws", s.middleware.AuthRequiredJWT)
 	os.MkdirAll("./uploads", os.ModePerm) // TODO: Это еще надо? Вроде нет
 	os.MkdirAll("./public", os.ModePerm)  // TODO: Это еще надо? Вроде нет
 }
@@ -194,29 +199,44 @@ func (s *Server) setupRoutes() {
 		return c.SendFile("./public/service-worker.js")
 	})
 
-	s.app.Get("/ws/chat", websocket.New(s.marketplace.Chat.HandleWebSocket, websocket.Config{
-		HandshakeTimeout:  10 * time.Second,
-		ReadBufferSize:    1024,
-		WriteBufferSize:   1024,
-		EnableCompression: false,
-	}))
+	// WebSocket с проверкой аутентификации и rate limiting
+	s.app.Get("/ws/chat", s.middleware.AuthRequiredJWT, s.middleware.RateLimitByUser(5, time.Minute), func(c *fiber.Ctx) error {
+		// Проверяем, что это WebSocket запрос
+		if websocket.IsWebSocketUpgrade(c) {
+			// Сохраняем userID для использования в WebSocket handler
+			userID := c.Locals("user_id").(int)
+
+			return websocket.New(func(conn *websocket.Conn) {
+				// Передаем userID через контекст соединения
+				// В Fiber WebSocket, Locals доступен только для чтения
+				// Поэтому создаем обертку с сохраненным userID
+				s.marketplace.Chat.HandleWebSocketWithAuth(conn, userID)
+			}, websocket.Config{
+				HandshakeTimeout:  10 * time.Second,
+				ReadBufferSize:    1024,
+				WriteBufferSize:   1024,
+				EnableCompression: false,
+			})(c)
+		}
+		return fiber.ErrUpgradeRequired
+	})
 
 	// Изменено: публичные методы для реиндексации данных
-	s.app.Post("/reindex-ratings-public", s.marketplace.Indexing.ReindexRatings)
-	s.app.Post("/api/v1/public/reindex", s.marketplace.Indexing.ReindexAll)
+	s.app.Post("/reindex-ratings-public", s.middleware.CSRFProtection(), s.marketplace.Indexing.ReindexRatings)
+	s.app.Post("/api/v1/public/reindex", s.middleware.CSRFProtection(), s.marketplace.Indexing.ReindexAll)
 
 	s.app.Post("/api/v1/notifications/telegram/webhook", func(c *fiber.Ctx) error {
 		log.Printf("Received webhook request: %s", string(c.Body()))
 		return s.notifications.Notification.HandleTelegramWebhook(c)
 	})
 
-	s.app.Post("/api/v1/public/send-email", s.notifications.Notification.SendPublicEmail)
+	s.app.Post("/api/v1/public/send-email", s.middleware.CSRFProtection(), s.notifications.Notification.SendPublicEmail)
 	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
 	s.app.Get("/api/v1/public/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
 	s.app.Get("/api/v1/public/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
 	s.app.Get("/v1/notifications/telegram", s.notifications.Notification.GetTelegramStatus)
 
-	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequired)
+	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequiredJWT)
 	balanceRoutes.Get("/", s.balance.Balance.GetBalance)
 	balanceRoutes.Get("/transactions", s.balance.Balance.GetTransactions)
 	balanceRoutes.Get("/payment-methods", s.balance.Balance.GetPaymentMethods)
@@ -275,10 +295,29 @@ func (s *Server) setupRoutes() {
 	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
 
 	// Применяем rate limiting для authentication endpoints
-	s.app.Post("/api/v1/users/register", s.middleware.RegistrationRateLimit(), s.users.User.Register)
-	s.app.Post("/api/v1/users/login", s.middleware.AuthRateLimit(), s.users.User.Login)
+	// JWT Authentication endpoints
+	s.app.Post("/api/v1/users/register", s.middleware.RegistrationRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Register)
+	s.app.Post("/api/v1/users/login", s.middleware.AuthRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Login)
 
-	authedAPIGroup := s.app.Group("/api/v1", s.middleware.AuthRequired)
+	// New JWT endpoints with consistent /api/auth prefix
+	s.app.Post("/api/auth/register", s.middleware.RegistrationRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Register)
+	s.app.Post("/api/auth/login", s.middleware.AuthRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Login)
+	s.app.Post("/api/auth/logout", s.middleware.RateLimitByIP(10, time.Minute), s.middleware.CSRFProtection(), s.users.Auth.Logout)
+	s.app.Post("/api/auth/refresh", s.middleware.RefreshTokenRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.RefreshToken)
+
+	// Auth routes с rate limiting по IP
+	auth := s.app.Group("/auth")
+	auth.Get("/session", s.users.Auth.GetSession)
+	auth.Get("/google", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleAuth)
+	auth.Get("/google/callback", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleCallback)
+	auth.Get("/logout", s.users.Auth.Logout)
+	auth.Post("/logout", s.middleware.CSRFProtection(), s.users.Auth.Logout) // Поддержка POST для logout
+
+	// API routes с общим rate limiting по пользователю (300 запросов в минуту)
+	// Используем JWT как основной метод аутентификации
+	api := s.app.Group("/api/v1", s.middleware.AuthRequiredJWT, s.middleware.RateLimitByUser(300, time.Minute))
+
+	authedAPIGroup := s.app.Group("/api/v1", s.middleware.AuthRequiredJWT, s.middleware.CSRFProtection())
 
 	protectedReviews := authedAPIGroup.Group("/reviews")
 	protectedReviews.Post("/", s.review.Review.CreateReview)
@@ -316,12 +355,6 @@ func (s *Server) setupRoutes() {
 	citiesApi := s.app.Group("/api/v1/cities")
 	citiesApi.Get("/suggest", s.geocode.GetCitySuggestions)
 
-	auth := s.app.Group("/auth")
-	auth.Get("/session", s.users.Auth.GetSession)
-	auth.Get("/google", s.users.Auth.GoogleAuth)
-	auth.Get("/google/callback", s.users.Auth.GoogleCallback)
-	auth.Get("/logout", s.users.Auth.Logout)
-
 	users := authedAPIGroup.Group("/users")
 	users.Get("/me", s.users.User.GetProfile)    // TODO: remove
 	users.Put("/me", s.users.User.UpdateProfile) // TODO: remove
@@ -330,6 +363,16 @@ func (s *Server) setupRoutes() {
 	users.Get("/:id/profile", s.users.User.GetProfileByID)
 	// Публичный маршрут для проверки статуса администратора (без авторизации и AdminRequired)
 	s.app.Get("/api/v1/admin-check/:email", s.users.User.IsAdminPublic)
+
+	// Contacts routes
+	contacts := api.Group("/contacts")
+	contacts.Get("/", s.contacts.GetContacts)
+	contacts.Post("/", s.contacts.AddContact)
+	contacts.Put("/:contact_user_id", s.contacts.UpdateContactStatus)
+	contacts.Delete("/:contact_user_id", s.contacts.RemoveContact)
+	contacts.Get("/privacy", s.contacts.GetPrivacySettings)
+	contacts.Put("/privacy", s.contacts.UpdatePrivacySettings)
+	contacts.Get("/status/:contact_user_id", s.contacts.GetContactStatus)
 
 	// Обновлено: маршруты защищенного API маркетплейса используют соответствующие обработчики
 	marketplaceProtected := authedAPIGroup.Group("/marketplace")
@@ -352,7 +395,7 @@ func (s *Server) setupRoutes() {
 	marketplaceProtected.Post("/translations/detect-language", s.marketplace.Translations.DetectLanguage)
 	marketplaceProtected.Get("/translations/:id", s.marketplace.Translations.GetTranslations)
 	// Административные маршруты
-	adminRoutes := s.app.Group("/api/v1/admin", s.middleware.AuthRequired, s.middleware.AdminRequired)
+	adminRoutes := s.app.Group("/api/v1/admin", s.middleware.AuthRequiredJWT, s.middleware.AdminRequired, s.middleware.CSRFProtection())
 
 	// Регистрируем маршруты администрирования категорий
 	adminRoutes.Post("/categories", s.marketplace.AdminCategories.CreateCategory)
@@ -381,8 +424,9 @@ func (s *Server) setupRoutes() {
 
 	// Для обратной совместимости добавим маршруты без v1
 	legacyAdmin := s.app.Group("/api/admin")
-	legacyAdmin.Use(s.middleware.AuthRequired)
+	legacyAdmin.Use(s.middleware.AuthRequiredJWT)
 	legacyAdmin.Use(s.middleware.AdminRequired)
+	legacyAdmin.Use(s.middleware.CSRFProtection())
 
 	// Все маршруты для категорий
 	legacyAdmin.Get("/categories", s.marketplace.AdminCategories.GetCategories)
@@ -484,9 +528,16 @@ func (s *Server) setupRoutes() {
 	chat := authedAPIGroup.Group("/marketplace/chat")
 	chat.Get("/", s.marketplace.Chat.GetChats)
 	chat.Get("/messages", s.marketplace.Chat.GetMessages)
-	chat.Post("/messages", s.marketplace.Chat.SendMessage)
+
+	// Применяем rate limiting для отправки сообщений и загрузки файлов
+	chat.Post("/messages", s.middleware.RateLimitMessages(), s.marketplace.Chat.SendMessage)
 	chat.Put("/messages/read", s.marketplace.Chat.MarkAsRead)
 	chat.Post("/:chat_id/archive", s.marketplace.Chat.ArchiveChat)
+
+	// Роуты для работы с вложениями с rate limiting
+	chat.Post("/messages/:id/attachments", s.middleware.RateLimitMessages(), s.marketplace.Chat.UploadAttachments)
+	chat.Get("/attachments/:id", s.marketplace.Chat.GetAttachment)
+	chat.Delete("/attachments/:id", s.marketplace.Chat.DeleteAttachment)
 	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
 
 	notifications := authedAPIGroup.Group("/notifications")

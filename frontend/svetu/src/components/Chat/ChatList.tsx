@@ -1,0 +1,481 @@
+'use client';
+
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useChat } from '@/hooks/useChat';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from 'next-intl';
+import { MarketplaceChat } from '@/types/chat';
+import { UserContact } from '@/types/contacts';
+import { contactsService } from '@/services/contacts';
+import Image from 'next/image';
+import { useLocale } from 'next-intl';
+import config from '@/config';
+
+interface ChatListProps {
+  onChatSelect: (chat: MarketplaceChat) => void;
+}
+
+export default function ChatList({ onChatSelect }: ChatListProps) {
+  const t = useTranslations('Chat');
+  const locale = useLocale();
+  const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'chats' | 'contacts'>('chats');
+  const [contacts, setContacts] = useState<UserContact[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const {
+    chats,
+    currentChat,
+    isLoading,
+    hasMoreChats,
+    loadChats,
+    onlineUsers,
+  } = useChat();
+
+  // Функция для загрузки контактов
+  const loadContacts = useCallback(async () => {
+    if (!user) return;
+
+    setContactsLoading(true);
+    try {
+      const response = await contactsService.getContacts('accepted');
+      setContacts(response.contacts);
+    } catch (error) {
+      // Если ошибка авторизации, тихо устанавливаем пустой массив
+      if (error instanceof Error && error.message === 'Unauthorized') {
+        setContacts([]);
+      } else {
+        // Логируем только другие ошибки
+        console.error('Error loading contacts:', error);
+      }
+    } finally {
+      setContactsLoading(false);
+    }
+  }, [user]);
+
+  // Загрузка чатов при монтировании
+  useEffect(() => {
+    // Загружаем чаты только если пользователь авторизован
+    if (user && chats.length === 0) {
+      loadChats(1);
+    }
+  }, [user, chats.length, loadChats]);
+
+  // Загрузка контактов при переключении на вкладку контактов
+  useEffect(() => {
+    if (
+      activeTab === 'contacts' &&
+      user &&
+      (!contacts || contacts.length === 0)
+    ) {
+      loadContacts();
+    }
+  }, [activeTab, user, contacts, loadContacts]);
+
+  // Бесконечная прокрутка
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMoreChats && !isLoading) {
+          loadChats(chats.length / 20 + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMoreChats, isLoading, chats.length, loadChats]);
+
+  // Фильтрация чатов по поиску
+  const filteredChats = chats.filter((chat) => {
+    if (!searchQuery) return true;
+
+    const query = searchQuery.toLowerCase();
+    const otherUserName = chat.other_user?.name?.toLowerCase() || '';
+    const listingTitle = chat.listing?.title?.toLowerCase() || '';
+    const lastMessage = chat.last_message?.content?.toLowerCase() || '';
+
+    return (
+      otherUserName.includes(query) ||
+      listingTitle.includes(query) ||
+      lastMessage.includes(query)
+    );
+  });
+
+  // Сортировка чатов по дате последнего сообщения (новые сверху)
+  const sortedChats = [...filteredChats].sort((a, b) => {
+    const aTime = new Date(a.last_message_at || a.created_at).getTime();
+    const bTime = new Date(b.last_message_at || b.created_at).getTime();
+    return bTime - aTime; // Новые сообщения сверху
+  });
+
+  // Фильтрация контактов по поиску
+  const filteredContacts = (contacts || []).filter((contact) => {
+    if (!searchQuery) return true;
+
+    const query = searchQuery.toLowerCase();
+    const contactName = contact.contact_user?.name?.toLowerCase() || '';
+    const contactEmail = contact.contact_user?.email?.toLowerCase() || '';
+
+    return contactName.includes(query) || contactEmail.includes(query);
+  });
+
+  const getChatTitle = (chat: MarketplaceChat) => {
+    if (chat.listing) {
+      // Проверяем специальные маркеры от бэкенда
+      if (chat.listing.title === '__DIRECT_MESSAGE__') {
+        return t('directMessage');
+      }
+      if (chat.listing.title === '__DELETED_LISTING__') {
+        return t('deletedListing');
+      }
+      return chat.listing.title;
+    }
+    return t('deletedListing');
+  };
+
+  const getChatSubtitle = (chat: MarketplaceChat) => {
+    return chat.other_user?.name || t('unknownUser');
+  };
+
+  const getChatAvatar = (chat: MarketplaceChat) => {
+    console.log('Chat avatar for:', chat.id, {
+      listing: chat.listing,
+      images: chat.listing?.images,
+      first_image: chat.listing?.images?.[0],
+    });
+
+    if (chat.listing?.images?.[0]?.public_url) {
+      const imageUrl = config.buildImageUrl(chat.listing.images[0].public_url);
+      console.log('Built image URL:', imageUrl);
+      return imageUrl;
+    }
+    return '/placeholder-listing.jpg';
+  };
+
+  // Функция для создания/открытия чата с контактом
+  const handleContactSelect = async (contact: UserContact) => {
+    if (!contact.contact_user?.id || !user?.id) return;
+
+    // Сначала ищем существующий прямой чат с этим контактом
+    const existingChat = chats.find(
+      (chat) =>
+        !chat.listing_id && // Прямой чат (без привязки к объявлению)
+        contact.contact_user &&
+        ((chat.buyer_id === user.id &&
+          chat.seller_id === contact.contact_user.id) ||
+          (chat.seller_id === user.id &&
+            chat.buyer_id === contact.contact_user.id))
+    );
+
+    if (existingChat) {
+      // Если чат уже существует, открываем его
+      onChatSelect(existingChat);
+    } else {
+      // Создаем виртуальный чат для прямого общения с контактом
+      const directChat: MarketplaceChat = {
+        id: 0, // Временный ID для нового чата
+        listing_id: 0,
+        buyer_id: user.id,
+        seller_id: contact.contact_user.id,
+        last_message: undefined,
+        last_message_at: new Date().toISOString(),
+        unread_count: 0,
+        is_archived: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        other_user: {
+          id: contact.contact_user.id,
+          name: contact.contact_user.name || '',
+          email: contact.contact_user.email || '',
+          picture_url: '',
+          provider: '',
+        },
+      };
+
+      onChatSelect(directChat);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-base-100">
+      {/* Заголовок и поиск с современным дизайном */}
+      <div className="p-4">
+        {/* Поиск с иконкой */}
+        <div className="form-control mb-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder={t('searchPlaceholder')}
+              className="input input-bordered bg-white/90 backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-200 pl-10 border-gray-200 focus:border-blue-300"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <svg
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-base-content/50"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Кнопки переключения */}
+        <div className="flex gap-2">
+          <button
+            className={`flex-1 btn btn-sm ${
+              activeTab === 'chats'
+                ? 'btn-primary'
+                : 'btn-ghost border border-base-300 bg-base-100/50 hover:bg-base-200'
+            }`}
+            onClick={() => setActiveTab('chats')}
+          >
+            <svg
+              className="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
+              />
+            </svg>
+            {t('chatsTab')}
+          </button>
+          <button
+            className={`flex-1 btn btn-sm ${
+              activeTab === 'contacts'
+                ? 'btn-primary'
+                : 'btn-ghost border border-base-300 bg-base-100/50 hover:bg-base-200'
+            }`}
+            onClick={() => setActiveTab('contacts')}
+          >
+            <svg
+              className="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+              />
+            </svg>
+            {t('contactsTab')}
+          </button>
+        </div>
+      </div>
+
+      {/* Список чатов или контактов */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-1">
+        {activeTab === 'chats' ? (
+          // Список чатов с card компонентами
+          <>
+            {isLoading && chats.length === 0 ? (
+              <div className="flex justify-center p-8">
+                <span className="loading loading-spinner loading-lg text-primary"></span>
+              </div>
+            ) : sortedChats.length === 0 ? (
+              <div className="card bg-base-100 shadow-sm">
+                <div className="card-body text-center py-12">
+                  <div className="text-4xl mb-4">💬</div>
+                  <h3 className="card-title justify-center text-base-content/70">
+                    {searchQuery ? t('noSearchResults') : t('noChats')}
+                  </h3>
+                  <p className="text-base-content/50">
+                    {searchQuery
+                      ? t('tryDifferentSearch')
+                      : t('startNewConversation')}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {sortedChats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    onClick={() => onChatSelect(chat)}
+                    className={`card bg-white hover:bg-gray-50 cursor-pointer ${
+                      currentChat?.id === chat.id
+                        ? 'ring-2 ring-blue-300 bg-blue-50/50'
+                        : 'border border-gray-100'
+                    }`}
+                  >
+                    <div className="card-body p-4">
+                      <div className="flex items-center gap-4">
+                        {/* Аватар с индикатором */}
+                        <div className="avatar indicator">
+                          {chat.unread_count > 0 && (
+                            <span className="indicator-item badge bg-blue-500 text-white badge-sm border-0">
+                              {chat.unread_count}
+                            </span>
+                          )}
+                          <div className="w-14 h-14 rounded-full ring-2 ring-gray-200">
+                            <Image
+                              src={getChatAvatar(chat)}
+                              alt={getChatTitle(chat)}
+                              width={56}
+                              height={56}
+                              className="object-cover rounded-full"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Информация о чате */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="card-title text-base truncate">
+                              {getChatTitle(chat)}
+                            </h3>
+                            <div className="flex items-center">
+                              {chat.other_user &&
+                                onlineUsers.has(chat.other_user.id) && (
+                                  <span className="text-xs text-gray-500">
+                                    online
+                                  </span>
+                                )}
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="text-sm text-base-content/70 truncate">
+                              {getChatSubtitle(chat)}
+                            </p>
+                            {chat.listing_id > 0 &&
+                              chat.listing?.price !== undefined && (
+                                <span className="text-sm font-semibold text-green-600">
+                                  {new Intl.NumberFormat(
+                                    locale === 'ru' ? 'ru-RU' : 'en-US',
+                                    {
+                                      style: 'currency',
+                                      currency: 'RSD',
+                                      minimumFractionDigits: 0,
+                                      maximumFractionDigits: 0,
+                                    }
+                                  ).format(chat.listing.price)}
+                                </span>
+                              )}
+                          </div>
+
+                          {chat.last_message && (
+                            <div className="flex items-center gap-1">
+                              {chat.last_message.sender_id === user?.id && (
+                                <span className="text-xs text-blue-500">✓</span>
+                              )}
+                              <p className="text-xs text-base-content/50 truncate">
+                                {chat.last_message.content}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Индикатор загрузки следующей страницы */}
+                {hasMoreChats && (
+                  <div ref={loadMoreRef} className="flex justify-center p-4">
+                    {isLoading && (
+                      <span className="loading loading-spinner loading-md text-primary"></span>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          // Список контактов с card компонентами
+          <>
+            {contactsLoading ? (
+              <div className="flex justify-center p-8">
+                <span className="loading loading-spinner loading-lg text-secondary"></span>
+              </div>
+            ) : filteredContacts.length === 0 ? (
+              <div className="card bg-base-100 shadow-sm">
+                <div className="card-body text-center py-12">
+                  <div className="text-4xl mb-4">👥</div>
+                  <h3 className="card-title justify-center text-base-content/70">
+                    {searchQuery ? t('noSearchResults') : t('noContacts')}
+                  </h3>
+                  <p className="text-base-content/50">
+                    {searchQuery
+                      ? t('tryDifferentSearch')
+                      : t('addContactsMessage')}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              filteredContacts.map((contact) => (
+                <div
+                  key={contact.id}
+                  onClick={() => handleContactSelect(contact)}
+                  className="card bg-white hover:bg-gray-50 cursor-pointer border border-gray-100"
+                >
+                  <div className="card-body p-4">
+                    <div className="flex items-center gap-4">
+                      {/* Аватар контакта с онлайн индикатором */}
+                      <div className="avatar avatar-online">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center ring-2 ring-green-200">
+                          <span className="text-lg font-bold text-green-600">
+                            {contact.contact_user?.name
+                              ?.charAt(0)
+                              .toUpperCase() || '?'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Информация о контакте */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="card-title text-base truncate">
+                          {contact.contact_user?.name ||
+                            `User #${contact.contact_user_id}`}
+                        </h3>
+                        <p className="text-sm text-base-content/70 truncate">
+                          {contact.contact_user?.email}
+                        </p>
+                        {contact.notes && (
+                          <p className="text-xs text-base-content/50 truncate mt-1">
+                            📝 {contact.notes}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Статус онлайн */}
+                      <div className="flex items-center">
+                        {contact.contact_user &&
+                          onlineUsers.has(contact.contact_user.id) && (
+                            <span className="text-xs text-gray-500">
+                              online
+                            </span>
+                          )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

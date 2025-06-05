@@ -4,6 +4,7 @@ package service
 import (
 	"backend/internal/domain/models"
 	"backend/internal/types"
+	"backend/pkg/jwt"
 	"context"
 )
 
@@ -12,7 +13,23 @@ type AuthServiceInterface interface {
 	HandleGoogleCallback(ctx context.Context, code string) (*types.SessionData, error)
 	SaveSession(token string, data *types.SessionData)
 	DeleteSession(token string)
-	GetSession(ctx context.Context, token string) (*types.SessionData, error) // должен принимать ctx и token
+	GetSession(ctx context.Context, token string) (*types.SessionData, error)
+	
+	// JWT методы
+	GenerateJWT(userID int, email string) (string, error)
+	ValidateJWT(tokenString string) (*jwt.Claims, error)
+	
+	// Email/Password аутентификация
+	LoginWithEmailPassword(ctx context.Context, email, password string) (string, *models.User, error)
+	RegisterWithEmailPassword(ctx context.Context, name, email, password string) (string, *models.User, error)
+	
+	// Refresh Token методы
+	LoginWithRefreshToken(ctx context.Context, email, password, ip, userAgent string) (accessToken, refreshToken string, user *models.User, err error)
+	RegisterWithRefreshToken(ctx context.Context, name, email, password, ip, userAgent string) (accessToken, refreshToken string, user *models.User, err error)
+	GenerateTokensForOAuth(ctx context.Context, userID int, email, ip, userAgent string) (accessToken, refreshToken string, err error)
+	RefreshTokens(ctx context.Context, refreshToken, ip, userAgent string) (newAccessToken, newRefreshToken string, err error)
+	RevokeRefreshToken(ctx context.Context, refreshToken string) error
+	RevokeUserRefreshTokens(ctx context.Context, userID int) error
 }
 
 type UserServiceInterface interface {

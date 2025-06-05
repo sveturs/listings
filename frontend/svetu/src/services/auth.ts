@@ -1,4 +1,5 @@
 import configManager from '@/config';
+import { tokenManager } from '@/utils/tokenManager';
 import type {
   SessionResponse,
   UserUpdate,
@@ -29,19 +30,20 @@ interface LoginRequest {
 }
 
 interface LoginResponse {
-  message: string;
+  access_token: string;
+  token_type: string;
+  expires_in: number;
   user: {
     id: number;
     name: string;
     email: string;
-    provider: string;
+    provider?: string;
     phone?: string;
     city?: string;
     country?: string;
     picture_url?: string;
     is_admin?: boolean;
   };
-  token: string;
 }
 
 export class AuthService {
@@ -51,7 +53,6 @@ export class AuthService {
     { count: number; resetTime: number }
   >();
   private static csrfToken: string | null = null;
-  private static jwtToken: string | null = null;
 
   // Rate limiting configuration
   private static readonly RATE_LIMITS = {
@@ -64,53 +65,47 @@ export class AuthService {
     this.abortControllers.clear();
   }
 
-  // JWT token management
-  private static setJwtToken(token: string | null): void {
-    this.jwtToken = token;
-    if (token) {
-      try {
-        localStorage.setItem('jwt_token', token);
-      } catch (error) {
-        console.warn('Failed to save JWT token to localStorage:', error);
-      }
-    } else {
-      try {
-        localStorage.removeItem('jwt_token');
-      } catch (error) {
-        console.warn('Failed to remove JWT token from localStorage:', error);
-      }
-    }
-  }
-
-  private static getJwtToken(): string | null {
-    if (this.jwtToken) {
-      return this.jwtToken;
-    }
-
-    try {
-      const token = localStorage.getItem('jwt_token');
-      if (token) {
-        this.jwtToken = token;
-        return token;
-      }
-    } catch (error) {
-      console.warn('Failed to read JWT token from localStorage:', error);
-    }
-
-    return null;
-  }
-
   private static getAuthHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
 
-    const jwtToken = this.getJwtToken();
-    if (jwtToken) {
-      headers['Authorization'] = `Bearer ${jwtToken}`;
+    // Добавляем JWT токен если есть
+    const token = tokenManager.getAccessToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     return headers;
+  }
+
+  // Инициализация TokenManager
+  static initializeTokenManager(): void {
+    // Настраиваем axios interceptors для автоматического обновления токенов
+    tokenManager.createAxiosInterceptor();
+  }
+
+  // Попытка восстановить сессию при загрузке страницы
+  static async restoreSession(): Promise<SessionResponse | null> {
+    console.log('[AuthService] Attempting to restore session...');
+    try {
+      // Пытаемся обновить токены используя refresh token
+      const accessToken = await tokenManager.refreshAccessToken();
+
+      if (accessToken) {
+        console.log('[AuthService] Access token obtained, fetching session...');
+        // Если удалось получить access token, получаем сессию
+        return await this.getSession();
+      } else {
+        console.log('[AuthService] No access token obtained');
+      }
+    } catch (error) {
+      // Если обновление не удалось, очищаем токены
+      tokenManager.clearTokens();
+      console.log('[AuthService] Could not restore session:', error);
+    }
+
+    return null;
   }
 
   // Get or fetch CSRF token
@@ -198,16 +193,10 @@ export class AuthService {
     const controller = this.getAbortController('session');
 
     try {
-      const headers: HeadersInit = {};
-      const jwtToken = this.getJwtToken();
-      if (jwtToken) {
-        headers['Authorization'] = `Bearer ${jwtToken}`;
-      }
-
       const response = await fetch(`${API_BASE}/auth/session`, {
         method: 'GET',
         credentials: 'include',
-        headers,
+        headers: this.getAuthHeaders(), // Добавляем JWT токен в заголовки
         signal: controller.signal,
       });
 
@@ -230,15 +219,16 @@ export class AuthService {
 
   static async logout(): Promise<void> {
     try {
-      await fetch(`${API_BASE}/auth/logout`, {
-        method: 'GET',
+      // Сначала очищаем токены локально, чтобы предотвратить автоматическое обновление
+      tokenManager.clearTokens();
+
+      await fetch(`${API_BASE}/api/auth/logout`, {
+        method: 'POST',
         credentials: 'include',
+        headers: this.getAuthHeaders(),
       });
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      // Очищаем JWT токен при выходе
-      this.setJwtToken(null);
     }
   }
 
@@ -291,7 +281,7 @@ export class AuthService {
     }
   }
 
-  static async register(data: RegisterUserRequest): Promise<void> {
+  static async register(data: RegisterUserRequest): Promise<LoginResponse> {
     // Check rate limiting
     if (!this.checkRateLimit('register')) {
       throw new AuthError('users.errors.tooManyAttempts');
@@ -301,7 +291,7 @@ export class AuthService {
     const csrfToken = await this.getCsrfToken();
 
     try {
-      const response = await fetch(`${API_BASE}/api/v1/users/register`, {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -320,11 +310,19 @@ export class AuthService {
         throw new AuthError(errorMessage);
       }
 
+      const result = await response.json();
+
+      // Сохраняем JWT токен после успешной регистрации
+      if (result.access_token) {
+        tokenManager.setAccessToken(result.access_token);
+      }
+
       this.abortControllers.delete('register');
+      return result;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('Register request was cancelled');
-        return;
+        throw error;
       }
       // Не логируем AuthError и translation keys в консоль
       if (
@@ -348,7 +346,7 @@ export class AuthService {
     const csrfToken = await this.getCsrfToken();
 
     try {
-      const response = await fetch(`${API_BASE}/api/v1/users/login`, {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -369,9 +367,14 @@ export class AuthService {
 
       const result = await response.json();
 
-      // Сохраняем JWT токен если он есть в ответе
-      if (result.token) {
-        this.setJwtToken(result.token);
+      // Сохраняем JWT токен
+      if (result.access_token) {
+        tokenManager.setAccessToken(result.access_token);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AuthService] Access token saved');
+        }
+      } else {
+        console.error('[AuthService] No access_token in login response');
       }
 
       this.abortControllers.delete('login');
