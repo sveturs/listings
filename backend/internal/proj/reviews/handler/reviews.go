@@ -36,56 +36,6 @@ func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
 	}
 }
 
-// Response structures for Swagger documentation
-
-// ReviewResponse представляет ответ с отзывом
-type ReviewResponse struct {
-	Success bool           `json:"success" example:"true"`
-	Data    *models.Review `json:"data"`
-}
-
-// ReviewsListResponse представляет ответ со списком отзывов
-type ReviewsListResponse struct {
-	Success bool            `json:"success" example:"true"`
-	Data    []models.Review `json:"data"`
-	Meta    ReviewsMeta     `json:"meta"`
-}
-
-// ReviewsMeta метаданные для списка отзывов
-type ReviewsMeta struct {
-	Total int `json:"total" example:"100"`
-	Page  int `json:"page" example:"1"`
-	Limit int `json:"limit" example:"20"`
-}
-
-// ReviewMessageResponse представляет ответ с сообщением
-type ReviewMessageResponse struct {
-	Success bool   `json:"success" example:"true"`
-	Message string `json:"message" example:"Операция выполнена успешно"`
-}
-
-// VoteRequest запрос на голосование за отзыв
-type VoteRequest struct {
-	VoteType string `json:"vote_type" example:"helpful"`
-}
-
-// ResponseRequest запрос на добавление ответа на отзыв
-type ResponseRequest struct {
-	Response string `json:"response" example:"Спасибо за ваш отзыв!"`
-}
-
-// PhotosResponse ответ с загруженными фотографиями
-type PhotosResponse struct {
-	Success bool     `json:"success" example:"true"`
-	Message string   `json:"message" example:"Photos uploaded successfully"`
-	Photos  []string `json:"photos"`
-}
-
-// RatingResponse ответ с рейтингом
-type RatingResponse struct {
-	Success bool    `json:"success" example:"true"`
-	Rating  float64 `json:"rating" example:"4.5"`
-}
 
 // CreateReview creates a new review
 // @Summary Create a new review
@@ -178,7 +128,10 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.SuccessResponse(c, createdReview)
+	return c.JSON(&ReviewResponse{
+		Success: true,
+		Data:    createdReview,
+	})
 }
 
 // GetReviews returns filtered list of reviews
@@ -220,12 +173,13 @@ func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting reviews")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": reviews,
-		"meta": fiber.Map{
-			"total": total,
-			"page":  filter.Page,
-			"limit": filter.Limit,
+	return c.JSON(&ReviewsListResponse{
+		Success: true,
+		Data:    reviews,
+		Meta: ReviewsMeta{
+			Total: int(total),
+			Page:  filter.Page,
+			Limit: filter.Limit,
 		},
 	})
 }
@@ -292,8 +246,9 @@ func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
 		log.Printf("Error sending notification: %v", err)
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Vote recorded successfully",
+	return c.JSON(&ReviewMessageResponse{
+		Success: true,
+		Message: "Vote recorded successfully",
 	})
 }
 
@@ -362,8 +317,9 @@ func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
 		log.Printf("Error sending notification: %v", err)
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Response added successfully",
+	return c.JSON(&ReviewMessageResponse{
+		Success: true,
+		Message: "Response added successfully",
 	})
 }
 
@@ -390,7 +346,10 @@ func (h *ReviewHandler) GetReviewByID(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting review")
 	}
 
-	return utils.SuccessResponse(c, review)
+	return c.JSON(&ReviewResponse{
+		Success: true,
+		Data:    review,
+	})
 }
 
 // UpdateReview updates an existing review
@@ -427,7 +386,10 @@ func (h *ReviewHandler) UpdateReview(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating review")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "Review updated successfully"})
+	return c.JSON(&ReviewMessageResponse{
+		Success: true,
+		Message: "Review updated successfully",
+	})
 }
 
 // GetStats returns review statistics
@@ -438,7 +400,7 @@ func (h *ReviewHandler) UpdateReview(c *fiber.Ctx) error {
 // @Produce json
 // @Param entity_type query string false "Entity type"
 // @Param entity_id query int false "Entity ID"
-// @Success 200 {object} models.ReviewStats "Review statistics"
+// @Success 200 {object} StatsResponse "Review statistics"
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/v1/reviews/stats [get]
 func (h *ReviewHandler) GetStats(c *fiber.Ctx) error {
@@ -451,7 +413,10 @@ func (h *ReviewHandler) GetStats(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting review stats")
 	}
 
-	return utils.SuccessResponse(c, stats)
+	return c.JSON(&StatsResponse{
+		Success: true,
+		Data:    stats,
+	})
 }
 
 // UploadPhotos uploads photos for a review
@@ -513,9 +478,10 @@ func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating review photos")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Photos uploaded successfully",
-		"photos":  photoUrls,
+	return c.JSON(&PhotosResponse{
+		Success: true,
+		Message: "Photos uploaded successfully",
+		Photos:  photoUrls,
 	})
 }
 
@@ -543,8 +509,9 @@ func (h *ReviewHandler) DeleteReview(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при удалении отзыва")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Отзыв успешно удален",
+	return c.JSON(&ReviewMessageResponse{
+		Success: true,
+		Message: "Отзыв успешно удален",
 	})
 }
 
@@ -572,8 +539,9 @@ func (h *ReviewHandler) GetEntityRating(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении рейтинга")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"rating": rating,
+	return c.JSON(&RatingResponse{
+		Success: true,
+		Rating:  rating,
 	})
 }
 
@@ -585,7 +553,7 @@ func (h *ReviewHandler) GetEntityRating(c *fiber.Ctx) error {
 // @Produce json
 // @Param type path string true "Entity type"
 // @Param id path int true "Entity ID"
-// @Success 200 {object} models.ReviewStats "Entity review statistics"
+// @Success 200 {object} StatsResponse "Entity review statistics"
 // @Failure 400 {object} ErrorResponse "Invalid entity ID"
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/v1/reviews/stats/{type}/{id} [get]
@@ -606,7 +574,10 @@ func (h *ReviewHandler) GetEntityStats(c *fiber.Ctx) error {
 
 	log.Printf("Получена статистика для %s ID=%d: %+v", entityType, entityId, stats)
 
-	return utils.SuccessResponse(c, stats)
+	return c.JSON(&StatsResponse{
+		Success: true,
+		Data:    stats,
+	})
 }
 
 // GetUserReviews returns all reviews for a user
@@ -631,7 +602,15 @@ func (h *ReviewHandler) GetUserReviews(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении отзывов пользователя")
 	}
 
-	return utils.SuccessResponse(c, reviews)
+	return c.JSON(&ReviewsListResponse{
+		Success: true,
+		Data:    reviews,
+		Meta: ReviewsMeta{
+			Total: len(reviews),
+			Page:  1,
+			Limit: len(reviews),
+		},
+	})
 }
 
 // GetStorefrontReviews returns all reviews for a storefront
@@ -656,7 +635,15 @@ func (h *ReviewHandler) GetStorefrontReviews(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении отзывов витрины")
 	}
 
-	return utils.SuccessResponse(c, reviews)
+	return c.JSON(&ReviewsListResponse{
+		Success: true,
+		Data:    reviews,
+		Meta: ReviewsMeta{
+			Total: len(reviews),
+			Page:  1,
+			Limit: len(reviews),
+		},
+	})
 }
 
 // GetUserRatingSummary returns user rating summary
@@ -666,7 +653,7 @@ func (h *ReviewHandler) GetStorefrontReviews(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} models.UserRatingSummary "User rating summary"
+// @Success 200 {object} UserRatingSummaryResponse "User rating summary"
 // @Failure 400 {object} ErrorResponse "Invalid user ID"
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/v1/reviews/user/{id}/rating [get]
@@ -681,7 +668,10 @@ func (h *ReviewHandler) GetUserRatingSummary(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении сводки рейтинга пользователя")
 	}
 
-	return utils.SuccessResponse(c, summary)
+	return c.JSON(&UserRatingSummaryResponse{
+		Success: true,
+		Data:    summary,
+	})
 }
 
 // GetStorefrontRatingSummary returns storefront rating summary
@@ -691,7 +681,7 @@ func (h *ReviewHandler) GetUserRatingSummary(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Storefront ID"
-// @Success 200 {object} models.StorefrontRatingSummary "Storefront rating summary"
+// @Success 200 {object} StorefrontRatingSummaryResponse "Storefront rating summary"
 // @Failure 400 {object} ErrorResponse "Invalid storefront ID"
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/v1/reviews/storefront/{id}/rating [get]
@@ -706,5 +696,8 @@ func (h *ReviewHandler) GetStorefrontRatingSummary(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении сводки рейтинга витрины")
 	}
 
-	return utils.SuccessResponse(c, summary)
+	return c.JSON(&StorefrontRatingSummaryResponse{
+		Success: true,
+		Data:    summary,
+	})
 }

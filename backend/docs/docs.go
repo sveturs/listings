@@ -1490,7 +1490,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Review statistics",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.ReviewStats"
+                            "$ref": "#/definitions/internal_proj_reviews_handler.StatsResponse"
                         }
                     },
                     "500": {
@@ -1535,7 +1535,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Entity review statistics",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.ReviewStats"
+                            "$ref": "#/definitions/internal_proj_reviews_handler.StatsResponse"
                         }
                     },
                     "400": {
@@ -1623,7 +1623,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Storefront rating summary",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.StorefrontRatingSummary"
+                            "$ref": "#/definitions/internal_proj_reviews_handler.StorefrontRatingSummaryResponse"
                         }
                     },
                     "400": {
@@ -1711,7 +1711,7 @@ const docTemplate = `{
                     "200": {
                         "description": "User rating summary",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.UserRatingSummary"
+                            "$ref": "#/definitions/internal_proj_reviews_handler.UserRatingSummaryResponse"
                         }
                     },
                     "400": {
@@ -3276,6 +3276,42 @@ const docTemplate = `{
                 "total": {
                     "type": "integer",
                     "example": 100
+                }
+            }
+        },
+        "internal_proj_reviews_handler.StatsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/backend_internal_domain_models.ReviewStats"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_reviews_handler.StorefrontRatingSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/backend_internal_domain_models.StorefrontRatingSummary"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_reviews_handler.UserRatingSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/backend_internal_domain_models.UserRatingSummary"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },

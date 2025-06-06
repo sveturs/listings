@@ -549,6 +549,30 @@ definitions:
         example: 100
         type: integer
     type: object
+  internal_proj_reviews_handler.StatsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/backend_internal_domain_models.ReviewStats'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_reviews_handler.StorefrontRatingSummaryResponse:
+    properties:
+      data:
+        $ref: '#/definitions/backend_internal_domain_models.StorefrontRatingSummary'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_reviews_handler.UserRatingSummaryResponse:
+    properties:
+      data:
+        $ref: '#/definitions/backend_internal_domain_models.UserRatingSummary'
+      success:
+        example: true
+        type: boolean
+    type: object
   internal_proj_reviews_handler.VoteRequest:
     properties:
       vote_type:
@@ -1966,7 +1990,7 @@ paths:
         "200":
           description: Review statistics
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.ReviewStats'
+            $ref: '#/definitions/internal_proj_reviews_handler.StatsResponse'
         "500":
           description: Internal server error
           schema:
@@ -1996,7 +2020,7 @@ paths:
         "200":
           description: Entity review statistics
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.ReviewStats'
+            $ref: '#/definitions/internal_proj_reviews_handler.StatsResponse'
         "400":
           description: Invalid entity ID
           schema:
@@ -2054,7 +2078,7 @@ paths:
         "200":
           description: Storefront rating summary
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.StorefrontRatingSummary'
+            $ref: '#/definitions/internal_proj_reviews_handler.StorefrontRatingSummaryResponse'
         "400":
           description: Invalid storefront ID
           schema:
@@ -2112,7 +2136,7 @@ paths:
         "200":
           description: User rating summary
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.UserRatingSummary'
+            $ref: '#/definitions/internal_proj_reviews_handler.UserRatingSummaryResponse'
         "400":
           description: Invalid user ID
           schema:
