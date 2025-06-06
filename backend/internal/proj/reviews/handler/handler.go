@@ -31,14 +31,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	review.Get("/:id", h.Review.GetReviewByID)
 	review.Get("/stats", h.Review.GetStats)
 
-	authedAPIGroup := app.Group("/api/v1", mw.AuthRequiredJWT, mw.CSRFProtection())
+	app.Get("/api/v1/users/:id/reviews", mw.AuthRequiredJWT, mw.CSRFProtection(), h.Review.GetUserReviews)
+	app.Get("/api/v1/users/:id/rating", mw.AuthRequiredJWT, mw.CSRFProtection(), h.Review.GetUserRatingSummary)
+	app.Get("/api/v1/storefronts/:id/reviews", mw.AuthRequiredJWT, mw.CSRFProtection(), h.Review.GetStorefrontReviews)
+	app.Get("/api/v1/storefronts/:id/rating", mw.AuthRequiredJWT, mw.CSRFProtection(), h.Review.GetStorefrontRatingSummary)
 
-	authedAPIGroup.Get("/users/:id/reviews", h.Review.GetUserReviews)
-	authedAPIGroup.Get("/users/:id/rating", h.Review.GetUserRatingSummary)
-	authedAPIGroup.Get("/storefronts/:id/reviews", h.Review.GetStorefrontReviews)
-	authedAPIGroup.Get("/storefronts/:id/rating", h.Review.GetStorefrontRatingSummary)
-
-	protectedReviews := authedAPIGroup.Group("/reviews")
+	protectedReviews := app.Group("/api/v1/reviews", mw.AuthRequiredJWT, mw.CSRFProtection())
 	protectedReviews.Post("/", h.Review.CreateReview)
 	protectedReviews.Put("/:id", h.Review.UpdateReview)
 	protectedReviews.Delete("/:id", h.Review.DeleteReview)

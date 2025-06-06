@@ -2,14 +2,17 @@
 package handler
 
 import (
-	"backend/internal/domain/models"
-	globalService "backend/internal/proj/global/service"
-	postgres "backend/internal/storage/postgres"
-	"backend/pkg/utils"
-	"github.com/gofiber/fiber/v2"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/domain/models"
+	"backend/internal/middleware"
+	globalService "backend/internal/proj/global/service"
+	postgres "backend/internal/storage/postgres"
+	"backend/pkg/utils"
 )
 
 // Глобальные переменные для кеширования категорий
@@ -34,6 +37,10 @@ type Handler struct {
 	CustomComponents   *CustomComponentHandler
 	MarketplaceHandler *MarketplaceHandler
 	service            globalService.ServicesInterface
+}
+
+func (h *Handler) GetPrefix() string {
+	return "/api/v1/marketplace"
 }
 
 // NewHandler создает новый обработчик маркетплейса
@@ -86,6 +93,190 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		MarketplaceHandler: nil,
 		service:            services,
 	}
+}
+
+func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
+
+	marketplace := app.Group("/api/v1/marketplace")
+	marketplace.Get("/listings", h.Listings.GetListings)
+	marketplace.Get("/categories", h.Categories.GetCategories)
+	marketplace.Get("/category-tree", h.Categories.GetCategoryTree)
+	marketplace.Get("/listings/:id", h.Listings.GetListing)
+	marketplace.Get("/search", h.Search.SearchListingsAdvanced) // маршрут поиска
+	marketplace.Get("/suggestions", h.Search.GetSuggestions)    // маршрут автодополнения
+	marketplace.Get("/category-suggestions", h.Search.GetCategorySuggestions)
+
+	// Временный публичный маршрут для проверки
+	app.Get("/admin-categories-test", h.AdminCategories.GetCategories)
+	marketplace.Get("/categories/:id/attributes", h.Categories.GetCategoryAttributes)
+	marketplace.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)
+	marketplace.Get("/listings/:id/similar", h.Search.GetSimilarListings)
+	marketplace.Get("/categories/:id/attribute-ranges", h.Categories.GetAttributeRanges)
+	marketplace.Get("/enhanced-suggestions", h.Search.GetEnhancedSuggestions)
+
+	// Карта - геопространственные маршруты
+	marketplace.Get("/map/bounds", h.GetListingsInBounds)
+	marketplace.Get("/map/clusters", h.GetMapClusters)
+
+	// Обновлено: маршруты API переводов используют обработчик переводов
+	translation := app.Group("/api/v1/translation")
+	translation.Get("/limits", h.Translations.GetTranslationLimits)
+	translation.Post("/provider", h.Translations.SetTranslationProvider)
+
+	authedAPIGroup := app.Group("/api/v1", mw.AuthRequiredJWT, mw.CSRFProtection())
+
+	marketplaceProtected := authedAPIGroup.Group("/marketplace")
+	marketplaceProtected.Post("/listings", h.Listings.CreateListing)
+	marketplaceProtected.Put("/listings/:id", h.Listings.UpdateListing)
+	marketplaceProtected.Delete("/listings/:id", h.Listings.DeleteListing)
+	marketplaceProtected.Post("/listings/:id/images", h.Images.UploadImages)
+	marketplaceProtected.Post("/listings/:id/favorite", h.Favorites.AddToFavorites)
+	marketplaceProtected.Delete("/listings/:id/favorite", h.Favorites.RemoveFromFavorites)
+	marketplaceProtected.Get("/favorites", h.Favorites.GetFavorites)
+	marketplaceProtected.Put("/translations/:id", h.Translations.UpdateTranslations)
+	marketplaceProtected.Post("/translations/batch", h.Translations.TranslateText) // Предполагается, что этот метод переименован
+	marketplaceProtected.Post("/moderate-image", h.Images.ModerateImage)
+	marketplaceProtected.Post("/enhance-preview", h.Images.EnhancePreview)
+	marketplaceProtected.Post("/enhance-images", h.Images.EnhanceImages)
+
+	// маршруты для новых методов в TranslationsHandler
+	marketplaceProtected.Post("/translations/batch-translate", h.Translations.BatchTranslateListings)
+	marketplaceProtected.Post("/translations/translate", h.Translations.TranslateText)
+	marketplaceProtected.Post("/translations/detect-language", h.Translations.DetectLanguage)
+	marketplaceProtected.Get("/translations/:id", h.Translations.GetTranslations)
+
+	adminRoutes := app.Group("/api/v1/admin", mw.AuthRequiredJWT, mw.AdminRequired, mw.CSRFProtection())
+
+	// Регистрируем маршруты администрирования категорий
+	adminRoutes.Post("/categories", h.AdminCategories.CreateCategory)
+	adminRoutes.Get("/categories", h.AdminCategories.GetCategories)
+	adminRoutes.Get("/categories/:id", h.AdminCategories.GetCategoryByID)
+	adminRoutes.Put("/categories/:id", h.AdminCategories.UpdateCategory)
+	adminRoutes.Delete("/categories/:id", h.AdminCategories.DeleteCategory)
+	adminRoutes.Post("/categories/:id/reorder", h.AdminCategories.ReorderCategories)
+	adminRoutes.Put("/categories/:id/move", h.AdminCategories.MoveCategory)
+	adminRoutes.Post("/categories/:id/attributes", h.AdminCategories.AddAttributeToCategory)
+	adminRoutes.Delete("/categories/:id/attributes/:attr_id", h.AdminCategories.RemoveAttributeFromCategory)
+	adminRoutes.Put("/categories/:id/attributes/:attr_id", h.AdminCategories.UpdateAttributeCategory)
+
+	// Регистрируем маршруты администрирования атрибутов
+	adminRoutes.Post("/attributes", h.AdminAttributes.CreateAttribute)
+	adminRoutes.Get("/attributes", h.AdminAttributes.GetAttributes)
+	adminRoutes.Get("/attributes/:id", h.AdminAttributes.GetAttributeByID)
+	adminRoutes.Put("/attributes/:id", h.AdminAttributes.UpdateAttribute)
+	adminRoutes.Delete("/attributes/:id", h.AdminAttributes.DeleteAttribute)
+	adminRoutes.Post("/attributes/bulk-update", h.AdminAttributes.BulkUpdateAttributes)
+
+	// Маршруты для экспорта/импорта настроек атрибутов
+	adminRoutes.Get("/categories/:categoryId/attributes/export", h.AdminAttributes.ExportCategoryAttributes)
+	adminRoutes.Post("/categories/:categoryId/attributes/import", h.AdminAttributes.ImportCategoryAttributes)
+	adminRoutes.Post("/categories/:targetCategoryId/attributes/copy", h.AdminAttributes.CopyAttributesSettings)
+
+	// Для обратной совместимости добавим маршруты без v1
+	legacyAdmin := app.Group("/api/admin", mw.AuthRequiredJWT, mw.AdminRequired, mw.CSRFProtection())
+
+	// Все маршруты для категорий
+	legacyAdmin.Get("/categories", h.AdminCategories.GetCategories)
+	legacyAdmin.Post("/categories", h.AdminCategories.CreateCategory)
+	legacyAdmin.Get("/categories/:id", h.AdminCategories.GetCategoryByID)
+	legacyAdmin.Put("/categories/:id", h.AdminCategories.UpdateCategory)
+	legacyAdmin.Delete("/categories/:id", h.AdminCategories.DeleteCategory)
+	legacyAdmin.Post("/categories/:id/reorder", h.AdminCategories.ReorderCategories)
+	legacyAdmin.Put("/categories/:id/move", h.AdminCategories.MoveCategory)
+	legacyAdmin.Post("/categories/:id/attributes", h.AdminCategories.AddAttributeToCategory)
+	legacyAdmin.Delete("/categories/:id/attributes/:attr_id", h.AdminCategories.RemoveAttributeFromCategory)
+	legacyAdmin.Put("/categories/:id/attributes/:attr_id", h.AdminCategories.UpdateAttributeCategory)
+
+	// Маршруты для атрибутов
+	legacyAdmin.Post("/attributes", h.AdminAttributes.CreateAttribute)
+	legacyAdmin.Get("/attributes", h.AdminAttributes.GetAttributes)
+	legacyAdmin.Get("/attributes/:id", h.AdminAttributes.GetAttributeByID)
+	legacyAdmin.Put("/attributes/:id", h.AdminAttributes.UpdateAttribute)
+	legacyAdmin.Delete("/attributes/:id", h.AdminAttributes.DeleteAttribute)
+	legacyAdmin.Post("/attributes/bulk-update", h.AdminAttributes.BulkUpdateAttributes)
+
+	// Добавляем маршруты для экспорта/импорта настроек атрибутов
+	legacyAdmin.Get("/categories/:categoryId/attributes/export", h.AdminAttributes.ExportCategoryAttributes)
+	legacyAdmin.Post("/categories/:categoryId/attributes/import", h.AdminAttributes.ImportCategoryAttributes)
+	legacyAdmin.Post("/categories/:targetCategoryId/attributes/copy", h.AdminAttributes.CopyAttributesSettings)
+
+	// Маршруты для групп атрибутов
+	legacyAdmin.Get("/attribute-groups", h.MarketplaceHandler.ListAttributeGroups)
+	legacyAdmin.Post("/attribute-groups", h.MarketplaceHandler.CreateAttributeGroup)
+	legacyAdmin.Get("/attribute-groups/:id", h.MarketplaceHandler.GetAttributeGroup)
+	legacyAdmin.Put("/attribute-groups/:id", h.MarketplaceHandler.UpdateAttributeGroup)
+	legacyAdmin.Delete("/attribute-groups/:id", h.MarketplaceHandler.DeleteAttributeGroup)
+	legacyAdmin.Get("/attribute-groups/:id/items", h.MarketplaceHandler.GetAttributeGroupWithItems)
+	legacyAdmin.Post("/attribute-groups/:id/items", h.MarketplaceHandler.AddItemToGroup)
+	legacyAdmin.Delete("/attribute-groups/:id/items/:attributeId", h.MarketplaceHandler.RemoveItemFromGroup)
+
+	// Маршруты для привязки групп к категориям
+	legacyAdmin.Get("/categories/:id/attribute-groups", h.MarketplaceHandler.GetCategoryGroups)
+	legacyAdmin.Post("/categories/:id/attribute-groups", h.MarketplaceHandler.AttachGroupToCategory)
+	legacyAdmin.Delete("/categories/:id/attribute-groups/:groupId", h.MarketplaceHandler.DetachGroupFromCategory)
+
+	// Маршруты для кастомных UI компонентов
+	// ВАЖНО: Более специфичные роуты должны идти раньше параметризованных
+
+	// Маршруты для шаблонов (должны быть перед :id, чтобы не конфликтовать)
+	adminRoutes.Get("/custom-components/templates", h.CustomComponents.ListTemplates)
+	adminRoutes.Post("/custom-components/templates", h.CustomComponents.CreateTemplate)
+
+	// Маршруты для использования компонентов
+	adminRoutes.Get("/custom-components/usage", h.CustomComponents.GetComponentUsages)
+	adminRoutes.Post("/custom-components/usage", h.CustomComponents.AddComponentUsage)
+	adminRoutes.Delete("/custom-components/usage/:id", h.CustomComponents.RemoveComponentUsage)
+
+	// Основные маршруты компонентов (параметризованные идут последними)
+	adminRoutes.Post("/custom-components", h.CustomComponents.CreateComponent)
+	adminRoutes.Get("/custom-components", h.CustomComponents.ListComponents)
+	adminRoutes.Get("/custom-components/:id", h.CustomComponents.GetComponent)
+	adminRoutes.Put("/custom-components/:id", h.CustomComponents.UpdateComponent)
+	adminRoutes.Delete("/custom-components/:id", h.CustomComponents.DeleteComponent)
+
+	adminRoutes.Get("/categories/:category_id/components", h.CustomComponents.GetCategoryComponents)
+
+	// Маршруты для групп атрибутов
+	adminRoutes.Get("/attribute-groups", h.MarketplaceHandler.ListAttributeGroups)
+	adminRoutes.Post("/attribute-groups", h.MarketplaceHandler.CreateAttributeGroup)
+	adminRoutes.Get("/attribute-groups/:id", h.MarketplaceHandler.GetAttributeGroup)
+	adminRoutes.Put("/attribute-groups/:id", h.MarketplaceHandler.UpdateAttributeGroup)
+	adminRoutes.Delete("/attribute-groups/:id", h.MarketplaceHandler.DeleteAttributeGroup)
+	adminRoutes.Get("/attribute-groups/:id/items", h.MarketplaceHandler.GetAttributeGroupWithItems)
+	adminRoutes.Post("/attribute-groups/:id/items", h.MarketplaceHandler.AddItemToGroup)
+	adminRoutes.Delete("/attribute-groups/:id/items/:attributeId", h.MarketplaceHandler.RemoveItemFromGroup)
+
+	// Маршруты для привязки групп к категориям
+	adminRoutes.Get("/categories/:id/attribute-groups", h.MarketplaceHandler.GetCategoryGroups)
+	adminRoutes.Post("/categories/:id/attribute-groups", h.MarketplaceHandler.AttachGroupToCategory)
+	adminRoutes.Delete("/categories/:id/attribute-groups/:groupId", h.MarketplaceHandler.DetachGroupFromCategory)
+
+	// Использовать реальный обработчик из UserHandler
+
+	// Управление администраторами
+
+	// Обновлено: маршруты админских функций используют обработчик индексации
+	adminRoutes.Post("/reindex-listings", h.Indexing.ReindexAll)
+	adminRoutes.Post("/reindex-listings-with-translations", h.Indexing.ReindexAllWithTranslations)
+	adminRoutes.Post("/sync-discounts", h.Listings.SynchronizeDiscounts) // Оставляем в Listings, т.к. это работа с объявлениями
+	adminRoutes.Post("/reindex-ratings", h.Indexing.ReindexRatings)
+
+	chat := authedAPIGroup.Group("/marketplace/chat")
+	chat.Get("/", h.Chat.GetChats)
+	chat.Get("/messages", h.Chat.GetMessages)
+
+	// Применяем rate limiting для отправки сообщений и загрузки файлов
+	chat.Post("/messages", mw.RateLimitMessages(), h.Chat.SendMessage)
+	chat.Put("/messages/read", h.Chat.MarkAsRead)
+	chat.Post("/:chat_id/archive", h.Chat.ArchiveChat)
+
+	// Роуты для работы с вложениями с rate limiting
+	chat.Post("/messages/:id/attachments", mw.RateLimitMessages(), h.Chat.UploadAttachments)
+	chat.Get("/attachments/:id", h.Chat.GetAttachment)
+	chat.Delete("/attachments/:id", h.Chat.DeleteAttachment)
+	chat.Get("/unread-count", h.Chat.GetUnreadCount)
+
+	return nil
 }
 
 // GetListingsInBounds возвращает объявления в указанных границах карты
@@ -225,16 +416,6 @@ func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
 		}
 	}
 
-	// Получаем кластеры в указанных границах
-	_ = neLat64       // используем переменную
-	_ = neLng64       // используем переменную
-	_ = swLat64       // используем переменную
-	_ = swLng64       // используем переменную
-	_ = zoom          // используем переменную
-	_ = categoryIDs   // используем переменную
-	_ = condition     // используем переменную
-	_ = minPriceFloat // используем переменную
-
 	clusters, err := h.service.Marketplace().GetListingsInBounds(c.Context(),
 		neLat64, neLng64, swLat64, swLng64, zoom,
 		categoryIDs, condition, minPriceFloat, maxPriceFloat)
@@ -252,4 +433,3 @@ func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
 		"count": len(clusters),
 	})
 }
-

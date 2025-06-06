@@ -59,6 +59,15 @@
         "failed": "Registration failed. Please try again."
       }
     },
+    "login": {
+      "enter": "Login",
+      "error": {
+        "invalid_request_body": "Invalid request format",
+        "email_password_required": "Email and password are required",
+        "invalid_credentials": "Invalid email or password",
+        "failed": "Ошибка входа. Попробуйте еще раз."
+      }
+    },
     "refresh_token": {
       "error": {
         "token_not_found": "Session expired. Please log in again.",
@@ -177,7 +186,6 @@
       }
     },
     "login": {
-      "enter": "Login",
       "error": {
         "invalid_request_body": "Invalid request format",
         "email_password_required": "Email and password are required",
@@ -226,9 +234,9 @@
       "attributeGroups": "Attribute Groups",
       "content": "Content",
       "listings": "Listings",
-      "listingsDescription": "Moderate and manage marketplace listings",
       "users": "Users",
       "usersDescription": "Manage user accounts and permissions",
+      "listingsDescription": "Moderate and manage marketplace listings",
       "categoriesDescription": "Configure categories and attributes"
     },
     "common": {
@@ -370,7 +378,8 @@
     "nameMaxLength": "Name cannot exceed 100 characters",
     "phoneInvalid": "Please enter a valid phone number",
     "cityMaxLength": "City name cannot exceed 100 characters",
-    "countryMaxLength": "Country name cannot exceed 100 characters"
+    "countryMaxLength": "Country name cannot exceed 100 characters",
+    "invalidDataFormat": "Неверный формат данных"
   },
   "contacts": {
     "title": "Contacts",

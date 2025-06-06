@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"encoding/json"
-	"github.com/gofiber/fiber/v2"
-	"log"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/logger"
 )
 
 func (m *Middleware) Logger() fiber.Handler {
@@ -21,9 +23,9 @@ func (m *Middleware) Logger() fiber.Handler {
 		queryParams := c.Request().URI().QueryString()
 		if len(queryParams) > 0 {
 			maskedQuery := masker.Mask(string(queryParams))
-			log.Printf("REQUEST: %s %s?%s", method, path, maskedQuery)
+			logger.Info().Str("method", method).Str("path", path).Str("maskedQuery", maskedQuery).Msg("REQUEST")
 		} else {
-			log.Printf("REQUEST: %s %s", method, path)
+			logger.Info().Str("method", method).Str("path", path).Msgf("REQUEST")
 		}
 
 		// Логируем тело запроса только для POST/PUT/PATCH с маскированием
@@ -34,7 +36,7 @@ func (m *Middleware) Logger() fiber.Handler {
 				var jsonBody interface{}
 				if err := json.Unmarshal(body, &jsonBody); err == nil {
 					maskedBody := masker.Mask(string(body))
-					log.Printf("REQUEST BODY: %s", maskedBody)
+					logger.Info().Str("body", maskedBody).Msgf("REQUEST BODY")
 				}
 			}
 		}
@@ -42,12 +44,8 @@ func (m *Middleware) Logger() fiber.Handler {
 		err := c.Next()
 
 		// Логируем результат
-		log.Printf("RESPONSE: %s %s - %d - %v",
-			method,
-			path,
-			c.Response().StatusCode(),
-			time.Since(start),
-		)
+		logger.Info().Str("method", method).Str("path", path).Int("status", c.Response().StatusCode()).
+			Dur("duration", time.Since(start)).Msgf("RESPONSE")
 
 		return err
 	}

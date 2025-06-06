@@ -51,6 +51,14 @@
         "authentication_failed": "Ошибка аутентификации. Попробуйте еще раз."
       }
     },
+    "register": {
+      "error": {
+        "invalid_request_body": "Неверный формат запроса",
+        "fields_required": "Все обязательные поля должны быть заполнены",
+        "email_exists": "Пользователь с таким email уже существует",
+        "failed": "Ошибка регистрации. Попробуйте еще раз."
+      }
+    },
     "login": {
       "enter": "Войти",
       "error": {
@@ -58,14 +66,6 @@
         "email_password_required": "Email и пароль обязательны",
         "invalid_credentials": "Неверный email или пароль",
         "failed": "Ошибка входа. Попробуйте еще раз."
-      }
-    },
-    "register": {
-      "error": {
-        "invalid_request_body": "Неверный формат запроса",
-        "fields_required": "Все обязательные поля должны быть заполнены",
-        "email_exists": "Пользователь с таким email уже существует",
-        "failed": "Ошибка регистрации. Попробуйте еще раз."
       }
     },
     "refresh_token": {
@@ -122,7 +122,8 @@
       "nameMaxLength": "Имя не может превышать 100 символов",
       "phoneInvalid": "Некорректный формат номера телефона",
       "cityMaxLength": "Название города не может превышать 100 символов",
-      "countryMaxLength": "Название страны не может превышать 100 символов"
+      "countryMaxLength": "Название страны не может превышать 100 символов",
+      "invalidDataFormat": "Invalid data format"
     },
     "errors": {
       "loginFailed": "Ошибка входа. Проверьте email и пароль.",
@@ -186,6 +187,9 @@
     },
     "login": {
       "error": {
+        "invalid_request_body": "Invalid request format",
+        "email_password_required": "Email and password are required",
+        "failed": "Login failed. Please try again.",
         "invalid_data": "Неверные данные запроса",
         "email_required": "Email обязателен",
         "password_required": "Пароль обязателен",
@@ -221,6 +225,7 @@
   },
   "admin": {
     "title": "Панель администратора",
+    "manage": "Управление",
     "sections": {
       "dashboard": "Главная",
       "catalog": "Каталог",
@@ -298,6 +303,7 @@
       "allTypes": "Все типы",
       "systemName": "Системное имя",
       "type": "Тип",
+      "icon": "Icon",
       "usedInCategories": "Используется в категориях",
       "types": {
         "text": "Текст",
@@ -326,7 +332,6 @@
       "availableAttributes": "Доступные атрибуты",
       "selectedAttributes": "Выбранные атрибуты"
     },
-    "manage": "Управление",
     "users": {
       "error": {
         "fetch_failed": "Ошибка получения списка пользователей",
@@ -366,6 +371,15 @@
         "removed": "Администратор успешно удален"
       }
     }
+  },
+  "validation": {
+    "nameRequired": "Имя обязательно для заполнения",
+    "nameMinLength": "Имя должно содержать минимум 2 символа",
+    "nameMaxLength": "Имя не может превышать 100 символов",
+    "phoneInvalid": "Пожалуйста, введите корректный номер телефона",
+    "cityMaxLength": "Название города не может превышать 100 символов",
+    "countryMaxLength": "Название страны не может превышать 100 символов",
+    "invalidDataFormat": "Неверный формат данных"
   },
   "contacts": {
     "title": "Контакты",
@@ -524,15 +538,6 @@
   "telegram": {
     "connected": "Telegram успешно подключен",
     "connectionError": "Ошибка при подключении Telegram"
-  },
-  "validation": {
-    "nameRequired": "Имя обязательно для заполнения",
-    "nameMinLength": "Имя должно содержать минимум 2 символа",
-    "nameMaxLength": "Имя не может превышать 100 символов",
-    "phoneInvalid": "Пожалуйста, введите корректный номер телефона",
-    "cityMaxLength": "Название города не может превышать 100 символов",
-    "countryMaxLength": "Название страны не может превышать 100 символов",
-    "invalidDataFormat": "Неверный формат данных"
   },
   "reviews": {
     "create": {

@@ -2,13 +2,12 @@
 package middleware
 
 import (
-	"backend/internal/config"
-	"backend/pkg/utils"
-	"log"
-
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/config"
+	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
+	"backend/pkg/utils"
 )
 
 type Middleware struct {
@@ -38,64 +37,64 @@ func (m *Middleware) ErrorHandler(c *fiber.Ctx, err error) error {
 		message = e.Message
 	}
 
-	log.Printf("Error handling request: %v", err)
+	logger.Error().Err(err).Msg("Error handling request")
 
 	return utils.ErrorResponse(c, code, message)
 }
 func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
-	log.Printf("AdminRequired middleware called for path: %s", c.Path())
+	logger.Info().Str("path", c.Path()).Msg("AdminRequired middleware called for path")
 
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
-	log.Printf("AdminRequired check for user ID: %d, isOk: %v", userID, ok)
+	logger.Info().Msgf("AdminRequired check for user ID: %d, isOk: %v", userID, ok)
 
 	if !ok || userID == 0 {
-		log.Printf("AdminRequired: User ID not found or invalid")
+		logger.Info().Msgf("AdminRequired: User ID not found or invalid")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
 	}
 
 	// Сначала проверяем ID пользователя (для обратной совместимости)
 	if userID == 1 || userID == 2 || userID == 3 {
-		log.Printf("AdminRequired: Access granted for user ID %d", userID)
+		logger.Info().Msgf("AdminRequired: Access granted for user ID %d", userID)
 		return c.Next()
 	}
 
-	log.Printf("AdminRequired: User ID %d not in admin list, checking email", userID)
+	logger.Info().Msgf("AdminRequired: User ID %d not in admin list, checking email", userID)
 
 	// Если ID не подходит, проверяем email пользователя
 	ctx := c.Context()
 
 	if m.services == nil {
-		log.Printf("AdminRequired: Error: services is nil")
+		logger.Info().Msgf("AdminRequired: Error: services is nil")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Внутренняя ошибка сервера")
 	}
 
 	userService := m.services.User()
 	if userService == nil {
-		log.Printf("AdminRequired: Error: User service is nil")
+		logger.Info().Msgf("AdminRequired: Error: User service is nil")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Внутренняя ошибка сервера")
 	}
 
 	user, err := userService.GetUserByID(ctx, userID)
 	if err != nil {
-		log.Printf("AdminRequired: Error getting user with ID %d: %v", userID, err)
+		logger.Info().Msgf("AdminRequired: Error getting user with ID %d: %v", userID, err)
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "Отказано в доступе")
 	}
 
 	if user == nil {
-		log.Printf("AdminRequired: User with ID %d not found", userID)
+		logger.Info().Msgf("AdminRequired: User with ID %d not found", userID)
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "Отказано в доступе")
 	}
 
-	log.Printf("AdminRequired: Found user with ID %d, email: %s", userID, user.Email)
+	logger.Info().Msgf("AdminRequired: Found user with ID %d, email: %s", userID, user.Email)
 
 	// Проверка администратора по БД (нужно учитывать, что таблица может еще не существовать)
 	isAdmin, err := userService.IsUserAdmin(ctx, user.Email)
 	if err != nil {
 		// Если таблица еще не создана, проверяем по жесткому списку
-		log.Printf("AdminRequired: Error checking admin status in DB: %v, falling back to hardcoded list", err)
+		logger.Info().Msgf("AdminRequired: Error checking admin status in DB: %v, falling back to hardcoded list", err)
 	} else if isAdmin {
-		log.Printf("AdminRequired: Access granted for admin email %s (from DB)", user.Email)
+		logger.Info().Msgf("AdminRequired: Access granted for admin email %s (from DB)", user.Email)
 		return c.Next()
 	}
 
@@ -106,16 +105,16 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 		// Здесь можно добавить дополнительные email-адреса администраторов
 	}
 
-	log.Printf("AdminRequired: Checking user email %s against hardcoded admin emails: %v", user.Email, adminEmails)
+	logger.Info().Msgf("AdminRequired: Checking user email %s against hardcoded admin emails: %v", user.Email, adminEmails)
 
 	// Проверяем, является ли email пользователя админским
 	for _, adminEmail := range adminEmails {
 		if user.Email == adminEmail {
-			log.Printf("AdminRequired: Access granted for admin email %s (from hardcoded list)", user.Email)
+			logger.Info().Msgf("AdminRequired: Access granted for admin email %s (from hardcoded list)", user.Email)
 			return c.Next()
 		}
 	}
 
-	log.Printf("AdminRequired: User ID %d with email %s is not an admin", userID, user.Email)
+	logger.Info().Msgf("AdminRequired: User ID %d with email %s is not an admin", userID, user.Email)
 	return utils.ErrorResponse(c, fiber.StatusForbidden, "Отказано в доступе")
 }
