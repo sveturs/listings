@@ -230,8 +230,6 @@ func (s *Server) setupRoutes() {
 
 	// s.app.Post("/api/v1/public/send-email", s.notifications.Notification.SendPublicEmail)
 	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
-	s.app.Get("/api/v1/public/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
-	s.app.Get("/api/v1/public/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
 
 	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequiredJWT)
 	balanceRoutes.Get("/", s.balance.Balance.GetBalance)
@@ -279,15 +277,6 @@ func (s *Server) setupRoutes() {
 	translation.Get("/limits", s.marketplace.Translations.GetTranslationLimits)
 	translation.Post("/provider", s.marketplace.Translations.SetTranslationProvider)
 
-	review := s.app.Group("/api/v1/reviews")
-	review.Get("/", s.review.Review.GetReviews)
-	review.Get("/:id", s.review.Review.GetReviewByID)
-	review.Get("/stats", s.review.Review.GetStats)
-
-	entityStats := s.app.Group("/api/v1/entity")
-	entityStats.Get("/:type/:id/rating", s.review.Review.GetEntityRating)
-	entityStats.Get("/:type/:id/stats", s.review.Review.GetEntityStats)
-
 	// CSRF токен
 	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
 
@@ -299,14 +288,6 @@ func (s *Server) setupRoutes() {
 	api := s.app.Group("/api/v1", s.middleware.AuthRequiredJWT, s.middleware.RateLimitByUser(300, time.Minute))
 
 	authedAPIGroup := s.app.Group("/api/v1", s.middleware.AuthRequiredJWT, s.middleware.CSRFProtection())
-
-	protectedReviews := authedAPIGroup.Group("/reviews")
-	protectedReviews.Post("/", s.review.Review.CreateReview)
-	protectedReviews.Put("/:id", s.review.Review.UpdateReview)
-	protectedReviews.Delete("/:id", s.review.Review.DeleteReview)
-	protectedReviews.Post("/:id/vote", s.review.Review.VoteForReview)
-	protectedReviews.Post("/:id/response", s.review.Review.AddResponse)
-	protectedReviews.Post("/:id/photos", s.review.Review.UploadPhotos)
 
 	storefronts := authedAPIGroup.Group("/storefronts")
 	storefronts.Get("/", s.storefront.Storefront.GetUserStorefronts)
@@ -324,11 +305,6 @@ func (s *Server) setupRoutes() {
 	storefronts.Put("/import-sources/:id/category-mappings", s.storefront.Storefront.UpdateCategoryMappings)
 	storefronts.Get("/import-sources/:id/imported-categories", s.storefront.Storefront.GetImportedCategories)
 	storefronts.Post("/import-sources/:id/apply-category-mappings", s.storefront.Storefront.ApplyCategoryMappings)
-
-	authedAPIGroup.Get("/users/:id/reviews", s.review.Review.GetUserReviews)
-	authedAPIGroup.Get("/users/:id/rating", s.review.Review.GetUserRatingSummary)
-	authedAPIGroup.Get("/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
-	authedAPIGroup.Get("/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
 
 	geocodeApi := s.app.Group("/api/v1/geocode")
 	geocodeApi.Get("/reverse", s.geocode.ReverseGeocode)
@@ -509,7 +485,7 @@ func (s *Server) registerProjectRoutes() {
 	var registrars []RouteRegistrar
 
 	// Добавляем notifications проект
-	registrars = append(registrars, s.notifications, s.users)
+	registrars = append(registrars, s.notifications, s.users, s.review)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {

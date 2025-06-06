@@ -3,10 +3,6 @@
 package handler
 
 import (
-	"backend/internal/domain/models"
-	globalService "backend/internal/proj/global/service"
-	"backend/internal/proj/reviews/service"
-	"backend/pkg/utils"
 	"fmt"
 	"log"
 	"strconv"
@@ -14,6 +10,11 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/domain/models"
+	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/reviews/service"
+	"backend/pkg/utils"
 )
 
 type ReviewHandler struct {
@@ -35,20 +36,32 @@ func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
 	}
 }
 
-// internal/handlers/reviews.go
 
+// CreateReview creates a new review
+// @Summary Create a new review
+// @Description Creates a new review for a listing
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param review body models.CreateReviewRequest true "Review data"
+// @Success 200 {object} ReviewResponse "Created review"
+// @Failure 400 {object} ErrorResponse "Invalid input"
+// @Failure 404 {object} ErrorResponse "Listing not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews [post]
 func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 	log.Printf("Starting CreateReview handler")
 	userID := c.Locals("user_id").(int)
 
 	var request models.CreateReviewRequest
 	if err := c.BodyParser(&request); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.create.error.invalid_input")
 	}
 
 	// Санитизация комментария от XSS
 	request.Comment = utils.SanitizeText(request.Comment)
-	
+
 	// Определяем язык текста до создания отзыва
 	if request.Comment != "" {
 		detectedLang, _, err := h.services.Translation().DetectLanguage(c.Context(), request.Comment)
@@ -61,14 +74,14 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 
 	// Проверяем входные данные
 	if request.EntityID == 0 || request.Rating == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Required fields missing")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.create.error.required_fields")
 	}
 
 	// Получаем информацию об объявлении
 	listing, err := h.services.Marketplace().GetListingByID(c.Context(), request.EntityID)
 	if err != nil {
 		log.Printf("Failed to get listing %d: %v", request.EntityID, err)
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.listing_not_found")
 	}
 
 	if listing.StorefrontID != nil {
@@ -80,7 +93,7 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 	createdReview, err := h.services.Review().CreateReview(c.Context(), userID, &request)
 	if err != nil {
 		log.Printf("Failed to create review: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating review")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.create.error.create_failed")
 	}
 
 	log.Printf("Parsed request: %+v", request)
@@ -88,7 +101,7 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 	// Проверяем созданный отзыв
 	if createdReview == nil {
 		log.Printf("Created review is nil")
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating review")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.create.error.create_failed")
 	}
 
 	log.Printf("Review created: %+v", createdReview)
@@ -115,9 +128,31 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.SuccessResponse(c, createdReview)
+	return c.JSON(&ReviewResponse{
+		Success: true,
+		Data:    createdReview,
+	})
 }
 
+// GetReviews returns filtered list of reviews
+// @Summary Get reviews list
+// @Description Returns paginated list of reviews with filters
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param entity_type query string false "Entity type filter"
+// @Param entity_id query int false "Entity ID filter"
+// @Param user_id query int false "User ID filter"
+// @Param min_rating query int false "Minimum rating filter"
+// @Param max_rating query int false "Maximum rating filter"
+// @Param status query string false "Status filter" default(published)
+// @Param sort_by query string false "Sort by field" default(date)
+// @Param sort_order query string false "Sort order" default(desc)
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(20)
+// @Success 200 {object} ReviewsListResponse "List of reviews"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/reviews [get]
 func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
 	filter := models.ReviewsFilter{
 		EntityType: c.Query("entity_type"),
@@ -135,24 +170,39 @@ func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
 	reviews, total, err := h.services.Review().GetReviews(c.Context(), filter)
 	if err != nil {
 		log.Printf("Error getting reviews: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting reviews")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.list.error.fetch_failed")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": reviews,
-		"meta": fiber.Map{
-			"total": total,
-			"page":  filter.Page,
-			"limit": filter.Limit,
+	return c.JSON(&ReviewsListResponse{
+		Success: true,
+		Data:    reviews,
+		Meta: ReviewsMeta{
+			Total: int(total),
+			Page:  filter.Page,
+			Limit: filter.Limit,
 		},
 	})
 }
 
+// VoteForReview adds a vote to a review
+// @Summary Vote for a review
+// @Description Adds a helpful or unhelpful vote to a review
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Review ID"
+// @Param vote body VoteRequest true "Vote data"
+// @Success 200 {object} ReviewMessageResponse "Vote recorded successfully"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 404 {object} ErrorResponse "Review not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/{id}/vote [post]
 func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 	reviewID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid review ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
 	}
 
 	var request struct {
@@ -160,25 +210,25 @@ func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&request); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_request")
 	}
 
 	// Получаем информацию об отзыве
 	review, err := h.services.Review().GetReviewByID(c.Context(), reviewID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Review not found")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.not_found")
 	}
 
 	// Получаем информацию об объявлении
 	listing, err := h.services.Marketplace().GetListingByID(c.Context(), review.EntityID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.listing_not_found")
 	}
 
 	err = h.services.Review().VoteForReview(c.Context(), userID, reviewID, request.VoteType)
 	if err != nil {
 		log.Printf("Error voting for review: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error voting for review")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.vote.error.failed")
 	}
 
 	notificationText := fmt.Sprintf(
@@ -196,15 +246,31 @@ func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
 		log.Printf("Error sending notification: %v", err)
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Vote recorded successfully",
+	return c.JSON(&ReviewMessageResponse{
+		Success: true,
+		Message: "reviews.vote.success.recorded",
 	})
 }
+
+// AddResponse adds a response to a review
+// @Summary Add response to review
+// @Description Adds a response from the listing owner to a review
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Review ID"
+// @Param response body ResponseRequest true "Response data"
+// @Success 200 {object} ReviewMessageResponse "Response added successfully"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 404 {object} ErrorResponse "Review not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/{id}/response [post]
 func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 	reviewID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid review ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
 	}
 
 	var request struct {
@@ -212,28 +278,28 @@ func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&request); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_request")
 	}
-	
+
 	// Санитизация ответа от XSS
 	request.Response = utils.SanitizeText(request.Response)
 
 	// Получаем информацию об отзыве
 	review, err := h.services.Review().GetReviewByID(c.Context(), reviewID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Review not found")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.not_found")
 	}
 
 	// Получаем информацию об объявлении
 	listing, err := h.services.Marketplace().GetListingByID(c.Context(), review.EntityID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Listing not found")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.listing_not_found")
 	}
 
 	err = h.services.Review().AddResponse(c.Context(), userID, reviewID, request.Response)
 	if err != nil {
 		log.Printf("Error adding response: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error adding response")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.response.error.add_failed")
 	}
 
 	notificationText := fmt.Sprintf(
@@ -251,52 +317,92 @@ func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
 		log.Printf("Error sending notification: %v", err)
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Response added successfully",
+	return c.JSON(&ReviewMessageResponse{
+		Success: true,
+		Message: "reviews.response.success.added",
 	})
 }
 
-// internal/handlers/reviews.go
-
+// GetReviewByID returns a review by ID
+// @Summary Get review by ID
+// @Description Returns a single review by its ID
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Review ID"
+// @Success 200 {object} ReviewResponse "Review details"
+// @Failure 400 {object} ErrorResponse "Invalid review ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/reviews/{id} [get]
 func (h *ReviewHandler) GetReviewByID(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid review ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
 	}
 
 	review, err := h.services.Review().GetReviewByID(c.Context(), id)
 	if err != nil {
 		log.Printf("Error getting review: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting review")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.get.error.failed")
 	}
 
-	return utils.SuccessResponse(c, review)
+	return c.JSON(&ReviewResponse{
+		Success: true,
+		Data:    review,
+	})
 }
 
+// UpdateReview updates an existing review
+// @Summary Update review
+// @Description Updates an existing review by its author
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Review ID"
+// @Param review body models.Review true "Updated review data"
+// @Success 200 {object} ReviewMessageResponse "Review updated successfully"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/{id} [put]
 func (h *ReviewHandler) UpdateReview(c *fiber.Ctx) error {
 	userId := c.Locals("user_id").(int)
 	reviewId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid review ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
 	}
 
 	var review models.Review
 	if err := c.BodyParser(&review); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_request")
 	}
-	
+
 	// Санитизация полей от XSS
 	review.Comment = utils.SanitizeText(review.Comment)
 
 	err = h.services.Review().UpdateReview(c.Context(), userId, reviewId, &review)
 	if err != nil {
 		log.Printf("Error updating review: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating review")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.update.error.failed")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "Review updated successfully"})
+	return c.JSON(&ReviewMessageResponse{
+		Success: true,
+		Message: "reviews.update.success.updated",
+	})
 }
 
+// GetStats returns review statistics
+// @Summary Get review statistics
+// @Description Returns review statistics for a specific entity
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param entity_type query string false "Entity type"
+// @Param entity_id query int false "Entity ID"
+// @Success 200 {object} StatsResponse "Review statistics"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/reviews/stats [get]
 func (h *ReviewHandler) GetStats(c *fiber.Ctx) error {
 	entityType := c.Query("entity_type")
 	entityID := utils.StringToInt(c.Query("entity_id"), 0)
@@ -304,38 +410,54 @@ func (h *ReviewHandler) GetStats(c *fiber.Ctx) error {
 	stats, err := h.services.Review().GetReviewStats(c.Context(), entityType, entityID)
 	if err != nil {
 		log.Printf("Error getting review stats: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting review stats")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.stats.error.fetch_failed")
 	}
 
-	return utils.SuccessResponse(c, stats)
+	return c.JSON(&StatsResponse{
+		Success: true,
+		Data:    stats,
+	})
 }
 
+// UploadPhotos uploads photos for a review
+// @Summary Upload review photos
+// @Description Uploads photos for an existing review
+// @Tags reviews
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path int true "Review ID"
+// @Param photos formData file true "Photos to upload (max 10)"
+// @Success 200 {object} PhotosResponse "Photos uploaded successfully"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/{id}/photos [post]
 func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
 	reviewId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid review ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
 	}
 
 	// Получаем загруженные файлы
 	form, err := c.MultipartForm()
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Error parsing form")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.parse_form")
 	}
 
 	files := form.File["photos"]
 	if len(files) == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "No files uploaded")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.no_files")
 	}
 
 	if len(files) > 10 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Maximum 10 photos allowed")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.max_files")
 	}
 
 	photoUrls := make([]string, 0)
 	for _, file := range files {
 		// Проверка типа файла
 		if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
-			return utils.ErrorResponse(c, fiber.StatusBadRequest, "Only images are allowed")
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.invalid_type")
 		}
 
 		// Генерируем уникальное имя файла
@@ -353,124 +475,229 @@ func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
 	// Обновляем отзыв с новыми фотографиями
 	err = h.services.Review().UpdateReviewPhotos(c.Context(), reviewId, photoUrls)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error updating review photos")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.photos.error.update_failed")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Photos uploaded successfully",
-		"photos":  photoUrls,
+	return c.JSON(&PhotosResponse{
+		Success: true,
+		Message: "reviews.photos.success.uploaded",
+		Photos:  photoUrls,
 	})
 }
+
+// DeleteReview deletes a review
+// @Summary Delete review
+// @Description Deletes a review by its author
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Review ID"
+// @Success 200 {object} ReviewMessageResponse "Review deleted successfully"
+// @Failure 400 {object} ErrorResponse "Invalid review ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/{id} [delete]
 func (h *ReviewHandler) DeleteReview(c *fiber.Ctx) error {
 	userId := c.Locals("user_id").(int)
 	reviewId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID отзыва")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
 	}
 
 	err = h.services.Review().DeleteReview(c.Context(), userId, reviewId)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при удалении отзыва")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.delete.error.failed")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Отзыв успешно удален",
+	return c.JSON(&ReviewMessageResponse{
+		Success: true,
+		Message: "reviews.delete.success.deleted",
 	})
 }
 
+// GetEntityRating returns entity rating
+// @Summary Get entity rating
+// @Description Returns average rating for a specific entity
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param type path string true "Entity type"
+// @Param id path int true "Entity ID"
+// @Success 200 {object} RatingResponse "Entity rating"
+// @Failure 400 {object} ErrorResponse "Invalid entity ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/reviews/rating/{type}/{id} [get]
 func (h *ReviewHandler) GetEntityRating(c *fiber.Ctx) error {
 	entityType := c.Params("type")
 	entityId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID сущности")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_entity_id")
 	}
 
 	rating, err := h.services.Review().GetEntityRating(c.Context(), entityType, entityId)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении рейтинга")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.rating.error.fetch_failed")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"rating": rating,
+	return c.JSON(&RatingResponse{
+		Success: true,
+		Rating:  rating,
 	})
 }
 
+// GetEntityStats returns entity review statistics
+// @Summary Get entity review statistics
+// @Description Returns detailed review statistics for a specific entity
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param type path string true "Entity type"
+// @Param id path int true "Entity ID"
+// @Success 200 {object} StatsResponse "Entity review statistics"
+// @Failure 400 {object} ErrorResponse "Invalid entity ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/reviews/stats/{type}/{id} [get]
 func (h *ReviewHandler) GetEntityStats(c *fiber.Ctx) error {
-    entityType := c.Params("type")
-    entityId, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID сущности")
-    }
-    
-    log.Printf("Запрос статистики для %s ID=%d", entityType, entityId)
-    
-    stats, err := h.services.Review().GetReviewStats(c.Context(), entityType, entityId)
-    if err != nil {
-        log.Printf("Ошибка при получении статистики для %s ID=%d: %v", entityType, entityId, err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении статистики")
-    }
-    
-    log.Printf("Получена статистика для %s ID=%d: %+v", entityType, entityId, stats)
-    
-    return utils.SuccessResponse(c, stats)
+	entityType := c.Params("type")
+	entityId, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_entity_id")
+	}
+
+	log.Printf("Запрос статистики для %s ID=%d", entityType, entityId)
+
+	stats, err := h.services.Review().GetReviewStats(c.Context(), entityType, entityId)
+	if err != nil {
+		log.Printf("Ошибка при получении статистики для %s ID=%d: %v", entityType, entityId, err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.stats.error.fetch_failed")
+	}
+
+	log.Printf("Получена статистика для %s ID=%d: %+v", entityType, entityId, stats)
+
+	return c.JSON(&StatsResponse{
+		Success: true,
+		Data:    stats,
+	})
 }
 
-// GetUserReviews получает все отзывы для пользователя
+// GetUserReviews returns all reviews for a user
+// @Summary Get user reviews
+// @Description Returns all reviews received by a specific user
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} ReviewsListResponse "User reviews"
+// @Failure 400 {object} ErrorResponse "Invalid user ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/reviews/user/{id} [get]
 func (h *ReviewHandler) GetUserReviews(c *fiber.Ctx) error {
 	userID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID пользователя")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_user_id")
 	}
 
 	reviews, err := h.services.Review().GetUserReviews(c.Context(), userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении отзывов пользователя")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.user.error.fetch_failed")
 	}
 
-	return utils.SuccessResponse(c, reviews)
+	return c.JSON(&ReviewsListResponse{
+		Success: true,
+		Data:    reviews,
+		Meta: ReviewsMeta{
+			Total: len(reviews),
+			Page:  1,
+			Limit: len(reviews),
+		},
+	})
 }
 
-// GetStorefrontReviews получает все отзывы для витрины
+// GetStorefrontReviews returns all reviews for a storefront
+// @Summary Get storefront reviews
+// @Description Returns all reviews for a specific storefront
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Storefront ID"
+// @Success 200 {object} ReviewsListResponse "Storefront reviews"
+// @Failure 400 {object} ErrorResponse "Invalid storefront ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/reviews/storefront/{id} [get]
 func (h *ReviewHandler) GetStorefrontReviews(c *fiber.Ctx) error {
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID витрины")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_storefront_id")
 	}
 
 	reviews, err := h.services.Review().GetStorefrontReviews(c.Context(), storefrontID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении отзывов витрины")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.storefront.error.fetch_failed")
 	}
 
-	return utils.SuccessResponse(c, reviews)
+	return c.JSON(&ReviewsListResponse{
+		Success: true,
+		Data:    reviews,
+		Meta: ReviewsMeta{
+			Total: len(reviews),
+			Page:  1,
+			Limit: len(reviews),
+		},
+	})
 }
 
-// GetUserRatingSummary получает сводные данные о рейтинге пользователя
+// GetUserRatingSummary returns user rating summary
+// @Summary Get user rating summary
+// @Description Returns rating summary for a specific user
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} UserRatingSummaryResponse "User rating summary"
+// @Failure 400 {object} ErrorResponse "Invalid user ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/reviews/user/{id}/rating [get]
 func (h *ReviewHandler) GetUserRatingSummary(c *fiber.Ctx) error {
 	userID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID пользователя")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_user_id")
 	}
 
 	summary, err := h.services.Review().GetUserRatingSummary(c.Context(), userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении сводки рейтинга пользователя")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.user.error.rating_fetch_failed")
 	}
 
-	return utils.SuccessResponse(c, summary)
+	return c.JSON(&UserRatingSummaryResponse{
+		Success: true,
+		Data:    summary,
+	})
 }
 
-// GetStorefrontRatingSummary получает сводные данные о рейтинге витрины
+// GetStorefrontRatingSummary returns storefront rating summary
+// @Summary Get storefront rating summary
+// @Description Returns rating summary for a specific storefront
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Storefront ID"
+// @Success 200 {object} StorefrontRatingSummaryResponse "Storefront rating summary"
+// @Failure 400 {object} ErrorResponse "Invalid storefront ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/reviews/storefront/{id}/rating [get]
 func (h *ReviewHandler) GetStorefrontRatingSummary(c *fiber.Ctx) error {
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID витрины")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_storefront_id")
 	}
 
 	summary, err := h.services.Review().GetStorefrontRatingSummary(c.Context(), storefrontID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при получении сводки рейтинга витрины")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.storefront.error.rating_fetch_failed")
 	}
 
-	return utils.SuccessResponse(c, summary)
+	return c.JSON(&StorefrontRatingSummaryResponse{
+		Success: true,
+		Data:    summary,
+	})
 }

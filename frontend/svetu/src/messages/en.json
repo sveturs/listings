@@ -529,5 +529,100 @@
   "telegram": {
     "connected": "Telegram successfully connected",
     "connectionError": "Error connecting Telegram"
+  },
+  "reviews": {
+    "create": {
+      "error": {
+        "invalid_input": "Invalid input data",
+        "required_fields": "Please fill in all required fields",
+        "listing_not_found": "Listing not found",
+        "create_failed": "Failed to create review"
+      }
+    },
+    "list": {
+      "error": {
+        "fetch_failed": "Failed to load reviews"
+      }
+    },
+    "get": {
+      "error": {
+        "failed": "Failed to load review"
+      }
+    },
+    "update": {
+      "error": {
+        "failed": "Failed to update review"
+      },
+      "success": {
+        "updated": "Review updated successfully"
+      }
+    },
+    "delete": {
+      "error": {
+        "failed": "Failed to delete review"
+      },
+      "success": {
+        "deleted": "Review deleted successfully"
+      }
+    },
+    "vote": {
+      "error": {
+        "failed": "Failed to record vote"
+      },
+      "success": {
+        "recorded": "Thank you for your feedback"
+      }
+    },
+    "response": {
+      "error": {
+        "add_failed": "Failed to add response"
+      },
+      "success": {
+        "added": "Response added successfully"
+      }
+    },
+    "stats": {
+      "error": {
+        "fetch_failed": "Failed to load statistics"
+      }
+    },
+    "rating": {
+      "error": {
+        "fetch_failed": "Failed to load rating"
+      }
+    },
+    "photos": {
+      "error": {
+        "parse_form": "Failed to process form data",
+        "no_files": "No files selected",
+        "max_files": "Maximum 10 photos allowed",
+        "invalid_type": "Only image files are allowed",
+        "update_failed": "Failed to upload photos"
+      },
+      "success": {
+        "uploaded": "Photos uploaded successfully"
+      }
+    },
+    "user": {
+      "error": {
+        "fetch_failed": "Failed to load user reviews",
+        "rating_fetch_failed": "Failed to load user rating"
+      }
+    },
+    "storefront": {
+      "error": {
+        "fetch_failed": "Failed to load storefront reviews",
+        "rating_fetch_failed": "Failed to load storefront rating"
+      }
+    },
+    "error": {
+      "invalid_id": "Invalid review ID",
+      "invalid_request": "Invalid request",
+      "not_found": "Review not found",
+      "listing_not_found": "Listing not found",
+      "invalid_entity_id": "Invalid entity ID",
+      "invalid_user_id": "Invalid user ID",
+      "invalid_storefront_id": "Invalid storefront ID"
+    }
   }
 }

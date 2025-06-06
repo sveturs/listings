@@ -192,3 +192,66 @@ docker push harbor.svetu.rs/svetu/backend/api:latest
 
 ### Управление сервером
 TODO: Требуется доработать
+
+## API Documentation (Swagger)
+
+Backend использует **goswag** для автоматической генерации OpenAPI/Swagger документации.
+
+### Генерация документации
+
+```bash
+cd backend && make docs
+```
+
+Эта команда запускает `swag init` со следующими параметрами:
+- `--generalInfo` - путь к основному файлу приложения
+- `--output` - директория для генерации документации
+- `--outputTypes` - форматы вывода (go, json, yaml)
+- `--parseInternal` - парсинг внутренних пакетов
+- `--parseDependency` - парсинг зависимостей
+- `--parseDepth` - глубина парсинга зависимостей
+
+### Swagger аннотации
+
+Все HTTP endpoints должны быть документированы с помощью Swagger комментариев:
+
+```go
+// GetReviews returns filtered list of reviews
+// @Summary Get reviews list
+// @Description Returns paginated list of reviews with filters
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param entity_id query int false "Entity ID filter"
+// @Success 200 {object} ReviewsListResponse "List of reviews"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews [get]
+func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
+    // ...
+}
+```
+
+### Структура Swagger аннотаций
+
+- `@Summary` - краткое описание endpoint'а
+- `@Description` - подробное описание
+- `@Tags` - группировка endpoints в документации
+- `@Accept` - формат входных данных
+- `@Produce` - формат выходных данных
+- `@Param` - описание параметров
+- `@Success` - описание успешного ответа
+- `@Failure` - описание ошибок
+- `@Security` - требования авторизации
+- `@Router` - путь и HTTP метод
+
+### Сгенерированные файлы
+
+После выполнения `make docs` создаются:
+- `docs/docs.go` - Go код для встраивания документации
+- `docs/swagger.json` - OpenAPI спецификация в JSON
+- `docs/swagger.yaml` - OpenAPI спецификация в YAML
+
+### Просмотр документации
+
+Swagger UI доступен по адресу: http://localhost:3000/swagger/index.html (в режиме разработки)
