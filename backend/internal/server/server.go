@@ -258,9 +258,7 @@ func (s *Server) setupRoutes() {
 
 	// API routes с общим rate limiting по пользователю (300 запросов в минуту)
 	// Используем JWT как основной метод аутентификации
-	api := s.app.Group("/api/v1", s.middleware.AuthRequiredJWT, s.middleware.RateLimitByUser(300, time.Minute))
-
-	authedAPIGroup := s.app.Group("/api/v1", s.middleware.AuthRequiredJWT, s.middleware.CSRFProtection())
+	authedAPIGroup := s.app.Group("/api/v1", s.middleware.AuthRequiredJWT, s.middleware.CSRFProtection(), s.middleware.RateLimitByUser(300, time.Minute))
 
 	storefronts := authedAPIGroup.Group("/storefronts")
 	storefronts.Get("/", s.storefront.Storefront.GetUserStorefronts)
@@ -286,7 +284,7 @@ func (s *Server) setupRoutes() {
 	citiesApi.Get("/suggest", s.geocode.GetCitySuggestions)
 
 	// Contacts routes
-	contacts := api.Group("/contacts")
+	contacts := authedAPIGroup.Group("/contacts")
 	contacts.Get("/", s.contacts.GetContacts)
 	contacts.Post("/", s.contacts.AddContact)
 	contacts.Put("/:contact_user_id", s.contacts.UpdateContactStatus)
