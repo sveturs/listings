@@ -4,7 +4,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,12 +16,13 @@ import (
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	balanceHandler "backend/internal/proj/balance/handler"
+	contactsHandler "backend/internal/proj/contacts/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	globalService "backend/internal/proj/global/service"
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	notificationHandler "backend/internal/proj/notifications/handler"
-	paymentService "backend/internal/proj/payments/service"
+	paymentHandler "backend/internal/proj/payments/handler"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	storefrontHandler "backend/internal/proj/storefront/handler"
 	userHandler "backend/internal/proj/users/handler"
@@ -40,10 +40,10 @@ type Server struct {
 	marketplace   *marketplaceHandler.Handler
 	notifications *notificationHandler.Handler
 	balance       *balanceHandler.Handler
-	payments      paymentService.PaymentServiceInterface
+	payments      *paymentHandler.Handler
 	storefront    *storefrontHandler.Handler
-	geocode       *geocodeHandler.GeocodeHandler
-	contacts      *marketplaceHandler.ContactsHandler
+	geocode       *geocodeHandler.Handler
+	contacts      *contactsHandler.Handler
 	fileStorage   filestorage.FileStorageInterface
 }
 
@@ -77,9 +77,10 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(services)
 	balanceHandler := balanceHandler.NewHandler(services)
 	storefrontHandler := storefrontHandler.NewHandler(services)
-	contactsHandler := marketplaceHandler.NewContactsHandler(services)
+	contactsHandler := contactsHandler.NewHandler(services)
+	paymentsHandler := paymentHandler.NewHandler(services)
 	middleware := middleware.NewMiddleware(cfg, services)
-	geocodeHandler := geocodeHandler.NewGeocodeHandler(services.Geocode())
+	geocodeHandler := geocodeHandler.NewHandler(services)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -117,7 +118,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		notifications: notificationsHandler,
 		balance:       balanceHandler,
 		storefront:    storefrontHandler,
-		payments:      services.Payment(),
+		payments:      paymentsHandler,
 		geocode:       geocodeHandler,
 		contacts:      contactsHandler,
 		fileStorage:   fileStorage,
@@ -224,74 +225,8 @@ func (s *Server) setupRoutes() {
 	// Регистрируем роуты через новую систему
 	s.registerProjectRoutes()
 
-	// Убираем старые роуты notifications, они теперь в registerProjectRoutes
-	// s.app.Post("/api/v1/notifications/telegram/webhook", s.notifications.Notification.HandleTelegramWebhook)
-	// s.app.Get("/api/v1/notifications/telegram", s.notifications.Notification.GetTelegramStatus)
-
-	// s.app.Post("/api/v1/public/send-email", s.notifications.Notification.SendPublicEmail)
-	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
-
-	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequiredJWT)
-	balanceRoutes.Get("/", s.balance.Balance.GetBalance)
-	balanceRoutes.Get("/transactions", s.balance.Balance.GetTransactions)
-	balanceRoutes.Get("/payment-methods", s.balance.Balance.GetPaymentMethods)
-	balanceRoutes.Post("/deposit", s.balance.Balance.CreateDeposit)
-
-	s.app.Post("/webhook/stripe", func(c *fiber.Ctx) error {
-		payload := c.Body()
-		signature := c.Get("Stripe-Signature")
-
-		err := s.payments.HandleWebhook(c.Context(), payload, signature)
-		if err != nil {
-			log.Printf("Webhook error: %v", err)
-			return c.SendStatus(fiber.StatusBadRequest)
-		}
-
-		return c.SendStatus(fiber.StatusOK)
-	})
-
 	// CSRF токен
 	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
-
-	// Применяем rate limiting для authentication endpoints
-	// New JWT endpoints with consistent /api/auth prefix
-
-	// API routes с общим rate limiting по пользователю (300 запросов в минуту)
-	// Используем JWT как основной метод аутентификации
-	authedAPIGroup := s.app.Group("/api/v1", s.middleware.AuthRequiredJWT, s.middleware.CSRFProtection(), s.middleware.RateLimitByUser(300, time.Minute))
-
-	storefronts := authedAPIGroup.Group("/storefronts")
-	storefronts.Get("/", s.storefront.Storefront.GetUserStorefronts)
-	storefronts.Post("/", s.storefront.Storefront.CreateStorefront)
-	storefronts.Get("/:id", s.storefront.Storefront.GetStorefront)
-	storefronts.Put("/:id", s.storefront.Storefront.UpdateStorefront)
-	storefronts.Delete("/:id", s.storefront.Storefront.DeleteStorefront)
-	storefronts.Get("/:id/import-sources", s.storefront.Storefront.GetImportSources)
-	storefronts.Post("/import-sources", s.storefront.Storefront.CreateImportSource)
-	storefronts.Put("/import-sources/:id", s.storefront.Storefront.UpdateImportSource)
-	storefronts.Delete("/import-sources/:id", s.storefront.Storefront.DeleteImportSource)
-	storefronts.Post("/import-sources/:id/run", s.storefront.Storefront.RunImport)
-	storefronts.Get("/import-sources/:id/history", s.storefront.Storefront.GetImportHistory)
-	storefronts.Get("/import-sources/:id/category-mappings", s.storefront.Storefront.GetCategoryMappings)
-	storefronts.Put("/import-sources/:id/category-mappings", s.storefront.Storefront.UpdateCategoryMappings)
-	storefronts.Get("/import-sources/:id/imported-categories", s.storefront.Storefront.GetImportedCategories)
-	storefronts.Post("/import-sources/:id/apply-category-mappings", s.storefront.Storefront.ApplyCategoryMappings)
-
-	geocodeApi := s.app.Group("/api/v1/geocode")
-	geocodeApi.Get("/reverse", s.geocode.ReverseGeocode)
-
-	citiesApi := s.app.Group("/api/v1/cities")
-	citiesApi.Get("/suggest", s.geocode.GetCitySuggestions)
-
-	// Contacts routes
-	contacts := authedAPIGroup.Group("/contacts")
-	contacts.Get("/", s.contacts.GetContacts)
-	contacts.Post("/", s.contacts.AddContact)
-	contacts.Put("/:contact_user_id", s.contacts.UpdateContactStatus)
-	contacts.Delete("/:contact_user_id", s.contacts.RemoveContact)
-	contacts.Get("/privacy", s.contacts.GetPrivacySettings)
-	contacts.Put("/privacy", s.contacts.UpdatePrivacySettings)
-	contacts.Get("/status/:contact_user_id", s.contacts.GetContactStatus)
 }
 
 // registerProjectRoutes регистрирует роуты проектов через новую систему
@@ -299,8 +234,8 @@ func (s *Server) registerProjectRoutes() {
 	// Создаем слайс всех проектов, которые реализуют RouteRegistrar
 	var registrars []RouteRegistrar
 
-	// Добавляем notifications проект
-	registrars = append(registrars, s.notifications, s.users, s.review, s.marketplace)
+	// Добавляем все проекты, которые реализуют RouteRegistrar
+	registrars = append(registrars, s.notifications, s.users, s.review, s.marketplace, s.balance, s.storefront, s.geocode, s.contacts, s.payments)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {

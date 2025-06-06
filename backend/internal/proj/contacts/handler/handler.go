@@ -9,18 +9,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type ContactsHandler struct {
+type Handler struct {
 	services globalService.ServicesInterface
 }
 
-func NewContactsHandler(services globalService.ServicesInterface) *ContactsHandler {
-	return &ContactsHandler{
+func NewHandler(services globalService.ServicesInterface) *Handler {
+	return &Handler{
 		services: services,
 	}
 }
 
 // Добавить контакт
-func (h *ContactsHandler) AddContact(c *fiber.Ctx) error {
+func (h *Handler) AddContact(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	var req models.AddContactRequest
@@ -52,7 +52,7 @@ func (h *ContactsHandler) AddContact(c *fiber.Ctx) error {
 }
 
 // Обновить статус контакта
-func (h *ContactsHandler) UpdateContactStatus(c *fiber.Ctx) error {
+func (h *Handler) UpdateContactStatus(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	contactUserID, err := c.ParamsInt("contact_user_id")
@@ -79,7 +79,7 @@ func (h *ContactsHandler) UpdateContactStatus(c *fiber.Ctx) error {
 }
 
 // Получить список контактов
-func (h *ContactsHandler) GetContacts(c *fiber.Ctx) error {
+func (h *Handler) GetContacts(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	status := c.Query("status", "")
@@ -101,7 +101,7 @@ func (h *ContactsHandler) GetContacts(c *fiber.Ctx) error {
 }
 
 // Удалить контакт
-func (h *ContactsHandler) RemoveContact(c *fiber.Ctx) error {
+func (h *Handler) RemoveContact(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	contactUserID, err := c.ParamsInt("contact_user_id")
@@ -118,7 +118,7 @@ func (h *ContactsHandler) RemoveContact(c *fiber.Ctx) error {
 }
 
 // Получить настройки приватности
-func (h *ContactsHandler) GetPrivacySettings(c *fiber.Ctx) error {
+func (h *Handler) GetPrivacySettings(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	settings, err := h.services.Contacts().GetPrivacySettings(c.Context(), userID)
@@ -130,7 +130,7 @@ func (h *ContactsHandler) GetPrivacySettings(c *fiber.Ctx) error {
 }
 
 // Обновить настройки приватности
-func (h *ContactsHandler) UpdatePrivacySettings(c *fiber.Ctx) error {
+func (h *Handler) UpdatePrivacySettings(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	var req models.UpdatePrivacySettingsRequest
@@ -147,7 +147,7 @@ func (h *ContactsHandler) UpdatePrivacySettings(c *fiber.Ctx) error {
 }
 
 // Проверить статус контакта
-func (h *ContactsHandler) GetContactStatus(c *fiber.Ctx) error {
+func (h *Handler) GetContactStatus(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	contactUserIDStr := c.Params("contact_user_id")
