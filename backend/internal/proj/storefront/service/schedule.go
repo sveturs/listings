@@ -2,13 +2,15 @@
 package service
 
 import (
-	"backend/internal/storage"
 	"context"
 	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"backend/internal/logger"
+	"backend/internal/storage"
 )
 
 // ScheduleService сервис для работы с расписанием импорта
@@ -61,7 +63,7 @@ func (s *ScheduleService) Start() {
 		}
 	}()
 
-	log.Println("Schedule service started")
+	logger.Info().Msg("Schedule service started")
 }
 
 // Stop останавливает фоновую задачу
@@ -77,12 +79,12 @@ func (s *ScheduleService) Stop() {
 	s.wg.Wait()
 	s.running = false
 
-	log.Println("Schedule service stopped")
+	logger.Info().Msg("Schedule service stopped")
 }
 
 // checkSchedules проверяет все источники импорта и запускает импорт по расписанию
 func (s *ScheduleService) checkSchedules() {
-	log.Println("Checking import schedules...")
+	logger.Info().Msg("Checking import schedules...")
 
 	// Получаем все источники импорта с расписанием
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -136,7 +138,7 @@ func (s *ScheduleService) checkSchedules() {
 		}
 	}
 
-	if err := rows.Scan(); err != nil && err.Error() != "EOF" {
+	if err := rows.Err(); err != nil {
 		log.Printf("Error after scanning rows: %v", err)
 	}
 }

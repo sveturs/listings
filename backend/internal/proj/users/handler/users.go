@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -82,8 +83,8 @@ type AdminCheckResponseWrapper struct {
 // @Accept json
 // @Produce json
 // @Success 200 {object} UserProfileResponse "User profile"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/users/me [get]
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
@@ -93,6 +94,17 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.profile.error.fetch")
 	}
+
+	// Проверяем, является ли пользователь администратором
+	isAdmin, err := h.userService.IsUserAdmin(c.Context(), profile.Email)
+	if err != nil {
+		// Если ошибка при проверке админа, логируем но не прерываем запрос
+		log.Printf("Error checking admin status for user %d: %v", userID, err)
+		isAdmin = false
+	}
+	
+	// Добавляем информацию об админе в профиль
+	profile.IsAdmin = isAdmin
 
 	return c.JSON(UserProfileResponse{
 		Success: true,
@@ -108,9 +120,9 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 // @Produce json
 // @Param profile body models.UserProfileUpdate true "Profile update data"
 // @Success 200 {object} MessageResponse "Profile updated successfully"
-// @Failure 400 {object} models.ErrorResponse "Invalid request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/users/me [put]
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
@@ -145,8 +157,8 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 // @Produce json
 // @Param user body RegisterRequest true "Данные для регистрации (name, email, password обязательны, phone опционален)"
 // @Success 201 {object} RegisterResponse
-// @Failure 400 {object} models.ErrorResponse
-// @Failure 500 {object} models.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /api/v1/users/register [post]
 // DEPRECATED: Используйте AuthHandler.Register вместо этого метода
 func (h *UserHandler) RegisterOld(c *fiber.Ctx) error {
@@ -206,9 +218,9 @@ func (h *UserHandler) RegisterOld(c *fiber.Ctx) error {
 // @Produce json
 // @Param user body LoginRequest true "Данные для авторизации (email и password обязательны)"
 // @Success 200 {object} LoginResponse
-// @Failure 400 {object} models.ErrorResponse
-// @Failure 401 {object} models.ErrorResponse
-// @Failure 500 {object} models.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /api/v1/users/login [post]
 // DEPRECATED: Используйте AuthHandler.Login вместо этого метода
 func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
@@ -283,9 +295,9 @@ func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 200 {object} PublicUserResponseWrapper "Public user profile"
-// @Failure 400 {object} models.ErrorResponse "Invalid user ID"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 404 {object} models.ErrorResponse "User not found"
+// @Failure 400 {object} ErrorResponse "Invalid user ID"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 404 {object} ErrorResponse "User not found"
 // @Security BearerAuth
 // @Router /api/v1/users/{id}/profile [get]
 func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
@@ -321,9 +333,9 @@ func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
 // @Produce json
 // @Param email path string true "User email"
 // @Success 200 {object} AdminCheckResponseWrapper "Admin status"
-// @Failure 400 {object} models.ErrorResponse "Email required"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 404 {object} models.ErrorResponse "User not found"
+// @Failure 400 {object} ErrorResponse "Email required"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 404 {object} ErrorResponse "User not found"
 // @Security BearerAuth
 // @Router /api/v1/users/admin-check/{email} [get]
 func (h *UserHandler) IsAdminSimple(c *fiber.Ctx) error {

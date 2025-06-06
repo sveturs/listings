@@ -60,7 +60,7 @@ func main() {
 	// Удаляем второй аргумент fileStorage, так как NewServer инициализирует его внутри себя
 	srv, err := server.NewServer(cfg)
 	if err != nil {
-		logger.Fatal().Err(err).Msgf("Failed to create server: %v", err)
+		logger.Fatal().Err(err).Msg("Failed to create server")
 	}
 
 	// Graceful shutdown

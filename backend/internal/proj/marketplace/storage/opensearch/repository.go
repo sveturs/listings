@@ -2,15 +2,10 @@
 package opensearch
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/domain/search"
-	"backend/internal/storage"
-	osClient "backend/internal/storage/opensearch"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgx/v5"
-	"log"
 	"math"
 	"net/http"
 	"net/url"
@@ -18,6 +13,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/domain/search"
+	"backend/internal/logger"
+	"backend/internal/storage"
+	osClient "backend/internal/storage/opensearch"
 )
 
 // Repository реализует интерфейс MarketplaceSearchRepository
@@ -43,18 +44,18 @@ func (r *Repository) PrepareIndex(ctx context.Context) error {
 		return fmt.Errorf("ошибка проверки индекса: %w", err)
 	}
 
-	log.Printf("Проверка индекса %s: существует=%v", r.indexName, exists)
+	logger.Info().Str("indexName", r.indexName).Bool("exists", exists).Msg("Проверка индекса")
 
 	if !exists {
-		log.Printf("Создание индекса %s...", r.indexName)
+		logger.Info().Str("indexName", r.indexName).Msg("Создание индекса...")
 		if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
 			return fmt.Errorf("ошибка создания индекса: %w", err)
 		}
-		log.Printf("Индекс %s успешно создан", r.indexName)
+		logger.Info().Str("indexName", r.indexName).Msg("Индекс успешно создан")
 
 		allListings, _, err := r.storage.GetListings(ctx, map[string]string{}, 1000, 0)
 		if err != nil {
-			log.Printf("Ошибка получения объявлений: %v", err)
+			logger.Error().Err(err).Msg("Ошибка получения объявлений")
 			return err
 		}
 
@@ -62,13 +63,13 @@ func (r *Repository) PrepareIndex(ctx context.Context) error {
 		for i := range allListings {
 			listingPtrs[i] = &allListings[i]
 		}
-		log.Printf("Запуск переиндексации с обновленной схемой (поддержка метаданных и скидок)")
+		logger.Info().Msgf("Запуск переиндексации с обновленной схемой (поддержка метаданных и скидок)")
 		if err := r.BulkIndexListings(ctx, listingPtrs); err != nil {
-			log.Printf("Ошибка индексации объявлений: %v", err)
+			logger.Error().Err(err).Msg("Ошибка индексации объявлений")
 			return err
 		}
 
-		log.Printf("Успешно проиндексировано %d объявлений", len(allListings))
+		logger.Info().Int("listing_count", len(allListings)).Msgf("Успешно проиндексировано объявлений")
 	}
 
 	return nil
@@ -77,7 +78,7 @@ func (r *Repository) PrepareIndex(ctx context.Context) error {
 func (r *Repository) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
 	doc := r.listingToDoc(listing)
 	docJSON, _ := json.MarshalIndent(doc, "", "  ")
-	log.Printf("Индексация объявления %d с данными: %s", listing.ID, string(docJSON))
+	logger.Info().Msgf("Индексация объявления %d с данными: %s", listing.ID, string(docJSON))
 	return r.client.IndexDocument(r.indexName, fmt.Sprintf("%d", listing.ID), doc)
 }
 
@@ -87,11 +88,11 @@ func (r *Repository) BulkIndexListings(ctx context.Context, listings []*models.M
 
 	for _, listing := range listings {
 		doc := r.listingToDoc(listing)
-		log.Printf("Индексация объявления с ID: %d, категория: %d, название: %s",
+		logger.Info().Msgf("Индексация объявления с ID: %d, категория: %d, название: %s",
 			listing.ID, listing.CategoryID, listing.Title)
 
 		if listing.ID == 0 {
-			log.Printf("ВНИМАНИЕ: Объявление с нулевым ID: %s (категория: %d)",
+			logger.Info().Msgf("ВНИМАНИЕ: Объявление с нулевым ID: %s (категория: %d)",
 				listing.Title, listing.CategoryID)
 		}
 
@@ -144,7 +145,7 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 		query = params.CustomQuery
 		// Логируем, что используем специальный запрос
 		queryJSON, _ := json.MarshalIndent(query, "", "  ")
-		log.Printf("Используем специальный запрос для поиска: %s", string(queryJSON))
+		logger.Info().Msgf("Используем специальный запрос для поиска: %s", string(queryJSON))
 	} else {
 		query = r.buildSearchQuery(params)
 	}
@@ -159,7 +160,7 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
 	}
 
-	log.Printf("OpenSearch ответил успешно. Анализируем результаты...")
+	logger.Info().Msgf("OpenSearch ответил успешно. Анализируем результаты...")
 	return r.parseSearchResponse(searchResponse, params.Language)
 }
 
@@ -168,7 +169,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 		return []string{}, nil
 	}
 
-	log.Printf("Запрос автодополнения для: '%s', размер: %d", prefix, size)
+	logger.Info().Msgf("Запрос автодополнения для: '%s', размер: %d", prefix, size)
 
 	// Создаем комплексный запрос, который ищет как по обычным полям, так и по атрибутам
 	query := map[string]interface{}{
@@ -446,7 +447,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 		suggestions = suggestions[:size]
 	}
 
-	log.Printf("Найдено %d подсказок для '%s': %v", len(suggestions), prefix, suggestions)
+	logger.Info().Msgf("Найдено %d подсказок для '%s': %v", len(suggestions), prefix, suggestions)
 	return suggestions, nil
 }
 
@@ -487,14 +488,14 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 	}
 
 	if exists {
-		log.Printf("Удаляем существующий индекс %s", r.indexName)
+		logger.Info().Msgf("Удаляем существующий индекс %s", r.indexName)
 		if err := r.client.DeleteIndex(r.indexName); err != nil {
 			return fmt.Errorf("ошибка удаления индекса: %w", err)
 		}
 		time.Sleep(1 * time.Second)
 	}
 
-	log.Printf("Создаем индекс %s заново", r.indexName)
+	logger.Info().Msgf("Создаем индекс %s заново", r.indexName)
 	if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
 		return fmt.Errorf("ошибка создания индекса: %w", err)
 	}
@@ -504,7 +505,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 	totalIndexed := 0
 
 	for {
-		log.Printf("Получение пакета объявлений (размер: %d, смещение: %d)", batchSize, offset)
+		logger.Info().Msgf("Получение пакета объявлений (размер: %d, смещение: %d)", batchSize, offset)
 		listings, total, err := r.storage.GetListings(ctx, map[string]string{}, batchSize, offset)
 		if err != nil {
 			return fmt.Errorf("ошибка получения объявлений: %w", err)
@@ -514,7 +515,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 			break
 		}
 
-		log.Printf("Получено %d объявлений из %d всего (пакет %d)", len(listings), total, offset/batchSize+1)
+		logger.Info().Msgf("Получено %d объявлений из %d всего (пакет %d)", len(listings), total, offset/batchSize+1)
 
 		listingPtrs := make([]*models.MarketplaceListing, len(listings))
 		for i := range listings {
@@ -532,7 +533,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 						transMap[t.Language][t.FieldName] = t.TranslatedText
 					}
 					listings[i].Translations = transMap
-					log.Printf("Загружено %d переводов для объявления %d", len(translations), listingID)
+					logger.Info().Msgf("Загружено %d переводов для объявления %d", len(translations), listingID)
 				}
 			}
 
@@ -541,7 +542,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 				attrs, err := r.storage.GetListingAttributes(ctx, listingID)
 				if err == nil && len(attrs) > 0 {
 					listings[i].Attributes = attrs
-					log.Printf("Загружено %d атрибутов для объявления %d", len(attrs), listingID)
+					logger.Info().Msgf("Загружено %d атрибутов для объявления %d", len(attrs), listingID)
 				}
 			}
 
@@ -559,7 +560,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 		}
 	}
 
-	log.Printf("Успешно проиндексировано %d объявлений", totalIndexed)
+	logger.Info().Msgf("Успешно проиндексировано %d объявлений", totalIndexed)
 	return nil
 }
 
@@ -578,7 +579,7 @@ func (r *Repository) getAttributeOptionTranslations(attrName, value string) (map
 
 	if err != nil {
 		if err != pgx.ErrNoRows {
-			log.Printf("Ошибка получения переводов для атрибута %s, значение %s: %v", attrName, value, err)
+			logger.Info().Msgf("Ошибка получения переводов для атрибута %s, значение %s: %v", attrName, value, err)
 		}
 		return nil, err
 	}
@@ -616,7 +617,7 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		"review_count":      listing.ReviewCount,
 	}
 
-	log.Printf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
+	logger.Info().Msgf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
 		listing.ID, listing.City, listing.Country, listing.Location)
 
 	realEstateFields := createRealEstateFieldsMap()
@@ -637,7 +638,7 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	processImages(doc, listing, r.storage)
 
 	docJSON, _ := json.MarshalIndent(doc, "", "  ")
-	log.Printf("FINAL DOC for listing %d [size=%d bytes]: %s", listing.ID, len(docJSON), string(docJSON))
+	logger.Info().Msgf("FINAL DOC for listing %d [size=%d bytes]: %s", listing.ID, len(docJSON), string(docJSON))
 
 	return doc
 }
@@ -676,18 +677,18 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
 				doc["make"] = makeValue
 				doc["make_lowercase"] = strings.ToLower(makeValue)
 				carKeywords = append(carKeywords, textValue, strings.ToLower(textValue)) // Добавляем к ключевым словам
-				log.Printf("FIRST PASS: Добавлена марка '%s' в корень документа для объявления %d", makeValue, listingID)
+				logger.Info().Msgf("FIRST PASS: Добавлена марка '%s' в корень документа для объявления %d", makeValue, listingID)
 			case "model":
 				modelValue = textValue
 				doc["model"] = modelValue
 				doc["model_lowercase"] = strings.ToLower(modelValue)
 				carKeywords = append(carKeywords, textValue, strings.ToLower(textValue)) // Добавляем к ключевым словам
-				log.Printf("FIRST PASS: Добавлена модель '%s' в корень документа для объявления %d", modelValue, listingID)
+				logger.Info().Msgf("FIRST PASS: Добавлена модель '%s' в корень документа для объявления %d", modelValue, listingID)
 			default:
 				if isImportantTextAttribute(attr.AttributeName) {
 					doc[attr.AttributeName] = textValue
 					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(textValue)
-					log.Printf("FIRST PASS: Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
+					logger.Info().Msgf("FIRST PASS: Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
 						attr.AttributeName, textValue, listingID)
 				}
 			}
@@ -708,13 +709,13 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
 				if attr.TextValue != nil && *attr.TextValue != "" {
 					doc[attr.AttributeName] = *attr.TextValue
 					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(*attr.TextValue)
-					log.Printf("Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
+					logger.Info().Msgf("Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
 						attr.AttributeName, *attr.TextValue, listingID)
 				} else if attr.DisplayValue != "" {
 					// Если есть только отображаемое значение
 					doc[attr.AttributeName] = attr.DisplayValue
 					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(attr.DisplayValue)
-					log.Printf("Добавлен важный атрибут (из DisplayValue) %s = '%s' в корень документа для объявления %d",
+					logger.Info().Msgf("Добавлен важный атрибут (из DisplayValue) %s = '%s' в корень документа для объявления %d",
 						attr.AttributeName, attr.DisplayValue, listingID)
 				}
 			}
@@ -754,7 +755,7 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
 					doc[attr.AttributeName+"_text"] = displayValue
 					realEstateText = append(realEstateText, displayValue)
 					addRangesForAttribute(doc, attr)
-					log.Printf("FIRST PASS: Добавлен числовой атрибут %s = %f в корень документа для объявления %d",
+					logger.Info().Msgf("FIRST PASS: Добавлен числовой атрибут %s = %f в корень документа для объявления %d",
 						attr.AttributeName, numVal, listingID)
 				}
 			}
@@ -770,7 +771,7 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
 				}
 				doc[attr.AttributeName+"_text"] = strValue
 				realEstateText = append(realEstateText, strValue)
-				log.Printf("FIRST PASS: Добавлен булев атрибут %s = %v в корень документа для объявления %d",
+				logger.Info().Msgf("FIRST PASS: Добавлен булев атрибут %s = %v в корень документа для объявления %d",
 					attr.AttributeName, boolValue, listingID)
 			}
 		}
@@ -807,9 +808,9 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
 	doc["attributes"] = attributesArray
 	allAttrsText := getUniqueValues(flattenAttributeValues(attributeTextValues))
 	doc["all_attributes_text"] = allAttrsText
-	
+
 	// Отладочный вывод для проверки индексации атрибутов
-	log.Printf("ИНДЕКСАЦИЯ объявления %d: attributes=%d, all_attributes_text=%v", 
+	logger.Info().Msgf("ИНДЕКСАЦИЯ объявления %d: attributes=%d, all_attributes_text=%v",
 		listingID, len(attributesArray), allAttrsText)
 
 	if len(realEstateText) > 0 {
@@ -937,14 +938,14 @@ func ensureImportantAttributes(doc map[string]interface{}, makeValue, modelValue
 	if makeValue != "" && doc["make"] == nil {
 		doc["make"] = makeValue
 		doc["make_lowercase"] = strings.ToLower(makeValue)
-		log.Printf("FINAL CHECK: Добавлена марка '%s' в корень документа для объявления %d",
+		logger.Info().Msgf("FINAL CHECK: Добавлена марка '%s' в корень документа для объявления %d",
 			makeValue, listingID)
 	}
 
 	if modelValue != "" && doc["model"] == nil {
 		doc["model"] = modelValue
 		doc["model_lowercase"] = strings.ToLower(modelValue)
-		log.Printf("FINAL CHECK: Добавлена модель '%s' в корень документа для объявления %d",
+		logger.Info().Msgf("FINAL CHECK: Добавлена модель '%s' в корень документа для объявления %d",
 			modelValue, listingID)
 	}
 }
@@ -1058,7 +1059,7 @@ func processDiscountData(doc map[string]interface{}, listing *models.Marketplace
 			doc["old_price"] = oldPrice
 			doc["has_discount"] = true
 
-			log.Printf("Extracted discount from description for listing %d: %v", listing.ID, discount)
+			logger.Info().Msgf("Extracted discount from description for listing %d: %v", listing.ID, discount)
 		}
 	}
 }
@@ -1075,12 +1076,12 @@ func processMetadata(doc map[string]interface{}, listing *models.MarketplaceList
 				doc["has_discount"] = true
 				doc["old_price"] = prevPrice
 
-				log.Printf("Recalculated discount percent for OpenSearch: %d%% (listing %d)",
+				logger.Info().Msgf("Recalculated discount percent for OpenSearch: %d%% (listing %d)",
 					discountPercent, listing.ID)
 
 				// Проверяем, чтобы storefront_id сохранился для объявлений со скидками
 				if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-					log.Printf("ВАЖНО: Сохраняем storefront_id=%d после обработки скидки для объявления %d",
+					logger.Info().Msgf("ВАЖНО: Сохраняем storefront_id=%d после обработки скидки для объявления %d",
 						*listing.StorefrontID, listing.ID)
 				}
 			}
@@ -1093,14 +1094,14 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
 		// Явно проверяем и выводим информацию о том, что мы добавляем storefront_id
 		doc["storefront_id"] = *listing.StorefrontID
-		log.Printf("ВАЖНО: Устанавливаем storefront_id=%d для объявления %d с скидкой=%v",
+		logger.Info().Msgf("ВАЖНО: Устанавливаем storefront_id=%d для объявления %d с скидкой=%v",
 			*listing.StorefrontID, listing.ID, listing.HasDiscount)
 
 		needStorefrontInfo := listing.City == "" || listing.Country == "" || listing.Location == "" ||
 			listing.Latitude == nil || listing.Longitude == nil
 
 		if needStorefrontInfo {
-			log.Printf("Fetching storefront %d data for listing %d address info", *listing.StorefrontID, listing.ID)
+			logger.Info().Msgf("Fetching storefront %d data for listing %d address info", *listing.StorefrontID, listing.ID)
 			var storefront models.Storefront
 			err := storage.QueryRow(context.Background(), `
                 SELECT name, city, address, country, latitude, longitude
@@ -1136,18 +1137,18 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 					doc["show_on_map"] = true
 				}
 			} else {
-				log.Printf("WARNING: Failed to load storefront data for listing %d: %v", listing.ID, err)
+				logger.Info().Msgf("WARNING: Failed to load storefront data for listing %d: %v", listing.ID, err)
 			}
 		}
 	} else {
-		log.Printf("DEBUG: Listing %d has no storefront_id", listing.ID)
+		logger.Info().Msgf("DEBUG: Listing %d has no storefront_id", listing.ID)
 	}
 
 	// Дополнительная проверка после обработки всех метаданных и скидок
 	if listing.HasDiscount && listing.StorefrontID != nil &&
 		doc["storefront_id"] == nil {
 		doc["storefront_id"] = *listing.StorefrontID
-		log.Printf("КРИТИЧНО: Добавлен storefront_id=%d для объявления %d со скидкой в конце обработки",
+		logger.Info().Msgf("КРИТИЧНО: Добавлен storefront_id=%d для объявления %d со скидкой в конце обработки",
 			*listing.StorefrontID, listing.ID)
 	}
 }
@@ -1395,7 +1396,7 @@ func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float6
 }
 
 func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]interface{} {
-	log.Printf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s",
+	logger.Info().Msgf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s",
 		params.CategoryID, params.Language, params.Query)
 
 	query := map[string]interface{}{
@@ -1421,7 +1422,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 	}
 
 	if params.Query != "" {
-		log.Printf("Текстовый поиск по запросу: '%s'", params.Query)
+		logger.Info().Msgf("Текстовый поиск по запросу: '%s'", params.Query)
 
 		searchFields := []string{
 			"title^3", "description",
@@ -1435,7 +1436,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"brand^4",
 			"property_type^3",
 			"body_type^3",
-				// удалил rooms^3, т.к. оно числовое
+			// удалил rooms^3, т.к. оно числовое
 			"cpu^3",
 			"gpu^3",
 			"memory^3",
@@ -1458,14 +1459,14 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"attr_screen_size_text^3",
 			"real_estate_attributes_text^3",
 			"real_estate_attributes_combined^3",
-				// удалил rooms^4, т.к. оно дублирует и оно числовое
-				// удалил area^3, т.к. оно числовое
-				// удалил floor^3, т.к. оно числовое
-				// удалил total_floors^3, т.к. оно числовое
+			// удалил rooms^4, т.к. оно дублирует и оно числовое
+			// удалил area^3, т.к. оно числовое
+			// удалил floor^3, т.к. оно числовое
+			// удалил total_floors^3, т.к. оно числовое
 			"property_type^4",
-				// удалил land_area^3, т.к. оно числовое
-				// удалил year_built^3, т.к. оно числовое
-				// удалил bathrooms^3, т.к. оно числовое
+			// удалил land_area^3, т.к. оно числовое
+			// удалил year_built^3, т.к. оно числовое
+			// удалил bathrooms^3, т.к. оно числовое
 			"heating_type^3",
 			"parking^3",
 			"balcony^3",
@@ -1689,7 +1690,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		}
 
 		if isRealEstateQuery {
-			log.Printf("Обнаружен запрос о недвижимости: '%s'", params.Query)
+			logger.Info().Msgf("Обнаружен запрос о недвижимости: '%s'", params.Query)
 
 			realEstateBoost := []map[string]interface{}{
 				{
@@ -2015,7 +2016,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 									},
 								},
 							})
-							log.Printf("Added range filter for real estate attribute %s: %f-%f",
+							logger.Info().Msgf("Added range filter for real estate attribute %s: %f-%f",
 								attrName, minVal, maxVal)
 						}
 					}
@@ -2025,7 +2026,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 							attrName: attrValue,
 						},
 					})
-					log.Printf("Added term filter for text real estate attribute %s = %s",
+					logger.Info().Msgf("Added term filter for text real estate attribute %s = %s",
 						attrName, attrValue)
 				} else if attrValue == "true" || attrValue == "false" {
 					boolVal := attrValue == "true"
@@ -2034,7 +2035,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 							attrName: boolVal,
 						},
 					})
-					log.Printf("Added boolean filter for real estate attribute %s = %v",
+					logger.Info().Msgf("Added boolean filter for real estate attribute %s = %v",
 						attrName, boolVal)
 				} else {
 					if numVal, err := strconv.ParseFloat(attrValue, 64); err == nil {
@@ -2043,7 +2044,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 								attrName: numVal,
 							},
 						})
-						log.Printf("Added numeric filter for real estate attribute %s = %f",
+						logger.Info().Msgf("Added numeric filter for real estate attribute %s = %f",
 							attrName, numVal)
 					} else {
 						filter = append(filter, map[string]interface{}{
@@ -2051,7 +2052,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 								attrName + "_text": attrValue,
 							},
 						})
-						log.Printf("Added text filter for real estate attribute %s = %s",
+						logger.Info().Msgf("Added text filter for real estate attribute %s = %s",
 							attrName, attrValue)
 					}
 				}
@@ -2146,7 +2147,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			sortField = "price"
 			sortOrder = "asc"
 		case "rating_desc":
-			log.Printf("Применяем сортировку рейтинга по УБЫВАНИЮ")
+			logger.Info().Msgf("Применяем сортировку рейтинга по УБЫВАНИЮ")
 			query["sort"] = []interface{}{
 				map[string]interface{}{
 					"_script": map[string]interface{}{
@@ -2170,7 +2171,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			}
 			return query
 		case "rating_asc":
-			log.Printf("Применяем сортировку рейтинга по ВОЗРАСТАНИЮ")
+			logger.Info().Msgf("Применяем сортировку рейтинга по ВОЗРАСТАНИЮ")
 			query["sort"] = []interface{}{
 				map[string]interface{}{
 					"_script": map[string]interface{}{
@@ -2205,7 +2206,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			}
 		}
 
-		log.Printf("Применяем сортировку по полю %s в порядке %s", sortField, sortOrder)
+		logger.Info().Msgf("Применяем сортировку по полю %s в порядке %s", sortField, sortOrder)
 		query["sort"] = []interface{}{
 			map[string]interface{}{
 				sortField: map[string]interface{}{
@@ -2256,7 +2257,7 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 
 						listing, err := r.docToListing(source, language)
 						if err != nil {
-							log.Printf("Ошибка преобразования документа: %v", err)
+							logger.Info().Msgf("Ошибка преобразования документа: %v", err)
 							continue
 						}
 						if avgRating, ok := source["average_rating"].(float64); ok {
@@ -2275,7 +2276,7 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 								filters["category_id"] = fmt.Sprintf("%d", listing.CategoryID)
 							}
 
-							log.Printf("Попытка восстановить ID для объявления: %+v", filters)
+							logger.Info().Msgf("Попытка восстановить ID для объявления: %+v", filters)
 						}
 
 						result.Listings = append(result.Listings, listing)
@@ -2667,7 +2668,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 			// Если есть previous_price, устанавливаем его в поле OldPrice
 			if prevPrice, ok := discount["previous_price"].(float64); ok {
 				listing.OldPrice = prevPrice
-				log.Printf("Найдена скидка для объявления %d: скидка %v%%, старая цена: %.2f",
+				logger.Info().Msgf("Найдена скидка для объявления %d: скидка %v%%, старая цена: %.2f",
 					listing.ID, discount["discount_percent"], prevPrice)
 			}
 		}
@@ -2684,12 +2685,12 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		listing.HasDiscount = true
 	}
 	if listing.ID == 18 {
-		log.Printf("DEBUG: Преобразование документа для объявления ID=18")
-		log.Printf("DEBUG: Source документа: %+v", doc)
+		logger.Info().Msgf("DEBUG: Преобразование документа для объявления ID=18")
+		logger.Info().Msgf("DEBUG: Source документа: %+v", doc)
 		if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
-			log.Printf("DEBUG: Метаданные в документе: %+v", metadata)
+			logger.Info().Msgf("DEBUG: Метаданные в документе: %+v", metadata)
 			if discount, ok := metadata["discount"].(map[string]interface{}); ok {
-				log.Printf("DEBUG: Скидка в документе: %+v", discount)
+				logger.Info().Msgf("DEBUG: Скидка в документе: %+v", discount)
 			}
 		}
 	}

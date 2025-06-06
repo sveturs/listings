@@ -1837,6 +1837,14 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
 
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
 	log.Printf("GetCategories: starting to fetch categories")
+	
+	// Сначала проверим подключение к базе данных
+	if err := s.pool.Ping(ctx); err != nil {
+		log.Printf("GetCategories: Database ping failed: %v", err)
+		return nil, err
+	}
+	log.Printf("GetCategories: Database ping successful")
+	
 	query := `
         WITH category_translations AS (
             SELECT 
@@ -1857,9 +1865,10 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
         LEFT JOIN category_translations ct ON c.id = ct.entity_id
     `
 
+	log.Printf("GetCategories: Executing query")
 	rows, err := s.pool.Query(ctx, query)
 	if err != nil {
-		log.Printf("Error querying categories: %v", err)
+		log.Printf("GetCategories: Error querying categories: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -1868,27 +1877,33 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 	for rows.Next() {
 		var cat models.MarketplaceCategory
 		var translationsJson []byte
+		var icon sql.NullString
 
 		err := rows.Scan(
 			&cat.ID,
 			&cat.Name,
 			&cat.Slug,
 			&cat.ParentID,
-			&cat.Icon,
+			&icon,
 			&cat.CreatedAt,
 			&translationsJson,
 		)
 
 		if err != nil {
-			log.Printf("Error scanning category: %v", err)
+			log.Printf("GetCategories: Error scanning category: %v", err)
 			continue
+		}
+
+		// Обрабатываем NULL значение для icon
+		if icon.Valid {
+			cat.Icon = icon.String
 		}
 
 		//    log.Printf("Raw translations for category %d: %s", cat.ID, string(translationsJson))
 
 		translations := make(map[string]string)
 		if err := json.Unmarshal(translationsJson, &translations); err != nil {
-			log.Printf("Error unmarshaling translations for category %d: %v", cat.ID, err)
+			log.Printf("GetCategories: Error unmarshaling translations for category %d: %v", cat.ID, err)
 		} else {
 			cat.Translations = translations
 			//     log.Printf("Processed translations for category %d: %+v", cat.ID, translations)

@@ -16,6 +16,14 @@ const eslintConfig = [
     rules: {
       'prettier/prettier': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 ];

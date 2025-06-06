@@ -2035,6 +2035,10 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "is_admin": {
+                    "description": "Флаг администратора",
+                    "type": "boolean"
+                },
                 "last_seen": {
                     "type": "string"
                 },
@@ -2465,7 +2469,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "localhost:3000",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Sve Tu Marketplace API",

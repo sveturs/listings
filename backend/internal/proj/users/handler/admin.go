@@ -18,7 +18,7 @@ import (
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10) minimum(1) maximum(100)
 // @Success 200 {object} AdminUserListResponse "List of users"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/users [get]
 func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
@@ -67,8 +67,8 @@ func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 200 {object} models.UserProfile "User profile"
-// @Failure 400 {object} models.ErrorResponse "Invalid user ID"
-// @Failure 404 {object} models.ErrorResponse "User not found"
+// @Failure 400 {object} ErrorResponse "Invalid user ID"
+// @Failure 404 {object} ErrorResponse "User not found"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id} [get]
 func (h *UserHandler) GetUserByIDAdmin(c *fiber.Ctx) error {
@@ -94,8 +94,8 @@ func (h *UserHandler) GetUserByIDAdmin(c *fiber.Ctx) error {
 // @Param id path int true "User ID"
 // @Param body body models.UserProfileUpdate true "User update data"
 // @Success 200 {object} AdminMessageResponse "Update successful"
-// @Failure 400 {object} models.ErrorResponse "Invalid request"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id} [put]
 func (h *UserHandler) UpdateUserAdmin(c *fiber.Ctx) error {
@@ -133,8 +133,8 @@ func (h *UserHandler) UpdateUserAdmin(c *fiber.Ctx) error {
 // @Param id path int true "User ID"
 // @Param body body AdminStatusUpdateRequest true "Status update (active, blocked, pending)"
 // @Success 200 {object} AdminMessageResponse "Status updated"
-// @Failure 400 {object} models.ErrorResponse "Invalid status"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 400 {object} ErrorResponse "Invalid status"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/status [put]
 func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
@@ -173,8 +173,8 @@ func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 200 {object} AdminMessageResponse "User deleted"
-// @Failure 400 {object} models.ErrorResponse "Invalid user ID"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 400 {object} ErrorResponse "Invalid user ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {

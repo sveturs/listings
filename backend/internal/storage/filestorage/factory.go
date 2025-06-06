@@ -1,25 +1,26 @@
 package filestorage
 
 import (
-	"backend/internal/config"
-	"backend/internal/storage/minio"
 	"context"
 	"fmt"
 	"io"
-	"log" // Разкомментируйте эту строку
 	"path/filepath"
 	"time"
-	// "strings"
+
+	"backend/internal/config"
+	"backend/internal/logger"
+	"backend/internal/storage/minio"
 )
 
 // Factory создает и возвращает соответствующую реализацию FileStorageInterface
 func NewFileStorage(cfg config.FileStorageConfig) (FileStorageInterface, error) {
-	log.Printf("Инициализация хранилища файлов. Провайдер: %s", cfg.Provider)
+	logger.Info().Str("provider", cfg.Provider).Msg("Инициализация хранилища файлов.")
 
 	switch cfg.Provider {
 	case "minio":
-		log.Printf("Настройка MinIO: endpoint=%s, bucket=%s, useSSL=%v, publicBaseURL=%s",
-			cfg.MinioEndpoint, cfg.MinioBucketName, cfg.MinioUseSSL, cfg.PublicBaseURL)
+		logger.Info().Str("endpoint", cfg.MinioEndpoint).Str("bucket", cfg.MinioBucketName).
+			Bool("useSSL", cfg.MinioUseSSL).Str("publicBaseURL", cfg.PublicBaseURL).
+			Msgf("Настройка MinIO")
 
 		minioClient, err := minio.NewMinioClient(minio.MinioConfig{
 			Endpoint:        cfg.MinioEndpoint,
@@ -30,17 +31,17 @@ func NewFileStorage(cfg config.FileStorageConfig) (FileStorageInterface, error) 
 			Location:        cfg.MinioLocation,
 		})
 		if err != nil {
-			log.Printf("ОШИБКА при создании клиента MinIO: %v", err)
+			logger.Error().Err(err).Msg("ОШИБКА при создании клиента MinIO")
 			return nil, fmt.Errorf("ошибка создания клиента MinIO: %w", err)
 		}
-		log.Printf("Клиент MinIO успешно создан")
+		logger.Info().Msgf("Клиент MinIO успешно создан")
 		return &MinioStorage{
 			client:          minioClient,
 			publicBaseURL:   cfg.PublicBaseURL,
 			minioBucketName: cfg.MinioBucketName,
 		}, nil
 	default:
-		log.Printf("ОШИБКА: неподдерживаемый провайдер хранилища: %s", cfg.Provider)
+		logger.Error().Str("provider", cfg.Provider).Msgf("неподдерживаемый провайдер хранилища")
 		return nil, fmt.Errorf("неподдерживаемый провайдер хранилища: %s", cfg.Provider)
 	}
 }
@@ -55,16 +56,16 @@ type MinioStorage struct {
 func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
 	bucketPath := objectName
 
-	log.Printf("Uploading file to MinIO: objectName=%s, size=%d, contentType=%s, bucket=%s",
-		bucketPath, size, contentType, s.minioBucketName)
+	logger.Info().Str("objectName", objectName).Int64("size", size).Str("contentType", contentType).
+		Str("minioBucketName", s.minioBucketName).Msg("Uploading file to MinIO")
 
 	filePath, err := s.client.UploadFile(ctx, bucketPath, reader, size, contentType)
 	if err != nil {
-		log.Printf("ERROR uploading file to MinIO: %v", err)
+		logger.Error().Err(err).Msg("ERROR uploading file to MinIO")
 		return "", err
 	}
 
-	log.Printf("File successfully uploaded to MinIO: filePath=%s", filePath)
+	logger.Info().Str("filePath", filePath).Msg("File successfully uploaded to MinIO")
 
 	// Формируем URL в зависимости от bucket
 	var fileURL string
@@ -74,7 +75,7 @@ func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader
 		fileURL = fmt.Sprintf("/listings/%s", objectName)
 	}
 
-	log.Printf("URL for file: %s", fileURL)
+	logger.Info().Str("fileURL", fileURL).Msg("URL for file")
 	return fileURL, nil
 }
 
@@ -85,13 +86,13 @@ func (s *MinioStorage) DeleteFile(ctx context.Context, objectName string) error 
 		objectName = filepath.Base(objectName)
 	}
 
-	log.Printf("Удаление файла из MinIO: originalName=%s, objectName=%s", originalName, objectName)
+	logger.Info().Str("originalName", originalName).Str("objectName", objectName).Msgf("Удаление файла из MinIO")
 
 	err := s.client.DeleteFile(ctx, objectName)
 	if err != nil {
-		log.Printf("ОШИБКА при удалении файла из MinIO: %v", err)
+		logger.Info().Msgf("ОШИБКА при удалении файла из MinIO: %v", err)
 	} else {
-		log.Printf("Файл успешно удален из MinIO: %s", objectName)
+		logger.Info().Msgf("Файл успешно удален из MinIO: %s", objectName)
 	}
 
 	return err
@@ -104,7 +105,7 @@ func (s *MinioStorage) GetURL(ctx context.Context, objectName string) (string, e
 		objectName = filepath.Base(objectName)
 	}
 
-	log.Printf("Получение URL для файла: originalName=%s, objectName=%s", originalName, objectName)
+	logger.Info().Msgf("Получение URL для файла: originalName=%s, objectName=%s", originalName, objectName)
 
 	var fileURL string
 	if s.publicBaseURL != "" {
@@ -122,7 +123,7 @@ func (s *MinioStorage) GetURL(ctx context.Context, objectName string) (string, e
 		}
 	}
 
-	log.Printf("Сформирован URL для файла: %s", fileURL)
+	logger.Info().Str("fileURL", fileURL).Msg("Сформирован URL для файла")
 	return fileURL, nil
 }
 
@@ -133,14 +134,13 @@ func (s *MinioStorage) GetPresignedURL(ctx context.Context, objectName string, e
 		objectName = filepath.Base(objectName)
 	}
 
-	log.Printf("Получение предподписанного URL для файла: originalName=%s, objectName=%s, expiry=%v",
-		originalName, objectName, expiry)
+	logger.Info().Str("originalName", originalName).Str("objectName", objectName).Dur("expiry", expiry).Msg("Получение предподписанного URL для файла")
 
 	url, err := s.client.GetPresignedURL(ctx, objectName, expiry)
 	if err != nil {
-		log.Printf("ОШИБКА при получении предподписанного URL: %v", err)
+		logger.Error().Err(err).Msg("ОШИБКА при получении предподписанного URL")
 	} else {
-		log.Printf("Получен предподписанный URL: %s", url)
+		logger.Info().Str("url", url).Msg("Получен предподписанный URL")
 	}
 
 	return url, err
@@ -153,8 +153,7 @@ func (s *MinioStorage) GetFile(ctx context.Context, objectName string) (io.ReadC
 		objectName = filepath.Base(objectName)
 	}
 
-	log.Printf("Получение файла из MinIO: originalName=%s, objectName=%s",
-		originalName, objectName)
+	logger.Info().Str("originalName", originalName).Str("objectName", objectName).Msg("Получение файла из MinIO")
 
 	// Если путь содержит подкаталоги, сохраняем их
 	parts := filepath.SplitList(objectName)
@@ -164,10 +163,10 @@ func (s *MinioStorage) GetFile(ctx context.Context, objectName string) (io.ReadC
 
 	file, err := s.client.GetObject(ctx, objectName)
 	if err != nil {
-		log.Printf("ОШИБКА при получении файла из MinIO: %v", err)
+		logger.Error().Err(err).Msgf("ОШИБКА при получении файла из MinIO")
 		return nil, err
 	}
 
-	log.Printf("Файл успешно получен из MinIO")
+	logger.Info().Msgf("Файл успешно получен из MinIO")
 	return file, nil
 }

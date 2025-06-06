@@ -11,6 +11,7 @@ type CategoryAttribute struct {
 	Name               string                       `json:"name"`
 	DisplayName        string                       `json:"display_name"`
 	AttributeType      string                       `json:"attribute_type"`
+	Icon               string                       `json:"icon,omitempty"`
 	Options            json.RawMessage              `json:"options,omitempty"`
 	ValidRules         json.RawMessage              `json:"validation_rules,omitempty"`
 	IsSearchable       bool                         `json:"is_searchable"`

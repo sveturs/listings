@@ -110,10 +110,10 @@ func (h *MarketplaceHandler) UpdateAttributeGroup(c *fiber.Ctx) error {
 	if req.DisplayName != "" {
 		updates["display_name"] = req.DisplayName
 	}
-	if req.Description != "" {
+	if req.Description != nil {
 		updates["description"] = req.Description
 	}
-	if req.Icon != "" {
+	if req.Icon != nil {
 		updates["icon"] = req.Icon
 	}
 	// For boolean and integer fields we always update them

@@ -65,14 +65,68 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Не все обязательные поля заполнены")
 	}
 
-	// Преобразуем Options из JSON, если они есть
+	// Обрабатываем полные данные из JSON запроса
 	if c.Get("Content-Type") == "application/json" {
-		var optionsData map[string]interface{}
-		if err := json.Unmarshal([]byte(c.Body()), &optionsData); err == nil {
-			if options, ok := optionsData["options"]; ok {
+		var requestData map[string]interface{}
+		if err := json.Unmarshal([]byte(c.Body()), &requestData); err == nil {
+			// Преобразуем Options, если они есть
+			if options, ok := requestData["options"]; ok {
 				optionsJSON, err := json.Marshal(options)
 				if err == nil {
 					attribute.Options = optionsJSON
+				}
+			}
+
+			// Формируем validation_rules из отдельных полей
+			validationRules := make(map[string]interface{})
+			
+			// Проверяем и добавляем правила валидации из запроса
+			if minLength, ok := requestData["min_length"]; ok && minLength != nil {
+				if val, ok := minLength.(float64); ok && val > 0 {
+					validationRules["min_length"] = val
+				}
+			}
+			if maxLength, ok := requestData["max_length"]; ok && maxLength != nil {
+				if val, ok := maxLength.(float64); ok && val > 0 {
+					validationRules["max_length"] = val
+				}
+			}
+			if minValue, ok := requestData["min_value"]; ok && minValue != nil {
+				if val, ok := minValue.(float64); ok {
+					validationRules["min_value"] = val
+				}
+			}
+			if maxValue, ok := requestData["max_value"]; ok && maxValue != nil {
+				if val, ok := maxValue.(float64); ok {
+					validationRules["max_value"] = val
+				}
+			}
+			if pattern, ok := requestData["pattern"]; ok && pattern != nil {
+				if val, ok := pattern.(string); ok && val != "" {
+					validationRules["pattern"] = val
+				}
+			}
+			if unit, ok := requestData["unit"]; ok && unit != nil {
+				if val, ok := unit.(string); ok && val != "" {
+					validationRules["unit"] = val
+				}
+			}
+			if defaultValue, ok := requestData["default_value"]; ok && defaultValue != nil {
+				validationRules["default_value"] = defaultValue
+			}
+
+			// Обрабатываем поле icon
+			if icon, ok := requestData["icon"]; ok && icon != nil {
+				if val, ok := icon.(string); ok {
+					attribute.Icon = val
+				}
+			}
+
+			// Преобразуем validation_rules в JSON, если есть правила
+			if len(validationRules) > 0 {
+				validRulesJSON, err := json.Marshal(validationRules)
+				if err == nil {
+					attribute.ValidRules = validRulesJSON
 				}
 			}
 		}
@@ -96,7 +150,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 	// В текущей реализации нет метода для получения всех атрибутов,
 	// поэтому можно создать запрос к базе данных напрямую
 	query := `
-		SELECT id, name, display_name, attribute_type, options, validation_rules, 
+		SELECT id, name, display_name, attribute_type, icon, options, validation_rules, 
 		is_searchable, is_filterable, is_required, sort_order, created_at
 		FROM category_attributes
 		ORDER BY sort_order, id
@@ -119,6 +173,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 			&attribute.Name,
 			&attribute.DisplayName,
 			&attribute.AttributeType,
+			&attribute.Icon,
 			&optionsJSON,
 			&validRulesJSON,
 			&attribute.IsSearchable,
@@ -185,14 +240,68 @@ func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Не все обязательные поля заполнены")
 	}
 
-	// Преобразуем Options из JSON, если они есть
+	// Обрабатываем полные данные из JSON запроса
 	if c.Get("Content-Type") == "application/json" {
-		var optionsData map[string]interface{}
-		if err := json.Unmarshal([]byte(c.Body()), &optionsData); err == nil {
-			if options, ok := optionsData["options"]; ok {
+		var requestData map[string]interface{}
+		if err := json.Unmarshal([]byte(c.Body()), &requestData); err == nil {
+			// Преобразуем Options, если они есть
+			if options, ok := requestData["options"]; ok {
 				optionsJSON, err := json.Marshal(options)
 				if err == nil {
 					attribute.Options = optionsJSON
+				}
+			}
+
+			// Формируем validation_rules из отдельных полей
+			validationRules := make(map[string]interface{})
+			
+			// Проверяем и добавляем правила валидации из запроса
+			if minLength, ok := requestData["min_length"]; ok && minLength != nil {
+				if val, ok := minLength.(float64); ok && val > 0 {
+					validationRules["min_length"] = val
+				}
+			}
+			if maxLength, ok := requestData["max_length"]; ok && maxLength != nil {
+				if val, ok := maxLength.(float64); ok && val > 0 {
+					validationRules["max_length"] = val
+				}
+			}
+			if minValue, ok := requestData["min_value"]; ok && minValue != nil {
+				if val, ok := minValue.(float64); ok {
+					validationRules["min_value"] = val
+				}
+			}
+			if maxValue, ok := requestData["max_value"]; ok && maxValue != nil {
+				if val, ok := maxValue.(float64); ok {
+					validationRules["max_value"] = val
+				}
+			}
+			if pattern, ok := requestData["pattern"]; ok && pattern != nil {
+				if val, ok := pattern.(string); ok && val != "" {
+					validationRules["pattern"] = val
+				}
+			}
+			if unit, ok := requestData["unit"]; ok && unit != nil {
+				if val, ok := unit.(string); ok && val != "" {
+					validationRules["unit"] = val
+				}
+			}
+			if defaultValue, ok := requestData["default_value"]; ok && defaultValue != nil {
+				validationRules["default_value"] = defaultValue
+			}
+
+			// Обрабатываем поле icon
+			if icon, ok := requestData["icon"]; ok && icon != nil {
+				if val, ok := icon.(string); ok {
+					attribute.Icon = val
+				}
+			}
+
+			// Преобразуем validation_rules в JSON, если есть правила
+			if len(validationRules) > 0 {
+				validRulesJSON, err := json.Marshal(validationRules)
+				if err == nil {
+					attribute.ValidRules = validRulesJSON
 				}
 			}
 		}

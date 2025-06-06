@@ -186,7 +186,7 @@ class TokenManager {
    */
   private decodeToken(
     token: string
-  ): { exp?: number; [key: string]: unknown } | null {
+  ): { exp?: number; iat?: number; sub?: string } | null {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -218,19 +218,6 @@ class TokenManager {
     } catch {
       return true;
     }
-  }
-
-  /**
-   * Создает axios interceptor для автоматического добавления токена и обновления
-   * @deprecated Не используется, так как apiClient имеет упрощенную реализацию
-   */
-  createAxiosInterceptor() {
-    // Заглушка для совместимости
-    // Реальная функциональность добавления токенов реализована
-    // непосредственно в ApiClient через getAuthToken()
-    console.log(
-      '[TokenManager] Interceptors not implemented in simplified apiClient'
-    );
   }
 }
 

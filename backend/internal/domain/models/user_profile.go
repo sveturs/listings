@@ -20,6 +20,7 @@ type UserProfile struct {
 	Settings          json.RawMessage `json:"settings,omitempty"`
     City              string          `json:"city"` // Теперь используем обычные строки, а не указатели
     Country           string          `json:"country"` 
+    IsAdmin           bool            `json:"is_admin"` // Флаг администратора
 }
 
 // UserProfileUpdate используется для частичного обновления профиля

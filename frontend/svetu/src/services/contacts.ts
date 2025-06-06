@@ -68,7 +68,7 @@ class ContactsService {
     };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      (headers as any)['Authorization'] = `Bearer ${token}`;
     } else {
       console.warn('[ContactsService] No access token available');
     }

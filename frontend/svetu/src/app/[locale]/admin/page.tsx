@@ -1,35 +1,10 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
-import { useEffect } from 'react';
+import { Link } from '@/i18n/routing';
 
 export default function AdminPage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
   const t = useTranslations('admin');
-  const router = useRouter();
-
-  // Handle authentication redirect
-  useEffect(() => {
-    if (!isLoading && (!isAuthenticated || !user?.is_admin)) {
-      router.push('/');
-    }
-  }, [isAuthenticated, user?.is_admin, isLoading, router]);
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center">
-          <span className="loading loading-spinner loading-lg"></span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user?.is_admin) {
-    return null; // Redirect handled by useEffect
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -65,9 +40,33 @@ export default function AdminPage() {
             <h2 className="card-title">{t('sections.categories')}</h2>
             <p>{t('sections.categoriesDescription')}</p>
             <div className="card-actions justify-end">
-              <button className="btn btn-primary" disabled title="Coming soon">
+              <Link href="/admin/categories" className="btn btn-primary">
                 {t('manage')}
-              </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <h2 className="card-title">{t('sections.attributes')}</h2>
+            <p>{t('sections.attributesDescription')}</p>
+            <div className="card-actions justify-end">
+              <Link href="/admin/attributes" className="btn btn-primary">
+                {t('manage')}
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <h2 className="card-title">{t('sections.attributeGroups')}</h2>
+            <p>{t('sections.attributeGroupsDescription')}</p>
+            <div className="card-actions justify-end">
+              <Link href="/admin/attribute-groups" className="btn btn-primary">
+                {t('manage')}
+              </Link>
             </div>
           </div>
         </div>

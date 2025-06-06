@@ -65,7 +65,7 @@ class ChatService {
 
     // Добавляем JWT токен если есть
     if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
+      (headers as any)['Authorization'] = `Bearer ${accessToken}`;
     }
 
     // Добавляем CSRF токен для изменяющих запросов
@@ -100,8 +100,8 @@ class ChatService {
       if (response.status === 429) {
         console.warn('Chat API rate limit:', error);
         const rateLimitError = new Error(
-          error.message ||
-            error.error ||
+          (error as any).message ||
+            (error as any).error ||
             'Слишком много запросов. Подождите немного.'
         );
         (rateLimitError as Error & { status: number }).status = 429;
@@ -114,7 +114,9 @@ class ChatService {
         url: url,
       });
       throw new Error(
-        error.message || error.error || `Error: ${response.status}`
+        (error as any).message ||
+          (error as any).error ||
+          `Error: ${response.status}`
       );
     }
 

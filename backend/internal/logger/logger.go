@@ -28,8 +28,8 @@ func Init(env string, level string) error {
 	return nil
 }
 
-func Get() zerolog.Logger {
-	return log
+func Get() *zerolog.Logger {
+	return &log
 }
 
 func Fatal() *zerolog.Event {

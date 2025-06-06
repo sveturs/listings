@@ -26,10 +26,10 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 	// Создаем атрибут в БД
 	query := `
 		INSERT INTO category_attributes (
-			name, display_name, attribute_type, options, validation_rules, 
+			name, display_name, attribute_type, icon, options, validation_rules, 
 			is_searchable, is_filterable, is_required, sort_order, custom_component
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id, created_at
 	`
 
@@ -41,6 +41,7 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 		attribute.Name,
 		attribute.DisplayName,
 		attribute.AttributeType,
+		attribute.Icon,
 		optionsJSON,
 		validRulesJSON,
 		attribute.IsSearchable,
@@ -119,14 +120,15 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 			name = $1, 
 			display_name = $2, 
 			attribute_type = $3, 
-			options = $4, 
-			validation_rules = $5, 
-			is_searchable = $6, 
-			is_filterable = $7, 
-			is_required = $8, 
-			sort_order = $9,
-			custom_component = $10
-		WHERE id = $11
+			icon = $4,
+			options = $5, 
+			validation_rules = $6, 
+			is_searchable = $7, 
+			is_filterable = $8, 
+			is_required = $9, 
+			sort_order = $10,
+			custom_component = $11
+		WHERE id = $12
 	`
 
 	_, err = s.storage.Exec(
@@ -134,6 +136,7 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 		attribute.Name,
 		attribute.DisplayName,
 		attribute.AttributeType,
+		attribute.Icon,
 		optionsJSON,
 		validRulesJSON,
 		attribute.IsSearchable,
@@ -290,7 +293,7 @@ func (s *MarketplaceService) DeleteAttribute(ctx context.Context, id int) error 
 func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*models.CategoryAttribute, error) {
 	query := `
 		SELECT 
-			id, name, display_name, attribute_type, options, validation_rules, 
+			id, name, display_name, attribute_type, icon, options, validation_rules, 
 			is_searchable, is_filterable, is_required, sort_order, created_at, custom_component
 		FROM category_attributes
 		WHERE id = $1
@@ -304,6 +307,7 @@ func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*mod
 		&attribute.Name,
 		&attribute.DisplayName,
 		&attribute.AttributeType,
+		&attribute.Icon,
 		&optionsJSON,
 		&validRulesJSON,
 		&attribute.IsSearchable,

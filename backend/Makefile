@@ -6,7 +6,7 @@ build:
 
 # Swagger документация
 docs:
-	go tool github.com/swaggo/swag/cmd/swag init --parseDependency --parseInternal -g cmd/api/main.go -o docs --exclude ./internal/domain/models/custom_component.go
+	go tool github.com/swaggo/swag/cmd/swag init --parseDependency --parseInternal -g cmd/api/main.go -o docs
 
 docs-fmt:
 	go tool github.com/swaggo/swag/cmd/swag fmt

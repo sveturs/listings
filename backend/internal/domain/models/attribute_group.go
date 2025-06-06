@@ -10,8 +10,8 @@ type AttributeGroup struct {
 	ID           int       `json:"id" db:"id"`
 	Name         string    `json:"name" db:"name"`
 	DisplayName  string    `json:"display_name" db:"display_name"`
-	Description  string    `json:"description" db:"description"`
-	Icon         string    `json:"icon" db:"icon"`
+	Description  *string   `json:"description" db:"description"`
+	Icon         *string   `json:"icon" db:"icon"`
 	SortOrder    int       `json:"sort_order" db:"sort_order"`
 	IsActive     bool      `json:"is_active" db:"is_active"`
 	IsSystem     bool      `json:"is_system" db:"is_system"`
@@ -24,9 +24,9 @@ type AttributeGroupItem struct {
 	ID                 int             `json:"id" db:"id"`
 	GroupID            int             `json:"group_id" db:"group_id"`
 	AttributeID        int             `json:"attribute_id" db:"attribute_id"`
-	Icon               string          `json:"icon" db:"icon"`
+	Icon               *string         `json:"icon" db:"icon"`
 	SortOrder          int             `json:"sort_order" db:"sort_order"`
-	CustomDisplayName  string          `json:"custom_display_name" db:"custom_display_name"`
+	CustomDisplayName  *string         `json:"custom_display_name" db:"custom_display_name"`
 	VisibilityCondition json.RawMessage `json:"visibility_condition" db:"visibility_condition"`
 	CreatedAt          time.Time       `json:"created_at" db:"created_at"`
 	Attribute          *CategoryAttribute `json:"attribute,omitempty"`
@@ -55,30 +55,30 @@ type AttributeGroupWithItems struct {
 
 // CreateAttributeGroupRequest запрос на создание группы атрибутов
 type CreateAttributeGroupRequest struct {
-	Name        string `json:"name" validate:"required"`
-	DisplayName string `json:"display_name" validate:"required"`
-	Description string `json:"description"`
-	Icon        string `json:"icon"`
-	SortOrder   int    `json:"sort_order"`
-	IsActive    bool   `json:"is_active"`
+	Name        string  `json:"name" validate:"required"`
+	DisplayName string  `json:"display_name" validate:"required"`
+	Description *string `json:"description"`
+	Icon        *string `json:"icon"`
+	SortOrder   int     `json:"sort_order"`
+	IsActive    bool    `json:"is_active"`
 }
 
 // UpdateAttributeGroupRequest запрос на обновление группы атрибутов
 type UpdateAttributeGroupRequest struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"display_name"`
-	Description string `json:"description"`
-	Icon        string `json:"icon"`
-	SortOrder   int    `json:"sort_order"`
-	IsActive    bool   `json:"is_active"`
+	Name        string  `json:"name"`
+	DisplayName string  `json:"display_name"`
+	Description *string `json:"description"`
+	Icon        *string `json:"icon"`
+	SortOrder   int     `json:"sort_order"`
+	IsActive    bool    `json:"is_active"`
 }
 
 // AddItemToGroupRequest запрос на добавление атрибута в группу
 type AddItemToGroupRequest struct {
 	AttributeID        int             `json:"attribute_id" validate:"required"`
-	Icon               string          `json:"icon"`
+	Icon               *string         `json:"icon"`
 	SortOrder          int             `json:"sort_order"`
-	CustomDisplayName  string          `json:"custom_display_name"`
+	CustomDisplayName  *string         `json:"custom_display_name"`
 	VisibilityCondition json.RawMessage `json:"visibility_condition"`
 }
 

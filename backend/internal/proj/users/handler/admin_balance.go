@@ -17,8 +17,8 @@ import (
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 200 {object} AdminBalanceResponse "User balance"
-// @Failure 400 {object} models.ErrorResponse "Invalid user ID"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 400 {object} ErrorResponse "Invalid user ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/balance [get]
 func (h *UserHandler) GetUserBalance(c *fiber.Ctx) error {
@@ -45,8 +45,8 @@ func (h *UserHandler) GetUserBalance(c *fiber.Ctx) error {
 // @Param limit query int false "Number of items per page" default(20)
 // @Param offset query int false "Number of items to skip" default(0)
 // @Success 200 {object} AdminBalanceResponse "List of transactions"
-// @Failure 400 {object} models.ErrorResponse "Invalid user ID"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 400 {object} ErrorResponse "Invalid user ID"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/transactions [get]
 func (h *UserHandler) GetUserTransactions(c *fiber.Ctx) error {

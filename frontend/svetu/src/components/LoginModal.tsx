@@ -183,7 +183,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
           if (loginResponse.user) {
             updateUser({
               ...loginResponse.user,
-              provider: loginResponse.user.provider || '', // Ensure provider is always a string
+              provider: loginResponse.user.provider || 'email',
             });
           }
 
@@ -204,7 +204,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
           if (registerResponse.user) {
             updateUser({
               ...registerResponse.user,
-              provider: registerResponse.user.provider || '', // Ensure provider is always a string
+              provider: registerResponse.user.provider || 'email',
             });
           }
 

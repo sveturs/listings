@@ -44,11 +44,45 @@ func (h *AdminCategoriesHandler) RegisterRoutes(app *fiber.App, adminMiddleware 
 
 // CreateCategory создает новую категорию
 func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
+	// Парсим JSON из запроса в map для гибкой обработки типов
+	var requestData map[string]interface{}
+	if err := c.BodyParser(&requestData); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+	}
+
+	// Создаем структуру категории
 	var category models.MarketplaceCategory
 
-	// Парсим JSON из запроса
-	if err := c.BodyParser(&category); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+	// Обрабатываем основные поля
+	if name, ok := requestData["name"].(string); ok {
+		category.Name = name
+	}
+	if slug, ok := requestData["slug"].(string); ok {
+		category.Slug = slug
+	}
+	if icon, ok := requestData["icon"].(string); ok {
+		category.Icon = icon
+	}
+
+	// Обрабатываем parent_id - может прийти как строка или число
+	if parentIDRaw, ok := requestData["parent_id"]; ok && parentIDRaw != nil {
+		switch v := parentIDRaw.(type) {
+		case string:
+			if v != "" && v != "0" {
+				if parentID, err := strconv.Atoi(v); err == nil && parentID > 0 {
+					category.ParentID = &parentID
+				}
+			}
+		case float64:
+			if v > 0 {
+				parentID := int(v)
+				category.ParentID = &parentID
+			}
+		case int:
+			if v > 0 {
+				category.ParentID = &v
+			}
+		}
 	}
 
 	// Проверяем обязательные поля
@@ -65,7 +99,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 	id, err := h.marketplaceService.CreateCategory(c.Context(), &category)
 	if err != nil {
 		log.Printf("Failed to create category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось создать категорию")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось создать категорию: "+err.Error())
 	}
 
 	// Инвалидируем кеш категорий
@@ -119,15 +153,47 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
 	}
 
-	var category models.MarketplaceCategory
-
-	// Парсим JSON из запроса
-	if err := c.BodyParser(&category); err != nil {
+	// Парсим JSON из запроса в map для гибкой обработки типов
+	var requestData map[string]interface{}
+	if err := c.BodyParser(&requestData); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
 	}
 
-	// Устанавливаем ID категории
+	// Создаем структуру категории
+	var category models.MarketplaceCategory
 	category.ID = categoryID
+
+	// Обрабатываем основные поля
+	if name, ok := requestData["name"].(string); ok {
+		category.Name = name
+	}
+	if slug, ok := requestData["slug"].(string); ok {
+		category.Slug = slug
+	}
+	if icon, ok := requestData["icon"].(string); ok {
+		category.Icon = icon
+	}
+
+	// Обрабатываем parent_id - может прийти как строка или число
+	if parentIDRaw, ok := requestData["parent_id"]; ok && parentIDRaw != nil {
+		switch v := parentIDRaw.(type) {
+		case string:
+			if v != "" && v != "0" {
+				if parentID, err := strconv.Atoi(v); err == nil && parentID > 0 {
+					category.ParentID = &parentID
+				}
+			}
+		case float64:
+			if v > 0 {
+				parentID := int(v)
+				category.ParentID = &parentID
+			}
+		case int:
+			if v > 0 {
+				category.ParentID = &v
+			}
+		}
+	}
 
 	// Проверяем обязательные поля
 	if category.Name == "" {
@@ -143,7 +209,7 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 	err = h.marketplaceService.UpdateCategory(c.Context(), &category)
 	if err != nil {
 		log.Printf("Failed to update category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось обновить категорию")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось обновить категорию: "+err.Error())
 	}
 
 	// Инвалидируем кеш категорий

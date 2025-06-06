@@ -6,7 +6,7 @@
 Отклоненный платеж (недостаточно средств)
 4000 0000 0000 9995
 Платеж требует аутентификации
-
+lsof -ti:3001 | xargs kill -9 2>/dev/null; sleep 2; yarn dev -p 3001 > dev.log 2>&1 &
 
 docker compose up --build -d backend
 cd /data/hostel-booking-system && docker compose -f docker-compose.yml up --build frontend -d)

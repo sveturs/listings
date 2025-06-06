@@ -221,15 +221,112 @@
   },
   "admin": {
     "title": "Панель администратора",
-    "manage": "Управление",
     "sections": {
+      "dashboard": "Главная",
+      "catalog": "Каталог",
+      "categories": "Категории",
+      "attributes": "Атрибуты",
+      "attributeGroups": "Группы атрибутов",
+      "content": "Контент",
+      "listings": "Объявления",
       "users": "Пользователи",
       "usersDescription": "Управление учетными записями и правами",
-      "listings": "Объявления",
       "listingsDescription": "Модерация и управление объявлениями",
-      "categories": "Категории",
       "categoriesDescription": "Настройка категорий и атрибутов"
     },
+    "common": {
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "delete": "Удалить",
+      "edit": "Редактировать",
+      "add": "Добавить",
+      "search": "Поиск",
+      "filter": "Фильтр",
+      "actions": "Действия",
+      "status": "Статус",
+      "active": "Активный",
+      "inactive": "Неактивный",
+      "yes": "Да",
+      "no": "Нет",
+      "confirmDelete": "Вы уверены, что хотите удалить этот элемент?",
+      "saveSuccess": "Успешно сохранено",
+      "deleteSuccess": "Успешно удалено",
+      "error": "Произошла ошибка",
+      "loading": "Загрузка...",
+      "noData": "Нет данных",
+      "total": "Всего"
+    },
+    "categories": {
+      "title": "Категории",
+      "description": "Управление категориями товаров и их иерархией",
+      "addCategory": "Добавить категорию",
+      "editCategory": "Редактировать категорию",
+      "categoryName": "Название категории",
+      "slug": "URL-адрес",
+      "parentCategory": "Родительская категория",
+      "noParent": "Нет родителя (корневая категория)",
+      "icon": "Иконка",
+      "isActive": "Активна",
+      "seoTitle": "SEO заголовок",
+      "seoDescription": "SEO описание",
+      "seoKeywords": "SEO ключевые слова",
+      "totalCategories": "Всего категорий",
+      "manageAttributes": "Управление атрибутами"
+    },
+    "attributes": {
+      "title": "Атрибуты",
+      "description": "Управление атрибутами товаров и их типами",
+      "addAttribute": "Добавить атрибут",
+      "editAttribute": "Редактировать атрибут",
+      "attributeName": "Название атрибута",
+      "displayName": "Отображаемое название",
+      "attributeType": "Тип атрибута",
+      "isRequired": "Обязательный",
+      "isSearchable": "Доступен для поиска",
+      "isFilterable": "Доступен для фильтрации",
+      "showInCard": "Показывать в карточке",
+      "showInList": "Показывать в списке",
+      "unit": "Единица измерения",
+      "minValue": "Мин. значение",
+      "maxValue": "Макс. значение",
+      "minLength": "Мин. длина",
+      "maxLength": "Макс. длина",
+      "pattern": "Шаблон",
+      "defaultValue": "Значение по умолчанию",
+      "options": "Опции",
+      "validationRules": "Правила валидации",
+      "allTypes": "Все типы",
+      "systemName": "Системное имя",
+      "type": "Тип",
+      "usedInCategories": "Используется в категориях",
+      "types": {
+        "text": "Текст",
+        "number": "Число",
+        "select": "Выбор",
+        "boolean": "Да/Нет",
+        "date": "Дата",
+        "range": "Диапазон",
+        "location": "Местоположение",
+        "file": "Файл",
+        "gallery": "Галерея"
+      }
+    },
+    "attributeGroups": {
+      "title": "Группы атрибутов",
+      "description": "Организация атрибутов в логические группы",
+      "addGroup": "Добавить группу",
+      "editGroup": "Редактировать группу",
+      "groupName": "Название группы",
+      "displayName": "Отображаемое название",
+      "icon": "Иконка",
+      "sortOrder": "Порядок сортировки",
+      "isActive": "Активна",
+      "isSystem": "Системная группа",
+      "attributes": "Атрибуты в группе",
+      "availableAttributes": "Доступные атрибуты",
+      "selectedAttributes": "Выбранные атрибуты"
+    },
+    "manage": "Управление",
     "users": {
       "error": {
         "fetch_failed": "Ошибка получения списка пользователей",
@@ -269,14 +366,6 @@
         "removed": "Администратор успешно удален"
       }
     }
-  },
-  "validation": {
-    "nameRequired": "Имя обязательно для заполнения",
-    "nameMinLength": "Имя должно содержать минимум 2 символа",
-    "nameMaxLength": "Имя не может превышать 100 символов",
-    "phoneInvalid": "Пожалуйста, введите корректный номер телефона",
-    "cityMaxLength": "Название города не может превышать 100 символов",
-    "countryMaxLength": "Название страны не может превышать 100 символов"
   },
   "contacts": {
     "title": "Контакты",
@@ -425,5 +514,24 @@
     "loadMore": "Загрузить еще",
     "noItems": "Объявления не найдены",
     "errorLoadingData": "Ошибка загрузки данных. Пожалуйста, попробуйте позже."
+  },
+  "notifications": {
+    "getError": "Ошибка при получении уведомлений",
+    "settingsUpdated": "Настройки обновлены",
+    "markedAsRead": "Уведомление отмечено как прочитанное",
+    "updateError": "Ошибка при обновлении статуса уведомления"
+  },
+  "telegram": {
+    "connected": "Telegram успешно подключен",
+    "connectionError": "Ошибка при подключении Telegram"
+  },
+  "validation": {
+    "nameRequired": "Имя обязательно для заполнения",
+    "nameMinLength": "Имя должно содержать минимум 2 символа",
+    "nameMaxLength": "Имя не может превышать 100 символов",
+    "phoneInvalid": "Пожалуйста, введите корректный номер телефона",
+    "cityMaxLength": "Название города не может превышать 100 символов",
+    "countryMaxLength": "Название страны не может превышать 100 символов",
+    "invalidDataFormat": "Неверный формат данных"
   }
 }

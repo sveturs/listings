@@ -253,6 +253,9 @@ definitions:
         type: string
       id:
         type: integer
+      is_admin:
+        description: Флаг администратора
+        type: boolean
       last_seen:
         type: string
       name:
@@ -543,7 +546,7 @@ definitions:
         example: https://example.com/avatar.jpg
         type: string
     type: object
-host: localhost:8080
+host: localhost:3000
 info:
   contact:
     email: support@svetu.rs

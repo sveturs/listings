@@ -81,8 +81,7 @@ export class AuthService {
 
   // Инициализация TokenManager
   static initializeTokenManager(): void {
-    // Настраиваем axios interceptors для автоматического обновления токенов
-    tokenManager.createAxiosInterceptor();
+    // TokenManager инициализируется автоматически при импорте
   }
 
   // Попытка восстановить сессию при загрузке страницы

@@ -17,7 +17,6 @@ let ws: WebSocket | null = null;
 let heartbeatInterval: NodeJS.Timeout | null = null;
 
 export const websocketMiddleware: Middleware =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (store: any) => (next) => (action: any) => {
     if (action.type === 'chat/initWebSocket') {
       const { getCurrentUserId } = action.payload;

@@ -14,7 +14,16 @@ export abstract class ApiClient {
   protected baseURL: string;
 
   constructor(baseURL?: string) {
-    this.baseURL = baseURL || configManager.getConfig().api.url;
+    // В development режиме и в браузере используем пустую строку для proxy
+    if (
+      !baseURL &&
+      typeof window !== 'undefined' &&
+      process.env.NODE_ENV === 'development'
+    ) {
+      this.baseURL = '';
+    } else {
+      this.baseURL = baseURL || configManager.getConfig().api.url;
+    }
   }
 
   /**
@@ -25,7 +34,9 @@ export abstract class ApiClient {
     params?: QueryParams,
     options?: RequestOptions
   ): Promise<ApiResponse<T>> {
-    const url = `${this.baseURL}${endpoint}${buildQueryString(params || {})}`;
+    const url = this.baseURL
+      ? `${this.baseURL}${endpoint}${buildQueryString(params || {})}`
+      : `${endpoint}${buildQueryString(params || {})}`;
 
     return this.request<T>(url, {
       method: 'GET',
@@ -41,7 +52,8 @@ export abstract class ApiClient {
     data?: D,
     options?: RequestOptions
   ): Promise<ApiResponse<T>> {
-    return this.request<T>(`${this.baseURL}${endpoint}`, {
+    const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
+    return this.request<T>(url, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
       ...options,
@@ -56,7 +68,8 @@ export abstract class ApiClient {
     data?: D,
     options?: RequestOptions
   ): Promise<ApiResponse<T>> {
-    return this.request<T>(`${this.baseURL}${endpoint}`, {
+    const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
+    return this.request<T>(url, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
       ...options,
@@ -70,7 +83,8 @@ export abstract class ApiClient {
     endpoint: string,
     options?: RequestOptions
   ): Promise<ApiResponse<T>> {
-    return this.request<T>(`${this.baseURL}${endpoint}`, {
+    const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
+    return this.request<T>(url, {
       method: 'DELETE',
       ...options,
     });
@@ -84,7 +98,8 @@ export abstract class ApiClient {
     formData: FormData,
     options?: RequestOptions
   ): Promise<ApiResponse<T>> {
-    return this.request<T>(`${this.baseURL}${endpoint}`, {
+    const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
+    return this.request<T>(url, {
       method: 'POST',
       body: formData,
       headers: {
@@ -123,7 +138,7 @@ export abstract class ApiClient {
 
       const token = await this.getAuthToken();
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        (headers as any)['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch(url, {
@@ -231,49 +246,82 @@ export abstract class ApiClient {
 
 // Создаем базовый экземпляр API клиента для использования в других модулях
 class DefaultApiClient extends ApiClient {
-  // Добавляем axios-подобные методы для совместимости с tokenManager
+  // Делаем методы публичными для использования в других сервисах
+  public async get<T>(
+    endpoint: string,
+    params?: QueryParams,
+    options?: RequestOptions
+  ): Promise<ApiResponse<T>> {
+    return super.get<T>(endpoint, params, options);
+  }
+
+  public async post<T, D = unknown>(
+    endpoint: string,
+    data?: D,
+    options?: RequestOptions
+  ): Promise<ApiResponse<T>> {
+    return super.post<T, D>(endpoint, data, options);
+  }
+
+  public async put<T, D = unknown>(
+    endpoint: string,
+    data?: D,
+    options?: RequestOptions
+  ): Promise<ApiResponse<T>> {
+    return super.put<T, D>(endpoint, data, options);
+  }
+
+  public async delete<T>(
+    endpoint: string,
+    options?: RequestOptions
+  ): Promise<ApiResponse<T>> {
+    return super.delete<T>(endpoint, options);
+  }
+
+  public async upload<T>(
+    endpoint: string,
+    formData: FormData,
+    options?: RequestOptions
+  ): Promise<ApiResponse<T>> {
+    return super.upload<T>(endpoint, formData, options);
+  }
+
+  // Добавляем axios-подобные методы для совместимости
   interceptors = {
     request: {
-      use: () => {
-        // Пустая реализация для совместимости
-        console.log('[ApiClient] Request interceptor registered (no-op)');
+      use: (
+        onFulfilled: (
+          config: Record<string, unknown>
+        ) => Record<string, unknown>,
+        onRejected?: (error: unknown) => unknown
+      ) => {
+        // Простая реализация для совместимости с tokenManager
+        this.requestInterceptor = onFulfilled;
+        this.requestErrorInterceptor = onRejected;
       },
     },
     response: {
-      use: () => {
-        // Пустая реализация для совместимости
-        console.log('[ApiClient] Response interceptor registered (no-op)');
+      use: (
+        onFulfilled: (
+          response: Record<string, unknown>
+        ) => Record<string, unknown>,
+        onRejected?: (error: unknown) => unknown
+      ) => {
+        // Простая реализация для совместимости с tokenManager
+        this.responseInterceptor = onFulfilled;
+        this.responseErrorInterceptor = onRejected;
       },
     },
   };
 
-  // Дополнительный метод для axios-подобного интерфейса
-  async axiosRequest(config: {
-    url?: string;
-    method?: string;
-    headers?: HeadersInit;
-    data?: unknown;
-  }) {
-    const url = config.url || '';
-    const response = await fetch(url, {
-      method: config.method || 'GET',
-      headers: config.headers,
-      body: config.data ? JSON.stringify(config.data) : undefined,
-      credentials: 'include',
-    });
-
-    return {
-      data: await response.json().catch(() => ({})),
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-      config,
-    };
-  }
-
-  // Добавляем свойство request как объект для совместимости
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  request = this.axiosRequest.bind(this) as any;
+  private requestInterceptor?: (
+    config: Record<string, unknown>
+  ) => Record<string, unknown>;
+  private requestErrorInterceptor?: (error: unknown) => unknown;
+  private responseInterceptor?: (
+    response: Record<string, unknown>
+  ) => Record<string, unknown>;
+  private responseErrorInterceptor?: (error: unknown) => unknown;
 }
 
 export const apiClient = new DefaultApiClient();

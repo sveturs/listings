@@ -51,15 +51,6 @@
         "authentication_failed": "Authentication failed. Please try again."
       }
     },
-    "login": {
-      "enter": "Login",
-      "error": {
-        "invalid_request_body": "Invalid request format",
-        "email_password_required": "Email and password are required",
-        "invalid_credentials": "Invalid email or password",
-        "failed": "Login failed. Please try again."
-      }
-    },
     "register": {
       "error": {
         "invalid_request_body": "Invalid request format",
@@ -122,7 +113,8 @@
       "nameMaxLength": "Name cannot exceed 100 characters",
       "phoneInvalid": "Invalid phone number format",
       "cityMaxLength": "City name cannot exceed 100 characters",
-      "countryMaxLength": "Country name cannot exceed 100 characters"
+      "countryMaxLength": "Country name cannot exceed 100 characters",
+      "invalidDataFormat": "Invalid data format"
     },
     "errors": {
       "loginFailed": "Login failed. Please check your email and password.",
@@ -185,7 +177,11 @@
       }
     },
     "login": {
+      "enter": "Login",
       "error": {
+        "invalid_request_body": "Invalid request format",
+        "email_password_required": "Email and password are required",
+        "failed": "Login failed. Please try again.",
         "invalid_data": "Invalid request data",
         "email_required": "Email is required",
         "password_required": "Password is required",
@@ -223,12 +219,110 @@
     "title": "Admin Panel",
     "manage": "Manage",
     "sections": {
-      "users": "Users",
-      "usersDescription": "Manage user accounts and permissions",
+      "dashboard": "Dashboard",
+      "catalog": "Catalog",
+      "categories": "Categories",
+      "attributes": "Attributes",
+      "attributeGroups": "Attribute Groups",
+      "content": "Content",
       "listings": "Listings",
       "listingsDescription": "Moderate and manage marketplace listings",
-      "categories": "Categories",
+      "users": "Users",
+      "usersDescription": "Manage user accounts and permissions",
       "categoriesDescription": "Configure categories and attributes"
+    },
+    "common": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "add": "Add",
+      "search": "Search",
+      "filter": "Filter",
+      "actions": "Actions",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "yes": "Yes",
+      "no": "No",
+      "confirmDelete": "Are you sure you want to delete this item?",
+      "saveSuccess": "Successfully saved",
+      "deleteSuccess": "Successfully deleted",
+      "error": "An error occurred",
+      "loading": "Loading...",
+      "noData": "No data available",
+      "total": "Total"
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Manage product categories and their hierarchy",
+      "addCategory": "Add Category",
+      "editCategory": "Edit Category",
+      "categoryName": "Category Name",
+      "slug": "URL Slug",
+      "parentCategory": "Parent Category",
+      "noParent": "No parent (root category)",
+      "icon": "Icon",
+      "isActive": "Active",
+      "seoTitle": "SEO Title",
+      "seoDescription": "SEO Description",
+      "seoKeywords": "SEO Keywords",
+      "totalCategories": "Total Categories",
+      "manageAttributes": "Manage Attributes"
+    },
+    "attributes": {
+      "title": "Attributes",
+      "description": "Manage product attributes and their types",
+      "addAttribute": "Add Attribute",
+      "editAttribute": "Edit Attribute",
+      "attributeName": "Attribute Name",
+      "displayName": "Display Name",
+      "attributeType": "Attribute Type",
+      "isRequired": "Required",
+      "isSearchable": "Searchable",
+      "isFilterable": "Filterable",
+      "showInCard": "Show in Card",
+      "showInList": "Show in List",
+      "unit": "Unit",
+      "minValue": "Min Value",
+      "maxValue": "Max Value",
+      "minLength": "Min Length",
+      "maxLength": "Max Length",
+      "pattern": "Pattern",
+      "defaultValue": "Default Value",
+      "options": "Options",
+      "validationRules": "Validation Rules",
+      "allTypes": "All Types",
+      "systemName": "System Name",
+      "type": "Type",
+      "icon": "Icon",
+      "usedInCategories": "Used in Categories",
+      "types": {
+        "text": "Text",
+        "number": "Number",
+        "select": "Select",
+        "boolean": "Boolean",
+        "date": "Date",
+        "range": "Range",
+        "location": "Location",
+        "file": "File",
+        "gallery": "Gallery"
+      }
+    },
+    "attributeGroups": {
+      "title": "Attribute Groups",
+      "description": "Organize attributes into logical groups",
+      "addGroup": "Add Group",
+      "editGroup": "Edit Group",
+      "groupName": "Group Name",
+      "displayName": "Display Name",
+      "icon": "Icon",
+      "sortOrder": "Sort Order",
+      "isActive": "Active",
+      "isSystem": "System Group",
+      "attributes": "Attributes in Group",
+      "availableAttributes": "Available Attributes",
+      "selectedAttributes": "Selected Attributes"
     },
     "users": {
       "error": {
@@ -425,5 +519,15 @@
     "loadMore": "Load more",
     "noItems": "No listings found",
     "errorLoadingData": "Error loading data. Please try again later."
+  },
+  "notifications": {
+    "getError": "Error retrieving notifications",
+    "settingsUpdated": "Settings updated",
+    "markedAsRead": "Notification marked as read",
+    "updateError": "Error updating notification status"
+  },
+  "telegram": {
+    "connected": "Telegram successfully connected",
+    "connectionError": "Error connecting Telegram"
   }
 }

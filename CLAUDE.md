@@ -19,6 +19,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Зависимости**: При добавлении ключевых зависимостей указывай их в разделе "Key Dependencies"
 
+- **Переводы**: Backend возвращает только placeholder'ы (например, "notifications.getError"), а фронт переводит их через файлы `frontend/svetu/src/messages/{en,ru}.json`
+
 - **Переменные окружения**: При добавлении новых переменных:
    1. Обновляй `.env` и `.env.example` (с примерами и комментариями)
    2. Обновляй интерфейсы в `src/config/types.ts` (`EnvVariables` и `Config`)

@@ -25,6 +25,7 @@ type Config struct {
 	OpenSearch            OpenSearchConfig  `yaml:"opensearch"`
 	FileStorage           FileStorageConfig `yaml:"file_storage"`
 	FileUpload            FileUploadConfig  `yaml:"file_upload"`
+	MinIOPublicURL        string
 }
 
 type FileStorageConfig struct {
@@ -119,6 +120,13 @@ func NewConfig() (*Config, error) {
 	// Получаем ключ Google Translate API (необязательный)
 	config.GoogleTranslateAPIKey = os.Getenv("GOOGLE_TRANSLATE_API_KEY")
 
+	// Получаем публичный URL для MinIO (по умолчанию localhost)
+	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
+	if minioPublicURL == "" {
+		minioPublicURL = "http://localhost:9000"
+	}
+	config.MinIOPublicURL = minioPublicURL
+
 	config.OpenSearch = OpenSearchConfig{
 		URL:              os.Getenv("OPENSEARCH_URL"),
 		Username:         os.Getenv("OPENSEARCH_USERNAME"),
@@ -209,6 +217,7 @@ func NewConfig() (*Config, error) {
 		StripeWebhookSecret:   config.StripeWebhookSecret,
 		JWTSecret:             config.JWTSecret,
 		JWTExpirationHours:    config.JWTExpirationHours,
+		MinIOPublicURL:        config.MinIOPublicURL,
 		OpenSearch:            config.OpenSearch,
 		FileStorage:           config.FileStorage,
 		FileUpload:            fileUploadConfig,

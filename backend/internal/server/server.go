@@ -5,15 +5,16 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"github.com/gofiber/websocket/v2"
+	"github.com/pkg/errors"
 
 	_ "backend/docs"
 	"backend/internal/config"
+	"backend/internal/logger"
 	"backend/internal/middleware"
 	balanceHandler "backend/internal/proj/balance/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
@@ -49,61 +50,31 @@ type Server struct {
 func NewServer(cfg *config.Config) (*Server, error) {
 	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
 	if err != nil {
-		log.Printf("Ошибка инициализации файлового хранилища: %v. Функции загрузки файлов могут быть недоступны.", err)
+		return nil, errors.Wrap(err, "Ошибка инициализации файлового хранилища")
 	}
 
-	var osClient *opensearch.OpenSearchClient
-	if cfg.OpenSearch.URL != "" {
-		var err error
-		osClient, err = opensearch.NewOpenSearchClient(opensearch.Config{
-			URL:      cfg.OpenSearch.URL,
-			Username: cfg.OpenSearch.Username,
-			Password: cfg.OpenSearch.Password,
-		})
-		if err != nil {
-			log.Printf("Ошибка подключения к OpenSearch: %v", err)
-		} else {
-			log.Println("Успешное подключение к OpenSearch")
-		}
+	osClient, err := initializeOpenSearch(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "OpenSearch initialization failed")
 	} else {
-		log.Println("OpenSearch URL не указан, поиск будет отключен")
+		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
-
 	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize database: %w", err)
+		return nil, errors.Wrap(err, "failed to initialize database")
 	}
 
-	var translationService marketplaceService.TranslationServiceInterface
-	if cfg.GoogleTranslateAPIKey != "" && cfg.OpenAIAPIKey != "" {
-		translationFactory, err := marketplaceService.NewTranslationServiceFactory(cfg.GoogleTranslateAPIKey, cfg.OpenAIAPIKey, db)
-		if err != nil {
-			log.Printf("Ошибка создания фабрики перевода: %v, будет использован только OpenAI", err)
-			translationService, err = marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create translation service: %w", err)
-			}
-		} else {
-			translationService = translationFactory
-			log.Printf("Создана фабрика сервисов перевода с поддержкой Google Translate и OpenAI")
-		}
-	} else if cfg.OpenAIAPIKey != "" {
-		var err error
-		translationService, err = marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create translation service: %w", err)
-		}
-		log.Printf("Создан сервис перевода на базе OpenAI")
-	} else {
-		return nil, fmt.Errorf("не указан ни один API ключ для перевода")
+	translationService, err := initializeTranslationService(cfg, db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize translation service: %w", err)
 	}
 
 	services := globalService.NewService(db, cfg, translationService)
 
 	usersHandler := userHandler.NewHandler(services)
 	reviewHandler := reviewHandler.NewHandler(services)
+	notificationsHandler := notificationHandler.NewHandler(services.Notification())
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(services)
-	notificationsHandler := notificationHandler.NewHandler(services)
 	balanceHandler := balanceHandler.NewHandler(services)
 	storefrontHandler := storefrontHandler.NewHandler(services)
 	contactsHandler := marketplaceHandler.NewContactsHandler(services)
@@ -113,9 +84,11 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// Детальное логирование ошибки
-			log.Printf("Error type: %T", err)
-			log.Printf("Error details: %+v", err)
-			log.Printf("Error handler called with path: %s", c.Path())
+			logger.Error().
+				Err(err).
+				Str("error_type", fmt.Sprintf("%T", err)).
+				Str("path", c.Path()).
+				Msg("Error in handler")
 
 			// Стандартная обработка ошибки
 			code := fiber.StatusInternalServerError
@@ -150,24 +123,67 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		fileStorage:   fileStorage,
 	}
 
-	notificationsHandler.Notification.ConnectTelegramWebhook()
+	notificationsHandler.ConnectTelegramWebhook()
 	server.setupMiddleware()
 	server.setupRoutes()
 
 	return server, nil
 }
 
+func initializeTranslationService(cfg *config.Config, db *postgres.Database) (marketplaceService.TranslationServiceInterface, error) {
+	if cfg.GoogleTranslateAPIKey != "" && cfg.OpenAIAPIKey != "" {
+		translationFactory, err := marketplaceService.NewTranslationServiceFactory(cfg.GoogleTranslateAPIKey, cfg.OpenAIAPIKey, db)
+		if err == nil {
+			logger.Info().Msg("Создана фабрика сервисов перевода с поддержкой Google Translate и OpenAI")
+			return translationFactory, nil
+		} else {
+			logger.Error().Err(err).Msg("Ошибка создания фабрики перевода, будет использован только OpenAI")
+		}
+	}
+
+	if cfg.OpenAIAPIKey != "" {
+		translationService, err := marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
+		if err != nil {
+			return nil, err
+		}
+		logger.Info().Msg("Создан сервис перевода на базе OpenAI")
+		return translationService, nil
+	}
+
+	return nil, fmt.Errorf("не указан ни один API ключ для перевода")
+}
+
+func initializeOpenSearch(cfg *config.Config) (*opensearch.OpenSearchClient, error) {
+	if cfg.OpenSearch.URL == "" {
+		return nil, errors.New("OpenSearch URL не указан, поиск будет отключен")
+	}
+
+	osClient, err := opensearch.NewOpenSearchClient(opensearch.Config{
+		URL:      cfg.OpenSearch.URL,
+		Username: cfg.OpenSearch.Username,
+		Password: cfg.OpenSearch.Password,
+	})
+
+	if err != nil {
+		return nil, errors.New("Ошибка подключения к OpenSearch")
+	}
+
+	return osClient, nil
+}
+
 func (s *Server) setupMiddleware() {
+	// Общие middleware для observability
 	// Security headers должны быть первыми
 	s.app.Use(s.middleware.SecurityHeaders())
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
+	// TODO: Добавить middleware для метрик
+
 	s.app.Use("/ws", s.middleware.AuthRequiredJWT)
-	os.MkdirAll("./uploads", os.ModePerm) // TODO: Это еще надо? Вроде нет
-	os.MkdirAll("./public", os.ModePerm)  // TODO: Это еще надо? Вроде нет
 }
 
 func (s *Server) setupRoutes() {
+
 	s.app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Svetu API")
 	})
@@ -182,22 +198,6 @@ func (s *Server) setupRoutes() {
 		URL:         "/swagger/doc.json",
 		DeepLinking: false,
 	}))
-
-	s.app.Get("/listings/*", func(c *fiber.Ctx) error {
-		path := c.Params("*")
-		log.Printf("Serving MinIO file: %s", path)
-		minioUrl := fmt.Sprintf("http://localhost:9000/listings/%s", path)
-		log.Printf("Redirecting to public MinIO URL: %s", minioUrl)
-		return c.Redirect(minioUrl, 302)
-	})
-
-	s.app.Static("/uploads", "./uploads")
-	s.app.Static("/public", "./public")
-
-	s.app.Get("/service-worker.js", func(c *fiber.Ctx) error {
-		c.Set("Content-Type", "application/javascript")
-		return c.SendFile("./public/service-worker.js")
-	})
 
 	// WebSocket с проверкой аутентификации и rate limiting
 	s.app.Get("/ws/chat", s.middleware.AuthRequiredJWT, s.middleware.RateLimitByUser(5, time.Minute), func(c *fiber.Ctx) error {
@@ -221,20 +221,17 @@ func (s *Server) setupRoutes() {
 		return fiber.ErrUpgradeRequired
 	})
 
-	// Изменено: публичные методы для реиндексации данных
-	s.app.Post("/reindex-ratings-public", s.middleware.CSRFProtection(), s.marketplace.Indexing.ReindexRatings)
-	s.app.Post("/api/v1/public/reindex", s.middleware.CSRFProtection(), s.marketplace.Indexing.ReindexAll)
+	// Регистрируем роуты через новую систему
+	s.registerProjectRoutes()
 
-	s.app.Post("/api/v1/notifications/telegram/webhook", func(c *fiber.Ctx) error {
-		log.Printf("Received webhook request: %s", string(c.Body()))
-		return s.notifications.Notification.HandleTelegramWebhook(c)
-	})
+	// Убираем старые роуты notifications, они теперь в registerProjectRoutes
+	// s.app.Post("/api/v1/notifications/telegram/webhook", s.notifications.Notification.HandleTelegramWebhook)
+	// s.app.Get("/api/v1/notifications/telegram", s.notifications.Notification.GetTelegramStatus)
 
-	s.app.Post("/api/v1/public/send-email", s.middleware.CSRFProtection(), s.notifications.Notification.SendPublicEmail)
+	// s.app.Post("/api/v1/public/send-email", s.notifications.Notification.SendPublicEmail)
 	s.app.Get("/api/v1/public/storefronts/:id", s.storefront.Storefront.GetPublicStorefront)
 	s.app.Get("/api/v1/public/storefronts/:id/reviews", s.review.Review.GetStorefrontReviews)
 	s.app.Get("/api/v1/public/storefronts/:id/rating", s.review.Review.GetStorefrontRatingSummary)
-	s.app.Get("/v1/notifications/telegram", s.notifications.Notification.GetTelegramStatus)
 
 	balanceRoutes := s.app.Group("/api/v1/balance", s.middleware.AuthRequiredJWT)
 	balanceRoutes.Get("/", s.balance.Balance.GetBalance)
@@ -296,18 +293,6 @@ func (s *Server) setupRoutes() {
 
 	// Применяем rate limiting для authentication endpoints
 	// New JWT endpoints with consistent /api/auth prefix
-	s.app.Post("/api/v1/auth/register", s.middleware.RegistrationRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Register)
-	s.app.Post("/api/v1/auth/login", s.middleware.AuthRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Login)
-	s.app.Post("/api/v1/auth/logout", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.Logout)
-	s.app.Post("/api/v1/auth/refresh", s.middleware.RefreshTokenRateLimit(), s.users.Auth.RefreshToken)
-
-	s.app.Get("/api/v1/auth/session", s.users.Auth.GetSession)
-	s.app.Get("/api/v1/auth/google", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleAuth)
-	s.app.Get("/api/v1/auth/google/callback", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleCallback)
-	s.app.Get("/auth/google", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleAuth)
-	s.app.Get("/auth/google/callback", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleCallback)
-	s.app.Get("/api/v1/auth/logout", s.users.Auth.Logout)
-	s.app.Post("/api/v1/auth/logout", s.middleware.CSRFProtection(), s.users.Auth.Logout) // Поддержка POST для logout
 
 	// API routes с общим rate limiting по пользователю (300 запросов в минуту)
 	// Используем JWT как основной метод аутентификации
@@ -350,15 +335,6 @@ func (s *Server) setupRoutes() {
 
 	citiesApi := s.app.Group("/api/v1/cities")
 	citiesApi.Get("/suggest", s.geocode.GetCitySuggestions)
-
-	users := authedAPIGroup.Group("/users")
-	users.Get("/me", s.users.User.GetProfile)    // TODO: remove
-	users.Put("/me", s.users.User.UpdateProfile) // TODO: remove
-	users.Get("/profile", s.users.User.GetProfile)
-	users.Put("/profile", s.users.User.UpdateProfile)
-	users.Get("/:id/profile", s.users.User.GetProfileByID)
-	// Публичный маршрут для проверки статуса администратора (без авторизации и AdminRequired)
-	s.app.Get("/api/v1/admin-check/:email", s.users.User.IsAdminPublic)
 
 	// Contacts routes
 	contacts := api.Group("/contacts")
@@ -501,19 +477,8 @@ func (s *Server) setupRoutes() {
 	adminRoutes.Delete("/categories/:id/attribute-groups/:groupId", s.marketplace.MarketplaceHandler.DetachGroupFromCategory)
 
 	// Использовать реальный обработчик из UserHandler
-	adminRoutes.Get("/users", s.users.User.GetAllUsers)
-	adminRoutes.Get("/users/:id", s.users.User.GetUserByIDAdmin)
-	adminRoutes.Put("/users/:id", s.users.User.UpdateUserAdmin)
-	adminRoutes.Put("/users/:id/status", s.users.User.UpdateUserStatus)
-	adminRoutes.Delete("/users/:id", s.users.User.DeleteUser)
-	adminRoutes.Get("/users/:id/balance", s.users.User.GetUserBalance)
-	adminRoutes.Get("/users/:id/transactions", s.users.User.GetUserTransactions)
 
 	// Управление администраторами
-	adminRoutes.Get("/admins", s.users.User.GetAllAdmins)
-	adminRoutes.Post("/admins", s.users.User.AddAdmin)
-	adminRoutes.Delete("/admins/:email", s.users.User.RemoveAdmin)
-	adminRoutes.Get("/admins/check/:email", s.users.User.IsAdmin)
 
 	// Обновлено: маршруты админских функций используют обработчик индексации
 	adminRoutes.Post("/reindex-listings", s.marketplace.Indexing.ReindexAll)
@@ -536,14 +501,30 @@ func (s *Server) setupRoutes() {
 	chat.Delete("/attachments/:id", s.marketplace.Chat.DeleteAttachment)
 	chat.Get("/unread-count", s.marketplace.Chat.GetUnreadCount)
 
-	notifications := authedAPIGroup.Group("/notifications")
-	notifications.Get("/", s.notifications.Notification.GetNotifications)
-	notifications.Get("/settings", s.notifications.Notification.GetSettings)
-	notifications.Put("/settings", s.notifications.Notification.UpdateSettings)
-	notifications.Get("/telegram", s.notifications.Notification.GetTelegramStatus)
-	notifications.Get("/telegram/token", s.notifications.Notification.GetTelegramToken)
-	notifications.Put("/:id/read", s.notifications.Notification.MarkAsRead)
-	notifications.Post("/telegram/token", s.notifications.Notification.GetTelegramToken)
+}
+
+// registerProjectRoutes регистрирует роуты проектов через новую систему
+func (s *Server) registerProjectRoutes() {
+	// Создаем слайс всех проектов, которые реализуют RouteRegistrar
+	var registrars []RouteRegistrar
+
+	// Добавляем notifications проект
+	registrars = append(registrars, s.notifications, s.users)
+
+	// Регистрируем роуты каждого проекта
+	for _, registrar := range registrars {
+		err := registrar.RegisterRoutes(s.app, s.middleware)
+		if err != nil {
+			logger.Error().
+				Err(err).
+				Str("prefix", registrar.GetPrefix()).
+				Msg("Ошибка регистрации роутов проекта")
+		} else {
+			logger.Info().
+				Str("prefix", registrar.GetPrefix()).
+				Msg("Роуты проекта успешно зарегистрированы")
+		}
+	}
 }
 
 func (s *Server) Start() error {

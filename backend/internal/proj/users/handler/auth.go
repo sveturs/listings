@@ -61,7 +61,7 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 // @Produce json
 // @Param code query string true "Authorization code from Google"
 // @Success 302 {string} string "Redirect to frontend with session"
-// @Failure 500 {object} models.ErrorResponse "Authentication failed"
+// @Failure 500 {object} ErrorResponse "Authentication failed"
 // @Router /auth/google/callback [get]
 func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	code := c.Query("code")
@@ -323,9 +323,9 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 // @Produce json
 // @Param body body LoginRequest true "Login credentials"
 // @Success 200 {object} AuthResponse "Authentication successful"
-// @Failure 400 {object} models.ErrorResponse "Invalid request"
-// @Failure 401 {object} models.ErrorResponse "Invalid credentials"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 401 {object} ErrorResponse "Invalid credentials"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var loginData LoginRequest
@@ -400,9 +400,9 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 // @Produce json
 // @Param body body RegisterRequest true "Registration data"
 // @Success 200 {object} AuthResponse "Registration successful"
-// @Failure 400 {object} models.ErrorResponse "Invalid request"
-// @Failure 409 {object} models.ErrorResponse "User already exists"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 409 {object} ErrorResponse "User already exists"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	var registerData RegisterRequest
@@ -473,7 +473,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Success 200 {object} TokenResponse "New access token"
-// @Failure 401 {object} models.ErrorResponse "Invalid or missing refresh token"
+// @Failure 401 {object} ErrorResponse "Invalid or missing refresh token"
 // @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	// Получаем refresh токен из cookie
