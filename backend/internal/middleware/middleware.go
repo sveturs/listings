@@ -42,59 +42,77 @@ func (m *Middleware) ErrorHandler(c *fiber.Ctx, err error) error {
 	return utils.ErrorResponse(c, code, message)
 }
 func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
-	logger.Info().Str("path", c.Path()).Msg("AdminRequired middleware called for path")
+	logger.Info().Str("path", c.Path()).Msg("AdminRequired middleware called")
 
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
-	logger.Info().Msgf("AdminRequired check for user ID: %d, isOk: %v", userID, ok)
+	logger.Info().
+		Int("user_id", userID).
+		Bool("user_id_ok", ok).
+		Msg("AdminRequired: checking user ID")
 
 	if !ok || userID == 0 {
-		logger.Info().Msgf("AdminRequired: User ID not found or invalid")
+		logger.Info().Msg("AdminRequired: User ID not found or invalid")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
 	}
 
 	// Сначала проверяем ID пользователя (для обратной совместимости)
 	if userID == 1 || userID == 2 || userID == 3 {
-		logger.Info().Msgf("AdminRequired: Access granted for user ID %d", userID)
+		logger.Info().
+			Int("user_id", userID).
+			Msg("AdminRequired: Access granted for hardcoded user ID")
 		return c.Next()
 	}
 
-	logger.Info().Msgf("AdminRequired: User ID %d not in admin list, checking email", userID)
+	logger.Info().
+		Int("user_id", userID).
+		Msg("AdminRequired: User ID not in hardcoded list, checking email")
 
 	// Если ID не подходит, проверяем email пользователя
 	ctx := c.Context()
 
 	if m.services == nil {
-		logger.Info().Msgf("AdminRequired: Error: services is nil")
+		logger.Error().Msg("AdminRequired: services is nil")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Внутренняя ошибка сервера")
 	}
 
 	userService := m.services.User()
 	if userService == nil {
-		logger.Info().Msgf("AdminRequired: Error: User service is nil")
+		logger.Error().Msg("AdminRequired: User service is nil")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Внутренняя ошибка сервера")
 	}
 
 	user, err := userService.GetUserByID(ctx, userID)
 	if err != nil {
-		logger.Info().Msgf("AdminRequired: Error getting user with ID %d: %v", userID, err)
+		logger.Error().
+			Err(err).
+			Int("user_id", userID).
+			Msg("AdminRequired: Error getting user")
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "Отказано в доступе")
 	}
 
 	if user == nil {
-		logger.Info().Msgf("AdminRequired: User with ID %d not found", userID)
+		logger.Info().
+			Int("user_id", userID).
+			Msg("AdminRequired: User not found")
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "Отказано в доступе")
 	}
 
-	logger.Info().Msgf("AdminRequired: Found user with ID %d, email: %s", userID, user.Email)
+	logger.Info().
+		Int("user_id", userID).
+		Str("email", user.Email).
+		Msg("AdminRequired: Found user")
 
 	// Проверка администратора по БД (нужно учитывать, что таблица может еще не существовать)
 	isAdmin, err := userService.IsUserAdmin(ctx, user.Email)
 	if err != nil {
 		// Если таблица еще не создана, проверяем по жесткому списку
-		logger.Info().Msgf("AdminRequired: Error checking admin status in DB: %v, falling back to hardcoded list", err)
+		logger.Error().Err(err).Msg("AdminRequired: Error checking admin status in DB, falling back to hardcoded list")
 	} else if isAdmin {
-		logger.Info().Msgf("AdminRequired: Access granted for admin email %s (from DB)", user.Email)
+		logger.Info().
+			Str("email", user.Email).
+			Str("source", "database").
+			Msg("AdminRequired: Access granted for admin")
 		return c.Next()
 	}
 
@@ -105,16 +123,25 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 		// Здесь можно добавить дополнительные email-адреса администраторов
 	}
 
-	logger.Info().Msgf("AdminRequired: Checking user email %s against hardcoded admin emails: %v", user.Email, adminEmails)
+	logger.Info().
+		Str("email", user.Email).
+		Strs("admin_emails", adminEmails).
+		Msg("AdminRequired: Checking user email against hardcoded list")
 
 	// Проверяем, является ли email пользователя админским
 	for _, adminEmail := range adminEmails {
 		if user.Email == adminEmail {
-			logger.Info().Msgf("AdminRequired: Access granted for admin email %s (from hardcoded list)", user.Email)
+			logger.Info().
+				Str("email", user.Email).
+				Str("source", "hardcoded").
+				Msg("AdminRequired: Access granted for admin")
 			return c.Next()
 		}
 	}
 
-	logger.Info().Msgf("AdminRequired: User ID %d with email %s is not an admin", userID, user.Email)
+	logger.Info().
+		Int("user_id", userID).
+		Str("email", user.Email).
+		Msg("AdminRequired: Access denied - user is not an admin")
 	return utils.ErrorResponse(c, fiber.StatusForbidden, "Отказано в доступе")
 }

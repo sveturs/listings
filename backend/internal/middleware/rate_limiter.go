@@ -2,13 +2,13 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 
+	"backend/internal/logger"
 	"backend/pkg/utils"
 )
 
@@ -218,7 +218,10 @@ func (m *Middleware) RateLimitByUser(limit int, window time.Duration) fiber.Hand
 			// Если нет userID, используем IP
 			key := fmt.Sprintf("ip:%s", c.IP())
 			if !rl.isAllowed(key, limit/2, window) { // Меньший лимит для неавторизованных
-				log.Printf("Rate limit exceeded for IP: %s", c.IP())
+				logger.Info().
+					Str("ip", c.IP()).
+					Str("path", c.Path()).
+					Msg("Rate limit exceeded for IP")
 				return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "Too many requests")
 			}
 			return c.Next()
@@ -227,7 +230,10 @@ func (m *Middleware) RateLimitByUser(limit int, window time.Duration) fiber.Hand
 		// Для авторизованных пользователей
 		key := fmt.Sprintf("user:%d", userID)
 		if !rl.isAllowed(key, limit, window) {
-			log.Printf("Rate limit exceeded for user: %d", userID)
+			logger.Info().
+				Int("user_id", userID).
+				Str("path", c.Path()).
+				Msg("Rate limit exceeded for user")
 			return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "Too many requests")
 		}
 
@@ -243,7 +249,10 @@ func (m *Middleware) RateLimitByIP(limit int, window time.Duration) fiber.Handle
 		key := fmt.Sprintf("ip:%s:%s", c.IP(), c.Path())
 
 		if !rl.isAllowed(key, limit, window) {
-			log.Printf("Rate limit exceeded for IP: %s, path: %s", c.IP(), c.Path())
+			logger.Info().
+				Str("ip", c.IP()).
+				Str("path", c.Path()).
+				Msg("Rate limit exceeded for IP")
 			return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "Too many requests")
 		}
 
@@ -271,14 +280,20 @@ func (m *Middleware) RateLimitMessages() fiber.Handler {
 		case path == "/api/v1/marketplace/chat/messages":
 			// 30 сообщений в минуту
 			if !messageLimiter.isAllowed(key, 30, time.Minute) {
-				log.Printf("Message rate limit exceeded for user: %d", userID)
+				logger.Info().
+					Int("user_id", userID).
+					Str("action", "send_message").
+					Msg("Message rate limit exceeded")
 				return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "Слишком много сообщений. Подождите немного.")
 			}
 
 		case path == "/api/v1/marketplace/chat/messages/:id/attachments":
 			// 10 загрузок файлов в минуту
 			if !fileLimiter.isAllowed(key, 10, time.Minute) {
-				log.Printf("File upload rate limit exceeded for user: %d", userID)
+				logger.Info().
+					Int("user_id", userID).
+					Str("action", "upload_file").
+					Msg("File upload rate limit exceeded")
 				return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "Слишком много загрузок файлов. Подождите немного.")
 			}
 		}
@@ -302,7 +317,10 @@ func (m *Middleware) RefreshTokenRateLimit() fiber.Handler {
 
 		// Обработка превышения лимита
 		LimitReached: func(c *fiber.Ctx) error {
-			log.Printf("Refresh token rate limit exceeded for IP: %s", c.IP())
+			logger.Info().
+				Str("ip", c.IP()).
+				Str("action", "refresh_token").
+				Msg("Refresh token rate limit exceeded")
 			return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "users.auth.error.too_many_refresh_attempts")
 		},
 

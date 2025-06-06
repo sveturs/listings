@@ -16,7 +16,7 @@ import (
 // AuthRequiredJWT - основной метод аутентификации через JWT
 // Поддерживает как Bearer токены в заголовке, так и fallback на session cookies
 func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
-	logger.Info().Msgf("AuthRequiredJWT middleware called for path: %s", c.Path())
+	logger.Info().Str("path", c.Path()).Msg("AuthRequiredJWT middleware called")
 
 	// Приоритет 1: Проверяем JWT токен в заголовке Authorization
 	authHeader := c.Get("Authorization")
@@ -29,14 +29,19 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			// Валидируем JWT токен
 			claims, err := jwt.ValidateToken(tokenString, m.config.JWTSecret)
 			if err != nil {
-				logger.Info().Msgf("AuthRequiredJWT: JWT validation failed: %v", err)
+				logger.Error().
+					Err(err).
+					Str("auth_type", "bearer").
+					Msg("JWT validation failed")
 				return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.invalid_token")
 			}
 
 			// Проверяем что пользователь существует
 			user, err := m.services.User().GetUserByID(c.Context(), claims.UserID)
 			if err != nil || user == nil {
-				logger.Info().Msgf("AuthRequiredJWT: User not found for ID %d", claims.UserID)
+				logger.Info().
+					Int("user_id", claims.UserID).
+					Msg("User not found for JWT")
 				return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.user_not_found")
 			}
 
@@ -62,7 +67,10 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 
 		claims, err := jwt.ValidateToken(tokenFromQuery, m.config.JWTSecret)
 		if err != nil {
-			logger.Info().Msgf("AuthRequiredJWT: JWT query validation failed: %v", err)
+			logger.Error().
+				Err(err).
+				Str("auth_type", "query").
+				Msg("JWT validation failed")
 		} else {
 			// JWT из query валиден
 			c.Locals("user_id", claims.UserID)
@@ -85,7 +93,10 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 
 		claims, err := jwt.ValidateToken(jwtCookie, m.config.JWTSecret)
 		if err != nil {
-			logger.Info().Msgf("AuthRequiredJWT: JWT cookie validation failed: %v", err)
+			logger.Error().
+				Err(err).
+				Str("auth_type", "cookie").
+				Msg("JWT validation failed")
 			// Очищаем невалидную cookie
 			c.Cookie(&fiber.Cookie{
 				Name:     "jwt_token",
@@ -115,11 +126,14 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	// Приоритет 4: Fallback на session cookie для обратной совместимости
 	sessionToken := c.Cookies("session_token")
 	if sessionToken != "" {
-		logger.Info().Msgf("AuthRequiredJWT: Falling back to session authentication")
+		logger.Info().Msg("Falling back to session authentication")
 
 		session, err := m.services.Auth().GetSession(c.Context(), sessionToken)
 		if err != nil {
-			logger.Info().Msgf("AuthRequiredJWT: Session validation failed: %v", err)
+			logger.Error().
+				Err(err).
+				Str("auth_type", "session").
+				Msg("Session validation failed")
 			return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.invalid_session")
 		}
 
@@ -135,7 +149,9 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			time.Duration(m.config.JWTExpirationHours)*time.Hour,
 		)
 		if err != nil {
-			logger.Info().Msgf("AuthRequiredJWT: Failed to generate JWT from session: %v", err)
+			logger.Error().
+				Err(err).
+				Msg("Failed to generate JWT from session")
 		} else {
 			// Устанавливаем JWT cookie для будущих запросов
 			c.Cookie(&fiber.Cookie{
@@ -168,8 +184,11 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 
 	// Если ни один метод аутентификации не сработал
 	if c.Get("Upgrade") == "websocket" {
-		logger.Info().Msgf("SECURITY: Unauthorized WebSocket connection attempt from IP: %s, User-Agent: %s",
-			c.IP(), c.Get("User-Agent"))
+		logger.Info().
+			Str("ip", c.IP()).
+			Str("user_agent", c.Get("User-Agent")).
+			Str("connection_type", "websocket").
+			Msg("SECURITY: Unauthorized connection attempt")
 	}
 
 	return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.authentication_required")

@@ -23,9 +23,9 @@ func (m *Middleware) Logger() fiber.Handler {
 		queryParams := c.Request().URI().QueryString()
 		if len(queryParams) > 0 {
 			maskedQuery := masker.Mask(string(queryParams))
-			logger.Info().Str("method", method).Str("path", path).Str("maskedQuery", maskedQuery).Msg("REQUEST")
+			logger.Info().Str("method", method).Str("path", path).Str("query", maskedQuery).Msg("REQUEST")
 		} else {
-			logger.Info().Str("method", method).Str("path", path).Msgf("REQUEST")
+			logger.Info().Str("method", method).Str("path", path).Msg("REQUEST")
 		}
 
 		// Логируем тело запроса только для POST/PUT/PATCH с маскированием
@@ -36,7 +36,7 @@ func (m *Middleware) Logger() fiber.Handler {
 				var jsonBody interface{}
 				if err := json.Unmarshal(body, &jsonBody); err == nil {
 					maskedBody := masker.Mask(string(body))
-					logger.Info().Str("body", maskedBody).Msgf("REQUEST BODY")
+					logger.Info().Str("body", maskedBody).Msg("REQUEST BODY")
 				}
 			}
 		}
@@ -44,8 +44,12 @@ func (m *Middleware) Logger() fiber.Handler {
 		err := c.Next()
 
 		// Логируем результат
-		logger.Info().Str("method", method).Str("path", path).Int("status", c.Response().StatusCode()).
-			Dur("duration", time.Since(start)).Msgf("RESPONSE")
+		logger.Info().
+			Str("method", method).
+			Str("path", path).
+			Int("status", c.Response().StatusCode()).
+			Dur("duration", time.Since(start)).
+			Msg("RESPONSE")
 
 		return err
 	}
