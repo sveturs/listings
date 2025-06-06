@@ -6,6 +6,7 @@ import (
 	balanceService "backend/internal/proj/balance/service"
 	geocodeService "backend/internal/proj/geocode/service"
 	chatService "backend/internal/proj/marketplace/service"
+	contactsService "backend/internal/proj/marketplace/service"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	translationService "backend/internal/proj/marketplace/service"
 	notificationService "backend/internal/proj/notifications/service"
@@ -24,6 +25,7 @@ type ServicesInterface interface {
 	Marketplace() marketplaceService.MarketplaceServiceInterface
 	Review() reviewService.ReviewServiceInterface
 	Chat() chatService.ChatServiceInterface
+	Contacts() contactsService.ContactsServiceInterface
 	Notification() notificationService.NotificationServiceInterface
 	Translation() translationService.TranslationServiceInterface
 	Balance() balanceService.BalanceServiceInterface
@@ -34,4 +36,7 @@ type ServicesInterface interface {
 	
 	// FileStorage возвращает сервис для работы с файловым хранилищем
 	FileStorage() filestorage.FileStorageInterface
+	
+	// ChatAttachment возвращает сервис для работы с вложениями чата
+	ChatAttachment() marketplaceService.ChatAttachmentServiceInterface
 }

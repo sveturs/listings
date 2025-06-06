@@ -9,7 +9,8 @@
     "nav": {
       "blog": "Blog",
       "news": "News",
-      "contacts": "Contacts"
+      "contacts": "Contacts",
+      "userContacts": "My Contacts"
     }
   },
   "blog": {
@@ -38,13 +39,40 @@
     "readMore": "Read more"
   },
   "auth": {
-    "login": "Login",
     "logout": "Logout",
     "loggingOut": "Logging out...",
     "profile": "Profile",
     "adminPanel": "Admin Panel",
     "common": {
       "close": "Close"
+    },
+    "google_callback": {
+      "error": {
+        "authentication_failed": "Authentication failed. Please try again."
+      }
+    },
+    "login": {
+      "enter": "Login",
+      "error": {
+        "invalid_request_body": "Invalid request format",
+        "email_password_required": "Email and password are required",
+        "invalid_credentials": "Invalid email or password",
+        "failed": "Login failed. Please try again."
+      }
+    },
+    "register": {
+      "error": {
+        "invalid_request_body": "Invalid request format",
+        "fields_required": "All required fields must be filled",
+        "email_exists": "User with this email already exists",
+        "failed": "Registration failed. Please try again."
+      }
+    },
+    "refresh_token": {
+      "error": {
+        "token_not_found": "Session expired. Please log in again.",
+        "invalid_token": "Invalid session. Please log in again."
+      }
     },
     "loginForm": {
       "title": "Sign In",
@@ -142,17 +170,48 @@
   "users": {
     "register": {
       "error": {
+        "invalid_data": "Invalid request data",
         "name_required": "Name is required",
         "email_required": "Email is required",
         "password_required": "Password is required",
         "password_too_short": "Password must be at least 6 characters",
         "email_exists": "Email already exists",
+        "password_hash_failed": "Failed to process password",
+        "create_failed": "Failed to create user",
         "tooManyAttempts": "Too many registration attempts from this IP. Please try again in 1 hour."
+      },
+      "success": {
+        "created": "User registered successfully"
       }
     },
     "login": {
       "error": {
+        "invalid_data": "Invalid request data",
+        "email_required": "Email is required",
+        "password_required": "Password is required",
         "invalid_credentials": "Invalid email or password"
+      },
+      "success": {
+        "authenticated": "Login successful"
+      }
+    },
+    "profile": {
+      "error": {
+        "fetch": "Failed to fetch profile",
+        "invalid_data": "Invalid request data",
+        "validation": "Validation failed",
+        "update": "Failed to update profile",
+        "invalid_id": "Invalid user ID",
+        "not_found": "User not found"
+      },
+      "success": {
+        "updated": "Profile updated successfully"
+      }
+    },
+    "admin_check": {
+      "error": {
+        "email_required": "Email is required",
+        "user_not_found": "User not found"
       }
     },
     "errors": {
@@ -170,6 +229,45 @@
       "listingsDescription": "Moderate and manage marketplace listings",
       "categories": "Categories",
       "categoriesDescription": "Configure categories and attributes"
+    },
+    "users": {
+      "error": {
+        "fetch_failed": "Failed to fetch users list",
+        "invalid_user_id": "Invalid user ID",
+        "user_not_found": "User not found",
+        "invalid_format": "Invalid data format",
+        "validation_failed": "Validation failed",
+        "update_failed": "Failed to update user profile",
+        "invalid_status": "Invalid status. Allowed values: active, blocked, pending",
+        "status_update_failed": "Failed to update user status",
+        "delete_failed": "Failed to delete user"
+      },
+      "success": {
+        "profile_updated": "User profile updated successfully",
+        "status_updated": "User status updated successfully",
+        "deleted": "User deleted successfully"
+      }
+    },
+    "balance": {
+      "error": {
+        "invalid_user_id": "Invalid user ID",
+        "fetch_balance_failed": "Failed to fetch user balance",
+        "fetch_transactions_failed": "Failed to fetch user transactions"
+      }
+    },
+    "admins": {
+      "error": {
+        "unauthorized": "Authorization required",
+        "fetch_failed": "Failed to fetch administrators list",
+        "invalid_format": "Invalid data format",
+        "email_required": "Email is required",
+        "add_failed": "Failed to add administrator",
+        "remove_failed": "Failed to remove administrator",
+        "check_failed": "Failed to check administrator status"
+      },
+      "success": {
+        "removed": "Administrator removed successfully"
+      }
     }
   },
   "validation": {
@@ -212,5 +310,120 @@
       "details": "Error details",
       "reload": "Reload page"
     }
+  },
+  "Chat": {
+    "title": "Messages",
+    "selectChat": "Select a chat to start messaging",
+    "chatsTab": "Chats",
+    "contactsTab": "Contacts",
+    "searchPlaceholder": "Search chats...",
+    "noChats": "No chats yet",
+    "noContacts": "No contacts yet",
+    "noSearchResults": "No results found",
+    "contactStatus": "Contact",
+    "deletedListing": "Deleted listing",
+    "newChat": "New Chat",
+    "directMessage": "Direct Message",
+    "startNewConversation": "Start a new conversation",
+    "sendFirstMessage": "Send a message to start the conversation",
+    "unknownUser": "Unknown user",
+    "viewListing": "View listing",
+    "addToContacts": "Add to contacts",
+    "loadMore": "Load earlier messages",
+    "loadingOldMessages": "Loading messages...",
+    "scrollUpToLoadMore": "Scroll up to load earlier messages",
+    "userTyping": "{name} is typing...",
+    "usersTyping": "{count} users are typing...",
+    "messagePlaceholder": "Type a message...",
+    "keyboardShortcuts": "Enter - send, Shift+Enter - new line",
+    "attachFile": "Attach file",
+    "addEmoji": "Add emoji",
+    "sendMessage": "Send",
+    "searchEmoji": "Search emoji",
+    "noRecentEmojis": "No recent emojis",
+    "noEmojisFound": "No emojis found",
+    "emojiCategory": {
+      "all": "All",
+      "recent": "Recent",
+      "smileys": "Smileys & Emotion",
+      "gestures": "People & Body",
+      "hearts": "Hearts",
+      "animals": "Animals & Nature",
+      "food": "Food & Drink",
+      "objects": "Objects"
+    },
+    "initialMessage": "Hello! I'm interested in your listing.",
+    "contactAdded": "Contact added successfully!",
+    "contactAddError": "Failed to add contact. Please try again.",
+    "contactAlreadyExists": "This contact already exists",
+    "pleaseLoginToAddContacts": "Please log in to add contacts",
+    "failedToAddContact": "Failed to add contact. Please try again.",
+    "cannotAddYourself": "You cannot add yourself as a contact",
+    "userDoesNotAllowContacts": "This user does not allow contact requests",
+    "rateLimitMessage": "Too many messages. Please wait a moment.",
+    "rateLimitFiles": "Too many file uploads. Please wait a moment.",
+    "sendError": "Failed to send message",
+    "uploadError": "Failed to upload files",
+    "messageRead": "Read",
+    "messageDelivered": "Delivered",
+    "newMessages": "New",
+    "contactActive": "Active",
+    "tryDifferentSearch": "Try a different search query",
+    "addContactsMessage": "Add contacts for quick communication",
+    "online": "online",
+    "lastSeen": "last seen {time}",
+    "lastSeenJustNow": "just now",
+    "lastSeenMinutesAgo": "{count, plural, =1 {# minute ago} other {# minutes ago}}",
+    "lastSeenHoursAgo": "{count, plural, =1 {# hour ago} other {# hours ago}}",
+    "lastSeenDaysAgo": "{count, plural, =1 {# day ago} other {# days ago}}",
+    "lastSeenWeeksAgo": "{count, plural, =1 {# week ago} other {# weeks ago}}",
+    "lastSeenMonthsAgo": "{count, plural, =1 {# month ago} other {# months ago}}",
+    "selectedFiles": "Selected files:",
+    "filesSelected": "{{count}} file(s) selected",
+    "deleteAttachment": "Delete this attachment?",
+    "download": "Download",
+    "expand": "Expand",
+    "delete": "Delete"
+  },
+  "userContacts": {
+    "title": "My Contacts",
+    "auth": {
+      "required": "Authentication Required",
+      "loginMessage": "Please log in to view your contacts"
+    },
+    "tabs": {
+      "all": "All",
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "blocked": "Blocked"
+    },
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "blocked": "Blocked"
+    },
+    "actions": {
+      "accept": "Accept",
+      "block": "Block",
+      "unblock": "Unblock",
+      "remove": "Remove",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "empty": {
+      "message": "No contacts found"
+    },
+    "privacy": {
+      "title": "Privacy Settings",
+      "settings": "Privacy Settings",
+      "allowRequests": "Allow contact requests",
+      "contactsOnly": "Accept messages from contacts only"
+    }
+  },
+  "Marketplace": {
+    "title": "Listings",
+    "loadMore": "Load more",
+    "noItems": "No listings found",
+    "errorLoadingData": "Error loading data. Please try again later."
   }
 }

@@ -9,3 +9,9 @@
 .env.development.local
 .env.test.local
 .env.production.local
+
+*.log
+*.txt
+Screenshot.png
+testreports
+backend/debug-scripts/

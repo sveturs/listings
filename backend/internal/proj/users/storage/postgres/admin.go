@@ -135,34 +135,18 @@ func (s *Storage) DeleteUser(ctx context.Context, id int) error {
 	// 1. Сначала проверим все объявления и удалим зависимые данные
 	log.Printf("Deleting data for user's marketplace listings")
 
-	// Получаем список всех объявлений пользователя
-	var listingIDs []int
-	rows, err := tx.Query(ctx, `SELECT id FROM marketplace_listings WHERE user_id = $1`, id)
+	// Удаляем все изображения для объявлений пользователя одним запросом
+	result, err := tx.Exec(ctx, `
+		DELETE FROM marketplace_images 
+		WHERE listing_id IN (
+			SELECT id FROM marketplace_listings WHERE user_id = $1
+		)`, id)
 	if err != nil {
-		log.Printf("Error selecting marketplace_listings: %v", err)
+		log.Printf("Error deleting marketplace_images: %v", err)
 		return err
 	}
-
-	for rows.Next() {
-		var listingID int
-		if err := rows.Scan(&listingID); err != nil {
-			rows.Close()
-			log.Printf("Error scanning listing ID: %v", err)
-			return err
-		}
-		listingIDs = append(listingIDs, listingID)
-	}
-	rows.Close()
-
-	// Удаляем все изображения для каждого объявления
-	for _, listingID := range listingIDs {
-		log.Printf("Deleting images for listing ID %d", listingID)
-		_, err = tx.Exec(ctx, `DELETE FROM marketplace_images WHERE listing_id = $1`, listingID)
-		if err != nil {
-			log.Printf("Error deleting marketplace_images: %v", err)
-			return err
-		}
-	}
+	imagesDeleted := result.RowsAffected()
+	log.Printf("Deleted %d images for user %d listings", imagesDeleted, id)
 
 	// 2. Удаляем избранное (маркетплейс)
 	log.Printf("Deleting marketplace_favorites")
@@ -199,42 +183,31 @@ func (s *Storage) DeleteUser(ctx context.Context, id int) error {
 	// 6. Для витрин и с ними связанных данных
 	log.Printf("Processing user_storefronts")
 
-	// Получаем ID всех витрин пользователя
-	var storefrontIDs []int
-	rows, err = tx.Query(ctx, `SELECT id FROM user_storefronts WHERE user_id = $1`, id)
+	// Удаляем историю импортов для всех витрин пользователя одним запросом
+	log.Printf("Deleting import_history for all user's storefronts")
+	_, err = tx.Exec(ctx, `
+		DELETE FROM import_history 
+		WHERE source_id IN (
+			SELECT is.id 
+			FROM import_sources is
+			JOIN user_storefronts us ON is.storefront_id = us.id
+			WHERE us.user_id = $1
+		)`, id)
 	if err != nil {
-		log.Printf("Error querying user_storefronts: %v", err)
+		log.Printf("Error deleting import_history: %v", err)
 		return err
 	}
 
-	for rows.Next() {
-		var sfID int
-		if err := rows.Scan(&sfID); err != nil {
-			rows.Close()
-			log.Printf("Error scanning storefront ID: %v", err)
-			return err
-		}
-		storefrontIDs = append(storefrontIDs, sfID)
-	}
-	rows.Close()
-
-	// Для каждой витрины удаляем связанные данные
-	for _, sfID := range storefrontIDs {
-		// Удаляем историю импортов
-		log.Printf("Deleting import_history for storefront ID %d", sfID)
-		_, err = tx.Exec(ctx, `DELETE FROM import_history WHERE source_id IN (SELECT id FROM import_sources WHERE storefront_id = $1)`, sfID)
-		if err != nil {
-			log.Printf("Error deleting import_history: %v", err)
-			return err
-		}
-
-		// Удаляем источники импорта
-		log.Printf("Deleting import_sources for storefront ID %d", sfID)
-		_, err = tx.Exec(ctx, `DELETE FROM import_sources WHERE storefront_id = $1`, sfID)
-		if err != nil {
-			log.Printf("Error deleting import_sources: %v", err)
-			return err
-		}
+	// Удаляем источники импорта
+	log.Printf("Deleting import_sources")
+	_, err = tx.Exec(ctx, `
+		DELETE FROM import_sources 
+		WHERE storefront_id IN (
+			SELECT id FROM user_storefronts WHERE user_id = $1
+		)`, id)
+	if err != nil {
+		log.Printf("Error deleting import_sources: %v", err)
+		return err
 	}
 
 	// Удаляем витрины

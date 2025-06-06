@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @plugin 'daisyui';
+@import '../styles/chat-patterns.css';
+@import '../styles/chat-bubble.css';
 
 :root {
   --background: #ffffff;
@@ -24,4 +26,14 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Hide scrollbar but keep scrolling functionality */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

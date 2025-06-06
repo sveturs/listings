@@ -26,7 +26,8 @@ func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*models
 }
 
 func (s *UserService) CreateUser(ctx context.Context, user *models.User) error {
-	return s.storage.CreateUser(ctx, user)
+	_, err := s.storage.CreateUser(ctx, user)
+	return err
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, user *models.User) error {

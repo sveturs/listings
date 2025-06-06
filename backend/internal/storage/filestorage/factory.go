@@ -66,7 +66,13 @@ func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader
 
 	log.Printf("File successfully uploaded to MinIO: filePath=%s", filePath)
 
-	fileURL := fmt.Sprintf("/listings/%s", objectName)
+	// Формируем URL в зависимости от bucket
+	var fileURL string
+	if s.minioBucketName == "chat-files" {
+		fileURL = fmt.Sprintf("/chat-files/%s", objectName)
+	} else {
+		fileURL = fmt.Sprintf("/listings/%s", objectName)
+	}
 
 	log.Printf("URL for file: %s", fileURL)
 	return fileURL, nil
@@ -103,9 +109,17 @@ func (s *MinioStorage) GetURL(ctx context.Context, objectName string) (string, e
 	var fileURL string
 	if s.publicBaseURL != "" {
 		// Формируем URL для доступа через бэкенд
-		fileURL = fmt.Sprintf("%s/listings/%s", s.publicBaseURL, objectName)
+		if s.minioBucketName == "chat-files" {
+			fileURL = fmt.Sprintf("%s/chat-files/%s", s.publicBaseURL, objectName)
+		} else {
+			fileURL = fmt.Sprintf("%s/listings/%s", s.publicBaseURL, objectName)
+		}
 	} else {
-		fileURL = fmt.Sprintf("/listings/%s", objectName)
+		if s.minioBucketName == "chat-files" {
+			fileURL = fmt.Sprintf("/chat-files/%s", objectName)
+		} else {
+			fileURL = fmt.Sprintf("/listings/%s", objectName)
+		}
 	}
 
 	log.Printf("Сформирован URL для файла: %s", fileURL)

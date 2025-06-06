@@ -6,6 +6,7 @@ export interface MarketplaceImage {
 
 export interface MarketplaceItem {
   id: number;
+  user_id: number;
   title: string;
   description?: string;
   price?: number;

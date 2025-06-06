@@ -22,6 +22,10 @@ type MarketplaceMessage struct {
 		OriginalLanguage string                            `json:"original_language"`
 		Translations    map[string]map[string]string      `json:"translations,omitempty"`
 		
+    // Поля для поддержки вложений
+    HasAttachments   bool              `json:"has_attachments"`
+    AttachmentsCount int               `json:"attachments_count"`
+    Attachments      []ChatAttachment  `json:"attachments,omitempty"`
 }
 
 type MarketplaceChat struct {
@@ -45,7 +49,8 @@ type MarketplaceChat struct {
 
 // Структуры для запросов
 type CreateMessageRequest struct {
-	ListingID  int    `json:"listing_id" validate:"required"`
+	ListingID  int    `json:"listing_id"`
+	ChatID     int    `json:"chat_id"`
 	ReceiverID int    `json:"receiver_id" validate:"required"`
 	Content    string `json:"content" validate:"required"`
 }

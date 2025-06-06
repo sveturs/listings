@@ -5,6 +5,8 @@ import { getMessages, getTranslations } from 'next-intl/server';
 import { routing } from '@/i18n/routing';
 import Header from '@/components/Header';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ReduxProvider } from '@/components/ReduxProvider';
+import WebSocketManager from '@/components/WebSocketManager';
 import '../globals.css';
 
 const geistSans = Geist({
@@ -59,10 +61,13 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
-          <AuthProvider>
-            <Header />
-            <main className="min-h-screen">{children}</main>
-          </AuthProvider>
+          <ReduxProvider>
+            <AuthProvider>
+              <WebSocketManager />
+              <Header />
+              <main className="min-h-screen pt-16">{children}</main>
+            </AuthProvider>
+          </ReduxProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -10,7 +10,7 @@
 //	@license.name	MIT
 //	@license.url	https://opensource.org/licenses/MIT
 
-//	@host		localhost:8080
+//	@host		localhost:3000
 //	@BasePath	/api/v1
 
 //	@securityDefinitions.apikey	Bearer
@@ -22,16 +22,16 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"backend/internal/config"
-	"backend/internal/server"
-
 	"github.com/joho/godotenv"
+
+	"backend/internal/config"
+	"backend/internal/logger"
+	"backend/internal/server"
 )
 
 func main() {
@@ -42,27 +42,31 @@ func main() {
 	}
 
 	if err := godotenv.Load(envFile); err != nil {
-		log.Printf("Warning: Could not load .env file: %s", envFile)
+		logger.Info().Str("envFile", envFile).Msgf("Warning: Could not load .env file: %s", envFile)
+	}
+	// Initialize logger
+	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL")); err != nil {
+		logger.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
 
 	// Инициализация конфигурации
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to load config: %v", err)
 	}
-	log.Printf("Config loaded successfully: %v", cfg)
+	logger.Info().Any("config", cfg).Msg("Config loaded successfully")
 
 	// Создание и запуск сервера
 	// Удаляем второй аргумент fileStorage, так как NewServer инициализирует его внутри себя
 	srv, err := server.NewServer(cfg)
 	if err != nil {
-		log.Fatalf("Failed to create server: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create server: %v", err)
 	}
 
 	// Graceful shutdown
 	go func() {
 		if err := srv.Start(); err != nil {
-			log.Printf("Server error: %v", err)
+			logger.Error().Err(err).Msg("Server error")
 		}
 	}()
 
@@ -71,14 +75,14 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server...")
+	logger.Info().Msg("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		logger.Fatal().Err(err).Msgf("Server forced to shutdown")
 	}
 
-	log.Println("Server exited properly")
+	logger.Info().Msg("Server exited properly")
 }

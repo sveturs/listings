@@ -63,6 +63,31 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 		log.Printf("Успешно установлена политика для бакета: %s", config.BucketName)
 	}
 
+	// Также создаем bucket для файлов чата если он не существует
+	chatBucket := "chat-files"
+	chatExists, err := client.BucketExists(context.Background(), chatBucket)
+	if err != nil {
+		log.Printf("Ошибка проверки существования бакета chat-files: %v", err)
+	} else if !chatExists {
+		err = client.MakeBucket(context.Background(), chatBucket, minio.MakeBucketOptions{
+			Region: config.Location,
+		})
+		if err != nil {
+			log.Printf("Ошибка создания бакета chat-files: %v", err)
+		} else {
+			log.Printf("Успешно создан бакет: %s", chatBucket)
+
+			// Устанавливаем политику доступа для публичного чтения
+			chatPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + chatBucket + `/*"]}]}`
+			err = client.SetBucketPolicy(context.Background(), chatBucket, chatPolicy)
+			if err != nil {
+				log.Printf("Ошибка установки политики бакета chat-files: %v", err)
+			} else {
+				log.Printf("Успешно установлена политика для бакета: %s", chatBucket)
+			}
+		}
+	}
+
 	return &MinioClient{
 		client:     client,
 		bucketName: config.BucketName,
@@ -86,8 +111,10 @@ func (m *MinioClient) UploadFile(ctx context.Context, objectName string, reader 
 		return "", fmt.Errorf("error uploading file to MinIO: %w", err)
 	}
 
-	// Return path to file (relative path)
-	return objectName, nil
+	// Return public URL for the file
+	// Format: /<bucket-name>/<object-path>
+	publicURL := fmt.Sprintf("/%s/%s", m.bucketName, objectName)
+	return publicURL, nil
 }
 
 // DeleteFile удаляет файл из MinIO

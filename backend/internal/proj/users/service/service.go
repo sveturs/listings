@@ -10,9 +10,9 @@ type Service struct {
     User UserServiceInterface
 }
 
-func NewService(store storage.Storage, googleClientID, googleClientSecret, googleRedirectURL string) *Service {
+func NewService(store storage.Storage, googleClientID, googleClientSecret, googleRedirectURL, jwtSecret string, jwtExpHours int) *Service {
     return &Service{
-        Auth: NewAuthService(googleClientID, googleClientSecret, googleRedirectURL, store),
+        Auth: NewAuthService(googleClientID, googleClientSecret, googleRedirectURL, store, jwtSecret, jwtExpHours),
         User: NewUserService(store),
     }
 }

@@ -8,8 +8,9 @@ import (
 )
 
 type Service struct {
-    Marketplace MarketplaceServiceInterface
-    Chat       ChatServiceInterface
+    Marketplace    MarketplaceServiceInterface
+    Chat          ChatServiceInterface
+    ChatAttachment ChatAttachmentServiceInterface
 }
 
 func NewService(storage storage.Storage, notifService service.NotificationServiceInterface) *Service {
@@ -19,9 +20,16 @@ func NewService(storage storage.Storage, notifService service.NotificationServic
     dummyTranslation := &dummyTranslationService{}
     
     return &Service{
-        Marketplace: NewMarketplaceService(storage, dummyTranslation),
-        Chat:       NewChatService(storage, notifService),
+        Marketplace:    NewMarketplaceService(storage, dummyTranslation),
+        Chat:          NewChatService(storage, notifService),
+        ChatAttachment: nil, // Will be set by global service
     }
+}
+
+// SetChatAttachmentService sets the chat attachment service
+// This is called by the global service after all dependencies are initialized
+func (s *Service) SetChatAttachmentService(attachmentService ChatAttachmentServiceInterface) {
+    s.ChatAttachment = attachmentService
 }
 
 // dummyTranslationService is a minimal implementation that does nothing

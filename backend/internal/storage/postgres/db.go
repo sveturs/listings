@@ -219,6 +219,47 @@ func (db *Database) GetSession(ctx context.Context, token string) (*types.Sessio
 	return &session, nil
 }
 
+// Refresh Token methods
+func (db *Database) CreateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
+	return db.usersDB.CreateRefreshToken(ctx, token)
+}
+
+func (db *Database) GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error) {
+	return db.usersDB.GetRefreshToken(ctx, token)
+}
+
+func (db *Database) GetRefreshTokenByID(ctx context.Context, id int) (*models.RefreshToken, error) {
+	return db.usersDB.GetRefreshTokenByID(ctx, id)
+}
+
+func (db *Database) GetUserRefreshTokens(ctx context.Context, userID int) ([]*models.RefreshToken, error) {
+	return db.usersDB.GetUserRefreshTokens(ctx, userID)
+}
+
+func (db *Database) UpdateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
+	return db.usersDB.UpdateRefreshToken(ctx, token)
+}
+
+func (db *Database) RevokeRefreshToken(ctx context.Context, tokenID int) error {
+	return db.usersDB.RevokeRefreshToken(ctx, tokenID)
+}
+
+func (db *Database) RevokeRefreshTokenByValue(ctx context.Context, tokenValue string) error {
+	return db.usersDB.RevokeRefreshTokenByValue(ctx, tokenValue)
+}
+
+func (db *Database) RevokeUserRefreshTokens(ctx context.Context, userID int) error {
+	return db.usersDB.RevokeUserRefreshTokens(ctx, userID)
+}
+
+func (db *Database) DeleteExpiredRefreshTokens(ctx context.Context) (int64, error) {
+	return db.usersDB.DeleteExpiredRefreshTokens(ctx)
+}
+
+func (db *Database) CountActiveUserTokens(ctx context.Context, userID int) (int, error) {
+	return db.usersDB.CountActiveUserTokens(ctx, userID)
+}
+
 func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	query := `
         SELECT user_id
@@ -405,7 +446,7 @@ func (db *Database) GetUserByID(ctx context.Context, id int) (*models.User, erro
 	return db.usersDB.GetUserByID(ctx, id)
 }
 
-func (db *Database) CreateUser(ctx context.Context, user *models.User) error {
+func (db *Database) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
 	return db.usersDB.CreateUser(ctx, user)
 }
 
@@ -484,6 +525,7 @@ func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int
 
 	return count, nil
 }
+
 func (db *Database) CreateNotification(ctx context.Context, n *models.Notification) error {
 	return db.notificationsDB.CreateNotification(ctx, n)
 }
@@ -815,4 +857,41 @@ func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {
 
 	log.Printf("Synchronized discount metadata for %d listings", count)
 	return nil
+}
+
+// User Contacts methods - delegating to marketplace storage
+func (db *Database) AddContact(ctx context.Context, contact *models.UserContact) error {
+	return db.marketplaceDB.AddContact(ctx, contact)
+}
+
+func (db *Database) UpdateContactStatus(ctx context.Context, userID, contactUserID int, status, notes string) error {
+	return db.marketplaceDB.UpdateContactStatus(ctx, userID, contactUserID, status, notes)
+}
+
+func (db *Database) GetContact(ctx context.Context, userID, contactUserID int) (*models.UserContact, error) {
+	return db.marketplaceDB.GetContact(ctx, userID, contactUserID)
+}
+
+func (db *Database) GetUserContacts(ctx context.Context, userID int, status string, page, limit int) ([]models.UserContact, int, error) {
+	return db.marketplaceDB.GetUserContacts(ctx, userID, status, page, limit)
+}
+
+func (db *Database) RemoveContact(ctx context.Context, userID, contactUserID int) error {
+	return db.marketplaceDB.RemoveContact(ctx, userID, contactUserID)
+}
+
+func (db *Database) GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
+	return db.marketplaceDB.GetUserPrivacySettings(ctx, userID)
+}
+
+func (db *Database) UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
+	return db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
+}
+
+func (db *Database) CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error) {
+	return db.marketplaceDB.CanAddContact(ctx, userID, targetUserID)
+}
+
+func (db *Database) AreContacts(ctx context.Context, userID1, userID2 int) (bool, error) {
+	return db.marketplaceDB.AreContacts(ctx, userID1, userID2)
 }

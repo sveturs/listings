@@ -22,6 +22,7 @@ type Service struct {
 	marketplace   *marketplaceService.Service
 	review        *reviewService.Service
 	chat          *marketplaceService.Service
+	contacts      *marketplaceService.ContactsService
 	config        *config.Config
 	notification  *notificationService.Service
 	translation   translationService.TranslationServiceInterface
@@ -32,6 +33,7 @@ type Service struct {
 	geocode       geocodeService.GeocodeServiceInterface
 	scheduleImport *storefrontService.ScheduleService
 	fileStorage   filestorage.FileStorageInterface
+	chatAttachment *marketplaceService.ChatAttachmentService
 }
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
@@ -51,6 +53,7 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	scheduleService.Start()
 	// Create services
 	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification)
+	contactsSvc := marketplaceService.NewContactsService(storage)
 	
 	// Here we need to set the real translation service to the marketplace service
 	if ms, ok := marketplaceSvc.Marketplace.(*marketplaceService.MarketplaceService); ok && translationSvc != nil {
@@ -64,11 +67,27 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 		log.Printf("Ошибка инициализации файлового хранилища: %v. Будут использоваться временные файлы.", err)
 	}
 	
+	// Создаем отдельное хранилище для chat-files
+	chatFileStorageConfig := cfg.FileStorage
+	chatFileStorageConfig.MinioBucketName = "chat-files"
+	chatFileStorageSvc, err := filestorage.NewFileStorage(chatFileStorageConfig)
+	if err != nil {
+		log.Printf("Ошибка инициализации хранилища чат-файлов: %v", err)
+		chatFileStorageSvc = fileStorageSvc // Используем основное хранилище как fallback
+	}
+	
+	// Инициализация сервиса вложений чата
+	chatAttachmentSvc := marketplaceService.NewChatAttachmentService(storage, chatFileStorageSvc, cfg.FileUpload)
+	
+	// Установка сервиса вложений в marketplace сервис
+	marketplaceSvc.SetChatAttachmentService(chatAttachmentSvc)
+	
 	return &Service{
-		users:         userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL),
+		users:         userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.JWTSecret, cfg.JWTExpirationHours),
 		marketplace:   marketplaceSvc,
 		review:        reviewService.NewService(storage),
 		chat:          marketplaceSvc, // Reuse the same service for chat
+		contacts:      contactsSvc,
 		config:        cfg,
 		notification:  notificationSvc,
 		translation:   translationSvc,
@@ -79,6 +98,7 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 		geocode:       geocodeSvc,
 		scheduleImport: scheduleService,
 		fileStorage:   fileStorageSvc,
+		chatAttachment: chatAttachmentSvc,
 	}
 }
 
@@ -147,4 +167,12 @@ func (s *Service) Notification() notificationService.NotificationServiceInterfac
 
 func (s *Service) Translation() translationService.TranslationServiceInterface {
 	return s.translation
+}
+
+func (s *Service) Contacts() marketplaceService.ContactsServiceInterface {
+	return s.contacts
+}
+
+func (s *Service) ChatAttachment() marketplaceService.ChatAttachmentServiceInterface {
+	return s.chatAttachment
 }

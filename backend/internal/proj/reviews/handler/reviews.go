@@ -46,6 +46,9 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid input")
 	}
 
+	// Санитизация комментария от XSS
+	request.Comment = utils.SanitizeText(request.Comment)
+	
 	// Определяем язык текста до создания отзыва
 	if request.Comment != "" {
 		detectedLang, _, err := h.services.Translation().DetectLanguage(c.Context(), request.Comment)
@@ -211,6 +214,9 @@ func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
 	if err := c.BodyParser(&request); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
+	
+	// Санитизация ответа от XSS
+	request.Response = utils.SanitizeText(request.Response)
 
 	// Получаем информацию об отзыве
 	review, err := h.services.Review().GetReviewByID(c.Context(), reviewID)
@@ -278,6 +284,9 @@ func (h *ReviewHandler) UpdateReview(c *fiber.Ctx) error {
 	if err := c.BodyParser(&review); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
+	
+	// Санитизация полей от XSS
+	review.Comment = utils.SanitizeText(review.Comment)
 
 	err = h.services.Review().UpdateReview(c.Context(), userId, reviewId, &review)
 	if err != nil {

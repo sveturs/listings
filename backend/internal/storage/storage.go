@@ -15,13 +15,25 @@ type Storage interface {
 	GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	GetUserByID(ctx context.Context, id int) (*models.User, error)
-	CreateUser(ctx context.Context, user *models.User) error
+	CreateUser(ctx context.Context, user *models.User) (*models.User, error)
 	UpdateUser(ctx context.Context, user *models.User) error
 	GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error)
 	UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error
 	UpdateLastSeen(ctx context.Context, id int) error
 	GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error)
 	GetSession(ctx context.Context, token string) (*types.SessionData, error)
+
+	// Refresh Token methods
+	CreateRefreshToken(ctx context.Context, token *models.RefreshToken) error
+	GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error)
+	GetRefreshTokenByID(ctx context.Context, id int) (*models.RefreshToken, error)
+	GetUserRefreshTokens(ctx context.Context, userID int) ([]*models.RefreshToken, error)
+	UpdateRefreshToken(ctx context.Context, token *models.RefreshToken) error
+	RevokeRefreshToken(ctx context.Context, tokenID int) error
+	RevokeRefreshTokenByValue(ctx context.Context, tokenValue string) error
+	RevokeUserRefreshTokens(ctx context.Context, userID int) error
+	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
+	CountActiveUserTokens(ctx context.Context, userID int) (int, error)
 
 	// Административные методы для управления пользователями
 	GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int, error)
@@ -119,6 +131,14 @@ type Storage interface {
 	MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error
 	ArchiveChat(ctx context.Context, chatID int, userID int) error
 	GetUnreadMessagesCount(ctx context.Context, userID int) (int, error)
+	
+	// Chat attachments methods
+	CreateChatAttachment(ctx context.Context, attachment *models.ChatAttachment) error
+	GetChatAttachment(ctx context.Context, attachmentID int) (*models.ChatAttachment, error)
+	GetMessageAttachments(ctx context.Context, messageID int) ([]*models.ChatAttachment, error)
+	DeleteChatAttachment(ctx context.Context, attachmentID int) error
+	UpdateMessageAttachmentsCount(ctx context.Context, messageID int, count int) error
+	GetMessageByID(ctx context.Context, messageID int) (*models.MarketplaceMessage, error)
 
 	Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 
@@ -153,6 +173,16 @@ type Storage interface {
 
 	// Translation methods
 	GetTranslationsForEntity(ctx context.Context, entityType string, entityID int) ([]models.Translation, error)
+
+	// User Contacts methods
+	AddContact(ctx context.Context, contact *models.UserContact) error
+	UpdateContactStatus(ctx context.Context, userID, contactUserID int, status, notes string) error
+	GetContact(ctx context.Context, userID, contactUserID int) (*models.UserContact, error)
+	GetUserContacts(ctx context.Context, userID int, status string, page, limit int) ([]models.UserContact, int, error)
+	RemoveContact(ctx context.Context, userID, contactUserID int) error
+	GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error)
+	UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error
+	CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error)
 
 	// Database connection
 	Close()

@@ -9,8 +9,18 @@ import (
 	"strconv"
 )
 
-// GetAllUsers возвращает список всех пользователей с пагинацией
-// GetAllUsers возвращает список всех пользователей с пагинацией
+// GetAllUsers returns paginated list of all users
+// @Summary Get all users (Admin)
+// @Description Returns paginated list of all users in the system
+// @Tags admin-users
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10) minimum(1) maximum(100)
+// @Success 200 {object} AdminUserListResponse "List of users"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/users [get]
 func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
 	log.Printf("GetAllUsers handler called with path: %s", c.Path())
 
@@ -25,7 +35,7 @@ func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-
+	
 	// Вычисляем смещение
 	offset := (page - 1) * limit
 
@@ -34,104 +44,152 @@ func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("GetAllUsers: error getting users: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка получения списка пользователей",
+			"error": "admin.users.error.fetch_failed",
 		})
 	}
 
 	// Возвращаем данные напрямую
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":  users,
-		"total": total,
-		"page":  page,
-		"limit": limit,
-		"pages": (total + limit - 1) / limit, // Округление вверх
-	})
+	response := AdminUserListResponse{
+		Data:  users,
+		Total: total,
+		Page:  page,
+		Limit: limit,
+		Pages: (total + limit - 1) / limit, // Округление вверх
+	}
+	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-// GetUserByID возвращает информацию о пользователе по ID
+// GetUserByIDAdmin returns user information by ID
+// @Summary Get user by ID (Admin)
+// @Description Returns detailed user information by user ID
+// @Tags admin-users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} models.UserProfile "User profile"
+// @Failure 400 {object} models.ErrorResponse "Invalid user ID"
+// @Failure 404 {object} models.ErrorResponse "User not found"
+// @Security BearerAuth
+// @Router /api/v1/admin/users/{id} [get]
 func (h *UserHandler) GetUserByIDAdmin(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID пользователя")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_user_id")
 	}
 
 	profile, err := h.userService.GetUserProfile(c.Context(), id)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Пользователь не найден")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "admin.users.error.user_not_found")
 	}
 
 	return utils.SuccessResponse(c, profile)
 }
 
-// UpdateUserAdmin обновляет информацию о пользователе (админ)
+// UpdateUserAdmin updates user information
+// @Summary Update user (Admin)
+// @Description Updates user profile information by administrator
+// @Tags admin-users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param body body models.UserProfileUpdate true "User update data"
+// @Success 200 {object} AdminMessageResponse "Update successful"
+// @Failure 400 {object} models.ErrorResponse "Invalid request"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/users/{id} [put]
 func (h *UserHandler) UpdateUserAdmin(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID пользователя")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_user_id")
 	}
 
 	var update models.UserProfileUpdate
 	if err := c.BodyParser(&update); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_format")
 	}
 
 	if err := update.Validate(); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.validation_failed")
 	}
 
 	err = h.userService.UpdateUserProfile(c.Context(), id, &update)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка обновления профиля пользователя")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.users.error.update_failed")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Профиль пользователя успешно обновлен",
-	})
+	response := AdminMessageResponse{
+		Message: "admin.users.success.profile_updated",
+	}
+	return utils.SuccessResponse(c, response)
 }
 
-// UpdateUserStatus обновляет статус пользователя (блокировка/разблокировка)
+// UpdateUserStatus updates user status (block/unblock)
+// @Summary Update user status (Admin)
+// @Description Updates user status (active, blocked, pending)
+// @Tags admin-users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param body body AdminStatusUpdateRequest true "Status update (active, blocked, pending)"
+// @Success 200 {object} AdminMessageResponse "Status updated"
+// @Failure 400 {object} models.ErrorResponse "Invalid status"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/users/{id}/status [put]
 func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID пользователя")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_user_id")
 	}
 
-	var data struct {
-		Status string `json:"status"`
-	}
+	var data AdminStatusUpdateRequest
 
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_format")
 	}
 
 	// Проверяем допустимость статуса
 	if data.Status != "active" && data.Status != "blocked" && data.Status != "pending" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Недопустимый статус. Допустимые значения: active, blocked, pending")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_status")
 	}
 
 	err = h.userService.UpdateUserStatus(c.Context(), id, data.Status)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка обновления статуса пользователя")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.users.error.status_update_failed")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Статус пользователя успешно обновлен",
-	})
+	response := AdminMessageResponse{
+		Message: "admin.users.success.status_updated",
+	}
+	return utils.SuccessResponse(c, response)
 }
 
-// DeleteUser удаляет пользователя
+// DeleteUser deletes a user from the system
+// @Summary Delete user (Admin)
+// @Description Permanently deletes a user from the system
+// @Tags admin-users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} AdminMessageResponse "User deleted"
+// @Failure 400 {object} models.ErrorResponse "Invalid user ID"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID пользователя")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_user_id")
 	}
 
 	err = h.userService.DeleteUser(c.Context(), id)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка удаления пользователя")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.users.error.delete_failed")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Пользователь успешно удален",
-	})
+	response := AdminMessageResponse{
+		Message: "admin.users.success.deleted",
+	}
+	return utils.SuccessResponse(c, response)
 }

@@ -216,12 +216,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         for (let i = 0; i < retries; i++) {
           try {
-            const session = await AuthService.getSession();
-            if (session.authenticated && session.user) {
+            // Сначала пытаемся восстановить сессию через JWT
+            const session = await AuthService.restoreSession();
+            if (session && session.authenticated && session.user) {
               updateUser(session.user);
               setError(null);
             } else {
-              updateUser(null);
+              // Если восстановление не удалось, пытаемся получить сессию обычным способом
+              const fallbackSession = await AuthService.getSession();
+              if (fallbackSession.authenticated && fallbackSession.user) {
+                updateUser(fallbackSession.user);
+                setError(null);
+              } else {
+                updateUser(null);
+              }
             }
             setIsLoading(false);
             return;
@@ -252,6 +260,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
+    // Инициализируем TokenManager
+    AuthService.initializeTokenManager();
+
+    // Проверяем флаг logout
+    const logoutFlag = sessionStorage.getItem('svetu_logout_flag');
+    if (logoutFlag === 'true') {
+      // Пользователь вышел из системы, очищаем флаг и не восстанавливаем сессию
+      sessionStorage.removeItem('svetu_logout_flag');
+      storageUtils.removeItem('svetu_user');
+      setIsLoading(false);
+      return;
+    }
+
     // Проверяем наличие валидного кешированного пользователя при первой загрузке
     const cachedData = storageUtils.getItem('svetu_user');
     let hasValidCache = false;
@@ -270,11 +291,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // Проверяем, есть ли refresh token cookie (возможно после Google OAuth)
+    const hasRefreshToken = document.cookie.includes('refresh_token=');
+
     if (hasValidCache) {
       // Проверяем актуальность в фоне, не блокируя UI (skipLoadingState = true)
       setTimeout(() => refreshSession(3, true), 100);
+    } else if (hasRefreshToken) {
+      // Если есть refresh token, но нет кеша (возможно после Google OAuth)
+      console.log(
+        '[AuthContext] Detected refresh token, attempting to restore session'
+      );
+      refreshSession();
     } else {
-      // Если нет валидного кешированного пользователя, делаем полную проверку с loading state
+      // Если нет ни кеша, ни refresh token, делаем полную проверку с loading state
       refreshSession();
     }
 
@@ -299,6 +329,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await AuthService.logout();
       updateUser(null);
+
+      // Устанавливаем флаг в sessionStorage чтобы предотвратить автоматическое восстановление
+      sessionStorage.setItem('svetu_logout_flag', 'true');
+
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);

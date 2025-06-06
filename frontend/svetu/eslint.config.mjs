@@ -15,6 +15,7 @@ const eslintConfig = [
   {
     rules: {
       'prettier/prettier': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
 ];

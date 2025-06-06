@@ -2,7 +2,7 @@
 
 build:
 	go build -o bin/migrator ./cmd/migrator
-	#go build -o bin/api ./cmd/api
+	go build -o bin/api ./cmd/api
 
 # Swagger документация
 docs:

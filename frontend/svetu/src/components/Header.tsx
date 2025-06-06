@@ -15,11 +15,12 @@ export default function Header() {
     { href: '/blog', label: t('nav.blog') },
     { href: '/news', label: t('nav.news') },
     { href: '/contacts', label: t('nav.contacts') },
+    { href: '/user-contacts', label: t('nav.userContacts') },
   ];
 
   return (
     <>
-      <header className="navbar bg-base-100 shadow-lg">
+      <header className="navbar bg-base-100 shadow-lg fixed top-0 left-0 right-0 z-[100]">
         <div className="navbar-start">
           <Link href="/" className="btn btn-ghost text-xl">
             SveTu
