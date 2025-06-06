@@ -472,7 +472,7 @@ const docTemplate = `{
         },
         "/api/v1/admin-check/{email}": {
             "get": {
-                "description": "Проверяет, является ли пользователь с указанным email администратором (без авторизации)",
+                "description": "Checks if user with specified email is an administrator (no authorization required)",
                 "consumes": [
                     "application/json"
                 ],
@@ -480,13 +480,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admins"
+                    "public"
                 ],
-                "summary": "Публичная проверка статуса администратора",
+                "summary": "Public administrator check",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Email пользователя",
+                        "description": "User email",
                         "name": "email",
                         "in": "path",
                         "required": true
@@ -494,21 +494,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Admin status",
                         "schema": {
-                            "$ref": "#/definitions/fiber.Map"
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminAdminsResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -516,7 +516,12 @@ const docTemplate = `{
         },
         "/api/v1/admin/admins": {
             "get": {
-                "description": "Получает список всех администраторов системы",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns list of all system administrators",
                 "consumes": [
                     "application/json"
                 ],
@@ -524,12 +529,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admins"
+                    "admin-management"
                 ],
-                "summary": "Получить список администраторов",
+                "summary": "Get all administrators",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "List of administrators",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -537,16 +542,27 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
             },
             "post": {
-                "description": "Добавляет нового администратора по email",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds a new administrator by email",
                 "consumes": [
                     "application/json"
                 ],
@@ -554,12 +570,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admins"
+                    "admin-management"
                 ],
-                "summary": "Добавить администратора",
+                "summary": "Add new administrator",
                 "parameters": [
                     {
-                        "description": "Данные администратора",
+                        "description": "Administrator data",
                         "name": "admin",
                         "in": "body",
                         "required": true,
@@ -570,21 +586,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Created administrator",
                         "schema": {
                             "$ref": "#/definitions/backend_internal_domain_models.AdminUser"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -592,7 +614,12 @@ const docTemplate = `{
         },
         "/api/v1/admin/admins/check/{email}": {
             "get": {
-                "description": "Проверяет, является ли пользователь с указанным email администратором",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Checks if user with specified email is an administrator",
                 "consumes": [
                     "application/json"
                 ],
@@ -600,13 +627,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admins"
+                    "admin-management"
                 ],
-                "summary": "Проверить статус администратора",
+                "summary": "Check administrator status",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Email пользователя",
+                        "description": "User email",
                         "name": "email",
                         "in": "path",
                         "required": true
@@ -614,21 +641,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Admin status",
                         "schema": {
-                            "$ref": "#/definitions/fiber.Map"
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminAdminsResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -636,7 +669,12 @@ const docTemplate = `{
         },
         "/api/v1/admin/admins/{email}": {
             "delete": {
-                "description": "Удаляет администратора по email",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes administrator privileges from user by email",
                 "consumes": [
                     "application/json"
                 ],
@@ -644,13 +682,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admins"
+                    "admin-management"
                 ],
-                "summary": "Удалить администратора",
+                "summary": "Remove administrator",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Email администратора",
+                        "description": "Administrator email",
                         "name": "email",
                         "in": "path",
                         "required": true
@@ -658,21 +696,562 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Administrator removed",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns paginated list of all users in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Get all users (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of users",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminUserListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns detailed user information by user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Get user by ID (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User profile",
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.UserProfile"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user ID",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates user profile information by administrator",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Update user (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "User update data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.UserProfileUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Update successful",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently deletes a user from the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Delete user (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User deleted",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user ID",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/{id}/balance": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns balance information for a specific user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Get user balance (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User balance",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminBalanceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user ID",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates user status (active, blocked, pending)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Update user status (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status update (active, blocked, pending)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminStatusUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status updated",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid status",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/{id}/transactions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns paginated transaction history for a specific user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Get user transactions (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of transactions",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.AdminBalanceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user ID",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "description": "Authenticates user and returns JWT access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login with email and password",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Authentication successful",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Logs out the user by revoking all refresh tokens and clearing cookies",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "description": "Refreshes expired access token using valid refresh token from cookie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh access token",
+                "responses": {
+                    "200": {
+                        "description": "New access token",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.TokenResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or missing refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "description": "Creates a new user account and returns JWT access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register new user",
+                "parameters": [
+                    {
+                        "description": "Registration data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Registration successful",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "User already exists",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -685,7 +1264,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Проверяет, является ли пользователь с указанным email администратором (упрощенная проверка по ID)",
+                "description": "Checks if user with specified email is administrator (simplified check by ID)",
                 "consumes": [
                     "application/json"
                 ],
@@ -693,13 +1272,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "users"
                 ],
-                "summary": "Проверка статуса администратора (упрощенная)",
+                "summary": "Check admin status (simple)",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Email пользователя",
+                        "description": "User email",
                         "name": "email",
                         "in": "path",
                         "required": true
@@ -707,40 +1286,35 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Admin status",
                         "schema": {
                             "$ref": "#/definitions/internal_proj_users_handler.AdminCheckResponseWrapper"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Email required",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/api/v1/users/profile": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Возвращает полный профиль авторизованного пользователя",
+        "/api/v1/users/login": {
+            "post": {
+                "description": "Авторизует пользователя по email и паролю, создает сессию и устанавливает session cookie",
                 "consumes": [
                     "application/json"
                 ],
@@ -750,10 +1324,67 @@ const docTemplate = `{
                 "tags": [
                     "Users"
                 ],
-                "summary": "Получить профиль пользователя",
+                "summary": "Авторизация пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для авторизации (email и password обязательны)",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.LoginRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns full profile of the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get current user profile",
+                "responses": {
+                    "200": {
+                        "description": "User profile",
                         "schema": {
                             "$ref": "#/definitions/internal_proj_users_handler.UserProfileResponse"
                         }
@@ -761,13 +1392,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -778,7 +1409,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Обновляет профиль авторизованного пользователя",
+                "description": "Updates profile of the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -786,12 +1417,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "users"
                 ],
-                "summary": "Обновить профиль пользователя",
+                "summary": "Update user profile",
                 "parameters": [
                     {
-                        "description": "Данные для обновления профиля",
+                        "description": "Profile update data",
                         "name": "profile",
                         "in": "body",
                         "required": true,
@@ -802,27 +1433,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Profile updated successfully",
                         "schema": {
                             "$ref": "#/definitions/internal_proj_users_handler.MessageResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -830,11 +1461,6 @@ const docTemplate = `{
         },
         "/api/v1/users/register": {
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "Создает нового пользователя в системе",
                 "consumes": [
                     "application/json"
@@ -848,7 +1474,7 @@ const docTemplate = `{
                 "summary": "Регистрация пользователя",
                 "parameters": [
                     {
-                        "description": "Данные для регистрации",
+                        "description": "Данные для регистрации (name, email, password обязательны, phone опционален)",
                         "name": "user",
                         "in": "body",
                         "required": true,
@@ -867,19 +1493,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -892,7 +1512,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Возвращает публичную информацию о пользователе по ID",
+                "description": "Returns public information about user by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -900,13 +1520,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "users"
                 ],
-                "summary": "Получить публичный профиль пользователя",
+                "summary": "Get public user profile",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID пользователя",
+                        "description": "User ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -914,27 +1534,124 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Public user profile",
                         "schema": {
                             "$ref": "#/definitions/internal_proj_users_handler.PublicUserResponseWrapper"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/google": {
+            "get": {
+                "description": "Redirects user to Google OAuth2 authorization page",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Initiate Google OAuth authentication",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "URL to return after authentication",
+                        "name": "returnTo",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to Google OAuth",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/google/callback": {
+            "get": {
+                "description": "Processes the OAuth2 callback from Google and creates user session",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Handle Google OAuth callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization code from Google",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to frontend with session",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Authentication failed",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/session": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns information about the currently authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get current session",
+                "responses": {
+                    "200": {
+                        "description": "Session information",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.SessionResponse"
                         }
                     }
                 }
@@ -942,6 +1659,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 400
+                },
+                "error": {
+                    "type": "string",
+                    "example": "Invalid request"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Validation failed"
+                }
+            }
+        },
         "backend_internal_domain_models.AdminUser": {
             "type": "object",
             "properties": {
@@ -1267,6 +2001,9 @@ const docTemplate = `{
                 },
                 "picture_url": {
                     "type": "string"
+                },
+                "provider": {
+                    "type": "string"
                 }
             }
         },
@@ -1311,6 +2048,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "picture_url": {
+                    "type": "string"
+                },
+                "provider": {
                     "type": "string"
                 },
                 "settings": {
@@ -1363,19 +2103,24 @@ const docTemplate = `{
                 }
             }
         },
-        "backend_pkg_utils.SuccessResponseSwag": {
+        "internal_proj_users_handler.AdminAdminsResponse": {
             "type": "object",
             "properties": {
-                "data": {},
-                "success": {
+                "email": {
+                    "type": "string",
+                    "example": "admin@example.com"
+                },
+                "is_admin": {
                     "type": "boolean",
                     "example": true
                 }
             }
         },
-        "fiber.Map": {
+        "internal_proj_users_handler.AdminBalanceResponse": {
             "type": "object",
-            "additionalProperties": true
+            "properties": {
+                "data": {}
+            }
         },
         "internal_proj_users_handler.AdminCheckResponse": {
             "type": "object",
@@ -1399,6 +2144,113 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "internal_proj_users_handler.AdminMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "admin.users.success.profile_updated"
+                }
+            }
+        },
+        "internal_proj_users_handler.AdminStatusUpdateRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "blocked",
+                        "pending"
+                    ],
+                    "example": "active"
+                }
+            }
+        },
+        "internal_proj_users_handler.AdminUserListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.UserProfile"
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pages": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "internal_proj_users_handler.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "token_type": {
+                    "type": "string",
+                    "example": "Bearer"
+                },
+                "user": {
+                    "$ref": "#/definitions/internal_proj_users_handler.UserResponse"
+                }
+            }
+        },
+        "internal_proj_users_handler.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
+                }
+            }
+        },
+        "internal_proj_users_handler.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "users.login.success.authenticated"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "user": {
+                    "$ref": "#/definitions/backend_internal_domain_models.User"
                 }
             }
         },
@@ -1456,7 +2308,8 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "name"
+                "name",
+                "password"
             ],
             "properties": {
                 "email": {
@@ -1465,7 +2318,17 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string",
-                    "example": "Иван Иванов"
+                    "minLength": 2,
+                    "example": "John Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
                 }
             }
         },
@@ -1485,6 +2348,76 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_proj_users_handler.SessionResponse": {
+            "type": "object",
+            "properties": {
+                "authenticated": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "user": {
+                    "$ref": "#/definitions/internal_proj_users_handler.SessionUserResponse"
+                }
+            }
+        },
+        "internal_proj_users_handler.SessionUserResponse": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "Moscow"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Russia"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_admin": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                },
+                "picture_url": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "internal_proj_users_handler.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "token_type": {
+                    "type": "string",
+                    "example": "Bearer"
+                }
+            }
+        },
         "internal_proj_users_handler.UserProfileResponse": {
             "type": "object",
             "properties": {
@@ -1494,6 +2427,27 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "internal_proj_users_handler.UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "picture_url": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
                 }
             }
         }

@@ -70,19 +70,18 @@ export default function ChatWindow({
     userLastSeen,
   } = useChat();
 
-  const chatMessages = useMemo(() => 
-    chat ? messages[chat.id] || [] : [], 
-    [chat?.id, messages]
+  const chatMessages = useMemo(
+    () => (chat ? messages[chat.id] || [] : []),
+    [chat, messages]
   );
   const hasMore = chat ? hasMoreMessages[chat.id] || false : false;
-  const typingInThisChat = useMemo(() => 
-    chat
-      ? Array.from(typingUsers[chat.id] || []).filter((id) => id !== user?.id)
-      : [],
-    [chat?.id, typingUsers, user?.id]
+  const typingInThisChat = useMemo(
+    () =>
+      chat ? (typingUsers[chat.id] || []).filter((id) => id !== user?.id) : [],
+    [chat, typingUsers, user?.id]
   );
   const isOtherUserOnline =
-    chat?.other_user && onlineUsers.has(chat.other_user.id);
+    chat?.other_user && onlineUsers.includes(chat.other_user.id);
 
   // Загрузка сообщений при смене чата с отменой предыдущих запросов
   useEffect(() => {
@@ -104,7 +103,7 @@ export default function ChatWindow({
     return () => {
       abortController.abort();
     };
-  }, [chat?.id, loadMessages]); // loadMessages стабильная функция из useCallback
+  }, [chat, chatMessages.length, loadMessages]); // loadMessages стабильная функция из useCallback
 
   // Прокрутка к последнему сообщению только при открытии чата или смене чата
   useEffect(() => {
@@ -149,7 +148,7 @@ export default function ChatWindow({
         observer?.disconnect();
       };
     }
-  }, [chat?.id, chatMessages.length, isInitialLoad, isLoading]);
+  }, [chat, chatMessages.length, isInitialLoad, isLoading]);
 
   // Загрузка информации об объявлении для новых чатов
   useEffect(() => {

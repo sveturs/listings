@@ -9,6 +9,7 @@ import {
 } from '@/types/chat';
 import { chatService } from '@/services/chat';
 import { tokenManager } from '@/utils/tokenManager';
+import { fileUploadManager } from '@/utils/fileUploadManager';
 import type { RootState } from '../index';
 
 interface ChatState {
@@ -22,10 +23,10 @@ interface ChatState {
 
   // WebSocket
   ws: WebSocket | null;
-  typingUsers: Record<number, Set<number>>; // chatId -> Set of userIds
-  onlineUsers: Set<number>;
+  typingUsers: Record<number, number[]>; // chatId -> array of userIds
+  onlineUsers: number[]; // array of online user ids
   userLastSeen: Record<number, string>; // userId -> last seen timestamp
-  getCurrentUserId?: () => number; // Функция для получения текущего userId
+  currentUserId: number | null; // ID текущего пользователя
 
   // Пагинация
   chatsPage: number;
@@ -48,9 +49,9 @@ const initialState: ChatState = {
   error: null,
   ws: null,
   typingUsers: {},
-  onlineUsers: new Set(),
+  onlineUsers: [],
   userLastSeen: {},
-  getCurrentUserId: undefined,
+  currentUserId: null,
   chatsPage: 1,
   messagesPage: {},
   hasMoreChats: true,
@@ -122,12 +123,19 @@ export const uploadFiles = createAsyncThunk(
     files.forEach((file) => {
       const fileId = `${messageId}-${file.name}-${Date.now()}`;
       uploadingFileIds.push(fileId);
+
+      // Сохраняем файл в менеджере
+      fileUploadManager.addFile(fileId, file);
+
+      // Сохраняем только метаданные в Redux
       dispatch(
         chatSlice.actions.addUploadingFile({
           fileId,
           file: {
             id: fileId,
-            file,
+            name: file.name,
+            size: file.size,
+            type: file.type,
             progress: 0,
             status: 'pending',
           },
@@ -152,6 +160,7 @@ export const uploadFiles = createAsyncThunk(
       // Удаляем файлы из загрузки
       uploadingFileIds.forEach((fileId) => {
         dispatch(chatSlice.actions.removeUploadingFile(fileId));
+        fileUploadManager.removeFile(fileId);
       });
 
       return { messageId, attachments: response.attachments };
@@ -175,6 +184,23 @@ export const deleteAttachment = createAsyncThunk(
   async (attachmentId: number) => {
     await chatService.deleteAttachment(attachmentId);
     return attachmentId;
+  }
+);
+
+// Загрузить одно сообщение с вложениями
+export const refreshMessageWithAttachments = createAsyncThunk(
+  'chat/refreshMessageWithAttachments',
+  async ({ chatId, messageId }: { chatId: number; messageId: number }) => {
+    // Загружаем одно сообщение через API чтобы получить вложения
+    const response = await chatService.getMessages({
+      chat_id: chatId,
+      page: 1,
+      limit: 1,
+    });
+
+    // Находим нужное сообщение
+    const message = response.messages.find((m) => m.id === messageId);
+    return { chatId, message };
   }
 );
 
@@ -206,12 +232,18 @@ const chatSlice = createSlice({
     ) => {
       const { chatId, userId, isTyping } = action.payload;
       if (!state.typingUsers[chatId]) {
-        state.typingUsers[chatId] = new Set();
+        state.typingUsers[chatId] = [];
       }
       if (isTyping) {
-        state.typingUsers[chatId].add(userId);
+        // Добавляем пользователя, если его еще нет в списке
+        if (!state.typingUsers[chatId].includes(userId)) {
+          state.typingUsers[chatId].push(userId);
+        }
       } else {
-        state.typingUsers[chatId].delete(userId);
+        // Удаляем пользователя из списка
+        state.typingUsers[chatId] = state.typingUsers[chatId].filter(
+          (id) => id !== userId
+        );
       }
     },
 
@@ -246,10 +278,36 @@ const chatSlice = createSlice({
 
     removeUploadingFile: (state, action: PayloadAction<string>) => {
       delete state.uploadingFiles[action.payload];
+      // Очищаем файл из менеджера
+      fileUploadManager.removeFile(action.payload);
     },
 
-    setGetCurrentUserId: (state, action: PayloadAction<() => number>) => {
-      state.getCurrentUserId = action.payload;
+    setCurrentUserId: (state, action: PayloadAction<number | null>) => {
+      state.currentUserId = action.payload;
+    },
+
+    updateMessageAttachments: (
+      state,
+      action: PayloadAction<{
+        messageId: number;
+        chatId: number;
+        attachments: ChatAttachment[];
+      }>
+    ) => {
+      const { messageId, chatId, attachments } = action.payload;
+
+      // Обновляем сообщение в списке сообщений
+      if (state.messages[chatId]) {
+        const message = state.messages[chatId].find((m) => m.id === messageId);
+        if (message) {
+          message.attachments = attachments;
+          message.has_attachments = attachments.length > 0;
+          message.attachments_count = attachments.length;
+        }
+      }
+
+      // Сохраняем вложения в отдельном хранилище
+      state.attachments[messageId] = attachments;
     },
 
     // WebSocket события
@@ -267,6 +325,16 @@ const chatSlice = createSlice({
       );
       if (!exists) {
         state.messages[message.chat_id].push(message);
+      } else if (message.has_attachments) {
+        // Если сообщение уже существует, но теперь имеет вложения - обновляем его
+        const existingMessage = state.messages[message.chat_id].find(
+          (msg) => msg.id === message.id
+        );
+        if (existingMessage) {
+          existingMessage.has_attachments = message.has_attachments;
+          existingMessage.attachments = message.attachments;
+          existingMessage.attachments_count = message.attachments_count;
+        }
       }
 
       // Обновляем чат
@@ -278,10 +346,7 @@ const chatSlice = createSlice({
         state.chats[chatIndex].last_message_at = message.created_at;
 
         // Увеличиваем счетчик непрочитанных, если сообщение не от текущего пользователя
-        if (
-          state.getCurrentUserId &&
-          message.sender_id !== state.getCurrentUserId()
-        ) {
+        if (state.currentUserId && message.sender_id !== state.currentUserId) {
           state.chats[chatIndex].unread_count =
             (state.chats[chatIndex].unread_count || 0) + 1;
         }
@@ -320,14 +385,20 @@ const chatSlice = createSlice({
     },
 
     handleUserOnline: (state, action: PayloadAction<{ user_id: number }>) => {
-      state.onlineUsers.add(action.payload.user_id);
+      // Добавляем пользователя, если его еще нет в списке
+      if (!state.onlineUsers.includes(action.payload.user_id)) {
+        state.onlineUsers.push(action.payload.user_id);
+      }
     },
 
     handleUserOffline: (
       state,
       action: PayloadAction<{ user_id: number; last_seen?: string }>
     ) => {
-      state.onlineUsers.delete(action.payload.user_id);
+      // Удаляем пользователя из списка
+      state.onlineUsers = state.onlineUsers.filter(
+        (id) => id !== action.payload.user_id
+      );
       if (action.payload.last_seen) {
         state.userLastSeen[action.payload.user_id] = action.payload.last_seen;
       }
@@ -447,15 +518,18 @@ const chatSlice = createSlice({
     // uploadFiles
     builder.addCase(uploadFiles.fulfilled, (state, action) => {
       const { messageId, attachments } = action.payload;
-      state.attachments[messageId] = attachments;
+      // Убедимся, что attachments - это массив
+      const safeAttachments = Array.isArray(attachments) ? attachments : [];
+
+      state.attachments[messageId] = safeAttachments;
 
       // Обновляем сообщение с флагом has_attachments
       Object.values(state.messages).forEach((messages) => {
         const message = messages.find((m) => m.id === messageId);
         if (message) {
-          message.has_attachments = true;
-          message.attachments = attachments;
-          message.attachments_count = attachments.length;
+          message.has_attachments = safeAttachments.length > 0;
+          message.attachments = safeAttachments;
+          message.attachments_count = safeAttachments.length;
         }
       });
     });
@@ -475,6 +549,26 @@ const chatSlice = createSlice({
         });
       });
     });
+
+    // refreshMessageWithAttachments
+    builder.addCase(
+      refreshMessageWithAttachments.fulfilled,
+      (state, action) => {
+        const { chatId, message } = action.payload;
+
+        if (message && state.messages[chatId]) {
+          // Находим и обновляем сообщение
+          const messageIndex = state.messages[chatId].findIndex(
+            (m) => m.id === message.id
+          );
+
+          if (messageIndex !== -1) {
+            // Обновляем сообщение с вложениями
+            state.messages[chatId][messageIndex] = message;
+          }
+        }
+      }
+    );
   },
 });
 
@@ -487,7 +581,8 @@ export const {
   updateUploadProgress,
   setUploadError,
   removeUploadingFile,
-  setGetCurrentUserId,
+  setCurrentUserId,
+  updateMessageAttachments,
   handleNewMessage,
   handleMessageRead,
   handleUserOnline,
@@ -505,8 +600,10 @@ export const selectIsLoading = (state: RootState) => state.chat.isLoading;
 export const selectError = (state: RootState) => state.chat.error;
 export const selectOnlineUsers = (state: RootState) => state.chat.onlineUsers;
 export const selectTypingUsers = (state: RootState, chatId: number) =>
-  state.chat.typingUsers[chatId] || new Set();
+  state.chat.typingUsers[chatId] || [];
 export const selectUploadingFiles = (state: RootState) =>
   state.chat.uploadingFiles;
+export const selectCurrentUserId = (state: RootState) =>
+  state.chat.currentUserId;
 
 export default chatSlice.reducer;

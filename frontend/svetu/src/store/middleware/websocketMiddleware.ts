@@ -7,7 +7,9 @@ import {
   handleUserOnline,
   handleUserOffline,
   setUserTyping,
-  setGetCurrentUserId,
+  setCurrentUserId,
+  updateMessageAttachments,
+  refreshMessageWithAttachments,
 } from '../slices/chatSlice';
 import type { RootState } from '../index';
 
@@ -16,12 +18,13 @@ let heartbeatInterval: NodeJS.Timeout | null = null;
 
 export const websocketMiddleware: Middleware =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (store) => (next) => (action: any) => {
+  (store: any) => (next) => (action: any) => {
     if (action.type === 'chat/initWebSocket') {
       const { getCurrentUserId } = action.payload;
 
-      // Сохраняем функцию getCurrentUserId в store
-      store.dispatch(setGetCurrentUserId(getCurrentUserId));
+      // Сохраняем ID текущего пользователя в store
+      const currentUserId = getCurrentUserId();
+      store.dispatch(setCurrentUserId(currentUserId));
 
       // Закрываем существующее соединение
       if (ws) {
@@ -36,7 +39,22 @@ export const websocketMiddleware: Middleware =
 
           switch (data.type) {
             case 'new_message':
+              // Сообщение уже должно содержать вложения от сервера
               store.dispatch(handleNewMessage(data.payload));
+
+              // Если сообщение помечено как имеющее вложения, но вложения не пришли
+              // это может означать, что файлы еще загружаются
+              if (data.payload.has_attachments && !data.payload.attachments) {
+                // Ждем немного и пытаемся загрузить сообщение с вложениями
+                setTimeout(() => {
+                  store.dispatch(
+                    refreshMessageWithAttachments({
+                      chatId: data.payload.chat_id,
+                      messageId: data.payload.id,
+                    })
+                  );
+                }, 3000); // Ждем 3 секунды, чтобы дать время файлам загрузиться
+              }
               break;
 
             case 'message_read':
@@ -69,8 +87,25 @@ export const websocketMiddleware: Middleware =
               break;
 
             case 'attachment_upload':
+              // Когда другой пользователь загрузил вложение
+              // Это событие должно содержать полную информацию о сообщении с вложениями
+              if (
+                data.payload &&
+                data.payload.message_id &&
+                data.payload.attachments
+              ) {
+                store.dispatch(
+                  updateMessageAttachments({
+                    messageId: data.payload.message_id,
+                    chatId: data.payload.chat_id,
+                    attachments: data.payload.attachments,
+                  })
+                );
+              }
+              break;
+
             case 'attachment_delete':
-              // Обрабатываем события вложений если нужно
+              // Обрабатываем удаление вложений если нужно
               break;
 
             default:

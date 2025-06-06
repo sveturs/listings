@@ -59,9 +59,9 @@ export function FileUploadProgress({
           <FaFile className={`text-lg ${getStatusColor(file.status)}`} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <p className="text-sm truncate pr-2">{file.file.name}</p>
+              <p className="text-sm truncate pr-2">{file.name}</p>
               <p className="text-xs text-base-content/60">
-                {formatFileSize(file.file.size)}
+                {formatFileSize(file.size)}
               </p>
             </div>
             <div className="mt-1">

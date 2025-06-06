@@ -39,13 +39,40 @@
     "readMore": "Подробнее"
   },
   "auth": {
-    "login": "Войти",
     "logout": "Выйти",
     "loggingOut": "Выход...",
     "profile": "Профиль",
     "adminPanel": "Панель администратора",
     "common": {
       "close": "Закрыть"
+    },
+    "google_callback": {
+      "error": {
+        "authentication_failed": "Ошибка аутентификации. Попробуйте еще раз."
+      }
+    },
+    "login": {
+      "enter": "Войти",
+      "error": {
+        "invalid_request_body": "Неверный формат запроса",
+        "email_password_required": "Email и пароль обязательны",
+        "invalid_credentials": "Неверный email или пароль",
+        "failed": "Ошибка входа. Попробуйте еще раз."
+      }
+    },
+    "register": {
+      "error": {
+        "invalid_request_body": "Неверный формат запроса",
+        "fields_required": "Все обязательные поля должны быть заполнены",
+        "email_exists": "Пользователь с таким email уже существует",
+        "failed": "Ошибка регистрации. Попробуйте еще раз."
+      }
+    },
+    "refresh_token": {
+      "error": {
+        "token_not_found": "Сессия истекла. Пожалуйста, войдите снова.",
+        "invalid_token": "Недействительная сессия. Пожалуйста, войдите снова."
+      }
     },
     "loginForm": {
       "title": "Вход в систему",
@@ -143,17 +170,48 @@
   "users": {
     "register": {
       "error": {
+        "invalid_data": "Неверные данные запроса",
         "name_required": "Имя обязательно для заполнения",
         "email_required": "Email обязателен для заполнения",
         "password_required": "Пароль обязателен для заполнения",
         "password_too_short": "Пароль должен содержать минимум 6 символов",
         "email_exists": "Email уже используется",
+        "password_hash_failed": "Ошибка обработки пароля",
+        "create_failed": "Ошибка создания пользователя",
         "tooManyAttempts": "Слишком много попыток регистрации с этого IP. Попробуйте через 1 час."
+      },
+      "success": {
+        "created": "Пользователь успешно зарегистрирован"
       }
     },
     "login": {
       "error": {
+        "invalid_data": "Неверные данные запроса",
+        "email_required": "Email обязателен",
+        "password_required": "Пароль обязателен",
         "invalid_credentials": "Неверный email или пароль"
+      },
+      "success": {
+        "authenticated": "Вход выполнен успешно"
+      }
+    },
+    "profile": {
+      "error": {
+        "fetch": "Ошибка загрузки профиля",
+        "invalid_data": "Неверные данные запроса",
+        "validation": "Ошибка валидации",
+        "update": "Ошибка обновления профиля",
+        "invalid_id": "Неверный ID пользователя",
+        "not_found": "Пользователь не найден"
+      },
+      "success": {
+        "updated": "Профиль успешно обновлен"
+      }
+    },
+    "admin_check": {
+      "error": {
+        "email_required": "Email обязателен",
+        "user_not_found": "Пользователь не найден"
       }
     },
     "errors": {
@@ -171,6 +229,45 @@
       "listingsDescription": "Модерация и управление объявлениями",
       "categories": "Категории",
       "categoriesDescription": "Настройка категорий и атрибутов"
+    },
+    "users": {
+      "error": {
+        "fetch_failed": "Ошибка получения списка пользователей",
+        "invalid_user_id": "Неверный ID пользователя",
+        "user_not_found": "Пользователь не найден",
+        "invalid_format": "Неверный формат данных",
+        "validation_failed": "Ошибка валидации",
+        "update_failed": "Ошибка обновления профиля пользователя",
+        "invalid_status": "Недопустимый статус. Допустимые значения: active, blocked, pending",
+        "status_update_failed": "Ошибка обновления статуса пользователя",
+        "delete_failed": "Ошибка удаления пользователя"
+      },
+      "success": {
+        "profile_updated": "Профиль пользователя успешно обновлен",
+        "status_updated": "Статус пользователя успешно обновлен",
+        "deleted": "Пользователь успешно удален"
+      }
+    },
+    "balance": {
+      "error": {
+        "invalid_user_id": "Неверный ID пользователя",
+        "fetch_balance_failed": "Ошибка получения баланса пользователя",
+        "fetch_transactions_failed": "Ошибка получения транзакций пользователя"
+      }
+    },
+    "admins": {
+      "error": {
+        "unauthorized": "Требуется авторизация",
+        "fetch_failed": "Ошибка при получении списка администраторов",
+        "invalid_format": "Неверный формат данных",
+        "email_required": "Email обязателен",
+        "add_failed": "Ошибка при добавлении администратора",
+        "remove_failed": "Ошибка при удалении администратора",
+        "check_failed": "Ошибка при проверке статуса администратора"
+      },
+      "success": {
+        "removed": "Администратор успешно удален"
+      }
     }
   },
   "validation": {

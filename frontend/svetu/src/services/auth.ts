@@ -193,7 +193,7 @@ export class AuthService {
     const controller = this.getAbortController('session');
 
     try {
-      const response = await fetch(`${API_BASE}/auth/session`, {
+      const response = await fetch(`${API_BASE}/api/v1/auth/session`, {
         method: 'GET',
         credentials: 'include',
         headers: this.getAuthHeaders(), // Добавляем JWT токен в заголовки
@@ -222,7 +222,7 @@ export class AuthService {
       // Сначала очищаем токены локально, чтобы предотвратить автоматическое обновление
       tokenManager.clearTokens();
 
-      await fetch(`${API_BASE}/api/auth/logout`, {
+      await fetch(`${API_BASE}/api/v1/auth/logout`, {
         method: 'POST',
         credentials: 'include',
         headers: this.getAuthHeaders(),
@@ -291,7 +291,7 @@ export class AuthService {
     const csrfToken = await this.getCsrfToken();
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/register`, {
+      const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -346,7 +346,7 @@ export class AuthService {
     const csrfToken = await this.getCsrfToken();
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/login`, {
+      const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

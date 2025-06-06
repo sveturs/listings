@@ -295,23 +295,19 @@ func (s *Server) setupRoutes() {
 	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
 
 	// Применяем rate limiting для authentication endpoints
-	// JWT Authentication endpoints
-	s.app.Post("/api/v1/users/register", s.middleware.RegistrationRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Register)
-	s.app.Post("/api/v1/users/login", s.middleware.AuthRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Login)
-
 	// New JWT endpoints with consistent /api/auth prefix
-	s.app.Post("/api/auth/register", s.middleware.RegistrationRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Register)
-	s.app.Post("/api/auth/login", s.middleware.AuthRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Login)
-	s.app.Post("/api/auth/logout", s.middleware.RateLimitByIP(10, time.Minute), s.middleware.CSRFProtection(), s.users.Auth.Logout)
-	s.app.Post("/api/auth/refresh", s.middleware.RefreshTokenRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.RefreshToken)
+	s.app.Post("/api/v1/auth/register", s.middleware.RegistrationRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Register)
+	s.app.Post("/api/v1/auth/login", s.middleware.AuthRateLimit(), s.middleware.CSRFProtection(), s.users.Auth.Login)
+	s.app.Post("/api/v1/auth/logout", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.Logout)
+	s.app.Post("/api/v1/auth/refresh", s.middleware.RefreshTokenRateLimit(), s.users.Auth.RefreshToken)
 
-	// Auth routes с rate limiting по IP
-	auth := s.app.Group("/auth")
-	auth.Get("/session", s.users.Auth.GetSession)
-	auth.Get("/google", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleAuth)
-	auth.Get("/google/callback", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleCallback)
-	auth.Get("/logout", s.users.Auth.Logout)
-	auth.Post("/logout", s.middleware.CSRFProtection(), s.users.Auth.Logout) // Поддержка POST для logout
+	s.app.Get("/api/v1/auth/session", s.users.Auth.GetSession)
+	s.app.Get("/api/v1/auth/google", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleAuth)
+	s.app.Get("/api/v1/auth/google/callback", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleCallback)
+	s.app.Get("/auth/google", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleAuth)
+	s.app.Get("/auth/google/callback", s.middleware.RateLimitByIP(10, time.Minute), s.users.Auth.GoogleCallback)
+	s.app.Get("/api/v1/auth/logout", s.users.Auth.Logout)
+	s.app.Post("/api/v1/auth/logout", s.middleware.CSRFProtection(), s.users.Auth.Logout) // Поддержка POST для logout
 
 	// API routes с общим rate limiting по пользователю (300 запросов в минуту)
 	// Используем JWT как основной метод аутентификации
@@ -555,5 +551,5 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-	return s.app.Shutdown()
+	return s.app.ShutdownWithContext(ctx)
 }

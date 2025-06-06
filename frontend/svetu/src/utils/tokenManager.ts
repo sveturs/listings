@@ -1,4 +1,3 @@
-import { apiClient } from '@/services/api-client';
 import configManager from '@/config';
 
 interface TokenManagerConfig {
@@ -77,7 +76,7 @@ class TokenManager {
     try {
       console.log('[TokenManager] Attempting to refresh token...');
       const response = await fetch(
-        `${configManager.getApiUrl()}/api/auth/refresh`,
+        `${configManager.getApiUrl()}/api/v1/auth/refresh`,
         {
           method: 'POST',
           credentials: 'include', // Важно для отправки httpOnly cookie
@@ -229,7 +228,9 @@ class TokenManager {
     // Заглушка для совместимости
     // Реальная функциональность добавления токенов реализована
     // непосредственно в ApiClient через getAuthToken()
-    console.log('[TokenManager] Interceptors not implemented in simplified apiClient');
+    console.log(
+      '[TokenManager] Interceptors not implemented in simplified apiClient'
+    );
   }
 }
 

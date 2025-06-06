@@ -168,9 +168,9 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
     <button
       onClick={() => (onLoginClick ? onLoginClick() : login())}
       className="btn btn-primary btn-sm"
-      aria-label={t('login')}
+      aria-label={t('login.enter')}
     >
-      {t('login')}
+      {t('login.enter')}
     </button>
   );
 }

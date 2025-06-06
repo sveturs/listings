@@ -107,7 +107,9 @@ export interface UnreadCountResponse {
 // Типы для загрузки файлов
 export interface UploadingFile {
   id: string;
-  file: File;
+  name: string;
+  size: number;
+  type: string;
   progress: number;
   status: 'pending' | 'uploading' | 'success' | 'error';
   error?: string;

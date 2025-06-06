@@ -26,6 +26,15 @@ func NewAuthHandler(services globalService.ServicesInterface) *AuthHandler {
 	}
 }
 
+// GoogleAuth redirects to Google OAuth2 authorization page
+// @Summary Initiate Google OAuth authentication
+// @Description Redirects user to Google OAuth2 authorization page
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param returnTo query string false "URL to return after authentication"
+// @Success 302 {string} string "Redirect to Google OAuth"
+// @Router /auth/google [get]
 func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 	// Получаем returnTo из query параметров
 	returnTo := c.Query("returnTo")
@@ -44,12 +53,22 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 	return c.Redirect(url)
 }
 
+// GoogleCallback handles Google OAuth2 callback
+// @Summary Handle Google OAuth callback
+// @Description Processes the OAuth2 callback from Google and creates user session
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param code query string true "Authorization code from Google"
+// @Success 302 {string} string "Redirect to frontend with session"
+// @Failure 500 {object} models.ErrorResponse "Authentication failed"
+// @Router /auth/google/callback [get]
 func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	code := c.Query("code")
 
 	sessionData, err := h.services.Auth().HandleGoogleCallback(c.Context(), code)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Authentication failed")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "auth.google_callback.error.authentication_failed")
 	}
 
 	// Генерация токена сессии
@@ -102,7 +121,15 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	return c.Redirect(returnTo)
 }
 
-// backend/internal/proj/users/handler/auth.go
+// GetSession returns current user session information
+// @Summary Get current session
+// @Description Returns information about the currently authenticated user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} SessionResponse "Session information"
+// @Router /auth/session [get]
 func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 	var sessionData *types.SessionData
 	var err error
@@ -158,9 +185,10 @@ func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 
 	// Если ни session cookie, ни JWT не дали результата
 	if sessionData == nil {
-		return c.JSON(fiber.Map{
-			"authenticated": false,
-		})
+		response := SessionResponse{
+			Authenticated: false,
+		}
+		return c.JSON(response)
 	}
 
 	// Проверяем, является ли пользователь администратором
@@ -180,22 +208,32 @@ func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.JSON(fiber.Map{
-		"authenticated": true,
-		"user": fiber.Map{
-			"id":          sessionData.UserID,
-			"name":        sessionData.Name,
-			"email":       sessionData.Email,
-			"provider":    sessionData.Provider,
-			"picture_url": sessionData.PictureURL,
-			"is_admin":    isAdmin, // Добавляем поле is_admin!
-			"city":        city,    // Добавляем поля профиля
-			"country":     country,
-			"phone":       phone,
+	response := SessionResponse{
+		Authenticated: true,
+		User: &SessionUserResponse{
+			ID:         sessionData.UserID,
+			Name:       sessionData.Name,
+			Email:      sessionData.Email,
+			Provider:   sessionData.Provider,
+			PictureURL: sessionData.PictureURL,
+			IsAdmin:    isAdmin,
+			City:       city,
+			Country:    country,
+			Phone:      phone,
 		},
-	})
+	}
+	return c.JSON(response)
 }
 
+// Logout terminates user session and revokes tokens
+// @Summary Logout user
+// @Description Logs out the user by revoking all refresh tokens and clearing cookies
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {string} string "OK"
+// @Router /api/v1/auth/logout [post]
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	// Получаем userID из контекста (может быть из JWT или session)
 	userID := 0
@@ -277,30 +315,38 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// Login обрабатывает вход по email/паролю и возвращает JWT
+// Login authenticates user with email and password
+// @Summary Login with email and password
+// @Description Authenticates user and returns JWT access token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body LoginRequest true "Login credentials"
+// @Success 200 {object} AuthResponse "Authentication successful"
+// @Failure 400 {object} models.ErrorResponse "Invalid request"
+// @Failure 401 {object} models.ErrorResponse "Invalid credentials"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
-	var loginData struct {
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required,min=6"`
-	}
+	var loginData LoginRequest
 
 	if err := c.BodyParser(&loginData); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "auth.login.error.invalid_request_body")
 	}
 
 	// Валидация данных
 	if loginData.Email == "" || loginData.Password == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Email and password are required")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "auth.login.error.email_password_required")
 	}
 
 	// Аутентификация с получением access и refresh токенов
 	accessToken, refreshToken, user, err := h.services.Auth().LoginWithRefreshToken(c.Context(), loginData.Email, loginData.Password, c.IP(), c.Get("User-Agent"))
 	if err != nil {
 		if err == types.ErrInvalidCredentials {
-			return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Invalid email or password")
+			return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.login.error.invalid_credentials")
 		}
 		h.logger.Error("Login failed: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Login failed")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "auth.login.error.failed")
 	}
 
 	// Устанавливаем refresh token в httpOnly cookie
@@ -332,34 +378,42 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		user.ID, user.Email, tokenPrefix, h.services.Config().JWTExpirationHours * 3600)
 
 	// Возвращаем access токен и данные пользователя в формате, ожидаемом фронтендом
-	return c.JSON(fiber.Map{
-		"access_token": accessToken,
-		"token_type":   "Bearer",
-		"expires_in":   h.services.Config().JWTExpirationHours * 3600, // Access token lifetime
-		"user": fiber.Map{
-			"id":          user.ID,
-			"name":        user.Name,
-			"email":       user.Email,
-			"picture_url": user.PictureURL,
+	response := AuthResponse{
+		AccessToken: accessToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   h.services.Config().JWTExpirationHours * 3600,
+		User: UserResponse{
+			ID:         user.ID,
+			Name:       user.Name,
+			Email:      user.Email,
+			PictureURL: user.PictureURL,
 		},
-	})
+	}
+	return c.JSON(response)
 }
 
-// Register обрабатывает регистрацию нового пользователя
+// Register creates a new user account
+// @Summary Register new user
+// @Description Creates a new user account and returns JWT access token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body RegisterRequest true "Registration data"
+// @Success 200 {object} AuthResponse "Registration successful"
+// @Failure 400 {object} models.ErrorResponse "Invalid request"
+// @Failure 409 {object} models.ErrorResponse "User already exists"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
-	var registerData struct {
-		Name     string `json:"name" validate:"required,min=2"`
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required,min=6"`
-	}
+	var registerData RegisterRequest
 
 	if err := c.BodyParser(&registerData); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "auth.register.error.invalid_request_body")
 	}
 
 	// Валидация данных
 	if registerData.Name == "" || registerData.Email == "" || registerData.Password == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Name, email and password are required")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "auth.register.error.fields_required")
 	}
 
 	// Регистрация с получением access и refresh токенов
@@ -373,10 +427,10 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	)
 	if err != nil {
 		if err == types.ErrUserAlreadyExists {
-			return utils.ErrorResponse(c, fiber.StatusConflict, "User with this email already exists")
+			return utils.ErrorResponse(c, fiber.StatusConflict, "auth.register.error.email_exists")
 		}
 		h.logger.Error("Registration failed: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Registration failed")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "auth.register.error.failed")
 	}
 
 	// Устанавливаем refresh token в httpOnly cookie
@@ -399,19 +453,28 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		user.ID, user.Email, tokenPrefix, h.services.Config().JWTExpirationHours * 3600)
 
 	// Возвращаем access токен и данные пользователя в формате, ожидаемом фронтендом
-	return c.JSON(fiber.Map{
-		"access_token": accessToken,
-		"token_type":   "Bearer",
-		"expires_in":   h.services.Config().JWTExpirationHours * 3600,
-		"user": fiber.Map{
-			"id":    user.ID,
-			"name":  user.Name,
-			"email": user.Email,
+	response := AuthResponse{
+		AccessToken: accessToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   h.services.Config().JWTExpirationHours * 3600,
+		User: UserResponse{
+			ID:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
 		},
-	})
+	}
+	return c.JSON(response)
 }
 
-// RefreshToken обновляет access токен используя refresh токен
+// RefreshToken refreshes JWT access token using refresh token
+// @Summary Refresh access token
+// @Description Refreshes expired access token using valid refresh token from cookie
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} TokenResponse "New access token"
+// @Failure 401 {object} models.ErrorResponse "Invalid or missing refresh token"
+// @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	// Получаем refresh токен из cookie
 	refreshToken := c.Cookies("refresh_token")
@@ -420,7 +483,7 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	
 	if refreshToken == "" {
 		h.logger.Error("Refresh token not found in cookie")
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Refresh token not found")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.refresh_token.error.token_not_found")
 	}
 
 	// Обновляем токены
@@ -443,7 +506,7 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		})
 		
 		h.logger.Error("Token refresh failed: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Invalid refresh token")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.refresh_token.error.invalid_token")
 	}
 
 	// Устанавливаем новый refresh токен в cookie
@@ -461,10 +524,10 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	h.logger.Info("Tokens refreshed successfully for refresh_token")
 	
 	// Возвращаем новый access токен в формате, ожидаемом фронтендом
-	response := fiber.Map{
-		"access_token": newAccessToken,
-		"token_type":   "Bearer",
-		"expires_in":   h.services.Config().JWTExpirationHours * 3600,
+	response := TokenResponse{
+		AccessToken: newAccessToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   h.services.Config().JWTExpirationHours * 3600,
 	}
 	
 	h.logger.Info("Refresh endpoint returning: %+v", response)

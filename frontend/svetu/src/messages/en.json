@@ -39,13 +39,40 @@
     "readMore": "Read more"
   },
   "auth": {
-    "login": "Login",
     "logout": "Logout",
     "loggingOut": "Logging out...",
     "profile": "Profile",
     "adminPanel": "Admin Panel",
     "common": {
       "close": "Close"
+    },
+    "google_callback": {
+      "error": {
+        "authentication_failed": "Authentication failed. Please try again."
+      }
+    },
+    "login": {
+      "enter": "Login",
+      "error": {
+        "invalid_request_body": "Invalid request format",
+        "email_password_required": "Email and password are required",
+        "invalid_credentials": "Invalid email or password",
+        "failed": "Login failed. Please try again."
+      }
+    },
+    "register": {
+      "error": {
+        "invalid_request_body": "Invalid request format",
+        "fields_required": "All required fields must be filled",
+        "email_exists": "User with this email already exists",
+        "failed": "Registration failed. Please try again."
+      }
+    },
+    "refresh_token": {
+      "error": {
+        "token_not_found": "Session expired. Please log in again.",
+        "invalid_token": "Invalid session. Please log in again."
+      }
     },
     "loginForm": {
       "title": "Sign In",
@@ -143,17 +170,48 @@
   "users": {
     "register": {
       "error": {
+        "invalid_data": "Invalid request data",
         "name_required": "Name is required",
         "email_required": "Email is required",
         "password_required": "Password is required",
         "password_too_short": "Password must be at least 6 characters",
         "email_exists": "Email already exists",
+        "password_hash_failed": "Failed to process password",
+        "create_failed": "Failed to create user",
         "tooManyAttempts": "Too many registration attempts from this IP. Please try again in 1 hour."
+      },
+      "success": {
+        "created": "User registered successfully"
       }
     },
     "login": {
       "error": {
+        "invalid_data": "Invalid request data",
+        "email_required": "Email is required",
+        "password_required": "Password is required",
         "invalid_credentials": "Invalid email or password"
+      },
+      "success": {
+        "authenticated": "Login successful"
+      }
+    },
+    "profile": {
+      "error": {
+        "fetch": "Failed to fetch profile",
+        "invalid_data": "Invalid request data",
+        "validation": "Validation failed",
+        "update": "Failed to update profile",
+        "invalid_id": "Invalid user ID",
+        "not_found": "User not found"
+      },
+      "success": {
+        "updated": "Profile updated successfully"
+      }
+    },
+    "admin_check": {
+      "error": {
+        "email_required": "Email is required",
+        "user_not_found": "User not found"
       }
     },
     "errors": {
@@ -171,6 +229,45 @@
       "listingsDescription": "Moderate and manage marketplace listings",
       "categories": "Categories",
       "categoriesDescription": "Configure categories and attributes"
+    },
+    "users": {
+      "error": {
+        "fetch_failed": "Failed to fetch users list",
+        "invalid_user_id": "Invalid user ID",
+        "user_not_found": "User not found",
+        "invalid_format": "Invalid data format",
+        "validation_failed": "Validation failed",
+        "update_failed": "Failed to update user profile",
+        "invalid_status": "Invalid status. Allowed values: active, blocked, pending",
+        "status_update_failed": "Failed to update user status",
+        "delete_failed": "Failed to delete user"
+      },
+      "success": {
+        "profile_updated": "User profile updated successfully",
+        "status_updated": "User status updated successfully",
+        "deleted": "User deleted successfully"
+      }
+    },
+    "balance": {
+      "error": {
+        "invalid_user_id": "Invalid user ID",
+        "fetch_balance_failed": "Failed to fetch user balance",
+        "fetch_transactions_failed": "Failed to fetch user transactions"
+      }
+    },
+    "admins": {
+      "error": {
+        "unauthorized": "Authorization required",
+        "fetch_failed": "Failed to fetch administrators list",
+        "invalid_format": "Invalid data format",
+        "email_required": "Email is required",
+        "add_failed": "Failed to add administrator",
+        "remove_failed": "Failed to remove administrator",
+        "check_failed": "Failed to check administrator status"
+      },
+      "success": {
+        "removed": "Administrator removed successfully"
+      }
     }
   },
   "validation": {

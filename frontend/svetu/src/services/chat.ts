@@ -13,9 +13,39 @@ import {
 
 class ChatService {
   private baseUrl: string;
+  private csrfToken: string | null = null;
+  private reconnectAttempts = 0;
 
   constructor() {
     this.baseUrl = `${configManager.getApiUrl()}/api/v1/marketplace/chat`;
+  }
+
+  private async getCsrfToken(): Promise<string> {
+    if (this.csrfToken) {
+      return this.csrfToken;
+    }
+
+    try {
+      const response = await fetch(
+        `${configManager.getApiUrl()}/api/v1/csrf-token`,
+        {
+          method: 'GET',
+          credentials: 'include',
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        this.csrfToken = data.csrf_token;
+        return this.csrfToken || '';
+      }
+    } catch (error) {
+      console.warn('Failed to fetch CSRF token:', error);
+    }
+
+    // Fallback: generate client-side token for basic protection
+    this.csrfToken = `client-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    return this.csrfToken;
   }
 
   private async request<T>(
@@ -36,6 +66,13 @@ class ChatService {
     // Добавляем JWT токен если есть
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    // Добавляем CSRF токен для изменяющих запросов
+    const method = options?.method || 'GET';
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())) {
+      const csrfToken = await this.getCsrfToken();
+      headers['X-CSRF-Token'] = csrfToken;
     }
 
     const response = await fetch(url, {
@@ -220,7 +257,7 @@ class ChatService {
 
     const xhr = new XMLHttpRequest();
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable && onProgress) {
           const progress = Math.round((e.loaded * 100) / e.total);
@@ -265,6 +302,17 @@ class ChatService {
       console.log('Uploading attachments to:', uploadUrl);
 
       xhr.open('POST', uploadUrl);
+
+      // Добавляем JWT токен
+      const accessToken = tokenManager.getAccessToken();
+      if (accessToken) {
+        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+      }
+
+      // Добавляем CSRF токен
+      const csrfToken = await this.getCsrfToken();
+      xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+
       xhr.send(formData);
     });
   }
@@ -299,7 +347,7 @@ class ChatService {
 
     const xhr = new XMLHttpRequest();
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       // Отслеживание прогресса
       if (onProgress) {
         xhr.upload.addEventListener('progress', (e) => {
@@ -314,7 +362,16 @@ class ChatService {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const response = JSON.parse(xhr.responseText);
-            resolve(response);
+            // Сервер возвращает { data: [...], success: true }
+            // Преобразуем в ожидаемый формат { attachments: [...] }
+            if (response.data && response.success) {
+              resolve({ attachments: response.data });
+            } else {
+              // Fallback на случай, если формат ответа изменится
+              resolve({
+                attachments: response.attachments || response.data || [],
+              });
+            }
           } catch {
             reject(new Error('Invalid response'));
           }
@@ -333,6 +390,10 @@ class ChatService {
       Object.entries(headers).forEach(([key, value]) => {
         xhr.setRequestHeader(key, value);
       });
+
+      // Добавляем CSRF токен
+      const csrfToken = await this.getCsrfToken();
+      xhr.setRequestHeader('X-CSRF-Token', csrfToken);
 
       xhr.withCredentials = true;
       xhr.send(formData);
@@ -422,8 +483,6 @@ class ChatService {
 
     return ws;
   }
-
-  private reconnectAttempts = 0;
 }
 
 export const chatService = new ChatService();

@@ -75,40 +75,17 @@ type AdminCheckResponseWrapper struct {
 	Data    AdminCheckResponse `json:"data"`
 }
 
-// RegisterRequest представляет запрос на регистрацию
-type RegisterRequest struct {
-	Name     string  `json:"name" validate:"required" example:"Иван Иванов"`
-	Email    string  `json:"email" validate:"required,email" example:"user@example.com"`
-	Password string  `json:"password" validate:"required,min=6" example:"password123"`
-	Phone    *string `json:"phone,omitempty" example:"+1234567890"`
-}
-
-// LoginRequest представляет запрос на вход
-type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email" example:"user@example.com"`
-	Password string `json:"password" validate:"required" example:"password123"`
-}
-
-// LoginResponse представляет ответ после успешной авторизации
-type LoginResponse struct {
-	Success   bool         `json:"success" example:"true"`
-	Message   string       `json:"message" example:"Вход выполнен успешно"`
-	Token     string       `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
-	ExpiresIn int          `json:"expires_in" example:"3600"`
-	User      *models.User `json:"user"`
-}
-
-// GetProfile получает профиль текущего пользователя
-// @Summary Получить профиль пользователя
-// @Description Возвращает полный профиль авторизованного пользователя
-// @Tags Users
+// GetProfile returns current user profile
+// @Summary Get current user profile
+// @Description Returns full profile of the authenticated user
+// @Tags users
 // @Accept json
 // @Produce json
-// @Success 200 {object} UserProfileResponse
-// @Failure 401 {object} utils.ErrorResponseSwag
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Success 200 {object} UserProfileResponse "User profile"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/users/profile [get]
+// @Router /api/v1/users/me [get]
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
@@ -123,19 +100,19 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	})
 }
 
-// UpdateProfile обновляет профиль текущего пользователя
-// @Summary Обновить профиль пользователя
-// @Description Обновляет профиль авторизованного пользователя
-// @Tags Users
+// UpdateProfile updates current user profile
+// @Summary Update user profile
+// @Description Updates profile of the authenticated user
+// @Tags users
 // @Accept json
 // @Produce json
-// @Param profile body models.UserProfileUpdate true "Данные для обновления профиля"
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 401 {object} utils.ErrorResponseSwag
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Param profile body models.UserProfileUpdate true "Profile update data"
+// @Success 200 {object} MessageResponse "Profile updated successfully"
+// @Failure 400 {object} models.ErrorResponse "Invalid request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/users/profile [put]
+// @Router /api/v1/users/me [put]
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
@@ -168,8 +145,8 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 // @Produce json
 // @Param user body RegisterRequest true "Данные для регистрации (name, email, password обязательны, phone опционален)"
 // @Success 201 {object} RegisterResponse
-// @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
 // @Router /api/v1/users/register [post]
 // DEPRECATED: Используйте AuthHandler.Register вместо этого метода
 func (h *UserHandler) RegisterOld(c *fiber.Ctx) error {
@@ -229,9 +206,9 @@ func (h *UserHandler) RegisterOld(c *fiber.Ctx) error {
 // @Produce json
 // @Param user body LoginRequest true "Данные для авторизации (email и password обязательны)"
 // @Success 200 {object} LoginResponse
-// @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 401 {object} utils.ErrorResponseSwag
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
 // @Router /api/v1/users/login [post]
 // DEPRECATED: Используйте AuthHandler.Login вместо этого метода
 func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
@@ -298,17 +275,17 @@ func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
 	})
 }
 
-// GetProfileByID получает публичный профиль пользователя
-// @Summary Получить публичный профиль пользователя
-// @Description Возвращает публичную информацию о пользователе по ID
-// @Tags Users
+// GetProfileByID returns public user profile
+// @Summary Get public user profile
+// @Description Returns public information about user by ID
+// @Tags users
 // @Accept json
 // @Produce json
-// @Param id path int true "ID пользователя"
-// @Success 200 {object} PublicUserResponseWrapper
-// @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 401 {object} utils.ErrorResponseSwag
-// @Failure 404 {object} utils.ErrorResponseSwag
+// @Param id path int true "User ID"
+// @Success 200 {object} PublicUserResponseWrapper "Public user profile"
+// @Failure 400 {object} models.ErrorResponse "Invalid user ID"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 404 {object} models.ErrorResponse "User not found"
 // @Security BearerAuth
 // @Router /api/v1/users/{id}/profile [get]
 func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
@@ -336,17 +313,17 @@ func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
 	})
 }
 
-// IsAdminSimple проверяет, является ли пользователь администратором (простая реализация)
-// @Summary Проверка статуса администратора (упрощенная)
-// @Description Проверяет, является ли пользователь с указанным email администратором (упрощенная проверка по ID)
-// @Tags Users
+// IsAdminSimple checks if user is administrator (simple implementation)
+// @Summary Check admin status (simple)
+// @Description Checks if user with specified email is administrator (simplified check by ID)
+// @Tags users
 // @Accept json
 // @Produce json
-// @Param email path string true "Email пользователя"
-// @Success 200 {object} AdminCheckResponseWrapper
-// @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 401 {object} utils.ErrorResponseSwag
-// @Failure 404 {object} utils.ErrorResponseSwag
+// @Param email path string true "User email"
+// @Success 200 {object} AdminCheckResponseWrapper "Admin status"
+// @Failure 400 {object} models.ErrorResponse "Email required"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 404 {object} models.ErrorResponse "User not found"
 // @Security BearerAuth
 // @Router /api/v1/users/admin-check/{email} [get]
 func (h *UserHandler) IsAdminSimple(c *fiber.Ctx) error {

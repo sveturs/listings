@@ -1,5 +1,17 @@
 basePath: /api/v1
 definitions:
+  ErrorResponse:
+    properties:
+      code:
+        example: 400
+        type: integer
+      error:
+        example: Invalid request
+        type: string
+      message:
+        example: Validation failed
+        type: string
+    type: object
   backend_internal_domain_models.AdminUser:
     properties:
       created_at:
@@ -219,6 +231,8 @@ definitions:
         type: string
       picture_url:
         type: string
+      provider:
+        type: string
     type: object
   backend_internal_domain_models.UserProfile:
     properties:
@@ -248,6 +262,8 @@ definitions:
       phone:
         type: string
       picture_url:
+        type: string
+      provider:
         type: string
       settings:
         items:
@@ -282,15 +298,18 @@ definitions:
         example: Описание ошибки
         type: string
     type: object
-  backend_pkg_utils.SuccessResponseSwag:
+  internal_proj_users_handler.AdminAdminsResponse:
     properties:
-      data: {}
-      success:
+      email:
+        example: admin@example.com
+        type: string
+      is_admin:
         example: true
         type: boolean
     type: object
-  fiber.Map:
-    additionalProperties: true
+  internal_proj_users_handler.AdminBalanceResponse:
+    properties:
+      data: {}
     type: object
   internal_proj_users_handler.AdminCheckResponse:
     properties:
@@ -308,6 +327,81 @@ definitions:
       success:
         example: true
         type: boolean
+    type: object
+  internal_proj_users_handler.AdminMessageResponse:
+    properties:
+      message:
+        example: admin.users.success.profile_updated
+        type: string
+    type: object
+  internal_proj_users_handler.AdminStatusUpdateRequest:
+    properties:
+      status:
+        enum:
+        - active
+        - blocked
+        - pending
+        example: active
+        type: string
+    required:
+    - status
+    type: object
+  internal_proj_users_handler.AdminUserListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.UserProfile'
+        type: array
+      limit:
+        example: 10
+        type: integer
+      page:
+        example: 1
+        type: integer
+      pages:
+        example: 10
+        type: integer
+      total:
+        example: 100
+        type: integer
+    type: object
+  internal_proj_users_handler.AuthResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      expires_in:
+        example: 3600
+        type: integer
+      token_type:
+        example: Bearer
+        type: string
+      user:
+        $ref: '#/definitions/internal_proj_users_handler.UserResponse'
+    type: object
+  internal_proj_users_handler.LoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: password123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_proj_users_handler.LoginResponse:
+    properties:
+      message:
+        example: users.login.success.authenticated
+        type: string
+      success:
+        example: true
+        type: boolean
+      user:
+        $ref: '#/definitions/backend_internal_domain_models.User'
     type: object
   internal_proj_users_handler.MessageResponse:
     properties:
@@ -350,11 +444,20 @@ definitions:
         example: user@example.com
         type: string
       name:
-        example: Иван Иванов
+        example: John Doe
+        minLength: 2
+        type: string
+      password:
+        example: password123
+        minLength: 6
+        type: string
+      phone:
+        example: "+1234567890"
         type: string
     required:
     - email
     - name
+    - password
     type: object
   internal_proj_users_handler.RegisterResponse:
     properties:
@@ -367,6 +470,56 @@ definitions:
       user:
         $ref: '#/definitions/backend_internal_domain_models.User'
     type: object
+  internal_proj_users_handler.SessionResponse:
+    properties:
+      authenticated:
+        example: true
+        type: boolean
+      user:
+        $ref: '#/definitions/internal_proj_users_handler.SessionUserResponse'
+    type: object
+  internal_proj_users_handler.SessionUserResponse:
+    properties:
+      city:
+        example: Moscow
+        type: string
+      country:
+        example: Russia
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_admin:
+        example: false
+        type: boolean
+      name:
+        example: John Doe
+        type: string
+      phone:
+        example: "+1234567890"
+        type: string
+      picture_url:
+        example: https://example.com/avatar.jpg
+        type: string
+      provider:
+        example: password
+        type: string
+    type: object
+  internal_proj_users_handler.TokenResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      expires_in:
+        example: 3600
+        type: integer
+      token_type:
+        example: Bearer
+        type: string
+    type: object
   internal_proj_users_handler.UserProfileResponse:
     properties:
       data:
@@ -374,6 +527,21 @@ definitions:
       success:
         example: true
         type: boolean
+    type: object
+  internal_proj_users_handler.UserResponse:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: John Doe
+        type: string
+      picture_url:
+        example: https://example.com/avatar.jpg
+        type: string
     type: object
 host: localhost:8080
 info:
@@ -672,10 +840,10 @@ paths:
     get:
       consumes:
       - application/json
-      description: Проверяет, является ли пользователь с указанным email администратором
-        (без авторизации)
+      description: Checks if user with specified email is an administrator (no authorization
+        required)
       parameters:
-      - description: Email пользователя
+      - description: User email
         in: path
         name: email
         required: true
@@ -684,47 +852,53 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Admin status
           schema:
-            $ref: '#/definitions/fiber.Map'
+            $ref: '#/definitions/internal_proj_users_handler.AdminAdminsResponse'
         "400":
-          description: Bad Request
+          description: Invalid request
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Публичная проверка статуса администратора
+            $ref: '#/definitions/ErrorResponse'
+      summary: Public administrator check
       tags:
-      - Admins
+      - public
   /api/v1/admin/admins:
     get:
       consumes:
       - application/json
-      description: Получает список всех администраторов системы
+      description: Returns list of all system administrators
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: List of administrators
           schema:
             items:
               $ref: '#/definitions/backend_internal_domain_models.AdminUser'
             type: array
-        "500":
-          description: Internal Server Error
+        "401":
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Получить список администраторов
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all administrators
       tags:
-      - Admins
+      - admin-management
     post:
       consumes:
       - application/json
-      description: Добавляет нового администратора по email
+      description: Adds a new administrator by email
       parameters:
-      - description: Данные администратора
+      - description: Administrator data
         in: body
         name: admin
         required: true
@@ -734,27 +908,33 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Created administrator
           schema:
             $ref: '#/definitions/backend_internal_domain_models.AdminUser'
         "400":
-          description: Bad Request
+          description: Invalid request
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Добавить администратора
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add new administrator
       tags:
-      - Admins
+      - admin-management
   /api/v1/admin/admins/{email}:
     delete:
       consumes:
       - application/json
-      description: Удаляет администратора по email
+      description: Removes administrator privileges from user by email
       parameters:
-      - description: Email администратора
+      - description: Administrator email
         in: path
         name: email
         required: true
@@ -763,27 +943,33 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Administrator removed
           schema:
-            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
         "400":
-          description: Bad Request
+          description: Invalid request
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Удалить администратора
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove administrator
       tags:
-      - Admins
+      - admin-management
   /api/v1/admin/admins/check/{email}:
     get:
       consumes:
       - application/json
-      description: Проверяет, является ли пользователь с указанным email администратором
+      description: Checks if user with specified email is an administrator
       parameters:
-      - description: Email пользователя
+      - description: User email
         in: path
         name: email
         required: true
@@ -792,27 +978,67 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Admin status
           schema:
-            $ref: '#/definitions/fiber.Map'
+            $ref: '#/definitions/internal_proj_users_handler.AdminAdminsResponse'
         "400":
-          description: Bad Request
+          description: Invalid request
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Проверить статус администратора
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Check administrator status
       tags:
-      - Admins
-  /api/v1/users/{id}/profile:
+      - admin-management
+  /api/v1/admin/users:
     get:
       consumes:
       - application/json
-      description: Возвращает публичную информацию о пользователе по ID
+      description: Returns paginated list of all users in the system
       parameters:
-      - description: ID пользователя
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.AdminUserListResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all users (Admin)
+      tags:
+      - admin-users
+  /api/v1/admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently deletes a user from the system
+      parameters:
+      - description: User ID
         in: path
         name: id
         required: true
@@ -821,34 +1047,344 @@ paths:
       - application/json
       responses:
         "200":
+          description: User deleted
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user (Admin)
+      tags:
+      - admin-users
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed user information by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.UserProfile'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID (Admin)
+      tags:
+      - admin-users
+    put:
+      consumes:
+      - application/json
+      description: Updates user profile information by administrator
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User update data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UserProfileUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update successful
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user (Admin)
+      tags:
+      - admin-users
+  /api/v1/admin/users/{id}/balance:
+    get:
+      consumes:
+      - application/json
+      description: Returns balance information for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User balance
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.AdminBalanceResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user balance (Admin)
+      tags:
+      - admin-users
+  /api/v1/admin/users/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Updates user status (active, blocked, pending)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status update (active, blocked, pending)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_users_handler.AdminStatusUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+        "400":
+          description: Invalid status
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user status (Admin)
+      tags:
+      - admin-users
+  /api/v1/admin/users/{id}/transactions:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated transaction history for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 20
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of transactions
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.AdminBalanceResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user transactions (Admin)
+      tags:
+      - admin-users
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates user and returns JWT access token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_users_handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authentication successful
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Login with email and password
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logs out the user by revoking all refresh tokens and clearing cookies
+      produces:
+      - application/json
+      responses:
+        "200":
           description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refreshes expired access token using valid refresh token from cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New access token
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.TokenResponse'
+        "401":
+          description: Invalid or missing refresh token
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account and returns JWT access token
+      parameters:
+      - description: Registration data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_users_handler.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Registration successful
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: User already exists
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Register new user
+      tags:
+      - auth
+  /api/v1/users/{id}/profile:
+    get:
+      consumes:
+      - application/json
+      description: Returns public information about user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Public user profile
           schema:
             $ref: '#/definitions/internal_proj_users_handler.PublicUserResponseWrapper'
         "400":
-          description: Bad Request
+          description: Invalid user ID
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
         "404":
-          description: Not Found
+          description: User not found
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Получить публичный профиль пользователя
+      summary: Get public user profile
       tags:
-      - Users
+      - users
   /api/v1/users/admin-check/{email}:
     get:
       consumes:
       - application/json
-      description: Проверяет, является ли пользователь с указанным email администратором
-        (упрощенная проверка по ID)
+      description: Checks if user with specified email is administrator (simplified
+        check by ID)
       parameters:
-      - description: Email пользователя
+      - description: User email
         in: path
         name: email
         required: true
@@ -857,57 +1393,92 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Admin status
           schema:
             $ref: '#/definitions/internal_proj_users_handler.AdminCheckResponseWrapper'
         "400":
-          description: Bad Request
+          description: Email required
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
         "404":
-          description: Not Found
+          description: User not found
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Проверка статуса администратора (упрощенная)
+      summary: Check admin status (simple)
       tags:
-      - Users
-  /api/v1/users/profile:
-    get:
+      - users
+  /api/v1/users/login:
+    post:
       consumes:
       - application/json
-      description: Возвращает полный профиль авторизованного пользователя
+      description: Авторизует пользователя по email и паролю, создает сессию и устанавливает
+        session cookie
+      parameters:
+      - description: Данные для авторизации (email и password обязательны)
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_users_handler.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
+            $ref: '#/definitions/internal_proj_users_handler.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Авторизация пользователя
+      tags:
+      - Users
+  /api/v1/users/me:
+    get:
+      consumes:
+      - application/json
+      description: Returns full profile of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
             $ref: '#/definitions/internal_proj_users_handler.UserProfileResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Получить профиль пользователя
+      summary: Get current user profile
       tags:
-      - Users
+      - users
     put:
       consumes:
       - application/json
-      description: Обновляет профиль авторизованного пользователя
+      description: Updates profile of the authenticated user
       parameters:
-      - description: Данные для обновления профиля
+      - description: Profile update data
         in: body
         name: profile
         required: true
@@ -917,33 +1488,34 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Profile updated successfully
           schema:
             $ref: '#/definitions/internal_proj_users_handler.MessageResponse'
         "400":
-          description: Bad Request
+          description: Invalid request
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Обновить профиль пользователя
+      summary: Update user profile
       tags:
-      - Users
+      - users
   /api/v1/users/register:
     post:
       consumes:
       - application/json
       description: Создает нового пользователя в системе
       parameters:
-      - description: Данные для регистрации
+      - description: Данные для регистрации (name, email, password обязательны, phone
+          опционален)
         in: body
         name: user
         required: true
@@ -959,20 +1531,76 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
+            $ref: '#/definitions/ErrorResponse'
       summary: Регистрация пользователя
       tags:
       - Users
+  /auth/google:
+    get:
+      consumes:
+      - application/json
+      description: Redirects user to Google OAuth2 authorization page
+      parameters:
+      - description: URL to return after authentication
+        in: query
+        name: returnTo
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirect to Google OAuth
+          schema:
+            type: string
+      summary: Initiate Google OAuth authentication
+      tags:
+      - auth
+  /auth/google/callback:
+    get:
+      consumes:
+      - application/json
+      description: Processes the OAuth2 callback from Google and creates user session
+      parameters:
+      - description: Authorization code from Google
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirect to frontend with session
+          schema:
+            type: string
+        "500":
+          description: Authentication failed
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Handle Google OAuth callback
+      tags:
+      - auth
+  /auth/session:
+    get:
+      consumes:
+      - application/json
+      description: Returns information about the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session information
+          schema:
+            $ref: '#/definitions/internal_proj_users_handler.SessionResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current session
+      tags:
+      - auth
 securityDefinitions:
   Bearer:
     description: Bearer token для авторизации

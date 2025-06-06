@@ -347,7 +347,7 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
                             </h3>
                             <div className="flex items-center">
                               {chat.other_user &&
-                                onlineUsers.has(chat.other_user.id) && (
+                                onlineUsers.includes(chat.other_user.id) && (
                                   <span className="text-xs text-gray-500">
                                     online
                                   </span>
@@ -462,7 +462,7 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
                       {/* Статус онлайн */}
                       <div className="flex items-center">
                         {contact.contact_user &&
-                          onlineUsers.has(contact.contact_user.id) && (
+                          onlineUsers.includes(contact.contact_user.id) && (
                             <span className="text-xs text-gray-500">
                               online
                             </span>

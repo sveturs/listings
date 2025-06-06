@@ -169,7 +169,7 @@ export function useChat() {
       };
     },
     getTypingUsers: (chatId: number) => {
-      return typingUsers[chatId] || new Set();
+      return typingUsers[chatId] || [];
     },
   };
 }

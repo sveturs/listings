@@ -9,6 +9,7 @@ import EmojiPicker from './EmojiPicker';
 import { FileUploadProgress } from '@/components/Chat/FileUploadProgress';
 import { toast } from '@/utils/toast';
 import { validateFiles, formatFileSize } from '@/utils/fileValidation';
+import Image from 'next/image';
 
 interface MessageInputProps {
   chat?: MarketplaceChat;
@@ -89,6 +90,10 @@ export default function MessageInput({
         try {
           await uploadFiles(sentMessage.id, selectedFiles);
           setSelectedFiles([]);
+
+          // После успешной загрузки файлов, обновляем сообщение с вложениями
+          // Вложения уже обновлены в Redux store через uploadFiles.fulfilled
+          // WebSocket должен отправить событие attachment_upload другим пользователям
         } catch (uploadError: unknown) {
           const err = uploadError as Error & { status?: number };
           // Обработка ошибки загрузки файлов
@@ -282,10 +287,11 @@ export default function MessageInput({
                       {isImage ? (
                         // Эскиз для изображений
                         <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-2 border-base-300/50">
-                          <img
+                          <Image
                             src={fileUrl}
                             alt={file.name}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
                             onLoad={() => URL.revokeObjectURL(fileUrl)}
                           />
                           <button

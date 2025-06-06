@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 
 interface UserContact {
@@ -49,53 +49,56 @@ export default function UserContactsPage() {
     useState<PrivacySettings | null>(null);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
-  const fetchContacts = async (status: string = '') => {
-    try {
-      setLoading(true);
-      let url = '/api/v1/contacts';
-      if (status) {
-        url += `?status=${encodeURIComponent(status)}`;
+  const fetchContacts = useCallback(
+    async (status: string = '') => {
+      try {
+        setLoading(true);
+        let url = '/api/v1/contacts';
+        if (status) {
+          url += `?status=${encodeURIComponent(status)}`;
+        }
+
+        // Получаем JWT токен через tokenManager
+        const { tokenManager } = await import('@/utils/tokenManager');
+        const accessToken = await tokenManager.getAccessToken();
+
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
+
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+
+        const response = await fetch(url, {
+          credentials: 'include',
+          headers,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch contacts');
+        }
+
+        const result = await response.json();
+        // Учитываем, что данные могут быть обернуты в поле data
+        const data: ContactsResponse = result.data || result;
+        setContacts(data.contacts || []);
+        setError(''); // Очищаем ошибку при успешной загрузке
+      } catch (err) {
+        // Не показываем ошибку, если это первая попытка загрузки при старте
+        if (contacts === null) {
+          console.log('Initial fetch failed, will retry after auth');
+        } else {
+          setError(err instanceof Error ? err.message : 'Unknown error');
+        }
+      } finally {
+        setLoading(false);
       }
+    },
+    [contacts]
+  );
 
-      // Получаем JWT токен через tokenManager
-      const { tokenManager } = await import('@/utils/tokenManager');
-      const accessToken = await tokenManager.getAccessToken();
-
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch(url, {
-        credentials: 'include',
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch contacts');
-      }
-
-      const result = await response.json();
-      // Учитываем, что данные могут быть обернуты в поле data
-      const data: ContactsResponse = result.data || result;
-      setContacts(data.contacts || []);
-      setError(''); // Очищаем ошибку при успешной загрузке
-    } catch (err) {
-      // Не показываем ошибку, если это первая попытка загрузки при старте
-      if (contacts === null) {
-        console.log('Initial fetch failed, will retry after auth');
-      } else {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPrivacySettings = async () => {
+  const fetchPrivacySettings = useCallback(async () => {
     try {
       // Получаем JWT токен через tokenManager
       const { tokenManager } = await import('@/utils/tokenManager');
@@ -140,7 +143,7 @@ export default function UserContactsPage() {
         updated_at: new Date().toISOString(),
       });
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     setMounted(true);
