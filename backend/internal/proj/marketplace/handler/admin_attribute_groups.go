@@ -2,8 +2,8 @@ package handler
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"strconv"
 )
 
@@ -45,7 +45,7 @@ func (h *MarketplaceHandler) CreateAttributeGroup(c *fiber.Ctx) error {
 
 	id, err := h.storage.AttributeGroups.CreateAttributeGroup(c.Context(), group)
 	if err != nil {
-		log.Printf("Ошибка создания группы атрибутов: %v", err)
+		logger.Error().Err(err).Msg("Error creating attribute group")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.createGroupError",
 		})
@@ -70,7 +70,7 @@ func (h *MarketplaceHandler) CreateAttributeGroup(c *fiber.Ctx) error {
 func (h *MarketplaceHandler) ListAttributeGroups(c *fiber.Ctx) error {
 	groups, err := h.storage.AttributeGroups.ListAttributeGroups(c.Context())
 	if err != nil {
-		log.Printf("Ошибка получения списка групп: %v", err)
+		logger.Error().Err(err).Msg("Error getting attribute groups list")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.listGroupsError",
 		})
@@ -105,7 +105,7 @@ func (h *MarketplaceHandler) GetAttributeGroup(c *fiber.Ctx) error {
 
 	group, err := h.storage.AttributeGroups.GetAttributeGroup(c.Context(), id)
 	if err != nil {
-		log.Printf("Ошибка получения группы: %v", err)
+		logger.Error().Err(err).Msg("Error getting attribute group")
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "marketplace.groupNotFound",
 		})
@@ -165,7 +165,7 @@ func (h *MarketplaceHandler) UpdateAttributeGroup(c *fiber.Ctx) error {
 
 	err = h.storage.AttributeGroups.UpdateAttributeGroup(c.Context(), id, updates)
 	if err != nil {
-		log.Printf("Ошибка обновления группы: %v", err)
+		logger.Error().Err(err).Msg("Error updating attribute group")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.updateGroupError",
 		})
@@ -200,7 +200,7 @@ func (h *MarketplaceHandler) DeleteAttributeGroup(c *fiber.Ctx) error {
 
 	err = h.storage.AttributeGroups.DeleteAttributeGroup(c.Context(), id)
 	if err != nil {
-		log.Printf("Ошибка удаления группы: %v", err)
+		logger.Error().Err(err).Msg("Error deleting attribute group")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.deleteGroupError",
 		})
@@ -236,7 +236,7 @@ func (h *MarketplaceHandler) GetAttributeGroupWithItems(c *fiber.Ctx) error {
 
 	group, err := h.storage.AttributeGroups.GetAttributeGroup(c.Context(), id)
 	if err != nil {
-		log.Printf("Ошибка получения группы: %v", err)
+		logger.Error().Err(err).Msg("Error getting attribute group")
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "marketplace.groupNotFound",
 		})
@@ -244,7 +244,7 @@ func (h *MarketplaceHandler) GetAttributeGroupWithItems(c *fiber.Ctx) error {
 
 	items, err := h.storage.AttributeGroups.GetGroupItems(c.Context(), id)
 	if err != nil {
-		log.Printf("Ошибка получения атрибутов группы: %v", err)
+		logger.Error().Err(err).Msg("Error getting group items")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.getGroupItemsError",
 		})
@@ -304,7 +304,7 @@ func (h *MarketplaceHandler) AddItemToGroup(c *fiber.Ctx) error {
 
 	id, err := h.storage.AttributeGroups.AddItemToGroup(c.Context(), groupID, item)
 	if err != nil {
-		log.Printf("Ошибка добавления атрибута в группу: %v", err)
+		logger.Error().Err(err).Msg("Error adding item to group")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.addItemError",
 		})
@@ -349,7 +349,7 @@ func (h *MarketplaceHandler) RemoveItemFromGroup(c *fiber.Ctx) error {
 
 	err = h.storage.AttributeGroups.RemoveItemFromGroup(c.Context(), groupID, attributeID)
 	if err != nil {
-		log.Printf("Ошибка удаления атрибута из группы: %v", err)
+		logger.Error().Err(err).Msg("Error removing item from group")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.removeItemError",
 		})
@@ -384,7 +384,7 @@ func (h *MarketplaceHandler) GetCategoryGroups(c *fiber.Ctx) error {
 
 	groups, err := h.storage.AttributeGroups.GetCategoryGroups(c.Context(), categoryID)
 	if err != nil {
-		log.Printf("Ошибка получения групп категории: %v", err)
+		logger.Error().Err(err).Msg("Error getting category groups")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.getCategoryGroupsError",
 		})
@@ -433,7 +433,7 @@ func (h *MarketplaceHandler) AttachGroupToCategory(c *fiber.Ctx) error {
 
 	id, err := h.storage.AttributeGroups.AttachGroupToCategory(c.Context(), categoryID, attachment)
 	if err != nil {
-		log.Printf("Ошибка привязки группы к категории: %v", err)
+		logger.Error().Err(err).Msg("Error attaching group to category")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.attachGroupError",
 		})
@@ -478,7 +478,7 @@ func (h *MarketplaceHandler) DetachGroupFromCategory(c *fiber.Ctx) error {
 
 	err = h.storage.AttributeGroups.DetachGroupFromCategory(c.Context(), categoryID, groupID)
 	if err != nil {
-		log.Printf("Ошибка отвязки группы от категории: %v", err)
+		logger.Error().Err(err).Msg("Error detaching group from category")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "marketplace.detachGroupError",
 		})

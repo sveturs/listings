@@ -5,13 +5,13 @@ package handler
 import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 	"context"
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -42,15 +42,15 @@ func NewChatHandler(services globalService.ServicesInterface, config *config.Con
 // @Router /api/v1/marketplace/chat [get]
 func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	log.Printf("GetChats called for userID: %d", userID)
+	logger.Info().Int("userId", userID).Msg("GetChats called")
 
 	chats, err := h.services.Chat().GetChats(c.Context(), userID)
 	if err != nil {
-		log.Printf("Error in GetChats for userID %d: %v", userID, err)
+		logger.Error().Err(err).Int("userId", userID).Msg("Error in GetChats")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getChatsError")
 	}
 
-	log.Printf("GetChats successful for userID %d, found %d chats", userID, len(chats))
+	logger.Info().Int("userId", userID).Int("chatsCount", len(chats)).Msg("GetChats successful")
 	return utils.SuccessResponse(c, chats)
 }
 
@@ -124,8 +124,14 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 
 	offset := (page - 1) * limit
 
-	log.Printf("GetMessages: page=%d, limit=%d, offset=%d, chatID=%s, listingID=%d, userID=%d",
-		page, limit, offset, c.Query("chat_id"), listingIDInt, userID)
+	logger.Info().
+		Int("page", page).
+		Int("limit", limit).
+		Int("offset", offset).
+		Str("chatId", c.Query("chat_id")).
+		Int("listingId", listingIDInt).
+		Int("userId", userID).
+		Msg("GetMessages")
 
 	// Создаем новый context.Context с chat_id
 	ctx := context.Background()
@@ -138,11 +144,11 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 
 	messages, err := h.services.Chat().GetMessages(ctx, listingIDInt, userID, offset, limit)
 	if err != nil {
-		log.Printf("Error fetching messages: %v", err)
+		logger.Error().Err(err).Msg("Error fetching messages")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getMessagesError")
 	}
 
-	log.Printf("GetMessages: returned %d messages", len(messages))
+	logger.Info().Int("messagesCount", len(messages)).Msg("GetMessages: returned messages")
 
 	// Загружаем вложения для каждого сообщения
 	for i := range messages {
@@ -246,7 +252,7 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 	}
 
 	if err := h.services.Chat().SendMessage(c.Context(), msg); err != nil {
-		log.Printf("Error sending message: %v", err)
+		logger.Error().Err(err).Msg("Error sending message")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.sendMessageError")
 	}
 
@@ -326,19 +332,19 @@ func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/messages/{id}/attachments [post]
 func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
-	log.Printf("UploadAttachments called")
+	logger.Info().Msg("UploadAttachments called")
 	userID := c.Locals("user_id").(int)
 	messageID, err := c.ParamsInt("id")
 	if err != nil {
-		log.Printf("Error parsing message ID: %v", err)
+		logger.Error().Err(err).Msg("Error parsing message ID")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidMessageId")
 	}
-	log.Printf("UploadAttachments: userID=%d, messageID=%d", userID, messageID)
+	logger.Info().Int("userId", userID).Int("messageId", messageID).Msg("UploadAttachments")
 
 	// Получаем сообщение для проверки прав
 	message, err := h.services.Storage().GetMessageByID(c.Context(), messageID)
 	if err != nil {
-		log.Printf("Error getting message by ID %d: %v", messageID, err)
+		logger.Error().Err(err).Int("messageId", messageID).Msg("Error getting message by ID")
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.messageNotFound")
 	}
 
@@ -366,17 +372,17 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 	// Загружаем файлы через сервис
 	attachments, err := h.services.ChatAttachment().UploadAttachments(c.Context(), messageID, files)
 	if err != nil {
-		log.Printf("Error uploading attachments: %v", err)
+		logger.Error().Err(err).Msg("Error uploading attachments")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.uploadAttachmentsError")
 	}
 
 	// Отправляем обновленное сообщение через WebSocket
 	if len(attachments) > 0 {
-		log.Printf("UploadAttachments: uploading %d attachments for message %d", len(attachments), messageID)
+		logger.Info().Int("attachmentsCount", len(attachments)).Int("messageId", messageID).Msg("UploadAttachments: uploading attachments")
 		// Получаем обновленное сообщение с вложениями
 		updatedMessage, err := h.services.Storage().GetMessageByID(c.Context(), messageID)
 		if err == nil {
-			log.Printf("UploadAttachments: got message from DB, senderID=%d, receiverID=%d", updatedMessage.SenderID, updatedMessage.ReceiverID)
+			logger.Info().Int("senderId", updatedMessage.SenderID).Int("receiverId", updatedMessage.ReceiverID).Msg("UploadAttachments: got message from DB")
 			// Конвертируем вложения для сообщения
 			updatedMessage.Attachments = make([]models.ChatAttachment, len(attachments))
 			for i, att := range attachments {
@@ -385,11 +391,11 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 			updatedMessage.HasAttachments = true
 			updatedMessage.AttachmentsCount = len(attachments)
 
-			log.Printf("UploadAttachments: broadcasting message with %d attachments", len(updatedMessage.Attachments))
+			logger.Info().Int("attachmentsCount", len(updatedMessage.Attachments)).Msg("UploadAttachments: broadcasting message")
 			// Отправляем обновленное сообщение через WebSocket
 			h.services.Chat().BroadcastMessage(updatedMessage)
 		} else {
-			log.Printf("UploadAttachments: error getting message by ID: %v", err)
+			logger.Error().Err(err).Msg("UploadAttachments: error getting message by ID")
 		}
 	}
 
@@ -478,7 +484,7 @@ func (h *ChatHandler) HandleWebSocketWithAuth(c *websocket.Conn, userID int) {
 
 	// Проверяем, что userID валидный
 	if userID == 0 {
-		log.Printf("WebSocket: Invalid user_id: %d, closing connection", userID)
+		logger.Warn().Int("userId", userID).Msg("WebSocket: Invalid user_id, closing connection")
 		c.Close()
 		return
 	}
@@ -501,14 +507,14 @@ func (h *ChatHandler) HandleWebSocketWithAuth(c *websocket.Conn, userID int) {
 		}
 
 		if !validOrigin {
-			log.Printf("SECURITY: WebSocket invalid origin %s for user %d, closing connection", origin, userID)
+			logger.Warn().Str("origin", origin).Int("userId", userID).Msg("SECURITY: WebSocket invalid origin, closing connection")
 			c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseUnsupportedData, "Invalid origin"))
 			c.Close()
 			return
 		}
 	}
 
-	log.Printf("WebSocket: User %d connected from origin %s", userID, origin)
+	logger.Info().Int("userId", userID).Str("origin", origin).Msg("WebSocket: User connected")
 
 	// Вызываем основной обработчик
 	h.handleWebSocketConnection(c, userID)
@@ -523,19 +529,19 @@ func (h *ChatHandler) HandleWebSocket(c *websocket.Conn) {
 	// Получаем userID, переданный из middleware
 	userIDRaw := c.Locals("user_id")
 	if userIDRaw == nil {
-		log.Printf("WebSocket: No user_id found, closing connection")
+		logger.Warn().Msg("WebSocket: No user_id found, closing connection")
 		c.Close()
 		return
 	}
 
 	userID, ok := userIDRaw.(int)
 	if !ok || userID == 0 {
-		log.Printf("WebSocket: Invalid user_id: %v, closing connection", userIDRaw)
+		logger.Warn().Interface("userIdRaw", userIDRaw).Msg("WebSocket: Invalid user_id, closing connection")
 		c.Close()
 		return
 	}
 
-	log.Printf("WebSocket: User %d connected", userID)
+	logger.Info().Int("userId", userID).Msg("WebSocket: User connected")
 
 	// Вызываем основной обработчик
 	h.handleWebSocketConnection(c, userID)
@@ -576,7 +582,7 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 			messageType, message, err := c.ReadMessage()
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Printf("error reading message: %v", err)
+					logger.Error().Err(err).Msg("error reading message")
 				}
 				return
 			}
@@ -585,7 +591,7 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 				// Пытаемся распарсить сообщение как JSON
 				var rawMsg map[string]interface{}
 				if err := json.Unmarshal(message, &rawMsg); err != nil {
-					log.Printf("Error unmarshaling message: %v", err)
+					logger.Error().Err(err).Msg("Error unmarshaling message")
 					continue
 				}
 
@@ -633,13 +639,13 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 				// Обрабатываем обычное сообщение
 				var msg models.MarketplaceMessage
 				if err := json.Unmarshal(message, &msg); err != nil {
-					log.Printf("Error unmarshaling WebSocket message: %v", err)
+					logger.Error().Err(err).Msg("Error unmarshaling WebSocket message")
 					continue
 				}
 
 				// Валидация входных данных
 				if msg.ReceiverID == 0 {
-					log.Printf("Error: ReceiverID is 0 in WebSocket message")
+					logger.Error().Msg("Error: ReceiverID is 0 in WebSocket message")
 					errMsg := fiber.Map{
 						"error": "ReceiverID is required",
 					}
@@ -651,7 +657,7 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 
 				msg.SenderID = userID
 				if err := h.services.Chat().SendMessage(ctx, &msg); err != nil {
-					log.Printf("Error sending message via WebSocket: %v", err)
+					logger.Error().Err(err).Msg("Error sending message via WebSocket")
 					errMsg := fiber.Map{
 						"error":      err.Error(),
 						"chat_id":    msg.ChatID,

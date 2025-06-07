@@ -1,12 +1,12 @@
 package handler
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	postgres "backend/internal/storage/postgres"
 	"backend/pkg/utils"
 )
@@ -186,7 +186,7 @@ func (h *CustomComponentHandler) DeleteComponent(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/admin/custom-components [get]
 func (h *CustomComponentHandler) ListComponents(c *fiber.Ctx) error {
-	log.Printf("ListComponents called")
+	logger.Info().Msg("ListComponents called")
 
 	filters := map[string]interface{}{
 		"component_type": c.Query("component_type"),
@@ -196,12 +196,12 @@ func (h *CustomComponentHandler) ListComponents(c *fiber.Ctx) error {
 	components, err := h.storage.ListComponents(c.Context(), filters)
 	if err != nil {
 		// Добавляем логирование ошибки
-		log.Printf("Error listing components: %v", err)
+		logger.Error().Err(err).Msg("Error listing components")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.internalServerError")
 	}
 
 	// Логируем успешный результат
-	log.Printf("Listed %d components", len(components))
+	logger.Info().Int("componentsCount", len(components)).Msg("Listed components")
 
 	return c.JSON(components)
 }
@@ -375,18 +375,18 @@ func (h *CustomComponentHandler) CreateTemplate(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/admin/custom-components/templates [get]
 func (h *CustomComponentHandler) ListTemplates(c *fiber.Ctx) error {
-	log.Printf("ListTemplates called")
+	logger.Info().Msg("ListTemplates called")
 
 	componentID := c.QueryInt("component_id", 0)
 	templates, err := h.storage.ListTemplates(c.Context(), componentID)
 	if err != nil {
 		// Добавляем логирование ошибки
-		log.Printf("Error listing templates: %v", err)
+		logger.Error().Err(err).Msg("Error listing templates")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.internalServerError")
 	}
 
 	// Логируем успешный результат
-	log.Printf("Listed %d templates", len(templates))
+	logger.Info().Int("templatesCount", len(templates)).Msg("Listed templates")
 
 	return c.JSON(templates)
 }

@@ -2,13 +2,13 @@
 package handler
 
 import (
-	"log"
 	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
@@ -47,7 +47,7 @@ func NewCategoriesHandler(services globalService.ServicesInterface) *CategoriesH
 func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 	categories, err := h.marketplaceService.GetCategories(c.Context())
 	if err != nil {
-		log.Printf("Failed to get categories: %v", err)
+		logger.Error().Err(err).Msg("Failed to get categories")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categoriesError")
 	}
 
@@ -77,7 +77,7 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 	// Если кеш устарел или пуст, загружаем дерево категорий из хранилища
 	categoryTree, err := h.marketplaceService.GetCategoryTree(c.Context())
 	if err != nil {
-		log.Printf("Failed to get category tree: %v", err)
+		logger.Error().Err(err).Msg("Failed to get category tree")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categoryTreeError")
 	}
 
@@ -111,7 +111,7 @@ func (h *CategoriesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 	// Получаем атрибуты категории
 	attributes, err := h.marketplaceService.GetCategoryAttributes(c.Context(), categoryID)
 	if err != nil {
-		log.Printf("Failed to get attributes for category %d: %v", categoryID, err)
+		logger.Error().Err(err).Int("categoryId", categoryID).Msg("Failed to get attributes for category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.attributesError")
 	}
 
@@ -139,7 +139,7 @@ func (h *CategoriesHandler) GetAttributeRanges(c *fiber.Ctx) error {
 	// Получаем диапазоны значений атрибутов
 	ranges, err := h.marketplaceService.GetAttributeRanges(c.Context(), categoryID)
 	if err != nil {
-		log.Printf("Failed to get attribute ranges for category %d: %v", categoryID, err)
+		logger.Error().Err(err).Int("categoryId", categoryID).Msg("Failed to get attribute ranges for category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.rangesError")
 	}
 

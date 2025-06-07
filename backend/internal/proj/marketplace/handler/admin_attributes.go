@@ -3,13 +3,13 @@ package handler
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"strconv"
 )
 
@@ -146,7 +146,7 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 	// Создаем атрибут
 	id, err := h.marketplaceService.CreateAttribute(c.Context(), &attribute)
 	if err != nil {
-		log.Printf("Failed to create attribute: %v", err)
+		logger.Error().Err(err).Msg("Failed to create attribute")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.createAttributeError")
 	}
 
@@ -178,7 +178,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 
 	rows, err := h.marketplaceService.Storage().Query(c.Context(), query)
 	if err != nil {
-		log.Printf("Failed to get attributes: %v", err)
+		logger.Error().Err(err).Msg("Failed to get attributes")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getAttributesError")
 	}
 	defer rows.Close()
@@ -203,7 +203,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 			&attribute.CreatedAt,
 		)
 		if err != nil {
-			log.Printf("Failed to scan attribute: %v", err)
+			logger.Error().Err(err).Msg("Failed to scan attribute")
 			continue
 		}
 
@@ -238,7 +238,7 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 	// Получаем атрибут по ID
 	attribute, err := h.marketplaceService.GetAttributeByID(c.Context(), attributeID)
 	if err != nil {
-		log.Printf("Failed to get attribute by ID: %v", err)
+		logger.Error().Err(err).Msg("Failed to get attribute by ID")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getAttributeError")
 	}
 
@@ -354,7 +354,7 @@ func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 	// Обновляем атрибут
 	err = h.marketplaceService.UpdateAttribute(c.Context(), &attribute)
 	if err != nil {
-		log.Printf("Failed to update attribute: %v", err)
+		logger.Error().Err(err).Msg("Failed to update attribute")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeError")
 	}
 
@@ -385,7 +385,7 @@ func (h *AdminAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 	// Удаляем атрибут
 	err = h.marketplaceService.DeleteAttribute(c.Context(), attributeID)
 	if err != nil {
-		log.Printf("Failed to delete attribute: %v", err)
+		logger.Error().Err(err).Msg("Failed to delete attribute")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteAttributeError")
 	}
 
@@ -502,7 +502,7 @@ func (h *AdminAttributesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 	}
 
 	if addErr != nil {
-		log.Printf("Failed to add attribute to category: %v", addErr)
+		logger.Error().Err(addErr).Msg("Failed to add attribute to category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.addAttributeToCategoryError")
 	}
 
@@ -539,7 +539,7 @@ func (h *AdminAttributesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error
 	// Отвязываем атрибут от категории
 	err = h.marketplaceService.RemoveAttributeFromCategory(c.Context(), categoryID, attributeID)
 	if err != nil {
-		log.Printf("Failed to remove attribute from category: %v", err)
+		logger.Error().Err(err).Msg("Failed to remove attribute from category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.removeAttributeFromCategoryError")
 	}
 
@@ -598,7 +598,7 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 	)
 
 	if err != nil {
-		log.Printf("Failed to update attribute category settings: %v", err)
+		logger.Error().Err(err).Msg("Failed to update attribute category settings")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeCategoryError")
 	}
 
@@ -629,7 +629,7 @@ func (h *AdminAttributesHandler) ExportCategoryAttributes(c *fiber.Ctx) error {
 	// Получаем атрибуты категории с их настройками
 	categoryAttributes, err := h.getCategoryAttributesWithSettings(c.Context(), categoryID)
 	if err != nil {
-		log.Printf("Failed to export category attributes: %v", err)
+		logger.Error().Err(err).Msg("Failed to export category attributes")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.exportAttributesError")
 	}
 
@@ -850,7 +850,7 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 
 		// Инвалидируем кеш атрибутов для категории
 		if err := h.marketplaceService.InvalidateAttributeCache(c.Context(), categoryID); err != nil {
-			log.Printf("Failed to invalidate attribute cache: %v", err)
+			logger.Error().Err(err).Msg("Failed to invalidate attribute cache")
 		}
 	}
 
@@ -954,7 +954,7 @@ func (h *AdminAttributesHandler) CopyAttributesSettings(c *fiber.Ctx) error {
 
 	// Инвалидируем кеш атрибутов для целевой категории
 	if err := h.marketplaceService.InvalidateAttributeCache(c.Context(), targetCategoryID); err != nil {
-		log.Printf("Failed to invalidate attribute cache: %v", err)
+		logger.Error().Err(err).Msg("Failed to invalidate attribute cache")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{

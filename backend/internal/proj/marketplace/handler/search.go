@@ -4,11 +4,11 @@ package handler
 import (
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
+	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"math"
 	"strconv"
 )
@@ -41,7 +41,7 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	// Парсим параметры поиска из запроса
 	var params search.ServiceParams
 	if err := c.BodyParser(&params); err != nil {
-		log.Printf("Failed to parse search params: %v", err)
+		logger.Error().Err(err).Msg("Failed to parse search params")
 
 		// Попробуем разобрать запрос как form-data
 		params = search.ServiceParams{
@@ -130,7 +130,7 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	// Выполняем поиск
 	results, err := h.marketplaceService.SearchListingsAdvanced(ctx, &params)
 	if err != nil {
-		log.Printf("Failed to perform advanced search: %v", err)
+		logger.Error().Err(err).Msg("Failed to perform advanced search")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.searchError")
 	}
 
@@ -158,8 +158,7 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	}
 
 	// Логируем метаданные пагинации для отладки
-	log.Printf("Метаданные пагинации: total=%d, total_pages=%d, page=%d, size=%d, has_more=%v",
-		total, totalPages, page, size, hasMore)
+	logger.Info().Int("total", pagination.Total).Int("totalPages", pagination.TotalPages).Int("page", pagination.Page).Int("size", pagination.Size).Bool("hasMore", pagination.HasMore).Msg("Pagination metadata")
 
 	// ВАЖНОЕ ИЗМЕНЕНИЕ: структура, соответствующая ожиданиям фронтенда
 	response := fiber.Map{
@@ -225,7 +224,7 @@ func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 	// Получаем предложения
 	suggestions, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, size)
 	if err != nil {
-		log.Printf("Failed to get suggestions for prefix '%s': %v", prefix, err)
+		logger.Error().Err(err).Str("prefix", prefix).Msg("Failed to get suggestions")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.suggestionsError")
 	}
 
@@ -274,7 +273,7 @@ func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	// Получаем предложения для текущего языка
 	suggestions, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, size)
 	if err != nil {
-		log.Printf("Failed to get suggestions for prefix '%s': %v", prefix, err)
+		logger.Error().Err(err).Str("prefix", prefix).Msg("Failed to get suggestions")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.suggestionsError")
 	}
 
@@ -283,7 +282,7 @@ func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	if len(prefix) < 5 {
 		categorySuggestions, err = h.marketplaceService.GetCategorySuggestions(c.Context(), prefix, size)
 		if err != nil {
-			log.Printf("Failed to get category suggestions for prefix '%s': %v", prefix, err)
+			logger.Error().Err(err).Str("prefix", prefix).Msg("Failed to get category suggestions")
 			// Продолжаем даже при ошибке
 		}
 	}
@@ -360,7 +359,7 @@ func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 	// Получаем предложения категорий
 	suggestions, err := h.marketplaceService.GetCategorySuggestions(c.Context(), query, size)
 	if err != nil {
-		log.Printf("Failed to get category suggestions for query '%s': %v", query, err)
+		logger.Error().Err(err).Str("query", query).Msg("Failed to get category suggestions")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categorySuggestionsError")
 	}
 
@@ -398,7 +397,7 @@ func (h *SearchHandler) GetSimilarListings(c *fiber.Ctx) error {
 	// Получаем похожие объявления
 	listings, err := h.marketplaceService.GetSimilarListings(c.Context(), id, limit)
 	if err != nil {
-		log.Printf("Failed to get similar listings for listing %d: %v", id, err)
+		logger.Error().Err(err).Int("listingId", id).Msg("Failed to get similar listings")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.similarListingsError")
 	}
 

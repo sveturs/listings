@@ -3,12 +3,12 @@ package handler
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
 	"context"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"time"
 )
 
@@ -42,21 +42,21 @@ func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем пользователя для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
-		log.Printf("Failed to get user with ID %d: %v", userID, err)
+		logger.Error().Err(err).Int("userID", userID).Msg("Failed to get user")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.adminCheckError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
-		log.Printf("User %d is not admin: %v", userID, err)
+		logger.Error().Err(err).Int("userID", userID).Msg("User is not admin")
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.adminRequired")
 	}
 
@@ -64,9 +64,9 @@ func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 	go func() {
 		err := h.marketplaceService.ReindexAllListings(context.Background())
 		if err != nil {
-			log.Printf("Reindex error: %v", err)
+			logger.Error().Err(err).Msg("Reindex error")
 		} else {
-			log.Println("Reindex completed successfully")
+			logger.Info().Msg("Reindex completed successfully")
 		}
 	}()
 
@@ -92,28 +92,28 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем пользователя для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
-		log.Printf("Failed to get user with ID %d: %v", userID, err)
+		logger.Error().Err(err).Int("userID", userID).Msg("Failed to get user")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.adminCheckError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
-		log.Printf("User %d is not admin: %v", userID, err)
+		logger.Error().Err(err).Int("userID", userID).Msg("User is not admin")
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.adminRequired")
 	}
 
 	// Запускаем переиндексацию с переводами в отдельной горутине
 	go func() {
 		startTime := time.Now()
-		log.Printf("Starting full reindex with translations at %s", startTime.Format(time.RFC3339))
+		logger.Info().Time("startTime", startTime).Msg("Starting full reindex with translations")
 
 		// Получаем все объявления
 		filters := make(map[string]string)
@@ -124,7 +124,7 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 		for {
 			listings, count, err := h.services.Storage().GetListings(context.Background(), filters, limit, offset)
 			if err != nil {
-				log.Printf("Error fetching listings: %v", err)
+				logger.Error().Err(err).Msg("Error fetching listings")
 				break
 			}
 
@@ -133,14 +133,14 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 			}
 
 			total += len(listings)
-			log.Printf("Processing %d listings (offset %d)", len(listings), offset)
+			logger.Info().Int("count", len(listings)).Int("offset", offset).Msg("Processing listings")
 
 			// Обрабатываем каждое объявление
 			for _, listing := range listings {
 				// Индексируем объявление
 				err = h.services.Storage().IndexListing(context.Background(), &listing)
 				if err != nil {
-					log.Printf("Error indexing listing %d: %v", listing.ID, err)
+					logger.Error().Err(err).Int("listingID", listing.ID).Msg("Error indexing listing")
 				}
 			}
 
@@ -155,8 +155,11 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
-		log.Printf("Reindex with translations completed at %s, duration: %s, processed %d listings",
-			endTime.Format(time.RFC3339), duration, total)
+		logger.Info().
+			Time("endTime", endTime).
+			Dur("duration", duration).
+			Int("processedListings", total).
+			Msg("Reindex with translations completed")
 	}()
 
 	// Возвращаем успешный результат
@@ -182,21 +185,21 @@ func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем пользователя для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
-		log.Printf("Failed to get user with ID %d: %v", userID, err)
+		logger.Error().Err(err).Int("userID", userID).Msg("Failed to get user")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.adminCheckError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
-		log.Printf("User %d is not admin: %v", userID, err)
+		logger.Error().Err(err).Int("userID", userID).Msg("User is not admin")
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.adminRequired")
 	}
 
@@ -204,7 +207,7 @@ func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 	go func() {
 		err := h.marketplaceService.ReindexAllListings(context.Background())
 		if err != nil {
-			log.Printf("Error during reindex: %v", err)
+			logger.Error().Err(err).Msg("Error during reindex")
 		}
 	}()
 
@@ -231,27 +234,27 @@ func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем пользователя для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
-		log.Printf("Failed to get user with ID %d: %v", userID, err)
+		logger.Error().Err(err).Int("userID", userID).Msg("Failed to get user")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.adminCheckError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
-		log.Printf("User %d is not admin: %v", userID, err)
+		logger.Error().Err(err).Int("userID", userID).Msg("User is not admin")
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.adminRequired")
 	}
 
 	// Запускаем переиндексацию рейтингов в отдельной горутине
 	go func() {
-		log.Println("Starting ratings reindex")
+		logger.Info().Msg("Starting ratings reindex")
 		startTime := time.Now()
 
 		// Получаем все объявления
@@ -265,7 +268,7 @@ func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 		for {
 			listings, count, err := h.services.Storage().GetListings(context.Background(), filters, limit, offset)
 			if err != nil {
-				log.Printf("Error fetching listings: %v", err)
+				logger.Error().Err(err).Msg("Error fetching listings")
 				lastError = err
 				break
 			}
@@ -275,14 +278,14 @@ func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 			}
 
 			total += len(listings)
-			log.Printf("Processing ratings for %d listings (offset %d)", len(listings), offset)
+			logger.Info().Int("count", len(listings)).Int("offset", offset).Msg("Processing ratings for listings")
 
 			// Обрабатываем каждое объявление
 			for _, listing := range listings {
 				// Получаем рейтинг объявления
 				avgRating, err := h.services.Storage().GetEntityRating(context.Background(), "listing", listing.ID)
 				if err != nil {
-					log.Printf("Error fetching rating for listing %d: %v", listing.ID, err)
+					logger.Error().Err(err).Int("listingID", listing.ID).Msg("Error fetching rating for listing")
 					continue
 				}
 
@@ -292,7 +295,7 @@ func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 					EntityID:   listing.ID,
 				})
 				if err != nil {
-					log.Printf("Error fetching reviews for listing %d: %v", listing.ID, err)
+					logger.Error().Err(err).Int("listingID", listing.ID).Msg("Error fetching reviews for listing")
 					continue
 				}
 
@@ -306,7 +309,7 @@ func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 				// Обновляем индекс
 				err = h.services.Storage().IndexListing(context.Background(), &listing)
 				if err != nil {
-					log.Printf("Error updating rating for listing %d: %v", listing.ID, err)
+					logger.Error().Err(err).Int("listingID", listing.ID).Msg("Error updating rating for listing")
 					lastError = err
 					continue
 				}
@@ -325,8 +328,12 @@ func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
-		log.Printf("Ratings reindex completed in %s, processed %d listings, reindexed %d, last error: %v",
-			duration, total, reindexed, lastError)
+		logger.Info().
+			Dur("duration", duration).
+			Int("processedListings", total).
+			Int("reindexedListings", reindexed).
+			Err(lastError).
+			Msg("Ratings reindex completed")
 	}()
 
 	// Возвращаем успешный результат

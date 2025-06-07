@@ -3,12 +3,12 @@ package handler
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -50,20 +50,20 @@ func NewImagesHandler(services globalService.ServicesInterface) *ImagesHandler {
 // @Router /api/v1/marketplace/listings/{id}/images [post]
 func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 	// Добавим явные логи для отладки
-	log.Printf("НАЧАЛО ЗАГРУЗКИ ИЗОБРАЖЕНИЙ. Получен запрос: %s %s", c.Method(), c.Path())
+	logger.Info().Str("method", c.Method()).Str("path", c.Path()).Msg("Starting image upload")
 
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Ошибка получения user_id из контекста: %v", c.Locals("user_id"))
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Error getting user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
-	log.Printf("Аутентифицированный пользователь ID: %d", userID)
+	logger.Info().Int("userId", userID).Msg("Authenticated user")
 
 	// Проверяем, пришли ли какие-то файлы
 	form, err := c.MultipartForm()
 	if err != nil {
-		log.Printf("Ошибка получения MultipartForm: %v", err)
+		logger.Error().Err(err).Msg("Error getting MultipartForm")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.fileError")
 	}
 
@@ -73,9 +73,9 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 		files = form.File["files"]
 		if len(files) == 0 {
 			// Проверим все поля
-			log.Printf("Поиск файлов в form.File с ключами: %v", getMapKeys(form.File))
+			logger.Info().Interface("keys", getMapKeys(form.File)).Msg("Searching files in form.File")
 			for key, values := range form.File {
-				log.Printf("Поле %s содержит %d файлов", key, len(values))
+				logger.Info().Str("field", key).Int("filesCount", len(values)).Msg("Field contains files")
 				if len(values) > 0 {
 					files = values
 					break
@@ -83,13 +83,13 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 			}
 
 			if len(files) == 0 {
-				log.Printf("Не найдено файлов в запросе")
+				logger.Warn().Msg("No files found in request")
 				return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.noFiles")
 			}
 		}
 	}
 
-	log.Printf("Найдено %d файлов для загрузки", len(files))
+	logger.Info().Int("filesCount", len(files)).Msg("Files found for upload")
 
 	// Получаем ID объявления из параметров
 	listingIDStr := c.FormValue("listing_id")
@@ -97,29 +97,29 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 		// Попробуем из параметров URL
 		listingIDStr = c.Params("id")
 		if listingIDStr == "" {
-			log.Printf("Ошибка: ID объявления не указан")
+			logger.Error().Msg("Error: listing ID not specified")
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.missingListingId")
 		}
 	}
 
 	listingID, err := strconv.Atoi(listingIDStr)
 	if err != nil {
-		log.Printf("Ошибка преобразования ID объявления '%s': %v", listingIDStr, err)
+		logger.Error().Err(err).Str("listingIdStr", listingIDStr).Msg("Error converting listing ID")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
-	log.Printf("ID объявления для загрузки изображений: %d", listingID)
+	logger.Info().Int("listingId", listingID).Msg("Listing ID for image upload")
 
 	// Получаем информацию об объявлении для проверки владельца
 	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
 	if err != nil {
-		log.Printf("Ошибка получения объявления с ID %d: %v", listingID, err)
+		logger.Error().Err(err).Int("listingId", listingID).Msg("Error getting listing")
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 	}
 
 	// Проверяем, владеет ли пользователь объявлением
 	if listing.UserID != userID {
-		log.Printf("Доступ запрещен: UserID %d не владеет объявлением %d (владелец: %d)",
-			userID, listingID, listing.UserID)
+		logger.Warn().Int("userId", userID).Int("listingId", listingID).Int("ownerId", listing.UserID).Msg("Access denied: user does not own listing")
+
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.forbidden")
 	}
 
@@ -128,57 +128,55 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 	if mainImageIndexStr := c.FormValue("main_image_index"); mainImageIndexStr != "" {
 		if idx, err := strconv.Atoi(mainImageIndexStr); err == nil {
 			mainImageIndex = idx
-			log.Printf("Установлен индекс главного изображения: %d", mainImageIndex)
+			logger.Info().Int("mainImageIndex", mainImageIndex).Msg("Main image index set")
 		}
 	}
 
 	var uploadedImages []models.MarketplaceImage
 	for i, file := range files {
-		log.Printf("Обработка файла %d: %s (размер: %d, тип: %s)",
-			i, file.Filename, file.Size, file.Header.Get("Content-Type"))
+		logger.Info().Int("fileIndex", i).Str("filename", file.Filename).Int64("size", file.Size).Str("contentType", contentType).Msg("Processing file")
+
 
 		// Проверка типа файла и размера
 		if file.Size > 10*1024*1024 {
-			log.Printf("Файл слишком большой: %d байт", file.Size)
+			logger.Warn().Int64("size", file.Size).Msg("File too large")
 			continue // Пропускаем слишком большие файлы
 		}
 
 		contentType := file.Header.Get("Content-Type")
 		if !strings.HasPrefix(contentType, "image/") {
-			log.Printf("Неподдерживаемый тип файла: %s", contentType)
+			logger.Warn().Str("contentType", contentType).Msg("Unsupported file type")
 			continue // Пропускаем файлы не-изображения
 		}
 
 		// Загружаем изображение
 		isMain := i == mainImageIndex
-		log.Printf("Загрузка изображения: listingID=%d, isMain=%v", listingID, isMain)
+		logger.Info().Int("listingId", listingID).Bool("isMain", isMain).Msg("Uploading image")
 		image, err := h.marketplaceService.UploadImage(c.Context(), file, listingID, isMain)
 		if err != nil {
-			log.Printf("Ошибка загрузки изображения: %v", err)
+			logger.Error().Err(err).Msg("Error uploading image")
 			continue
 		}
 
-		log.Printf("Image successfully uploaded: ID=%d, Path=%s", image.ID, image.FilePath)
+		logger.Info().Int("imageId", image.ID).Str("filePath", image.FilePath).Msg("Image successfully uploaded")
 
 		uploadedImages = append(uploadedImages, *image)
 	}
 
 	// Переиндексируем объявление с загруженными изображениями
-	log.Printf("Переиндексация объявления %d с новыми изображениями", listingID)
+	logger.Info().Int("listingId", listingID).Msg("Reindexing listing with new images")
 	fullListing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
 	if err != nil {
-		log.Printf("Ошибка получения полной информации об объявлении для переиндексации: %v", err)
+		logger.Error().Err(err).Msg("Error getting full listing info for reindexing")
 	} else {
 		if err := h.marketplaceService.Storage().IndexListing(c.Context(), fullListing); err != nil {
-			log.Printf("Ошибка переиндексации объявления после загрузки изображений: %v", err)
+			logger.Error().Err(err).Msg("Error reindexing listing after image upload")
 		} else {
-			log.Printf("Успешно переиндексировано объявление %d с %d изображениями",
-				listingID, len(fullListing.Images))
+			logger.Info().Int("listingId", listingID).Int("imagesCount", len(fullListing.Images)).Msg("Successfully reindexed listing with images")
 		}
 	}
 
-	log.Printf("ЗАВЕРШЕНА ЗАГРУЗКА ИЗОБРАЖЕНИЙ: загружено %d из %d файлов",
-		len(uploadedImages), len(files))
+	logger.Info().Int("uploadedCount", len(uploadedImages)).Int("totalFiles", len(files)).Msg("Image upload completed")
 
 	// Возвращаем успешный результат с информацией о загруженных изображениях
 	return utils.SuccessResponse(c, fiber.Map{
@@ -216,7 +214,7 @@ func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
@@ -229,14 +227,14 @@ func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 	// Получаем информацию об изображении
 	image, err := h.services.Storage().GetListingImageByID(c.Context(), imageID)
 	if err != nil {
-		log.Printf("Failed to get image with ID %d: %v", imageID, err)
+		logger.Error().Err(err).Int("imageId", imageID).Msg("Failed to get image")
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.imageNotFound")
 	}
 
 	// Получаем информацию об объявлении
 	listing, err := h.marketplaceService.GetListingByID(c.Context(), image.ListingID)
 	if err != nil {
-		log.Printf("Failed to get listing with ID %d: %v", image.ListingID, err)
+		logger.Error().Err(err).Int("listingId", image.ListingID).Msg("Failed to get listing")
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 	}
 
@@ -248,7 +246,7 @@ func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 	// Удаляем изображение
 	err = h.marketplaceService.DeleteImage(c.Context(), imageID)
 	if err != nil {
-		log.Printf("Failed to delete image with ID %d: %v", imageID, err)
+		logger.Error().Err(err).Int("imageId", imageID).Msg("Failed to delete image")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteError")
 	}
 
@@ -276,28 +274,28 @@ func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем пользователя по ID для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
-		log.Printf("Failed to get user with ID %d: %v", userID, err)
+		logger.Error().Err(err).Int("userId", userID).Msg("Failed to get user")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.adminCheckError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
-		log.Printf("User %d is not admin: %v", userID, err)
+		logger.Error().Err(err).Int("userId", userID).Msg("User is not admin")
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.adminRequired")
 	}
 
 	// Получаем файл из запроса
 	file, err := c.FormFile("file")
 	if err != nil {
-		log.Printf("Failed to get file from request: %v", err)
+		logger.Error().Err(err).Msg("Failed to get file from request")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.fileError")
 	}
 
@@ -316,7 +314,7 @@ func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
 	tempDir := os.TempDir()
 	tempFilePath := filepath.Join(tempDir, fmt.Sprintf("moderate_image_%d", time.Now().UnixNano()))
 	if err := c.SaveFile(file, tempFilePath); err != nil {
-		log.Printf("Failed to save file: %v", err)
+		logger.Error().Err(err).Msg("Failed to save file")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.saveFileError")
 	}
 	defer os.Remove(tempFilePath) // Удаляем временный файл после завершения
@@ -355,7 +353,7 @@ func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
@@ -368,14 +366,14 @@ func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
 	// Получаем информацию об изображении
 	image, err := h.services.Storage().GetListingImageByID(c.Context(), imageID)
 	if err != nil {
-		log.Printf("Failed to get image with ID %d: %v", imageID, err)
+		logger.Error().Err(err).Int("imageId", imageID).Msg("Failed to get image")
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.imageNotFound")
 	}
 
 	// Получаем информацию об объявлении
 	listing, err := h.marketplaceService.GetListingByID(c.Context(), image.ListingID)
 	if err != nil {
-		log.Printf("Failed to get listing with ID %d: %v", image.ListingID, err)
+		logger.Error().Err(err).Int("listingId", image.ListingID).Msg("Failed to get listing")
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 	}
 
@@ -421,7 +419,7 @@ func (h *ImagesHandler) EnhanceImages(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
@@ -434,7 +432,7 @@ func (h *ImagesHandler) EnhanceImages(c *fiber.Ctx) error {
 	// Получаем информацию об объявлении
 	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
 	if err != nil {
-		log.Printf("Failed to get listing with ID %d: %v", listingID, err)
+		logger.Error().Err(err).Int("listingId", listingID).Msg("Failed to get listing")
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 	}
 
@@ -453,7 +451,7 @@ func (h *ImagesHandler) EnhanceImages(c *fiber.Ctx) error {
 	for _, imageID := range imageIDs {
 		image, err := h.services.Storage().GetListingImageByID(c.Context(), imageID)
 		if err != nil {
-			log.Printf("Failed to get image with ID %d: %v", imageID, err)
+			logger.Error().Err(err).Int("imageId", imageID).Msg("Failed to get image")
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.imageNotFound")
 		}
 

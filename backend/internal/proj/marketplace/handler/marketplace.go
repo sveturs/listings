@@ -2,9 +2,9 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
+	"backend/internal/logger"
 	"backend/internal/proj/marketplace/service"
 	postgres "backend/internal/storage/postgres"
 )
@@ -26,7 +26,7 @@ func NewMarketplaceHandler(storage *postgres.Storage) *MarketplaceHandler {
 func (h *MarketplaceHandler) respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("JSON serialization error: %v", err)
+		logger.Error().Err(err).Msg("JSON serialization error")
 		h.respondWithError(w, http.StatusInternalServerError, "marketplace.serializationError")
 		return
 	}

@@ -3,6 +3,7 @@ package handler
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
@@ -10,7 +11,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -48,13 +48,13 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
 	var listing models.MarketplaceListing
 	if err := c.BodyParser(&listing); err != nil {
-		log.Printf("Failed to parse request body: %v", err)
+		logger.Error().Err(err).Msg("Failed to parse request body")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
@@ -77,7 +77,7 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 	// Создаем объявление
 	id, err := h.marketplaceService.CreateListing(c.Context(), &listing)
 	if err != nil {
-		log.Printf("Failed to create listing: %v", err)
+		logger.Error().Err(err).Msg("Failed to create listing")
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			return utils.ErrorResponse(c, fiber.StatusConflict, "marketplace.duplicateTitle")
 		}
@@ -113,7 +113,7 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 	// Получаем детали объявления
 	listing, err := h.marketplaceService.GetListingByID(c.Context(), id)
 	if err != nil {
-		log.Printf("Failed to get listing with ID %d: %v", id, err)
+		logger.Error().Err(err).Int("listingId", id).Msg("Failed to get listing")
 		if err.Error() == "listing not found" {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 		}
@@ -124,7 +124,7 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 	go func(ctx context.Context, listingID int) {
 		err := h.services.Storage().IncrementViewsCount(context.Background(), listingID)
 		if err != nil {
-			log.Printf("Failed to increment views count for listing %d: %v", listingID, err)
+			logger.Error().Err(err).Int("listingId", listingID).Msg("Failed to increment views count")
 		}
 	}(c.Context(), id)
 
@@ -225,7 +225,7 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	// Получаем список объявлений
 	listings, total, err := h.marketplaceService.GetListings(c.Context(), filters, limit, offset)
 	if err != nil {
-		log.Printf("Failed to get listings: %v", err)
+		logger.Error().Err(err).Msg("Failed to get listings")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.listError")
 	}
 
@@ -265,7 +265,7 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -278,7 +278,7 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	// Получаем текущие данные объявления для проверки владельца
 	currentListing, err := h.marketplaceService.GetListingByID(c.Context(), id)
 	if err != nil {
-		log.Printf("Failed to get listing with ID %d: %v", id, err)
+		logger.Error().Err(err).Int("listingId", id).Msg("Failed to get listing")
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 	}
 
@@ -290,7 +290,7 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	// Парсим данные из запроса
 	var listing models.MarketplaceListing
 	if err := c.BodyParser(&listing); err != nil {
-		log.Printf("Failed to parse request body: %v", err)
+		logger.Error().Err(err).Msg("Failed to parse request body")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
@@ -323,22 +323,22 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 
 		err = h.services.Storage().ClosePriceHistoryEntry(c.Context(), id)
 		if err != nil {
-			log.Printf("Failed to close previous price history entry: %v", err)
+			logger.Error().Err(err).Msg("Failed to close previous price history entry")
 		}
 
 		err = h.services.Storage().AddPriceHistoryEntry(c.Context(), &priceHistory)
 		if err != nil {
-			log.Printf("Failed to add price history entry: %v", err)
+			logger.Error().Err(err).Msg("Failed to add price history entry")
 		}
 
 		// Проверяем, не является ли изменение цены манипуляцией
 		isManipulation, err := h.services.Storage().CheckPriceManipulation(c.Context(), id)
 		if err != nil {
-			log.Printf("Failed to check price manipulation: %v", err)
+			logger.Error().Err(err).Msg("Failed to check price manipulation")
 		}
 
 		if isManipulation {
-			log.Printf("Detected price manipulation for listing %d", id)
+			logger.Warn().Int("listingId", id).Msg("Detected price manipulation")
 			// Здесь можно добавить логику для обработки манипуляций с ценой
 		}
 	}
@@ -346,7 +346,7 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	// Обновляем объявление
 	err = h.marketplaceService.UpdateListing(c.Context(), &listing)
 	if err != nil {
-		log.Printf("Failed to update listing: %v", err)
+		logger.Error().Err(err).Msg("Failed to update listing")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateError")
 	}
 
@@ -374,7 +374,7 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -387,7 +387,7 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 	// Удаляем объявление
 	err = h.marketplaceService.DeleteListing(c.Context(), id, userID)
 	if err != nil {
-		log.Printf("Failed to delete listing with ID %d: %v", id, err)
+		logger.Error().Err(err).Int("listingId", id).Msg("Failed to delete listing")
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "permission") {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.forbidden")
 		}
@@ -398,7 +398,7 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 	go func() {
 		err := h.services.Storage().DeleteListingIndex(context.Background(), fmt.Sprintf("%d", id))
 		if err != nil {
-			log.Printf("Failed to delete listing index for ID %d: %v", id, err)
+			logger.Error().Err(err).Int("listingId", id).Msg("Failed to delete listing index")
 		}
 	}()
 
@@ -429,7 +429,7 @@ func (h *ListingsHandler) GetPriceHistory(c *fiber.Ctx) error {
 	// Получаем историю цен
 	priceHistory, err := h.marketplaceService.GetPriceHistory(c.Context(), id)
 	if err != nil {
-		log.Printf("Failed to get price history for listing %d: %v", id, err)
+		logger.Error().Err(err).Int("listingId", id).Msg("Failed to get price history")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.priceHistoryError")
 	}
 
@@ -458,28 +458,28 @@ func (h *ListingsHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
-		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
 	// Получаем пользователя для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
-		log.Printf("Failed to get user with ID %d: %v", userID, err)
+		logger.Error().Err(err).Int("userId", userID).Msg("Failed to get user")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.checkError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
-		log.Printf("User %d is not admin: %v", userID, err)
+		logger.Error().Err(err).Int("userId", userID).Msg("User is not admin")
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.required")
 	}
 
 	// Запускаем синхронизацию
 	err = h.marketplaceService.SynchronizeDiscountData(c.Context(), 0)
 	if err != nil {
-		log.Printf("Failed to synchronize discount data: %v", err)
+		logger.Error().Err(err).Msg("Failed to synchronize discount data")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.syncError")
 	}
 

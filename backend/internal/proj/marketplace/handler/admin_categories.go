@@ -3,11 +3,11 @@ package handler
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	//"backend/internal/middleware"
 	"backend/pkg/utils"
 	//"encoding/json"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"strconv"
 )
 
@@ -109,7 +109,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 	// Создаем категорию
 	id, err := h.marketplaceService.CreateCategory(c.Context(), &category)
 	if err != nil {
-		log.Printf("Failed to create category: %v", err)
+		logger.Error().Err(err).Msg("Failed to create category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.createCategoryError")
 	}
 
@@ -146,7 +146,7 @@ func (h *AdminCategoriesHandler) GetCategoryByID(c *fiber.Ctx) error {
 	// Получаем все категории
 	categories, err := h.marketplaceService.GetCategories(c.Context())
 	if err != nil {
-		log.Printf("Failed to get categories: %v", err)
+		logger.Error().Err(err).Msg("Failed to get categories")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getCategoriesError")
 	}
 
@@ -243,7 +243,7 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 	// Обновляем категорию
 	err = h.marketplaceService.UpdateCategory(c.Context(), &category)
 	if err != nil {
-		log.Printf("Failed to update category: %v", err)
+		logger.Error().Err(err).Msg("Failed to update category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateCategoryError")
 	}
 
@@ -277,7 +277,7 @@ func (h *AdminCategoriesHandler) DeleteCategory(c *fiber.Ctx) error {
 	// Удаляем категорию
 	err = h.marketplaceService.DeleteCategory(c.Context(), categoryID)
 	if err != nil {
-		log.Printf("Failed to delete category: %v", err)
+		logger.Error().Err(err).Msg("Failed to delete category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteCategoryError")
 	}
 
@@ -319,7 +319,7 @@ func (h *AdminCategoriesHandler) ReorderCategories(c *fiber.Ctx) error {
 	// Изменяем порядок категорий
 	err := h.marketplaceService.ReorderCategories(c.Context(), input.OrderedIDs)
 	if err != nil {
-		log.Printf("Failed to reorder categories: %v", err)
+		logger.Error().Err(err).Msg("Failed to reorder categories")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.reorderCategoriesError")
 	}
 
@@ -363,7 +363,7 @@ func (h *AdminCategoriesHandler) MoveCategory(c *fiber.Ctx) error {
 	// Перемещаем категорию
 	err = h.marketplaceService.MoveCategory(c.Context(), categoryID, input.NewParentID)
 	if err != nil {
-		log.Printf("Failed to move category: %v", err)
+		logger.Error().Err(err).Msg("Failed to move category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.moveCategoryError")
 	}
 
@@ -408,7 +408,7 @@ func (h *AdminCategoriesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 	// Привязываем атрибут к категории
 	err = h.marketplaceService.AddAttributeToCategory(c.Context(), categoryID, input.AttributeID, input.IsRequired)
 	if err != nil {
-		log.Printf("Failed to add attribute to category: %v", err)
+		logger.Error().Err(err).Msg("Failed to add attribute to category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.addAttributeToCategoryError")
 	}
 
@@ -445,7 +445,7 @@ func (h *AdminCategoriesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error
 	// Отвязываем атрибут от категории
 	err = h.marketplaceService.RemoveAttributeFromCategory(c.Context(), categoryID, attributeID)
 	if err != nil {
-		log.Printf("Failed to remove attribute from category: %v", err)
+		logger.Error().Err(err).Msg("Failed to remove attribute from category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.removeAttributeFromCategoryError")
 	}
 
@@ -493,7 +493,7 @@ func (h *AdminCategoriesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 	// Обновляем настройки связи
 	err = h.marketplaceService.UpdateAttributeCategory(c.Context(), categoryID, attributeID, input.IsRequired, input.IsEnabled)
 	if err != nil {
-		log.Printf("Failed to update attribute category settings: %v", err)
+		logger.Error().Err(err).Msg("Failed to update attribute category settings")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeCategoryError")
 	}
 
