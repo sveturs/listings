@@ -28,6 +28,15 @@ func NewSearchHandler(services globalService.ServicesInterface) *SearchHandler {
 }
 
 // SearchListingsAdvanced выполняет расширенный поиск объявлений
+// @Summary Advanced search for listings
+// @Description Performs advanced search with filters, facets, and suggestions
+// @Tags marketplace-search
+// @Accept json
+// @Produce json
+// @Param body body search.ServiceParams true "Search parameters"
+// @Success 200 {object} object{data=[]models.MarketplaceListing,meta=object{total=int,page=int,size=int,total_pages=int,has_more=bool,facets=object,suggestions=[]string,spelling_suggestion=string,took_ms=int}} "Search results with metadata"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.searchError"
+// @Router /api/v1/marketplace/search [get]
 func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	// Парсим параметры поиска из запроса
 	var params search.ServiceParams
@@ -122,7 +131,7 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	results, err := h.marketplaceService.SearchListingsAdvanced(ctx, &params)
 	if err != nil {
 		log.Printf("Failed to perform advanced search: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при выполнении поиска")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.searchError")
 	}
 
 	// Проверяем, что results.Items не nil
@@ -187,11 +196,22 @@ func parseIntOrDefault(str string, defaultValue int) int {
 }
 
 // GetSuggestions возвращает предложения автодополнения
+// @Summary Get search suggestions
+// @Description Returns autocomplete suggestions based on prefix
+// @Tags marketplace-search
+// @Accept json
+// @Produce json
+// @Param prefix query string true "Search prefix"
+// @Param size query int false "Number of suggestions" default(10)
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]string} "List of suggestions"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.prefixRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
+// @Router /api/v1/marketplace/suggestions [get]
 func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 	// Получаем префикс для автодополнения из параметров
 	prefix := c.Query("prefix")
 	if prefix == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Необходимо указать префикс")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.prefixRequired")
 	}
 
 	// Получаем размер выборки
@@ -206,7 +226,7 @@ func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 	suggestions, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, size)
 	if err != nil {
 		log.Printf("Failed to get suggestions for prefix '%s': %v", prefix, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить предложения")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.suggestionsError")
 	}
 
 	// Возвращаем предложения
@@ -214,11 +234,23 @@ func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 }
 
 // GetEnhancedSuggestions возвращает расширенные предложения автодополнения
+// @Summary Get enhanced search suggestions
+// @Description Returns autocomplete suggestions with categories
+// @Tags marketplace-search
+// @Accept json
+// @Produce json
+// @Param prefix query string true "Search prefix"
+// @Param size query int false "Number of suggestions" default(10)
+// @Param lang query string false "Language" default(ru)
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]object{text=string,type=string,category=object{id=int,name=string,slug=string}}} "Enhanced suggestions"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.prefixRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
+// @Router /api/v1/marketplace/enhanced-suggestions [get]
 func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	// Получаем префикс для автодополнения из параметров
 	prefix := c.Query("prefix")
 	if prefix == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Необходимо указать префикс")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.prefixRequired")
 	}
 
 	// Получаем размер выборки
@@ -243,7 +275,7 @@ func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	suggestions, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, size)
 	if err != nil {
 		log.Printf("Failed to get suggestions for prefix '%s': %v", prefix, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить предложения")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.suggestionsError")
 	}
 
 	// Для более короткого запроса (менее 3 символов) добавляем категории
@@ -299,11 +331,22 @@ func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 }
 
 // GetCategorySuggestions возвращает предложения категорий
+// @Summary Get category suggestions
+// @Description Returns category suggestions based on query
+// @Tags marketplace-search
+// @Accept json
+// @Produce json
+// @Param query query string true "Search query"
+// @Param size query int false "Number of suggestions" default(10)
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategorySuggestion} "Category suggestions"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categorySuggestionsError"
+// @Router /api/v1/marketplace/category-suggestions [get]
 func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 	// Получаем строку запроса
 	query := c.Query("query")
 	if query == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Необходимо указать запрос")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.queryRequired")
 	}
 
 	// Получаем размер выборки
@@ -318,7 +361,7 @@ func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 	suggestions, err := h.marketplaceService.GetCategorySuggestions(c.Context(), query, size)
 	if err != nil {
 		log.Printf("Failed to get category suggestions for query '%s': %v", query, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить предложения категорий")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categorySuggestionsError")
 	}
 
 	// Возвращаем предложения категорий
@@ -326,11 +369,22 @@ func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 }
 
 // GetSimilarListings возвращает похожие объявления
+// @Summary Get similar listings
+// @Description Returns listings similar to a specific listing
+// @Tags marketplace-search
+// @Accept json
+// @Produce json
+// @Param id path int true "Listing ID"
+// @Param limit query int false "Number of similar listings" default(5)
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Similar listings"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.similarListingsError"
+// @Router /api/v1/marketplace/listings/{id}/similar [get]
 func (h *SearchHandler) GetSimilarListings(c *fiber.Ctx) error {
 	// Получаем ID объявления из параметров URL
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
 	// Получаем лимит
@@ -345,7 +399,7 @@ func (h *SearchHandler) GetSimilarListings(c *fiber.Ctx) error {
 	listings, err := h.marketplaceService.GetSimilarListings(c.Context(), id, limit)
 	if err != nil {
 		log.Printf("Failed to get similar listings for listing %d: %v", id, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить похожие объявления")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.similarListingsError")
 	}
 
 	// Проверяем, что listings не nil

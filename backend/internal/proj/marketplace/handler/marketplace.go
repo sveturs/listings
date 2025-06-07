@@ -9,25 +9,25 @@ import (
 	postgres "backend/internal/storage/postgres"
 )
 
-// MarketplaceHandler представляет основной обработчик для маркетплейса
+// MarketplaceHandler represents the main handler for marketplace operations
 type MarketplaceHandler struct {
 	storage *postgres.Storage
 	service service.MarketplaceServiceInterface
 }
 
-// NewMarketplaceHandler создает новый основной обработчик маркетплейса
+// NewMarketplaceHandler creates a new marketplace handler
 func NewMarketplaceHandler(storage *postgres.Storage) *MarketplaceHandler {
 	return &MarketplaceHandler{
 		storage: storage,
 	}
 }
 
-// respondWithJSON отправляет JSON-ответ
+// respondWithJSON sends a JSON response
 func (h *MarketplaceHandler) respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("Ошибка сериализации в JSON: %v", err)
-		h.respondWithError(w, http.StatusInternalServerError, "Ошибка обработки ответа")
+		log.Printf("JSON serialization error: %v", err)
+		h.respondWithError(w, http.StatusInternalServerError, "marketplace.serializationError")
 		return
 	}
 
@@ -36,7 +36,7 @@ func (h *MarketplaceHandler) respondWithJSON(w http.ResponseWriter, statusCode i
 	w.Write(response)
 }
 
-// respondWithError отправляет ошибку в формате JSON
+// respondWithError sends an error response in JSON format
 func (h *MarketplaceHandler) respondWithError(w http.ResponseWriter, statusCode int, message string) {
 	h.respondWithJSON(w, statusCode, map[string]string{"error": message})
 }

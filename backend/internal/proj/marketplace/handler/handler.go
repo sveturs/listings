@@ -15,14 +15,14 @@ import (
 	"backend/pkg/utils"
 )
 
-// Глобальные переменные для кеширования категорий
+// Global variables for caching categories
 var (
 	categoryTreeCache      []models.CategoryTreeNode
 	categoryTreeLastUpdate time.Time
 	categoryTreeMutex      sync.RWMutex
 )
 
-// Handler объединяет все обработчики маркетплейса
+// Handler combines all marketplace handlers
 type Handler struct {
 	Listings           *ListingsHandler
 	Images             *ImagesHandler
@@ -43,7 +43,7 @@ func (h *Handler) GetPrefix() string {
 	return "/api/v1/marketplace"
 }
 
-// NewHandler создает новый обработчик маркетплейса
+// NewHandler creates a new marketplace handler
 func NewHandler(services globalService.ServicesInterface) *Handler {
 	// Сначала создаем базовые обработчики
 	categoriesHandler := NewCategoriesHandler(services)
@@ -279,7 +279,25 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	return nil
 }
 
-// GetListingsInBounds возвращает объявления в указанных границах карты
+// GetListingsInBounds returns listings within specified map bounds
+// @Summary Get listings in bounds
+// @Description Returns all listings within the specified geographical bounds
+// @Tags marketplace-map
+// @Accept json
+// @Produce json
+// @Param ne_lat query number true "Northeast latitude"
+// @Param ne_lng query number true "Northeast longitude"
+// @Param sw_lat query number true "Southwest latitude"
+// @Param sw_lng query number true "Southwest longitude"
+// @Param zoom query int false "Map zoom level" default(10)
+// @Param categories query string false "Comma-separated category IDs"
+// @Param condition query string false "Item condition filter"
+// @Param min_price query number false "Minimum price filter"
+// @Param max_price query number false "Maximum price filter"
+// @Success 200 {object} object{listings=[]models.MarketplaceListing,bounds=object{ne=object{lat=number,lng=number},sw=object{lat=number,lng=number}},zoom=int,count=int} "Listings within bounds"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
+// @Router /api/v1/marketplace/map/bounds [get]
 func (h *Handler) GetListingsInBounds(c *fiber.Ctx) error {
 	// Получаем параметры bounds
 	neLat := c.Query("ne_lat")
@@ -290,28 +308,28 @@ func (h *Handler) GetListingsInBounds(c *fiber.Ctx) error {
 
 	// Валидируем параметры
 	if neLat == "" || neLng == "" || swLat == "" || swLng == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Missing bounding box parameters")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.missingBounds")
 	}
 
 	// Парсим координаты
 	neLat64, err := strconv.ParseFloat(neLat, 64)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid ne_lat")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLatitude")
 	}
 
 	neLng64, err := strconv.ParseFloat(neLng, 64)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid ne_lng")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLongitude")
 	}
 
 	swLat64, err := strconv.ParseFloat(swLat, 64)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid sw_lat")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLatitude")
 	}
 
 	swLng64, err := strconv.ParseFloat(swLng, 64)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid sw_lng")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLongitude")
 	}
 
 	zoom, err := strconv.Atoi(zoomStr)
@@ -343,7 +361,7 @@ func (h *Handler) GetListingsInBounds(c *fiber.Ctx) error {
 		neLat64, neLng64, swLat64, swLng64, zoom,
 		categoryIDs, condition, minPriceFloat, maxPriceFloat)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get listings")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
 
 	return utils.SuccessResponse(c, map[string]interface{}{
@@ -357,7 +375,25 @@ func (h *Handler) GetListingsInBounds(c *fiber.Ctx) error {
 	})
 }
 
-// GetMapClusters возвращает кластеризованные данные для карты
+// GetMapClusters returns clustered data for map view
+// @Summary Get map clusters
+// @Description Returns clustered listings data for efficient map rendering
+// @Tags marketplace-map
+// @Accept json
+// @Produce json
+// @Param ne_lat query number true "Northeast latitude"
+// @Param ne_lng query number true "Northeast longitude"
+// @Param sw_lat query number true "Southwest latitude"
+// @Param sw_lng query number true "Southwest longitude"
+// @Param zoom query int false "Map zoom level" default(10)
+// @Param categories query string false "Comma-separated category IDs"
+// @Param condition query string false "Item condition filter"
+// @Param min_price query number false "Minimum price filter"
+// @Param max_price query number false "Maximum price filter"
+// @Success 200 {object} object{clusters=[]models.MarketplaceListing,bounds=object{ne=object{lat=number,lng=number},sw=object{lat=number,lng=number}},zoom=int,count=int} "Map clusters data"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
+// @Router /api/v1/marketplace/map/clusters [get]
 func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
 	// Получаем параметры bounds
 	neLat := c.Query("ne_lat")
@@ -368,28 +404,28 @@ func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
 
 	// Валидируем параметры
 	if neLat == "" || neLng == "" || swLat == "" || swLng == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Missing bounding box parameters")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.missingBounds")
 	}
 
 	// Парсим координаты
 	neLat64, err := strconv.ParseFloat(neLat, 64)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid ne_lat")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLatitude")
 	}
 
 	neLng64, err := strconv.ParseFloat(neLng, 64)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid ne_lng")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLongitude")
 	}
 
 	swLat64, err := strconv.ParseFloat(swLat, 64)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid sw_lat")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLatitude")
 	}
 
 	swLng64, err := strconv.ParseFloat(swLng, 64)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid sw_lng")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLongitude")
 	}
 
 	zoom, err := strconv.Atoi(zoomStr)
@@ -420,7 +456,7 @@ func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
 		neLat64, neLng64, swLat64, swLng64, zoom,
 		categoryIDs, condition, minPriceFloat, maxPriceFloat)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get clusters")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
 
 	return utils.SuccessResponse(c, map[string]interface{}{

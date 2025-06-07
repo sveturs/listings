@@ -12,6 +12,23 @@ definitions:
         example: Validation failed
         type: string
     type: object
+  backend_internal_domain_models.AddItemToGroupRequest:
+    properties:
+      attribute_id:
+        type: integer
+      custom_display_name:
+        type: string
+      icon:
+        type: string
+      sort_order:
+        type: integer
+      visibility_condition:
+        items:
+          type: integer
+        type: array
+    required:
+    - attribute_id
+    type: object
   backend_internal_domain_models.AdminUser:
     properties:
       created_at:
@@ -24,6 +41,236 @@ definitions:
         type: integer
       notes:
         type: string
+    type: object
+  backend_internal_domain_models.AttachGroupToCategoryRequest:
+    properties:
+      collapsed_by_default:
+        type: boolean
+      component_id:
+        type: integer
+      configuration:
+        items:
+          type: integer
+        type: array
+      display_mode:
+        type: string
+      group_id:
+        type: integer
+      is_active:
+        type: boolean
+      sort_order:
+        type: integer
+    required:
+    - group_id
+    type: object
+  backend_internal_domain_models.AttributeGroup:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_system:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  backend_internal_domain_models.AttributeGroupItem:
+    properties:
+      attribute:
+        $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+      attribute_id:
+        type: integer
+      created_at:
+        type: string
+      custom_display_name:
+        type: string
+      group_id:
+        type: integer
+      icon:
+        type: string
+      id:
+        type: integer
+      sort_order:
+        type: integer
+      visibility_condition:
+        items:
+          type: integer
+        type: array
+    type: object
+  backend_internal_domain_models.CategoryAttribute:
+    properties:
+      attribute_type:
+        type: string
+      created_at:
+        type: string
+      custom_component:
+        type: string
+      display_name:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      is_filterable:
+        type: boolean
+      is_required:
+        type: boolean
+      is_searchable:
+        type: boolean
+      name:
+        type: string
+      option_translations:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        type: object
+      options:
+        items:
+          type: integer
+        type: array
+      sort_order:
+        type: integer
+      translations:
+        additionalProperties:
+          type: string
+        type: object
+      validation_rules:
+        items:
+          type: integer
+        type: array
+    type: object
+  backend_internal_domain_models.CategoryAttributeMapping:
+    properties:
+      attribute:
+        $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+      attribute_id:
+        type: integer
+      category_id:
+        type: integer
+      custom_component:
+        type: string
+      is_enabled:
+        type: boolean
+      is_required:
+        type: boolean
+      sort_order:
+        type: integer
+    type: object
+  backend_internal_domain_models.CategorySuggestion:
+    properties:
+      id:
+        type: integer
+      listing_count:
+        type: integer
+      name:
+        type: string
+    type: object
+  backend_internal_domain_models.CategoryTreeNode:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.CategoryTreeNode'
+        type: array
+      children_count:
+        description: Новое поле
+        type: integer
+      created_at:
+        type: string
+      custom_ui_component:
+        type: string
+      has_custom_ui:
+        type: boolean
+      icon:
+        type: string
+      id:
+        type: integer
+      level:
+        type: integer
+      listing_count:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+      path:
+        type: string
+      slug:
+        type: string
+      translations:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  backend_internal_domain_models.ChatAttachment:
+    properties:
+      content_type:
+        description: MIME тип
+        type: string
+      created_at:
+        type: string
+      file_name:
+        description: Оригинальное имя файла
+        type: string
+      file_path:
+        description: Путь к файлу в хранилище
+        type: string
+      file_size:
+        description: Размер в байтах
+        type: integer
+      file_type:
+        description: image, video, document
+        type: string
+      id:
+        type: integer
+      message_id:
+        type: integer
+      metadata:
+        additionalProperties: true
+        description: Дополнительные метаданные
+        type: object
+      public_url:
+        description: Публичный URL для доступа
+        type: string
+      storage_bucket:
+        description: chat-files
+        type: string
+      storage_type:
+        description: minio
+        type: string
+      thumbnail_url:
+        description: URL превью для видео
+        type: string
+    type: object
+  backend_internal_domain_models.CreateAttributeGroupRequest:
+    properties:
+      description:
+        type: string
+      display_name:
+        type: string
+      icon:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+    required:
+    - display_name
+    - name
     type: object
   backend_internal_domain_models.CreateComponentUsageRequest:
     properties:
@@ -79,6 +326,20 @@ definitions:
     - component_type
     - name
     - template_code
+    type: object
+  backend_internal_domain_models.CreateMessageRequest:
+    properties:
+      chat_id:
+        type: integer
+      content:
+        type: string
+      listing_id:
+        type: integer
+      receiver_id:
+        type: integer
+    required:
+    - content
+    - receiver_id
     type: object
   backend_internal_domain_models.CreateReviewRequest:
     properties:
@@ -230,6 +491,313 @@ definitions:
           type: integer
         type: array
     type: object
+  backend_internal_domain_models.ListingAttributeValue:
+    properties:
+      attribute_id:
+        type: integer
+      attribute_name:
+        type: string
+      attribute_type:
+        type: string
+      boolean_value:
+        type: boolean
+      display_name:
+        type: string
+      display_value:
+        description: Вспомогательное поле для вывода значения любого типа в строковом
+          виде
+        type: string
+      json_value:
+        items:
+          type: integer
+        type: array
+      listing_id:
+        type: integer
+      numeric_value:
+        type: number
+      option_translations:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        type: object
+      text_value:
+        type: string
+      translations:
+        additionalProperties:
+          type: string
+        type: object
+      unit:
+        description: Добавляем поле для единиц измерения
+        type: string
+    type: object
+  backend_internal_domain_models.MarkAsReadRequest:
+    properties:
+      message_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - message_ids
+    type: object
+  backend_internal_domain_models.MarketplaceCategory:
+    properties:
+      count:
+        type: integer
+      created_at:
+        type: string
+      custom_ui_component:
+        type: string
+      external_id:
+        type: string
+      has_custom_ui:
+        type: boolean
+      icon:
+        type: string
+      id:
+        type: integer
+      level:
+        type: integer
+      listing_count:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+      slug:
+        type: string
+      sort_order:
+        type: integer
+      translations:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  backend_internal_domain_models.MarketplaceChat:
+    properties:
+      buyer:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.User'
+        description: Дополнительные поля для отображения
+      buyer_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      last_message:
+        $ref: '#/definitions/backend_internal_domain_models.MarketplaceMessage'
+      last_message_at:
+        type: string
+      listing:
+        $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+      listing_id:
+        type: integer
+      other_user:
+        $ref: '#/definitions/backend_internal_domain_models.User'
+      seller:
+        $ref: '#/definitions/backend_internal_domain_models.User'
+      seller_id:
+        type: integer
+      unread_count:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  backend_internal_domain_models.MarketplaceImage:
+    properties:
+      content_type:
+        description: MIME-тип файла
+        type: string
+      created_at:
+        type: string
+      file_name:
+        description: Оригинальное имя файла
+        type: string
+      file_path:
+        description: Путь к файлу в хранилище
+        type: string
+      file_size:
+        description: Размер файла в байтах
+        type: integer
+      id:
+        type: integer
+      is_main:
+        description: Является ли изображение основным
+        type: boolean
+      listing_id:
+        type: integer
+      public_url:
+        description: Публичный URL для доступа к файлу
+        type: string
+      storage_bucket:
+        description: Имя бакета для MinIO
+        type: string
+      storage_type:
+        description: 'Тип хранилища: "local" или "minio"'
+        type: string
+    type: object
+  backend_internal_domain_models.MarketplaceListing:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.ListingAttributeValue'
+        type: array
+      average_rating:
+        type: number
+      category:
+        $ref: '#/definitions/backend_internal_domain_models.MarketplaceCategory'
+      category_id:
+        type: integer
+      category_path:
+        items:
+          type: string
+        type: array
+      category_path_ids:
+        items:
+          type: integer
+        type: array
+      category_path_names:
+        items:
+          type: string
+        type: array
+      category_path_slugs:
+        items:
+          type: string
+        type: array
+      city:
+        type: string
+      condition:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      external_id:
+        type: string
+      has_discount:
+        type: boolean
+      helpful_votes:
+        type: integer
+      id:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.MarketplaceImage'
+        type: array
+      is_favorite:
+        type: boolean
+      latitude:
+        type: number
+      location:
+        type: string
+      longitude:
+        type: number
+      metadata:
+        additionalProperties: true
+        description: Для хранения дополнительной информации, включая данные о скидке
+        type: object
+      not_helpful_votes:
+        type: integer
+      old_price:
+        type: number
+      original_language:
+        type: string
+      price:
+        type: number
+      review_count:
+        type: integer
+      show_on_map:
+        type: boolean
+      status:
+        type: string
+      storefront_id:
+        description: связь с витриной
+        type: integer
+      title:
+        type: string
+      translations:
+        $ref: '#/definitions/backend_internal_domain_models.TranslationMap'
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/backend_internal_domain_models.User'
+      user_id:
+        type: integer
+      views_count:
+        type: integer
+    type: object
+  backend_internal_domain_models.MarketplaceMessage:
+    properties:
+      attachments:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.ChatAttachment'
+        type: array
+      attachments_count:
+        type: integer
+      chat_id:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      has_attachments:
+        description: Поля для поддержки вложений
+        type: boolean
+      id:
+        type: integer
+      is_read:
+        type: boolean
+      listing:
+        $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+      listing_id:
+        type: integer
+      original_language:
+        description: Добавляем поля для мультиязычности
+        type: string
+      receiver:
+        $ref: '#/definitions/backend_internal_domain_models.User'
+      receiver_id:
+        type: integer
+      sender:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.User'
+        description: Дополнительные поля для отображения
+      sender_id:
+        type: integer
+      translations:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        type: object
+      updated_at:
+        type: string
+    type: object
+  backend_internal_domain_models.PriceHistoryEntry:
+    properties:
+      change_percentage:
+        type: number
+      change_source:
+        description: manual, import, system, etc.
+        type: string
+      created_at:
+        type: string
+      effective_from:
+        type: string
+      effective_to:
+        type: string
+      id:
+        type: integer
+      listing_id:
+        type: integer
+      price:
+        type: number
+    type: object
   backend_internal_domain_models.Review:
     properties:
       comment:
@@ -354,6 +922,53 @@ definitions:
       total_reviews:
         type: integer
     type: object
+  backend_internal_domain_models.Translation:
+    properties:
+      created_at:
+        type: string
+      entity_id:
+        type: integer
+      entity_type:
+        type: string
+      field_name:
+        type: string
+      id:
+        type: integer
+      is_machine_translated:
+        type: boolean
+      is_verified:
+        type: boolean
+      language:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      translated_text:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  backend_internal_domain_models.TranslationMap:
+    additionalProperties:
+      additionalProperties:
+        type: string
+      type: object
+    type: object
+  backend_internal_domain_models.UpdateAttributeGroupRequest:
+    properties:
+      description:
+        type: string
+      display_name:
+        type: string
+      icon:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+    type: object
   backend_internal_domain_models.UpdateCustomComponentRequest:
     properties:
       component_type:
@@ -474,11 +1089,87 @@ definitions:
       user_id:
         type: integer
     type: object
+  backend_internal_domain_search.ServiceParams:
+    properties:
+      aggregations:
+        description: Запрашиваемые агрегации
+        items:
+          type: string
+        type: array
+      attributeFilters:
+        additionalProperties:
+          type: string
+        description: поле для фильтров атрибутов
+        type: object
+      categoryID:
+        description: ID категории
+        type: string
+      city:
+        description: Город
+        type: string
+      condition:
+        description: Состояние (новое, б/у)
+        type: string
+      country:
+        description: Страна
+        type: string
+      distance:
+        description: Радиус поиска
+        type: string
+      fuzziness:
+        description: Уровень нечеткости (AUTO, 1, 2, ...)
+        type: string
+      language:
+        description: Язык для поиска
+        type: string
+      latitude:
+        description: Широта для геопоиска
+        type: number
+      longitude:
+        description: Долгота для геопоиска
+        type: number
+      minimumShouldMatch:
+        description: Минимальное количество совпадений (70%, 50% и т.д.)
+        type: string
+      page:
+        description: Номер страницы
+        type: integer
+      priceMax:
+        description: Максимальная цена
+        type: number
+      priceMin:
+        description: Минимальная цена
+        type: number
+      query:
+        description: Текстовый запрос
+        type: string
+      size:
+        description: Размер страницы
+        type: integer
+      sort:
+        description: Поле сортировки
+        type: string
+      sortDirection:
+        description: Направление сортировки (asc, desc)
+        type: string
+      status:
+        type: string
+      storefrontID:
+        description: ID витрины
+        type: string
+    type: object
   backend_pkg_utils.ErrorResponseSwag:
     properties:
       error:
         example: Описание ошибки
         type: string
+    type: object
+  backend_pkg_utils.SuccessResponseSwag:
+    properties:
+      data: {}
+      success:
+        example: true
+        type: boolean
     type: object
   internal_proj_reviews_handler.PhotosResponse:
     properties:
@@ -838,16 +1529,109 @@ info:
   title: Sve Tu Marketplace API
   version: "1.0"
 paths:
+  /api/admin/attributes:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new attribute for categories
+      parameters:
+      - description: Attribute data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.attributeCreated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    id:
+                      type: integer
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidData or marketplace.requiredFieldsMissing
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.createAttributeError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Create attribute
+      tags:
+      - marketplace-admin-attributes
+  /api/admin/categories:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new marketplace category
+      parameters:
+      - description: Category data
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            icon:
+              type: string
+            name:
+              type: string
+            parent_id:
+              type: integer
+            slug:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.categoryCreated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    id:
+                      type: integer
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidData or marketplace.categoryNameRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.createCategoryError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Create category
+      tags:
+      - marketplace-admin-categories
   /api/admin/categories/{category_id}/components:
     get:
-      description: Возвращает кастомные компоненты для конкретной категории
+      description: Returns custom components for a specific category
       parameters:
-      - description: ID категории
+      - description: Category ID
         in: path
         name: category_id
         required: true
         type: integer
-      - description: Контекст использования
+      - description: Usage context
         in: query
         name: context
         type: string
@@ -860,20 +1644,401 @@ paths:
             items:
               $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
             type: array
+        "400":
+          description: marketplace.invalidCategoryId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.internalServerError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Компоненты категории
+      summary: Get category components
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
+  /api/admin/categories/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a marketplace category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.categoryDeleted
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidCategoryId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.deleteCategoryError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Delete category
+      tags:
+      - marketplace-admin-categories
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed information about a specific category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category information
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.MarketplaceCategory'
+        "400":
+          description: marketplace.invalidCategoryId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.categoryNotFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getCategoriesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get category by ID
+      tags:
+      - marketplace-admin-categories
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing marketplace category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated category data
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            icon:
+              type: string
+            name:
+              type: string
+            parent_id:
+              type: integer
+            slug:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.categoryUpdated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidCategoryId or marketplace.categoryNameRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.updateCategoryError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update category
+      tags:
+      - marketplace-admin-categories
+  /api/admin/categories/{id}/attributes:
+    post:
+      consumes:
+      - application/json
+      description: Links an attribute to a category with optional required setting
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attribute data
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            attribute_id:
+              type: integer
+            is_required:
+              type: boolean
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.attributeAddedToCategory
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidCategoryId or marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.addAttributeToCategoryError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Add attribute to category
+      tags:
+      - marketplace-admin-categories
+  /api/admin/categories/{id}/attributes/{attr_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Unlinks an attribute from a category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attribute ID
+        in: path
+        name: attr_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.attributeRemovedFromCategory
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidCategoryId or marketplace.invalidAttributeId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.removeAttributeFromCategoryError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Remove attribute from category
+      tags:
+      - marketplace-admin-categories
+    put:
+      consumes:
+      - application/json
+      description: Updates settings for an attribute-category relationship
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attribute ID
+        in: path
+        name: attr_id
+        required: true
+        type: integer
+      - description: Attribute settings
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            is_enabled:
+              type: boolean
+            is_required:
+              type: boolean
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.attributeCategoryUpdated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidCategoryId or marketplace.invalidAttributeId
+            or marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.updateAttributeCategoryError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update attribute category settings
+      tags:
+      - marketplace-admin-categories
+  /api/admin/categories/{id}/move:
+    put:
+      consumes:
+      - application/json
+      description: Moves a category to a different parent in the hierarchy
+      parameters:
+      - description: Category ID to move
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New parent category ID
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            new_parent_id:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.categoryMoved
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidCategoryId or marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.moveCategoryError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Move category in hierarchy
+      tags:
+      - marketplace-admin-categories
+  /api/admin/categories/{id}/reorder:
+    post:
+      consumes:
+      - application/json
+      description: Changes the order of categories based on provided IDs list
+      parameters:
+      - description: Parent category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: List of category IDs in new order
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            ordered_ids:
+              items:
+                type: integer
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.categoriesReordered
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidData or marketplace.emptyIdList
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.reorderCategoriesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Reorder categories
+      tags:
+      - marketplace-admin-categories
   /api/admin/custom-components:
     get:
-      description: Возвращает список всех кастомных UI компонентов
+      description: Returns a list of all custom UI components
       parameters:
-      - description: Фильтр по типу компонента
+      - description: Filter by component type
         in: query
         name: component_type
         type: string
-      - description: Фильтр по активности
+      - description: Filter by active status
         in: query
         name: active
         type: boolean
@@ -886,17 +2051,21 @@ paths:
             items:
               $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
             type: array
+        "500":
+          description: marketplace.internalServerError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Список компонентов
+      summary: List custom components
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
     post:
       consumes:
       - application/json
-      description: Создает новый кастомный UI компонент
+      description: Creates a new custom UI component
       parameters:
-      - description: Данные компонента
+      - description: Component data
         in: body
         name: component
         required: true
@@ -910,39 +2079,43 @@ paths:
           schema:
             $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
         "400":
-          description: Bad Request
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.internalServerError
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Создание кастомного компонента
+      summary: Create custom component
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
   /api/admin/custom-components/{id}:
     delete:
-      description: Удаляет кастомный UI компонент
+      description: Deletes a custom UI component
       parameters:
-      - description: ID компонента
+      - description: Component ID
         in: path
         name: id
         required: true
         type: integer
       responses:
         "204":
-          description: Компонент удален
+          description: Component deleted
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Удаление компонента
+      summary: Delete custom component
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
     get:
-      description: Получает кастомный UI компонент по ID
+      description: Gets a custom UI component by ID
       parameters:
-      - description: ID компонента
+      - description: Component ID
         in: path
         name: id
         required: true
@@ -954,26 +2127,30 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "404":
-          description: Not Found
+          description: marketplace.componentNotFound
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Получение компонента
+      summary: Get custom component
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
     put:
       consumes:
       - application/json
-      description: Обновляет кастомный UI компонент
+      description: Updates a custom UI component
       parameters:
-      - description: ID компонента
+      - description: Component ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Данные компонента
+      - description: Component data
         in: body
         name: component
         required: true
@@ -987,17 +2164,21 @@ paths:
           schema:
             $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
         "400":
-          description: Bad Request
+          description: marketplace.invalidId or marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.internalServerError
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Обновление компонента
+      summary: Update custom component
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
   /api/admin/custom-components/templates:
     get:
-      description: Возвращает список всех шаблонов компонентов
+      description: Returns a list of all component templates
       produces:
       - application/json
       responses:
@@ -1007,17 +2188,21 @@ paths:
             items:
               $ref: '#/definitions/backend_internal_domain_models.CustomUITemplate'
             type: array
+        "500":
+          description: marketplace.internalServerError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Список шаблонов
+      summary: List templates
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
     post:
       consumes:
       - application/json
-      description: Создает шаблон для кастомного компонента
+      description: Creates a template for a custom component
       parameters:
-      - description: Данные шаблона
+      - description: Template data
         in: body
         name: template
         required: true
@@ -1031,23 +2216,27 @@ paths:
           schema:
             $ref: '#/definitions/backend_internal_domain_models.CustomUITemplate'
         "400":
-          description: Bad Request
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.internalServerError
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Создание шаблона
+      summary: Create template
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
   /api/admin/custom-components/usage:
     get:
-      description: Возвращает список всех использований компонентов с фильтрацией
+      description: Returns a list of all component usages with filtering
       parameters:
-      - description: ID компонента
+      - description: Component ID
         in: query
         name: component_id
         type: integer
-      - description: ID категории
+      - description: Category ID
         in: query
         name: category_id
         type: integer
@@ -1061,20 +2250,20 @@ paths:
               $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
             type: array
         "500":
-          description: Internal Server Error
+          description: marketplace.internalServerError
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Получение всех использований компонентов
+      summary: Get component usages
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
     post:
       consumes:
       - application/json
-      description: Добавляет использование компонента для конкретной категории
+      description: Adds component usage for a specific category
       parameters:
-      - description: Данные использования
+      - description: Usage data
         in: body
         name: usage
         required: true
@@ -1088,35 +2277,43 @@ paths:
           schema:
             $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
         "400":
-          description: Bad Request
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.internalServerError
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Добавление использования компонента
+      summary: Add component usage
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
   /api/admin/custom-components/usage/{id}:
     delete:
-      description: Удаляет использование компонента для категории
+      description: Removes component usage for a category
       parameters:
-      - description: ID использования
+      - description: Usage ID
         in: path
         name: id
         required: true
         type: integer
       responses:
         "204":
-          description: Использование удалено
+          description: Usage removed
         "400":
-          description: Bad Request
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.internalServerError
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Удаление использования компонента
+      summary: Remove component usage
       tags:
-      - CustomComponents
+      - marketplace-admin-custom-components
   /api/v1/admin-check/{email}:
     get:
       consumes:
@@ -1279,6 +2476,608 @@ paths:
       summary: Check administrator status
       tags:
       - admin-management
+  /api/v1/admin/marketplace/attributes:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of all category attributes sorted by sort_order and
+        ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of attributes
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get all attributes
+      tags:
+      - marketplace-admin-attributes
+  /api/v1/admin/marketplace/attributes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a category attribute by ID
+      parameters:
+      - description: Attribute ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid attribute ID
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Delete attribute
+      tags:
+      - marketplace-admin-attributes
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed information about a specific attribute
+      parameters:
+      - description: Attribute ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attribute information
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+        "400":
+          description: Invalid attribute ID
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Attribute not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get attribute by ID
+      tags:
+      - marketplace-admin-attributes
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing category attribute with new data
+      parameters:
+      - description: Attribute ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attribute data
+        in: body
+        name: attribute
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update attribute
+      tags:
+      - marketplace-admin-attributes
+  /api/v1/admin/marketplace/attributes/bulk:
+    put:
+      consumes:
+      - application/json
+      description: Updates multiple category attributes in a single request
+      parameters:
+      - description: List of attributes to update
+        in: body
+        name: attributes
+        required: true
+        schema:
+          properties:
+            attributes:
+              items:
+                $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update results with success count
+          schema:
+            additionalProperties: true
+            type: object
+        "206":
+          description: Partial update with errors
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Bulk update attributes
+      tags:
+      - marketplace-admin-attributes
+  /api/v1/admin/marketplace/categories/{categoryId}/attributes/{attributeId}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes the link between a category attribute and a category
+      parameters:
+      - description: Category ID
+        in: path
+        name: categoryId
+        required: true
+        type: integer
+      - description: Attribute ID
+        in: path
+        name: attributeId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Remove attribute from category
+      tags:
+      - marketplace-admin-attributes
+    post:
+      consumes:
+      - application/json
+      description: Links a category attribute to a specific category with optional
+        settings
+      parameters:
+      - description: Category ID
+        in: path
+        name: categoryId
+        required: true
+        type: integer
+      - description: Attribute ID
+        in: path
+        name: attributeId
+        required: true
+        type: integer
+      - description: Attribute settings for category
+        in: body
+        name: settings
+        schema:
+          properties:
+            is_required:
+              type: boolean
+            sort_order:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Add attribute to category
+      tags:
+      - marketplace-admin-attributes
+    put:
+      consumes:
+      - application/json
+      description: Updates settings for an attribute within a specific category
+      parameters:
+      - description: Category ID
+        in: path
+        name: categoryId
+        required: true
+        type: integer
+      - description: Attribute ID
+        in: path
+        name: attributeId
+        required: true
+        type: integer
+      - description: Attribute category settings
+        in: body
+        name: settings
+        required: true
+        schema:
+          properties:
+            custom_component:
+              type: string
+            is_enabled:
+              type: boolean
+            is_required:
+              type: boolean
+            sort_order:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update attribute category settings
+      tags:
+      - marketplace-admin-attributes
+  /api/v1/admin/marketplace/categories/{categoryId}/attributes/export:
+    get:
+      consumes:
+      - application/json
+      description: Exports all attribute settings for a specific category as JSON
+      parameters:
+      - description: Category ID
+        in: path
+        name: categoryId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category attributes with settings
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.CategoryAttributeMapping'
+            type: array
+        "400":
+          description: Invalid category ID
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Export category attributes
+      tags:
+      - marketplace-admin-attributes
+  /api/v1/admin/marketplace/categories/{categoryId}/attributes/import:
+    post:
+      consumes:
+      - application/json
+      description: Imports attribute settings into a category, replacing existing
+        settings
+      parameters:
+      - description: Category ID
+        in: path
+        name: categoryId
+        required: true
+        type: integer
+      - description: List of attribute mappings to import
+        in: body
+        name: attributes
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/backend_internal_domain_models.CategoryAttributeMapping'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import results with success count
+          schema:
+            additionalProperties: true
+            type: object
+        "206":
+          description: Partial import with errors
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Category not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Import category attributes
+      tags:
+      - marketplace-admin-attributes
+  /api/v1/admin/marketplace/categories/{targetCategoryId}/attributes/copy:
+    post:
+      consumes:
+      - application/json
+      description: Copies all attribute settings from a source category to a target
+        category
+      parameters:
+      - description: Target category ID
+        in: path
+        name: targetCategoryId
+        required: true
+        type: integer
+      - description: Source category ID
+        in: body
+        name: source
+        required: true
+        schema:
+          properties:
+            source_category_id:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Category not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Copy attribute settings between categories
+      tags:
+      - marketplace-admin-attributes
+  /api/v1/admin/reindex-all-listings:
+    post:
+      consumes:
+      - application/json
+      description: Alternative endpoint to reindex all marketplace listings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reindexing started
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.adminRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.adminCheckError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Reindex all listings (alias)
+      tags:
+      - marketplace-admin-indexing
+  /api/v1/admin/reindex-listings:
+    post:
+      consumes:
+      - application/json
+      description: Reindexes all marketplace listings in the search index
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reindexing started
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.adminRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.adminCheckError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Reindex all listings
+      tags:
+      - marketplace-admin-indexing
+  /api/v1/admin/reindex-listings-with-translations:
+    post:
+      consumes:
+      - application/json
+      description: Reindexes all marketplace listings with their translations in the
+        search index
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reindexing with translations started
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.adminRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.adminCheckError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Reindex all listings with translations
+      tags:
+      - marketplace-admin-indexing
+  /api/v1/admin/reindex-ratings:
+    post:
+      consumes:
+      - application/json
+      description: Reindexes ratings and review counts for all marketplace listings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rating reindexing started
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.adminRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.adminCheckError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Reindex listing ratings
+      tags:
+      - marketplace-admin-indexing
+  /api/v1/admin/sync-discounts:
+    post:
+      consumes:
+      - application/json
+      description: Synchronizes discount data for all listings (Admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Discounts synchronized successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: admin.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.syncError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Synchronize discount data
+      tags:
+      - marketplace-admin
   /api/v1/admin/users:
     get:
       consumes:
@@ -1623,6 +3422,2470 @@ paths:
       summary: Register new user
       tags:
       - auth
+  /api/v1/marketplace/admin/attribute-groups:
+    get:
+      consumes:
+      - application/json
+      description: Returns all attribute groups
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of attribute groups
+          schema:
+            properties:
+              groups:
+                items:
+                  $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
+                type: array
+              success:
+                type: boolean
+            type: object
+        "500":
+          description: marketplace.listGroupsError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List attribute groups
+      tags:
+      - marketplace-admin-attribute-groups
+    post:
+      consumes:
+      - application/json
+      description: Creates a new attribute group for organizing attributes
+      parameters:
+      - description: Attribute group data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CreateAttributeGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Group created successfully
+          schema:
+            properties:
+              id:
+                type: integer
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidRequest or marketplace.groupNameRequired
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: marketplace.createGroupError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create attribute group
+      tags:
+      - marketplace-admin-attribute-groups
+  /api/v1/marketplace/admin/attribute-groups/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an attribute group
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.groupDeleted
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidGroupId
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: marketplace.deleteGroupError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete attribute group
+      tags:
+      - marketplace-admin-attribute-groups
+    get:
+      consumes:
+      - application/json
+      description: Returns information about a specific attribute group
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attribute group information
+          schema:
+            properties:
+              group:
+                $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidGroupId
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: marketplace.groupNotFound
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get attribute group
+      tags:
+      - marketplace-admin-attribute-groups
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing attribute group
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated group data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UpdateAttributeGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.groupUpdated
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidGroupId or marketplace.invalidRequest
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: marketplace.updateGroupError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update attribute group
+      tags:
+      - marketplace-admin-attribute-groups
+  /api/v1/marketplace/admin/attribute-groups/{id}/items:
+    get:
+      consumes:
+      - application/json
+      description: Returns attribute group with all its attributes
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Group with items
+          schema:
+            properties:
+              data:
+                properties:
+                  group:
+                    $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
+                  items:
+                    items:
+                      $ref: '#/definitions/backend_internal_domain_models.AttributeGroupItem'
+                    type: array
+                type: object
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidGroupId
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: marketplace.groupNotFound
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: marketplace.getGroupItemsError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get attribute group with items
+      tags:
+      - marketplace-admin-attribute-groups
+    post:
+      consumes:
+      - application/json
+      description: Adds an attribute to a group
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attribute data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.AddItemToGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Item added successfully
+          schema:
+            properties:
+              id:
+                type: integer
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidGroupId or marketplace.invalidRequest
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: marketplace.addItemError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Add attribute to group
+      tags:
+      - marketplace-admin-attribute-groups
+  /api/v1/marketplace/admin/attribute-groups/{id}/items/{attributeId}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes an attribute from a group
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attribute ID
+        in: path
+        name: attributeId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.itemRemoved
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidGroupId or marketplace.invalidAttributeId
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: marketplace.removeItemError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Remove attribute from group
+      tags:
+      - marketplace-admin-attribute-groups
+  /api/v1/marketplace/admin/categories/{id}/groups:
+    get:
+      consumes:
+      - application/json
+      description: Returns attribute groups attached to a category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category groups
+          schema:
+            properties:
+              groups:
+                items:
+                  $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
+                type: array
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidCategoryId
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: marketplace.getCategoryGroupsError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get category attribute groups
+      tags:
+      - marketplace-admin-attribute-groups
+    post:
+      consumes:
+      - application/json
+      description: Attaches an attribute group to a category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Group attachment data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.AttachGroupToCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Group attached successfully
+          schema:
+            properties:
+              id:
+                type: integer
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidCategoryId or marketplace.invalidRequest
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: marketplace.attachGroupError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Attach group to category
+      tags:
+      - marketplace-admin-attribute-groups
+  /api/v1/marketplace/admin/categories/{id}/groups/{groupId}:
+    delete:
+      consumes:
+      - application/json
+      description: Detaches an attribute group from a category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Group ID
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: marketplace.groupDetached
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidCategoryId or marketplace.invalidGroupId
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: marketplace.detachGroupError
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Detach group from category
+      tags:
+      - marketplace-admin-attribute-groups
+  /api/v1/marketplace/attachments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an attachment (only by the message sender)
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attachment deleted
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidAttachmentId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.deleteAttachmentForbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.deleteAttachmentError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Delete attachment
+      tags:
+      - marketplace-chat
+    get:
+      consumes:
+      - application/json
+      description: Returns information about a specific attachment
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attachment info
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ChatAttachment'
+              type: object
+        "400":
+          description: marketplace.invalidAttachmentId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.accessDenied
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.attachmentNotFound or marketplace.messageNotFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get attachment info
+      tags:
+      - marketplace-chat
+  /api/v1/marketplace/categories:
+    get:
+      consumes:
+      - application/json
+      description: Returns all marketplace categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Categories list
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.MarketplaceCategory'
+                  type: array
+              type: object
+        "500":
+          description: marketplace.categoriesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get categories list
+      tags:
+      - marketplace-categories
+  /api/v1/marketplace/categories/{id}/attribute-ranges:
+    get:
+      consumes:
+      - application/json
+      description: Returns min/max values for numeric attributes in a category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attribute ranges
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    properties:
+                      max:
+                        type: number
+                      min:
+                        type: number
+                    type: object
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidCategoryId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.rangesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get attribute value ranges
+      tags:
+      - marketplace-categories
+  /api/v1/marketplace/categories/{id}/attributes:
+    get:
+      consumes:
+      - application/json
+      description: Returns all attributes available for a specific category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category attributes
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+                  type: array
+              type: object
+        "400":
+          description: marketplace.invalidCategoryId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.attributesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get category attributes
+      tags:
+      - marketplace-categories
+  /api/v1/marketplace/category-suggestions:
+    get:
+      consumes:
+      - application/json
+      description: Returns category suggestions based on query
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        required: true
+        type: string
+      - default: 10
+        description: Number of suggestions
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category suggestions
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.CategorySuggestion'
+                  type: array
+              type: object
+        "400":
+          description: marketplace.queryRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.categorySuggestionsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get category suggestions
+      tags:
+      - marketplace-search
+  /api/v1/marketplace/category-tree:
+    get:
+      consumes:
+      - application/json
+      description: Returns hierarchical tree of all categories with caching
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category tree
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.CategoryTreeNode'
+                  type: array
+              type: object
+        "500":
+          description: marketplace.categoryTreeError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get category tree
+      tags:
+      - marketplace-categories
+  /api/v1/marketplace/chat:
+    get:
+      consumes:
+      - application/json
+      description: Returns all chats where the user is a participant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of chats
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.MarketplaceChat'
+                  type: array
+              type: object
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getChatsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get user's chats
+      tags:
+      - marketplace-chat
+  /api/v1/marketplace/chat/messages:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated messages from a chat
+      parameters:
+      - description: Chat ID
+        in: query
+        name: chat_id
+        type: string
+      - description: Listing ID
+        in: query
+        name: listing_id
+        type: string
+      - description: Receiver ID for direct messages
+        in: query
+        name: receiver_id
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Chat messages
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceMessage'
+                type: array
+              meta:
+                properties:
+                  hasMore:
+                    type: boolean
+                  limit:
+                    type: integer
+                  page:
+                    type: integer
+                  total:
+                    type: integer
+                type: object
+            type: object
+        "400":
+          description: marketplace.invalidChatId or marketplace.invalidListingId or
+            marketplace.chatParamsRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getMessagesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get chat messages
+      tags:
+      - marketplace-chat
+  /api/v1/marketplace/chats/{chat_id}/archive:
+    post:
+      consumes:
+      - application/json
+      description: Archives a chat for the user
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chat_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Chat archived
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidChatId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.archiveChatError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Archive chat
+      tags:
+      - marketplace-chat
+  /api/v1/marketplace/enhance-images:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Enhances multiple images for a marketplace listing using AI processing
+      parameters:
+      - description: Listing ID
+        in: formData
+        name: listing_id
+        required: true
+        type: integer
+      - default: quality
+        description: Enhancement type
+        in: formData
+        name: enhancement_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enhancement job started
+          schema:
+            properties:
+              data:
+                properties:
+                  job_id:
+                    type: string
+                  message:
+                    type: string
+                type: object
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidId or marketplace.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.notFound or marketplace.imageNotFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.enhanceError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Enhance listing images
+      tags:
+      - marketplace-images
+  /api/v1/marketplace/enhance-preview:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Creates a preview of an enhanced image before applying changes
+      parameters:
+      - description: Image ID to enhance
+        in: formData
+        name: image_id
+        required: true
+        type: integer
+      - default: quality
+        description: Enhancement type
+        in: formData
+        name: enhancement_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enhancement preview
+          schema:
+            properties:
+              data:
+                properties:
+                  preview_url:
+                    type: string
+                type: object
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.enhanceError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Create image enhancement preview
+      tags:
+      - marketplace-images
+  /api/v1/marketplace/enhanced-suggestions:
+    get:
+      consumes:
+      - application/json
+      description: Returns autocomplete suggestions with categories
+      parameters:
+      - description: Search prefix
+        in: query
+        name: prefix
+        required: true
+        type: string
+      - default: 10
+        description: Number of suggestions
+        in: query
+        name: size
+        type: integer
+      - default: ru
+        description: Language
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enhanced suggestions
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    properties:
+                      category:
+                        properties:
+                          id:
+                            type: integer
+                          name:
+                            type: string
+                          slug:
+                            type: string
+                        type: object
+                      text:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  type: array
+              type: object
+        "400":
+          description: marketplace.prefixRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.suggestionsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get enhanced search suggestions
+      tags:
+      - marketplace-search
+  /api/v1/marketplace/favorites:
+    get:
+      consumes:
+      - application/json
+      description: Returns all listings marked as favorites by the user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of favorite listings
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+                  type: array
+              type: object
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getFavoritesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get user's favorite listings
+      tags:
+      - marketplace-favorites
+  /api/v1/marketplace/favorites/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a listing from user's favorites
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Removed from favorites
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.removeFromFavoritesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Remove listing from favorites
+      tags:
+      - marketplace-favorites
+    post:
+      consumes:
+      - application/json
+      description: Adds a listing to user's favorites
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Added to favorites
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.addToFavoritesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Add listing to favorites
+      tags:
+      - marketplace-favorites
+  /api/v1/marketplace/favorites/{id}/check:
+    get:
+      consumes:
+      - application/json
+      description: Checks if a specific listing is in user's favorites
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Favorite status
+          schema:
+            properties:
+              data:
+                properties:
+                  is_in_favorites:
+                    type: boolean
+                type: object
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.checkFavoritesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Check if listing is in favorites
+      tags:
+      - marketplace-favorites
+  /api/v1/marketplace/favorites/count:
+    get:
+      consumes:
+      - application/json
+      description: Returns the total number of listings in user's favorites
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Favorites count
+          schema:
+            properties:
+              data:
+                properties:
+                  count:
+                    type: integer
+                type: object
+              success:
+                type: boolean
+            type: object
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getFavoritesCountError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get favorites count
+      tags:
+      - marketplace-favorites
+  /api/v1/marketplace/images/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an image from a marketplace listing
+      parameters:
+      - description: Image ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Image deleted successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.deleteError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Delete listing image
+      tags:
+      - marketplace-images
+  /api/v1/marketplace/listings:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated list of listings with optional filters
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        type: string
+      - description: Category ID filter
+        in: query
+        name: category_id
+        type: integer
+      - description: Condition filter (new, used, etc.)
+        in: query
+        name: condition
+        type: string
+      - description: Minimum price filter
+        in: query
+        name: min_price
+        type: number
+      - description: Maximum price filter
+        in: query
+        name: max_price
+        type: number
+      - description: Sort order (price_asc, price_desc, date_desc, etc.)
+        in: query
+        name: sort_by
+        type: string
+      - description: User ID filter
+        in: query
+        name: user_id
+        type: integer
+      - description: Storefront ID filter
+        in: query
+        name: storefront_id
+        type: integer
+      - default: 20
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Listings list with pagination
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    data:
+                      items:
+                        $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+                      type: array
+                    meta:
+                      properties:
+                        limit:
+                          type: integer
+                        page:
+                          type: integer
+                        total:
+                          type: integer
+                      type: object
+                  type: object
+              type: object
+        "500":
+          description: marketplace.listError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get listings list
+      tags:
+      - marketplace-listings
+    post:
+      consumes:
+      - application/json
+      description: Creates a new marketplace listing with attributes
+      parameters:
+      - description: Listing data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Listing created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    id:
+                      type: integer
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "409":
+          description: marketplace.duplicateTitle
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.createError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Create new listing
+      tags:
+      - marketplace-listings
+  /api/v1/marketplace/listings/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a marketplace listing. Only the owner can delete
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Listing deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.deleteError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Delete listing
+      tags:
+      - marketplace-listings
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed information about a specific listing including
+        attributes and images
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Listing details
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+              type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get listing details
+      tags:
+      - marketplace-listings
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing marketplace listing. Only the owner can update
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated listing data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Listing updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.updateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update listing
+      tags:
+      - marketplace-listings
+  /api/v1/marketplace/listings/{id}/images:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads multiple images for a marketplace listing
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image files to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Index of the main image
+        in: formData
+        name: main_image_index
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Images uploaded successfully
+          schema:
+            properties:
+              count:
+                type: integer
+              images:
+                items:
+                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceImage'
+                type: array
+              message:
+                type: string
+            type: object
+        "400":
+          description: marketplace.invalidData or marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.uploadError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Upload listing images
+      tags:
+      - marketplace-images
+  /api/v1/marketplace/listings/{id}/price-history:
+    get:
+      consumes:
+      - application/json
+      description: Returns price history for a specific listing
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Price history entries
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.PriceHistoryEntry'
+                  type: array
+              type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.priceHistoryError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get listing price history
+      tags:
+      - marketplace-listings
+  /api/v1/marketplace/listings/{id}/similar:
+    get:
+      consumes:
+      - application/json
+      description: Returns listings similar to a specific listing
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 5
+        description: Number of similar listings
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Similar listings
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+                  type: array
+              type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.similarListingsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get similar listings
+      tags:
+      - marketplace-search
+  /api/v1/marketplace/map/bounds:
+    get:
+      consumes:
+      - application/json
+      description: Returns all listings within the specified geographical bounds
+      parameters:
+      - description: Northeast latitude
+        in: query
+        name: ne_lat
+        required: true
+        type: number
+      - description: Northeast longitude
+        in: query
+        name: ne_lng
+        required: true
+        type: number
+      - description: Southwest latitude
+        in: query
+        name: sw_lat
+        required: true
+        type: number
+      - description: Southwest longitude
+        in: query
+        name: sw_lng
+        required: true
+        type: number
+      - default: 10
+        description: Map zoom level
+        in: query
+        name: zoom
+        type: integer
+      - description: Comma-separated category IDs
+        in: query
+        name: categories
+        type: string
+      - description: Item condition filter
+        in: query
+        name: condition
+        type: string
+      - description: Minimum price filter
+        in: query
+        name: min_price
+        type: number
+      - description: Maximum price filter
+        in: query
+        name: max_price
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Listings within bounds
+          schema:
+            properties:
+              bounds:
+                properties:
+                  ne:
+                    properties:
+                      lat:
+                        type: number
+                      lng:
+                        type: number
+                    type: object
+                  sw:
+                    properties:
+                      lat:
+                        type: number
+                      lng:
+                        type: number
+                    type: object
+                type: object
+              count:
+                type: integer
+              listings:
+                items:
+                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+                type: array
+              zoom:
+                type: integer
+            type: object
+        "400":
+          description: marketplace.invalidBounds
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.mapError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get listings in bounds
+      tags:
+      - marketplace-map
+  /api/v1/marketplace/map/clusters:
+    get:
+      consumes:
+      - application/json
+      description: Returns clustered listings data for efficient map rendering
+      parameters:
+      - description: Northeast latitude
+        in: query
+        name: ne_lat
+        required: true
+        type: number
+      - description: Northeast longitude
+        in: query
+        name: ne_lng
+        required: true
+        type: number
+      - description: Southwest latitude
+        in: query
+        name: sw_lat
+        required: true
+        type: number
+      - description: Southwest longitude
+        in: query
+        name: sw_lng
+        required: true
+        type: number
+      - default: 10
+        description: Map zoom level
+        in: query
+        name: zoom
+        type: integer
+      - description: Comma-separated category IDs
+        in: query
+        name: categories
+        type: string
+      - description: Item condition filter
+        in: query
+        name: condition
+        type: string
+      - description: Minimum price filter
+        in: query
+        name: min_price
+        type: number
+      - description: Maximum price filter
+        in: query
+        name: max_price
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Map clusters or markers data
+          schema:
+            properties:
+              count:
+                type: integer
+              data:
+                type: array
+              type:
+                type: string
+              zoom:
+                type: integer
+            type: object
+        "400":
+          description: marketplace.invalidBounds
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.mapError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get map clusters
+      tags:
+      - marketplace-map
+  /api/v1/marketplace/messages:
+    post:
+      consumes:
+      - application/json
+      description: Sends a new message to a chat
+      parameters:
+      - description: Message data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CreateMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sent message
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceMessage'
+              type: object
+        "400":
+          description: marketplace.invalidRequest or marketplace.receiverRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.sendMessageError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Send chat message
+      tags:
+      - marketplace-chat
+  /api/v1/marketplace/messages/{id}/attachments:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads attachments for a chat message
+      parameters:
+      - description: Message ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Files to upload
+        in: formData
+        name: files
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Uploaded attachments
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.ChatAttachment'
+                  type: array
+              type: object
+        "400":
+          description: marketplace.invalidMessageId or marketplace.noFilesUploaded
+            or marketplace.tooManyFiles
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.messageNotFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.uploadAttachmentsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Upload message attachments
+      tags:
+      - marketplace-chat
+  /api/v1/marketplace/messages/read:
+    post:
+      consumes:
+      - application/json
+      description: Marks specified messages as read
+      parameters:
+      - description: Message IDs to mark as read
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.MarkAsReadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Messages marked as read
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.markAsReadError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Mark messages as read
+      tags:
+      - marketplace-chat
+  /api/v1/marketplace/messages/unread:
+    get:
+      consumes:
+      - application/json
+      description: Returns the number of unread messages for the user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Unread count
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    count:
+                      type: integer
+                  type: object
+              type: object
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getUnreadCountError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get unread messages count
+      tags:
+      - marketplace-chat
+  /api/v1/marketplace/moderate-image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Checks an uploaded image for prohibited content using AI moderation
+      parameters:
+      - description: Image file to moderate
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Moderation results
+          schema:
+            properties:
+              data:
+                properties:
+                  has_prohibited:
+                    type: boolean
+                  labels:
+                    items:
+                      type: string
+                    type: array
+                  prohibited_labels:
+                    items:
+                      type: string
+                    type: array
+                type: object
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidFile or marketplace.fileTooLarge
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.adminRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.moderationError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Moderate image content
+      tags:
+      - marketplace-images
+  /api/v1/marketplace/search:
+    get:
+      consumes:
+      - application/json
+      description: Performs advanced search with filters, facets, and suggestions
+      parameters:
+      - description: Search parameters
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_search.ServiceParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results with metadata
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+                type: array
+              meta:
+                properties:
+                  facets:
+                    type: object
+                  has_more:
+                    type: boolean
+                  page:
+                    type: integer
+                  size:
+                    type: integer
+                  spelling_suggestion:
+                    type: string
+                  suggestions:
+                    items:
+                      type: string
+                    type: array
+                  took_ms:
+                    type: integer
+                  total:
+                    type: integer
+                  total_pages:
+                    type: integer
+                type: object
+            type: object
+        "500":
+          description: marketplace.searchError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Advanced search for listings
+      tags:
+      - marketplace-search
+  /api/v1/marketplace/suggestions:
+    get:
+      consumes:
+      - application/json
+      description: Returns autocomplete suggestions based on prefix
+      parameters:
+      - description: Search prefix
+        in: query
+        name: prefix
+        required: true
+        type: string
+      - default: 10
+        description: Number of suggestions
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of suggestions
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "400":
+          description: marketplace.prefixRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.suggestionsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get search suggestions
+      tags:
+      - marketplace-search
+  /api/v1/marketplace/translations/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all translations for a specific listing, optionally filtered
+        by language
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Language filter
+        in: query
+        name: language
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Translations retrieved successfully
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/backend_internal_domain_models.Translation'
+                type: array
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getTranslationsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get listing translations
+      tags:
+      - marketplace-translations
+    put:
+      consumes:
+      - application/json
+      description: Updates translations for a specific listing with support for different
+        providers
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: google
+        description: Translation provider (google, openai)
+        in: query
+        name: translation_provider
+        type: string
+      - description: Translation data
+        in: body
+        name: translations
+        required: true
+        schema:
+          properties:
+            is_verified:
+              type: boolean
+            language:
+              type: string
+            provider:
+              type: string
+            translations:
+              type: object
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Translations updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: marketplace.authRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.updateTranslationError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update listing translations
+      tags:
+      - marketplace-translations
+  /api/v1/marketplace/translations/batch-translate:
+    post:
+      consumes:
+      - application/json
+      description: Translates multiple listings to the specified target language using
+        the selected provider
+      parameters:
+      - description: Batch translation request
+        in: body
+        name: batch
+        required: true
+        schema:
+          properties:
+            listing_ids:
+              items:
+                type: integer
+              type: array
+            provider:
+              type: string
+            target_lang:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Batch translation started successfully
+          schema:
+            properties:
+              data:
+                properties:
+                  listing_count:
+                    type: integer
+                  provider:
+                    type: string
+                  target_lang:
+                    type: string
+                type: object
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Batch translate listings
+      tags:
+      - marketplace-translations
+  /api/v1/marketplace/translations/detect-language:
+    post:
+      consumes:
+      - application/json
+      description: Automatically detects the language of the provided text
+      parameters:
+      - description: Text for language detection
+        in: body
+        name: detection
+        required: true
+        schema:
+          properties:
+            text:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Language detected successfully
+          schema:
+            properties:
+              data:
+                properties:
+                  confidence:
+                    type: number
+                  language:
+                    type: string
+                type: object
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.detectLanguageError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Detect text language
+      tags:
+      - marketplace-translations
+  /api/v1/marketplace/translations/translate:
+    post:
+      consumes:
+      - application/json
+      description: Translates text from source language to target language using specified
+        provider
+      parameters:
+      - description: Translation request
+        in: body
+        name: translation
+        required: true
+        schema:
+          properties:
+            provider:
+              type: string
+            source_lang:
+              type: string
+            target_lang:
+              type: string
+            text:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Text translated successfully
+          schema:
+            properties:
+              data:
+                properties:
+                  provider:
+                    type: string
+                  source_lang:
+                    type: string
+                  target_lang:
+                    type: string
+                  translated_text:
+                    type: string
+                type: object
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.translateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Translate text
+      tags:
+      - marketplace-translations
   /api/v1/reviews:
     get:
       consumes:
@@ -2148,6 +6411,75 @@ paths:
       summary: Get user rating summary
       tags:
       - reviews
+  /api/v1/translation/limits:
+    get:
+      consumes:
+      - application/json
+      description: Returns current usage limits and statistics for the translation
+        service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Translation limits retrieved successfully
+          schema:
+            properties:
+              data:
+                properties:
+                  daily_limit:
+                    type: integer
+                  provider:
+                    type: string
+                  remaining:
+                    type: integer
+                  used_today:
+                    type: integer
+                type: object
+              success:
+                type: boolean
+            type: object
+      summary: Get translation limits
+      tags:
+      - marketplace-translations
+  /api/v1/translation/provider:
+    post:
+      consumes:
+      - application/json
+      description: Sets the default translation provider for the user
+      parameters:
+      - description: Provider configuration (google, openai)
+        in: body
+        name: provider
+        required: true
+        schema:
+          properties:
+            provider:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Translation provider set successfully
+          schema:
+            properties:
+              data:
+                properties:
+                  provider:
+                    type: string
+                type: object
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Set translation provider
+      tags:
+      - marketplace-translations
   /api/v1/users/{id}/profile:
     get:
       consumes:

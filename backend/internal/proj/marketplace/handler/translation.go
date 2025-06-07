@@ -27,32 +27,48 @@ func NewTranslationsHandler(services globalService.ServicesInterface) *Translati
 	}
 }
 
-// UpdateTranslations обновляет переводы для объявления
+// UpdateTranslations updates translations for a listing
+// @Summary Update listing translations
+// @Description Updates translations for a specific listing with support for different providers
+// @Tags marketplace-translations
+// @Accept json
+// @Produce json
+// @Param id path int true "Listing ID"
+// @Param translation_provider query string false "Translation provider (google, openai)" default(google)
+// @Param translations body object{language=string,translations=object,is_verified=bool,provider=string} true "Translation data"
+// @Success 200 {object} object{success=bool,message=string} "Translations updated successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateTranslationError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/translations/{id} [put]
 func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем ID объявления из параметров URL
 	listingID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
 	// Проверяем существование объявления и права доступа
 	listing, err := h.marketplaceService.GetListingByID(c.Context(), listingID)
 	if err != nil {
 		log.Printf("Failed to get listing with ID %d: %v", listingID, err)
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Объявление не найдено")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 	}
 
 	// Проверяем, является ли пользователь владельцем объявления
 	isAdmin, _ := h.services.User().IsUserAdmin(c.Context(), "")
 	if listing.UserID != userID && !isAdmin {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "Вы не можете редактировать переводы этого объявления")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.forbidden")
 	}
 
 	// Парсим данные запроса
@@ -64,12 +80,12 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&updateData); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректные данные запроса")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Проверяем корректность языка
 	if updateData.Language == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Не указан язык перевода")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.languageRequired")
 	}
 
 	// Получаем провайдера из запроса или из параметра запроса
@@ -107,7 +123,7 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 		if err != nil {
 			log.Printf("Failed to update translation for listing %d, field %s, language %s: %v",
 				listingID, fieldName, updateData.Language, err)
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось обновить перевод")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateTranslationError")
 		}
 	}
 
@@ -130,16 +146,27 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Переводы успешно обновлены",
+		"message": "marketplace.translationsUpdated",
 	})
 }
 
-// GetTranslations получает переводы для объявления
+// GetTranslations retrieves translations for a listing
+// @Summary Get listing translations
+// @Description Retrieves all translations for a specific listing, optionally filtered by language
+// @Tags marketplace-translations
+// @Accept json
+// @Produce json
+// @Param id path int true "Listing ID"
+// @Param language query string false "Language filter"
+// @Success 200 {object} object{success=bool,data=[]models.Translation} "Translations retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getTranslationsError"
+// @Router /api/v1/marketplace/translations/{id} [get]
 func (h *TranslationsHandler) GetTranslations(c *fiber.Ctx) error {
 	// Получаем ID объявления из параметров URL
 	listingID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
 	// Получаем параметр языка из запроса
@@ -157,7 +184,7 @@ func (h *TranslationsHandler) GetTranslations(c *fiber.Ctx) error {
 	translations, err := h.marketplaceService.Storage().GetTranslationsForEntity(c.Context(), "listing", listingID)
 	if err != nil {
 		log.Printf("Failed to get translations for listing %d: %v", listingID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить переводы")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getTranslationsError")
 	}
 
 	// Фильтруем переводы по языку, если он указан
@@ -174,7 +201,17 @@ func (h *TranslationsHandler) GetTranslations(c *fiber.Ctx) error {
 	})
 }
 
-// TranslateText переводит текст с использованием выбранного провайдера
+// TranslateText translates text using the selected provider
+// @Summary Translate text
+// @Description Translates text from source language to target language using specified provider
+// @Tags marketplace-translations
+// @Accept json
+// @Produce json
+// @Param translation body object{text=string,source_lang=string,target_lang=string,provider=string} true "Translation request"
+// @Success 200 {object} object{success=bool,data=object{translated_text=string,source_lang=string,target_lang=string,provider=string}} "Text translated successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.translateError"
+// @Router /api/v1/marketplace/translations/translate [post]
 func (h *TranslationsHandler) TranslateText(c *fiber.Ctx) error {
 	// Парсим данные запроса
 	var request struct {
@@ -185,16 +222,16 @@ func (h *TranslationsHandler) TranslateText(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&request); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректные данные запроса")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Проверяем обязательные поля
 	if request.Text == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Текст для перевода не указан")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.textRequired")
 	}
 
 	if request.TargetLang == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Целевой язык не указан")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.targetLanguageRequired")
 	}
 
 	// Если исходный язык не указан, определяем его автоматически
@@ -240,7 +277,7 @@ func (h *TranslationsHandler) TranslateText(c *fiber.Ctx) error {
 
 	if err != nil {
 		log.Printf("Failed to translate text: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось перевести текст")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.translateError")
 	}
 
 	return c.JSON(fiber.Map{
@@ -254,7 +291,17 @@ func (h *TranslationsHandler) TranslateText(c *fiber.Ctx) error {
 	})
 }
 
-// DetectLanguage определяет язык текста
+// DetectLanguage detects the language of text
+// @Summary Detect text language
+// @Description Automatically detects the language of the provided text
+// @Tags marketplace-translations
+// @Accept json
+// @Produce json
+// @Param detection body object{text=string} true "Text for language detection"
+// @Success 200 {object} object{success=bool,data=object{language=string,confidence=number}} "Language detected successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.detectLanguageError"
+// @Router /api/v1/marketplace/translations/detect-language [post]
 func (h *TranslationsHandler) DetectLanguage(c *fiber.Ctx) error {
 	// Парсим данные запроса
 	var request struct {
@@ -262,19 +309,19 @@ func (h *TranslationsHandler) DetectLanguage(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&request); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректные данные запроса")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Проверяем обязательные поля
 	if request.Text == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Текст для определения языка не указан")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.textForDetectionRequired")
 	}
 
 	// Определяем язык
 	language, confidence, err := h.services.Translation().DetectLanguage(c.Context(), request.Text)
 	if err != nil {
 		log.Printf("Failed to detect language: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось определить язык")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.detectLanguageError")
 	}
 
 	return c.JSON(fiber.Map{
@@ -286,7 +333,14 @@ func (h *TranslationsHandler) DetectLanguage(c *fiber.Ctx) error {
 	})
 }
 
-// GetTranslationLimits возвращает лимиты использования сервиса перевода
+// GetTranslationLimits returns translation service usage limits
+// @Summary Get translation limits
+// @Description Returns current usage limits and statistics for the translation service
+// @Tags marketplace-translations
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{success=bool,data=object{daily_limit=int,used_today=int,remaining=int,provider=string}} "Translation limits retrieved successfully"
+// @Router /api/v1/translation/limits [get]
 func (h *TranslationsHandler) GetTranslationLimits(c *fiber.Ctx) error {
 	// Пример реализации - обычно это получается от API сервиса перевода
 	return c.JSON(fiber.Map{
@@ -300,7 +354,16 @@ func (h *TranslationsHandler) GetTranslationLimits(c *fiber.Ctx) error {
 	})
 }
 
-// SetTranslationProvider устанавливает провайдера перевода
+// SetTranslationProvider sets the translation provider
+// @Summary Set translation provider
+// @Description Sets the default translation provider for the user
+// @Tags marketplace-translations
+// @Accept json
+// @Produce json
+// @Param provider body object{provider=string} true "Provider configuration (google, openai)"
+// @Success 200 {object} object{success=bool,message=string,data=object{provider=string}} "Translation provider set successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Router /api/v1/translation/provider [post]
 func (h *TranslationsHandler) SetTranslationProvider(c *fiber.Ctx) error {
 	// Парсим данные запроса
 	var request struct {
@@ -308,12 +371,12 @@ func (h *TranslationsHandler) SetTranslationProvider(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&request); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректные данные запроса")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Проверяем, поддерживается ли запрошенный провайдер
 	if request.Provider != "google" && request.Provider != "openai" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неподдерживаемый провайдер. Доступные варианты: google, openai")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.unsupportedProvider")
 	}
 
 	// Здесь можно установить провайдер по умолчанию, например, через кеш или настройки пользователя
@@ -321,14 +384,24 @@ func (h *TranslationsHandler) SetTranslationProvider(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Провайдер перевода успешно установлен",
+		"message": "marketplace.providerSet",
 		"data": fiber.Map{
 			"provider": request.Provider,
 		},
 	})
 }
 
-// BatchTranslateListings переводит несколько объявлений сразу
+// BatchTranslateListings translates multiple listings at once
+// @Summary Batch translate listings
+// @Description Translates multiple listings to the specified target language using the selected provider
+// @Tags marketplace-translations
+// @Accept json
+// @Produce json
+// @Param batch body object{listing_ids=[]int,target_lang=string,provider=string} true "Batch translation request"
+// @Success 200 {object} object{success=bool,message=string,data=object{listing_count=int,target_lang=string,provider=string}} "Batch translation started successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/translations/batch-translate [post]
 func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 	// Парсим данные запроса
 	var request struct {
@@ -338,16 +411,16 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&request); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректные данные запроса")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Проверяем обязательные поля
 	if len(request.ListingIDs) == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Не указаны ID объявлений для перевода")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.listingIdsRequired")
 	}
 
 	if request.TargetLang == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Не указан целевой язык")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.targetLanguageRequired")
 	}
 
 	// Определяем провайдер перевода
@@ -501,7 +574,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Процесс перевода запущен",
+		"message": "marketplace.translationProcessStarted",
 		"data": fiber.Map{
 			"listing_count": len(request.ListingIDs),
 			"target_lang":   request.TargetLang,

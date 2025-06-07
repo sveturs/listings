@@ -29,7 +29,17 @@ func NewChatHandler(services globalService.ServicesInterface, config *config.Con
 	}
 }
 
-// REST эндпоинты
+// GetChats возвращает список чатов пользователя
+// @Summary Get user's chats
+// @Description Returns all chats where the user is a participant
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceChat} "List of chats"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getChatsError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/chat [get]
 func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 	log.Printf("GetChats called for userID: %d", userID)
@@ -37,13 +47,30 @@ func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
 	chats, err := h.services.Chat().GetChats(c.Context(), userID)
 	if err != nil {
 		log.Printf("Error in GetChats for userID %d: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching chats")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getChatsError")
 	}
 
 	log.Printf("GetChats successful for userID %d, found %d chats", userID, len(chats))
 	return utils.SuccessResponse(c, chats)
 }
 
+// GetMessages возвращает сообщения чата
+// @Summary Get chat messages
+// @Description Returns paginated messages from a chat
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Param chat_id query string false "Chat ID"
+// @Param listing_id query string false "Listing ID"
+// @Param receiver_id query string false "Receiver ID for direct messages"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(20)
+// @Success 200 {object} object{data=[]models.MarketplaceMessage,meta=object{page=int,limit=int,hasMore=bool,total=int}} "Chat messages"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidChatId or marketplace.invalidListingId or marketplace.chatParamsRequired"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getMessagesError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/chat/messages [get]
 func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
@@ -54,7 +81,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	if chatID != "" {
 		chatIDInt, err := strconv.Atoi(chatID)
 		if err != nil {
-			return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid chat ID format")
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidChatId")
 		}
 		c.Context().SetUserValue("chat_id", chatIDInt)
 
@@ -62,7 +89,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 		// Получим listing_id из чата
 		chat, err := h.services.Chat().GetChat(c.Context(), chatIDInt, userID)
 		if err != nil {
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching chat")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getChatError")
 		}
 		listingID = strconv.Itoa(chat.ListingID)
 	}
@@ -72,7 +99,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 
 	// Если нет ни chat_id, ни listing_id, ни receiver_id - ошибка
 	if listingID == "" && chatID == "" && receiverID == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Either chat_id, listing_id or receiver_id is required")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.chatParamsRequired")
 	}
 
 	listingIDInt := 0
@@ -80,7 +107,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 		var err error
 		listingIDInt, err = strconv.Atoi(listingID)
 		if err != nil {
-			return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid listing ID format")
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidListingId")
 		}
 	}
 
@@ -112,7 +139,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	messages, err := h.services.Chat().GetMessages(ctx, listingIDInt, userID, offset, limit)
 	if err != nil {
 		log.Printf("Error fetching messages: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching messages")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getMessagesError")
 	}
 
 	log.Printf("GetMessages: returned %d messages", len(messages))
@@ -151,12 +178,23 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, response)
 }
 
+// GetUnreadCount возвращает количество непрочитанных сообщений
+// @Summary Get unread messages count
+// @Description Returns the number of unread messages for the user
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{count=int}} "Unread count"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getUnreadCountError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/messages/unread [get]
 func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	count, err := h.services.Chat().GetUnreadMessagesCount(c.Context(), userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting unread count")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getUnreadCountError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
@@ -164,17 +202,30 @@ func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
 	})
 }
 
+// SendMessage отправляет сообщение в чат
+// @Summary Send chat message
+// @Description Sends a new message to a chat
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Param body body models.CreateMessageRequest true "Message data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceMessage} "Sent message"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest or marketplace.receiverRequired"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.sendMessageError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/messages [post]
 func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	var req models.CreateMessageRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidRequest")
 	}
 
 	// Валидация входных данных
 	if req.ReceiverID == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Missing receiver ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.receiverRequired")
 	}
 
 	// Санитизация контента для защиты от XSS
@@ -196,51 +247,91 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 
 	if err := h.services.Chat().SendMessage(c.Context(), msg); err != nil {
 		log.Printf("Error sending message: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error sending message")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.sendMessageError")
 	}
 
 	return utils.SuccessResponse(c, msg)
 }
 
+// MarkAsRead отмечает сообщения как прочитанные
+// @Summary Mark messages as read
+// @Description Marks specified messages as read
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Param body body models.MarkAsReadRequest true "Message IDs to mark as read"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Messages marked as read"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.markAsReadError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/messages/read [post]
 func (h *ChatHandler) MarkAsRead(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	var req models.MarkAsReadRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidRequest")
 	}
 
 	if err := h.services.Chat().MarkMessagesAsRead(c.Context(), req.MessageIDs, userID); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error marking messages as read")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.markAsReadError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "Messages marked as read"})
+	return utils.SuccessResponse(c, fiber.Map{"message": "marketplace.messagesMarkedAsRead"})
 }
+// ArchiveChat архивирует чат
+// @Summary Archive chat
+// @Description Archives a chat for the user
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Param chat_id path int true "Chat ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Chat archived"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidChatId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.archiveChatError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/chats/{chat_id}/archive [post]
 func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 	chatID, err := c.ParamsInt("chat_id")
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Неверный ID чата")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidChatId")
 	}
 
 	err = h.services.Chat().ArchiveChat(c.Context(), chatID, userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Ошибка при архивировании чата")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.archiveChatError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Чат архивирован",
+		"message": "marketplace.chatArchived",
 	})
 }
 
 // UploadAttachments загружает вложения для сообщения
+// @Summary Upload message attachments
+// @Description Uploads attachments for a chat message
+// @Tags marketplace-chat
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path int true "Message ID"
+// @Param files formData file true "Files to upload" 
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ChatAttachment} "Uploaded attachments"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidMessageId or marketplace.noFilesUploaded or marketplace.tooManyFiles"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.messageNotFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.uploadAttachmentsError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/messages/{id}/attachments [post]
 func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 	log.Printf("UploadAttachments called")
 	userID := c.Locals("user_id").(int)
 	messageID, err := c.ParamsInt("id")
 	if err != nil {
 		log.Printf("Error parsing message ID: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid message ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidMessageId")
 	}
 	log.Printf("UploadAttachments: userID=%d, messageID=%d", userID, messageID)
 
@@ -248,35 +339,35 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 	message, err := h.services.Storage().GetMessageByID(c.Context(), messageID)
 	if err != nil {
 		log.Printf("Error getting message by ID %d: %v", messageID, err)
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Message not found")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.messageNotFound")
 	}
 
 	// Проверяем, что пользователь является отправителем сообщения
 	if message.SenderID != userID {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "You can only upload attachments to your own messages")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.attachmentsForbidden")
 	}
 
 	// Получаем файлы из запроса
 	form, err := c.MultipartForm()
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Error parsing multipart form")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidFormData")
 	}
 
 	files := form.File["files"]
 	if len(files) == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "No files provided")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.noFilesUploaded")
 	}
 
 	// Ограничение на количество файлов
 	if len(files) > 10 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Maximum 10 files allowed per message")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.tooManyFiles")
 	}
 
 	// Загружаем файлы через сервис
 	attachments, err := h.services.ChatAttachment().UploadAttachments(c.Context(), messageID, files)
 	if err != nil {
 		log.Printf("Error uploading attachments: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.uploadAttachmentsError")
 	}
 
 	// Отправляем обновленное сообщение через WebSocket
@@ -306,50 +397,76 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 }
 
 // GetAttachment получает информацию о вложении
+// @Summary Get attachment info
+// @Description Returns information about a specific attachment
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Param id path int true "Attachment ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ChatAttachment} "Attachment info"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.accessDenied"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.attachmentNotFound or marketplace.messageNotFound"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/attachments/{id} [get]
 func (h *ChatHandler) GetAttachment(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 	attachmentID, err := c.ParamsInt("id")
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid attachment ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttachmentId")
 	}
 
 	// Получаем вложение
 	attachment, err := h.services.ChatAttachment().GetAttachment(c.Context(), attachmentID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Attachment not found")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.attachmentNotFound")
 	}
 
 	// Проверяем доступ к вложению через сообщение
 	message, err := h.services.Storage().GetMessageByID(c.Context(), attachment.MessageID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Message not found")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.messageNotFound")
 	}
 
 	// Пользователь должен быть участником чата
 	if message.SenderID != userID && message.ReceiverID != userID {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.accessDenied")
 	}
 
 	return utils.SuccessResponse(c, attachment)
 }
 
 // DeleteAttachment удаляет вложение
+// @Summary Delete attachment
+// @Description Deletes an attachment (only by the message sender)
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Param id path int true "Attachment ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Attachment deleted"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.deleteAttachmentForbidden"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.deleteAttachmentError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/attachments/{id} [delete]
 func (h *ChatHandler) DeleteAttachment(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 	attachmentID, err := c.ParamsInt("id")
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid attachment ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttachmentId")
 	}
 
 	if err := h.services.ChatAttachment().DeleteAttachment(c.Context(), attachmentID, userID); err != nil {
 		if err.Error() == "permission denied" {
-			return utils.ErrorResponse(c, fiber.StatusForbidden, "You can only delete your own attachments")
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.deleteAttachmentForbidden")
 		}
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error deleting attachment")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteAttachmentError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Attachment deleted successfully",
+		"message": "marketplace.attachmentDeleted",
 	})
 }
 

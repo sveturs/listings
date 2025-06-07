@@ -43,11 +43,22 @@ func (h *AdminCategoriesHandler) RegisterRoutes(app *fiber.App, adminMiddleware 
 }
 
 // CreateCategory создает новую категорию
+// @Summary Create category
+// @Description Creates a new marketplace category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param body body object{name=string,slug=string,icon=string,parent_id=int} true "Category data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{id=int,message=string}} "marketplace.categoryCreated"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.categoryNameRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createCategoryError"
+// @Security BearerAuth
+// @Router /api/admin/categories [post]
 func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 	// Парсим JSON из запроса в map для гибкой обработки типов
 	var requestData map[string]interface{}
 	if err := c.BodyParser(&requestData); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Создаем структуру категории
@@ -87,7 +98,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 
 	// Проверяем обязательные поля
 	if category.Name == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Название категории не может быть пустым")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.categoryNameRequired")
 	}
 
 	// Если slug не указан, генерируем его из названия
@@ -99,7 +110,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 	id, err := h.marketplaceService.CreateCategory(c.Context(), &category)
 	if err != nil {
 		log.Printf("Failed to create category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось создать категорию: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.createCategoryError")
 	}
 
 	// Инвалидируем кеш категорий
@@ -108,23 +119,35 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 	// Возвращаем ID созданной категории
 	return utils.SuccessResponse(c, fiber.Map{
 		"id":      id,
-		"message": "Категория успешно создана",
+		"message": "marketplace.categoryCreated",
 	})
 }
 
 // GetCategoryByID получает информацию о категории по ID
+// @Summary Get category by ID
+// @Description Returns detailed information about a specific category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} models.MarketplaceCategory "Category information"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.categoryNotFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id} [get]
 func (h *AdminCategoriesHandler) GetCategoryByID(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	// Получаем все категории
 	categories, err := h.marketplaceService.GetCategories(c.Context())
 	if err != nil {
 		log.Printf("Failed to get categories: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить категории")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getCategoriesError")
 	}
 
 	// Ищем нужную категорию
@@ -138,7 +161,7 @@ func (h *AdminCategoriesHandler) GetCategoryByID(c *fiber.Ctx) error {
 
 	// Если категория не найдена, возвращаем ошибку
 	if category == nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Категория не найдена")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.categoryNotFound")
 	}
 
 	// Возвращаем информацию о категории
@@ -146,17 +169,29 @@ func (h *AdminCategoriesHandler) GetCategoryByID(c *fiber.Ctx) error {
 }
 
 // UpdateCategory обновляет существующую категорию
+// @Summary Update category
+// @Description Updates an existing marketplace category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param body body object{name=string,slug=string,icon=string,parent_id=int} true "Updated category data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.categoryUpdated"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.categoryNameRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateCategoryError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id} [put]
 func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	// Парсим JSON из запроса в map для гибкой обработки типов
 	var requestData map[string]interface{}
 	if err := c.BodyParser(&requestData); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Создаем структуру категории
@@ -197,7 +232,7 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 
 	// Проверяем обязательные поля
 	if category.Name == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Название категории не может быть пустым")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.categoryNameRequired")
 	}
 
 	// Если slug не указан, генерируем его из названия
@@ -209,41 +244,64 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 	err = h.marketplaceService.UpdateCategory(c.Context(), &category)
 	if err != nil {
 		log.Printf("Failed to update category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось обновить категорию: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateCategoryError")
 	}
 
 	// Инвалидируем кеш категорий
 	h.InvalidateCategoryCache()
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Категория успешно обновлена",
+		"message": "marketplace.categoryUpdated",
 	})
 }
 
 // DeleteCategory удаляет категорию
+// @Summary Delete category
+// @Description Deletes a marketplace category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.categoryDeleted"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.deleteCategoryError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id} [delete]
 func (h *AdminCategoriesHandler) DeleteCategory(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	// Удаляем категорию
 	err = h.marketplaceService.DeleteCategory(c.Context(), categoryID)
 	if err != nil {
 		log.Printf("Failed to delete category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось удалить категорию: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteCategoryError")
 	}
 
 	// Инвалидируем кеш категорий
 	h.InvalidateCategoryCache()
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Категория успешно удалена",
+		"message": "marketplace.categoryDeleted",
 	})
 }
 
 // ReorderCategories изменяет порядок категорий
+// @Summary Reorder categories
+// @Description Changes the order of categories based on provided IDs list
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Parent category ID"
+// @Param body body object{ordered_ids=[]int} true "List of category IDs in new order"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.categoriesReordered"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.emptyIdList"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.reorderCategoriesError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id}/reorder [post]
 func (h *AdminCategoriesHandler) ReorderCategories(c *fiber.Ctx) error {
 	// Получаем входные данные
 	var input struct {
@@ -251,34 +309,46 @@ func (h *AdminCategoriesHandler) ReorderCategories(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&input); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	if len(input.OrderedIDs) == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Список идентификаторов не может быть пустым")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.emptyIdList")
 	}
 
 	// Изменяем порядок категорий
 	err := h.marketplaceService.ReorderCategories(c.Context(), input.OrderedIDs)
 	if err != nil {
 		log.Printf("Failed to reorder categories: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось изменить порядок категорий")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.reorderCategoriesError")
 	}
 
 	// Инвалидируем кеш категорий
 	h.InvalidateCategoryCache()
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Порядок категорий успешно изменен",
+		"message": "marketplace.categoriesReordered",
 	})
 }
 
 // MoveCategory перемещает категорию в иерархии
+// @Summary Move category in hierarchy
+// @Description Moves a category to a different parent in the hierarchy
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID to move"
+// @Param body body object{new_parent_id=int} true "New parent category ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.categoryMoved"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.moveCategoryError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id}/move [put]
 func (h *AdminCategoriesHandler) MoveCategory(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	// Получаем входные данные
@@ -287,30 +357,42 @@ func (h *AdminCategoriesHandler) MoveCategory(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&input); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Перемещаем категорию
 	err = h.marketplaceService.MoveCategory(c.Context(), categoryID, input.NewParentID)
 	if err != nil {
 		log.Printf("Failed to move category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось переместить категорию: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.moveCategoryError")
 	}
 
 	// Инвалидируем кеш категорий
 	h.InvalidateCategoryCache()
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Категория успешно перемещена",
+		"message": "marketplace.categoryMoved",
 	})
 }
 
 // AddAttributeToCategory привязывает атрибут к категории
+// @Summary Add attribute to category
+// @Description Links an attribute to a category with optional required setting
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param body body object{attribute_id=int,is_required=bool} true "Attribute data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.attributeAddedToCategory"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.addAttributeToCategoryError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id}/attributes [post]
 func (h *AdminCategoriesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	// Получаем входные данные
@@ -320,57 +402,82 @@ func (h *AdminCategoriesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&input); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Привязываем атрибут к категории
 	err = h.marketplaceService.AddAttributeToCategory(c.Context(), categoryID, input.AttributeID, input.IsRequired)
 	if err != nil {
 		log.Printf("Failed to add attribute to category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось привязать атрибут к категории: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.addAttributeToCategoryError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Атрибут успешно привязан к категории",
+		"message": "marketplace.attributeAddedToCategory",
 	})
 }
 
 // RemoveAttributeFromCategory отвязывает атрибут от категории
+// @Summary Remove attribute from category
+// @Description Unlinks an attribute from a category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param attr_id path int true "Attribute ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.attributeRemovedFromCategory"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidAttributeId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.removeAttributeFromCategoryError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id}/attributes/{attr_id} [delete]
 func (h *AdminCategoriesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error {
 	// Получаем ID категории и ID атрибута из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	attributeID, err := strconv.Atoi(c.Params("attr_id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID атрибута")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
 	}
 
 	// Отвязываем атрибут от категории
 	err = h.marketplaceService.RemoveAttributeFromCategory(c.Context(), categoryID, attributeID)
 	if err != nil {
 		log.Printf("Failed to remove attribute from category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось отвязать атрибут от категории: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.removeAttributeFromCategoryError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Атрибут успешно отвязан от категории",
+		"message": "marketplace.attributeRemovedFromCategory",
 	})
 }
 
 // UpdateAttributeCategory обновляет настройки связи атрибута с категорией
+// @Summary Update attribute category settings
+// @Description Updates settings for an attribute-category relationship
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param attr_id path int true "Attribute ID"
+// @Param body body object{is_required=bool,is_enabled=bool} true "Attribute settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.attributeCategoryUpdated"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidAttributeId or marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateAttributeCategoryError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id}/attributes/{attr_id} [put]
 func (h *AdminCategoriesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 	// Получаем ID категории и ID атрибута из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	attributeID, err := strconv.Atoi(c.Params("attr_id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID атрибута")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
 	}
 
 	// Получаем входные данные
@@ -380,17 +487,17 @@ func (h *AdminCategoriesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&input); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Обновляем настройки связи
 	err = h.marketplaceService.UpdateAttributeCategory(c.Context(), categoryID, attributeID, input.IsRequired, input.IsEnabled)
 	if err != nil {
 		log.Printf("Failed to update attribute category settings: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось обновить настройки связи атрибута с категорией: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeCategoryError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Настройки связи успешно обновлены",
+		"message": "marketplace.attributeCategoryUpdated",
 	})
 }

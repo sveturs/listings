@@ -28,25 +28,38 @@ func NewFavoritesHandler(services globalService.ServicesInterface) *FavoritesHan
 }
 
 // AddToFavorites добавляет объявление в избранное
+// @Summary Add listing to favorites
+// @Description Adds a listing to user's favorites
+// @Tags marketplace-favorites
+// @Accept json
+// @Produce json
+// @Param id path int true "Listing ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Added to favorites"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.addToFavoritesError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/favorites/{id} [post]
 func (h *FavoritesHandler) AddToFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
 	// Получаем ID объявления из параметров URL
 	listingID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
 	// Проверяем, существует ли объявление
 	_, err = h.marketplaceService.GetListingByID(c.Context(), listingID)
 	if err != nil {
 		log.Printf("Listing %d not found: %v", listingID, err)
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Объявление не найдено")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 	}
 
 	// Добавляем объявление в избранное
@@ -56,31 +69,43 @@ func (h *FavoritesHandler) AddToFavorites(c *fiber.Ctx) error {
 		// Проверяем, было ли объявление уже в избранном
 		if strings.Contains(err.Error(), "already in favorites") {
 			return utils.SuccessResponse(c, fiber.Map{
-				"message": "Объявление уже в избранном",
+				"message": "marketplace.alreadyInFavorites",
 			})
 		}
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось добавить объявление в избранное")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.addToFavoritesError")
 	}
 
 	// Возвращаем успешный результат
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Объявление добавлено в избранное",
+		"message": "marketplace.addedToFavorites",
 	})
 }
 
 // RemoveFromFavorites удаляет объявление из избранного
+// @Summary Remove listing from favorites
+// @Description Removes a listing from user's favorites
+// @Tags marketplace-favorites
+// @Accept json
+// @Produce json
+// @Param id path int true "Listing ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Removed from favorites"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.removeFromFavoritesError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/favorites/{id} [delete]
 func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
 	// Получаем ID объявления из параметров URL
 	listingID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
 	// Удаляем объявление из избранного
@@ -90,32 +115,42 @@ func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 		// Проверяем, было ли объявление в избранном
 		if strings.Contains(err.Error(), "not in favorites") {
 			return utils.SuccessResponse(c, fiber.Map{
-				"message": "Объявление не было в избранном",
+				"message": "marketplace.notInFavorites",
 			})
 		}
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось удалить объявление из избранного")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.removeFromFavoritesError")
 	}
 
 	// Возвращаем успешный результат
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Объявление удалено из избранного",
+		"message": "marketplace.removedFromFavorites",
 	})
 }
 
 // GetFavorites получает список избранных объявлений пользователя
+// @Summary Get user's favorite listings
+// @Description Returns all listings marked as favorites by the user
+// @Tags marketplace-favorites
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "List of favorite listings"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getFavoritesError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/favorites [get]
 func (h *FavoritesHandler) GetFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
 	// Получаем список избранных объявлений
 	listings, err := h.marketplaceService.GetUserFavorites(c.Context(), userID)
 	if err != nil {
 		log.Printf("Failed to get favorites for user %d: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить список избранных объявлений")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getFavoritesError")
 	}
 
 	// Проверяем на nil и возвращаем
@@ -128,25 +163,37 @@ func (h *FavoritesHandler) GetFavorites(c *fiber.Ctx) error {
 }
 
 // IsInFavorites проверяет, находится ли объявление в избранном пользователя
+// @Summary Check if listing is in favorites
+// @Description Checks if a specific listing is in user's favorites
+// @Tags marketplace-favorites
+// @Accept json
+// @Produce json
+// @Param id path int true "Listing ID"
+// @Success 200 {object} object{success=bool,data=object{is_in_favorites=bool}} "Favorite status"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.checkFavoritesError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/favorites/{id}/check [get]
 func (h *FavoritesHandler) IsInFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
 	// Получаем ID объявления из параметров URL
 	listingID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID объявления")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
 	// Получаем список избранных объявлений
 	favorites, err := h.marketplaceService.GetUserFavorites(c.Context(), userID)
 	if err != nil {
 		log.Printf("Failed to get favorites for user %d: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось проверить избранное")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.checkFavoritesError")
 	}
 
 	// Проверяем, есть ли объявление в избранном
@@ -168,18 +215,28 @@ func (h *FavoritesHandler) IsInFavorites(c *fiber.Ctx) error {
 }
 
 // GetFavoritesCount получает количество избранных объявлений пользователя
+// @Summary Get favorites count
+// @Description Returns the total number of listings in user's favorites
+// @Tags marketplace-favorites
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{success=bool,data=object{count=int}} "Favorites count"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getFavoritesCountError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/favorites/count [get]
 func (h *FavoritesHandler) GetFavoritesCount(c *fiber.Ctx) error {
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
 	// Получаем список избранных объявлений и считаем их количество
 	favorites, err := h.marketplaceService.GetUserFavorites(c.Context(), userID)
 	if err != nil {
 		log.Printf("Failed to get favorites count for user %d: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить количество избранных объявлений")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getFavoritesCountError")
 	}
 
 	count := len(favorites)

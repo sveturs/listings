@@ -2,13 +2,16 @@
 package handler
 
 import (
-	globalService "backend/internal/proj/global/service"
-	"backend/internal/proj/marketplace/service"
-	"backend/pkg/utils"
-	"github.com/gofiber/fiber/v2"
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/domain/models"
+	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/marketplace/service"
+	"backend/pkg/utils"
 )
 
 // Используем переменные кеша из marketplace.go
@@ -33,17 +36,33 @@ func NewCategoriesHandler(services globalService.ServicesInterface) *CategoriesH
 }
 
 // GetCategories получает список категорий
+// @Summary Get categories list
+// @Description Returns all marketplace categories
+// @Tags marketplace-categories
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory} "Categories list"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
+// @Router /api/v1/marketplace/categories [get]
 func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 	categories, err := h.marketplaceService.GetCategories(c.Context())
 	if err != nil {
 		log.Printf("Failed to get categories: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить категории")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categoriesError")
 	}
 
 	return utils.SuccessResponse(c, categories)
 }
 
 // GetCategoryTree получает дерево категорий
+// @Summary Get category tree
+// @Description Returns hierarchical tree of all categories with caching
+// @Tags marketplace-categories
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryTreeNode} "Category tree"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoryTreeError"
+// @Router /api/v1/marketplace/category-tree [get]
 func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 	// Оптимизация: используем кеш, если он актуален (не старше 5 минут)
 	categoryTreeMutex.RLock()
@@ -59,7 +78,7 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 	categoryTree, err := h.marketplaceService.GetCategoryTree(c.Context())
 	if err != nil {
 		log.Printf("Failed to get category tree: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить дерево категорий")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categoryTreeError")
 	}
 
 	// Обновляем кеш
@@ -72,36 +91,56 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 }
 
 // GetCategoryAttributes получает атрибуты для категории
+// @Summary Get category attributes
+// @Description Returns all attributes available for a specific category
+// @Tags marketplace-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttribute} "Category attributes"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.attributesError"
+// @Router /api/v1/marketplace/categories/{id}/attributes [get]
 func (h *CategoriesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	// Получаем атрибуты категории
 	attributes, err := h.marketplaceService.GetCategoryAttributes(c.Context(), categoryID)
 	if err != nil {
 		log.Printf("Failed to get attributes for category %d: %v", categoryID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить атрибуты категории")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.attributesError")
 	}
 
 	return utils.SuccessResponse(c, attributes)
 }
 
 // GetAttributeRanges получает диапазоны значений для числовых атрибутов
+// @Summary Get attribute value ranges
+// @Description Returns min/max values for numeric attributes in a category
+// @Tags marketplace-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]object{min=number,max=number}} "Attribute ranges"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.rangesError"
+// @Router /api/v1/marketplace/categories/{id}/attribute-ranges [get]
 func (h *CategoriesHandler) GetAttributeRanges(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	// Получаем диапазоны значений атрибутов
 	ranges, err := h.marketplaceService.GetAttributeRanges(c.Context(), categoryID)
 	if err != nil {
 		log.Printf("Failed to get attribute ranges for category %d: %v", categoryID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить диапазоны значений атрибутов")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.rangesError")
 	}
 
 	return utils.SuccessResponse(c, ranges)

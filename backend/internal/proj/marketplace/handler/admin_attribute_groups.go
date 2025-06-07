@@ -8,18 +8,29 @@ import (
 )
 
 // CreateAttributeGroup создает новую группу атрибутов
+// @Summary Create attribute group
+// @Description Creates a new attribute group for organizing attributes
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param body body models.CreateAttributeGroupRequest true "Attribute group data"
+// @Success 201 {object} object{success=bool,id=int} "Group created successfully"
+// @Failure 400 {object} object{error=string} "marketplace.invalidRequest or marketplace.groupNameRequired"
+// @Failure 500 {object} object{error=string} "marketplace.createGroupError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/attribute-groups [post]
 func (h *MarketplaceHandler) CreateAttributeGroup(c *fiber.Ctx) error {
 	var req models.CreateAttributeGroupRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный формат запроса",
+			"error": "marketplace.invalidRequest",
 		})
 	}
 
 	// Валидация
 	if req.Name == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Название группы обязательно",
+			"error": "marketplace.groupNameRequired",
 		})
 	}
 
@@ -36,7 +47,7 @@ func (h *MarketplaceHandler) CreateAttributeGroup(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка создания группы атрибутов: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка создания группы",
+			"error": "marketplace.createGroupError",
 		})
 	}
 
@@ -47,12 +58,21 @@ func (h *MarketplaceHandler) CreateAttributeGroup(c *fiber.Ctx) error {
 }
 
 // ListAttributeGroups возвращает список всех групп атрибутов
+// @Summary List attribute groups
+// @Description Returns all attribute groups
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{success=bool,groups=[]models.AttributeGroup} "List of attribute groups"
+// @Failure 500 {object} object{error=string} "marketplace.listGroupsError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/attribute-groups [get]
 func (h *MarketplaceHandler) ListAttributeGroups(c *fiber.Ctx) error {
 	groups, err := h.storage.AttributeGroups.ListAttributeGroups(c.Context())
 	if err != nil {
 		log.Printf("Ошибка получения списка групп: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка получения списка групп",
+			"error": "marketplace.listGroupsError",
 		})
 	}
 
@@ -63,12 +83,23 @@ func (h *MarketplaceHandler) ListAttributeGroups(c *fiber.Ctx) error {
 }
 
 // GetAttributeGroup получает информацию о группе атрибутов
+// @Summary Get attribute group
+// @Description Returns information about a specific attribute group
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param id path int true "Group ID"
+// @Success 200 {object} object{success=bool,group=models.AttributeGroup} "Attribute group information"
+// @Failure 400 {object} object{error=string} "marketplace.invalidGroupId"
+// @Failure 404 {object} object{error=string} "marketplace.groupNotFound"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/attribute-groups/{id} [get]
 func (h *MarketplaceHandler) GetAttributeGroup(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID группы",
+			"error": "marketplace.invalidGroupId",
 		})
 	}
 
@@ -76,7 +107,7 @@ func (h *MarketplaceHandler) GetAttributeGroup(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка получения группы: %v", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Группа не найдена",
+			"error": "marketplace.groupNotFound",
 		})
 	}
 
@@ -87,19 +118,31 @@ func (h *MarketplaceHandler) GetAttributeGroup(c *fiber.Ctx) error {
 }
 
 // UpdateAttributeGroup обновляет группу атрибутов
+// @Summary Update attribute group
+// @Description Updates an existing attribute group
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param id path int true "Group ID"
+// @Param body body models.UpdateAttributeGroupRequest true "Updated group data"
+// @Success 200 {object} object{success=bool,message=string} "marketplace.groupUpdated"
+// @Failure 400 {object} object{error=string} "marketplace.invalidGroupId or marketplace.invalidRequest"
+// @Failure 500 {object} object{error=string} "marketplace.updateGroupError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/attribute-groups/{id} [put]
 func (h *MarketplaceHandler) UpdateAttributeGroup(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID группы",
+			"error": "marketplace.invalidGroupId",
 		})
 	}
 
 	var req models.UpdateAttributeGroupRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный формат запроса",
+			"error": "marketplace.invalidRequest",
 		})
 	}
 
@@ -124,23 +167,34 @@ func (h *MarketplaceHandler) UpdateAttributeGroup(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка обновления группы: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка обновления группы",
+			"error": "marketplace.updateGroupError",
 		})
 	}
 
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Группа успешно обновлена",
+		"message": "marketplace.groupUpdated",
 	})
 }
 
 // DeleteAttributeGroup удаляет группу атрибутов
+// @Summary Delete attribute group
+// @Description Deletes an attribute group
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param id path int true "Group ID"
+// @Success 200 {object} object{success=bool,message=string} "marketplace.groupDeleted"
+// @Failure 400 {object} object{error=string} "marketplace.invalidGroupId"
+// @Failure 500 {object} object{error=string} "marketplace.deleteGroupError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/attribute-groups/{id} [delete]
 func (h *MarketplaceHandler) DeleteAttributeGroup(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID группы",
+			"error": "marketplace.invalidGroupId",
 		})
 	}
 
@@ -148,23 +202,35 @@ func (h *MarketplaceHandler) DeleteAttributeGroup(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка удаления группы: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка удаления группы",
+			"error": "marketplace.deleteGroupError",
 		})
 	}
 
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Группа успешно удалена",
+		"message": "marketplace.groupDeleted",
 	})
 }
 
 // GetAttributeGroupWithItems получает группу с её атрибутами
+// @Summary Get attribute group with items
+// @Description Returns attribute group with all its attributes
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param id path int true "Group ID"
+// @Success 200 {object} object{success=bool,data=object{group=models.AttributeGroup,items=[]models.AttributeGroupItem}} "Group with items"
+// @Failure 400 {object} object{error=string} "marketplace.invalidGroupId"
+// @Failure 404 {object} object{error=string} "marketplace.groupNotFound"
+// @Failure 500 {object} object{error=string} "marketplace.getGroupItemsError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/attribute-groups/{id}/items [get]
 func (h *MarketplaceHandler) GetAttributeGroupWithItems(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID группы",
+			"error": "marketplace.invalidGroupId",
 		})
 	}
 
@@ -172,7 +238,7 @@ func (h *MarketplaceHandler) GetAttributeGroupWithItems(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка получения группы: %v", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Группа не найдена",
+			"error": "marketplace.groupNotFound",
 		})
 	}
 
@@ -180,7 +246,7 @@ func (h *MarketplaceHandler) GetAttributeGroupWithItems(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка получения атрибутов группы: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка получения атрибутов",
+			"error": "marketplace.getGroupItemsError",
 		})
 	}
 
@@ -199,19 +265,31 @@ func (h *MarketplaceHandler) GetAttributeGroupWithItems(c *fiber.Ctx) error {
 }
 
 // AddItemToGroup добавляет атрибут в группу
+// @Summary Add attribute to group
+// @Description Adds an attribute to a group
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param id path int true "Group ID"
+// @Param body body models.AddItemToGroupRequest true "Attribute data"
+// @Success 201 {object} object{success=bool,id=int} "Item added successfully"
+// @Failure 400 {object} object{error=string} "marketplace.invalidGroupId or marketplace.invalidRequest"
+// @Failure 500 {object} object{error=string} "marketplace.addItemError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/attribute-groups/{id}/items [post]
 func (h *MarketplaceHandler) AddItemToGroup(c *fiber.Ctx) error {
 	groupIDStr := c.Params("id")
 	groupID, err := strconv.Atoi(groupIDStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID группы",
+			"error": "marketplace.invalidGroupId",
 		})
 	}
 
 	var req models.AddItemToGroupRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный формат запроса",
+			"error": "marketplace.invalidRequest",
 		})
 	}
 
@@ -228,7 +306,7 @@ func (h *MarketplaceHandler) AddItemToGroup(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка добавления атрибута в группу: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка добавления атрибута",
+			"error": "marketplace.addItemError",
 		})
 	}
 
@@ -239,6 +317,18 @@ func (h *MarketplaceHandler) AddItemToGroup(c *fiber.Ctx) error {
 }
 
 // RemoveItemFromGroup удаляет атрибут из группы
+// @Summary Remove attribute from group
+// @Description Removes an attribute from a group
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param id path int true "Group ID"
+// @Param attributeId path int true "Attribute ID"
+// @Success 200 {object} object{success=bool,message=string} "marketplace.itemRemoved"
+// @Failure 400 {object} object{error=string} "marketplace.invalidGroupId or marketplace.invalidAttributeId"
+// @Failure 500 {object} object{error=string} "marketplace.removeItemError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/attribute-groups/{id}/items/{attributeId} [delete]
 func (h *MarketplaceHandler) RemoveItemFromGroup(c *fiber.Ctx) error {
 	groupIDStr := c.Params("id")
 	attributeIDStr := c.Params("attributeId")
@@ -246,14 +336,14 @@ func (h *MarketplaceHandler) RemoveItemFromGroup(c *fiber.Ctx) error {
 	groupID, err := strconv.Atoi(groupIDStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID группы",
+			"error": "marketplace.invalidGroupId",
 		})
 	}
 
 	attributeID, err := strconv.Atoi(attributeIDStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID атрибута",
+			"error": "marketplace.invalidAttributeId",
 		})
 	}
 
@@ -261,23 +351,34 @@ func (h *MarketplaceHandler) RemoveItemFromGroup(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка удаления атрибута из группы: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка удаления атрибута",
+			"error": "marketplace.removeItemError",
 		})
 	}
 
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Атрибут успешно удален из группы",
+		"message": "marketplace.itemRemoved",
 	})
 }
 
 // GetCategoryGroups получает группы атрибутов, привязанные к категории
+// @Summary Get category attribute groups
+// @Description Returns attribute groups attached to a category
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} object{success=bool,groups=[]models.AttributeGroup} "Category groups"
+// @Failure 400 {object} object{error=string} "marketplace.invalidCategoryId"
+// @Failure 500 {object} object{error=string} "marketplace.getCategoryGroupsError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/categories/{id}/groups [get]
 func (h *MarketplaceHandler) GetCategoryGroups(c *fiber.Ctx) error {
 	categoryIDStr := c.Params("id")
 	categoryID, err := strconv.Atoi(categoryIDStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID категории",
+			"error": "marketplace.invalidCategoryId",
 		})
 	}
 
@@ -285,7 +386,7 @@ func (h *MarketplaceHandler) GetCategoryGroups(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка получения групп категории: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка получения групп",
+			"error": "marketplace.getCategoryGroupsError",
 		})
 	}
 
@@ -296,19 +397,31 @@ func (h *MarketplaceHandler) GetCategoryGroups(c *fiber.Ctx) error {
 }
 
 // AttachGroupToCategory привязывает группу атрибутов к категории
+// @Summary Attach group to category
+// @Description Attaches an attribute group to a category
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param body body models.AttachGroupToCategoryRequest true "Group attachment data"
+// @Success 201 {object} object{success=bool,id=int} "Group attached successfully"
+// @Failure 400 {object} object{error=string} "marketplace.invalidCategoryId or marketplace.invalidRequest"
+// @Failure 500 {object} object{error=string} "marketplace.attachGroupError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/categories/{id}/groups [post]
 func (h *MarketplaceHandler) AttachGroupToCategory(c *fiber.Ctx) error {
 	categoryIDStr := c.Params("id")
 	categoryID, err := strconv.Atoi(categoryIDStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID категории",
+			"error": "marketplace.invalidCategoryId",
 		})
 	}
 
 	var req models.AttachGroupToCategoryRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный формат запроса",
+			"error": "marketplace.invalidRequest",
 		})
 	}
 
@@ -322,7 +435,7 @@ func (h *MarketplaceHandler) AttachGroupToCategory(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка привязки группы к категории: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка привязки группы",
+			"error": "marketplace.attachGroupError",
 		})
 	}
 
@@ -333,6 +446,18 @@ func (h *MarketplaceHandler) AttachGroupToCategory(c *fiber.Ctx) error {
 }
 
 // DetachGroupFromCategory отвязывает группу атрибутов от категории
+// @Summary Detach group from category
+// @Description Detaches an attribute group from a category
+// @Tags marketplace-admin-attribute-groups
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param groupId path int true "Group ID"
+// @Success 200 {object} object{success=bool,message=string} "marketplace.groupDetached"
+// @Failure 400 {object} object{error=string} "marketplace.invalidCategoryId or marketplace.invalidGroupId"
+// @Failure 500 {object} object{error=string} "marketplace.detachGroupError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/admin/categories/{id}/groups/{groupId} [delete]
 func (h *MarketplaceHandler) DetachGroupFromCategory(c *fiber.Ctx) error {
 	categoryIDStr := c.Params("id")
 	groupIDStr := c.Params("groupId")
@@ -340,14 +465,14 @@ func (h *MarketplaceHandler) DetachGroupFromCategory(c *fiber.Ctx) error {
 	categoryID, err := strconv.Atoi(categoryIDStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID категории",
+			"error": "marketplace.invalidCategoryId",
 		})
 	}
 
 	groupID, err := strconv.Atoi(groupIDStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Неверный ID группы",
+			"error": "marketplace.invalidGroupId",
 		})
 	}
 
@@ -355,12 +480,12 @@ func (h *MarketplaceHandler) DetachGroupFromCategory(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Ошибка отвязки группы от категории: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Ошибка отвязки группы",
+			"error": "marketplace.detachGroupError",
 		})
 	}
 
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Группа успешно отвязана от категории",
+		"message": "marketplace.groupDetached",
 	})
 }

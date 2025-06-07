@@ -52,17 +52,28 @@ func (h *AdminAttributesHandler) RegisterRoutes(app *fiber.App, adminMiddleware 
 }
 
 // CreateAttribute создает новый атрибут
+// @Summary Create attribute
+// @Description Creates a new attribute for categories
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param body body models.CategoryAttribute true "Attribute data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{id=int,message=string}} "marketplace.attributeCreated"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.requiredFieldsMissing"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createAttributeError"
+// @Security BearerAuth
+// @Router /api/admin/attributes [post]
 func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 	var attribute models.CategoryAttribute
 
 	// Парсим JSON из запроса
 	if err := c.BodyParser(&attribute); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Проверяем обязательные поля
 	if attribute.Name == "" || attribute.DisplayName == "" || attribute.AttributeType == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Не все обязательные поля заполнены")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.requiredFieldsMissing")
 	}
 
 	// Обрабатываем полные данные из JSON запроса
@@ -136,16 +147,25 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 	id, err := h.marketplaceService.CreateAttribute(c.Context(), &attribute)
 	if err != nil {
 		log.Printf("Failed to create attribute: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось создать атрибут: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.createAttributeError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
 		"id":      id,
-		"message": "Атрибут успешно создан",
+		"message": "marketplace.attributeCreated",
 	})
 }
 
-// GetAttributes получает список всех атрибутов
+// GetAttributes returns list of all attributes
+// @Summary Get all attributes
+// @Description Returns list of all category attributes sorted by sort_order and ID
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.CategoryAttribute "List of attributes"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/attributes [get]
 func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 	// В текущей реализации нет метода для получения всех атрибутов,
 	// поэтому можно создать запрос к базе данных напрямую
@@ -159,7 +179,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 	rows, err := h.marketplaceService.Storage().Query(c.Context(), query)
 	if err != nil {
 		log.Printf("Failed to get attributes: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить атрибуты")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getAttributesError")
 	}
 	defer rows.Close()
 
@@ -195,41 +215,65 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, attributes)
 }
 
-// GetAttributeByID получает информацию об атрибуте по ID
+// GetAttributeByID returns attribute information by ID
+// @Summary Get attribute by ID
+// @Description Returns detailed information about a specific attribute
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param id path int true "Attribute ID"
+// @Success 200 {object} models.CategoryAttribute "Attribute information"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
+// @Failure 404 {object} utils.ErrorResponseSwag "Attribute not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/attributes/{id} [get]
 func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 	// Получаем ID атрибута из параметров URL
 	attributeID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID атрибута")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
 	}
 
 	// Получаем атрибут по ID
 	attribute, err := h.marketplaceService.GetAttributeByID(c.Context(), attributeID)
 	if err != nil {
 		log.Printf("Failed to get attribute by ID: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось получить атрибут")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getAttributeError")
 	}
 
 	// Если атрибут не найден, возвращаем ошибку
 	if attribute == nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Атрибут не найден")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.attributeNotFound")
 	}
 
 	return utils.SuccessResponse(c, attribute)
 }
 
-// UpdateAttribute обновляет существующий атрибут
+// UpdateAttribute updates an existing attribute
+// @Summary Update attribute
+// @Description Updates an existing category attribute with new data
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param id path int true "Attribute ID"
+// @Param attribute body models.CategoryAttribute true "Attribute data"
+// @Success 200 {object} map[string]interface{} "Success message"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/attributes/{id} [put]
 func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 	// Получаем ID атрибута из параметров URL
 	attributeID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID атрибута")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
 	}
 
 	// Парсим JSON из запроса
 	var attribute models.CategoryAttribute
 	if err := c.BodyParser(&attribute); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Устанавливаем ID атрибута
@@ -237,7 +281,7 @@ func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 
 	// Проверяем обязательные поля
 	if attribute.Name == "" || attribute.DisplayName == "" || attribute.AttributeType == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Не все обязательные поля заполнены")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.requiredFieldsMissing")
 	}
 
 	// Обрабатываем полные данные из JSON запроса
@@ -311,35 +355,57 @@ func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 	err = h.marketplaceService.UpdateAttribute(c.Context(), &attribute)
 	if err != nil {
 		log.Printf("Failed to update attribute: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось обновить атрибут: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Атрибут успешно обновлен",
+		"message": "marketplace.attributeUpdated",
 	})
 }
 
-// DeleteAttribute удаляет атрибут
+// DeleteAttribute deletes an attribute
+// @Summary Delete attribute
+// @Description Deletes a category attribute by ID
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param id path int true "Attribute ID"
+// @Success 200 {object} map[string]interface{} "Success message"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/attributes/{id} [delete]
 func (h *AdminAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 	// Получаем ID атрибута из параметров URL
 	attributeID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID атрибута")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
 	}
 
 	// Удаляем атрибут
 	err = h.marketplaceService.DeleteAttribute(c.Context(), attributeID)
 	if err != nil {
 		log.Printf("Failed to delete attribute: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось удалить атрибут: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteAttributeError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Атрибут успешно удален",
+		"message": "marketplace.attributeDeleted",
 	})
 }
 
-// BulkUpdateAttributes массово обновляет атрибуты
+// BulkUpdateAttributes updates multiple attributes in batch
+// @Summary Bulk update attributes
+// @Description Updates multiple category attributes in a single request
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param attributes body object{attributes=[]models.CategoryAttribute} true "List of attributes to update"
+// @Success 200 {object} map[string]interface{} "Update results with success count"
+// @Success 206 {object} map[string]interface{} "Partial update with errors"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/attributes/bulk [put]
 func (h *AdminAttributesHandler) BulkUpdateAttributes(c *fiber.Ctx) error {
 	// Получаем входные данные
 	var input struct {
@@ -347,11 +413,11 @@ func (h *AdminAttributesHandler) BulkUpdateAttributes(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&input); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	if len(input.Attributes) == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Список атрибутов не может быть пустым")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.emptyAttributesList")
 	}
 
 	// Обновляем каждый атрибут
@@ -361,14 +427,14 @@ func (h *AdminAttributesHandler) BulkUpdateAttributes(c *fiber.Ctx) error {
 	for _, attribute := range input.Attributes {
 		// Проверяем обязательные поля
 		if attribute.ID == 0 || attribute.Name == "" || attribute.DisplayName == "" || attribute.AttributeType == "" {
-			errors = append(errors, "Атрибут с неполными данными, ID: "+strconv.Itoa(attribute.ID))
+			errors = append(errors, "marketplace.incompleteAttributeData")
 			continue
 		}
 
 		// Обновляем атрибут
 		err := h.marketplaceService.UpdateAttribute(c.Context(), &attribute)
 		if err != nil {
-			errors = append(errors, "Не удалось обновить атрибут с ID "+strconv.Itoa(attribute.ID)+": "+err.Error())
+			errors = append(errors, "marketplace.updateAttributeError")
 			continue
 		}
 
@@ -388,17 +454,30 @@ func (h *AdminAttributesHandler) BulkUpdateAttributes(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, result)
 }
 
-// AddAttributeToCategory привязывает атрибут к категории
+// AddAttributeToCategory links an attribute to a category
+// @Summary Add attribute to category
+// @Description Links a category attribute to a specific category with optional settings
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param categoryId path int true "Category ID"
+// @Param attributeId path int true "Attribute ID"
+// @Param settings body object{is_required=bool,sort_order=int} false "Attribute settings for category"
+// @Success 200 {object} map[string]interface{} "Success message"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/{attributeId} [post]
 func (h *AdminAttributesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 	// Получаем ID категории и атрибута из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("categoryId"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	attributeID, err := strconv.Atoi(c.Params("attributeId"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID атрибута")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
 	}
 
 	// Парсим параметры из запроса
@@ -424,50 +503,75 @@ func (h *AdminAttributesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 
 	if addErr != nil {
 		log.Printf("Failed to add attribute to category: %v", addErr)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось привязать атрибут к категории: "+addErr.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.addAttributeToCategoryError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Атрибут успешно привязан к категории",
+		"message": "marketplace.attributeAddedToCategory",
 	})
 }
 
-// RemoveAttributeFromCategory отвязывает атрибут от категории
+// RemoveAttributeFromCategory unlinks an attribute from a category
+// @Summary Remove attribute from category
+// @Description Removes the link between a category attribute and a category
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param categoryId path int true "Category ID"
+// @Param attributeId path int true "Attribute ID"
+// @Success 200 {object} map[string]interface{} "Success message"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/{attributeId} [delete]
 func (h *AdminAttributesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error {
 	// Получаем ID категории и атрибута из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("categoryId"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	attributeID, err := strconv.Atoi(c.Params("attributeId"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID атрибута")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
 	}
 
 	// Отвязываем атрибут от категории
 	err = h.marketplaceService.RemoveAttributeFromCategory(c.Context(), categoryID, attributeID)
 	if err != nil {
 		log.Printf("Failed to remove attribute from category: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось отвязать атрибут от категории: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.removeAttributeFromCategoryError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Атрибут успешно отвязан от категории",
+		"message": "marketplace.attributeRemovedFromCategory",
 	})
 }
 
-// UpdateAttributeCategory обновляет настройки атрибута в категории
+// UpdateAttributeCategory updates attribute settings in a category
+// @Summary Update attribute category settings
+// @Description Updates settings for an attribute within a specific category
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param categoryId path int true "Category ID"
+// @Param attributeId path int true "Attribute ID"
+// @Param settings body object{is_required=bool,is_enabled=bool,sort_order=int,custom_component=string} true "Attribute category settings"
+// @Success 200 {object} map[string]interface{} "Success message"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/{attributeId} [put]
 func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 	// Получаем ID категории и атрибута из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("categoryId"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	attributeID, err := strconv.Atoi(c.Params("attributeId"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID атрибута")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
 	}
 
 	// Парсим параметры из запроса
@@ -479,7 +583,7 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&input); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	// Обновляем настройки атрибута в категории
@@ -495,27 +599,38 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 
 	if err != nil {
 		log.Printf("Failed to update attribute category settings: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось обновить настройки атрибута в категории: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeCategoryError")
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Настройки атрибута в категории успешно обновлены",
+		"message": "marketplace.attributeCategoryUpdated",
 	})
 }
 
-// ExportCategoryAttributes экспортирует настройки атрибутов категории
+// ExportCategoryAttributes exports category attribute settings
+// @Summary Export category attributes
+// @Description Exports all attribute settings for a specific category as JSON
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param categoryId path int true "Category ID"
+// @Success 200 {array} models.CategoryAttributeMapping "Category attributes with settings"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/export [get]
 func (h *AdminAttributesHandler) ExportCategoryAttributes(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("categoryId"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	// Получаем атрибуты категории с их настройками
 	categoryAttributes, err := h.getCategoryAttributesWithSettings(c.Context(), categoryID)
 	if err != nil {
 		log.Printf("Failed to export category attributes: %v", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось экспортировать настройки атрибутов: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.exportAttributesError")
 	}
 
 	// Устанавливаем заголовок для скачивания файла
@@ -549,7 +664,7 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 
 	rows, err := h.marketplaceService.Storage().Query(ctx, query, categoryID)
 	if err != nil {
-		return nil, fmt.Errorf("не удалось получить атрибуты категории: %w", err)
+		return nil, fmt.Errorf("marketplace.getCategoryAttributesError: %w", err)
 	}
 	defer rows.Close()
 
@@ -581,7 +696,7 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 			&attributeCustomComponent,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("не удалось прочитать атрибут: %w", err)
+			return nil, fmt.Errorf("marketplace.readAttributeError: %w", err)
 		}
 
 		// Используем пользовательский компонент из маппинга, если он есть, иначе из атрибута
@@ -641,45 +756,59 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 	return result, nil
 }
 
-// ImportCategoryAttributes импортирует настройки атрибутов в категорию
+// ImportCategoryAttributes imports attribute settings into a category
+// @Summary Import category attributes
+// @Description Imports attribute settings into a category, replacing existing settings
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param categoryId path int true "Category ID"
+// @Param attributes body []models.CategoryAttributeMapping true "List of attribute mappings to import"
+// @Success 200 {object} map[string]interface{} "Import results with success count"
+// @Success 206 {object} map[string]interface{} "Partial import with errors"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
+// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/import [post]
 func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
 	categoryID, err := strconv.Atoi(c.Params("categoryId"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
 	// Проверяем существование категории
 	var categoryExists bool
 	err = h.marketplaceService.Storage().QueryRow(c.Context(), "SELECT EXISTS(SELECT 1 FROM marketplace_categories WHERE id = $1)", categoryID).Scan(&categoryExists)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось проверить существование категории")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.checkCategoryExistenceError")
 	}
 	if !categoryExists {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Категория с указанным ID не найдена")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.categoryNotFound")
 	}
 
 	// Парсим данные из запроса
 	var attributeMappings []models.CategoryAttributeMapping
 	if err := c.BodyParser(&attributeMappings); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	if len(attributeMappings) == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Список атрибутов не может быть пустым")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.emptyAttributesList")
 	}
 
 	// Начинаем транзакцию
 	tx, err := h.marketplaceService.Storage().BeginTx(c.Context(), nil)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось начать транзакцию")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.beginTransactionError")
 	}
 	defer tx.Rollback()
 
 	// Удаляем существующие связи категории с атрибутами
 	_, err = tx.Exec(c.Context(), "DELETE FROM category_attribute_mapping WHERE category_id = $1", categoryID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось очистить существующие связи атрибутов")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.clearAttributeMappingsError")
 	}
 
 	// Добавляем новые связи
@@ -691,11 +820,11 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 		var attributeExists bool
 		err = tx.QueryRow(c.Context(), "SELECT EXISTS(SELECT 1 FROM category_attributes WHERE id = $1)", mapping.AttributeID).Scan(&attributeExists)
 		if err != nil {
-			errors = append(errors, fmt.Sprintf("Не удалось проверить атрибут %d: %s", mapping.AttributeID, err.Error()))
+			errors = append(errors, "marketplace.checkAttributeError")
 			continue
 		}
 		if !attributeExists {
-			errors = append(errors, fmt.Sprintf("Атрибут с ID %d не существует", mapping.AttributeID))
+			errors = append(errors, "marketplace.attributeNotExists")
 			continue
 		}
 
@@ -706,7 +835,7 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 		`, categoryID, mapping.AttributeID, mapping.IsEnabled, mapping.IsRequired, mapping.SortOrder, mapping.CustomComponent)
 
 		if err != nil {
-			errors = append(errors, fmt.Sprintf("Не удалось добавить атрибут %d: %s", mapping.AttributeID, err.Error()))
+			errors = append(errors, "marketplace.addAttributeError")
 			continue
 		}
 
@@ -716,7 +845,7 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 	// Если были успешные добавления, фиксируем транзакцию
 	if successCount > 0 {
 		if err := tx.Commit(); err != nil {
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось завершить транзакцию: "+err.Error())
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.commitTransactionError")
 		}
 
 		// Инвалидируем кеш атрибутов для категории
@@ -741,12 +870,25 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, result)
 }
 
-// CopyAttributesSettings копирует настройки атрибутов из одной категории в другую
+// CopyAttributesSettings copies attribute settings from one category to another
+// @Summary Copy attribute settings between categories
+// @Description Copies all attribute settings from a source category to a target category
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param targetCategoryId path int true "Target category ID"
+// @Param source body object{source_category_id=int} true "Source category ID"
+// @Success 200 {object} map[string]interface{} "Success message"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/categories/{targetCategoryId}/attributes/copy [post]
 func (h *AdminAttributesHandler) CopyAttributesSettings(c *fiber.Ctx) error {
 	// Получаем ID целевой категории из параметров URL
 	targetCategoryID, err := strconv.Atoi(c.Params("targetCategoryId"))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный ID целевой категории")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidTargetCategoryId")
 	}
 
 	// Получаем ID исходной категории из запроса
@@ -755,42 +897,42 @@ func (h *AdminAttributesHandler) CopyAttributesSettings(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&input); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Некорректный формат данных")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
 
 	if input.SourceCategoryID == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "ID исходной категории не указан")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.sourceCategoryIdRequired")
 	}
 
 	// Проверяем существование обеих категорий
 	var targetExists, sourceExists bool
 	err = h.marketplaceService.Storage().QueryRow(c.Context(), "SELECT EXISTS(SELECT 1 FROM marketplace_categories WHERE id = $1)", targetCategoryID).Scan(&targetExists)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось проверить существование целевой категории")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.checkTargetCategoryExistenceError")
 	}
 	if !targetExists {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Целевая категория не найдена")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.targetCategoryNotFound")
 	}
 
 	err = h.marketplaceService.Storage().QueryRow(c.Context(), "SELECT EXISTS(SELECT 1 FROM marketplace_categories WHERE id = $1)", input.SourceCategoryID).Scan(&sourceExists)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось проверить существование исходной категории")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.checkSourceCategoryExistenceError")
 	}
 	if !sourceExists {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Исходная категория не найдена")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.sourceCategoryNotFound")
 	}
 
 	// Начинаем транзакцию
 	tx, err := h.marketplaceService.Storage().BeginTx(c.Context(), nil)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось начать транзакцию")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.beginTransactionError")
 	}
 	defer tx.Rollback()
 
 	// Удаляем существующие связи в целевой категории
 	_, err = tx.Exec(c.Context(), "DELETE FROM category_attribute_mapping WHERE category_id = $1", targetCategoryID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось очистить существующие связи атрибутов")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.clearAttributeMappingsError")
 	}
 
 	// Копируем связи из исходной категории в целевую с учетом sort_order и custom_component
@@ -802,12 +944,12 @@ func (h *AdminAttributesHandler) CopyAttributesSettings(c *fiber.Ctx) error {
 	`
 	_, err = tx.Exec(c.Context(), query, targetCategoryID, input.SourceCategoryID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось скопировать настройки атрибутов: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.copyAttributeSettingsError")
 	}
 
 	// Фиксируем транзакцию
 	if err := tx.Commit(); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось завершить транзакцию: "+err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.commitTransactionError")
 	}
 
 	// Инвалидируем кеш атрибутов для целевой категории
@@ -816,6 +958,6 @@ func (h *AdminAttributesHandler) CopyAttributesSettings(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Настройки атрибутов успешно скопированы",
+		"message": "marketplace.attributeSettingsCopied",
 	})
 }

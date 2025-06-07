@@ -12,13 +12,13 @@ import (
 	"time"
 )
 
-// IndexingHandler обрабатывает запросы, связанные с индексацией объявлений
+// IndexingHandler handles requests related to listing indexing
 type IndexingHandler struct {
 	services           globalService.ServicesInterface
 	marketplaceService service.MarketplaceServiceInterface
 }
 
-// NewIndexingHandler создает новый обработчик индексации
+// NewIndexingHandler creates a new indexing handler
 func NewIndexingHandler(services globalService.ServicesInterface) *IndexingHandler {
 	return &IndexingHandler{
 		services:           services,
@@ -26,27 +26,38 @@ func NewIndexingHandler(services globalService.ServicesInterface) *IndexingHandl
 	}
 }
 
-// ReindexAll переиндексирует все объявления
+// ReindexAll reindexes all listings
+// @Summary Reindex all listings
+// @Description Reindexes all marketplace listings in the search index
+// @Tags marketplace-admin-indexing
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{message=string} "Reindexing started"
+// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
+// @Security BearerAuth
+// @Router /api/v1/admin/reindex-listings [post]
 func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем пользователя для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
 		log.Printf("Failed to get user with ID %d: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось проверить права администратора")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.adminCheckError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
 		log.Printf("User %d is not admin: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "Требуются права администратора")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.adminRequired")
 	}
 
 	// Запускаем переиндексацию в отдельной горутине, чтобы не блокировать запрос
@@ -61,31 +72,42 @@ func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 
 	// Возвращаем успешный результат
 	return utils.SuccessResponse(c, fiber.Map{
-		"message": "Переиндексация запущена",
+		"message": "marketplace.reindexStarted",
 	})
 }
 
-// ReindexAllWithTranslations переиндексирует все объявления с переводами
+// ReindexAllWithTranslations reindexes all listings with translations
+// @Summary Reindex all listings with translations
+// @Description Reindexes all marketplace listings with their translations in the search index
+// @Tags marketplace-admin-indexing
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{success=bool,message=string} "Reindexing with translations started"
+// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
+// @Security BearerAuth
+// @Router /api/v1/admin/reindex-listings-with-translations [post]
 func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем пользователя для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
 		log.Printf("Failed to get user with ID %d: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось проверить права администратора")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.adminCheckError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
 		log.Printf("User %d is not admin: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "Требуются права администратора")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.adminRequired")
 	}
 
 	// Запускаем переиндексацию с переводами в отдельной горутине
@@ -140,31 +162,42 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 	// Возвращаем успешный результат
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Переиндексация с переводами запущена",
+		"message": "marketplace.reindexWithTranslationsStarted",
 	})
 }
 
-// ReindexAllListings переиндексирует все объявления
+// ReindexAllListings reindexes all listings (alias method)
+// @Summary Reindex all listings (alias)
+// @Description Alternative endpoint to reindex all marketplace listings
+// @Tags marketplace-admin-indexing
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{success=bool,message=string} "Reindexing started"
+// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
+// @Security BearerAuth
+// @Router /api/v1/admin/reindex-all-listings [post]
 func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем пользователя для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
 		log.Printf("Failed to get user with ID %d: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось проверить права администратора")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.adminCheckError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
 		log.Printf("User %d is not admin: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "Требуются права администратора")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.adminRequired")
 	}
 
 	// Запускаем переиндексацию
@@ -178,31 +211,42 @@ func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 	// Возвращаем успешный результат
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Переиндексация запущена",
+		"message": "marketplace.reindexStarted",
 	})
 }
 
-// ReindexRatings переиндексирует рейтинги всех объявлений
+// ReindexRatings reindexes ratings for all listings
+// @Summary Reindex listing ratings
+// @Description Reindexes ratings and review counts for all marketplace listings
+// @Tags marketplace-admin-indexing
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{success=bool,message=string} "Rating reindexing started"
+// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
+// @Security BearerAuth
+// @Router /api/v1/admin/reindex-ratings [post]
 func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		log.Printf("Failed to get user_id from context: %v", c.Locals("user_id"))
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
 	// Получаем пользователя для проверки email
 	user, err := h.services.User().GetUserByID(c.Context(), userID)
 	if err != nil {
 		log.Printf("Failed to get user with ID %d: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Не удалось проверить права администратора")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.adminCheckError")
 	}
 
 	// Проверяем права администратора
 	isAdmin, err := h.services.User().IsUserAdmin(c.Context(), user.Email)
 	if err != nil || !isAdmin {
 		log.Printf("User %d is not admin: %v", userID, err)
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "Требуются права администратора")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.adminRequired")
 	}
 
 	// Запускаем переиндексацию рейтингов в отдельной горутине
@@ -288,6 +332,6 @@ func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 	// Возвращаем успешный результат
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Переиндексация рейтингов запущена",
+		"message": "marketplace.ratingsReindexStarted",
 	})
 }
