@@ -1,15 +1,17 @@
 package handler
 
 import (
-	"backend/internal/middleware"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/middleware"
 )
 
 // RegisterRoutes регистрирует маршруты для модуля contacts
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Группа маршрутов для контактов
-	contacts := app.Group("/api/v1/contacts", mw.AuthRequiredJWT)
+	contacts := app.Group("/api/v1/contacts", mw.AuthRequiredJWT, mw.CSRFProtection(), mw.RateLimitByUser(300, time.Minute))
 
 	// Маршруты для работы с контактами
 	contacts.Get("/", h.GetContacts)                             // Получить список контактов
