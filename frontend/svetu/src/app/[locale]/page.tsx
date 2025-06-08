@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { MarketplaceService } from '@/services/marketplace';
-import MarketplaceCard from '@/components/MarketplaceCard';
+import MarketplaceList from '@/components/marketplace/MarketplaceList';
 
 export default async function Home({
   params,
@@ -17,7 +17,7 @@ export default async function Home({
     marketplaceData = await MarketplaceService.search({
       sort_by: 'date_desc',
       page: 0,
-      size: 25,
+      size: 20,
     });
   } catch (err) {
     error = err as Error;
@@ -48,23 +48,13 @@ export default async function Home({
       )}
 
       {marketplaceData && marketplaceData.data.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {marketplaceData.data.map((item) => (
-            <MarketplaceCard key={item.id} item={item} locale={locale} />
-          ))}
-        </div>
+        <MarketplaceList initialData={marketplaceData} locale={locale} />
       ) : (
         !error && (
           <div className="text-center py-12">
             <p className="text-lg text-base-content/70">{t('noItems')}</p>
           </div>
         )
-      )}
-
-      {marketplaceData && marketplaceData.meta.has_more && (
-        <div className="text-center mt-8">
-          <button className="btn btn-primary">{t('loadMore')}</button>
-        </div>
       )}
     </div>
   );

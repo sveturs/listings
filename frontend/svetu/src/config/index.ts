@@ -120,13 +120,16 @@ class ConfigManager {
       return path;
     }
 
+    // Убеждаемся, что путь начинается со слеша
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
     // Если путь начинается с /listings/ или /chat-files/, используем MinIO
-    if (path.startsWith('/listings/') || path.startsWith('/chat-files/')) {
-      return `${this.getImageBaseUrl()}${path}`;
+    if (normalizedPath.startsWith('/listings/') || normalizedPath.startsWith('/chat-files/')) {
+      return `${this.getImageBaseUrl()}${normalizedPath}`;
     }
 
     // Иначе используем API URL (для обратной совместимости)
-    return `${this.config.api.url}${path}`;
+    return `${this.config.api.url}${normalizedPath}`;
   }
 }
 

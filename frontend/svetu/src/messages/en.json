@@ -3,7 +3,8 @@
     "marketplace": "Marketplace",
     "errorLoadingData": "Error loading data. Please try again later.",
     "noItems": "No items found",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "loading": "Loading..."
   },
   "header": {
     "nav": {
