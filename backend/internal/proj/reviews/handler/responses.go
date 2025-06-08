@@ -30,7 +30,7 @@ type ReviewsMeta struct {
 // ReviewMessageResponse представляет ответ с сообщением
 type ReviewMessageResponse struct {
 	Success bool   `json:"success" example:"true"`
-	Message string `json:"message" example:"Операция выполнена успешно"`
+	Message string `json:"message" example:"Operation completed successfully"`
 }
 
 // VoteRequest запрос на голосование за отзыв
@@ -40,7 +40,7 @@ type VoteRequest struct {
 
 // ResponseRequest запрос на добавление ответа на отзыв
 type ResponseRequest struct {
-	Response string `json:"response" example:"Спасибо за ваш отзыв!"`
+	Response string `json:"response" example:"Thank you for your review!"`
 }
 
 // PhotosResponse ответ с загруженными фотографиями

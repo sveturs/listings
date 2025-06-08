@@ -17,8 +17,8 @@ import (
 // @Accept json
 // @Produce json
 // @Success 200 {array} models.AdminUser "List of administrators"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.fetch_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/admins [get]
 func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
@@ -47,9 +47,9 @@ func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
 // @Produce json
 // @Param admin body models.AdminUser true "Administrator data"
 // @Success 200 {object} models.AdminUser "Created administrator"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.invalid_format or admin.admins.error.email_required"
+// @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.add_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/admins [post]
 func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
@@ -92,9 +92,9 @@ func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param email path string true "Administrator email"
 // @Success 200 {object} AdminMessageResponse "Administrator removed"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.email_required"
+// @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.remove_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/admins/{email} [delete]
 func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
@@ -132,9 +132,9 @@ func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param email path string true "User email"
 // @Success 200 {object} AdminAdminsResponse "Admin status"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.email_required"
+// @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.check_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/admins/check/{email} [get]
 func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
@@ -173,8 +173,8 @@ func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param email path string true "User email"
 // @Success 200 {object} AdminAdminsResponse "Admin status"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.email_required"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.check_failed"
 // @Router /api/v1/admin-check/{email} [get]
 func (h *UserHandler) IsAdminPublic(c *fiber.Ctx) error {
 	ctx := context.Background()

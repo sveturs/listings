@@ -45,9 +45,9 @@ func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
 // @Produce json
 // @Param review body models.CreateReviewRequest true "Review data"
 // @Success 200 {object} ReviewResponse "Created review"
-// @Failure 400 {object} ErrorResponse "Invalid input"
-// @Failure 404 {object} ErrorResponse "Listing not found"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid input"
+// @Failure 404 {object} utils.ErrorResponseSwag "Listing not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/reviews [post]
 func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
@@ -109,7 +109,7 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 	// Отправляем уведомление только если отзыв написан не владельцем объявления
 	if listing.UserID != userID {
 		notificationText := fmt.Sprintf(
-			"Новый отзыв\nРейтинг: %d/5\nОбъявление: %s\n\n%s",
+			"reviews.notification.new_review\nreviews.notification.rating: %d/5\nreviews.notification.listing: %s\n\n%s",
 			request.Rating,
 			listing.Title,
 			request.Comment,
@@ -151,7 +151,7 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
 // @Success 200 {object} ReviewsListResponse "List of reviews"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/reviews [get]
 func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
 	filter := models.ReviewsFilter{
@@ -193,9 +193,9 @@ func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
 // @Param id path int true "Review ID"
 // @Param vote body VoteRequest true "Vote data"
 // @Success 200 {object} ReviewMessageResponse "Vote recorded successfully"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 404 {object} ErrorResponse "Review not found"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Review not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/vote [post]
 func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
@@ -232,7 +232,7 @@ func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
 	}
 
 	notificationText := fmt.Sprintf(
-		"Ваш отзыв оценили как %s\nОбъявление: %s",
+		"reviews.notification.vote: %s\nreviews.notification.listing: %s",
 		request.VoteType,
 		listing.Title,
 	)
@@ -261,9 +261,9 @@ func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
 // @Param id path int true "Review ID"
 // @Param response body ResponseRequest true "Response data"
 // @Success 200 {object} ReviewMessageResponse "Response added successfully"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 404 {object} ErrorResponse "Review not found"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Review not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/response [post]
 func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
@@ -303,7 +303,7 @@ func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
 	}
 
 	notificationText := fmt.Sprintf(
-		"Получен ответ на ваш отзыв\nОбъявление: %s\n\n%s",
+		"reviews.notification.response\nreviews.notification.listing: %s\n\n%s",
 		listing.Title,
 		request.Response,
 	)
@@ -331,8 +331,8 @@ func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Review ID"
 // @Success 200 {object} ReviewResponse "Review details"
-// @Failure 400 {object} ErrorResponse "Invalid review ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid review ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/reviews/{id} [get]
 func (h *ReviewHandler) GetReviewByID(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
@@ -361,8 +361,8 @@ func (h *ReviewHandler) GetReviewByID(c *fiber.Ctx) error {
 // @Param id path int true "Review ID"
 // @Param review body models.Review true "Updated review data"
 // @Success 200 {object} ReviewMessageResponse "Review updated successfully"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id} [put]
 func (h *ReviewHandler) UpdateReview(c *fiber.Ctx) error {
@@ -401,7 +401,7 @@ func (h *ReviewHandler) UpdateReview(c *fiber.Ctx) error {
 // @Param entity_type query string false "Entity type"
 // @Param entity_id query int false "Entity ID"
 // @Success 200 {object} StatsResponse "Review statistics"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/reviews/stats [get]
 func (h *ReviewHandler) GetStats(c *fiber.Ctx) error {
 	entityType := c.Query("entity_type")
@@ -428,8 +428,8 @@ func (h *ReviewHandler) GetStats(c *fiber.Ctx) error {
 // @Param id path int true "Review ID"
 // @Param photos formData file true "Photos to upload (max 10)"
 // @Success 200 {object} PhotosResponse "Photos uploaded successfully"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/photos [post]
 func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
@@ -493,8 +493,8 @@ func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Review ID"
 // @Success 200 {object} ReviewMessageResponse "Review deleted successfully"
-// @Failure 400 {object} ErrorResponse "Invalid review ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid review ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id} [delete]
 func (h *ReviewHandler) DeleteReview(c *fiber.Ctx) error {
@@ -524,8 +524,8 @@ func (h *ReviewHandler) DeleteReview(c *fiber.Ctx) error {
 // @Param type path string true "Entity type"
 // @Param id path int true "Entity ID"
 // @Success 200 {object} RatingResponse "Entity rating"
-// @Failure 400 {object} ErrorResponse "Invalid entity ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid entity ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/reviews/rating/{type}/{id} [get]
 func (h *ReviewHandler) GetEntityRating(c *fiber.Ctx) error {
 	entityType := c.Params("type")
@@ -554,8 +554,8 @@ func (h *ReviewHandler) GetEntityRating(c *fiber.Ctx) error {
 // @Param type path string true "Entity type"
 // @Param id path int true "Entity ID"
 // @Success 200 {object} StatsResponse "Entity review statistics"
-// @Failure 400 {object} ErrorResponse "Invalid entity ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid entity ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/reviews/stats/{type}/{id} [get]
 func (h *ReviewHandler) GetEntityStats(c *fiber.Ctx) error {
 	entityType := c.Params("type")
@@ -564,15 +564,15 @@ func (h *ReviewHandler) GetEntityStats(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_entity_id")
 	}
 
-	log.Printf("Запрос статистики для %s ID=%d", entityType, entityId)
+	log.Printf("Getting stats for %s ID=%d", entityType, entityId)
 
 	stats, err := h.services.Review().GetReviewStats(c.Context(), entityType, entityId)
 	if err != nil {
-		log.Printf("Ошибка при получении статистики для %s ID=%d: %v", entityType, entityId, err)
+		log.Printf("Error getting stats for %s ID=%d: %v", entityType, entityId, err)
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.stats.error.fetch_failed")
 	}
 
-	log.Printf("Получена статистика для %s ID=%d: %+v", entityType, entityId, stats)
+	log.Printf("Got stats for %s ID=%d: %+v", entityType, entityId, stats)
 
 	return c.JSON(&StatsResponse{
 		Success: true,
@@ -588,8 +588,8 @@ func (h *ReviewHandler) GetEntityStats(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 200 {object} ReviewsListResponse "User reviews"
-// @Failure 400 {object} ErrorResponse "Invalid user ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid user ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/reviews/user/{id} [get]
 func (h *ReviewHandler) GetUserReviews(c *fiber.Ctx) error {
 	userID, err := strconv.Atoi(c.Params("id"))
@@ -621,8 +621,8 @@ func (h *ReviewHandler) GetUserReviews(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Success 200 {object} ReviewsListResponse "Storefront reviews"
-// @Failure 400 {object} ErrorResponse "Invalid storefront ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid storefront ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/reviews/storefront/{id} [get]
 func (h *ReviewHandler) GetStorefrontReviews(c *fiber.Ctx) error {
 	storefrontID, err := strconv.Atoi(c.Params("id"))
@@ -654,8 +654,8 @@ func (h *ReviewHandler) GetStorefrontReviews(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 200 {object} UserRatingSummaryResponse "User rating summary"
-// @Failure 400 {object} ErrorResponse "Invalid user ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid user ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/reviews/user/{id}/rating [get]
 func (h *ReviewHandler) GetUserRatingSummary(c *fiber.Ctx) error {
 	userID, err := strconv.Atoi(c.Params("id"))
@@ -682,8 +682,8 @@ func (h *ReviewHandler) GetUserRatingSummary(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Success 200 {object} StorefrontRatingSummaryResponse "Storefront rating summary"
-// @Failure 400 {object} ErrorResponse "Invalid storefront ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid storefront ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/reviews/storefront/{id}/rating [get]
 func (h *ReviewHandler) GetStorefrontRatingSummary(c *fiber.Ctx) error {
 	storefrontID, err := strconv.Atoi(c.Params("id"))

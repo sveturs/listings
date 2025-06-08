@@ -1323,15 +1323,15 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "admin.admins.error.email_required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.admins.error.check_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -1366,15 +1366,15 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "admin.admins.error.unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.admins.error.fetch_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -1415,21 +1415,21 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "admin.admins.error.invalid_format or admin.admins.error.email_required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "admin.admins.error.unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.admins.error.add_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -1470,21 +1470,21 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "admin.admins.error.email_required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "admin.admins.error.unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.admins.error.check_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -1525,21 +1525,21 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "admin.admins.error.email_required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "admin.admins.error.unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.admins.error.remove_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2526,9 +2526,9 @@
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.users.error.fetch_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2565,19 +2565,31 @@
                     "200": {
                         "description": "User profile",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.UserProfile"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserProfile"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Invalid user ID",
+                        "description": "admin.users.error.invalid_user_id",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
-                        "description": "User not found",
+                        "description": "admin.users.error.user_not_found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2621,19 +2633,31 @@
                     "200": {
                         "description": "Update successful",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.validation_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.users.error.update_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2668,19 +2692,31 @@
                     "200": {
                         "description": "User deleted",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Invalid user ID",
+                        "description": "admin.users.error.invalid_user_id",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.users.error.delete_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2717,19 +2753,31 @@
                     "200": {
                         "description": "User balance",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminBalanceResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminBalanceResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Invalid user ID",
+                        "description": "admin.balance.error.invalid_user_id",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.balance.error.fetch_balance_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2775,19 +2823,31 @@
                     "200": {
                         "description": "Status updated",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Invalid status",
+                        "description": "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.invalid_status",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.users.error.status_update_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2838,19 +2898,31 @@
                     "200": {
                         "description": "List of transactions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminBalanceResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminBalanceResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Invalid user ID",
+                        "description": "admin.balance.error.invalid_user_id",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "admin.balance.error.fetch_transactions_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2888,21 +2960,21 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "auth.login.error.invalid_request_body or auth.login.error.email_password_required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
-                        "description": "Invalid credentials",
+                        "description": "auth.login.error.invalid_credentials",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "auth.login.error.failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2957,9 +3029,9 @@
                         }
                     },
                     "401": {
-                        "description": "Invalid or missing refresh token",
+                        "description": "auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -2997,21 +3069,1523 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "auth.register.error.invalid_request_body or auth.register.error.fields_required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "409": {
-                        "description": "User already exists",
+                        "description": "auth.register.error.email_exists",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "auth.register.error.failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/balance": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns current balance and frozen balance for authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Get user balance",
+                "responses": {
+                    "200": {
+                        "description": "User balance information",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserBalance"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "balance.getError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/balance/deposit": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new payment session for balance deposit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Create deposit",
+                "parameters": [
+                    {
+                        "description": "Deposit details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_balance_handler.DepositRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment session created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.PaymentSession"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "balance.invalidRequest",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "balance.createDepositError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/balance/payment-methods": {
+            "get": {
+                "description": "Returns list of available payment methods",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Get payment methods",
+                "responses": {
+                    "200": {
+                        "description": "List of payment methods",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.PaymentMethod"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "balance.getPaymentMethodsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/balance/transactions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns paginated list of user balance transactions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Get transaction history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of transactions",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.BalanceTransaction"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "balance.getTransactionsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список контактов с фильтрацией по статусу и пагинацией",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Получить список контактов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Фильтр по статусу (pending, accepted, blocked)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Номер страницы",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Количество на странице",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список контактов",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.ContactsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidStatusFilter",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "contacts.fetchError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Добавляет пользователя в список контактов",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Добавить контакт",
+                "parameters": [
+                    {
+                        "description": "Данные для добавления контакта",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.AddContactRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Контакт успешно добавлен",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserContact"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidRequest",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "contacts.userNotAllowRequests",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "409": {
+                        "description": "contacts.alreadyExists",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "contacts.addError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/privacy": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает текущие настройки приватности пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Получить настройки приватности",
+                "responses": {
+                    "200": {
+                        "description": "Настройки приватности",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserPrivacySettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "privacy.fetchError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Изменяет настройки приватности пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Обновить настройки приватности",
+                "parameters": [
+                    {
+                        "description": "Новые настройки приватности",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.UpdatePrivacySettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Обновленные настройки",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserPrivacySettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidRequest",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "privacy.updateError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{contact_user_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Удаляет пользователя из списка контактов",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Удалить контакт",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контакта для удаления",
+                        "name": "contact_user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Контакт удален",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidContactUserId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "contacts.removeError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{contact_user_id}/check": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Проверяет, являются ли два пользователя контактами",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Проверить статус контакта",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя для проверки",
+                        "name": "contact_user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статус контакта",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidContactUserId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "contacts.checkError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{contact_user_id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Изменяет статус контакта (принять или заблокировать)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Обновить статус контакта",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контакта",
+                        "name": "contact_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Новый статус контакта",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.UpdateContactRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статус обновлен",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidContactUserId или validation.invalidStatus",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "contacts.updateError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/geocode/cities": {
+            "get": {
+                "description": "Возвращает список городов по частичному названию для автодополнения",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "geocode"
+                ],
+                "summary": "Поиск городов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Поисковый запрос (минимум 2 символа)",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Максимальное количество результатов",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список городов",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "geocode.suggestionsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/geocode/reverse": {
+            "get": {
+                "description": "Получает адрес по географическим координатам",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "geocode"
+                ],
+                "summary": "Обратное геокодирование",
+                "parameters": [
+                    {
+                        "type": "number",
+                        "description": "Широта",
+                        "name": "lat",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Долгота",
+                        "name": "lon",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Адрес по координатам",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidLatitude или validation.invalidLongitude",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "geocode.reverseError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/import-sources": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new import source for storefront",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Create import source",
+                "parameters": [
+                    {
+                        "description": "Import source data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.ImportSourceCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Import source created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.ImportSource"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "storefront.invalidRequest",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.createError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/import-sources/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates import source information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Update import source",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Import source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated import source data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.ImportSource"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Update successful",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "importSource.invalidId,storefront.invalidRequest",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.updateError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes an import source",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Delete import source",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Import source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delete successful",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "importSource.invalidId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.deleteError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/import-sources/{id}/apply-mappings": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Applies category mappings to imported listings",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Apply category mappings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Import source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mappings applied successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "updated_count": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "importSource.invalidId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.applyCategoryMappingsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/import-sources/{id}/category-mappings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns category mappings for a specific import source",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Get category mappings for import source",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Import source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category mappings",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "importSource.invalidId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.getCategoryMappingsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates category mappings for a specific import source",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Update category mappings for import source",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Import source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Category mappings",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Update successful",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "importSource.invalidId,importSource.invalidMappingsFormat",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.updateCategoryMappingsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/import-sources/{id}/history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns import history for an import source",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Get import history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Import source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit number of results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Import history",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.ImportHistory"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "importSource.invalidId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.getHistoryError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/import-sources/{id}/import": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Starts import process for an import source",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Run import",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Import source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "CSV file for import",
+                        "name": "file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "ZIP file with images",
+                        "name": "images_zip",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "ZIP file with XML data",
+                        "name": "xml_zip",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Import completed",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.ImportHistory"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "importSource.invalidId,importSource.notFound,importSource.noDataSource",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.runImportError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/import-sources/{id}/imported-categories": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns list of categories that were imported by this source",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Get imported categories",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Import source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of imported categories",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "importSource.invalidId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.getImportedCategoriesError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -6939,6 +8513,611 @@
                 }
             }
         },
+        "/api/v1/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список уведомлений пользователя с пагинацией",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Получить уведомления",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Количество записей",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Смещение",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список уведомлений",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "notifications.getError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/email/public": {
+            "post": {
+                "description": "Отправляет email сообщение с публичной формы контактов",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Отправить email с формы обратной связи",
+                "parameters": [
+                    {
+                        "description": "Данные формы",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email отправлен",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidDataFormat или validation.allFieldsRequired",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "email.sendError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/settings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает настройки уведомлений пользователя для всех типов",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Получить настройки уведомлений",
+                "responses": {
+                    "200": {
+                        "description": "Настройки уведомлений",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "$ref": "#/definitions/backend_internal_domain_models.NotificationSettings"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Обновляет настройки уведомлений для конкретного типа",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Обновить настройки уведомлений",
+                "parameters": [
+                    {
+                        "description": "Настройки",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Настройки обновлены",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidDataFormat",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "notifications.updateError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/telegram/connect": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Связывает аккаунт пользователя с Telegram для получения уведомлений",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Подключить Telegram",
+                "parameters": [
+                    {
+                        "description": "Данные для подключения",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Telegram подключен",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidDataFormat",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "telegram.connectionError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/telegram/status": {
+            "get": {
+                "description": "Проверяет, подключен ли Telegram к аккаунту пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Статус подключения Telegram",
+                "responses": {
+                    "200": {
+                        "description": "Статус подключения",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "auth.unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/telegram/token": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Генерирует токен для связывания аккаунта с Telegram ботом",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Получить токен для Telegram",
+                "responses": {
+                    "200": {
+                        "description": "Токен для подключения",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "notifications.tokenGenerateError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/telegram/webhook": {
+            "post": {
+                "description": "Обрабатывает входящие обновления от Telegram бота",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Telegram webhook",
+                "parameters": [
+                    {
+                        "description": "Telegram update",
+                        "name": "update",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tgbotapi.Update"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/{id}/read": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Отмечает уведомление как прочитанное",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Отметить как прочитанное",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID уведомления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Уведомление отмечено как прочитанное",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.invalidNotificationId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "notifications.updateError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/payments/stripe/webhook": {
+            "post": {
+                "description": "Обрабатывает webhook уведомления от Stripe о статусе платежей",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Webhook платежной системы",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Подпись Stripe для верификации webhook",
+                        "name": "Stripe-Signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Тело запроса от Stripe",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/storefronts/{id}": {
+            "get": {
+                "description": "Returns public data of a storefront (no authentication required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Get public storefront",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Public storefront data",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.Storefront"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "storefront.invalidId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "storefront.notActive",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "storefront.notFound",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "storefront.getError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/reviews": {
             "get": {
                 "description": "Returns paginated list of reviews with filters",
@@ -7029,7 +9208,7 @@
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7072,19 +9251,19 @@
                     "400": {
                         "description": "Invalid input",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
                         "description": "Listing not found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7129,13 +9308,13 @@
                     "400": {
                         "description": "Invalid entity ID",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7178,7 +9357,7 @@
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7223,13 +9402,13 @@
                     "400": {
                         "description": "Invalid entity ID",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7267,13 +9446,13 @@
                     "400": {
                         "description": "Invalid storefront ID",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7311,13 +9490,13 @@
                     "400": {
                         "description": "Invalid storefront ID",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7355,13 +9534,13 @@
                     "400": {
                         "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7399,13 +9578,13 @@
                     "400": {
                         "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7443,13 +9622,13 @@
                     "400": {
                         "description": "Invalid review ID",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7499,13 +9678,13 @@
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7546,13 +9725,13 @@
                     "400": {
                         "description": "Invalid review ID",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7602,13 +9781,13 @@
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7660,19 +9839,19 @@
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
                         "description": "Review not found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7724,19 +9903,433 @@
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
                         "description": "Review not found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all storefronts owned by the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Get user storefronts",
+                "responses": {
+                    "200": {
+                        "description": "List of user storefronts",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.Storefront"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "storefront.getError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new storefront for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Create new storefront",
+                "parameters": [
+                    {
+                        "description": "Storefront data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.StorefrontCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Storefront created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.Storefront"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "storefront.invalidRequest",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "402": {
+                        "description": "storefront.insufficientFunds",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "storefront.createError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a specific storefront by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Get storefront by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Storefront details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.Storefront"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "storefront.invalidId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "storefront.getError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates storefront information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Update storefront",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated storefront data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.Storefront"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Update successful",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "storefront.invalidId,storefront.invalidRequest",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "storefront.updateError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a storefront",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Delete storefront",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delete successful",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "storefront.invalidId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "storefront.deleteError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/import-sources": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all import sources for a specific storefront",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-sources"
+                ],
+                "summary": "Get import sources for storefront",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of import sources",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.ImportSource"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "storefront.invalidId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "importSource.getError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7883,21 +10476,21 @@
                         }
                     },
                     "400": {
-                        "description": "Email required",
+                        "description": "users.admin_check.error.email_required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "auth.required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
-                        "description": "User not found",
+                        "description": "users.admin_check.error.user_not_found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7905,7 +10498,7 @@
         },
         "/api/v1/users/login": {
             "post": {
-                "description": "Авторизует пользователя по email и паролю, создает сессию и устанавливает session cookie",
+                "description": "Authenticates user by email and password, creates session and sets session cookie. DEPRECATED: Use /api/v1/auth/login instead",
                 "consumes": [
                     "application/json"
                 ],
@@ -7913,12 +10506,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "users"
                 ],
-                "summary": "Авторизация пользователя",
+                "summary": "Login user (deprecated)",
+                "deprecated": true,
                 "parameters": [
                     {
-                        "description": "Данные для авторизации (email и password обязательны)",
+                        "description": "Login credentials (email and password required)",
                         "name": "user",
                         "in": "body",
                         "required": true,
@@ -7929,27 +10523,21 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Authentication successful",
                         "schema": {
                             "$ref": "#/definitions/internal_proj_users_handler.LoginResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "users.login.error.invalid_data or validation errors",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "users.login.error.invalid_credentials",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -7981,15 +10569,15 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "auth.required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "users.profile.error.fetch",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -8030,21 +10618,21 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "users.profile.error.invalid_data or users.profile.error.validation",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "auth.required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "users.profile.error.update",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -8052,7 +10640,7 @@
         },
         "/api/v1/users/register": {
             "post": {
-                "description": "Создает нового пользователя в системе",
+                "description": "Creates new user in the system. DEPRECATED: Use /api/v1/auth/register instead",
                 "consumes": [
                     "application/json"
                 ],
@@ -8060,12 +10648,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "users"
                 ],
-                "summary": "Регистрация пользователя",
+                "summary": "Register user (deprecated)",
+                "deprecated": true,
                 "parameters": [
                     {
-                        "description": "Данные для регистрации (name, email, password обязательны, phone опционален)",
+                        "description": "Registration data (name, email, password required, phone optional)",
                         "name": "user",
                         "in": "body",
                         "required": true,
@@ -8076,21 +10665,21 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "User created successfully",
                         "schema": {
                             "$ref": "#/definitions/internal_proj_users_handler.RegisterResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "users.register.error.invalid_data or validation errors",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "users.register.error.password_hash_failed or users.register.error.create_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -8131,21 +10720,21 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid user ID",
+                        "description": "users.profile.error.invalid_id",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "auth.required",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
-                        "description": "User not found",
+                        "description": "users.profile.error.not_found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -8212,9 +10801,9 @@
                         }
                     },
                     "500": {
-                        "description": "Authentication failed",
+                        "description": "auth.google_callback.error.authentication_failed",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -8250,20 +10839,20 @@
         }
     },
     "definitions": {
-        "ErrorResponse": {
+        "backend_internal_domain_models.AddContactRequest": {
             "type": "object",
+            "required": [
+                "contact_user_id"
+            ],
             "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 400
+                "added_from_chat_id": {
+                    "type": "integer"
                 },
-                "error": {
-                    "type": "string",
-                    "example": "Invalid request"
+                "contact_user_id": {
+                    "type": "integer"
                 },
-                "message": {
-                    "type": "string",
-                    "example": "Validation failed"
+                "notes": {
+                    "type": "string"
                 }
             }
         },
@@ -8412,6 +11001,47 @@
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "backend_internal_domain_models.BalanceTransaction": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "payment_details": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -8626,6 +11256,26 @@
                 "thumbnail_url": {
                     "description": "URL превью для видео",
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.ContactsListResponse": {
+            "type": "object",
+            "properties": {
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.UserContact"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -8975,6 +11625,130 @@
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "backend_internal_domain_models.ImportHistory": {
+            "type": "object",
+            "properties": {
+                "finished_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "items_failed": {
+                    "type": "integer"
+                },
+                "items_imported": {
+                    "type": "integer"
+                },
+                "items_total": {
+                    "type": "integer"
+                },
+                "items_updated": {
+                    "type": "integer"
+                },
+                "log": {
+                    "type": "string"
+                },
+                "source_id": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "success, failed, partial",
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.ImportSource": {
+            "type": "object",
+            "properties": {
+                "auth_data": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_import_at": {
+                    "type": "string"
+                },
+                "last_import_log": {
+                    "description": "Изменяем на обычную строку, но обрабатываем NULL при сканировании",
+                    "type": "string"
+                },
+                "last_import_status": {
+                    "description": "Изменяем на обычную строку, но обрабатываем NULL при сканировании",
+                    "type": "string"
+                },
+                "mapping": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "schedule": {
+                    "type": "string"
+                },
+                "storefront_id": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "csv, xml, json",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.ImportSourceCreate": {
+            "type": "object",
+            "required": [
+                "storefront_id",
+                "type"
+            ],
+            "properties": {
+                "auth_data": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "mapping": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "schedule": {
+                    "type": "string"
+                },
+                "storefront_id": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "csv",
+                        "xml",
+                        "json"
+                    ]
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         },
@@ -9407,6 +12181,109 @@
                 }
             }
         },
+        "backend_internal_domain_models.NotificationSettings": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email_enabled": {
+                    "description": "Добавляем поле для email",
+                    "type": "boolean"
+                },
+                "notification_type": {
+                    "type": "string"
+                },
+                "telegram_enabled": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.PaymentMethod": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "credentials": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "fee_percentage": {
+                    "type": "number"
+                },
+                "fixed_fee": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "maximum_amount": {
+                    "type": "number"
+                },
+                "minimum_amount": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.PaymentSession": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "external_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_url": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "backend_internal_domain_models.PriceHistoryEntry": {
             "type": "object",
             "properties": {
@@ -9593,6 +12470,104 @@
                 }
             }
         },
+        "backend_internal_domain_models.Storefront": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "creation_transaction_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "logo_path": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "active, inactive, suspended",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.StorefrontCreate": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_models.StorefrontRatingSummary": {
             "type": "object",
             "properties": {
@@ -9696,6 +12671,24 @@
                 }
             }
         },
+        "backend_internal_domain_models.UpdateContactRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "notes": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "accepted",
+                        "blocked"
+                    ]
+                }
+            }
+        },
         "backend_internal_domain_models.UpdateCustomComponentRequest": {
             "type": "object",
             "properties": {
@@ -9725,6 +12718,17 @@
                 }
             }
         },
+        "backend_internal_domain_models.UpdatePrivacySettingsRequest": {
+            "type": "object",
+            "properties": {
+                "allow_contact_requests": {
+                    "type": "boolean"
+                },
+                "allow_messages_from_contacts_only": {
+                    "type": "boolean"
+                }
+            }
+        },
         "backend_internal_domain_models.User": {
             "type": "object",
             "properties": {
@@ -9751,6 +12755,88 @@
                 },
                 "provider": {
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.UserBalance": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "frozen_balance": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.UserContact": {
+            "type": "object",
+            "properties": {
+                "added_from_chat_id": {
+                    "description": "Дополнительные поля",
+                    "type": "integer"
+                },
+                "contact_user": {
+                    "$ref": "#/definitions/backend_internal_domain_models.User"
+                },
+                "contact_user_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "pending, accepted, blocked",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "description": "Связанные объекты",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.User"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.UserPrivacySettings": {
+            "type": "object",
+            "properties": {
+                "allow_contact_requests": {
+                    "type": "boolean"
+                },
+                "allow_messages_from_contacts_only": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -9990,6 +13076,19 @@
                 }
             }
         },
+        "internal_proj_balance_handler.DepositRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 1000.5
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "card"
+                }
+            }
+        },
         "internal_proj_reviews_handler.PhotosResponse": {
             "type": "object",
             "properties": {
@@ -10027,7 +13126,7 @@
             "properties": {
                 "response": {
                     "type": "string",
-                    "example": "Спасибо за ваш отзыв!"
+                    "example": "Thank you for your review!"
                 }
             }
         },
@@ -10036,7 +13135,7 @@
             "properties": {
                 "message": {
                     "type": "string",
-                    "example": "Операция выполнена успешно"
+                    "example": "Operation completed successfully"
                 },
                 "success": {
                     "type": "boolean",
@@ -10481,6 +13580,1030 @@
                 "picture_url": {
                     "type": "string",
                     "example": "https://example.com/avatar.jpg"
+                }
+            }
+        },
+        "tgbotapi.Animation": {
+            "type": "object",
+            "properties": {
+                "file_id": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "thumb": {
+                    "$ref": "#/definitions/tgbotapi.PhotoSize"
+                }
+            }
+        },
+        "tgbotapi.Audio": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "integer"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "performer": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "optional",
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.CallbackQuery": {
+            "type": "object",
+            "properties": {
+                "chat_instance": {
+                    "type": "string"
+                },
+                "data": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "from": {
+                    "$ref": "#/definitions/tgbotapi.User"
+                },
+                "game_short_name": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inline_message_id": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Message"
+                        }
+                    ]
+                }
+            }
+        },
+        "tgbotapi.Chat": {
+            "type": "object",
+            "properties": {
+                "all_members_are_administrators": {
+                    "description": "optional",
+                    "type": "boolean"
+                },
+                "description": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "first_name": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "invite_link": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "last_name": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "photo": {
+                    "$ref": "#/definitions/tgbotapi.ChatPhoto"
+                },
+                "title": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "username": {
+                    "description": "optional",
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.ChatAnimation": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "integer"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "thumb": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.PhotoSize"
+                        }
+                    ]
+                },
+                "width": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.ChatPhoto": {
+            "type": "object",
+            "properties": {
+                "big_file_id": {
+                    "type": "string"
+                },
+                "small_file_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.ChosenInlineResult": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "$ref": "#/definitions/tgbotapi.User"
+                },
+                "inline_message_id": {
+                    "type": "string"
+                },
+                "location": {
+                    "$ref": "#/definitions/tgbotapi.Location"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "result_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.Contact": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "optional",
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.Document": {
+            "type": "object",
+            "properties": {
+                "file_id": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "thumb": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.PhotoSize"
+                        }
+                    ]
+                }
+            }
+        },
+        "tgbotapi.EncryptedCredentials": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Base64-encoded encrypted JSON-serialized data with unique user's\npayload, data hashes and secrets required for EncryptedPassportElement\ndecryption and authentication",
+                    "type": "string"
+                },
+                "hash": {
+                    "description": "Base64-encoded data hash for data authentication",
+                    "type": "string"
+                },
+                "secret": {
+                    "description": "Base64-encoded secret, encrypted with the bot's public RSA key,\nrequired for data decryption",
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.EncryptedPassportElement": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Base64-encoded encrypted Telegram Passport element data provided by\nthe user, available for \"personal_details\", \"passport\",\n\"driver_license\", \"identity_card\", \"identity_passport\" and \"address\"\ntypes. Can be decrypted and verified using the accompanying\nEncryptedCredentials.",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "User's verified email address, available only for \"email\" type",
+                    "type": "string"
+                },
+                "files": {
+                    "description": "Array of encrypted files with documents provided by the user,\navailable for \"utility_bill\", \"bank_statement\", \"rental_agreement\",\n\"passport_registration\" and \"temporary_registration\" types. Files can\nbe decrypted and verified using the accompanying EncryptedCredentials.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tgbotapi.PassportFile"
+                    }
+                },
+                "front_side": {
+                    "description": "Encrypted file with the front side of the document, provided by the\nuser. Available for \"passport\", \"driver_license\", \"identity_card\" and\n\"internal_passport\". The file can be decrypted and verified using the\naccompanying EncryptedCredentials.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.PassportFile"
+                        }
+                    ]
+                },
+                "phone_number": {
+                    "description": "User's verified phone number, available only for \"phone_number\" type",
+                    "type": "string"
+                },
+                "reverse_side": {
+                    "description": "Encrypted file with the reverse side of the document, provided by the\nuser. Available for \"driver_license\" and \"identity_card\". The file can\nbe decrypted and verified using the accompanying EncryptedCredentials.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.PassportFile"
+                        }
+                    ]
+                },
+                "selfie": {
+                    "description": "Encrypted file with the selfie of the user holding a document,\nprovided by the user; available for \"passport\", \"driver_license\",\n\"identity_card\" and \"internal_passport\". The file can be decrypted\nand verified using the accompanying EncryptedCredentials.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.PassportFile"
+                        }
+                    ]
+                },
+                "type": {
+                    "description": "Element type.",
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.Game": {
+            "type": "object",
+            "properties": {
+                "animation": {
+                    "$ref": "#/definitions/tgbotapi.Animation"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "photo": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tgbotapi.PhotoSize"
+                    }
+                },
+                "text": {
+                    "type": "string"
+                },
+                "text_entities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tgbotapi.MessageEntity"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.InlineQuery": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "$ref": "#/definitions/tgbotapi.User"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "location": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Location"
+                        }
+                    ]
+                },
+                "offset": {
+                    "type": "string"
+                },
+                "query": {
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.Invoice": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "start_parameter": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.Location": {
+            "type": "object",
+            "properties": {
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                }
+            }
+        },
+        "tgbotapi.Message": {
+            "type": "object",
+            "properties": {
+                "animation": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.ChatAnimation"
+                        }
+                    ]
+                },
+                "audio": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Audio"
+                        }
+                    ]
+                },
+                "caption": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "channel_chat_created": {
+                    "description": "optional",
+                    "type": "boolean"
+                },
+                "chat": {
+                    "$ref": "#/definitions/tgbotapi.Chat"
+                },
+                "contact": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Contact"
+                        }
+                    ]
+                },
+                "date": {
+                    "type": "integer"
+                },
+                "delete_chat_photo": {
+                    "description": "optional",
+                    "type": "boolean"
+                },
+                "document": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Document"
+                        }
+                    ]
+                },
+                "edit_date": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "entities": {
+                    "description": "optional",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tgbotapi.MessageEntity"
+                    }
+                },
+                "forward_date": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "forward_from": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.User"
+                        }
+                    ]
+                },
+                "forward_from_chat": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Chat"
+                        }
+                    ]
+                },
+                "forward_from_message_id": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "from": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.User"
+                        }
+                    ]
+                },
+                "game": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Game"
+                        }
+                    ]
+                },
+                "group_chat_created": {
+                    "description": "optional",
+                    "type": "boolean"
+                },
+                "invoice": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Invoice"
+                        }
+                    ]
+                },
+                "left_chat_member": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.User"
+                        }
+                    ]
+                },
+                "location": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Location"
+                        }
+                    ]
+                },
+                "message_id": {
+                    "type": "integer"
+                },
+                "migrate_from_chat_id": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "migrate_to_chat_id": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "new_chat_members": {
+                    "description": "optional",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tgbotapi.User"
+                    }
+                },
+                "new_chat_photo": {
+                    "description": "optional",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tgbotapi.PhotoSize"
+                    }
+                },
+                "new_chat_title": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "passport_data": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.PassportData"
+                        }
+                    ]
+                },
+                "photo": {
+                    "description": "optional",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tgbotapi.PhotoSize"
+                    }
+                },
+                "pinned_message": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Message"
+                        }
+                    ]
+                },
+                "reply_to_message": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Message"
+                        }
+                    ]
+                },
+                "sticker": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Sticker"
+                        }
+                    ]
+                },
+                "successful_payment": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.SuccessfulPayment"
+                        }
+                    ]
+                },
+                "supergroup_chat_created": {
+                    "description": "optional",
+                    "type": "boolean"
+                },
+                "text": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "venue": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Venue"
+                        }
+                    ]
+                },
+                "video": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Video"
+                        }
+                    ]
+                },
+                "video_note": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.VideoNote"
+                        }
+                    ]
+                },
+                "voice": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.Voice"
+                        }
+                    ]
+                }
+            }
+        },
+        "tgbotapi.MessageEntity": {
+            "type": "object",
+            "properties": {
+                "length": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "user": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "tgbotapi.OrderInfo": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "shipping_address": {
+                    "$ref": "#/definitions/tgbotapi.ShippingAddress"
+                }
+            }
+        },
+        "tgbotapi.PassportData": {
+            "type": "object",
+            "properties": {
+                "credentials": {
+                    "description": "Encrypted credentials required to decrypt the data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.EncryptedCredentials"
+                        }
+                    ]
+                },
+                "data": {
+                    "description": "Array with information about documents and other Telegram Passport\nelements that was shared with the bot",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tgbotapi.EncryptedPassportElement"
+                    }
+                }
+            }
+        },
+        "tgbotapi.PassportFile": {
+            "type": "object",
+            "properties": {
+                "file_date": {
+                    "description": "Unix time when the file was uploaded",
+                    "type": "integer"
+                },
+                "file_id": {
+                    "description": "Unique identifier for this file",
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "File size",
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.PhotoSize": {
+            "type": "object",
+            "properties": {
+                "file_id": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "width": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.PreCheckoutQuery": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "from": {
+                    "$ref": "#/definitions/tgbotapi.User"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invoice_payload": {
+                    "type": "string"
+                },
+                "order_info": {
+                    "$ref": "#/definitions/tgbotapi.OrderInfo"
+                },
+                "shipping_option_id": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.ShippingAddress": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country_code": {
+                    "type": "string"
+                },
+                "post_code": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "street_line1": {
+                    "type": "string"
+                },
+                "street_line2": {
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.ShippingQuery": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "$ref": "#/definitions/tgbotapi.User"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invoice_payload": {
+                    "type": "string"
+                },
+                "shipping_address": {
+                    "$ref": "#/definitions/tgbotapi.ShippingAddress"
+                }
+            }
+        },
+        "tgbotapi.Sticker": {
+            "type": "object",
+            "properties": {
+                "emoji": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "set_name": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "thumb": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.PhotoSize"
+                        }
+                    ]
+                },
+                "width": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.SuccessfulPayment": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "invoice_payload": {
+                    "type": "string"
+                },
+                "order_info": {
+                    "$ref": "#/definitions/tgbotapi.OrderInfo"
+                },
+                "provider_payment_charge_id": {
+                    "type": "string"
+                },
+                "shipping_option_id": {
+                    "type": "string"
+                },
+                "telegram_payment_charge_id": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.Update": {
+            "type": "object",
+            "properties": {
+                "callback_query": {
+                    "$ref": "#/definitions/tgbotapi.CallbackQuery"
+                },
+                "channel_post": {
+                    "$ref": "#/definitions/tgbotapi.Message"
+                },
+                "chosen_inline_result": {
+                    "$ref": "#/definitions/tgbotapi.ChosenInlineResult"
+                },
+                "edited_channel_post": {
+                    "$ref": "#/definitions/tgbotapi.Message"
+                },
+                "edited_message": {
+                    "$ref": "#/definitions/tgbotapi.Message"
+                },
+                "inline_query": {
+                    "$ref": "#/definitions/tgbotapi.InlineQuery"
+                },
+                "message": {
+                    "$ref": "#/definitions/tgbotapi.Message"
+                },
+                "pre_checkout_query": {
+                    "$ref": "#/definitions/tgbotapi.PreCheckoutQuery"
+                },
+                "shipping_query": {
+                    "$ref": "#/definitions/tgbotapi.ShippingQuery"
+                },
+                "update_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.User": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_bot": {
+                    "description": "optional",
+                    "type": "boolean"
+                },
+                "language_code": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "last_name": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "optional",
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.Venue": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "foursquare_id": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "location": {
+                    "$ref": "#/definitions/tgbotapi.Location"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "tgbotapi.Video": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "integer"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "thumb": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.PhotoSize"
+                        }
+                    ]
+                },
+                "width": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tgbotapi.VideoNote": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "integer"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "length": {
+                    "type": "integer"
+                },
+                "thumb": {
+                    "description": "optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tgbotapi.PhotoSize"
+                        }
+                    ]
+                }
+            }
+        },
+        "tgbotapi.Voice": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "integer"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "optional",
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "description": "optional",
+                    "type": "string"
                 }
             }
         }

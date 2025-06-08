@@ -11,8 +11,7 @@ import (
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Публичные маршруты
 	app.Post("/api/v1/notifications/telegram/webhook", h.HandleTelegramWebhook)
-	app.Get("/api/v1/notifications/telegram", h.GetTelegramStatus)
-	app.Post("/api/v1/public/send-email", h.SendPublicEmail)
+	app.Post("/api/v1/notifications/email/public", h.SendPublicEmail)
 
 	// Защищенные маршруты
 	protected := app.Group("/api/v1/notifications", mw.AuthRequiredJWT)
@@ -20,10 +19,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	protected.Get("/", h.GetNotifications)
 	protected.Get("/settings", h.GetSettings)
 	protected.Put("/settings", h.UpdateSettings)
-	protected.Get("/telegram", h.GetTelegramStatus)
+	protected.Get("/telegram/status", h.GetTelegramStatus)
 	protected.Get("/telegram/token", h.GetTelegramToken)
+	protected.Post("/telegram/connect", h.ConnectTelegram)
 	protected.Put("/:id/read", h.MarkAsRead)
-	protected.Post("/telegram/token", h.GetTelegramToken)
 
 	return nil
 }

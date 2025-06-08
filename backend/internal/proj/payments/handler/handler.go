@@ -21,6 +21,16 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 }
 
 // HandleWebhook обрабатывает webhook от платежной системы (Stripe)
+// @Summary Webhook платежной системы
+// @Description Обрабатывает webhook уведомления от Stripe о статусе платежей
+// @Tags payments
+// @Accept json
+// @Produce json
+// @Param Stripe-Signature header string true "Подпись Stripe для верификации webhook"
+// @Param payload body string true "Тело запроса от Stripe"
+// @Success 200 {string} string "OK"
+// @Failure 400 {string} string "Bad Request"
+// @Router /api/v1/payments/stripe/webhook [post]
 func (h *Handler) HandleWebhook(c *fiber.Ctx) error {
 	payload := c.Body()
 	signature := c.Get("Stripe-Signature")

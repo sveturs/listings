@@ -12,10 +12,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Публичные маршруты для геокодинга
 	geocodeApi := app.Group("/api/v1/geocode")
 	geocodeApi.Get("/reverse", h.Geocode.ReverseGeocode)
-
-	// Публичные маршруты для городов
-	citiesApi := app.Group("/api/v1/cities")
-	citiesApi.Get("/suggest", h.Geocode.GetCitySuggestions)
+	geocodeApi.Get("/cities", h.Geocode.GetCitySuggestions)
 
 	return nil
 }

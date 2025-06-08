@@ -16,9 +16,9 @@ import (
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} AdminBalanceResponse "User balance"
-// @Failure 400 {object} ErrorResponse "Invalid user ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminBalanceResponse} "User balance"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.balance.error.invalid_user_id"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.balance.error.fetch_balance_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/balance [get]
 func (h *UserHandler) GetUserBalance(c *fiber.Ctx) error {
@@ -44,9 +44,9 @@ func (h *UserHandler) GetUserBalance(c *fiber.Ctx) error {
 // @Param id path int true "User ID"
 // @Param limit query int false "Number of items per page" default(20)
 // @Param offset query int false "Number of items to skip" default(0)
-// @Success 200 {object} AdminBalanceResponse "List of transactions"
-// @Failure 400 {object} ErrorResponse "Invalid user ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminBalanceResponse} "List of transactions"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.balance.error.invalid_user_id"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.balance.error.fetch_transactions_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/transactions [get]
 func (h *UserHandler) GetUserTransactions(c *fiber.Ctx) error {

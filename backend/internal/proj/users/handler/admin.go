@@ -18,7 +18,7 @@ import (
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10) minimum(1) maximum(100)
 // @Success 200 {object} AdminUserListResponse "List of users"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.fetch_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users [get]
 func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
@@ -66,9 +66,9 @@ func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} models.UserProfile "User profile"
-// @Failure 400 {object} ErrorResponse "Invalid user ID"
-// @Failure 404 {object} ErrorResponse "User not found"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserProfile} "User profile"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id"
+// @Failure 404 {object} utils.ErrorResponseSwag "admin.users.error.user_not_found"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id} [get]
 func (h *UserHandler) GetUserByIDAdmin(c *fiber.Ctx) error {
@@ -93,9 +93,9 @@ func (h *UserHandler) GetUserByIDAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Param body body models.UserProfileUpdate true "User update data"
-// @Success 200 {object} AdminMessageResponse "Update successful"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Update successful"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.validation_failed"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.update_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id} [put]
 func (h *UserHandler) UpdateUserAdmin(c *fiber.Ctx) error {
@@ -132,9 +132,9 @@ func (h *UserHandler) UpdateUserAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Param body body AdminStatusUpdateRequest true "Status update (active, blocked, pending)"
-// @Success 200 {object} AdminMessageResponse "Status updated"
-// @Failure 400 {object} ErrorResponse "Invalid status"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Status updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.invalid_status"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.status_update_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/status [put]
 func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
@@ -172,9 +172,9 @@ func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} AdminMessageResponse "User deleted"
-// @Failure 400 {object} ErrorResponse "Invalid user ID"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "User deleted"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.delete_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {

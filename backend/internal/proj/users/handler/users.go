@@ -83,8 +83,8 @@ type AdminCheckResponseWrapper struct {
 // @Accept json
 // @Produce json
 // @Success 200 {object} UserProfileResponse "User profile"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "users.profile.error.fetch"
 // @Security BearerAuth
 // @Router /api/v1/users/me [get]
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
@@ -120,9 +120,9 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 // @Produce json
 // @Param profile body models.UserProfileUpdate true "Profile update data"
 // @Success 200 {object} MessageResponse "Profile updated successfully"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.profile.error.invalid_data or users.profile.error.validation"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "users.profile.error.update"
 // @Security BearerAuth
 // @Router /api/v1/users/me [put]
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
@@ -149,18 +149,18 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	})
 }
 
-// Register регистрирует нового пользователя
-// @Summary Регистрация пользователя
-// @Description Создает нового пользователя в системе
-// @Tags Users
+// RegisterOld регистрирует нового пользователя
+// @Summary Register user (deprecated)
+// @Description Creates new user in the system. DEPRECATED: Use /api/v1/auth/register instead
+// @Tags users
 // @Accept json
 // @Produce json
-// @Param user body RegisterRequest true "Данные для регистрации (name, email, password обязательны, phone опционален)"
-// @Success 201 {object} RegisterResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Param user body RegisterRequest true "Registration data (name, email, password required, phone optional)"
+// @Success 201 {object} RegisterResponse "User created successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.register.error.invalid_data or validation errors"
+// @Failure 500 {object} utils.ErrorResponseSwag "users.register.error.password_hash_failed or users.register.error.create_failed"
 // @Router /api/v1/users/register [post]
-// DEPRECATED: Используйте AuthHandler.Register вместо этого метода
+// @Deprecated
 func (h *UserHandler) RegisterOld(c *fiber.Ctx) error {
 	var registerData RegisterRequest
 
@@ -210,19 +210,18 @@ func (h *UserHandler) RegisterOld(c *fiber.Ctx) error {
 	})
 }
 
-// Login авторизует пользователя по email и паролю
-// @Summary Авторизация пользователя
-// @Description Авторизует пользователя по email и паролю, создает сессию и устанавливает session cookie
-// @Tags Users
+// LoginOld авторизует пользователя по email и паролю
+// @Summary Login user (deprecated)
+// @Description Authenticates user by email and password, creates session and sets session cookie. DEPRECATED: Use /api/v1/auth/login instead
+// @Tags users
 // @Accept json
 // @Produce json
-// @Param user body LoginRequest true "Данные для авторизации (email и password обязательны)"
-// @Success 200 {object} LoginResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Param user body LoginRequest true "Login credentials (email and password required)"
+// @Success 200 {object} LoginResponse "Authentication successful"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.login.error.invalid_data or validation errors"
+// @Failure 401 {object} utils.ErrorResponseSwag "users.login.error.invalid_credentials"
 // @Router /api/v1/users/login [post]
-// DEPRECATED: Используйте AuthHandler.Login вместо этого метода
+// @Deprecated
 func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
 	var loginData LoginRequest
 
@@ -295,9 +294,9 @@ func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 200 {object} PublicUserResponseWrapper "Public user profile"
-// @Failure 400 {object} ErrorResponse "Invalid user ID"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 404 {object} ErrorResponse "User not found"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.profile.error.invalid_id"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "users.profile.error.not_found"
 // @Security BearerAuth
 // @Router /api/v1/users/{id}/profile [get]
 func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
@@ -333,9 +332,9 @@ func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
 // @Produce json
 // @Param email path string true "User email"
 // @Success 200 {object} AdminCheckResponseWrapper "Admin status"
-// @Failure 400 {object} ErrorResponse "Email required"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 404 {object} ErrorResponse "User not found"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.admin_check.error.email_required"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "users.admin_check.error.user_not_found"
 // @Security BearerAuth
 // @Router /api/v1/users/admin-check/{email} [get]
 func (h *UserHandler) IsAdminSimple(c *fiber.Ctx) error {

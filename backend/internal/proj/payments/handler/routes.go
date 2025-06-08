@@ -10,12 +10,12 @@ import (
 // RegisterRoutes регистрирует все маршруты для проекта payments
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Webhook маршрут для обработки платежей (без аутентификации)
-	app.Post("/webhook/stripe", h.HandleWebhook)
+	app.Post("/api/v1/payments/stripe/webhook", h.HandleWebhook)
 
 	return nil
 }
 
 // GetPrefix возвращает префикс проекта для логирования
 func (h *Handler) GetPrefix() string {
-	return "/webhook"
+	return "payments"
 }

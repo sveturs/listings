@@ -19,66 +19,104 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 	}
 }
 
-// Добавить контакт
+// AddContact добавляет нового контакта
+// @Summary Добавить контакт
+// @Description Добавляет пользователя в список контактов
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param request body models.AddContactRequest true "Данные для добавления контакта"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserContact} "Контакт успешно добавлен"
+// @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidRequest"
+// @Failure 409 {object} utils.ErrorResponseSwag "contacts.alreadyExists"
+// @Failure 403 {object} utils.ErrorResponseSwag "contacts.userNotAllowRequests"
+// @Failure 500 {object} utils.ErrorResponseSwag "contacts.addError"
+// @Security BearerAuth
+// @Router /api/v1/contacts [post]
 func (h *Handler) AddContact(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	var req models.AddContactRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidRequest")
 	}
 
 	// Валидация
 	if req.ContactUserID == 0 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Contact user ID is required")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.contactUserIdRequired")
 	}
 
 	contact, err := h.services.Contacts().AddContact(c.Context(), userID, &req)
 	if err != nil {
 		// Проверяем специфичные ошибки
 		if err.Error() == "contact already exists" {
-			return utils.ErrorResponse(c, fiber.StatusConflict, "contact already exists")
+			return utils.ErrorResponse(c, fiber.StatusConflict, "contacts.alreadyExists")
 		}
 		if err.Error() == "cannot add yourself as contact" {
-			return utils.ErrorResponse(c, fiber.StatusBadRequest, "cannot add yourself as contact")
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "contacts.cannotAddYourself")
 		}
 		if err.Error() == "user does not allow contact requests or has blocked you" {
-			return utils.ErrorResponse(c, fiber.StatusForbidden, "user does not allow contact requests or has blocked you")
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "contacts.userNotAllowRequests")
 		}
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.addError")
 	}
 
 	return utils.SuccessResponse(c, contact)
 }
 
-// Обновить статус контакта
+// UpdateContactStatus обновляет статус контакта
+// @Summary Обновить статус контакта
+// @Description Изменяет статус контакта (принять или заблокировать)
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param contact_user_id path int true "ID контакта"
+// @Param request body models.UpdateContactRequest true "Новый статус контакта"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]string} "Статус обновлен"
+// @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidContactUserId или validation.invalidStatus"
+// @Failure 500 {object} utils.ErrorResponseSwag "contacts.updateError"
+// @Security BearerAuth
+// @Router /api/v1/contacts/{contact_user_id}/status [put]
 func (h *Handler) UpdateContactStatus(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	contactUserID, err := c.ParamsInt("contact_user_id")
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid contact user ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidContactUserId")
 	}
 
 	var req models.UpdateContactRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidRequest")
 	}
 
 	// Валидация статуса
 	if req.Status != models.ContactStatusAccepted && req.Status != models.ContactStatusBlocked {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid status")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidStatus")
 	}
 
 	err = h.services.Contacts().UpdateContactStatus(c.Context(), userID, contactUserID, &req)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.updateError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "Contact status updated"})
+	return utils.SuccessResponse(c, fiber.Map{"message": "contacts.statusUpdated"})
 }
 
-// Получить список контактов
+// GetContacts возвращает список контактов пользователя
+// @Summary Получить список контактов
+// @Description Возвращает список контактов с фильтрацией по статусу и пагинацией
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param status query string false "Фильтр по статусу (pending, accepted, blocked)"
+// @Param page query int false "Номер страницы" default(1)
+// @Param limit query int false "Количество на странице" default(20)
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ContactsListResponse} "Список контактов"
+// @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidStatusFilter"
+// @Failure 500 {object} utils.ErrorResponseSwag "contacts.fetchError"
+// @Security BearerAuth
+// @Router /api/v1/contacts [get]
 func (h *Handler) GetContacts(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
@@ -89,77 +127,119 @@ func (h *Handler) GetContacts(c *fiber.Ctx) error {
 	// Валидация статуса
 	if status != "" && status != models.ContactStatusPending &&
 		status != models.ContactStatusAccepted && status != models.ContactStatusBlocked {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid status filter")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidStatusFilter")
 	}
 
 	contacts, err := h.services.Contacts().GetContacts(c.Context(), userID, status, page, limit)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching contacts")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.fetchError")
 	}
 
 	return utils.SuccessResponse(c, contacts)
 }
 
-// Удалить контакт
+// RemoveContact удаляет контакт из списка
+// @Summary Удалить контакт
+// @Description Удаляет пользователя из списка контактов
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param contact_user_id path int true "ID контакта для удаления"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]string} "Контакт удален"
+// @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidContactUserId"
+// @Failure 500 {object} utils.ErrorResponseSwag "contacts.removeError"
+// @Security BearerAuth
+// @Router /api/v1/contacts/{contact_user_id} [delete]
 func (h *Handler) RemoveContact(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	contactUserID, err := c.ParamsInt("contact_user_id")
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid contact user ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidContactUserId")
 	}
 
 	err = h.services.Contacts().RemoveContact(c.Context(), userID, contactUserID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.removeError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "Contact removed"})
+	return utils.SuccessResponse(c, fiber.Map{"message": "contacts.removed"})
 }
 
-// Получить настройки приватности
+// GetPrivacySettings возвращает настройки приватности пользователя
+// @Summary Получить настройки приватности
+// @Description Возвращает текущие настройки приватности пользователя
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserPrivacySettings} "Настройки приватности"
+// @Failure 500 {object} utils.ErrorResponseSwag "privacy.fetchError"
+// @Security BearerAuth
+// @Router /api/v1/contacts/privacy [get]
 func (h *Handler) GetPrivacySettings(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	settings, err := h.services.Contacts().GetPrivacySettings(c.Context(), userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error fetching privacy settings")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "privacy.fetchError")
 	}
 
 	return utils.SuccessResponse(c, settings)
 }
 
-// Обновить настройки приватности
+// UpdatePrivacySettings обновляет настройки приватности
+// @Summary Обновить настройки приватности
+// @Description Изменяет настройки приватности пользователя
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param request body models.UpdatePrivacySettingsRequest true "Новые настройки приватности"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserPrivacySettings} "Обновленные настройки"
+// @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidRequest"
+// @Failure 500 {object} utils.ErrorResponseSwag "privacy.updateError"
+// @Security BearerAuth
+// @Router /api/v1/contacts/privacy [put]
 func (h *Handler) UpdatePrivacySettings(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	var req models.UpdatePrivacySettingsRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidRequest")
 	}
 
 	settings, err := h.services.Contacts().UpdatePrivacySettings(c.Context(), userID, &req)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "privacy.updateError")
 	}
 
 	return utils.SuccessResponse(c, settings)
 }
 
-// Проверить статус контакта
+// GetContactStatus проверяет статус контакта между пользователями
+// @Summary Проверить статус контакта
+// @Description Проверяет, являются ли два пользователя контактами
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param contact_user_id path int true "ID пользователя для проверки"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Статус контакта"
+// @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidContactUserId"
+// @Failure 500 {object} utils.ErrorResponseSwag "contacts.checkError"
+// @Security BearerAuth
+// @Router /api/v1/contacts/{contact_user_id}/check [get]
 func (h *Handler) GetContactStatus(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	contactUserIDStr := c.Params("contact_user_id")
 	contactUserID, err := strconv.Atoi(contactUserIDStr)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid contact user ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidContactUserId")
 	}
 
 	// Проверяем, являются ли пользователи контактами
 	areContacts, err := h.services.Contacts().AreContacts(c.Context(), userID, contactUserID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error checking contact status")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.checkError")
 	}
 
 	response := fiber.Map{

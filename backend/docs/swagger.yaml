@@ -1,16 +1,15 @@
 basePath: /api/v1
 definitions:
-  ErrorResponse:
+  backend_internal_domain_models.AddContactRequest:
     properties:
-      code:
-        example: 400
+      added_from_chat_id:
         type: integer
-      error:
-        example: Invalid request
+      contact_user_id:
+        type: integer
+      notes:
         type: string
-      message:
-        example: Validation failed
-        type: string
+    required:
+    - contact_user_id
     type: object
   backend_internal_domain_models.AddItemToGroupRequest:
     properties:
@@ -108,6 +107,33 @@ definitions:
         items:
           type: integer
         type: array
+    type: object
+  backend_internal_domain_models.BalanceTransaction:
+    properties:
+      amount:
+        type: number
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      payment_details:
+        items:
+          type: integer
+        type: array
+      payment_method:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      user_id:
+        type: integer
     type: object
   backend_internal_domain_models.CategoryAttribute:
     properties:
@@ -253,6 +279,19 @@ definitions:
       thumbnail_url:
         description: URL превью для видео
         type: string
+    type: object
+  backend_internal_domain_models.ContactsListResponse:
+    properties:
+      contacts:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.UserContact'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
     type: object
   backend_internal_domain_models.CreateAttributeGroupRequest:
     properties:
@@ -490,6 +529,90 @@ definitions:
         items:
           type: integer
         type: array
+    type: object
+  backend_internal_domain_models.ImportHistory:
+    properties:
+      finished_at:
+        type: string
+      id:
+        type: integer
+      items_failed:
+        type: integer
+      items_imported:
+        type: integer
+      items_total:
+        type: integer
+      items_updated:
+        type: integer
+      log:
+        type: string
+      source_id:
+        type: integer
+      started_at:
+        type: string
+      status:
+        description: success, failed, partial
+        type: string
+    type: object
+  backend_internal_domain_models.ImportSource:
+    properties:
+      auth_data:
+        items:
+          type: integer
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      last_import_at:
+        type: string
+      last_import_log:
+        description: Изменяем на обычную строку, но обрабатываем NULL при сканировании
+        type: string
+      last_import_status:
+        description: Изменяем на обычную строку, но обрабатываем NULL при сканировании
+        type: string
+      mapping:
+        items:
+          type: integer
+        type: array
+      schedule:
+        type: string
+      storefront_id:
+        type: integer
+      type:
+        description: csv, xml, json
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  backend_internal_domain_models.ImportSourceCreate:
+    properties:
+      auth_data:
+        items:
+          type: integer
+        type: array
+      mapping:
+        items:
+          type: integer
+        type: array
+      schedule:
+        type: string
+      storefront_id:
+        type: integer
+      type:
+        enum:
+        - csv
+        - xml
+        - json
+        type: string
+      url:
+        type: string
+    required:
+    - storefront_id
+    - type
     type: object
   backend_internal_domain_models.ListingAttributeValue:
     properties:
@@ -778,6 +901,74 @@ definitions:
       updated_at:
         type: string
     type: object
+  backend_internal_domain_models.NotificationSettings:
+    properties:
+      created_at:
+        type: string
+      email_enabled:
+        description: Добавляем поле для email
+        type: boolean
+      notification_type:
+        type: string
+      telegram_enabled:
+        type: boolean
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.PaymentMethod:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      credentials:
+        items:
+          type: integer
+        type: array
+      fee_percentage:
+        type: number
+      fixed_fee:
+        type: number
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      maximum_amount:
+        type: number
+      minimum_amount:
+        type: number
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  backend_internal_domain_models.PaymentSession:
+    properties:
+      amount:
+        type: number
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      expires_at:
+        type: string
+      external_id:
+        type: string
+      id:
+        type: integer
+      payment_method:
+        type: string
+      payment_url:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: integer
+    type: object
   backend_internal_domain_models.PriceHistoryEntry:
     properties:
       change_percentage:
@@ -901,6 +1092,71 @@ definitions:
       verified_reviews:
         type: integer
     type: object
+  backend_internal_domain_models.Storefront:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      creation_transaction_id:
+        type: integer
+      description:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      latitude:
+        type: number
+      logo_path:
+        type: string
+      longitude:
+        type: number
+      name:
+        type: string
+      phone:
+        type: string
+      slug:
+        type: string
+      status:
+        description: active, inactive, suspended
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+      website:
+        type: string
+    type: object
+  backend_internal_domain_models.StorefrontCreate:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      phone:
+        type: string
+      website:
+        type: string
+    required:
+    - name
+    type: object
   backend_internal_domain_models.StorefrontRatingSummary:
     properties:
       average_rating:
@@ -969,6 +1225,18 @@ definitions:
       sort_order:
         type: integer
     type: object
+  backend_internal_domain_models.UpdateContactRequest:
+    properties:
+      notes:
+        type: string
+      status:
+        enum:
+        - accepted
+        - blocked
+        type: string
+    required:
+    - status
+    type: object
   backend_internal_domain_models.UpdateCustomComponentRequest:
     properties:
       component_type:
@@ -988,6 +1256,13 @@ definitions:
       template_code:
         type: string
     type: object
+  backend_internal_domain_models.UpdatePrivacySettingsRequest:
+    properties:
+      allow_contact_requests:
+        type: boolean
+      allow_messages_from_contacts_only:
+        type: boolean
+    type: object
   backend_internal_domain_models.User:
     properties:
       created_at:
@@ -1006,6 +1281,59 @@ definitions:
         type: string
       provider:
         type: string
+    type: object
+  backend_internal_domain_models.UserBalance:
+    properties:
+      balance:
+        type: number
+      currency:
+        type: string
+      frozen_balance:
+        type: number
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.UserContact:
+    properties:
+      added_from_chat_id:
+        description: Дополнительные поля
+        type: integer
+      contact_user:
+        $ref: '#/definitions/backend_internal_domain_models.User'
+      contact_user_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      status:
+        description: pending, accepted, blocked
+        type: string
+      updated_at:
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.User'
+        description: Связанные объекты
+      user_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.UserPrivacySettings:
+    properties:
+      allow_contact_requests:
+        type: boolean
+      allow_messages_from_contacts_only:
+        type: boolean
+      created_at:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
     type: object
   backend_internal_domain_models.UserProfile:
     properties:
@@ -1171,6 +1499,15 @@ definitions:
         example: true
         type: boolean
     type: object
+  internal_proj_balance_handler.DepositRequest:
+    properties:
+      amount:
+        example: 1000.5
+        type: number
+      payment_method:
+        example: card
+        type: string
+    type: object
   internal_proj_reviews_handler.PhotosResponse:
     properties:
       message:
@@ -1196,13 +1533,13 @@ definitions:
   internal_proj_reviews_handler.ResponseRequest:
     properties:
       response:
-        example: Спасибо за ваш отзыв!
+        example: Thank you for your review!
         type: string
     type: object
   internal_proj_reviews_handler.ReviewMessageResponse:
     properties:
       message:
-        example: Операция выполнена успешно
+        example: Operation completed successfully
         type: string
       success:
         example: true
@@ -1513,6 +1850,685 @@ definitions:
         type: string
       picture_url:
         example: https://example.com/avatar.jpg
+        type: string
+    type: object
+  tgbotapi.Animation:
+    properties:
+      file_id:
+        type: string
+      file_name:
+        type: string
+      file_size:
+        type: integer
+      mime_type:
+        type: string
+      thumb:
+        $ref: '#/definitions/tgbotapi.PhotoSize'
+    type: object
+  tgbotapi.Audio:
+    properties:
+      duration:
+        type: integer
+      file_id:
+        type: string
+      file_size:
+        description: optional
+        type: integer
+      mime_type:
+        description: optional
+        type: string
+      performer:
+        description: optional
+        type: string
+      title:
+        description: optional
+        type: string
+    type: object
+  tgbotapi.CallbackQuery:
+    properties:
+      chat_instance:
+        type: string
+      data:
+        description: optional
+        type: string
+      from:
+        $ref: '#/definitions/tgbotapi.User'
+      game_short_name:
+        description: optional
+        type: string
+      id:
+        type: string
+      inline_message_id:
+        description: optional
+        type: string
+      message:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Message'
+        description: optional
+    type: object
+  tgbotapi.Chat:
+    properties:
+      all_members_are_administrators:
+        description: optional
+        type: boolean
+      description:
+        description: optional
+        type: string
+      first_name:
+        description: optional
+        type: string
+      id:
+        type: integer
+      invite_link:
+        description: optional
+        type: string
+      last_name:
+        description: optional
+        type: string
+      photo:
+        $ref: '#/definitions/tgbotapi.ChatPhoto'
+      title:
+        description: optional
+        type: string
+      type:
+        type: string
+      username:
+        description: optional
+        type: string
+    type: object
+  tgbotapi.ChatAnimation:
+    properties:
+      duration:
+        type: integer
+      file_id:
+        type: string
+      file_name:
+        description: optional
+        type: string
+      file_size:
+        description: optional
+        type: integer
+      height:
+        type: integer
+      mime_type:
+        description: optional
+        type: string
+      thumb:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.PhotoSize'
+        description: optional
+      width:
+        type: integer
+    type: object
+  tgbotapi.ChatPhoto:
+    properties:
+      big_file_id:
+        type: string
+      small_file_id:
+        type: string
+    type: object
+  tgbotapi.ChosenInlineResult:
+    properties:
+      from:
+        $ref: '#/definitions/tgbotapi.User'
+      inline_message_id:
+        type: string
+      location:
+        $ref: '#/definitions/tgbotapi.Location'
+      query:
+        type: string
+      result_id:
+        type: string
+    type: object
+  tgbotapi.Contact:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        description: optional
+        type: string
+      phone_number:
+        type: string
+      user_id:
+        description: optional
+        type: integer
+    type: object
+  tgbotapi.Document:
+    properties:
+      file_id:
+        type: string
+      file_name:
+        description: optional
+        type: string
+      file_size:
+        description: optional
+        type: integer
+      mime_type:
+        description: optional
+        type: string
+      thumb:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.PhotoSize'
+        description: optional
+    type: object
+  tgbotapi.EncryptedCredentials:
+    properties:
+      data:
+        description: |-
+          Base64-encoded encrypted JSON-serialized data with unique user's
+          payload, data hashes and secrets required for EncryptedPassportElement
+          decryption and authentication
+        type: string
+      hash:
+        description: Base64-encoded data hash for data authentication
+        type: string
+      secret:
+        description: |-
+          Base64-encoded secret, encrypted with the bot's public RSA key,
+          required for data decryption
+        type: string
+    type: object
+  tgbotapi.EncryptedPassportElement:
+    properties:
+      data:
+        description: |-
+          Base64-encoded encrypted Telegram Passport element data provided by
+          the user, available for "personal_details", "passport",
+          "driver_license", "identity_card", "identity_passport" and "address"
+          types. Can be decrypted and verified using the accompanying
+          EncryptedCredentials.
+        type: string
+      email:
+        description: User's verified email address, available only for "email" type
+        type: string
+      files:
+        description: |-
+          Array of encrypted files with documents provided by the user,
+          available for "utility_bill", "bank_statement", "rental_agreement",
+          "passport_registration" and "temporary_registration" types. Files can
+          be decrypted and verified using the accompanying EncryptedCredentials.
+        items:
+          $ref: '#/definitions/tgbotapi.PassportFile'
+        type: array
+      front_side:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.PassportFile'
+        description: |-
+          Encrypted file with the front side of the document, provided by the
+          user. Available for "passport", "driver_license", "identity_card" and
+          "internal_passport". The file can be decrypted and verified using the
+          accompanying EncryptedCredentials.
+      phone_number:
+        description: User's verified phone number, available only for "phone_number"
+          type
+        type: string
+      reverse_side:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.PassportFile'
+        description: |-
+          Encrypted file with the reverse side of the document, provided by the
+          user. Available for "driver_license" and "identity_card". The file can
+          be decrypted and verified using the accompanying EncryptedCredentials.
+      selfie:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.PassportFile'
+        description: |-
+          Encrypted file with the selfie of the user holding a document,
+          provided by the user; available for "passport", "driver_license",
+          "identity_card" and "internal_passport". The file can be decrypted
+          and verified using the accompanying EncryptedCredentials.
+      type:
+        description: Element type.
+        type: string
+    type: object
+  tgbotapi.Game:
+    properties:
+      animation:
+        $ref: '#/definitions/tgbotapi.Animation'
+      description:
+        type: string
+      photo:
+        items:
+          $ref: '#/definitions/tgbotapi.PhotoSize'
+        type: array
+      text:
+        type: string
+      text_entities:
+        items:
+          $ref: '#/definitions/tgbotapi.MessageEntity'
+        type: array
+      title:
+        type: string
+    type: object
+  tgbotapi.InlineQuery:
+    properties:
+      from:
+        $ref: '#/definitions/tgbotapi.User'
+      id:
+        type: string
+      location:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Location'
+        description: optional
+      offset:
+        type: string
+      query:
+        type: string
+    type: object
+  tgbotapi.Invoice:
+    properties:
+      currency:
+        type: string
+      description:
+        type: string
+      start_parameter:
+        type: string
+      title:
+        type: string
+      total_amount:
+        type: integer
+    type: object
+  tgbotapi.Location:
+    properties:
+      latitude:
+        type: number
+      longitude:
+        type: number
+    type: object
+  tgbotapi.Message:
+    properties:
+      animation:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.ChatAnimation'
+        description: optional
+      audio:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Audio'
+        description: optional
+      caption:
+        description: optional
+        type: string
+      channel_chat_created:
+        description: optional
+        type: boolean
+      chat:
+        $ref: '#/definitions/tgbotapi.Chat'
+      contact:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Contact'
+        description: optional
+      date:
+        type: integer
+      delete_chat_photo:
+        description: optional
+        type: boolean
+      document:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Document'
+        description: optional
+      edit_date:
+        description: optional
+        type: integer
+      entities:
+        description: optional
+        items:
+          $ref: '#/definitions/tgbotapi.MessageEntity'
+        type: array
+      forward_date:
+        description: optional
+        type: integer
+      forward_from:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.User'
+        description: optional
+      forward_from_chat:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Chat'
+        description: optional
+      forward_from_message_id:
+        description: optional
+        type: integer
+      from:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.User'
+        description: optional
+      game:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Game'
+        description: optional
+      group_chat_created:
+        description: optional
+        type: boolean
+      invoice:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Invoice'
+        description: optional
+      left_chat_member:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.User'
+        description: optional
+      location:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Location'
+        description: optional
+      message_id:
+        type: integer
+      migrate_from_chat_id:
+        description: optional
+        type: integer
+      migrate_to_chat_id:
+        description: optional
+        type: integer
+      new_chat_members:
+        description: optional
+        items:
+          $ref: '#/definitions/tgbotapi.User'
+        type: array
+      new_chat_photo:
+        description: optional
+        items:
+          $ref: '#/definitions/tgbotapi.PhotoSize'
+        type: array
+      new_chat_title:
+        description: optional
+        type: string
+      passport_data:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.PassportData'
+        description: optional
+      photo:
+        description: optional
+        items:
+          $ref: '#/definitions/tgbotapi.PhotoSize'
+        type: array
+      pinned_message:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Message'
+        description: optional
+      reply_to_message:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Message'
+        description: optional
+      sticker:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Sticker'
+        description: optional
+      successful_payment:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.SuccessfulPayment'
+        description: optional
+      supergroup_chat_created:
+        description: optional
+        type: boolean
+      text:
+        description: optional
+        type: string
+      venue:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Venue'
+        description: optional
+      video:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Video'
+        description: optional
+      video_note:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.VideoNote'
+        description: optional
+      voice:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.Voice'
+        description: optional
+    type: object
+  tgbotapi.MessageEntity:
+    properties:
+      length:
+        type: integer
+      offset:
+        type: integer
+      type:
+        type: string
+      url:
+        description: optional
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.User'
+        description: optional
+    type: object
+  tgbotapi.OrderInfo:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      shipping_address:
+        $ref: '#/definitions/tgbotapi.ShippingAddress'
+    type: object
+  tgbotapi.PassportData:
+    properties:
+      credentials:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.EncryptedCredentials'
+        description: Encrypted credentials required to decrypt the data
+      data:
+        description: |-
+          Array with information about documents and other Telegram Passport
+          elements that was shared with the bot
+        items:
+          $ref: '#/definitions/tgbotapi.EncryptedPassportElement'
+        type: array
+    type: object
+  tgbotapi.PassportFile:
+    properties:
+      file_date:
+        description: Unix time when the file was uploaded
+        type: integer
+      file_id:
+        description: Unique identifier for this file
+        type: string
+      file_size:
+        description: File size
+        type: integer
+    type: object
+  tgbotapi.PhotoSize:
+    properties:
+      file_id:
+        type: string
+      file_size:
+        description: optional
+        type: integer
+      height:
+        type: integer
+      width:
+        type: integer
+    type: object
+  tgbotapi.PreCheckoutQuery:
+    properties:
+      currency:
+        type: string
+      from:
+        $ref: '#/definitions/tgbotapi.User'
+      id:
+        type: string
+      invoice_payload:
+        type: string
+      order_info:
+        $ref: '#/definitions/tgbotapi.OrderInfo'
+      shipping_option_id:
+        type: string
+      total_amount:
+        type: integer
+    type: object
+  tgbotapi.ShippingAddress:
+    properties:
+      city:
+        type: string
+      country_code:
+        type: string
+      post_code:
+        type: string
+      state:
+        type: string
+      street_line1:
+        type: string
+      street_line2:
+        type: string
+    type: object
+  tgbotapi.ShippingQuery:
+    properties:
+      from:
+        $ref: '#/definitions/tgbotapi.User'
+      id:
+        type: string
+      invoice_payload:
+        type: string
+      shipping_address:
+        $ref: '#/definitions/tgbotapi.ShippingAddress'
+    type: object
+  tgbotapi.Sticker:
+    properties:
+      emoji:
+        description: optional
+        type: string
+      file_id:
+        type: string
+      file_size:
+        description: optional
+        type: integer
+      height:
+        type: integer
+      set_name:
+        description: optional
+        type: string
+      thumb:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.PhotoSize'
+        description: optional
+      width:
+        type: integer
+    type: object
+  tgbotapi.SuccessfulPayment:
+    properties:
+      currency:
+        type: string
+      invoice_payload:
+        type: string
+      order_info:
+        $ref: '#/definitions/tgbotapi.OrderInfo'
+      provider_payment_charge_id:
+        type: string
+      shipping_option_id:
+        type: string
+      telegram_payment_charge_id:
+        type: string
+      total_amount:
+        type: integer
+    type: object
+  tgbotapi.Update:
+    properties:
+      callback_query:
+        $ref: '#/definitions/tgbotapi.CallbackQuery'
+      channel_post:
+        $ref: '#/definitions/tgbotapi.Message'
+      chosen_inline_result:
+        $ref: '#/definitions/tgbotapi.ChosenInlineResult'
+      edited_channel_post:
+        $ref: '#/definitions/tgbotapi.Message'
+      edited_message:
+        $ref: '#/definitions/tgbotapi.Message'
+      inline_query:
+        $ref: '#/definitions/tgbotapi.InlineQuery'
+      message:
+        $ref: '#/definitions/tgbotapi.Message'
+      pre_checkout_query:
+        $ref: '#/definitions/tgbotapi.PreCheckoutQuery'
+      shipping_query:
+        $ref: '#/definitions/tgbotapi.ShippingQuery'
+      update_id:
+        type: integer
+    type: object
+  tgbotapi.User:
+    properties:
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_bot:
+        description: optional
+        type: boolean
+      language_code:
+        description: optional
+        type: string
+      last_name:
+        description: optional
+        type: string
+      username:
+        description: optional
+        type: string
+    type: object
+  tgbotapi.Venue:
+    properties:
+      address:
+        type: string
+      foursquare_id:
+        description: optional
+        type: string
+      location:
+        $ref: '#/definitions/tgbotapi.Location'
+      title:
+        type: string
+    type: object
+  tgbotapi.Video:
+    properties:
+      duration:
+        type: integer
+      file_id:
+        type: string
+      file_size:
+        description: optional
+        type: integer
+      height:
+        type: integer
+      mime_type:
+        description: optional
+        type: string
+      thumb:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.PhotoSize'
+        description: optional
+      width:
+        type: integer
+    type: object
+  tgbotapi.VideoNote:
+    properties:
+      duration:
+        type: integer
+      file_id:
+        type: string
+      file_size:
+        description: optional
+        type: integer
+      length:
+        type: integer
+      thumb:
+        allOf:
+        - $ref: '#/definitions/tgbotapi.PhotoSize'
+        description: optional
+    type: object
+  tgbotapi.Voice:
+    properties:
+      duration:
+        type: integer
+      file_id:
+        type: string
+      file_size:
+        description: optional
+        type: integer
+      mime_type:
+        description: optional
         type: string
     type: object
 host: localhost:3000
@@ -2334,13 +3350,13 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.AdminAdminsResponse'
         "400":
-          description: Invalid request
+          description: admin.admins.error.email_required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.admins.error.check_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Public administrator check
       tags:
       - public
@@ -2359,13 +3375,13 @@ paths:
               $ref: '#/definitions/backend_internal_domain_models.AdminUser'
             type: array
         "401":
-          description: Unauthorized
+          description: admin.admins.error.unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.admins.error.fetch_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get all administrators
@@ -2390,17 +3406,17 @@ paths:
           schema:
             $ref: '#/definitions/backend_internal_domain_models.AdminUser'
         "400":
-          description: Invalid request
+          description: admin.admins.error.invalid_format or admin.admins.error.email_required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "401":
-          description: Unauthorized
+          description: admin.admins.error.unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.admins.error.add_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Add new administrator
@@ -2425,17 +3441,17 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
         "400":
-          description: Invalid request
+          description: admin.admins.error.email_required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "401":
-          description: Unauthorized
+          description: admin.admins.error.unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.admins.error.remove_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Remove administrator
@@ -2460,17 +3476,17 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.AdminAdminsResponse'
         "400":
-          description: Invalid request
+          description: admin.admins.error.email_required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "401":
-          description: Unauthorized
+          description: admin.admins.error.unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.admins.error.check_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Check administrator status
@@ -3104,9 +4120,9 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.AdminUserListResponse'
         "500":
-          description: Internal server error
+          description: admin.users.error.fetch_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get all users (Admin)
@@ -3129,15 +4145,20 @@ paths:
         "200":
           description: User deleted
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+              type: object
         "400":
-          description: Invalid user ID
+          description: admin.users.error.invalid_user_id
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.users.error.delete_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Delete user (Admin)
@@ -3159,15 +4180,20 @@ paths:
         "200":
           description: User profile
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.UserProfile'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserProfile'
+              type: object
         "400":
-          description: Invalid user ID
+          description: admin.users.error.invalid_user_id
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "404":
-          description: User not found
+          description: admin.users.error.user_not_found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get user by ID (Admin)
@@ -3195,15 +4221,21 @@ paths:
         "200":
           description: Update successful
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+              type: object
         "400":
-          description: Invalid request
+          description: admin.users.error.invalid_user_id or admin.users.error.invalid_format
+            or admin.users.error.validation_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.users.error.update_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Update user (Admin)
@@ -3226,15 +4258,20 @@ paths:
         "200":
           description: User balance
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminBalanceResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminBalanceResponse'
+              type: object
         "400":
-          description: Invalid user ID
+          description: admin.balance.error.invalid_user_id
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.balance.error.fetch_balance_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get user balance (Admin)
@@ -3263,15 +4300,21 @@ paths:
         "200":
           description: Status updated
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+              type: object
         "400":
-          description: Invalid status
+          description: admin.users.error.invalid_user_id or admin.users.error.invalid_format
+            or admin.users.error.invalid_status
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.users.error.status_update_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Update user status (Admin)
@@ -3304,15 +4347,20 @@ paths:
         "200":
           description: List of transactions
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminBalanceResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminBalanceResponse'
+              type: object
         "400":
-          description: Invalid user ID
+          description: admin.balance.error.invalid_user_id
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: admin.balance.error.fetch_transactions_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get user transactions (Admin)
@@ -3338,17 +4386,17 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
         "400":
-          description: Invalid request
+          description: auth.login.error.invalid_request_body or auth.login.error.email_password_required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "401":
-          description: Invalid credentials
+          description: auth.login.error.invalid_credentials
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: auth.login.error.failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Login with email and password
       tags:
       - auth
@@ -3382,9 +4430,9 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.TokenResponse'
         "401":
-          description: Invalid or missing refresh token
+          description: auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Refresh access token
       tags:
       - auth
@@ -3408,20 +4456,924 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
         "400":
-          description: Invalid request
+          description: auth.register.error.invalid_request_body or auth.register.error.fields_required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "409":
-          description: User already exists
+          description: auth.register.error.email_exists
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: auth.register.error.failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Register new user
       tags:
       - auth
+  /api/v1/balance:
+    get:
+      consumes:
+      - application/json
+      description: Returns current balance and frozen balance for authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User balance information
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserBalance'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: balance.getError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get user balance
+      tags:
+      - balance
+  /api/v1/balance/deposit:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new payment session for balance deposit
+      parameters:
+      - description: Deposit details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_balance_handler.DepositRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment session created
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.PaymentSession'
+              type: object
+        "400":
+          description: balance.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: balance.createDepositError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Create deposit
+      tags:
+      - balance
+  /api/v1/balance/payment-methods:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of available payment methods
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of payment methods
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.PaymentMethod'
+                  type: array
+              type: object
+        "500":
+          description: balance.getPaymentMethodsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get payment methods
+      tags:
+      - balance
+  /api/v1/balance/transactions:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated list of user balance transactions
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of transactions
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.BalanceTransaction'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: balance.getTransactionsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get transaction history
+      tags:
+      - balance
+  /api/v1/contacts:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список контактов с фильтрацией по статусу и пагинацией
+      parameters:
+      - description: Фильтр по статусу (pending, accepted, blocked)
+        in: query
+        name: status
+        type: string
+      - default: 1
+        description: Номер страницы
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Количество на странице
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список контактов
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ContactsListResponse'
+              type: object
+        "400":
+          description: validation.invalidStatusFilter
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: contacts.fetchError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получить список контактов
+      tags:
+      - contacts
+    post:
+      consumes:
+      - application/json
+      description: Добавляет пользователя в список контактов
+      parameters:
+      - description: Данные для добавления контакта
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.AddContactRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Контакт успешно добавлен
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserContact'
+              type: object
+        "400":
+          description: validation.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: contacts.userNotAllowRequests
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "409":
+          description: contacts.alreadyExists
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: contacts.addError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Добавить контакт
+      tags:
+      - contacts
+  /api/v1/contacts/{contact_user_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет пользователя из списка контактов
+      parameters:
+      - description: ID контакта для удаления
+        in: path
+        name: contact_user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Контакт удален
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: validation.invalidContactUserId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: contacts.removeError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Удалить контакт
+      tags:
+      - contacts
+  /api/v1/contacts/{contact_user_id}/check:
+    get:
+      consumes:
+      - application/json
+      description: Проверяет, являются ли два пользователя контактами
+      parameters:
+      - description: ID пользователя для проверки
+        in: path
+        name: contact_user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус контакта
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: validation.invalidContactUserId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: contacts.checkError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Проверить статус контакта
+      tags:
+      - contacts
+  /api/v1/contacts/{contact_user_id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Изменяет статус контакта (принять или заблокировать)
+      parameters:
+      - description: ID контакта
+        in: path
+        name: contact_user_id
+        required: true
+        type: integer
+      - description: Новый статус контакта
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UpdateContactRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус обновлен
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: validation.invalidContactUserId или validation.invalidStatus
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: contacts.updateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Обновить статус контакта
+      tags:
+      - contacts
+  /api/v1/contacts/privacy:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает текущие настройки приватности пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Настройки приватности
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserPrivacySettings'
+              type: object
+        "500":
+          description: privacy.fetchError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получить настройки приватности
+      tags:
+      - contacts
+    put:
+      consumes:
+      - application/json
+      description: Изменяет настройки приватности пользователя
+      parameters:
+      - description: Новые настройки приватности
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UpdatePrivacySettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленные настройки
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserPrivacySettings'
+              type: object
+        "400":
+          description: validation.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: privacy.updateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Обновить настройки приватности
+      tags:
+      - contacts
+  /api/v1/geocode/cities:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список городов по частичному названию для автодополнения
+      parameters:
+      - description: Поисковый запрос (минимум 2 символа)
+        in: query
+        name: q
+        required: true
+        type: string
+      - default: 10
+        description: Максимальное количество результатов
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список городов
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    additionalProperties: true
+                    type: object
+                  type: array
+              type: object
+        "500":
+          description: geocode.suggestionsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Поиск городов
+      tags:
+      - geocode
+  /api/v1/geocode/reverse:
+    get:
+      consumes:
+      - application/json
+      description: Получает адрес по географическим координатам
+      parameters:
+      - description: Широта
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: Долгота
+        in: query
+        name: lon
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Адрес по координатам
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: validation.invalidLatitude или validation.invalidLongitude
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: geocode.reverseError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Обратное геокодирование
+      tags:
+      - geocode
+  /api/v1/import-sources:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new import source for storefront
+      parameters:
+      - description: Import source data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.ImportSourceCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import source created
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ImportSource'
+              type: object
+        "400":
+          description: storefront.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.createError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Create import source
+      tags:
+      - import-sources
+  /api/v1/import-sources/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an import source
+      parameters:
+      - description: Import source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Delete successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: importSource.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.deleteError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Delete import source
+      tags:
+      - import-sources
+    put:
+      consumes:
+      - application/json
+      description: Updates import source information
+      parameters:
+      - description: Import source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated import source data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.ImportSource'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: importSource.invalidId,storefront.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.updateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update import source
+      tags:
+      - import-sources
+  /api/v1/import-sources/{id}/apply-mappings:
+    post:
+      consumes:
+      - application/json
+      description: Applies category mappings to imported listings
+      parameters:
+      - description: Import source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mappings applied successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                    updated_count:
+                      type: integer
+                  type: object
+              type: object
+        "400":
+          description: importSource.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.applyCategoryMappingsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Apply category mappings
+      tags:
+      - import-sources
+  /api/v1/import-sources/{id}/category-mappings:
+    get:
+      consumes:
+      - application/json
+      description: Returns category mappings for a specific import source
+      parameters:
+      - description: Import source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category mappings
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: integer
+                  type: object
+              type: object
+        "400":
+          description: importSource.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.getCategoryMappingsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get category mappings for import source
+      tags:
+      - import-sources
+    put:
+      consumes:
+      - application/json
+      description: Updates category mappings for a specific import source
+      parameters:
+      - description: Import source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Category mappings
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: importSource.invalidId,importSource.invalidMappingsFormat
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.updateCategoryMappingsError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update category mappings for import source
+      tags:
+      - import-sources
+  /api/v1/import-sources/{id}/history:
+    get:
+      consumes:
+      - application/json
+      description: Returns import history for an import source
+      parameters:
+      - description: Import source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 10
+        description: Limit number of results
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import history
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.ImportHistory'
+                  type: array
+              type: object
+        "400":
+          description: importSource.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.getHistoryError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get import history
+      tags:
+      - import-sources
+  /api/v1/import-sources/{id}/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Starts import process for an import source
+      parameters:
+      - description: Import source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: CSV file for import
+        in: formData
+        name: file
+        type: file
+      - description: ZIP file with images
+        in: formData
+        name: images_zip
+        type: file
+      - description: ZIP file with XML data
+        in: formData
+        name: xml_zip
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import completed
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ImportHistory'
+              type: object
+        "400":
+          description: importSource.invalidId,importSource.notFound,importSource.noDataSource
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.runImportError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Run import
+      tags:
+      - import-sources
+  /api/v1/import-sources/{id}/imported-categories:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of categories that were imported by this source
+      parameters:
+      - description: Import source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of imported categories
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "400":
+          description: importSource.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.getImportedCategoriesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get imported categories
+      tags:
+      - import-sources
   /api/v1/marketplace/admin/attribute-groups:
     get:
       consumes:
@@ -5886,6 +7838,372 @@ paths:
       summary: Translate text
       tags:
       - marketplace-translations
+  /api/v1/notifications:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список уведомлений пользователя с пагинацией
+      parameters:
+      - default: 20
+        description: Количество записей
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список уведомлений
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "500":
+          description: notifications.getError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получить уведомления
+      tags:
+      - notifications
+  /api/v1/notifications/{id}/read:
+    put:
+      consumes:
+      - application/json
+      description: Отмечает уведомление как прочитанное
+      parameters:
+      - description: ID уведомления
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Уведомление отмечено как прочитанное
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: validation.invalidNotificationId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: notifications.updateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Отметить как прочитанное
+      tags:
+      - notifications
+  /api/v1/notifications/email/public:
+    post:
+      consumes:
+      - application/json
+      description: Отправляет email сообщение с публичной формы контактов
+      parameters:
+      - description: Данные формы
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email отправлен
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: validation.invalidDataFormat или validation.allFieldsRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: email.sendError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Отправить email с формы обратной связи
+      tags:
+      - notifications
+  /api/v1/notifications/settings:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает настройки уведомлений пользователя для всех типов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Настройки уведомлений
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    items:
+                      $ref: '#/definitions/backend_internal_domain_models.NotificationSettings'
+                    type: array
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Получить настройки уведомлений
+      tags:
+      - notifications
+    put:
+      consumes:
+      - application/json
+      description: Обновляет настройки уведомлений для конкретного типа
+      parameters:
+      - description: Настройки
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Настройки обновлены
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: validation.invalidDataFormat
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: notifications.updateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Обновить настройки уведомлений
+      tags:
+      - notifications
+  /api/v1/notifications/telegram/connect:
+    post:
+      consumes:
+      - application/json
+      description: Связывает аккаунт пользователя с Telegram для получения уведомлений
+      parameters:
+      - description: Данные для подключения
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Telegram подключен
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: validation.invalidDataFormat
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: telegram.connectionError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Подключить Telegram
+      tags:
+      - notifications
+  /api/v1/notifications/telegram/status:
+    get:
+      consumes:
+      - application/json
+      description: Проверяет, подключен ли Telegram к аккаунту пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус подключения
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "401":
+          description: auth.unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Статус подключения Telegram
+      tags:
+      - notifications
+  /api/v1/notifications/telegram/token:
+    get:
+      consumes:
+      - application/json
+      description: Генерирует токен для связывания аккаунта с Telegram ботом
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Токен для подключения
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "500":
+          description: notifications.tokenGenerateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получить токен для Telegram
+      tags:
+      - notifications
+  /api/v1/notifications/telegram/webhook:
+    post:
+      consumes:
+      - application/json
+      description: Обрабатывает входящие обновления от Telegram бота
+      parameters:
+      - description: Telegram update
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/tgbotapi.Update'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Telegram webhook
+      tags:
+      - notifications
+  /api/v1/payments/stripe/webhook:
+    post:
+      consumes:
+      - application/json
+      description: Обрабатывает webhook уведомления от Stripe о статусе платежей
+      parameters:
+      - description: Подпись Stripe для верификации webhook
+        in: header
+        name: Stripe-Signature
+        required: true
+        type: string
+      - description: Тело запроса от Stripe
+        in: body
+        name: payload
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Webhook платежной системы
+      tags:
+      - payments
+  /api/v1/public/storefronts/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns public data of a storefront (no authentication required)
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Public storefront data
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.Storefront'
+              type: object
+        "400":
+          description: storefront.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: storefront.notActive
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: storefront.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: storefront.getError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get public storefront
+      tags:
+      - storefronts
   /api/v1/reviews:
     get:
       consumes:
@@ -5947,7 +8265,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get reviews list
       tags:
       - reviews
@@ -5972,15 +8290,15 @@ paths:
         "400":
           description: Invalid input
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "404":
           description: Listing not found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Create a new review
@@ -6007,11 +8325,11 @@ paths:
         "400":
           description: Invalid review ID
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Delete review
@@ -6037,11 +8355,11 @@ paths:
         "400":
           description: Invalid review ID
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get review by ID
       tags:
       - reviews
@@ -6071,11 +8389,11 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Update review
@@ -6107,11 +8425,11 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Upload review photos
@@ -6144,15 +8462,15 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "404":
           description: Review not found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Add response to review
@@ -6185,15 +8503,15 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "404":
           description: Review not found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Vote for a review
@@ -6225,11 +8543,11 @@ paths:
         "400":
           description: Invalid entity ID
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get entity rating
       tags:
       - reviews
@@ -6257,7 +8575,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get review statistics
       tags:
       - reviews
@@ -6287,11 +8605,11 @@ paths:
         "400":
           description: Invalid entity ID
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get entity review statistics
       tags:
       - reviews
@@ -6316,11 +8634,11 @@ paths:
         "400":
           description: Invalid storefront ID
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get storefront reviews
       tags:
       - reviews
@@ -6345,11 +8663,11 @@ paths:
         "400":
           description: Invalid storefront ID
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get storefront rating summary
       tags:
       - reviews
@@ -6374,11 +8692,11 @@ paths:
         "400":
           description: Invalid user ID
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get user reviews
       tags:
       - reviews
@@ -6403,14 +8721,262 @@ paths:
         "400":
           description: Invalid user ID
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get user rating summary
       tags:
       - reviews
+  /api/v1/storefronts:
+    get:
+      consumes:
+      - application/json
+      description: Returns all storefronts owned by the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user storefronts
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.Storefront'
+                  type: array
+              type: object
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: storefront.getError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get user storefronts
+      tags:
+      - storefronts
+    post:
+      consumes:
+      - application/json
+      description: Creates a new storefront for the authenticated user
+      parameters:
+      - description: Storefront data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.StorefrontCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Storefront created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.Storefront'
+              type: object
+        "400":
+          description: storefront.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "402":
+          description: storefront.insufficientFunds
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: storefront.createError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Create new storefront
+      tags:
+      - storefronts
+  /api/v1/storefronts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a storefront
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Delete successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: storefront.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: storefront.deleteError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Delete storefront
+      tags:
+      - storefronts
+    get:
+      consumes:
+      - application/json
+      description: Returns a specific storefront by ID
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Storefront details
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.Storefront'
+              type: object
+        "400":
+          description: storefront.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: storefront.getError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get storefront by ID
+      tags:
+      - storefronts
+    put:
+      consumes:
+      - application/json
+      description: Updates storefront information
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated storefront data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.Storefront'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  properties:
+                    message:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: storefront.invalidId,storefront.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: storefront.updateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update storefront
+      tags:
+      - storefronts
+  /api/v1/storefronts/{id}/import-sources:
+    get:
+      consumes:
+      - application/json
+      description: Returns all import sources for a specific storefront
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of import sources
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.ImportSource'
+                  type: array
+              type: object
+        "400":
+          description: storefront.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: importSource.getError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get import sources for storefront
+      tags:
+      - import-sources
   /api/v1/translation/limits:
     get:
       consumes:
@@ -6499,17 +9065,17 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.PublicUserResponseWrapper'
         "400":
-          description: Invalid user ID
+          description: users.profile.error.invalid_id
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "401":
-          description: Unauthorized
+          description: auth.required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "404":
-          description: User not found
+          description: users.profile.error.not_found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get public user profile
@@ -6535,17 +9101,17 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.AdminCheckResponseWrapper'
         "400":
-          description: Email required
+          description: users.admin_check.error.email_required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "401":
-          description: Unauthorized
+          description: auth.required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "404":
-          description: User not found
+          description: users.admin_check.error.user_not_found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Check admin status (simple)
@@ -6555,10 +9121,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Авторизует пользователя по email и паролю, создает сессию и устанавливает
-        session cookie
+      deprecated: true
+      description: 'Authenticates user by email and password, creates session and
+        sets session cookie. DEPRECATED: Use /api/v1/auth/login instead'
       parameters:
-      - description: Данные для авторизации (email и password обязательны)
+      - description: Login credentials (email and password required)
         in: body
         name: user
         required: true
@@ -6568,24 +9135,20 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Authentication successful
           schema:
             $ref: '#/definitions/internal_proj_users_handler.LoginResponse'
         "400":
-          description: Bad Request
+          description: users.login.error.invalid_data or validation errors
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "401":
-          description: Unauthorized
+          description: users.login.error.invalid_credentials
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Авторизация пользователя
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Login user (deprecated)
       tags:
-      - Users
+      - users
   /api/v1/users/me:
     get:
       consumes:
@@ -6599,13 +9162,13 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.UserProfileResponse'
         "401":
-          description: Unauthorized
+          description: auth.required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: users.profile.error.fetch
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get current user profile
@@ -6630,17 +9193,17 @@ paths:
           schema:
             $ref: '#/definitions/internal_proj_users_handler.MessageResponse'
         "400":
-          description: Invalid request
+          description: users.profile.error.invalid_data or users.profile.error.validation
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "401":
-          description: Unauthorized
+          description: auth.required
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal server error
+          description: users.profile.error.update
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Update user profile
@@ -6650,10 +9213,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Создает нового пользователя в системе
+      deprecated: true
+      description: 'Creates new user in the system. DEPRECATED: Use /api/v1/auth/register
+        instead'
       parameters:
-      - description: Данные для регистрации (name, email, password обязательны, phone
-          опционален)
+      - description: Registration data (name, email, password required, phone optional)
         in: body
         name: user
         required: true
@@ -6663,20 +9227,20 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: User created successfully
           schema:
             $ref: '#/definitions/internal_proj_users_handler.RegisterResponse'
         "400":
-          description: Bad Request
+          description: users.register.error.invalid_data or validation errors
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: Internal Server Error
+          description: users.register.error.password_hash_failed or users.register.error.create_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Регистрация пользователя
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Register user (deprecated)
       tags:
-      - Users
+      - users
   /auth/google:
     get:
       consumes:
@@ -6716,9 +9280,9 @@ paths:
           schema:
             type: string
         "500":
-          description: Authentication failed
+          description: auth.google_callback.error.authentication_failed
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Handle Google OAuth callback
       tags:
       - auth

@@ -24,6 +24,17 @@ func NewBalanceHandler(balanceService balance.BalanceServiceInterface, paymentSe
     }
 }
  
+// GetBalance returns user balance information
+// @Summary Get user balance
+// @Description Returns current balance and frozen balance for authenticated user
+// @Tags balance
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserBalance} "User balance information"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.getError"
+// @Security BearerAuth
+// @Router /api/v1/balance [get]
 func (h *BalanceHandler) GetBalance(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     
@@ -40,24 +51,40 @@ func (h *BalanceHandler) GetBalance(c *fiber.Ctx) error {
                 Currency: "RSD",
             })
         }
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get balance")
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getError")
     }
 
     return utils.SuccessResponse(c, balance)
 }
 
 
+// DepositRequest represents deposit creation request
+type DepositRequest struct {
+    Amount        float64 `json:"amount" example:"1000.50"`
+    PaymentMethod string  `json:"payment_method" example:"card"`
+}
+
+// CreateDeposit creates a new deposit payment session
+// @Summary Create deposit
+// @Description Creates a new payment session for balance deposit
+// @Tags balance
+// @Accept json
+// @Produce json
+// @Param request body DepositRequest true "Deposit details"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.PaymentSession} "Payment session created"
+// @Failure 400 {object} utils.ErrorResponseSwag "balance.invalidRequest"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.createDepositError"
+// @Security BearerAuth
+// @Router /api/v1/balance/deposit [post]
 func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
 
-    var request struct {
-        Amount        float64 `json:"amount"`
-        PaymentMethod string  `json:"payment_method"`
-    }
+    var request DepositRequest
 
     if err := c.BodyParser(&request); err != nil {
         log.Printf("Error parsing deposit request: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request format")
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "balance.invalidRequest")
     }
 
     log.Printf("Processing deposit request: amount=%f, method=%s", request.Amount, request.PaymentMethod)
@@ -72,7 +99,7 @@ func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
     )
     if err != nil {
         log.Printf("Error creating payment session: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create payment")
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.createDepositError")
     }
 
     log.Printf("Created payment session: %+v", session)
@@ -80,6 +107,19 @@ func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
 }
 
 
+// GetTransactions returns user transaction history
+// @Summary Get transaction history
+// @Description Returns paginated list of user balance transactions
+// @Tags balance
+// @Accept json
+// @Produce json
+// @Param limit query int false "Limit" default(20)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.BalanceTransaction} "List of transactions"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.getTransactionsError"
+// @Security BearerAuth
+// @Router /api/v1/balance/transactions [get]
 func (h *BalanceHandler) GetTransactions(c *fiber.Ctx) error {
     userID := c.Locals("user_id").(int)
     
@@ -100,16 +140,25 @@ func (h *BalanceHandler) GetTransactions(c *fiber.Ctx) error {
 
     transactions, err := h.balanceService.GetTransactions(c.Context(), userID, limit, offset)
     if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get transactions")
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getTransactionsError")
     }
 
     return utils.SuccessResponse(c, transactions)
 }
 
+// GetPaymentMethods returns available payment methods
+// @Summary Get payment methods
+// @Description Returns list of available payment methods
+// @Tags balance
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.PaymentMethod} "List of payment methods"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.getPaymentMethodsError"
+// @Router /api/v1/balance/payment-methods [get]
 func (h *BalanceHandler) GetPaymentMethods(c *fiber.Ctx) error {
     methods, err := h.balanceService.GetPaymentMethods(c.Context())
     if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get payment methods")
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getPaymentMethodsError")
     }
 
     return utils.SuccessResponse(c, methods)
