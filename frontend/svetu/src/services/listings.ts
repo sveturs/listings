@@ -82,7 +82,7 @@ export class ListingsService {
     // Преобразуем атрибуты из формы
     if (data.attributes && Object.keys(data.attributes).length > 0) {
       request.attributes = Object.entries(data.attributes).map(
-        ([key, value]) => {
+        ([_key, value]) => {
           // value здесь уже объект AttributeFormData
           const attributeData = value as any;
           return {

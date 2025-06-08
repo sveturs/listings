@@ -53,19 +53,22 @@ export default function AttributesStep({
 
         if (response.success && response.data) {
           // Преобразуем атрибуты в CategoryAttributeMapping формат
-          const attributeMappings: CategoryAttributeMapping[] = response.data.map((attr) => ({
-            category_id: state.category.id,
-            attribute_id: attr.id,
-            is_enabled: true, // Все возвращенные атрибуты включены
-            is_required: attr.is_required,
-            sort_order: attr.sort_order,
-            attribute: attr
-          }));
+          const attributeMappings: CategoryAttributeMapping[] =
+            response.data.map((attr) => ({
+              category_id: state.category!.id,
+              attribute_id: attr.id,
+              is_enabled: true, // Все возвращенные атрибуты включены
+              is_required: attr.is_required,
+              sort_order: attr.sort_order,
+              attribute: attr,
+            }));
 
           // Фильтруем дубликаты по attribute_id и сортируем
           const uniqueAttributes = attributeMappings
-            .filter((attr, index, self) => 
-              index === self.findIndex(a => a.attribute?.id === attr.attribute?.id)
+            .filter(
+              (attr, index, self) =>
+                index ===
+                self.findIndex((a) => a.attribute?.id === attr.attribute?.id)
             )
             .sort((a, b) => a.sort_order - b.sort_order);
 
@@ -97,7 +100,7 @@ export default function AttributesStep({
     };
 
     loadAttributes();
-  }, [state.category]);
+  }, [state.category, formData]);
 
   useEffect(() => {
     dispatch({ type: 'SET_ATTRIBUTES', payload: formData });
@@ -160,17 +163,17 @@ export default function AttributesStep({
   // Универсальная функция для получения значений опций
   const getOptionValues = (options: any): string[] => {
     if (!options) return [];
-    
+
     // Если options это массив напрямую
     if (Array.isArray(options)) {
       return options;
     }
-    
+
     // Если options это объект с полем values
     if (options.values && Array.isArray(options.values)) {
       return options.values;
     }
-    
+
     return [];
   };
 

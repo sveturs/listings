@@ -113,7 +113,7 @@ export class AuthService {
     if (this.csrfToken && this.csrfToken.startsWith('client-')) {
       this.csrfToken = null;
     }
-    
+
     if (this.csrfToken) {
       return this.csrfToken;
     }
@@ -121,10 +121,12 @@ export class AuthService {
     try {
       // Получаем JWT токен если есть
       const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = token ? {
-        'Authorization': `Bearer ${token}`,
-      } : {};
-      
+      const headers: HeadersInit = token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {};
+
       const response = await fetch(`${API_BASE}/api/v1/csrf-token`, {
         method: 'GET',
         credentials: 'include',

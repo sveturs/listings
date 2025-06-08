@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCreateListing } from '@/contexts/CreateListingContext';
+import Image from 'next/image';
 
 interface PhotosStepProps {
   onNext: () => void;
@@ -178,9 +179,11 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                       }
                     `}
                   >
-                    <img
+                    <Image
                       src={photo}
                       alt={`Photo ${index + 1}`}
+                      width={200}
+                      height={128}
                       className="w-full h-24 sm:h-32 object-cover"
                     />
 

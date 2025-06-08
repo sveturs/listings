@@ -6,6 +6,7 @@ import { useCreateListing } from '@/contexts/CreateListingContext';
 import { ListingsService } from '@/services/listings';
 import { toast } from '@/utils/toast';
 import { useRouter } from '@/i18n/routing';
+import Image from 'next/image';
 
 interface PreviewPublishStepProps {
   onBack: () => void;
@@ -132,9 +133,11 @@ export default function PreviewPublishStep({
                 {state.images.length > 0 && (
                   <div className="avatar">
                     <div className="w-20 h-20 rounded-lg">
-                      <img
+                      <Image
                         src={state.images[state.mainImageIndex]}
                         alt="Main"
+                        width={80}
+                        height={80}
                         className="object-cover"
                       />
                     </div>
@@ -173,9 +176,11 @@ export default function PreviewPublishStep({
                     {state.images.map((image, index) => (
                       <div key={index} className="avatar">
                         <div className="w-12 h-12 rounded">
-                          <img
+                          <Image
                             src={image}
                             alt={`Image ${index + 1}`}
+                            width={48}
+                            height={48}
                             className="object-cover"
                           />
                         </div>
