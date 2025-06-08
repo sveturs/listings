@@ -1,0 +1,431 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
+import { useCreateListing } from '@/contexts/CreateListingContext';
+import {
+  MarketplaceService,
+  CategoryAttributeMapping,
+} from '@/services/marketplace';
+
+interface AttributeFormData {
+  attribute_id: number;
+  attribute_name: string;
+  display_name: string;
+  attribute_type: string;
+  text_value?: string;
+  numeric_value?: number;
+  boolean_value?: boolean;
+  json_value?: any;
+  display_value?: string;
+  unit?: string;
+}
+
+interface AttributesStepProps {
+  onNext: () => void;
+  onBack: () => void;
+}
+
+export default function AttributesStep({
+  onNext,
+  onBack,
+}: AttributesStepProps) {
+  const t = useTranslations();
+  const { state, dispatch } = useCreateListing();
+  const [attributes, setAttributes] = useState<CategoryAttributeMapping[]>([]);
+  const [formData, setFormData] = useState<Record<number, AttributeFormData>>(
+    state.attributes || {}
+  );
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadAttributes = async () => {
+      if (!state.category) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await MarketplaceService.getCategoryAttributes(
+          state.category.id
+        );
+
+        if (response.success && response.data) {
+          // Преобразуем атрибуты в CategoryAttributeMapping формат
+          const attributeMappings: CategoryAttributeMapping[] = response.data.map((attr) => ({
+            category_id: state.category.id,
+            attribute_id: attr.id,
+            is_enabled: true, // Все возвращенные атрибуты включены
+            is_required: attr.is_required,
+            sort_order: attr.sort_order,
+            attribute: attr
+          }));
+
+          // Фильтруем дубликаты по attribute_id и сортируем
+          const uniqueAttributes = attributeMappings
+            .filter((attr, index, self) => 
+              index === self.findIndex(a => a.attribute?.id === attr.attribute?.id)
+            )
+            .sort((a, b) => a.sort_order - b.sort_order);
+
+          setAttributes(uniqueAttributes);
+
+          // Инициализируем formData для новых атрибутов
+          const initialFormData: Record<number, AttributeFormData> = {};
+          uniqueAttributes.forEach((mapping) => {
+            if (mapping.attribute && !formData[mapping.attribute.id]) {
+              initialFormData[mapping.attribute.id] = {
+                attribute_id: mapping.attribute.id,
+                attribute_name: mapping.attribute.name,
+                display_name: mapping.attribute.display_name,
+                attribute_type: mapping.attribute.attribute_type,
+              };
+            }
+          });
+
+          // Объединяем с существующими данными
+          setFormData((prev) => ({ ...initialFormData, ...prev }));
+        }
+      } catch (error) {
+        console.error('Error loading attributes:', error);
+        // В случае ошибки показываем пустой список атрибутов
+        setAttributes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAttributes();
+  }, [state.category]);
+
+  useEffect(() => {
+    dispatch({ type: 'SET_ATTRIBUTES', payload: formData });
+  }, [formData, dispatch]);
+
+  const handleInputChange = (
+    attributeId: number,
+    value: any,
+    attributeType: string
+  ) => {
+    setFormData((prev) => {
+      const mapping = attributes.find((a) => a.attribute?.id === attributeId);
+      const attribute = mapping?.attribute;
+      if (!attribute) return prev;
+
+      const updatedAttribute: AttributeFormData = {
+        ...prev[attributeId],
+        attribute_id: attributeId,
+        attribute_name: attribute.name,
+        display_name: attribute.display_name,
+        attribute_type: attributeType,
+      };
+
+      // Очищаем все значения
+      delete updatedAttribute.text_value;
+      delete updatedAttribute.numeric_value;
+      delete updatedAttribute.boolean_value;
+      delete updatedAttribute.json_value;
+
+      // Устанавливаем значение в соответствующее поле
+      switch (attributeType) {
+        case 'text':
+        case 'select':
+          updatedAttribute.text_value = value;
+          updatedAttribute.display_value = value;
+          break;
+        case 'number':
+          updatedAttribute.numeric_value = value;
+          updatedAttribute.display_value = value.toString();
+          break;
+        case 'boolean':
+          updatedAttribute.boolean_value = value;
+          updatedAttribute.display_value = value ? 'Да' : 'Не';
+          break;
+        case 'multiselect':
+          updatedAttribute.json_value = value;
+          updatedAttribute.display_value = Array.isArray(value)
+            ? value.join(', ')
+            : '';
+          break;
+      }
+
+      return {
+        ...prev,
+        [attributeId]: updatedAttribute,
+      };
+    });
+  };
+
+  // Универсальная функция для получения значений опций
+  const getOptionValues = (options: any): string[] => {
+    if (!options) return [];
+    
+    // Если options это массив напрямую
+    if (Array.isArray(options)) {
+      return options;
+    }
+    
+    // Если options это объект с полем values
+    if (options.values && Array.isArray(options.values)) {
+      return options.values;
+    }
+    
+    return [];
+  };
+
+  const renderAttribute = (mapping: CategoryAttributeMapping) => {
+    const attribute = mapping.attribute;
+    if (!attribute) return null;
+
+    const formAttribute = formData[attribute.id];
+    const value =
+      formAttribute?.text_value ||
+      formAttribute?.numeric_value ||
+      formAttribute?.boolean_value ||
+      formAttribute?.json_value ||
+      '';
+
+    switch (attribute.attribute_type) {
+      case 'text':
+        return (
+          <input
+            type="text"
+            placeholder=""
+            className="input input-bordered"
+            value={value}
+            onChange={(e) =>
+              handleInputChange(
+                attribute.id,
+                e.target.value,
+                attribute.attribute_type
+              )
+            }
+          />
+        );
+
+      case 'number':
+        return (
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              placeholder="0"
+              className="input input-bordered flex-1"
+              value={value}
+              onChange={(e) =>
+                handleInputChange(
+                  attribute.id,
+                  parseFloat(e.target.value) || 0,
+                  attribute.attribute_type
+                )
+              }
+              min="0"
+            />
+            {attribute.options?.step && (
+              <span className="text-sm text-base-content/60">
+                шаг: {attribute.options.step}
+              </span>
+            )}
+          </div>
+        );
+
+      case 'select':
+        const selectOptions = getOptionValues(attribute.options);
+        return (
+          <select
+            className="select select-bordered"
+            value={value}
+            onChange={(e) =>
+              handleInputChange(
+                attribute.id,
+                e.target.value,
+                attribute.attribute_type
+              )
+            }
+          >
+            <option value="">{t('common.select')}</option>
+            {selectOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
+
+      case 'boolean':
+        return (
+          <div className="form-control">
+            <label className="label cursor-pointer justify-start gap-3">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-primary"
+                checked={!!value}
+                onChange={(e) =>
+                  handleInputChange(
+                    attribute.id,
+                    e.target.checked,
+                    attribute.attribute_type
+                  )
+                }
+              />
+              <span className="label-text">{t('common.yes')}</span>
+            </label>
+          </div>
+        );
+
+      case 'multiselect':
+        const multiselectOptions = getOptionValues(attribute.options);
+        return (
+          <div className="space-y-2">
+            {multiselectOptions.map((option) => (
+              <label
+                key={option}
+                className="label cursor-pointer justify-start gap-3"
+              >
+                <input
+                  type="checkbox"
+                  className="checkbox checkbox-sm"
+                  checked={Array.isArray(value) && value.includes(option)}
+                  onChange={(e) => {
+                    const currentArray = Array.isArray(value) ? value : [];
+                    const newArray = e.target.checked
+                      ? [...currentArray, option]
+                      : currentArray.filter((item: string) => item !== option);
+                    handleInputChange(
+                      attribute.id,
+                      newArray,
+                      attribute.attribute_type
+                    );
+                  }}
+                />
+                <span className="label-text text-sm">{option}</span>
+              </label>
+            ))}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const requiredAttributesFilled = attributes
+    .filter((mapping) => mapping.is_required && mapping.attribute)
+    .every((mapping) => {
+      const attr = mapping.attribute!;
+      const formAttr = formData[attr.id];
+      if (!formAttr) return false;
+
+      // Проверяем, что хотя бы одно значение заполнено
+      return (
+        formAttr.text_value !== undefined ||
+        formAttr.numeric_value !== undefined ||
+        formAttr.boolean_value !== undefined ||
+        (formAttr.json_value &&
+          Array.isArray(formAttr.json_value) &&
+          formAttr.json_value.length > 0)
+      );
+    });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="card bg-base-100 shadow-lg">
+        <div className="card-body">
+          <h2 className="card-title text-2xl mb-4 flex items-center">
+            🏷️ {t('create_listing.attributes.title')}
+          </h2>
+          <p className="text-base-content/70 mb-6">
+            {t('create_listing.attributes.description')}
+          </p>
+
+          {attributes.length === 0 ? (
+            <div className="alert alert-info">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                className="stroke-current shrink-0 w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span>{t('create_listing.attributes.none_required')}</span>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {attributes.map((mapping) => {
+                const attribute = mapping.attribute;
+                if (!attribute) return null;
+
+                return (
+                  <div key={attribute.id} className="form-control">
+                    <label className="label">
+                      <span className="label-text font-medium">
+                        {attribute.display_name || attribute.name}
+                      </span>
+                      {mapping.is_required && (
+                        <span className="label-text-alt text-error">*</span>
+                      )}
+                    </label>
+                    {renderAttribute(mapping)}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Региональная подсказка */}
+          <div className="alert alert-info mt-6">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="stroke-current shrink-0 w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <div className="text-sm">
+              <p className="font-medium">
+                💡 {t('create_listing.attributes.tip')}
+              </p>
+              <p className="text-xs mt-1">
+                {t('create_listing.attributes.tip_description')}
+              </p>
+            </div>
+          </div>
+
+          {/* Кнопки навигации */}
+          <div className="card-actions justify-between mt-6">
+            <button className="btn btn-outline" onClick={onBack}>
+              ← {t('common.back')}
+            </button>
+            <button
+              className={`btn btn-primary ${!requiredAttributesFilled ? 'btn-disabled' : ''}`}
+              onClick={onNext}
+              disabled={!requiredAttributesFilled}
+            >
+              {t('common.continue')} →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

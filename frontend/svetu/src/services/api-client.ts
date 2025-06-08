@@ -123,6 +123,19 @@ export abstract class ApiClient {
   }
 
   /**
+   * Получает CSRF токен через AuthService
+   */
+  private async getCsrfToken(): Promise<string | null> {
+    if (typeof window === 'undefined') return null;
+    try {
+      const { AuthService } = await import('./auth');
+      return await AuthService.getCsrfToken();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Базовый метод для выполнения запросов
    */
   protected async request<T>(
@@ -139,6 +152,20 @@ export abstract class ApiClient {
       const token = await this.getAuthToken();
       if (token) {
         (headers as any)['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Добавляем CSRF токен для небезопасных методов
+      const method = options?.method?.toUpperCase();
+      if (method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+        try {
+          const csrfToken = await this.getCsrfToken();
+          if (csrfToken) {
+            (headers as any)['X-CSRF-Token'] = csrfToken;
+          }
+        } catch (error) {
+          // Если не удалось получить CSRF токен, продолжаем без него
+          console.warn('Failed to get CSRF token:', error);
+        }
       }
 
       const response = await fetch(url, {

@@ -4,14 +4,16 @@
     "errorLoadingData": "Error loading data. Please try again later.",
     "noItems": "No items found",
     "loadMore": "Load more",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "createListing": "Create Listing"
   },
   "header": {
     "nav": {
       "blog": "Blog",
       "news": "News",
       "contacts": "Contacts",
-      "userContacts": "My Contacts"
+      "userContacts": "My Contacts",
+      "createListing": "Create Listing"
     }
   },
   "blog": {
@@ -152,7 +154,8 @@
       "edit": "Edit",
       "save": "Save",
       "saving": "Saving...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "createListing": "Create Listing"
     },
     "messages": {
       "updateSuccess": "Profile updated successfully"
@@ -803,5 +806,195 @@
       "invalid_user_id": "Invalid user ID",
       "invalid_storefront_id": "Invalid storefront ID"
     }
+  },
+  "create_listing": {
+    "title": "Post Listing",
+    "subtitle_regional": "Create listings according to Serbian market standards",
+    "auth_required": "You must be logged in to post a listing",
+    "success": "Listing posted successfully!",
+    "data_saving_mode": "Data saving mode is enabled",
+    "script_mode": "Script mode",
+    "title": "Listing title",
+    "description": "Description",
+    "price": "Price",
+    "currency": "Currency",
+    "condition": "Condition",
+    "characters": "characters",
+    "save_draft": "Save draft",
+    "publish": "Publish listing",
+    "uploading_images": "Uploading images...",
+    "draft_saved": "Draft saved",
+    "errors": {
+      "publish_failed": "Failed to publish listing",
+      "image_upload_failed": "Failed to upload images",
+      "draft_save_failed": "Failed to save draft"
+    },
+    "steps": {
+      "category": "Category",
+      "basic_info": "Basic info",
+      "trust_setup": "Trust",
+      "attributes": "Properties",
+      "photos": "Photos",
+      "location": "Location",
+      "payment_delivery": "Payment & delivery",
+      "preview": "Preview"
+    },
+    "category": {
+      "title": "Select category",
+      "description": "Choose the category that best fits your product",
+      "popular": "Popular categories",
+      "all": "All categories",
+      "tip_title": "Category selection tip",
+      "tip_description": "Proper category selection helps buyers find your listing easier",
+      "error_loading": "Failed to load categories. Please try again.",
+      "listings": "listings"
+    },
+    "basic_info": {
+      "title": "Basic information",
+      "description": "Enter title, description and price of your product"
+    },
+    "regional_tips": {
+      "title": "Regional tips",
+      "pricing": "Be realistic with price - buyers like to negotiate",
+      "description": "Honestly describe all flaws - it builds trust",
+      "honesty": "Honesty is the foundation of good sales in our market"
+    },
+    "attributes": {
+      "title": "Product properties",
+      "description": "Add detailed information about your product",
+      "none_required": "No required properties for this category",
+      "tip": "Detailed information helps buyers",
+      "tip_description": "The more relevant information, the higher chance of sale"
+    },
+    "photos": {
+      "title": "Photos",
+      "description": "Add quality photos of your product",
+      "upload_instruction": "Click or drag photos here",
+      "supported_formats": "Supported formats: JPG, PNG, WebP",
+      "max_size": "Max. 2MB per photo (data saving)",
+      "photos": "photos",
+      "uploading": "Uploading...",
+      "gallery": "Photo gallery",
+      "main": "Main",
+      "set_main": "Set as main",
+      "remove": "Remove",
+      "tips": {
+        "title": "Tips for quality photos",
+        "quality": "Photograph in daylight",
+        "lighting": "Avoid flash - use natural light",
+        "angles": "Shoot from multiple angles to show all details",
+        "defects": "Photograph all flaws and defects"
+      },
+      "trust_tip": {
+        "title": "Trust through photos",
+        "description": "Honest photos build trust - show all flaws and defects"
+      }
+    },
+    "location": {
+      "title": "Location",
+      "description": "Where is your product located?",
+      "country": "Country",
+      "region": "Province/region",
+      "city": "City",
+      "address": "Address",
+      "address_placeholder": "Enter approximate address (optional)",
+      "address_hint": "Address won't be publicly shown - used for map",
+      "exact_location": "Exact location",
+      "exact_location_desc": "Allows buyers to see exact location on map",
+      "get_current": "Use current location",
+      "get_current_desc": "Automatically determine location using GPS",
+      "get_location": "Get location",
+      "location_obtained": "Location successfully obtained",
+      "safe_meeting_places": "Safe meeting places",
+      "safe_meeting_desc": "Choose public places where you feel safe during handover",
+      "custom_city": "Enter city name",
+      "trust_tip": {
+        "title": "Safety during meeting",
+        "public_places": "Meet in public places",
+        "daylight": "We recommend meetings during daylight",
+        "known_areas": "Choose areas you know well"
+      }
+    },
+    "hints": {
+      "category": "Proper category selection helps buyers find your listing",
+      "trust": "Phone verification builds trust among users",
+      "delivery": "Cash on delivery is the most popular payment method in Serbia"
+    },
+    "preview": {
+      "title": "Listing preview",
+      "description": "Check how your listing will look before publishing",
+      "regional_summary": "Regional features",
+      "script": "Script",
+      "trust": "Trust",
+      "payment": "Payment",
+      "meeting": "Meeting",
+      "rules": {
+        "title": "Publishing rules",
+        "honest_description": "Truthful and detailed product description",
+        "fair_pricing": "Fair price according to condition",
+        "respectful_communication": "Respectful behavior towards buyers",
+        "safe_meetings": "Meetings in safe public places"
+      },
+      "publish_info": "Your listing will be available to all users"
+    }
+  },
+  "trust": {
+    "setup_title": "Trust setup",
+    "setup_description": "Verify phone and set up meeting method for easier selling",
+    "phone_verification": "Phone verification",
+    "phone_verification_info": "We will call you on the entered number for verification",
+    "local_operators_only": "Only domestic operators supported (MTS, Telenor, A1)",
+    "verify_phone": "Verify phone",
+    "verifying": "Verifying...",
+    "phone_verified": "Phone is verified ✓",
+    "preferred_meeting": "Handover method",
+    "meeting_places": "Meeting places",
+    "meeting_places_hint": "Choose public places where you feel safe",
+    "available_hours": "Available hours",
+    "available_hours_hint": "When you are available for calls and meetings",
+    "meeting": {
+      "personal": "Personal handover",
+      "personal_desc": "I will personally hand over the goods to buyer",
+      "pickup": "Pickup",
+      "pickup_desc": "Buyer comes to me to pick up goods",
+      "delivery": "Delivery",
+      "delivery_desc": "I will send goods via courier service"
+    }
+  },
+  "payment": {
+    "setup_title": "Payment method",
+    "setup_description": "Choose how you want to charge for goods",
+    "methods": "Payment methods",
+    "cod": "Cash on delivery",
+    "cod_desc": "Buyer pays upon receipt (most popular)",
+    "cash": "Cash",
+    "cash_desc": "Cash payment during personal handover",
+    "bank_transfer": "Bank transfer",
+    "bank_transfer_desc": "Payment in advance to account",
+    "cod_calculator": "Cash on delivery calculator",
+    "cod_fee": "Post office commission",
+    "example": "Example",
+    "negotiable_price": "Price negotiable",
+    "bundle_deals": "Discount for multiple items"
+  },
+  "delivery": {
+    "personal_handover": "Personal handover",
+    "personal_handover_desc": "I will personally hand over the goods to buyer",
+    "services": "Courier services"
+  },
+  "condition": {
+    "new": "New",
+    "new_desc": "New product, never used",
+    "used": "Used",
+    "used_desc": "Used product in good condition",
+    "refurbished": "Refurbished",
+    "refurbished_desc": "Professionally refurbished product"
+  },
+  "common": {
+    "back": "Back",
+    "continue": "Continue",
+    "select": "Select",
+    "yes": "Yes",
+    "popular": "Popular"
   }
 }

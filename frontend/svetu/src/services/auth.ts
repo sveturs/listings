@@ -108,15 +108,27 @@ export class AuthService {
   }
 
   // Get or fetch CSRF token
-  private static async getCsrfToken(): Promise<string> {
+  static async getCsrfToken(): Promise<string> {
+    // Сбрасываем токен, если запрос не удался ранее
+    if (this.csrfToken && this.csrfToken.startsWith('client-')) {
+      this.csrfToken = null;
+    }
+    
     if (this.csrfToken) {
       return this.csrfToken;
     }
 
     try {
+      // Получаем JWT токен если есть
+      const token = tokenManager.getAccessToken();
+      const headers: HeadersInit = token ? {
+        'Authorization': `Bearer ${token}`,
+      } : {};
+      
       const response = await fetch(`${API_BASE}/api/v1/csrf-token`, {
         method: 'GET',
         credentials: 'include',
+        headers,
       });
 
       if (response.ok) {

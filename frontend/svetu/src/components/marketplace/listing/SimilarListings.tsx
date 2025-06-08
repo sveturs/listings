@@ -15,7 +15,9 @@ interface SimilarListingsProps {
 export default function SimilarListings({ listingId }: SimilarListingsProps) {
   const locale = useLocale();
   const [allListings, setAllListings] = useState<MarketplaceItem[]>([]);
-  const [displayedListings, setDisplayedListings] = useState<MarketplaceItem[]>([]);
+  const [displayedListings, setDisplayedListings] = useState<MarketplaceItem[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(20);
@@ -66,7 +68,9 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
 
   const loadMore = useCallback(() => {
     if (displayCount < allListings.length) {
-      setDisplayCount((prev) => Math.min(prev + ITEMS_PER_LOAD, allListings.length));
+      setDisplayCount((prev) =>
+        Math.min(prev + ITEMS_PER_LOAD, allListings.length)
+      );
     }
   }, [displayCount, allListings.length]);
 

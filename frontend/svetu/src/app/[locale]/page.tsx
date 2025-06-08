@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { MarketplaceService } from '@/services/marketplace';
 import MarketplaceList from '@/components/marketplace/MarketplaceList';
+import { Link } from '@/i18n/routing';
 
 export default async function Home({
   params,
@@ -56,6 +57,28 @@ export default async function Home({
           </div>
         )
       )}
+
+      {/* Плавающая кнопка создания объявления */}
+      <Link
+        href="/create-listing"
+        className="fixed bottom-6 right-6 btn btn-primary btn-circle btn-lg shadow-lg hover:shadow-xl transition-shadow z-50"
+        title={t('createListing')}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+      </Link>
     </div>
   );
 }

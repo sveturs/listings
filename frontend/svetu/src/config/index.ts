@@ -124,7 +124,10 @@ class ConfigManager {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
     // Если путь начинается с /listings/ или /chat-files/, используем MinIO
-    if (normalizedPath.startsWith('/listings/') || normalizedPath.startsWith('/chat-files/')) {
+    if (
+      normalizedPath.startsWith('/listings/') ||
+      normalizedPath.startsWith('/chat-files/')
+    ) {
       return `${this.getImageBaseUrl()}${normalizedPath}`;
     }
 

@@ -11,6 +11,7 @@ import {
   hasFormChanges,
   type ValidationError,
 } from '@/utils/validation';
+import { Link } from '@/i18n/routing';
 
 export default function ProfilePage() {
   const {
@@ -389,10 +390,27 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="flex pt-6">
+            <div className="flex gap-4 pt-6">
               <button className="btn btn-primary" onClick={handleEdit}>
                 {t('actions.edit')}
               </button>
+              <Link href="/create-listing" className="btn btn-secondary">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                {t('actions.createListing')}
+              </Link>
             </div>
           </div>
         )}
