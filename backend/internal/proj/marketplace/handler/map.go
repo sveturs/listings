@@ -2,7 +2,6 @@
 package handler
 
 import (
-	"backend/internal/domain/models"
 	"backend/pkg/utils"
 	"strconv"
 

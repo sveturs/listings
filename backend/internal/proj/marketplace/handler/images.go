@@ -134,8 +134,7 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 
 	var uploadedImages []models.MarketplaceImage
 	for i, file := range files {
-		logger.Info().Int("fileIndex", i).Str("filename", file.Filename).Int64("size", file.Size).Str("contentType", contentType).Msg("Processing file")
-
+		logger.Info().Int("fileIndex", i).Str("filename", file.Filename).Int64("size", file.Size).Msg("Processing file")
 
 		// Проверка типа файла и размера
 		if file.Size > 10*1024*1024 {

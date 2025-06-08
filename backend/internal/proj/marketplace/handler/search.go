@@ -158,7 +158,7 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	}
 
 	// Логируем метаданные пагинации для отладки
-	logger.Info().Int("total", pagination.Total).Int("totalPages", pagination.TotalPages).Int("page", pagination.Page).Int("size", pagination.Size).Bool("hasMore", pagination.HasMore).Msg("Pagination metadata")
+	logger.Info().Int("total", total).Int("totalPages", totalPages).Int("page", page).Int("size", size).Bool("hasMore", hasMore).Msg("Pagination metadata")
 
 	// ВАЖНОЕ ИЗМЕНЕНИЕ: структура, соответствующая ожиданиям фронтенда
 	response := fiber.Map{
