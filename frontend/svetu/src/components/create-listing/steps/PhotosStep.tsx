@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { useCreateListing } from '@/contexts/CreateListingContext';
 import Image from 'next/image';
 

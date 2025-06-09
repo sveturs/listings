@@ -19,8 +19,12 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageRef = useRef<HTMLDivElement>(null);
+  const [imageNaturalDimensions, setImageNaturalDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
 
   const navigateImage = useCallback(
     (direction: number) => {
@@ -33,6 +37,23 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
     },
     [images.length]
   );
+
+  // Load natural dimensions of current image
+  useEffect(() => {
+    const currentImage = images[selectedIndex];
+    if (!currentImage || currentImage.id === 0 || currentImage.is_video) {
+      return;
+    }
+
+    const img = new window.Image();
+    img.onload = () => {
+      setImageNaturalDimensions({
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+    };
+    img.src = config.buildImageUrl(currentImage.public_url);
+  }, [selectedIndex, images]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -53,18 +74,65 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
   }, [showLightbox, navigateImage]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imageRef.current) return;
+    if (
+      !imageRef.current ||
+      !imageNaturalDimensions.width ||
+      !imageNaturalDimensions.height
+    )
+      return;
 
-    const rect = imageRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const container = imageRef.current;
+    const rect = container.getBoundingClientRect();
 
-    // Для зума x2, нужно правильно рассчитать позицию
-    // Чтобы центр зума соответствовал позиции курсора
-    const zoomX = Math.max(0, Math.min(100, x));
-    const zoomY = Math.max(0, Math.min(100, y));
+    // Размеры контейнера
+    const containerWidth = rect.width;
+    const containerHeight = rect.height;
 
-    setZoomPosition({ x: zoomX, y: zoomY });
+    // Соотношение сторон изображения
+    const imageAspectRatio =
+      imageNaturalDimensions.width / imageNaturalDimensions.height;
+    // Соотношение сторон контейнера (aspect-[4/3] = 4/3 = 1.333...)
+    const containerAspectRatio = 4 / 3;
+
+    let renderWidth,
+      renderHeight,
+      offsetX = 0,
+      offsetY = 0;
+
+    if (imageAspectRatio > containerAspectRatio) {
+      // Изображение шире контейнера - ограничено по ширине
+      renderWidth = containerWidth;
+      renderHeight = containerWidth / imageAspectRatio;
+      offsetY = (containerHeight - renderHeight) / 2;
+    } else {
+      // Изображение выше контейнера - ограничено по высоте
+      renderHeight = containerHeight;
+      renderWidth = containerHeight * imageAspectRatio;
+      offsetX = (containerWidth - renderWidth) / 2;
+    }
+
+    // Позиция курсора относительно контейнера
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Проверяем, находится ли курсор над изображением
+    const isOverImage =
+      mouseX >= offsetX &&
+      mouseX <= offsetX + renderWidth &&
+      mouseY >= offsetY &&
+      mouseY <= offsetY + renderHeight;
+
+    if (!isOverImage) {
+      setIsZoomed(false);
+      return;
+    }
+
+    // Рассчитываем позицию относительно изображения
+    const x = ((mouseX - offsetX) / renderWidth) * 100;
+    const y = ((mouseY - offsetY) / renderHeight) * 100;
+
+    setIsZoomed(true);
+    setZoomPosition({ x, y });
   };
 
   const renderImage = (image: (typeof images)[0], isMain = false) => {
@@ -133,7 +201,6 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
           ref={imageRef}
           className="relative aspect-[4/3] w-full cursor-zoom-in overflow-hidden"
           onClick={() => setShowLightbox(true)}
-          onMouseEnter={() => setIsZoomed(true)}
           onMouseLeave={() => setIsZoomed(false)}
           onMouseMove={handleMouseMove}
         >
