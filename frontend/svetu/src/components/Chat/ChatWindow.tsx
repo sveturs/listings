@@ -10,7 +10,7 @@ import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import Image from 'next/image';
 import Link from 'next/link';
-import config from '@/config';
+import configManager from '@/config';
 import { contactsService } from '@/services/contacts';
 import { getLastSeenText } from '@/utils/timeUtils';
 
@@ -160,7 +160,7 @@ export default function ChatWindow({
     });
     if (isNewChat && initialListingId && !listingInfo && !isContactChat) {
       console.log('Fetching listing info for ID:', initialListingId);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = configManager.getApiUrl();
       fetch(`${apiUrl}/api/v1/marketplace/listings/${initialListingId}`, {
         credentials: 'include',
         headers: {
@@ -357,11 +357,11 @@ export default function ChatWindow({
                   <Image
                     src={
                       (chat?.listing?.images?.[0]?.public_url &&
-                        config.buildImageUrl(
+                        configManager.buildImageUrl(
                           chat.listing.images[0].public_url
                         )) ||
                       (listingInfo?.images?.[0]?.public_url &&
-                        config.buildImageUrl(
+                        configManager.buildImageUrl(
                           listingInfo.images[0].public_url
                         )) ||
                       '/placeholder-listing.jpg'

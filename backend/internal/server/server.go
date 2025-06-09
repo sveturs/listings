@@ -222,11 +222,11 @@ func (s *Server) setupRoutes() {
 		return fiber.ErrUpgradeRequired
 	})
 
+	// CSRF токен - регистрируем ДО проектных роутов чтобы избежать конфликта с AuthRequiredJWT
+	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
+	
 	// Регистрируем роуты через новую систему
 	s.registerProjectRoutes()
-
-	// CSRF токен
-	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
 }
 
 // registerProjectRoutes регистрирует роуты проектов через новую систему

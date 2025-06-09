@@ -2,8 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { useCreateListing } from '@/contexts/CreateListingContext';
 import Image from 'next/image';
+import { useCreateListing } from '@/contexts/CreateListingContext';
 
 interface PhotosStepProps {
   onNext: () => void;

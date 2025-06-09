@@ -145,9 +145,13 @@ export abstract class ApiClient {
     try {
       // Добавляем JWT токен в заголовки если есть
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
         ...(options?.headers as Record<string, string>),
       };
+
+      // Устанавливаем Content-Type только если это не FormData
+      if (!(options?.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
 
       const token = await this.getAuthToken();
       if (token) {

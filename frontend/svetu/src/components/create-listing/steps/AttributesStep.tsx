@@ -100,7 +100,8 @@ export default function AttributesStep({
     };
 
     loadAttributes();
-  }, [state.category, formData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.category]);
 
   useEffect(() => {
     dispatch({ type: 'SET_ATTRIBUTES', payload: formData });

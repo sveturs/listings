@@ -122,14 +122,20 @@ export class ListingsService {
       }
     });
 
-    const response = await apiClient.post<UploadImagesResponse>(
+    // Отладочное логирование
+    console.log('Uploading images:', {
+      listingId,
+      filesCount: files.length,
+      formDataEntries: Array.from(formData.entries()).map(([key, value]) => ({
+        key,
+        value: value instanceof File ? `File: ${value.name}` : value,
+      })),
+    });
+
+    const response = await apiClient.upload<UploadImagesResponse>(
       `/api/v1/marketplace/listings/${listingId}/images`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
+      // Не устанавливаем Content-Type для FormData - браузер сделает это автоматически с boundary
     );
 
     return response.data;

@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { useCreateListing } from '@/contexts/CreateListingContext';
 import { ListingsService } from '@/services/listings';
 import { toast } from '@/utils/toast';
 import { useRouter } from '@/i18n/routing';
-import Image from 'next/image';
 
 interface PreviewPublishStepProps {
   onBack: () => void;
