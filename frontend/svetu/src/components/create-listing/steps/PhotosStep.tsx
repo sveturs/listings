@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useCreateListing } from '@/contexts/CreateListingContext';
+import { toast } from '@/utils/toast';
 
 interface PhotosStepProps {
   onNext: () => void;
@@ -26,6 +27,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
 
     setUploading(true);
     const newPhotos: string[] = [];
+    let skippedFiles = 0;
 
     for (let i = 0; i < Math.min(files.length, 8 - photos.length); i++) {
       const file = files[i];
@@ -33,8 +35,10 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
       // TODO: Интегрировать загрузку изображений через MinIO
       // ВРЕМЕННОЕ РЕШЕНИЕ: Локальная обработка изображений
       // См. TODO #19: Интегрировать загрузку изображений через MinIO
-      // Проверка размера файла (макс 2MB для слабого интернета)
-      if (file.size > 2 * 1024 * 1024) {
+      // Проверка размера файла (макс 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        skippedFiles++;
+        toast.error(`${file.name} превышает 10MB и был пропущен`);
         continue;
       }
 
@@ -54,8 +58,17 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
       reader.readAsDataURL(file);
     }
 
-    if (files.length === 0) {
+    // Если все файлы были пропущены или файлов нет
+    if (
+      files.length === 0 ||
+      (skippedFiles > 0 &&
+        newPhotos.length === 0 &&
+        Math.min(files.length, 8 - photos.length) === skippedFiles)
+    ) {
       setUploading(false);
+      if (skippedFiles > 0) {
+        toast.error('Все файлы превышают максимальный размер 10MB');
+      }
     }
   };
 

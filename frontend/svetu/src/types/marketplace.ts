@@ -45,6 +45,55 @@ export interface MarketplaceSearchResponse {
   };
 }
 
+export interface ListingFormData {
+  title: string;
+  description: string;
+  price: number;
+  currency: 'RSD' | 'EUR' | 'HRK' | 'MKD';
+  condition: 'new' | 'used' | 'refurbished';
+  category?: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+  trust?: {
+    phoneVerified: boolean;
+    preferredMeetingType: 'personal' | 'pickup' | 'delivery';
+    meetingLocations: string[];
+    availableHours: string;
+    localReputation: number;
+  };
+  payment?: {
+    methods: string[];
+    codEnabled: boolean;
+    codPrice: number;
+    personalMeeting: boolean;
+    deliveryOptions: string[];
+    negotiablePrice: boolean;
+    bundleDeals: boolean;
+  };
+  localization?: {
+    script: 'cyrillic' | 'latin' | 'mixed';
+    language: 'sr' | 'hr' | 'sl' | 'mk';
+    traditionalUnits: boolean;
+    regionalPhrases: string[];
+  };
+  pijaca?: {
+    vendorStallStyle: string;
+    neighborhoodGroup?: string;
+    regularCustomers: boolean;
+    traditionalStyle: boolean;
+  };
+  location?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+    city: string;
+    region: string;
+    country: string;
+  };
+}
+
 export interface MarketplaceSearchParams {
   sort_by?: 'date_desc' | 'date_asc' | 'price_asc' | 'price_desc';
   page?: number;

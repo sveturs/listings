@@ -26,6 +26,13 @@ export default function PreviewPublishStep({
 
   const handlePublish = async () => {
     setIsPublishing(true);
+
+    // Отладочное логирование состояния перед отправкой
+    console.log(
+      'PreviewPublishStep - State before publishing:',
+      JSON.stringify(state, null, 2)
+    );
+
     try {
       // Создаем объявление
       const response = await ListingsService.createListing(state);

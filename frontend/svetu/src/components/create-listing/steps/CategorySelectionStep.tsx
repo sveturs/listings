@@ -78,8 +78,14 @@ export default function CategorySelectionStep({
   }, [t]);
 
   const handleCategorySelect = (category: Category) => {
+    console.log('CategorySelectionStep - Selecting category:', category);
     setSelectedCategory(category);
-    setCategory({ id: category.id, name: category.name });
+    setCategory({
+      id: category.id,
+      name: category.name,
+      slug: category.slug || `category-${category.id}`,
+    });
+    console.log('CategorySelectionStep - Category set in context');
   };
 
   const handleNext = () => {

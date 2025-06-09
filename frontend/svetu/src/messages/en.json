@@ -171,6 +171,55 @@
       "cityMaxLength": "City name cannot exceed 100 characters",
       "countryMaxLength": "Country name cannot exceed 100 characters"
     },
+    "listings": {
+      "title": "My Listings",
+      "empty": "You don't have any listings yet",
+      "createFirst": "Create your first listing and start selling!",
+      "loading": "Loading your listings...",
+      "error": "Failed to load listings",
+      "back": "Back to Profile",
+      "edit": "Edit",
+      "delete": "Delete",
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "sold": "Sold",
+        "pending": "Pending"
+      },
+      "editListing": {
+        "title": "Edit Listing",
+        "description": "Update your listing information",
+        "back": "Back to My Listings",
+        "saving": "Saving...",
+        "saveChanges": "Save Changes",
+        "cancel": "Cancel",
+        "listingNotFound": "Listing not found",
+        "permissionError": "You do not have permission to edit this listing",
+        "updateSuccess": "Listing updated successfully",
+        "updateError": "Failed to update listing",
+        "fields": {
+          "title": "Title",
+          "description": "Description",
+          "price": "Price",
+          "condition": "Condition",
+          "city": "City",
+          "country": "Country",
+          "category": "Category",
+          "categoryHint": "Category cannot be changed after creation",
+          "loadError": "Failed to load listing"
+        },
+        "condition": {
+          "new": "New",
+          "used": "Used",
+          "refurbished": "Refurbished"
+        },
+        "validation": {
+          "titleRequired": "Title is required",
+          "descriptionRequired": "Description is required",
+          "priceRequired": "Price is required"
+        }
+      }
+    },
     "notProvided": "Not provided"
   },
   "users": {
@@ -824,6 +873,32 @@
     "publish": "Publish listing",
     "uploading_images": "Uploading images...",
     "draft_saved": "Draft saved",
+    "draft": {
+      "saving": "Saving...",
+      "saved": "Draft saved",
+      "savedAt": "Saved {time}",
+      "unsavedChanges": "Unsaved changes",
+      "saveError": "Failed to save draft",
+      "notFound": "Draft not found",
+      "deleted": "Draft deleted",
+      "deleteError": "Failed to delete draft",
+      "exported": "Draft exported",
+      "imported": "Draft imported",
+      "importError": "Failed to import draft",
+      "viewDrafts": "View drafts",
+      "myDrafts": "My drafts",
+      "noDrafts": "You don't have any drafts",
+      "untitled": "Untitled draft",
+      "updatedAgo": "Updated {time}",
+      "expiresIn": "Expires in {time}",
+      "complete": "Complete",
+      "open": "Open",
+      "export": "Export",
+      "delete": "Delete",
+      "close": "Close",
+      "offlineMode": "Offline mode - drafts are saved locally",
+      "recoveredDraft": "Recovered unsaved draft"
+    },
     "errors": {
       "publish_failed": "Failed to publish listing",
       "image_upload_failed": "Failed to upload images",
@@ -871,7 +946,7 @@
       "description": "Add quality photos of your product",
       "upload_instruction": "Click or drag photos here",
       "supported_formats": "Supported formats: JPG, PNG, WebP",
-      "max_size": "Max. 2MB per photo (data saving)",
+      "max_size": "Max. 10MB per photo",
       "photos": "photos",
       "uploading": "Uploading...",
       "gallery": "Photo gallery",

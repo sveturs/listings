@@ -53,6 +53,9 @@ export class ListingsService {
   static async createListing(
     data: CreateListingState
   ): Promise<CreateListingResponse> {
+    // Отладочное логирование состояния формы
+    console.log('CreateListing Data:', JSON.stringify(data, null, 2));
+
     // Преобразуем данные из формы в формат API
     const request: CreateListingRequest = {
       category_id: data.category?.id || 0,
@@ -78,6 +81,9 @@ export class ListingsService {
       negotiable_price: data.payment.negotiablePrice,
       bundle_deals: data.payment.bundleDeals,
     };
+
+    // Отладочное логирование запроса к API
+    console.log('API Request:', JSON.stringify(request, null, 2));
 
     // Преобразуем атрибуты из формы
     if (data.attributes && Object.keys(data.attributes).length > 0) {
