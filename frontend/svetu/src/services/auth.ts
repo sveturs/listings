@@ -217,9 +217,12 @@ export class AuthService {
         throw new Error('Failed to fetch session');
       }
 
-      const data = await response.json();
+      const result = await response.json();
       this.abortControllers.delete('session');
-      return data;
+
+      // Извлекаем данные из обертки
+      const sessionData = result.data || result;
+      return sessionData;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('Session request was cancelled');
@@ -283,7 +286,10 @@ export class AuthService {
 
       const result = await response.json();
       this.abortControllers.delete('updateProfile');
-      return result;
+
+      // Извлекаем данные из обертки
+      const profileData = result.data || result;
+      return profileData;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('Update profile request was cancelled');
@@ -325,13 +331,16 @@ export class AuthService {
 
       const result = await response.json();
 
+      // Извлекаем данные из обертки
+      const registerData = result.data || result;
+
       // Сохраняем JWT токен после успешной регистрации
-      if (result.access_token) {
-        tokenManager.setAccessToken(result.access_token);
+      if (registerData.access_token) {
+        tokenManager.setAccessToken(registerData.access_token);
       }
 
       this.abortControllers.delete('register');
-      return result;
+      return registerData;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('Register request was cancelled');
@@ -380,9 +389,12 @@ export class AuthService {
 
       const result = await response.json();
 
+      // Извлекаем данные из обертки
+      const loginData = result.data || result;
+
       // Сохраняем JWT токен
-      if (result.access_token) {
-        tokenManager.setAccessToken(result.access_token);
+      if (loginData.access_token) {
+        tokenManager.setAccessToken(loginData.access_token);
         if (process.env.NODE_ENV === 'development') {
           console.log('[AuthService] Access token saved');
         }
@@ -391,7 +403,7 @@ export class AuthService {
       }
 
       this.abortControllers.delete('login');
-      return result;
+      return loginData;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('Login request was cancelled');
