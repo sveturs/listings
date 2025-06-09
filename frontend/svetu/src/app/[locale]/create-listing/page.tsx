@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthContext } from '@/contexts/AuthContext';
 import StepWizard from '@/components/create-listing/StepWizard';
@@ -14,6 +14,12 @@ import LocationStep from '@/components/create-listing/steps/LocationStep';
 import PaymentDeliveryStep from '@/components/create-listing/steps/PaymentDeliveryStep';
 import PreviewPublishStep from '@/components/create-listing/steps/PreviewPublishStep';
 import { CreateListingProvider } from '@/contexts/CreateListingContext';
+import {
+  DraftStatus,
+  DraftIndicator,
+  OfflineIndicator,
+} from '@/components/DraftStatus';
+import { DraftsModal } from '@/components/DraftsModal';
 import { toast } from '@/utils/toast';
 
 const steps = [
@@ -29,9 +35,14 @@ const steps = [
 
 export default function CreateListingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations();
   const { user, isLoading: authLoading } = useAuthContext();
   const [currentStep, setCurrentStep] = useState(0);
+  const [showDraftsModal, setShowDraftsModal] = useState(false);
+
+  // Получаем ID черновика из URL параметров
+  const draftId = searchParams.get('draft') || undefined;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -117,13 +128,23 @@ export default function CreateListingPage() {
   };
 
   return (
-    <CreateListingProvider>
+    <CreateListingProvider draftId={draftId}>
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 min-h-screen">
+        {/* Оффлайн индикатор */}
+        <OfflineIndicator />
+
         {/* Региональный заголовок с традиционным стилем */}
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2">
-            {t('create_listing.title')}
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary">
+              {t('create_listing.title')}
+            </h1>
+            <div className="flex items-center gap-2">
+              <DraftStatus />
+              <DraftIndicator onClick={() => setShowDraftsModal(true)} />
+            </div>
+          </div>
           <p className="text-sm text-base-content/70">
             {t('create_listing.subtitle_regional')}
           </p>
@@ -156,6 +177,12 @@ export default function CreateListingPage() {
         />
 
         <div className="mt-4 sm:mt-8">{renderStep()}</div>
+
+        {/* Модальное окно черновиков */}
+        <DraftsModal
+          isOpen={showDraftsModal}
+          onClose={() => setShowDraftsModal(false)}
+        />
       </div>
     </CreateListingProvider>
   );

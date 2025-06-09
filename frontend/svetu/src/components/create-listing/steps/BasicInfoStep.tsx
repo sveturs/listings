@@ -25,6 +25,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
   );
 
   useEffect(() => {
+    console.log('BasicInfoStep - Updating formData:', formData);
     setBasicInfo(formData);
     setLocalization({ script: scriptMode });
   }, [formData, scriptMode, setBasicInfo, setLocalization]);

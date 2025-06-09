@@ -6,30 +6,74 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: configManager.getImageHosts(),
+    remotePatterns: [
+      // Динамически создаем список хостов из переменных окружения
+      ...(
+        process.env.NEXT_PUBLIC_IMAGE_HOSTS ||
+        'http:localhost:9000,https:svetu.rs:443,http:localhost:3000,http:100.88.44.15:9000,http:100.88.44.15:3000'
+      )
+        .split(',')
+        .flatMap((host) => {
+          const [protocol, hostname, port] = host.split(':');
+          const pathnames = ['/listings/**', '/chat-files/**'];
+
+          return pathnames.map((path) => {
+            const config: any = {
+              protocol: protocol as 'http' | 'https',
+              hostname,
+              pathname: path,
+            };
+
+            if (
+              port &&
+              !(protocol === 'http' && port === '80') &&
+              !(protocol === 'https' && port === '443')
+            ) {
+              config.port = port;
+            }
+
+            return config;
+          });
+        }),
+      // Google domains для аватарок
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
+        pathname: '/**',
+      },
+    ],
   },
   async rewrites() {
     // Rewrites нужны только для локальной разработки
     if (process.env.NODE_ENV === 'development') {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const minioUrl =
+        process.env.NEXT_PUBLIC_MINIO_URL || 'http://localhost:9000';
+
       return [
         {
           source: '/chat-files/:path*',
-          destination: 'http://localhost:9000/chat-files/:path*',
+          destination: `${minioUrl}/chat-files/:path*`,
         },
         // Проксируем API запросы на backend, кроме /api/auth/*
         {
           source: '/api/:path((?!auth).*)',
-          destination: 'http://localhost:3000/api/:path*',
+          destination: `${apiUrl}/api/:path*`,
         },
         // Проксируем auth запросы (не API)
         {
           source: '/auth/:path*',
-          destination: 'http://localhost:3000/auth/:path*',
+          destination: `${apiUrl}/auth/:path*`,
         },
         // Проксируем WebSocket для чата
         {
           source: '/ws/:path*',
-          destination: 'http://localhost:3000/ws/:path*',
+          destination: `${apiUrl}/ws/:path*`,
         },
       ];
     }
