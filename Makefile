@@ -6,7 +6,8 @@ deploy:
 
 # Swagger документация
 docs:
-	cd backend && make docs
+	cd backend && make docs && cd ..
+
 
 docs-fmt:
 	cd backend && make docs-fmt

@@ -1788,7 +1788,19 @@ const docTemplate = `{
                     "206": {
                         "description": "Partial update with errors",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_marketplace_handler.PartialOperationResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/internal_proj_marketplace_handler.PartialOperationResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.BulkUpdateResult"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -2119,7 +2131,19 @@ const docTemplate = `{
                     "206": {
                         "description": "Partial import with errors",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_marketplace_handler.PartialOperationResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/internal_proj_marketplace_handler.PartialOperationResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.ImportAttributesResult"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -13830,7 +13854,6 @@ const docTemplate = `{
                 }
             }
         },
-  
         "internal_proj_marketplace_handler.ProviderData": {
             "type": "object",
             "properties": {

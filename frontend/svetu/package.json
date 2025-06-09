@@ -9,7 +9,8 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "generate:types": "cd ../../backend && make generate-types"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
@@ -34,7 +35,9 @@
     "eslint-config-next": "15.3.2",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.0",
+    "openapi-typescript": "^7.8.0",
     "prettier": "^3.5.3",
+    "swagger2openapi": "^7.0.8",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
