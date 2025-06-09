@@ -7,7 +7,6 @@ import { useCreateListing } from '@/contexts/CreateListingContext';
 import { ListingsService } from '@/services/listings';
 import { toast } from '@/utils/toast';
 import { useRouter } from '@/i18n/routing';
-import Image from 'next/image';
 
 interface PreviewPublishStepProps {
   onBack: () => void;
