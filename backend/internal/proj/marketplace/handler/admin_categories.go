@@ -1,14 +1,15 @@
+// Package handler
 // backend/internal/proj/marketplace/handler/admin_categories.go
 package handler
 
 import (
+	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	//"backend/internal/middleware"
 	"backend/pkg/utils"
-	//"encoding/json"
-	"github.com/gofiber/fiber/v2"
-	"strconv"
 )
 
 // AdminCategoriesHandler обрабатывает запросы админки для управления категориями
@@ -23,25 +24,6 @@ func NewAdminCategoriesHandler(categoriesHandler *CategoriesHandler) *AdminCateg
 	}
 }
 
-// RegisterRoutes регистрирует маршруты для админки категорий
-func (h *AdminCategoriesHandler) RegisterRoutes(app *fiber.App, adminMiddleware fiber.Handler) {
-	adminGroup := app.Group("/api/admin", adminMiddleware)
-
-	// Маршруты для управления категориями
-	adminGroup.Post("/categories", h.CreateCategory)
-	adminGroup.Get("/categories", h.GetCategories)
-	adminGroup.Get("/categories/:id", h.GetCategoryByID)
-	adminGroup.Put("/categories/:id", h.UpdateCategory)
-	adminGroup.Delete("/categories/:id", h.DeleteCategory)
-	adminGroup.Post("/categories/:id/reorder", h.ReorderCategories)
-	adminGroup.Put("/categories/:id/move", h.MoveCategory)
-
-	// Маршруты для управления связями категорий и атрибутов
-	adminGroup.Post("/categories/:id/attributes", h.AddAttributeToCategory)
-	adminGroup.Delete("/categories/:id/attributes/:attr_id", h.RemoveAttributeFromCategory)
-	adminGroup.Put("/categories/:id/attributes/:attr_id", h.UpdateAttributeCategory)
-}
-
 // CreateCategory создает новую категорию
 // @Summary Create category
 // @Description Creates a new marketplace category
@@ -49,7 +31,7 @@ func (h *AdminCategoriesHandler) RegisterRoutes(app *fiber.App, adminMiddleware 
 // @Accept json
 // @Produce json
 // @Param body body object{name=string,slug=string,icon=string,parent_id=int} true "Category data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{id=int,message=string}} "marketplace.categoryCreated"
+// @Success 200 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Category created successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.categoryNameRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createCategoryError"
 // @Security BearerAuth
@@ -117,9 +99,9 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 	h.InvalidateCategoryCache()
 
 	// Возвращаем ID созданной категории
-	return utils.SuccessResponse(c, fiber.Map{
-		"id":      id,
-		"message": "marketplace.categoryCreated",
+	return utils.SuccessResponse(c, IDMessageResponse{
+		ID:      id,
+		Message: "marketplace.categoryCreated",
 	})
 }
 
@@ -130,7 +112,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} models.MarketplaceCategory "Category information"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceCategory} "Category information"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.categoryNotFound"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
@@ -176,7 +158,7 @@ func (h *AdminCategoriesHandler) GetCategoryByID(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param body body object{name=string,slug=string,icon=string,parent_id=int} true "Updated category data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.categoryUpdated"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Category updated successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.categoryNameRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateCategoryError"
 // @Security BearerAuth
@@ -250,8 +232,8 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 	// Инвалидируем кеш категорий
 	h.InvalidateCategoryCache()
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.categoryUpdated",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.categoryUpdated",
 	})
 }
 
@@ -262,7 +244,7 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.categoryDeleted"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Category deleted successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.deleteCategoryError"
 // @Security BearerAuth
@@ -284,8 +266,8 @@ func (h *AdminCategoriesHandler) DeleteCategory(c *fiber.Ctx) error {
 	// Инвалидируем кеш категорий
 	h.InvalidateCategoryCache()
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.categoryDeleted",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.categoryDeleted",
 	})
 }
 
@@ -297,7 +279,7 @@ func (h *AdminCategoriesHandler) DeleteCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Parent category ID"
 // @Param body body object{ordered_ids=[]int} true "List of category IDs in new order"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.categoriesReordered"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Categories reordered successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.emptyIdList"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.reorderCategoriesError"
 // @Security BearerAuth
@@ -326,8 +308,8 @@ func (h *AdminCategoriesHandler) ReorderCategories(c *fiber.Ctx) error {
 	// Инвалидируем кеш категорий
 	h.InvalidateCategoryCache()
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.categoriesReordered",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.categoriesReordered",
 	})
 }
 
@@ -339,7 +321,7 @@ func (h *AdminCategoriesHandler) ReorderCategories(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID to move"
 // @Param body body object{new_parent_id=int} true "New parent category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.categoryMoved"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Category moved successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.moveCategoryError"
 // @Security BearerAuth
@@ -370,8 +352,8 @@ func (h *AdminCategoriesHandler) MoveCategory(c *fiber.Ctx) error {
 	// Инвалидируем кеш категорий
 	h.InvalidateCategoryCache()
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.categoryMoved",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.categoryMoved",
 	})
 }
 
@@ -383,7 +365,7 @@ func (h *AdminCategoriesHandler) MoveCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param body body object{attribute_id=int,is_required=bool} true "Attribute data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.attributeAddedToCategory"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Attribute added to category successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.addAttributeToCategoryError"
 // @Security BearerAuth
@@ -412,8 +394,8 @@ func (h *AdminCategoriesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.addAttributeToCategoryError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attributeAddedToCategory",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attributeAddedToCategory",
 	})
 }
 
@@ -425,7 +407,7 @@ func (h *AdminCategoriesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param attr_id path int true "Attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.attributeRemovedFromCategory"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Attribute removed from category successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidAttributeId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.removeAttributeFromCategoryError"
 // @Security BearerAuth
@@ -449,8 +431,8 @@ func (h *AdminCategoriesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.removeAttributeFromCategoryError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attributeRemovedFromCategory",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attributeRemovedFromCategory",
 	})
 }
 
@@ -463,7 +445,7 @@ func (h *AdminCategoriesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error
 // @Param id path int true "Category ID"
 // @Param attr_id path int true "Attribute ID"
 // @Param body body object{is_required=bool,is_enabled=bool} true "Attribute settings"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "marketplace.attributeCategoryUpdated"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Attribute category updated successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidAttributeId or marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateAttributeCategoryError"
 // @Security BearerAuth
@@ -497,7 +479,7 @@ func (h *AdminCategoriesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeCategoryError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attributeCategoryUpdated",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attributeCategoryUpdated",
 	})
 }

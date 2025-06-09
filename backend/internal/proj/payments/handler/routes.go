@@ -1,3 +1,4 @@
+// Package handler
 // backend/internal/proj/payments/handler/routes.go
 package handler
 
@@ -17,5 +18,5 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 // GetPrefix возвращает префикс проекта для логирования
 func (h *Handler) GetPrefix() string {
-	return "payments"
+	return "/api/v1/payments"
 }

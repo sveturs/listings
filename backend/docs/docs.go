@@ -54,7 +54,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "marketplace.attributeCreated",
                         "schema": {
                             "allOf": [
@@ -65,15 +65,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.AttributeCreateResponse"
                                         }
                                     }
                                 }
@@ -140,7 +132,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "marketplace.categoryCreated",
+                        "description": "Category created successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -150,15 +142,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.IDMessageResponse"
                                         }
                                     }
                                 }
@@ -214,10 +198,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponentUsage"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponentUsage"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -266,7 +262,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Category information",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.MarketplaceCategory"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.MarketplaceCategory"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -340,7 +348,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "marketplace.categoryUpdated",
+                        "description": "Category updated successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -350,12 +358,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -404,7 +407,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "marketplace.categoryDeleted",
+                        "description": "Category deleted successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -414,12 +417,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -487,7 +485,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "marketplace.attributeAddedToCategory",
+                        "description": "Attribute added to category successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -497,12 +495,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -577,7 +570,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "marketplace.attributeCategoryUpdated",
+                        "description": "Attribute category updated successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -587,12 +580,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -648,7 +636,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "marketplace.attributeRemovedFromCategory",
+                        "description": "Attribute removed from category successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -658,12 +646,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -728,7 +711,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "marketplace.categoryMoved",
+                        "description": "Category moved successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -738,12 +721,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -811,7 +789,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "marketplace.categoriesReordered",
+                        "description": "Categories reordered successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -821,12 +799,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -881,10 +854,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponent"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponent"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -927,7 +912,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponent"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponent"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -964,10 +961,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/backend_internal_domain_models.CustomUITemplate"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.ComponentTemplate"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -1010,7 +1019,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.CustomUITemplate"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.ComponentTemplate"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1061,10 +1082,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponentUsage"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponentUsage"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -1107,7 +1140,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponentUsage"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponentUsage"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1193,7 +1238,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponent"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponent"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1249,7 +1306,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponent"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.CustomUIComponent"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1325,7 +1394,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Admin status",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminAdminsResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminAdminsResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1365,10 +1446,22 @@ const docTemplate = `{
                     "200": {
                         "description": "List of administrators",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/backend_internal_domain_models.AdminUser"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.AdminUser"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
@@ -1417,7 +1510,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Created administrator",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.AdminUser"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.AdminUser"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1472,7 +1577,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Admin status",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminAdminsResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminAdminsResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1527,7 +1644,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Administrator removed",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1573,10 +1702,22 @@ const docTemplate = `{
                     "200": {
                         "description": "List of attributes",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/backend_internal_domain_models.CategoryAttribute"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CategoryAttribute"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -1629,15 +1770,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Update results with success count",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.BulkUpdateResult"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "206": {
                         "description": "Partial update with errors",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.PartialOperationResponse"
                         }
                     },
                     "400": {
@@ -1680,7 +1831,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Attribute information",
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.CategoryAttribute"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.CategoryAttribute"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1742,8 +1905,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1788,10 +1962,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success message",
+                        "description": "marketplace.attributeDeleted",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1840,10 +2025,22 @@ const docTemplate = `{
                     "200": {
                         "description": "Category attributes with settings",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/backend_internal_domain_models.CategoryAttributeMapping"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CategoryAttributeMapping"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1904,15 +2101,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Import results with success count",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.ImportAttributesResult"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "206": {
                         "description": "Partial import with errors",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.PartialOperationResponse"
                         }
                     },
                     "400": {
@@ -1997,8 +2204,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -2068,8 +2286,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -2123,8 +2352,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -2187,8 +2427,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -2234,15 +2485,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Reindexing started",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.ReindexStartedResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "401": {
@@ -2288,12 +2543,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Reindexing started",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "401": {
@@ -2339,15 +2601,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Reindexing with translations started",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.ReindexStartedResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "401": {
@@ -2393,15 +2659,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Rating reindexing started",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.ReindexStartedResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "401": {
@@ -2455,12 +2725,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -2528,7 +2793,19 @@ const docTemplate = `{
                     "200": {
                         "description": "List of users",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminUserListResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminUserListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -2637,7 +2914,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Update successful",
+                        "description": "Profile updated",
                         "schema": {
                             "allOf": [
                                 {
@@ -2767,7 +3044,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_proj_users_handler.AdminBalanceResponse"
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserBalance"
                                         }
                                     }
                                 }
@@ -2902,7 +3179,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of transactions",
+                        "description": "Transaction history",
                         "schema": {
                             "allOf": [
                                 {
@@ -2912,7 +3189,10 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_proj_users_handler.AdminBalanceResponse"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.BalanceTransaction"
+                                            }
                                         }
                                     }
                                 }
@@ -2962,7 +3242,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Authentication successful",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AuthResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -3006,9 +3298,21 @@ const docTemplate = `{
                 "summary": "Logout user",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Logout successful",
                         "schema": {
-                            "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3031,7 +3335,19 @@ const docTemplate = `{
                     "200": {
                         "description": "New access token",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.TokenResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.TokenResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
@@ -3071,7 +3387,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Registration successful",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AuthResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -3624,10 +3952,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
+                                            "$ref": "#/definitions/internal_proj_contacts_handler.ContactRemoveResponse"
                                         }
                                     }
                                 }
@@ -3688,8 +4013,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/internal_proj_contacts_handler.ContactStatusCheckResponse"
                                         }
                                     }
                                 }
@@ -3759,10 +4083,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
+                                            "$ref": "#/definitions/internal_proj_contacts_handler.ContactStatusUpdateResponse"
                                         }
                                     }
                                 }
@@ -3827,8 +4148,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "object",
-                                                "additionalProperties": true
+                                                "$ref": "#/definitions/backend_internal_domain_models.GeoLocation"
                                             }
                                         }
                                     }
@@ -3886,10 +4206,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
+                                            "$ref": "#/definitions/backend_internal_domain_models.GeoLocation"
                                         }
                                     }
                                 }
@@ -4028,12 +4345,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_storefront_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -4098,12 +4410,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_storefront_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -4170,15 +4477,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                },
-                                                "updated_count": {
-                                                    "type": "integer"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_storefront_handler.ApplyCategoryMappingsResponse"
                                         }
                                     }
                                 }
@@ -4325,12 +4624,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_storefront_handler.CategoryMappingsUpdateResponse"
                                         }
                                     }
                                 }
@@ -4619,29 +4913,25 @@ const docTemplate = `{
                     "200": {
                         "description": "List of attribute groups",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "groups": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/backend_internal_domain_models.AttributeGroup"
-                                    }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.AttributeGroupsResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "500": {
                         "description": "marketplace.listGroupsError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -4652,63 +4942,17 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Creates a new attribute group for organizing attributes",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "marketplace-admin-attribute-groups"
-                ],
-                "summary": "Create attribute group",
-                "parameters": [
-                    {
-                        "description": "Attribute group data",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.CreateAttributeGroupRequest"
-                        }
-                    }
-                ],
                 "responses": {
-                    "201": {
-                        "description": "Group created successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "id": {
-                                    "type": "integer"
-                                },
-                                "success": {
-                                    "type": "boolean"
-                                }
-                            }
-                        }
-                    },
                     "400": {
                         "description": "marketplace.invalidRequest or marketplace.groupNameRequired",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "marketplace.createGroupError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -4745,37 +4989,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Attribute group information",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "group": {
-                                    "$ref": "#/definitions/backend_internal_domain_models.AttributeGroup"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.AttributeGroupResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
                         "description": "marketplace.invalidGroupId",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
                         "description": "marketplace.groupNotFound",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -4819,37 +5057,31 @@ const docTemplate = `{
                     "200": {
                         "description": "marketplace.groupUpdated",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
                         "description": "marketplace.invalidGroupId or marketplace.invalidRequest",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "marketplace.updateGroupError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -4884,37 +5116,31 @@ const docTemplate = `{
                     "200": {
                         "description": "marketplace.groupDeleted",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
                         "description": "marketplace.invalidGroupId",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "marketplace.deleteGroupError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -4951,59 +5177,37 @@ const docTemplate = `{
                     "200": {
                         "description": "Group with items",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "group": {
-                                            "$ref": "#/definitions/backend_internal_domain_models.AttributeGroup"
-                                        },
-                                        "items": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/backend_internal_domain_models.AttributeGroupItem"
-                                            }
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.AttributeGroupWithItemsData"
                                         }
                                     }
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
                         "description": "marketplace.invalidGroupId",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
                         "description": "marketplace.groupNotFound",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "marketplace.getGroupItemsError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -5047,37 +5251,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Item added successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "id": {
-                                    "type": "integer"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.IDMessageResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
                         "description": "marketplace.invalidGroupId or marketplace.invalidRequest",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "marketplace.addItemError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -5121,37 +5319,31 @@ const docTemplate = `{
                     "200": {
                         "description": "marketplace.itemRemoved",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
                         "description": "marketplace.invalidGroupId or marketplace.invalidAttributeId",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "marketplace.removeItemError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -5188,40 +5380,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Category groups",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "groups": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/backend_internal_domain_models.AttributeGroup"
-                                    }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.AttributeGroupsResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
                         "description": "marketplace.invalidCategoryId",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "marketplace.getCategoryGroupsError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -5265,37 +5448,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Group attached successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "id": {
-                                    "type": "integer"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.IDMessageResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
                         "description": "marketplace.invalidCategoryId or marketplace.invalidRequest",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "marketplace.attachGroupError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -5339,37 +5516,31 @@ const docTemplate = `{
                     "200": {
                         "description": "marketplace.groupDetached",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
                         "description": "marketplace.invalidCategoryId or marketplace.invalidGroupId",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "marketplace.detachGroupError",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -5404,7 +5575,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Attachment info",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -5475,7 +5646,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Attachment deleted",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -5485,12 +5656,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -5539,7 +5705,7 @@ const docTemplate = `{
                 "summary": "Get categories list",
                 "responses": {
                     "200": {
-                        "description": "Categories list",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -5592,7 +5758,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Attribute ranges",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -5602,18 +5768,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "max": {
-                                                        "type": "number"
-                                                    },
-                                                    "min": {
-                                                        "type": "number"
-                                                    }
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.AttributeRangesResponse"
                                         }
                                     }
                                 }
@@ -5659,7 +5814,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Category attributes",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -5725,7 +5880,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Category suggestions",
+                        "description": "Category suggestions list",
                         "schema": {
                             "allOf": [
                                 {
@@ -5775,7 +5930,7 @@ const docTemplate = `{
                 "summary": "Get category tree",
                 "responses": {
                     "200": {
-                        "description": "Category tree",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -5824,7 +5979,7 @@ const docTemplate = `{
                 "summary": "Get user's chats",
                 "responses": {
                     "200": {
-                        "description": "List of chats",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -5913,34 +6068,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Chat messages",
+                        "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/backend_internal_domain_models.MarketplaceMessage"
-                                    }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "meta": {
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "hasMore": {
-                                            "type": "boolean"
-                                        },
-                                        "limit": {
-                                            "type": "integer"
-                                        },
-                                        "page": {
-                                            "type": "integer"
-                                        },
-                                        "total": {
-                                            "type": "integer"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.ChatMessagesResponse"
                                         }
                                     }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -5993,7 +6135,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Chat archived",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -6003,12 +6145,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -6074,23 +6211,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Enhancement job started",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "job_id": {
-                                            "type": "string"
-                                        },
-                                        "message": {
-                                            "type": "string"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.EnhanceImagesResponse"
                                         }
                                     }
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -6164,20 +6297,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Enhancement preview",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "preview_url": {
-                                            "type": "string"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.EnhancePreviewResponse"
                                         }
                                     }
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -6251,7 +6383,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Enhanced suggestions",
+                        "description": "Enhanced suggestions list",
                         "schema": {
                             "allOf": [
                                 {
@@ -6263,29 +6395,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "category": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer"
-                                                            },
-                                                            "name": {
-                                                                "type": "string"
-                                                            },
-                                                            "slug": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    },
-                                                    "text": {
-                                                        "type": "string"
-                                                    },
-                                                    "type": {
-                                                        "type": "string"
-                                                    }
-                                                }
+                                                "$ref": "#/definitions/internal_proj_marketplace_handler.SuggestionItem"
                                             }
                                         }
                                     }
@@ -6385,20 +6495,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Favorites count",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "count": {
-                                            "type": "integer"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.FavoritesCountData"
                                         }
                                     }
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "401": {
@@ -6455,12 +6564,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -6531,12 +6635,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -6595,20 +6694,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Favorite status",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "is_in_favorites": {
-                                            "type": "boolean"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.FavoriteStatusData"
                                         }
                                     }
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -6663,12 +6761,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Image deleted successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -6793,29 +6898,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/definitions/backend_internal_domain_models.MarketplaceListing"
-                                                    }
-                                                },
-                                                "meta": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "limit": {
-                                                            "type": "integer"
-                                                        },
-                                                        "page": {
-                                                            "type": "integer"
-                                                        },
-                                                        "total": {
-                                                            "type": "integer"
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.ListingsResponse"
                                         }
                                     }
                                 }
@@ -6870,15 +6953,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.IDMessageResponse"
                                         }
                                     }
                                 }
@@ -7020,12 +7095,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -7102,12 +7172,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -7185,21 +7250,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Images uploaded successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "count": {
-                                    "type": "integer"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "images": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/backend_internal_domain_models.MarketplaceImage"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.ImagesUploadResponse"
+                                        }
                                     }
-                                },
-                                "message": {
-                                    "type": "string"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -7325,7 +7388,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Similar listings",
+                        "description": "Similar listings list",
                         "schema": {
                             "allOf": [
                                 {
@@ -7438,48 +7501,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Listings within bounds",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "bounds": {
-                                    "type": "object",
-                                    "properties": {
-                                        "ne": {
-                                            "type": "object",
-                                            "properties": {
-                                                "lat": {
-                                                    "type": "number"
-                                                },
-                                                "lng": {
-                                                    "type": "number"
-                                                }
-                                            }
-                                        },
-                                        "sw": {
-                                            "type": "object",
-                                            "properties": {
-                                                "lat": {
-                                                    "type": "number"
-                                                },
-                                                "lng": {
-                                                    "type": "number"
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                "count": {
-                                    "type": "integer"
-                                },
-                                "listings": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/backend_internal_domain_models.MarketplaceListing"
-                                    }
-                                },
-                                "zoom": {
-                                    "type": "integer"
-                                }
-                            }
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.MapBoundsResponse"
                         }
                     },
                     "400": {
@@ -7575,21 +7597,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Map clusters or markers data",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "count": {
-                                    "type": "integer"
-                                },
-                                "data": {
-                                    "type": "array"
-                                },
-                                "type": {
-                                    "type": "string"
-                                },
-                                "zoom": {
-                                    "type": "integer"
-                                }
-                            }
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.MapClustersResponse"
                         }
                     },
                     "400": {
@@ -7638,7 +7646,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Sent message",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -7707,7 +7715,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Messages marked as read",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -7717,12 +7725,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -7770,7 +7773,7 @@ const docTemplate = `{
                 "summary": "Get unread messages count",
                 "responses": {
                     "200": {
-                        "description": "Unread count",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -7780,12 +7783,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "count": {
-                                                    "type": "integer"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.UnreadCountData"
                                         }
                                     }
                                 }
@@ -7843,7 +7841,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Uploaded attachments",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -7921,32 +7919,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Moderation results",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "has_prohibited": {
-                                            "type": "boolean"
-                                        },
-                                        "labels": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "prohibited_labels": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.ImageModerationResponse"
                                         }
                                     }
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -8004,50 +7989,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Search results with metadata",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/backend_internal_domain_models.MarketplaceListing"
-                                    }
-                                },
-                                "meta": {
-                                    "type": "object",
-                                    "properties": {
-                                        "facets": {
-                                            "type": "object"
-                                        },
-                                        "has_more": {
-                                            "type": "boolean"
-                                        },
-                                        "page": {
-                                            "type": "integer"
-                                        },
-                                        "size": {
-                                            "type": "integer"
-                                        },
-                                        "spelling_suggestion": {
-                                            "type": "string"
-                                        },
-                                        "suggestions": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "took_ms": {
-                                            "type": "integer"
-                                        },
-                                        "total": {
-                                            "type": "integer"
-                                        },
-                                        "total_pages": {
-                                            "type": "integer"
-                                        }
-                                    }
-                                }
-                            }
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.SearchResponse"
                         }
                     },
                     "500": {
@@ -8090,7 +8032,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of suggestions",
+                        "description": "Suggestions list",
                         "schema": {
                             "allOf": [
                                 {
@@ -8150,21 +8092,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "listing_ids": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "integer"
-                                    }
-                                },
-                                "provider": {
-                                    "type": "string"
-                                },
-                                "target_lang": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.BatchTranslateRequest"
                         }
                     }
                 ],
@@ -8172,29 +8100,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Batch translation started successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "listing_count": {
-                                            "type": "integer"
-                                        },
-                                        "provider": {
-                                            "type": "string"
-                                        },
-                                        "target_lang": {
-                                            "type": "string"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.BatchTranslateData"
                                         }
                                     }
-                                },
-                                "message": {
-                                    "type": "string"
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -8226,12 +8144,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "text": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.DetectLanguageRequest"
                         }
                     }
                 ],
@@ -8239,23 +8152,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Language detected successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "confidence": {
-                                            "type": "number"
-                                        },
-                                        "language": {
-                                            "type": "string"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.DetectedLanguageData"
                                         }
                                     }
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -8293,21 +8202,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "provider": {
-                                    "type": "string"
-                                },
-                                "source_lang": {
-                                    "type": "string"
-                                },
-                                "target_lang": {
-                                    "type": "string"
-                                },
-                                "text": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.TranslateTextRequest"
                         }
                     }
                 ],
@@ -8315,29 +8210,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Text translated successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "provider": {
-                                            "type": "string"
-                                        },
-                                        "source_lang": {
-                                            "type": "string"
-                                        },
-                                        "target_lang": {
-                                            "type": "string"
-                                        },
-                                        "translated_text": {
-                                            "type": "string"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.TranslatedTextData"
                                         }
                                     }
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -8387,18 +8272,22 @@ const docTemplate = `{
                     "200": {
                         "description": "Translations retrieved successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/backend_internal_domain_models.Translation"
-                                    }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.Translation"
+                                            }
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -8453,21 +8342,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "is_verified": {
-                                    "type": "boolean"
-                                },
-                                "language": {
-                                    "type": "string"
-                                },
-                                "provider": {
-                                    "type": "string"
-                                },
-                                "translations": {
-                                    "type": "object"
-                                }
-                            }
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.TranslationUpdateRequest"
                         }
                     }
                 ],
@@ -8475,15 +8350,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Translations updated successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                                 },
-                                "success": {
-                                    "type": "boolean"
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -8565,8 +8444,10 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.Notification"
+                                            }
                                         }
                                     }
                                 }
@@ -8621,8 +8502,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/internal_proj_notifications_handler.PublicEmailSendResponse"
                                         }
                                     }
                                 }
@@ -8674,13 +8554,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "array",
-                                                "items": {
-                                                    "$ref": "#/definitions/backend_internal_domain_models.NotificationSettings"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_notifications_handler.NotificationSettingsResponse"
                                         }
                                     }
                                 }
@@ -8730,8 +8604,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/internal_proj_notifications_handler.NotificationSettingsUpdateResponse"
                                         }
                                     }
                                 }
@@ -8797,10 +8670,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
+                                            "$ref": "#/definitions/internal_proj_notifications_handler.TelegramConnectResponse"
                                         }
                                     }
                                 }
@@ -8847,8 +8717,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/internal_proj_notifications_handler.TelegramStatusResponse"
                                         }
                                     }
                                 }
@@ -8894,8 +8763,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/internal_proj_notifications_handler.TelegramTokenResponse"
                                         }
                                     }
                                 }
@@ -8939,7 +8807,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_notifications_handler.TelegramWebhookResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -8984,10 +8864,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
+                                            "$ref": "#/definitions/internal_proj_notifications_handler.NotificationMarkReadResponse"
                                         }
                                     }
                                 }
@@ -9011,7 +8888,7 @@ const docTemplate = `{
         },
         "/api/v1/payments/stripe/webhook": {
             "post": {
-                "description": "Обрабатывает webhook уведомления от Stripe о статусе платежей",
+                "description": "Processes webhook notifications from Stripe about payment status",
                 "consumes": [
                     "application/json"
                 ],
@@ -9021,36 +8898,48 @@ const docTemplate = `{
                 "tags": [
                     "payments"
                 ],
-                "summary": "Webhook платежной системы",
+                "summary": "Process payment webhook",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Подпись Stripe для верификации webhook",
+                        "description": "Stripe signature for webhook verification",
                         "name": "Stripe-Signature",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "description": "Тело запроса от Stripe",
+                        "description": "Stripe webhook payload",
                         "name": "payload",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/internal_proj_payments_handler.StripeWebhookRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Webhook processed successfully",
                         "schema": {
-                            "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_payments_handler.WebhookResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "payments.webhook.invalid_signature or payments.webhook.processing_error",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -9208,7 +9097,19 @@ const docTemplate = `{
                     "200": {
                         "description": "List of reviews",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewsListResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -9251,7 +9152,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Created review",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.Review"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9308,7 +9221,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Entity rating",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.RatingResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.RatingResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9357,7 +9282,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Review statistics",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.StatsResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.ReviewStats"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -9402,7 +9339,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Entity review statistics",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.StatsResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.ReviewStats"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9446,7 +9395,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Storefront reviews",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewsListResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9490,7 +9451,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Storefront rating summary",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.StorefrontRatingSummaryResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.StorefrontRatingSummary"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9534,7 +9507,19 @@ const docTemplate = `{
                     "200": {
                         "description": "User reviews",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewsListResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9578,7 +9563,19 @@ const docTemplate = `{
                     "200": {
                         "description": "User rating summary",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.UserRatingSummaryResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserRatingSummary"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9622,7 +9619,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Review details",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.Review"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9678,7 +9687,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Review updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9725,7 +9746,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Review deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9781,7 +9814,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Photos uploaded successfully",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.PhotosResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.PhotosResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9839,7 +9884,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Response added successfully",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -9903,7 +9960,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Vote recorded successfully",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -10168,12 +10237,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_storefront_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -10238,12 +10302,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            }
+                                            "$ref": "#/definitions/internal_proj_storefront_handler.MessageResponse"
                                         }
                                     }
                                 }
@@ -10358,29 +10417,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Translation limits retrieved successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "daily_limit": {
-                                            "type": "integer"
-                                        },
-                                        "provider": {
-                                            "type": "string"
-                                        },
-                                        "remaining": {
-                                            "type": "integer"
-                                        },
-                                        "used_today": {
-                                            "type": "integer"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.TranslationLimitsData"
                                         }
                                     }
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     }
                 }
@@ -10406,12 +10455,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "provider": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.SetProviderRequest"
                         }
                     }
                 ],
@@ -10419,23 +10463,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Translation provider set successfully",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
                                     "type": "object",
                                     "properties": {
-                                        "provider": {
-                                            "type": "string"
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.SetProviderResponse"
                                         }
                                     }
-                                },
-                                "message": {
-                                    "type": "string"
-                                },
-                                "success": {
-                                    "type": "boolean"
                                 }
-                            }
+                            ]
                         }
                     },
                     "400": {
@@ -10478,7 +10518,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Admin status",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.AdminCheckResponseWrapper"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminCheckResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -10531,7 +10583,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Authentication successful",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.LoginResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.LoginResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -10571,7 +10635,19 @@ const docTemplate = `{
                     "200": {
                         "description": "User profile",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.UserProfileResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserProfile"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
@@ -10620,7 +10696,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Profile updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.MessageResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -10673,7 +10761,19 @@ const docTemplate = `{
                     "201": {
                         "description": "User created successfully",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.RegisterResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.RegisterResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -10722,7 +10822,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Public user profile",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.PublicUserResponseWrapper"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.PublicUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -10837,7 +10949,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Session information",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.SessionResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.SessionResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -11265,6 +11389,41 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_models.ComponentTemplate": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "component_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "preview_image": {
+                    "type": "string"
+                },
+                "template_config": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "backend_internal_domain_models.ContactsListResponse": {
             "type": "object",
             "properties": {
@@ -11281,33 +11440,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "backend_internal_domain_models.CreateAttributeGroupRequest": {
-            "type": "object",
-            "required": [
-                "display_name",
-                "name"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "display_name": {
-                    "type": "string"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "sort_order": {
                     "type": "integer"
                 }
             }
@@ -11593,44 +11725,20 @@ const docTemplate = `{
                 }
             }
         },
-        "backend_internal_domain_models.CustomUITemplate": {
+        "backend_internal_domain_models.GeoLocation": {
             "type": "object",
             "properties": {
-                "created_at": {
+                "city": {
                     "type": "string"
                 },
-                "created_by": {
-                    "type": "integer"
-                },
-                "description": {
+                "country": {
                     "type": "string"
                 },
-                "display_name": {
-                    "type": "string"
+                "lat": {
+                    "type": "number"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "is_shared": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "template_code": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "updated_by": {
-                    "type": "integer"
-                },
-                "variables": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                "lon": {
+                    "type": "number"
                 }
             }
         },
@@ -11813,6 +11921,50 @@ const docTemplate = `{
                 "unit": {
                     "description": "Добавляем поле для единиц измерения",
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.MapMarker": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "condition": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_favorite": {
+                    "type": "boolean"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "main_image": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -12184,6 +12336,47 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.Notification": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "delivered_to": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "listing_id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -12969,6 +13162,19 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_search.Bucket": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "description": "Количество документов",
+                    "type": "integer"
+                },
+                "key": {
+                    "description": "Ключ бакета",
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_search.ServiceParams": {
             "type": "object",
             "properties": {
@@ -13095,6 +13301,905 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_proj_contacts_handler.ContactRemoveResponse": {
+            "description": "Ответ при удалении контакта из списка",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Сообщение об успешном удалении",
+                    "type": "string",
+                    "example": "contacts.removed"
+                }
+            }
+        },
+        "internal_proj_contacts_handler.ContactStatusCheckResponse": {
+            "description": "Информация о статусе связи между пользователями",
+            "type": "object",
+            "properties": {
+                "are_contacts": {
+                    "description": "Являются ли пользователи контактами",
+                    "type": "boolean",
+                    "example": true
+                },
+                "contact_id": {
+                    "description": "ID проверяемого контакта",
+                    "type": "integer",
+                    "example": 456
+                },
+                "user_id": {
+                    "description": "ID текущего пользователя",
+                    "type": "integer",
+                    "example": 123
+                }
+            }
+        },
+        "internal_proj_contacts_handler.ContactStatusUpdateResponse": {
+            "description": "Ответ при изменении статуса контакта",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Сообщение об успешном обновлении",
+                    "type": "string",
+                    "example": "contacts.statusUpdated"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.AttributeCreateResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "message": {
+                    "type": "string",
+                    "example": "marketplace.attributeCreated"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.AttributeGroupResponse": {
+            "type": "object",
+            "properties": {
+                "group": {
+                    "$ref": "#/definitions/backend_internal_domain_models.AttributeGroup"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.AttributeGroupWithItemsData": {
+            "type": "object",
+            "properties": {
+                "group": {
+                    "$ref": "#/definitions/backend_internal_domain_models.AttributeGroup"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.AttributeGroupItem"
+                    }
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.AttributeGroupsResponse": {
+            "type": "object",
+            "properties": {
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.AttributeGroup"
+                    }
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.AttributeRange": {
+            "type": "object",
+            "properties": {
+                "max": {
+                    "type": "number",
+                    "example": 1000000
+                },
+                "min": {
+                    "type": "number",
+                    "example": 0
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.AttributeRangesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/internal_proj_marketplace_handler.AttributeRange"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.BatchTranslateData": {
+            "type": "object",
+            "properties": {
+                "listing_count": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                },
+                "target_lang": {
+                    "type": "string",
+                    "example": "en"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.BatchTranslateRequest": {
+            "type": "object"
+        },
+        "internal_proj_marketplace_handler.BulkUpdateResult": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "success_count": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "total_count": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.CategorySummary": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Smartphones"
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "smartphones"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.ChatMessagesResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.MarketplaceMessage"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.Coordinates": {
+            "type": "object",
+            "properties": {
+                "lat": {
+                    "type": "number",
+                    "example": 55.7558
+                },
+                "lng": {
+                    "type": "number",
+                    "example": 37.6173
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.DetectLanguageRequest": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "example": "Hello world"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.DetectedLanguageData": {
+            "type": "object",
+            "properties": {
+                "confidence": {
+                    "type": "number",
+                    "example": 0.99
+                },
+                "language": {
+                    "type": "string",
+                    "example": "en"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.EnhanceImagesData": {
+            "type": "object",
+            "properties": {
+                "job_id": {
+                    "type": "string",
+                    "example": "enhance_123_1234567890"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "marketplace.imageEnhancementStarted"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.EnhanceImagesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.EnhanceImagesData"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.EnhancePreviewData": {
+            "type": "object",
+            "properties": {
+                "preview_url": {
+                    "type": "string",
+                    "example": "https://example.com/preview/123/quality"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.EnhancePreviewResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.EnhancePreviewData"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.FavoriteStatusData": {
+            "type": "object",
+            "properties": {
+                "is_in_favorites": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.FavoritesCountData": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.IDMessageResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "message": {
+                    "type": "string",
+                    "example": "marketplace.created"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.ImageModerationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.ModerationData"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.ImagesUploadResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.MarketplaceImage"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "marketplace.imagesUploaded"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.ImportAttributesResult": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "success_count": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "total_count": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.ListingsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.MarketplaceListing"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.PaginationMeta"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.MapBounds": {
+            "type": "object",
+            "properties": {
+                "ne": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.Coordinates"
+                },
+                "sw": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.Coordinates"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.MapBoundsData": {
+            "type": "object",
+            "properties": {
+                "bounds": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.MapBounds"
+                },
+                "count": {
+                    "type": "integer",
+                    "example": 25
+                },
+                "listings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.MapMarker"
+                    }
+                },
+                "zoom": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.MapBoundsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.MapBoundsData"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.MapClustersData": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "data": {},
+                "type": {
+                    "type": "string",
+                    "example": "clusters"
+                },
+                "zoom": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.MapClustersResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.MapClustersData"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "marketplace.operationSuccess"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.ModerationData": {
+            "type": "object",
+            "properties": {
+                "has_prohibited": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "image",
+                        "photo"
+                    ]
+                },
+                "prohibited_labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "limit": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.PartialOperationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error": {
+                    "type": "string",
+                    "example": "marketplace.partialOperationCompleted"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+  
+        "internal_proj_marketplace_handler.ProviderData": {
+            "type": "object",
+            "properties": {
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.ReindexStartedResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "marketplace.reindexStarted"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.SearchMetadata": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/backend_internal_domain_search.Bucket"
+                        }
+                    }
+                },
+                "has_more": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "size": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "spelling_suggestion": {
+                    "type": "string"
+                },
+                "suggestions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "took_ms": {
+                    "type": "integer",
+                    "example": 25
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.SearchResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.MarketplaceListing"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.SearchMetadata"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.SetProviderRequest": {
+            "type": "object",
+            "properties": {
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.SetProviderResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.ProviderData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "marketplace.providerSet"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.SuggestionItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.CategorySummary"
+                },
+                "text": {
+                    "type": "string",
+                    "example": "iPhone 13"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "product"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.TranslateTextRequest": {
+            "type": "object",
+            "properties": {
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                },
+                "source_lang": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "target_lang": {
+                    "type": "string",
+                    "example": "ru"
+                },
+                "text": {
+                    "type": "string",
+                    "example": "Hello world"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.TranslatedTextData": {
+            "type": "object",
+            "properties": {
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                },
+                "source_lang": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "target_lang": {
+                    "type": "string",
+                    "example": "ru"
+                },
+                "translated_text": {
+                    "type": "string",
+                    "example": "Привет мир"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.TranslationLimitsData": {
+            "type": "object",
+            "properties": {
+                "daily_limit": {
+                    "type": "integer",
+                    "example": 10000
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                },
+                "remaining": {
+                    "type": "integer",
+                    "example": 6550
+                },
+                "used_today": {
+                    "type": "integer",
+                    "example": 3450
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.TranslationUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "is_verified": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "language": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                },
+                "translations": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.UnreadCountData": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "internal_proj_notifications_handler.NotificationMarkReadResponse": {
+            "description": "Ответ при изменении статуса уведомления",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Сообщение об успешной отметке",
+                    "type": "string",
+                    "example": "notifications.markedAsRead"
+                }
+            }
+        },
+        "internal_proj_notifications_handler.NotificationSettingsResponse": {
+            "description": "Настройки уведомлений пользователя",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Массив настроек для разных типов уведомлений",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.NotificationSettings"
+                    }
+                }
+            }
+        },
+        "internal_proj_notifications_handler.NotificationSettingsUpdateResponse": {
+            "description": "Ответ при обновлении настроек уведомлений",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Сообщение об успешном обновлении",
+                    "type": "string",
+                    "example": "notifications.settingsUpdated"
+                },
+                "settings": {
+                    "description": "Обновленные настройки",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.NotificationSettings"
+                    }
+                }
+            }
+        },
+        "internal_proj_notifications_handler.PublicEmailSendResponse": {
+            "description": "Ответ при отправке email с публичной формы",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Сообщение о результате",
+                    "type": "string",
+                    "example": "email.sentSuccessfully"
+                },
+                "success": {
+                    "description": "Флаг успешной отправки",
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_notifications_handler.TelegramConnectResponse": {
+            "description": "Ответ при успешном подключении Telegram",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Сообщение об успешном подключении",
+                    "type": "string",
+                    "example": "telegram.connected"
+                }
+            }
+        },
+        "internal_proj_notifications_handler.TelegramStatusResponse": {
+            "description": "Информация о подключении Telegram к аккаунту",
+            "type": "object",
+            "properties": {
+                "connected": {
+                    "description": "Подключен ли Telegram",
+                    "type": "boolean",
+                    "example": true
+                },
+                "username": {
+                    "description": "Имя пользователя в Telegram (если подключен)",
+                    "type": "string",
+                    "example": "john_doe"
+                }
+            }
+        },
+        "internal_proj_notifications_handler.TelegramTokenResponse": {
+            "description": "Токен для связывания аккаунта с Telegram ботом",
+            "type": "object",
+            "properties": {
+                "generated_at": {
+                    "description": "Время генерации токена",
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "token": {
+                    "description": "Сгенерированный токен",
+                    "type": "string",
+                    "example": "123_abc..."
+                }
+            }
+        },
+        "internal_proj_notifications_handler.TelegramWebhookResponse": {
+            "description": "Ответ на webhook запрос от Telegram",
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "Статус обработки",
+                    "type": "string",
+                    "example": "OK"
+                }
+            }
+        },
+        "internal_proj_payments_handler.StripeWebhookRequest": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "integer",
+                    "example": 1234567890
+                },
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "id": {
+                    "type": "string",
+                    "example": "evt_1234567890"
+                },
+                "object": {
+                    "type": "string",
+                    "example": "event"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "checkout.session.completed"
+                }
+            }
+        },
+        "internal_proj_payments_handler.WebhookResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "payments.webhook.processed"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
         "internal_proj_reviews_handler.PhotosResponse": {
             "type": "object",
             "properties": {
@@ -13149,18 +14254,6 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_proj_reviews_handler.ReviewResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/backend_internal_domain_models.Review"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
         "internal_proj_reviews_handler.ReviewsListResponse": {
             "type": "object",
             "properties": {
@@ -13196,48 +14289,39 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_proj_reviews_handler.StatsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/backend_internal_domain_models.ReviewStats"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "internal_proj_reviews_handler.StorefrontRatingSummaryResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/backend_internal_domain_models.StorefrontRatingSummary"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "internal_proj_reviews_handler.UserRatingSummaryResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/backend_internal_domain_models.UserRatingSummary"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
         "internal_proj_reviews_handler.VoteRequest": {
             "type": "object",
             "properties": {
                 "vote_type": {
                     "type": "string",
                     "example": "helpful"
+                }
+            }
+        },
+        "internal_proj_storefront_handler.ApplyCategoryMappingsResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "updated_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_proj_storefront_handler.CategoryMappingsUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_storefront_handler.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
                 }
             }
         },
@@ -13254,34 +14338,12 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_proj_users_handler.AdminBalanceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {}
-            }
-        },
         "internal_proj_users_handler.AdminCheckResponse": {
             "type": "object",
             "properties": {
                 "is_admin": {
                     "type": "boolean",
                     "example": false
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "internal_proj_users_handler.AdminCheckResponseWrapper": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/internal_proj_users_handler.AdminCheckResponse"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
                 }
             }
         },
@@ -13383,10 +14445,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "users.login.success.authenticated"
                 },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                },
                 "user": {
                     "$ref": "#/definitions/backend_internal_domain_models.User"
                 }
@@ -13398,10 +14456,6 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "Операция выполнена успешно"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
                 }
             }
         },
@@ -13427,18 +14481,6 @@ const docTemplate = `{
                 "picture_url": {
                     "type": "string",
                     "example": "https://example.com/avatar.jpg"
-                }
-            }
-        },
-        "internal_proj_users_handler.PublicUserResponseWrapper": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/internal_proj_users_handler.PublicUserResponse"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
                 }
             }
         },
@@ -13476,10 +14518,6 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "Пользователь успешно зарегистрирован"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
                 },
                 "user": {
                     "$ref": "#/definitions/backend_internal_domain_models.User"
@@ -13553,18 +14591,6 @@ const docTemplate = `{
                 "token_type": {
                     "type": "string",
                     "example": "Bearer"
-                }
-            }
-        },
-        "internal_proj_users_handler.UserProfileResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/backend_internal_domain_models.UserProfile"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
                 }
             }
         },

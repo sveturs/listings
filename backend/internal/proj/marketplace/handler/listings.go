@@ -37,7 +37,7 @@ func NewListingsHandler(services globalService.ServicesInterface) *ListingsHandl
 // @Accept json
 // @Produce json
 // @Param body body models.MarketplaceListing true "Listing data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{id=int,message=string}} "Listing created successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Listing created successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 409 {object} utils.ErrorResponseSwag "marketplace.duplicateTitle"
@@ -66,7 +66,7 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 
 	listing.UserID = userID
 	listing.Status = "active"
-	
+
 	// Санитизация полей для защиты от XSS
 	listing.Title = utils.SanitizeText(listing.Title)
 	listing.Description = utils.SanitizeText(listing.Description)
@@ -85,9 +85,9 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 	}
 
 	// Возвращаем ID созданного объявления
-	return utils.SuccessResponse(c, fiber.Map{
-		"id":      id,
-		"message": "marketplace.createSuccess",
+	return utils.SuccessResponse(c, IDMessageResponse{
+		ID:      id,
+		Message: "marketplace.createSuccess",
 	})
 }
 
@@ -98,7 +98,7 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceListing} "Listing details"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceListing} "Listing details"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getError"
@@ -164,7 +164,7 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 // @Param storefront_id query int false "Storefront ID filter"
 // @Param limit query int false "Number of items per page" default(20)
 // @Param offset query int false "Number of items to skip" default(0)
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{data=[]models.MarketplaceListing,meta=object{total=int,page=int,limit=int}}} "Listings list with pagination"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ListingsResponse} "Listings list with pagination"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.listError"
 // @Router /api/v1/marketplace/listings [get]
 func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
@@ -235,12 +235,13 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	}
 
 	// Возвращаем список объявлений с пагинацией
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": listings,
-		"meta": fiber.Map{
-			"total": total,
-			"page":  offset/limit + 1,
-			"limit": limit,
+	return utils.SuccessResponse(c, ListingsResponse{
+		Success: true,
+		Data:    listings,
+		Meta: PaginationMeta{
+			Total: int(total),
+			Page:  offset/limit + 1,
+			Limit: limit,
 		},
 	})
 }
@@ -253,7 +254,7 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param body body models.MarketplaceListing true "Updated listing data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Listing updated successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Listing updated successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
@@ -303,7 +304,7 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	// Устанавливаем ID объявления и пользователя
 	listing.ID = id
 	listing.UserID = userID
-	
+
 	// Санитизация полей для защиты от XSS
 	listing.Title = utils.SanitizeText(listing.Title)
 	listing.Description = utils.SanitizeText(listing.Description)
@@ -351,8 +352,8 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	}
 
 	// Возвращаем успешный результат
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.updateSuccess",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.updateSuccess",
 	})
 }
 
@@ -363,7 +364,7 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Listing deleted successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Listing deleted successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
@@ -403,8 +404,8 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 	}()
 
 	// Возвращаем успешный результат
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.deleteSuccess",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.deleteSuccess",
 	})
 }
 
@@ -415,7 +416,7 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.PriceHistoryEntry} "Price history entries"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.PriceHistoryEntry} "Price history entries"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.priceHistoryError"
 // @Router /api/v1/marketplace/listings/{id}/price-history [get]
@@ -448,7 +449,7 @@ func (h *ListingsHandler) GetPriceHistory(c *fiber.Ctx) error {
 // @Tags marketplace-admin
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Discounts synchronized successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Discounts synchronized successfully"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 403 {object} utils.ErrorResponseSwag "admin.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.syncError"
@@ -484,8 +485,8 @@ func (h *ListingsHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 	}
 
 	// Возвращаем успешный результат
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.syncSuccess",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.syncSuccess",
 	})
 }
 

@@ -33,10 +33,10 @@ type ServicesInterface interface {
 	Storefront() storefrontService.StorefrontServiceInterface
 	Storage() storage.Storage
 	Geocode() geocodeService.GeocodeServiceInterface
-	
+
 	// FileStorage возвращает сервис для работы с файловым хранилищем
 	FileStorage() filestorage.FileStorageInterface
-	
+
 	// ChatAttachment возвращает сервис для работы с вложениями чата
 	ChatAttachment() marketplaceService.ChatAttachmentServiceInterface
 }

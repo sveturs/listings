@@ -34,7 +34,7 @@ func NewSearchHandler(services globalService.ServicesInterface) *SearchHandler {
 // @Accept json
 // @Produce json
 // @Param body body search.ServiceParams true "Search parameters"
-// @Success 200 {object} object{data=[]models.MarketplaceListing,meta=object{total=int,page=int,size=int,total_pages=int,has_more=bool,facets=object,suggestions=[]string,spelling_suggestion=string,took_ms=int}} "Search results with metadata"
+// @Success 200 {object} internal_proj_marketplace_handler.SearchResponse "Search results with metadata"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.searchError"
 // @Router /api/v1/marketplace/search [get]
 func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
@@ -140,6 +140,14 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		items = []*models.MarketplaceListing{}
 	}
 
+	// Преобразуем []*models.MarketplaceListing в []models.MarketplaceListing
+	listings := make([]models.MarketplaceListing, 0, len(items))
+	for _, item := range items {
+		if item != nil {
+			listings = append(listings, *item)
+		}
+	}
+
 	// Вычисляем метаданные пагинации
 	total := results.Total
 	totalPages := int(math.Ceil(float64(total) / float64(params.Size)))
@@ -161,18 +169,18 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	logger.Info().Int("total", total).Int("totalPages", totalPages).Int("page", page).Int("size", size).Bool("hasMore", hasMore).Msg("Pagination metadata")
 
 	// ВАЖНОЕ ИЗМЕНЕНИЕ: структура, соответствующая ожиданиям фронтенда
-	response := fiber.Map{
-		"data": items,
-		"meta": fiber.Map{
-			"total":               total,
-			"page":                page,
-			"size":                size,
-			"total_pages":         totalPages,
-			"has_more":            hasMore,
-			"facets":              results.Facets,
-			"suggestions":         results.Suggestions,
-			"spelling_suggestion": results.SpellingSuggestion,
-			"took_ms":             results.Took,
+	response := SearchResponse{
+		Data: listings,
+		Meta: SearchMetadata{
+			Total:              total,
+			Page:               page,
+			Size:               size,
+			TotalPages:         totalPages,
+			HasMore:            hasMore,
+			Facets:             results.Facets,
+			Suggestions:        results.Suggestions,
+			SpellingSuggestion: results.SpellingSuggestion,
+			TookMs:             results.Took,
 		},
 	}
 
@@ -202,7 +210,7 @@ func parseIntOrDefault(str string, defaultValue int) int {
 // @Produce json
 // @Param prefix query string true "Search prefix"
 // @Param size query int false "Number of suggestions" default(10)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]string} "List of suggestions"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]string} "Suggestions list"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.prefixRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
 // @Router /api/v1/marketplace/suggestions [get]
@@ -241,7 +249,7 @@ func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 // @Param prefix query string true "Search prefix"
 // @Param size query int false "Number of suggestions" default(10)
 // @Param lang query string false "Language" default(ru)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]object{text=string,type=string,category=object{id=int,name=string,slug=string}}} "Enhanced suggestions"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]internal_proj_marketplace_handler.SuggestionItem} "Enhanced suggestions list"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.prefixRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
 // @Router /api/v1/marketplace/enhanced-suggestions [get]
@@ -337,7 +345,7 @@ func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 // @Produce json
 // @Param query query string true "Search query"
 // @Param size query int false "Number of suggestions" default(10)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategorySuggestion} "Category suggestions"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategorySuggestion} "Category suggestions list"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categorySuggestionsError"
 // @Router /api/v1/marketplace/category-suggestions [get]
@@ -375,7 +383,7 @@ func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param limit query int false "Number of similar listings" default(5)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Similar listings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "Similar listings list"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.similarListingsError"
 // @Router /api/v1/marketplace/listings/{id}/similar [get]

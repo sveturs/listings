@@ -500,7 +500,7 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 	// Но если есть ChatID, проверяем, что чат существует
 
 	// Проверяем из контекста, существует ли листинг
-	var listingExists bool = true
+	var listingExists = true
 	if listingExistsValue := ctx.Value("listing_exists"); listingExistsValue != nil {
 		if exists, ok := listingExistsValue.(bool); ok {
 			listingExists = exists

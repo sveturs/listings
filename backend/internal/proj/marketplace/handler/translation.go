@@ -2,15 +2,17 @@
 package handler
 
 import (
+	"context"
+	"strconv"
+	"strings"
+
+	"github.com/gofiber/fiber/v2"
+
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
-	"context"
-	"github.com/gofiber/fiber/v2"
-	"strconv"
-	"strings"
 )
 
 // TranslationsHandler обрабатывает запросы, связанные с переводами
@@ -35,8 +37,8 @@ func NewTranslationsHandler(services globalService.ServicesInterface) *Translati
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param translation_provider query string false "Translation provider (google, openai)" default(google)
-// @Param translations body object{language=string,translations=object,is_verified=bool,provider=string} true "Translation data"
-// @Success 200 {object} object{success=bool,message=string} "Translations updated successfully"
+// @Param translations body TranslationUpdateRequest true "Translation data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Translations updated successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
@@ -143,9 +145,8 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 		}
 	}()
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "marketplace.translationsUpdated",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.translationsUpdated",
 	})
 }
 
@@ -157,7 +158,7 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param language query string false "Language filter"
-// @Success 200 {object} object{success=bool,data=[]models.Translation} "Translations retrieved successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.Translation} "Translations retrieved successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getTranslationsError"
 // @Router /api/v1/marketplace/translations/{id} [get]
@@ -194,10 +195,7 @@ func (h *TranslationsHandler) GetTranslations(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data":    filteredTranslations,
-	})
+	return utils.SuccessResponse(c, filteredTranslations)
 }
 
 // TranslateText translates text using the selected provider
@@ -206,8 +204,8 @@ func (h *TranslationsHandler) GetTranslations(c *fiber.Ctx) error {
 // @Tags marketplace-translations
 // @Accept json
 // @Produce json
-// @Param translation body object{text=string,source_lang=string,target_lang=string,provider=string} true "Translation request"
-// @Success 200 {object} object{success=bool,data=object{translated_text=string,source_lang=string,target_lang=string,provider=string}} "Text translated successfully"
+// @Param translation body TranslateTextRequest true "Translation request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TranslatedTextData} "Text translated successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.translateError"
 // @Router /api/v1/marketplace/translations/translate [post]
@@ -279,14 +277,11 @@ func (h *TranslationsHandler) TranslateText(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.translateError")
 	}
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"translated_text": translatedText,
-			"source_lang":     request.SourceLang,
-			"target_lang":     request.TargetLang,
-			"provider":        request.Provider,
-		},
+	return utils.SuccessResponse(c, TranslatedTextData{
+		TranslatedText: translatedText,
+		SourceLang:     request.SourceLang,
+		TargetLang:     request.TargetLang,
+		Provider:       request.Provider,
 	})
 }
 
@@ -296,8 +291,8 @@ func (h *TranslationsHandler) TranslateText(c *fiber.Ctx) error {
 // @Tags marketplace-translations
 // @Accept json
 // @Produce json
-// @Param detection body object{text=string} true "Text for language detection"
-// @Success 200 {object} object{success=bool,data=object{language=string,confidence=number}} "Language detected successfully"
+// @Param detection body DetectLanguageRequest true "Text for language detection"
+// @Success 200 {object} utils.SuccessResponseSwag{data=DetectedLanguageData} "Language detected successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.detectLanguageError"
 // @Router /api/v1/marketplace/translations/detect-language [post]
@@ -323,12 +318,9 @@ func (h *TranslationsHandler) DetectLanguage(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.detectLanguageError")
 	}
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"language":   language,
-			"confidence": confidence,
-		},
+	return utils.SuccessResponse(c, DetectedLanguageData{
+		Language:   language,
+		Confidence: confidence,
 	})
 }
 
@@ -338,18 +330,15 @@ func (h *TranslationsHandler) DetectLanguage(c *fiber.Ctx) error {
 // @Tags marketplace-translations
 // @Accept json
 // @Produce json
-// @Success 200 {object} object{success=bool,data=object{daily_limit=int,used_today=int,remaining=int,provider=string}} "Translation limits retrieved successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TranslationLimitsData} "Translation limits retrieved successfully"
 // @Router /api/v1/translation/limits [get]
 func (h *TranslationsHandler) GetTranslationLimits(c *fiber.Ctx) error {
 	// Пример реализации - обычно это получается от API сервиса перевода
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"daily_limit": 10000,
-			"used_today":  3450,
-			"remaining":   6550,
-			"provider":    "google",
-		},
+	return utils.SuccessResponse(c, TranslationLimitsData{
+		DailyLimit: 10000,
+		UsedToday:  3450,
+		Remaining:  6550,
+		Provider:   "google",
 	})
 }
 
@@ -359,8 +348,8 @@ func (h *TranslationsHandler) GetTranslationLimits(c *fiber.Ctx) error {
 // @Tags marketplace-translations
 // @Accept json
 // @Produce json
-// @Param provider body object{provider=string} true "Provider configuration (google, openai)"
-// @Success 200 {object} object{success=bool,message=string,data=object{provider=string}} "Translation provider set successfully"
+// @Param provider body SetProviderRequest true "Provider configuration (google, openai)"
+// @Success 200 {object} utils.SuccessResponseSwag{data=SetProviderResponse} "Translation provider set successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Router /api/v1/translation/provider [post]
 func (h *TranslationsHandler) SetTranslationProvider(c *fiber.Ctx) error {
@@ -381,11 +370,11 @@ func (h *TranslationsHandler) SetTranslationProvider(c *fiber.Ctx) error {
 	// Здесь можно установить провайдер по умолчанию, например, через кеш или настройки пользователя
 	// ...
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "marketplace.providerSet",
-		"data": fiber.Map{
-			"provider": request.Provider,
+	return utils.SuccessResponse(c, SetProviderResponse{
+		Success: true,
+		Message: "marketplace.providerSet",
+		Data: ProviderData{
+			Provider: request.Provider,
 		},
 	})
 }
@@ -396,8 +385,8 @@ func (h *TranslationsHandler) SetTranslationProvider(c *fiber.Ctx) error {
 // @Tags marketplace-translations
 // @Accept json
 // @Produce json
-// @Param batch body object{listing_ids=[]int,target_lang=string,provider=string} true "Batch translation request"
-// @Success 200 {object} object{success=bool,message=string,data=object{listing_count=int,target_lang=string,provider=string}} "Batch translation started successfully"
+// @Param batch body BatchTranslateRequest true "Batch translation request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=BatchTranslateData} "Batch translation started successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/translations/batch-translate [post]
@@ -571,13 +560,9 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 		}
 	}()
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "marketplace.translationProcessStarted",
-		"data": fiber.Map{
-			"listing_count": len(request.ListingIDs),
-			"target_lang":   request.TargetLang,
-			"provider":      provider,
-		},
+	return utils.SuccessResponse(c, BatchTranslateData{
+		ListingCount: len(request.ListingIDs),
+		TargetLang:   request.TargetLang,
+		Provider:     provider,
 	})
 }

@@ -280,6 +280,29 @@ definitions:
         description: URL превью для видео
         type: string
     type: object
+  backend_internal_domain_models.ComponentTemplate:
+    properties:
+      category_id:
+        type: integer
+      component_id:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      preview_image:
+        type: string
+      template_config:
+        items:
+          type: integer
+        type: array
+    type: object
   backend_internal_domain_models.ContactsListResponse:
     properties:
       contacts:
@@ -292,24 +315,6 @@ definitions:
         type: integer
       total:
         type: integer
-    type: object
-  backend_internal_domain_models.CreateAttributeGroupRequest:
-    properties:
-      description:
-        type: string
-      display_name:
-        type: string
-      icon:
-        type: string
-      is_active:
-        type: boolean
-      name:
-        type: string
-      sort_order:
-        type: integer
-    required:
-    - display_name
-    - name
     type: object
   backend_internal_domain_models.CreateComponentUsageRequest:
     properties:
@@ -503,32 +508,16 @@ definitions:
       usage_context:
         type: string
     type: object
-  backend_internal_domain_models.CustomUITemplate:
+  backend_internal_domain_models.GeoLocation:
     properties:
-      created_at:
+      city:
         type: string
-      created_by:
-        type: integer
-      description:
+      country:
         type: string
-      display_name:
-        type: string
-      id:
-        type: integer
-      is_shared:
-        type: boolean
-      name:
-        type: string
-      template_code:
-        type: string
-      updated_at:
-        type: string
-      updated_by:
-        type: integer
-      variables:
-        items:
-          type: integer
-        type: array
+      lat:
+        type: number
+      lon:
+        type: number
     type: object
   backend_internal_domain_models.ImportHistory:
     properties:
@@ -653,6 +642,35 @@ definitions:
       unit:
         description: Добавляем поле для единиц измерения
         type: string
+    type: object
+  backend_internal_domain_models.MapMarker:
+    properties:
+      category_id:
+        type: integer
+      city:
+        type: string
+      condition:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_favorite:
+        type: boolean
+      latitude:
+        type: number
+      longitude:
+        type: number
+      main_image:
+        type: string
+      price:
+        type: number
+      title:
+        type: string
+      user_id:
+        type: integer
     type: object
   backend_internal_domain_models.MarkAsReadRequest:
     properties:
@@ -900,6 +918,33 @@ definitions:
         type: object
       updated_at:
         type: string
+    type: object
+  backend_internal_domain_models.Notification:
+    properties:
+      created_at:
+        type: string
+      data:
+        items:
+          type: integer
+        type: array
+      delivered_to:
+        items:
+          type: integer
+        type: array
+      id:
+        type: integer
+      is_read:
+        type: boolean
+      listing_id:
+        type: integer
+      message:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+      user_id:
+        type: integer
     type: object
   backend_internal_domain_models.NotificationSettings:
     properties:
@@ -1417,6 +1462,15 @@ definitions:
       user_id:
         type: integer
     type: object
+  backend_internal_domain_search.Bucket:
+    properties:
+      count:
+        description: Количество документов
+        type: integer
+      key:
+        description: Ключ бакета
+        type: string
+    type: object
   backend_internal_domain_search.ServiceParams:
     properties:
       aggregations:
@@ -1508,6 +1562,630 @@ definitions:
         example: card
         type: string
     type: object
+  internal_proj_contacts_handler.ContactRemoveResponse:
+    description: Ответ при удалении контакта из списка
+    properties:
+      message:
+        description: Сообщение об успешном удалении
+        example: contacts.removed
+        type: string
+    type: object
+  internal_proj_contacts_handler.ContactStatusCheckResponse:
+    description: Информация о статусе связи между пользователями
+    properties:
+      are_contacts:
+        description: Являются ли пользователи контактами
+        example: true
+        type: boolean
+      contact_id:
+        description: ID проверяемого контакта
+        example: 456
+        type: integer
+      user_id:
+        description: ID текущего пользователя
+        example: 123
+        type: integer
+    type: object
+  internal_proj_contacts_handler.ContactStatusUpdateResponse:
+    description: Ответ при изменении статуса контакта
+    properties:
+      message:
+        description: Сообщение об успешном обновлении
+        example: contacts.statusUpdated
+        type: string
+    type: object
+  internal_proj_marketplace_handler.AttributeCreateResponse:
+    properties:
+      id:
+        example: 123
+        type: integer
+      message:
+        example: marketplace.attributeCreated
+        type: string
+    type: object
+  internal_proj_marketplace_handler.AttributeGroupResponse:
+    properties:
+      group:
+        $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
+    type: object
+  internal_proj_marketplace_handler.AttributeGroupWithItemsData:
+    properties:
+      group:
+        $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
+      items:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.AttributeGroupItem'
+        type: array
+    type: object
+  internal_proj_marketplace_handler.AttributeGroupsResponse:
+    properties:
+      groups:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
+        type: array
+    type: object
+  internal_proj_marketplace_handler.AttributeRange:
+    properties:
+      max:
+        example: 1000000
+        type: number
+      min:
+        example: 0
+        type: number
+    type: object
+  internal_proj_marketplace_handler.AttributeRangesResponse:
+    properties:
+      data:
+        additionalProperties:
+          $ref: '#/definitions/internal_proj_marketplace_handler.AttributeRange'
+        type: object
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.BatchTranslateData:
+    properties:
+      listing_count:
+        example: 3
+        type: integer
+      provider:
+        example: google
+        type: string
+      target_lang:
+        example: en
+        type: string
+    type: object
+  internal_proj_marketplace_handler.BatchTranslateRequest:
+    type: object
+  internal_proj_marketplace_handler.BulkUpdateResult:
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      success_count:
+        example: 5
+        type: integer
+      total_count:
+        example: 10
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.CategorySummary:
+    properties:
+      id:
+        example: 10
+        type: integer
+      name:
+        example: Smartphones
+        type: string
+      slug:
+        example: smartphones
+        type: string
+    type: object
+  internal_proj_marketplace_handler.ChatMessagesResponse:
+    properties:
+      limit:
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.MarketplaceMessage'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.Coordinates:
+    properties:
+      lat:
+        example: 55.7558
+        type: number
+      lng:
+        example: 37.6173
+        type: number
+    type: object
+  internal_proj_marketplace_handler.DetectLanguageRequest:
+    properties:
+      text:
+        example: Hello world
+        type: string
+    type: object
+  internal_proj_marketplace_handler.DetectedLanguageData:
+    properties:
+      confidence:
+        example: 0.99
+        type: number
+      language:
+        example: en
+        type: string
+    type: object
+  internal_proj_marketplace_handler.EnhanceImagesData:
+    properties:
+      job_id:
+        example: enhance_123_1234567890
+        type: string
+      message:
+        example: marketplace.imageEnhancementStarted
+        type: string
+    type: object
+  internal_proj_marketplace_handler.EnhanceImagesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_proj_marketplace_handler.EnhanceImagesData'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.EnhancePreviewData:
+    properties:
+      preview_url:
+        example: https://example.com/preview/123/quality
+        type: string
+    type: object
+  internal_proj_marketplace_handler.EnhancePreviewResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_proj_marketplace_handler.EnhancePreviewData'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.FavoriteStatusData:
+    properties:
+      is_in_favorites:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.FavoritesCountData:
+    properties:
+      count:
+        example: 5
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.IDMessageResponse:
+    properties:
+      id:
+        example: 123
+        type: integer
+      message:
+        example: marketplace.created
+        type: string
+    type: object
+  internal_proj_marketplace_handler.ImageModerationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_proj_marketplace_handler.ModerationData'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.ImagesUploadResponse:
+    properties:
+      count:
+        example: 3
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.MarketplaceImage'
+        type: array
+      message:
+        example: marketplace.imagesUploaded
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.ImportAttributesResult:
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      success_count:
+        example: 5
+        type: integer
+      total_count:
+        example: 10
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.ListingsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+        type: array
+      meta:
+        $ref: '#/definitions/internal_proj_marketplace_handler.PaginationMeta'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.MapBounds:
+    properties:
+      ne:
+        $ref: '#/definitions/internal_proj_marketplace_handler.Coordinates'
+      sw:
+        $ref: '#/definitions/internal_proj_marketplace_handler.Coordinates'
+    type: object
+  internal_proj_marketplace_handler.MapBoundsData:
+    properties:
+      bounds:
+        $ref: '#/definitions/internal_proj_marketplace_handler.MapBounds'
+      count:
+        example: 25
+        type: integer
+      listings:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.MapMarker'
+        type: array
+      zoom:
+        example: 10
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.MapBoundsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_proj_marketplace_handler.MapBoundsData'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.MapClustersData:
+    properties:
+      count:
+        example: 50
+        type: integer
+      data: {}
+      type:
+        example: clusters
+        type: string
+      zoom:
+        example: 10
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.MapClustersResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_proj_marketplace_handler.MapClustersData'
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.MessageResponse:
+    properties:
+      message:
+        example: marketplace.operationSuccess
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.ModerationData:
+    properties:
+      has_prohibited:
+        example: false
+        type: boolean
+      labels:
+        example:
+        - image
+        - photo
+        items:
+          type: string
+        type: array
+      prohibited_labels:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_proj_marketplace_handler.PaginationMeta:
+    properties:
+      has_more:
+        example: true
+        type: boolean
+      limit:
+        example: 20
+        type: integer
+      page:
+        example: 1
+        type: integer
+      total:
+        example: 100
+        type: integer
+      total_pages:
+        example: 5
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.PartialOperationResponse:
+    properties:
+      data: {}
+      error:
+        example: marketplace.partialOperationCompleted
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.ProviderData:
+    properties:
+      provider:
+        example: google
+        type: string
+    type: object
+  internal_proj_marketplace_handler.ReindexStartedResponse:
+    properties:
+      message:
+        example: marketplace.reindexStarted
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.SearchMetadata:
+    properties:
+      facets:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/backend_internal_domain_search.Bucket'
+          type: array
+        type: object
+      has_more:
+        example: true
+        type: boolean
+      page:
+        example: 1
+        type: integer
+      size:
+        example: 20
+        type: integer
+      spelling_suggestion:
+        type: string
+      suggestions:
+        items:
+          type: string
+        type: array
+      took_ms:
+        example: 25
+        type: integer
+      total:
+        example: 100
+        type: integer
+      total_pages:
+        example: 5
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.SearchResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+        type: array
+      meta:
+        $ref: '#/definitions/internal_proj_marketplace_handler.SearchMetadata'
+    type: object
+  internal_proj_marketplace_handler.SetProviderRequest:
+    properties:
+      provider:
+        example: google
+        type: string
+    type: object
+  internal_proj_marketplace_handler.SetProviderResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_proj_marketplace_handler.ProviderData'
+      message:
+        example: marketplace.providerSet
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  internal_proj_marketplace_handler.SuggestionItem:
+    properties:
+      category:
+        $ref: '#/definitions/internal_proj_marketplace_handler.CategorySummary'
+      text:
+        example: iPhone 13
+        type: string
+      type:
+        example: product
+        type: string
+    type: object
+  internal_proj_marketplace_handler.TranslateTextRequest:
+    properties:
+      provider:
+        example: google
+        type: string
+      source_lang:
+        example: en
+        type: string
+      target_lang:
+        example: ru
+        type: string
+      text:
+        example: Hello world
+        type: string
+    type: object
+  internal_proj_marketplace_handler.TranslatedTextData:
+    properties:
+      provider:
+        example: google
+        type: string
+      source_lang:
+        example: en
+        type: string
+      target_lang:
+        example: ru
+        type: string
+      translated_text:
+        example: Привет мир
+        type: string
+    type: object
+  internal_proj_marketplace_handler.TranslationLimitsData:
+    properties:
+      daily_limit:
+        example: 10000
+        type: integer
+      provider:
+        example: google
+        type: string
+      remaining:
+        example: 6550
+        type: integer
+      used_today:
+        example: 3450
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.TranslationUpdateRequest:
+    properties:
+      is_verified:
+        example: false
+        type: boolean
+      language:
+        example: en
+        type: string
+      provider:
+        example: google
+        type: string
+      translations:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  internal_proj_marketplace_handler.UnreadCountData:
+    properties:
+      count:
+        example: 5
+        type: integer
+    type: object
+  internal_proj_notifications_handler.NotificationMarkReadResponse:
+    description: Ответ при изменении статуса уведомления
+    properties:
+      message:
+        description: Сообщение об успешной отметке
+        example: notifications.markedAsRead
+        type: string
+    type: object
+  internal_proj_notifications_handler.NotificationSettingsResponse:
+    description: Настройки уведомлений пользователя
+    properties:
+      data:
+        description: Массив настроек для разных типов уведомлений
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.NotificationSettings'
+        type: array
+    type: object
+  internal_proj_notifications_handler.NotificationSettingsUpdateResponse:
+    description: Ответ при обновлении настроек уведомлений
+    properties:
+      message:
+        description: Сообщение об успешном обновлении
+        example: notifications.settingsUpdated
+        type: string
+      settings:
+        description: Обновленные настройки
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.NotificationSettings'
+        type: array
+    type: object
+  internal_proj_notifications_handler.PublicEmailSendResponse:
+    description: Ответ при отправке email с публичной формы
+    properties:
+      message:
+        description: Сообщение о результате
+        example: email.sentSuccessfully
+        type: string
+      success:
+        description: Флаг успешной отправки
+        example: true
+        type: boolean
+    type: object
+  internal_proj_notifications_handler.TelegramConnectResponse:
+    description: Ответ при успешном подключении Telegram
+    properties:
+      message:
+        description: Сообщение об успешном подключении
+        example: telegram.connected
+        type: string
+    type: object
+  internal_proj_notifications_handler.TelegramStatusResponse:
+    description: Информация о подключении Telegram к аккаунту
+    properties:
+      connected:
+        description: Подключен ли Telegram
+        example: true
+        type: boolean
+      username:
+        description: Имя пользователя в Telegram (если подключен)
+        example: john_doe
+        type: string
+    type: object
+  internal_proj_notifications_handler.TelegramTokenResponse:
+    description: Токен для связывания аккаунта с Telegram ботом
+    properties:
+      generated_at:
+        description: Время генерации токена
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      token:
+        description: Сгенерированный токен
+        example: 123_abc...
+        type: string
+    type: object
+  internal_proj_notifications_handler.TelegramWebhookResponse:
+    description: Ответ на webhook запрос от Telegram
+    properties:
+      status:
+        description: Статус обработки
+        example: OK
+        type: string
+    type: object
+  internal_proj_payments_handler.StripeWebhookRequest:
+    properties:
+      created:
+        example: 1234567890
+        type: integer
+      data:
+        additionalProperties: true
+        type: object
+      id:
+        example: evt_1234567890
+        type: string
+      object:
+        example: event
+        type: string
+      type:
+        example: checkout.session.completed
+        type: string
+    type: object
+  internal_proj_payments_handler.WebhookResponse:
+    properties:
+      message:
+        example: payments.webhook.processed
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
   internal_proj_reviews_handler.PhotosResponse:
     properties:
       message:
@@ -1545,14 +2223,6 @@ definitions:
         example: true
         type: boolean
     type: object
-  internal_proj_reviews_handler.ReviewResponse:
-    properties:
-      data:
-        $ref: '#/definitions/backend_internal_domain_models.Review'
-      success:
-        example: true
-        type: boolean
-    type: object
   internal_proj_reviews_handler.ReviewsListResponse:
     properties:
       data:
@@ -1577,34 +2247,27 @@ definitions:
         example: 100
         type: integer
     type: object
-  internal_proj_reviews_handler.StatsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/backend_internal_domain_models.ReviewStats'
-      success:
-        example: true
-        type: boolean
-    type: object
-  internal_proj_reviews_handler.StorefrontRatingSummaryResponse:
-    properties:
-      data:
-        $ref: '#/definitions/backend_internal_domain_models.StorefrontRatingSummary'
-      success:
-        example: true
-        type: boolean
-    type: object
-  internal_proj_reviews_handler.UserRatingSummaryResponse:
-    properties:
-      data:
-        $ref: '#/definitions/backend_internal_domain_models.UserRatingSummary'
-      success:
-        example: true
-        type: boolean
-    type: object
   internal_proj_reviews_handler.VoteRequest:
     properties:
       vote_type:
         example: helpful
+        type: string
+    type: object
+  internal_proj_storefront_handler.ApplyCategoryMappingsResponse:
+    properties:
+      message:
+        type: string
+      updated_count:
+        type: integer
+    type: object
+  internal_proj_storefront_handler.CategoryMappingsUpdateResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  internal_proj_storefront_handler.MessageResponse:
+    properties:
+      message:
         type: string
     type: object
   internal_proj_users_handler.AdminAdminsResponse:
@@ -1616,25 +2279,10 @@ definitions:
         example: true
         type: boolean
     type: object
-  internal_proj_users_handler.AdminBalanceResponse:
-    properties:
-      data: {}
-    type: object
   internal_proj_users_handler.AdminCheckResponse:
     properties:
       is_admin:
         example: false
-        type: boolean
-      success:
-        example: true
-        type: boolean
-    type: object
-  internal_proj_users_handler.AdminCheckResponseWrapper:
-    properties:
-      data:
-        $ref: '#/definitions/internal_proj_users_handler.AdminCheckResponse'
-      success:
-        example: true
         type: boolean
     type: object
   internal_proj_users_handler.AdminMessageResponse:
@@ -1706,9 +2354,6 @@ definitions:
       message:
         example: users.login.success.authenticated
         type: string
-      success:
-        example: true
-        type: boolean
       user:
         $ref: '#/definitions/backend_internal_domain_models.User'
     type: object
@@ -1717,9 +2362,6 @@ definitions:
       message:
         example: Операция выполнена успешно
         type: string
-      success:
-        example: true
-        type: boolean
     type: object
   internal_proj_users_handler.PublicUserResponse:
     properties:
@@ -1738,14 +2380,6 @@ definitions:
       picture_url:
         example: https://example.com/avatar.jpg
         type: string
-    type: object
-  internal_proj_users_handler.PublicUserResponseWrapper:
-    properties:
-      data:
-        $ref: '#/definitions/internal_proj_users_handler.PublicUserResponse'
-      success:
-        example: true
-        type: boolean
     type: object
   internal_proj_users_handler.RegisterRequest:
     properties:
@@ -1773,9 +2407,6 @@ definitions:
       message:
         example: Пользователь успешно зарегистрирован
         type: string
-      success:
-        example: true
-        type: boolean
       user:
         $ref: '#/definitions/backend_internal_domain_models.User'
     type: object
@@ -1828,14 +2459,6 @@ definitions:
       token_type:
         example: Bearer
         type: string
-    type: object
-  internal_proj_users_handler.UserProfileResponse:
-    properties:
-      data:
-        $ref: '#/definitions/backend_internal_domain_models.UserProfile'
-      success:
-        example: true
-        type: boolean
     type: object
   internal_proj_users_handler.UserResponse:
     properties:
@@ -2560,19 +3183,14 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: marketplace.attributeCreated
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    id:
-                      type: integer
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.AttributeCreateResponse'
               type: object
         "400":
           description: marketplace.invalidData or marketplace.requiredFieldsMissing
@@ -2612,18 +3230,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: marketplace.categoryCreated
+          description: Category created successfully
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    id:
-                      type: integer
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.IDMessageResponse'
               type: object
         "400":
           description: marketplace.invalidData or marketplace.categoryNameRequired
@@ -2657,9 +3270,14 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
-            type: array
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
+                  type: array
+              type: object
         "400":
           description: marketplace.invalidCategoryId
           schema:
@@ -2688,16 +3306,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: marketplace.categoryDeleted
+          description: Category deleted successfully
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidCategoryId
@@ -2728,7 +3343,12 @@ paths:
         "200":
           description: Category information
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.MarketplaceCategory'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceCategory'
+              type: object
         "400":
           description: marketplace.invalidCategoryId
           schema:
@@ -2775,16 +3395,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: marketplace.categoryUpdated
+          description: Category updated successfully
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidCategoryId or marketplace.categoryNameRequired
@@ -2825,16 +3442,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: marketplace.attributeAddedToCategory
+          description: Attribute added to category successfully
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidCategoryId or marketplace.invalidData
@@ -2869,16 +3483,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: marketplace.attributeRemovedFromCategory
+          description: Attribute removed from category successfully
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidCategoryId or marketplace.invalidAttributeId
@@ -2923,16 +3534,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: marketplace.attributeCategoryUpdated
+          description: Attribute category updated successfully
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidCategoryId or marketplace.invalidAttributeId
@@ -2972,16 +3580,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: marketplace.categoryMoved
+          description: Category moved successfully
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidCategoryId or marketplace.invalidData
@@ -3022,16 +3627,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: marketplace.categoriesReordered
+          description: Categories reordered successfully
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidData or marketplace.emptyIdList
@@ -3064,9 +3666,14 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
-            type: array
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+                  type: array
+              type: object
         "500":
           description: marketplace.internalServerError
           schema:
@@ -3093,7 +3700,12 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+              type: object
         "400":
           description: marketplace.invalidData
           schema:
@@ -3142,7 +3754,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+              type: object
         "400":
           description: marketplace.invalidId
           schema:
@@ -3178,7 +3795,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.CustomUIComponent'
+              type: object
         "400":
           description: marketplace.invalidId or marketplace.invalidData
           schema:
@@ -3201,9 +3823,14 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/backend_internal_domain_models.CustomUITemplate'
-            type: array
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.ComponentTemplate'
+                  type: array
+              type: object
         "500":
           description: marketplace.internalServerError
           schema:
@@ -3230,7 +3857,12 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.CustomUITemplate'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ComponentTemplate'
+              type: object
         "400":
           description: marketplace.invalidData
           schema:
@@ -3262,9 +3894,14 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
-            type: array
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
+                  type: array
+              type: object
         "500":
           description: marketplace.internalServerError
           schema:
@@ -3291,7 +3928,12 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.CustomUIComponentUsage'
+              type: object
         "400":
           description: marketplace.invalidData
           schema:
@@ -3348,7 +3990,12 @@ paths:
         "200":
           description: Admin status
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminAdminsResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminAdminsResponse'
+              type: object
         "400":
           description: admin.admins.error.email_required
           schema:
@@ -3371,9 +4018,14 @@ paths:
         "200":
           description: List of administrators
           schema:
-            items:
-              $ref: '#/definitions/backend_internal_domain_models.AdminUser'
-            type: array
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.AdminUser'
+                  type: array
+              type: object
         "401":
           description: admin.admins.error.unauthorized
           schema:
@@ -3404,7 +4056,12 @@ paths:
         "200":
           description: Created administrator
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.AdminUser'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.AdminUser'
+              type: object
         "400":
           description: admin.admins.error.invalid_format or admin.admins.error.email_required
           schema:
@@ -3439,7 +4096,12 @@ paths:
         "200":
           description: Administrator removed
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+              type: object
         "400":
           description: admin.admins.error.email_required
           schema:
@@ -3474,7 +4136,12 @@ paths:
         "200":
           description: Admin status
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminAdminsResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminAdminsResponse'
+              type: object
         "400":
           description: admin.admins.error.email_required
           schema:
@@ -3504,9 +4171,14 @@ paths:
         "200":
           description: List of attributes
           schema:
-            items:
-              $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
-            type: array
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+                  type: array
+              type: object
         "500":
           description: Internal server error
           schema:
@@ -3531,10 +4203,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: Success message
+          description: marketplace.attributeDeleted
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: Invalid attribute ID
           schema:
@@ -3564,7 +4240,12 @@ paths:
         "200":
           description: Attribute information
           schema:
-            $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
+              type: object
         "400":
           description: Invalid attribute ID
           schema:
@@ -3604,8 +4285,12 @@ paths:
         "200":
           description: Success message
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: Invalid data
           schema:
@@ -3642,13 +4327,16 @@ paths:
         "200":
           description: Update results with success count
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.BulkUpdateResult'
+              type: object
         "206":
           description: Partial update with errors
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/internal_proj_marketplace_handler.PartialOperationResponse'
         "400":
           description: Invalid data
           schema:
@@ -3680,8 +4368,12 @@ paths:
         "200":
           description: Success message
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: Invalid parameters
           schema:
@@ -3727,8 +4419,12 @@ paths:
         "200":
           description: Success message
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: Invalid parameters
           schema:
@@ -3778,8 +4474,12 @@ paths:
         "200":
           description: Success message
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: Invalid parameters
           schema:
@@ -3810,9 +4510,14 @@ paths:
         "200":
           description: Category attributes with settings
           schema:
-            items:
-              $ref: '#/definitions/backend_internal_domain_models.CategoryAttributeMapping'
-            type: array
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.CategoryAttributeMapping'
+                  type: array
+              type: object
         "400":
           description: Invalid category ID
           schema:
@@ -3852,13 +4557,16 @@ paths:
         "200":
           description: Import results with success count
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.ImportAttributesResult'
+              type: object
         "206":
           description: Partial import with errors
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/internal_proj_marketplace_handler.PartialOperationResponse'
         "400":
           description: Invalid data
           schema:
@@ -3903,8 +4611,12 @@ paths:
         "200":
           description: Success message
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: Invalid parameters
           schema:
@@ -3933,12 +4645,12 @@ paths:
         "200":
           description: Reindexing started
           schema:
-            properties:
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.ReindexStartedResponse'
+              type: object
         "401":
           description: marketplace.authRequired
           schema:
@@ -3967,10 +4679,12 @@ paths:
         "200":
           description: Reindexing started
           schema:
-            properties:
-              message:
-                type: string
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "401":
           description: marketplace.authRequired
           schema:
@@ -4000,12 +4714,12 @@ paths:
         "200":
           description: Reindexing with translations started
           schema:
-            properties:
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.ReindexStartedResponse'
+              type: object
         "401":
           description: marketplace.authRequired
           schema:
@@ -4034,12 +4748,12 @@ paths:
         "200":
           description: Rating reindexing started
           schema:
-            properties:
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.ReindexStartedResponse'
+              type: object
         "401":
           description: marketplace.authRequired
           schema:
@@ -4072,10 +4786,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "401":
           description: auth.required
@@ -4118,7 +4829,12 @@ paths:
         "200":
           description: List of users
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminUserListResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminUserListResponse'
+              type: object
         "500":
           description: admin.users.error.fetch_failed
           schema:
@@ -4219,7 +4935,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Update successful
+          description: Profile updated
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -4262,7 +4978,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_proj_users_handler.AdminBalanceResponse'
+                  $ref: '#/definitions/backend_internal_domain_models.UserBalance'
               type: object
         "400":
           description: admin.balance.error.invalid_user_id
@@ -4345,13 +5061,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of transactions
+          description: Transaction history
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_proj_users_handler.AdminBalanceResponse'
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.BalanceTransaction'
+                  type: array
               type: object
         "400":
           description: admin.balance.error.invalid_user_id
@@ -4384,7 +5102,12 @@ paths:
         "200":
           description: Authentication successful
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
+              type: object
         "400":
           description: auth.login.error.invalid_request_body or auth.login.error.email_password_required
           schema:
@@ -4409,9 +5132,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Logout successful
           schema:
-            type: string
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.MessageResponse'
+              type: object
       security:
       - BearerAuth: []
       summary: Logout user
@@ -4428,7 +5156,12 @@ paths:
         "200":
           description: New access token
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.TokenResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.TokenResponse'
+              type: object
         "401":
           description: auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token
           schema:
@@ -4454,7 +5187,12 @@ paths:
         "200":
           description: Registration successful
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
+              type: object
         "400":
           description: auth.register.error.invalid_request_body or auth.register.error.fields_required
           schema:
@@ -4720,9 +5458,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties:
-                    type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_contacts_handler.ContactRemoveResponse'
               type: object
         "400":
           description: validation.invalidContactUserId
@@ -4758,8 +5494,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/internal_proj_contacts_handler.ContactStatusCheckResponse'
               type: object
         "400":
           description: validation.invalidContactUserId
@@ -4801,9 +5536,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties:
-                    type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_contacts_handler.ContactStatusUpdateResponse'
               type: object
         "400":
           description: validation.invalidContactUserId или validation.invalidStatus
@@ -4907,8 +5640,7 @@ paths:
             - properties:
                 data:
                   items:
-                    additionalProperties: true
-                    type: object
+                    $ref: '#/definitions/backend_internal_domain_models.GeoLocation'
                   type: array
               type: object
         "500":
@@ -4944,9 +5676,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties:
-                    type: string
-                  type: object
+                  $ref: '#/definitions/backend_internal_domain_models.GeoLocation'
               type: object
         "400":
           description: validation.invalidLatitude или validation.invalidLongitude
@@ -5021,10 +5751,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_storefront_handler.MessageResponse'
               type: object
         "400":
           description: importSource.invalidId
@@ -5069,10 +5796,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_storefront_handler.MessageResponse'
               type: object
         "400":
           description: importSource.invalidId,storefront.invalidRequest
@@ -5112,12 +5836,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                    updated_count:
-                      type: integer
-                  type: object
+                  $ref: '#/definitions/internal_proj_storefront_handler.ApplyCategoryMappingsResponse'
               type: object
         "400":
           description: importSource.invalidId
@@ -5206,10 +5925,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_storefront_handler.CategoryMappingsUpdateResponse'
               type: object
         "400":
           description: importSource.invalidId,importSource.invalidMappingsFormat
@@ -5385,68 +6101,33 @@ paths:
         "200":
           description: List of attribute groups
           schema:
-            properties:
-              groups:
-                items:
-                  $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
-                type: array
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.AttributeGroupsResponse'
+              type: object
         "500":
           description: marketplace.listGroupsError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: List attribute groups
       tags:
       - marketplace-admin-attribute-groups
     post:
-      consumes:
-      - application/json
-      description: Creates a new attribute group for organizing attributes
-      parameters:
-      - description: Attribute group data
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/backend_internal_domain_models.CreateAttributeGroupRequest'
-      produces:
-      - application/json
       responses:
-        "201":
-          description: Group created successfully
-          schema:
-            properties:
-              id:
-                type: integer
-              success:
-                type: boolean
-            type: object
         "400":
           description: marketplace.invalidRequest or marketplace.groupNameRequired
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: marketplace.createGroupError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Create attribute group
-      tags:
-      - marketplace-admin-attribute-groups
   /api/v1/marketplace/admin/attribute-groups/{id}:
     delete:
       consumes:
@@ -5464,26 +6145,20 @@ paths:
         "200":
           description: marketplace.groupDeleted
           schema:
-            properties:
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: marketplace.invalidGroupId
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: marketplace.deleteGroupError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Delete attribute group
@@ -5505,26 +6180,20 @@ paths:
         "200":
           description: Attribute group information
           schema:
-            properties:
-              group:
-                $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.AttributeGroupResponse'
+              type: object
         "400":
           description: marketplace.invalidGroupId
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "404":
           description: marketplace.groupNotFound
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get attribute group
@@ -5552,26 +6221,20 @@ paths:
         "200":
           description: marketplace.groupUpdated
           schema:
-            properties:
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: marketplace.invalidGroupId or marketplace.invalidRequest
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: marketplace.updateGroupError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Update attribute group
@@ -5594,40 +6257,24 @@ paths:
         "200":
           description: Group with items
           schema:
-            properties:
-              data:
-                properties:
-                  group:
-                    $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
-                  items:
-                    items:
-                      $ref: '#/definitions/backend_internal_domain_models.AttributeGroupItem'
-                    type: array
-                type: object
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.AttributeGroupWithItemsData'
+              type: object
         "400":
           description: marketplace.invalidGroupId
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "404":
           description: marketplace.groupNotFound
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: marketplace.getGroupItemsError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get attribute group with items
@@ -5655,26 +6302,20 @@ paths:
         "201":
           description: Item added successfully
           schema:
-            properties:
-              id:
-                type: integer
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.IDMessageResponse'
+              type: object
         "400":
           description: marketplace.invalidGroupId or marketplace.invalidRequest
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: marketplace.addItemError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Add attribute to group
@@ -5702,26 +6343,20 @@ paths:
         "200":
           description: marketplace.itemRemoved
           schema:
-            properties:
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: marketplace.invalidGroupId or marketplace.invalidAttributeId
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: marketplace.removeItemError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Remove attribute from group
@@ -5744,28 +6379,20 @@ paths:
         "200":
           description: Category groups
           schema:
-            properties:
-              groups:
-                items:
-                  $ref: '#/definitions/backend_internal_domain_models.AttributeGroup'
-                type: array
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.AttributeGroupsResponse'
+              type: object
         "400":
           description: marketplace.invalidCategoryId
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: marketplace.getCategoryGroupsError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Get category attribute groups
@@ -5793,26 +6420,20 @@ paths:
         "201":
           description: Group attached successfully
           schema:
-            properties:
-              id:
-                type: integer
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.IDMessageResponse'
+              type: object
         "400":
           description: marketplace.invalidCategoryId or marketplace.invalidRequest
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: marketplace.attachGroupError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Attach group to category
@@ -5840,26 +6461,20 @@ paths:
         "200":
           description: marketplace.groupDetached
           schema:
-            properties:
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: marketplace.invalidCategoryId or marketplace.invalidGroupId
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: marketplace.detachGroupError
           schema:
-            properties:
-              error:
-                type: string
-            type: object
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
       summary: Detach group from category
@@ -5880,16 +6495,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: Attachment deleted
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidAttachmentId
@@ -5926,7 +6538,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Attachment info
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -5964,7 +6576,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Categories list
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -5996,20 +6608,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: Attribute ranges
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties:
-                    properties:
-                      max:
-                        type: number
-                      min:
-                        type: number
-                    type: object
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.AttributeRangesResponse'
               type: object
         "400":
           description: marketplace.invalidCategoryId
@@ -6037,7 +6642,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Category attributes
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -6078,7 +6683,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Category suggestions
+          description: Category suggestions list
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -6108,7 +6713,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Category tree
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -6134,7 +6739,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of chats
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -6189,25 +6794,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: Chat messages
+          description: OK
           schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceMessage'
-                type: array
-              meta:
-                properties:
-                  hasMore:
-                    type: boolean
-                  limit:
-                    type: integer
-                  page:
-                    type: integer
-                  total:
-                    type: integer
-                type: object
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.ChatMessagesResponse'
+              type: object
         "400":
           description: marketplace.invalidChatId or marketplace.invalidListingId or
             marketplace.chatParamsRequired
@@ -6241,16 +6835,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: Chat archived
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidChatId
@@ -6291,17 +6882,12 @@ paths:
         "200":
           description: Enhancement job started
           schema:
-            properties:
-              data:
-                properties:
-                  job_id:
-                    type: string
-                  message:
-                    type: string
-                type: object
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.EnhanceImagesResponse'
+              type: object
         "400":
           description: marketplace.invalidId or marketplace.invalidRequest
           schema:
@@ -6349,15 +6935,12 @@ paths:
         "200":
           description: Enhancement preview
           schema:
-            properties:
-              data:
-                properties:
-                  preview_url:
-                    type: string
-                type: object
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.EnhancePreviewResponse'
+              type: object
         "400":
           description: marketplace.invalidId
           schema:
@@ -6408,28 +6991,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: Enhanced suggestions
+          description: Enhanced suggestions list
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
                   items:
-                    properties:
-                      category:
-                        properties:
-                          id:
-                            type: integer
-                          name:
-                            type: string
-                          slug:
-                            type: string
-                        type: object
-                      text:
-                        type: string
-                      type:
-                        type: string
-                    type: object
+                    $ref: '#/definitions/internal_proj_marketplace_handler.SuggestionItem'
                   type: array
               type: object
         "400":
@@ -6496,10 +7065,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidId
@@ -6538,10 +7104,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidId
@@ -6581,15 +7144,12 @@ paths:
         "200":
           description: Favorite status
           schema:
-            properties:
-              data:
-                properties:
-                  is_in_favorites:
-                    type: boolean
-                type: object
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.FavoriteStatusData'
+              type: object
         "400":
           description: marketplace.invalidId
           schema:
@@ -6618,15 +7178,12 @@ paths:
         "200":
           description: Favorites count
           schema:
-            properties:
-              data:
-                properties:
-                  count:
-                    type: integer
-                type: object
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.FavoritesCountData'
+              type: object
         "401":
           description: auth.required
           schema:
@@ -6657,10 +7214,12 @@ paths:
         "200":
           description: Image deleted successfully
           schema:
-            properties:
-              message:
-                type: string
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: marketplace.invalidId
           schema:
@@ -6744,21 +7303,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    data:
-                      items:
-                        $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
-                      type: array
-                    meta:
-                      properties:
-                        limit:
-                          type: integer
-                        page:
-                          type: integer
-                        total:
-                          type: integer
-                      type: object
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.ListingsResponse'
               type: object
         "500":
           description: marketplace.listError
@@ -6788,12 +7333,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    id:
-                      type: integer
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.IDMessageResponse'
               type: object
         "400":
           description: marketplace.invalidData
@@ -6837,10 +7377,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidId
@@ -6927,10 +7464,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidData
@@ -6983,16 +7517,12 @@ paths:
         "200":
           description: Images uploaded successfully
           schema:
-            properties:
-              count:
-                type: integer
-              images:
-                items:
-                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceImage'
-                type: array
-              message:
-                type: string
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.ImagesUploadResponse'
+              type: object
         "400":
           description: marketplace.invalidData or marketplace.invalidId
           schema:
@@ -7074,7 +7604,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Similar listings
+          description: Similar listings list
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -7148,33 +7678,7 @@ paths:
         "200":
           description: Listings within bounds
           schema:
-            properties:
-              bounds:
-                properties:
-                  ne:
-                    properties:
-                      lat:
-                        type: number
-                      lng:
-                        type: number
-                    type: object
-                  sw:
-                    properties:
-                      lat:
-                        type: number
-                      lng:
-                        type: number
-                    type: object
-                type: object
-              count:
-                type: integer
-              listings:
-                items:
-                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
-                type: array
-              zoom:
-                type: integer
-            type: object
+            $ref: '#/definitions/internal_proj_marketplace_handler.MapBoundsResponse'
         "400":
           description: marketplace.invalidBounds
           schema:
@@ -7239,16 +7743,7 @@ paths:
         "200":
           description: Map clusters or markers data
           schema:
-            properties:
-              count:
-                type: integer
-              data:
-                type: array
-              type:
-                type: string
-              zoom:
-                type: integer
-            type: object
+            $ref: '#/definitions/internal_proj_marketplace_handler.MapClustersResponse'
         "400":
           description: marketplace.invalidBounds
           schema:
@@ -7276,7 +7771,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Sent message
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -7321,7 +7816,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Uploaded attachments
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -7369,16 +7864,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: Messages marked as read
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
               type: object
         "400":
           description: marketplace.invalidRequest
@@ -7406,16 +7898,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: Unread count
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    count:
-                      type: integer
-                  type: object
+                  $ref: '#/definitions/internal_proj_marketplace_handler.UnreadCountData'
               type: object
         "401":
           description: auth.required
@@ -7447,23 +7936,12 @@ paths:
         "200":
           description: Moderation results
           schema:
-            properties:
-              data:
-                properties:
-                  has_prohibited:
-                    type: boolean
-                  labels:
-                    items:
-                      type: string
-                    type: array
-                  prohibited_labels:
-                    items:
-                      type: string
-                    type: array
-                type: object
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.ImageModerationResponse'
+              type: object
         "400":
           description: marketplace.invalidFile or marketplace.fileTooLarge
           schema:
@@ -7503,35 +7981,7 @@ paths:
         "200":
           description: Search results with metadata
           schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
-                type: array
-              meta:
-                properties:
-                  facets:
-                    type: object
-                  has_more:
-                    type: boolean
-                  page:
-                    type: integer
-                  size:
-                    type: integer
-                  spelling_suggestion:
-                    type: string
-                  suggestions:
-                    items:
-                      type: string
-                    type: array
-                  took_ms:
-                    type: integer
-                  total:
-                    type: integer
-                  total_pages:
-                    type: integer
-                type: object
-            type: object
+            $ref: '#/definitions/internal_proj_marketplace_handler.SearchResponse'
         "500":
           description: marketplace.searchError
           schema:
@@ -7559,7 +8009,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of suggestions
+          description: Suggestions list
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -7602,14 +8052,14 @@ paths:
         "200":
           description: Translations retrieved successfully
           schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/backend_internal_domain_models.Translation'
-                type: array
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.Translation'
+                  type: array
+              type: object
         "400":
           description: marketplace.invalidId
           schema:
@@ -7642,28 +8092,19 @@ paths:
         name: translations
         required: true
         schema:
-          properties:
-            is_verified:
-              type: boolean
-            language:
-              type: string
-            provider:
-              type: string
-            translations:
-              type: object
-          type: object
+          $ref: '#/definitions/internal_proj_marketplace_handler.TranslationUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Translations updated successfully
           schema:
-            properties:
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
         "400":
           description: marketplace.invalidData
           schema:
@@ -7701,37 +8142,19 @@ paths:
         name: batch
         required: true
         schema:
-          properties:
-            listing_ids:
-              items:
-                type: integer
-              type: array
-            provider:
-              type: string
-            target_lang:
-              type: string
-          type: object
+          $ref: '#/definitions/internal_proj_marketplace_handler.BatchTranslateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Batch translation started successfully
           schema:
-            properties:
-              data:
-                properties:
-                  listing_count:
-                    type: integer
-                  provider:
-                    type: string
-                  target_lang:
-                    type: string
-                type: object
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.BatchTranslateData'
+              type: object
         "400":
           description: marketplace.invalidData
           schema:
@@ -7752,27 +8175,19 @@ paths:
         name: detection
         required: true
         schema:
-          properties:
-            text:
-              type: string
-          type: object
+          $ref: '#/definitions/internal_proj_marketplace_handler.DetectLanguageRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Language detected successfully
           schema:
-            properties:
-              data:
-                properties:
-                  confidence:
-                    type: number
-                  language:
-                    type: string
-                type: object
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.DetectedLanguageData'
+              type: object
         "400":
           description: marketplace.invalidData
           schema:
@@ -7796,37 +8211,19 @@ paths:
         name: translation
         required: true
         schema:
-          properties:
-            provider:
-              type: string
-            source_lang:
-              type: string
-            target_lang:
-              type: string
-            text:
-              type: string
-          type: object
+          $ref: '#/definitions/internal_proj_marketplace_handler.TranslateTextRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Text translated successfully
           schema:
-            properties:
-              data:
-                properties:
-                  provider:
-                    type: string
-                  source_lang:
-                    type: string
-                  target_lang:
-                    type: string
-                  translated_text:
-                    type: string
-                type: object
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.TranslatedTextData'
+              type: object
         "400":
           description: marketplace.invalidData
           schema:
@@ -7864,8 +8261,9 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.Notification'
+                  type: array
               type: object
         "500":
           description: notifications.getError
@@ -7897,9 +8295,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties:
-                    type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_notifications_handler.NotificationMarkReadResponse'
               type: object
         "400":
           description: validation.invalidNotificationId
@@ -7938,8 +8334,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/internal_proj_notifications_handler.PublicEmailSendResponse'
               type: object
         "400":
           description: validation.invalidDataFormat или validation.allFieldsRequired
@@ -7967,11 +8362,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties:
-                    items:
-                      $ref: '#/definitions/backend_internal_domain_models.NotificationSettings'
-                    type: array
-                  type: object
+                  $ref: '#/definitions/internal_proj_notifications_handler.NotificationSettingsResponse'
               type: object
       security:
       - BearerAuth: []
@@ -8000,8 +8391,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/internal_proj_notifications_handler.NotificationSettingsUpdateResponse'
               type: object
         "400":
           description: validation.invalidDataFormat
@@ -8040,9 +8430,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties:
-                    type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_notifications_handler.TelegramConnectResponse'
               type: object
         "400":
           description: validation.invalidDataFormat
@@ -8072,8 +8460,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/internal_proj_notifications_handler.TelegramStatusResponse'
               type: object
         "401":
           description: auth.unauthorized
@@ -8097,8 +8484,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/internal_proj_notifications_handler.TelegramTokenResponse'
               type: object
         "500":
           description: notifications.tokenGenerateError
@@ -8127,7 +8513,12 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_notifications_handler.TelegramWebhookResponse'
+              type: object
       summary: Telegram webhook
       tags:
       - notifications
@@ -8135,31 +8526,36 @@ paths:
     post:
       consumes:
       - application/json
-      description: Обрабатывает webhook уведомления от Stripe о статусе платежей
+      description: Processes webhook notifications from Stripe about payment status
       parameters:
-      - description: Подпись Stripe для верификации webhook
+      - description: Stripe signature for webhook verification
         in: header
         name: Stripe-Signature
         required: true
         type: string
-      - description: Тело запроса от Stripe
+      - description: Stripe webhook payload
         in: body
         name: payload
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/internal_proj_payments_handler.StripeWebhookRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Webhook processed successfully
           schema:
-            type: string
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_payments_handler.WebhookResponse'
+              type: object
         "400":
-          description: Bad Request
+          description: payments.webhook.invalid_signature or payments.webhook.processing_error
           schema:
-            type: string
-      summary: Webhook платежной системы
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Process payment webhook
       tags:
       - payments
   /api/v1/public/storefronts/{id}:
@@ -8261,7 +8657,12 @@ paths:
         "200":
           description: List of reviews
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.ReviewsListResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.ReviewsListResponse'
+              type: object
         "500":
           description: Internal server error
           schema:
@@ -8286,7 +8687,12 @@ paths:
         "200":
           description: Created review
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.ReviewResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.Review'
+              type: object
         "400":
           description: Invalid input
           schema:
@@ -8321,7 +8727,12 @@ paths:
         "200":
           description: Review deleted successfully
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.ReviewMessageResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.ReviewMessageResponse'
+              type: object
         "400":
           description: Invalid review ID
           schema:
@@ -8351,7 +8762,12 @@ paths:
         "200":
           description: Review details
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.ReviewResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.Review'
+              type: object
         "400":
           description: Invalid review ID
           schema:
@@ -8385,7 +8801,12 @@ paths:
         "200":
           description: Review updated successfully
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.ReviewMessageResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.ReviewMessageResponse'
+              type: object
         "400":
           description: Invalid request
           schema:
@@ -8421,7 +8842,12 @@ paths:
         "200":
           description: Photos uploaded successfully
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.PhotosResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.PhotosResponse'
+              type: object
         "400":
           description: Invalid request
           schema:
@@ -8458,7 +8884,12 @@ paths:
         "200":
           description: Response added successfully
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.ReviewMessageResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.ReviewMessageResponse'
+              type: object
         "400":
           description: Invalid request
           schema:
@@ -8499,7 +8930,12 @@ paths:
         "200":
           description: Vote recorded successfully
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.ReviewMessageResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.ReviewMessageResponse'
+              type: object
         "400":
           description: Invalid request
           schema:
@@ -8539,7 +8975,12 @@ paths:
         "200":
           description: Entity rating
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.RatingResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.RatingResponse'
+              type: object
         "400":
           description: Invalid entity ID
           schema:
@@ -8571,7 +9012,12 @@ paths:
         "200":
           description: Review statistics
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.StatsResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ReviewStats'
+              type: object
         "500":
           description: Internal server error
           schema:
@@ -8601,7 +9047,12 @@ paths:
         "200":
           description: Entity review statistics
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.StatsResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ReviewStats'
+              type: object
         "400":
           description: Invalid entity ID
           schema:
@@ -8630,7 +9081,12 @@ paths:
         "200":
           description: Storefront reviews
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.ReviewsListResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.ReviewsListResponse'
+              type: object
         "400":
           description: Invalid storefront ID
           schema:
@@ -8659,7 +9115,12 @@ paths:
         "200":
           description: Storefront rating summary
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.StorefrontRatingSummaryResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.StorefrontRatingSummary'
+              type: object
         "400":
           description: Invalid storefront ID
           schema:
@@ -8688,7 +9149,12 @@ paths:
         "200":
           description: User reviews
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.ReviewsListResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.ReviewsListResponse'
+              type: object
         "400":
           description: Invalid user ID
           schema:
@@ -8717,7 +9183,12 @@ paths:
         "200":
           description: User rating summary
           schema:
-            $ref: '#/definitions/internal_proj_reviews_handler.UserRatingSummaryResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserRatingSummary'
+              type: object
         "400":
           description: Invalid user ID
           schema:
@@ -8826,10 +9297,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_storefront_handler.MessageResponse'
               type: object
         "400":
           description: storefront.invalidId
@@ -8913,10 +9381,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  properties:
-                    message:
-                      type: string
-                  type: object
+                  $ref: '#/definitions/internal_proj_storefront_handler.MessageResponse'
               type: object
         "400":
           description: storefront.invalidId,storefront.invalidRequest
@@ -8989,21 +9454,12 @@ paths:
         "200":
           description: Translation limits retrieved successfully
           schema:
-            properties:
-              data:
-                properties:
-                  daily_limit:
-                    type: integer
-                  provider:
-                    type: string
-                  remaining:
-                    type: integer
-                  used_today:
-                    type: integer
-                type: object
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.TranslationLimitsData'
+              type: object
       summary: Get translation limits
       tags:
       - marketplace-translations
@@ -9018,27 +9474,19 @@ paths:
         name: provider
         required: true
         schema:
-          properties:
-            provider:
-              type: string
-          type: object
+          $ref: '#/definitions/internal_proj_marketplace_handler.SetProviderRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Translation provider set successfully
           schema:
-            properties:
-              data:
-                properties:
-                  provider:
-                    type: string
-                type: object
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.SetProviderResponse'
+              type: object
         "400":
           description: marketplace.invalidData
           schema:
@@ -9063,7 +9511,12 @@ paths:
         "200":
           description: Public user profile
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.PublicUserResponseWrapper'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.PublicUserResponse'
+              type: object
         "400":
           description: users.profile.error.invalid_id
           schema:
@@ -9099,7 +9552,12 @@ paths:
         "200":
           description: Admin status
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.AdminCheckResponseWrapper'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminCheckResponse'
+              type: object
         "400":
           description: users.admin_check.error.email_required
           schema:
@@ -9137,7 +9595,12 @@ paths:
         "200":
           description: Authentication successful
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.LoginResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.LoginResponse'
+              type: object
         "400":
           description: users.login.error.invalid_data or validation errors
           schema:
@@ -9160,7 +9623,12 @@ paths:
         "200":
           description: User profile
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.UserProfileResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserProfile'
+              type: object
         "401":
           description: auth.required
           schema:
@@ -9191,7 +9659,12 @@ paths:
         "200":
           description: Profile updated successfully
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.MessageResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.MessageResponse'
+              type: object
         "400":
           description: users.profile.error.invalid_data or users.profile.error.validation
           schema:
@@ -9229,7 +9702,12 @@ paths:
         "201":
           description: User created successfully
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.RegisterResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.RegisterResponse'
+              type: object
         "400":
           description: users.register.error.invalid_data or validation errors
           schema:
@@ -9297,7 +9775,12 @@ paths:
         "200":
           description: Session information
           schema:
-            $ref: '#/definitions/internal_proj_users_handler.SessionResponse'
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.SessionResponse'
+              type: object
       security:
       - BearerAuth: []
       summary: Get current session

@@ -16,7 +16,7 @@ type StorefrontServiceInterface interface {
 	GetPublicStorefrontByID(ctx context.Context, id int) (*models.Storefront, error)
 	UpdateStorefront(ctx context.Context, storefront *models.Storefront, userID int) error
 	DeleteStorefront(ctx context.Context, id int, userID int) error
-	
+
 	// Источники импорта
 	CreateImportSource(ctx context.Context, source *models.ImportSourceCreate, userID int) (*models.ImportSource, error)
 	UpdateImportSource(ctx context.Context, source *models.ImportSource, userID int) error
@@ -30,16 +30,13 @@ type StorefrontServiceInterface interface {
 	ImportCSV(ctx context.Context, sourceID int, reader io.Reader, zipFile io.Reader, userID int) (*models.ImportHistory, error)
 	GetImportHistory(ctx context.Context, sourceID int, userID int, limit, offset int) ([]models.ImportHistory, error)
 	ApplyCategoryMappings(ctx context.Context, sourceID int, userID int) (int, error)
-	
+
 	// Обработка изображений для импорта
 	ProcessImportImages(ctx context.Context, listingID int, imagesStr string, zipReader *zip.Reader) error
 
-	 // Методы для работы с сопоставлениями категорий
-	 GetCategoryMappings(ctx context.Context, sourceID int, userID int) (map[string]int, error)
-	 UpdateCategoryMappings(ctx context.Context, sourceID int, userID int, mappings map[string]int) error
+	// Методы для работы с сопоставлениями категорий
+	GetCategoryMappings(ctx context.Context, sourceID int, userID int) (map[string]int, error)
+	UpdateCategoryMappings(ctx context.Context, sourceID int, userID int, mappings map[string]int) error
 
-	 GetImportedCategories(ctx context.Context, sourceID int, userID int) ([]string, error)
- 
-
- 
+	GetImportedCategories(ctx context.Context, sourceID int, userID int) ([]string, error)
 }

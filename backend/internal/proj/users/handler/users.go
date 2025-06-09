@@ -1,30 +1,27 @@
 package handler
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/users/service"
 	"backend/internal/types"
-	"backend/pkg/logger"
 	"backend/pkg/utils"
 )
 
 type UserHandler struct {
 	services    globalService.ServicesInterface
 	userService service.UserServiceInterface
-	logger      *logger.Logger
 }
 
 func NewUserHandler(services globalService.ServicesInterface) *UserHandler {
 	return &UserHandler{
 		services:    services,
 		userService: services.User(),
-		logger:      logger.New(),
 	}
 }
 
@@ -38,13 +35,11 @@ type UserProfileResponse struct {
 
 // MessageResponse представляет ответ с сообщением
 type MessageResponse struct {
-	Success bool   `json:"success" example:"true"`
 	Message string `json:"message" example:"Операция выполнена успешно"`
 }
 
 // RegisterResponse представляет ответ после регистрации
 type RegisterResponse struct {
-	Success bool         `json:"success" example:"true"`
 	Message string       `json:"message" example:"Пользователь успешно зарегистрирован"`
 	User    *models.User `json:"user"`
 }
@@ -66,7 +61,6 @@ type PublicUserResponseWrapper struct {
 
 // AdminCheckResponse представляет ответ проверки администратора
 type AdminCheckResponse struct {
-	Success bool `json:"success" example:"true"`
 	IsAdmin bool `json:"is_admin" example:"false"`
 }
 
@@ -82,7 +76,7 @@ type AdminCheckResponseWrapper struct {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Success 200 {object} UserProfileResponse "User profile"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserProfile} "User profile"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "users.profile.error.fetch"
 // @Security BearerAuth
@@ -99,17 +93,14 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	isAdmin, err := h.userService.IsUserAdmin(c.Context(), profile.Email)
 	if err != nil {
 		// Если ошибка при проверке админа, логируем но не прерываем запрос
-		log.Printf("Error checking admin status for user %d: %v", userID, err)
+		logger.Error().Err(err).Int("user_id", userID).Msg("Error checking admin status")
 		isAdmin = false
 	}
-	
+
 	// Добавляем информацию об админе в профиль
 	profile.IsAdmin = isAdmin
 
-	return c.JSON(UserProfileResponse{
-		Success: true,
-		Data:    profile,
-	})
+	return utils.SuccessResponse(c, profile)
 }
 
 // UpdateProfile updates current user profile
@@ -119,7 +110,7 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param profile body models.UserProfileUpdate true "Profile update data"
-// @Success 200 {object} MessageResponse "Profile updated successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Profile updated successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "users.profile.error.invalid_data or users.profile.error.validation"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "users.profile.error.update"
@@ -143,8 +134,7 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.profile.error.update")
 	}
 
-	return c.JSON(MessageResponse{
-		Success: true,
+	return utils.SuccessResponse(c, &MessageResponse{
 		Message: "users.profile.success.updated",
 	})
 }
@@ -156,7 +146,7 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param user body RegisterRequest true "Registration data (name, email, password required, phone optional)"
-// @Success 201 {object} RegisterResponse "User created successfully"
+// @Success 201 {object} utils.SuccessResponseSwag{data=RegisterResponse} "User created successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "users.register.error.invalid_data or validation errors"
 // @Failure 500 {object} utils.ErrorResponseSwag "users.register.error.password_hash_failed or users.register.error.create_failed"
 // @Router /api/v1/users/register [post]
@@ -203,8 +193,8 @@ func (h *UserHandler) RegisterOld(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.register.error.create_failed")
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(RegisterResponse{
-		Success: true,
+	c.Status(fiber.StatusCreated)
+	return utils.SuccessResponse(c, &RegisterResponse{
 		Message: "users.register.success.created",
 		User:    user,
 	})
@@ -217,7 +207,7 @@ func (h *UserHandler) RegisterOld(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param user body LoginRequest true "Login credentials (email and password required)"
-// @Success 200 {object} LoginResponse "Authentication successful"
+// @Success 200 {object} utils.SuccessResponseSwag{data=LoginResponse} "Authentication successful"
 // @Failure 400 {object} utils.ErrorResponseSwag "users.login.error.invalid_data or validation errors"
 // @Failure 401 {object} utils.ErrorResponseSwag "users.login.error.invalid_credentials"
 // @Router /api/v1/users/login [post]
@@ -245,8 +235,11 @@ func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
 
 	// Проверяем пароль
 	if user.Password == nil || !utils.CheckPasswordHash(loginData.Password, *user.Password) {
-		h.logger.Info("Failed login attempt for user: %s (IP: %s, UserAgent: %s)",
-			loginData.Email, c.IP(), c.Get("User-Agent"))
+		logger.Info().
+			Str("email", loginData.Email).
+			Str("ip", c.IP()).
+			Str("user_agent", c.Get("User-Agent")).
+			Msg("Failed login attempt for user")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.login.error.invalid_credentials")
 	}
 
@@ -275,14 +268,17 @@ func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
 	})
 
 	// Логируем успешный логин
-	h.logger.Info("Successful login for user: %s (UserID: %d, IP: %s, Provider: password)",
-		user.Email, user.ID, c.IP())
+	logger.Info().
+		Str("email", user.Email).
+		Int("user_id", user.ID).
+		Str("ip", c.IP()).
+		Str("provider", "password").
+		Msg("Successful login for user")
 
 	// Возвращаем ответ без JWT токена (используем только сессию)
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "users.login.success.authenticated",
-		"user":    user,
+	return utils.SuccessResponse(c, &LoginResponse{
+		Message: "users.login.success.authenticated",
+		User:    user,
 	})
 }
 
@@ -293,7 +289,7 @@ func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} PublicUserResponseWrapper "Public user profile"
+// @Success 200 {object} utils.SuccessResponseSwag{data=PublicUserResponse} "Public user profile"
 // @Failure 400 {object} utils.ErrorResponseSwag "users.profile.error.invalid_id"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 404 {object} utils.ErrorResponseSwag "users.profile.error.not_found"
@@ -318,10 +314,7 @@ func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
 		CreatedAt:  user.CreatedAt.Format("2006-01-02T15:04:05Z"),
 	}
 
-	return c.JSON(PublicUserResponseWrapper{
-		Success: true,
-		Data:    publicUser,
-	})
+	return utils.SuccessResponse(c, publicUser)
 }
 
 // IsAdminSimple checks if user is administrator (simple implementation)
@@ -331,7 +324,7 @@ func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param email path string true "User email"
-// @Success 200 {object} AdminCheckResponseWrapper "Admin status"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminCheckResponse} "Admin status"
 // @Failure 400 {object} utils.ErrorResponseSwag "users.admin_check.error.email_required"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 404 {object} utils.ErrorResponseSwag "users.admin_check.error.user_not_found"
@@ -353,10 +346,7 @@ func (h *UserHandler) IsAdminSimple(c *fiber.Ctx) error {
 	// В этой простой версии считаем администраторами только пользователей с ID 1, 2, 3
 	isAdmin := user.ID == 1 || user.ID == 2 || user.ID == 3
 
-	return c.JSON(AdminCheckResponseWrapper{
-		Success: true,
-		Data: AdminCheckResponse{
-			IsAdmin: isAdmin,
-		},
+	return utils.SuccessResponse(c, &AdminCheckResponse{
+		IsAdmin: isAdmin,
 	})
 }

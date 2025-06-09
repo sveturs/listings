@@ -1,3 +1,4 @@
+// Package handler
 // backend/internal/proj/marketplace/handler/categories.go
 package handler
 
@@ -40,7 +41,7 @@ func NewCategoriesHandler(services globalService.ServicesInterface) *CategoriesH
 // @Tags marketplace-categories
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory} "Categories list"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
 // @Router /api/v1/marketplace/categories [get]
 func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
@@ -59,7 +60,7 @@ func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 // @Tags marketplace-categories
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryTreeNode} "Category tree"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryTreeNode}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoryTreeError"
 // @Router /api/v1/marketplace/category-tree [get]
 func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
@@ -96,7 +97,7 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttribute} "Category attributes"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttribute}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.attributesError"
 // @Router /api/v1/marketplace/categories/{id}/attributes [get]
@@ -124,7 +125,7 @@ func (h *CategoriesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]object{min=number,max=number}} "Attribute ranges"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AttributeRangesResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.rangesError"
 // @Router /api/v1/marketplace/categories/{id}/attribute-ranges [get]

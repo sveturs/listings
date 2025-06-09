@@ -1,3 +1,4 @@
+// Package handler
 // backend/internal/proj/notifications/routes.go
 package handler
 

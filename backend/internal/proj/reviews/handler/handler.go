@@ -1,3 +1,5 @@
+// Package handler содержит обработчики HTTP запросов для работы с отзывами
+// backend/internal/proj/reviews/handler/handler.go
 package handler
 
 import (

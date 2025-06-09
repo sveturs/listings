@@ -5,13 +5,13 @@ import (
 	"backend/internal/storage"
 	"context"
 	"fmt"
+	"html"
 	"log"
 	"regexp"
 	"strings"
 	"sync"
-	"html"
 
-	openai "github.com/sashabaranov/go-openai"
+	"github.com/sashabaranov/go-openai"
 )
 
 type TranslationService struct {
@@ -37,11 +37,11 @@ func (s *TranslationService) DetectLanguage(ctx context.Context, text string) (s
 	russianSpecific := "ёъыэьяй"
 	serbianCyrillicSpecific := "ђћџљњ"
 	serbianLatinSpecific := "đćčžš"
-	
+
 	// Очищаем текст от HTML тегов для анализа
 	cleanText := html.UnescapeString(text)
 	cleanTextLower := strings.ToLower(cleanText)
-	
+
 	// Регулярное выражение для удаления HTML-тегов
 	htmlTagRegex := regexp.MustCompile(`<[^>]+>`)
 	cleanText = htmlTagRegex.ReplaceAllString(cleanText, " ")
@@ -60,7 +60,7 @@ func (s *TranslationService) DetectLanguage(ctx context.Context, text string) (s
 			return "sr", 1.0, nil
 		}
 	}
-	
+
 	// Проверяем наличие сербских латинских букв
 	for _, char := range serbianLatinSpecific {
 		if strings.ContainsRune(cleanTextLower, char) {
@@ -70,30 +70,30 @@ func (s *TranslationService) DetectLanguage(ctx context.Context, text string) (s
 
 	// Проверка на сербский латинский по характерным словам
 	serbianLatinWords := []string{
-		"nije", 
-		"jeste", 
-		"nešto", 
-		"gde", 
-		"kako", 
-		"hvala", 
-		"zdravo", 
-		"dobar dan", 
-		"ja sam", 
-		"maskica", 
-		"telefon", 
-		"za", 
-		"iz", 
-		"koji", 
-		"kvalitet", 
-		"maskice", 
-		"karaktera", 
-		"slika", 
+		"nije",
+		"jeste",
+		"nešto",
+		"gde",
+		"kako",
+		"hvala",
+		"zdravo",
+		"dobar dan",
+		"ja sam",
+		"maskica",
+		"telefon",
+		"za",
+		"iz",
+		"koji",
+		"kvalitet",
+		"maskice",
+		"karaktera",
+		"slika",
 		"prikazuje",
 	}
-	
+
 	// Проверка английского по наличию артиклей
 	englishArticles := []string{" the ", " a ", " an "}
-	
+
 	// Проверяем сербские латинские слова
 	serbianWordCount := 0
 	for _, word := range serbianLatinWords {
@@ -101,7 +101,7 @@ func (s *TranslationService) DetectLanguage(ctx context.Context, text string) (s
 			serbianWordCount++
 		}
 	}
-	
+
 	// Проверяем английские артикли
 	englishArticleCount := 0
 	for _, article := range englishArticles {
@@ -109,12 +109,12 @@ func (s *TranslationService) DetectLanguage(ctx context.Context, text string) (s
 			englishArticleCount++
 		}
 	}
-	
+
 	// Простая эвристика: если есть несколько сербских слов и мало/нет английских артиклей
 	if serbianWordCount >= 3 && englishArticleCount < 2 {
 		return "sr", 0.9, nil
 	}
-	
+
 	// Если простые эвристики не сработали, используем OpenAI для определения
 	resp, err := s.client.CreateChatCompletion(
 		ctx,
@@ -200,64 +200,64 @@ func (s *TranslationService) TranslateToAllLanguages(ctx context.Context, text s
 }
 
 func (s *TranslationService) TranslateEntityFields(ctx context.Context, sourceLanguage string, targetLanguages []string, fields map[string]string) (map[string]map[string]string, error) {
-    results := make(map[string]map[string]string)
-    
-    // Сначала модерируем исходный текст
-    moderatedFields := make(map[string]string)
-    
-    // Проверяем наличие заголовка (title/name/header) для контекста
-    var title string
-    for fieldName, text := range fields {
-        fieldNameLower := strings.ToLower(fieldName)
-        if fieldNameLower == "title" || fieldNameLower == "name" || fieldNameLower == "header" {
-            title = text
-            break
-        }
-    }
-    
-    for fieldName, text := range fields {
-        if text == "" {
-            continue
-        }
-        
-        moderatedText, err := s.ModerateText(ctx, text, sourceLanguage)
-        if err != nil {
-            log.Printf("Error moderating field %s: %v", fieldName, err)
-            continue
-        }
-        moderatedFields[fieldName] = moderatedText
-    }
+	results := make(map[string]map[string]string)
 
-    // Сохраняем модерированный текст для исходного языка
-    results[sourceLanguage] = moderatedFields
-    
-    // Переводим на другие языки с учетом контекста
-    for _, targetLang := range targetLanguages {
-        if targetLang == sourceLanguage {
-            continue
-        }
-        
-        results[targetLang] = make(map[string]string)
-        
-        // Подготавливаем контекст из заголовка
-        context := ""
-        if title != "" {
-            context = fmt.Sprintf("Context from title/name: %s. ", title)
-        }
-        
-        for fieldName, moderatedText := range moderatedFields {
-            // Используем TranslateWithContext для учета контекста
-            translatedText, err := s.TranslateWithContext(ctx, moderatedText, sourceLanguage, targetLang, context, fieldName)
-            if err != nil {
-                log.Printf("Error translating field %s to %s: %v", fieldName, targetLang, err)
-                continue
-            }
-            
-            results[targetLang][fieldName] = translatedText
-        }
-    }
-    
-    return results, nil
+	// Сначала модерируем исходный текст
+	moderatedFields := make(map[string]string)
+
+	// Проверяем наличие заголовка (title/name/header) для контекста
+	var title string
+	for fieldName, text := range fields {
+		fieldNameLower := strings.ToLower(fieldName)
+		if fieldNameLower == "title" || fieldNameLower == "name" || fieldNameLower == "header" {
+			title = text
+			break
+		}
+	}
+
+	for fieldName, text := range fields {
+		if text == "" {
+			continue
+		}
+
+		moderatedText, err := s.ModerateText(ctx, text, sourceLanguage)
+		if err != nil {
+			log.Printf("Error moderating field %s: %v", fieldName, err)
+			continue
+		}
+		moderatedFields[fieldName] = moderatedText
+	}
+
+	// Сохраняем модерированный текст для исходного языка
+	results[sourceLanguage] = moderatedFields
+
+	// Переводим на другие языки с учетом контекста
+	for _, targetLang := range targetLanguages {
+		if targetLang == sourceLanguage {
+			continue
+		}
+
+		results[targetLang] = make(map[string]string)
+
+		// Подготавливаем контекст из заголовка
+		context := ""
+		if title != "" {
+			context = fmt.Sprintf("Context from title/name: %s. ", title)
+		}
+
+		for fieldName, moderatedText := range moderatedFields {
+			// Используем TranslateWithContext для учета контекста
+			translatedText, err := s.TranslateWithContext(ctx, moderatedText, sourceLanguage, targetLang, context, fieldName)
+			if err != nil {
+				log.Printf("Error translating field %s to %s: %v", fieldName, targetLang, err)
+				continue
+			}
+
+			results[targetLang][fieldName] = translatedText
+		}
+	}
+
+	return results, nil
 }
 func (s *TranslationService) TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error) {
 	// Проверяем кеш
@@ -268,13 +268,13 @@ func (s *TranslationService) TranslateWithContext(ctx context.Context, text stri
 
 	// Предварительно декодируем HTML-сущности, чтобы OpenAI мог правильно переводить текст
 	decodedText := html.UnescapeString(text)
-	
+
 	// Обрабатываем HTML-теги перед отправкой на перевод
 	htmlTagRegex := regexp.MustCompile(`<[^>]+>`)
-	
+
 	// Создаем словари для сохранения
 	tagReplacements := make(map[string]string)
-	
+
 	// Заменяем HTML-теги на плейсхолдеры
 	tagCounter := 0
 	processedText := htmlTagRegex.ReplaceAllStringFunc(decodedText, func(match string) string {
@@ -283,7 +283,7 @@ func (s *TranslationService) TranslateWithContext(ctx context.Context, text stri
 		tagCounter++
 		return placeholder
 	})
-	
+
 	// Добавляем информацию о языке перевода в промпт для улучшения контекста
 	languageContext := ""
 	switch targetLanguage {
@@ -294,7 +294,7 @@ func (s *TranslationService) TranslateWithContext(ctx context.Context, text stri
 	case "sr":
 		languageContext = "Translate to natural, grammatically correct Serbian using Cyrillic script."
 	}
-	
+
 	// Улучшаем промпт с учетом типа поля
 	fieldContext := ""
 	if fieldName != "" {
@@ -305,16 +305,16 @@ func (s *TranslationService) TranslateWithContext(ctx context.Context, text stri
 			fieldContext = "This is a product description. Use natural, marketing-appropriate language in the target language."
 		}
 	}
-	
+
 	// Строим запрос к API с четкими инструкциями
 	systemPrompt := fmt.Sprintf(`You are a professional translator specializing in e-commerce product descriptions. 
 You translate from %s to %s accurately while maintaining natural language flow.
 %s
 %s
 Important: DO NOT transliterate brand names or product names - properly translate them.
-DO NOT include any translator's notes or comments in your output.`, 
+DO NOT include any translator's notes or comments in your output.`,
 		sourceLanguage, targetLanguage, languageContext, fieldContext)
-	
+
 	userPrompt := fmt.Sprintf(`Translate this text from %s to %s:
 
 %s
@@ -325,20 +325,20 @@ IMPORTANT INSTRUCTIONS:
 3. Do not include any comments, notes, or explanations
 4. Return ONLY the translated text with the original placeholders intact
 5. Never use transliteration for common nouns - always use proper translation`,
-		sourceLanguage, 
-		targetLanguage, 
+		sourceLanguage,
+		targetLanguage,
 		processedText)
-	
+
 	// Добавляем контекст, если он есть
 	if context != "" {
 		userPrompt = fmt.Sprintf("Context for accurate translation: %s\n\n%s", context, userPrompt)
 	}
-	
+
 	// Вызываем API OpenAI
 	resp, err := s.client.CreateChatCompletion(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model: openai.GPT4,  // Используем GPT-4 для более качественного перевода
+			Model: openai.GPT4, // Используем GPT-4 для более качественного перевода
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
@@ -378,15 +378,12 @@ IMPORTANT INSTRUCTIONS:
 	}
 
 	translatedText := resp.Choices[0].Message.Content
-	
+
 	// Восстанавливаем HTML-теги
 	for placeholder, htmlTag := range tagReplacements {
 		translatedText = strings.Replace(translatedText, placeholder, htmlTag, 1)
 	}
-	
-	
-	
-	
+
 	// Кешируем результат
 	s.cache.Store(cacheKey, translatedText)
 
@@ -398,55 +395,55 @@ func (s *TranslationService) Translate(ctx context.Context, text string, sourceL
 }
 
 func (s *TranslationService) ModerateText(ctx context.Context, text string, language string) (string, error) {
-    if text == "" {
-        return "", nil
-    }
+	if text == "" {
+		return "", nil
+	}
 
-    // Декодируем HTML-сущности для лучшей обработки
-    decodedText := html.UnescapeString(text)
-    
-    // Обрабатываем HTML-теги перед модерацией
-    htmlTagRegex := regexp.MustCompile(`<[^>]+>`)
-    
-    // Словарь для сохранения тегов
-    tagReplacements := make(map[string]string)
-    
-    // Заменяем HTML-теги плейсхолдерами
-    tagCounter := 0
-    processedText := htmlTagRegex.ReplaceAllStringFunc(decodedText, func(match string) string {
-        placeholder := fmt.Sprintf("__HTML_TAG_%d__", tagCounter)
-        tagReplacements[placeholder] = match
-        tagCounter++
-        return placeholder
-    })
+	// Декодируем HTML-сущности для лучшей обработки
+	decodedText := html.UnescapeString(text)
 
-    resp, err := s.client.CreateChatCompletion(
-        ctx,
-        openai.ChatCompletionRequest{
-            Model: openai.GPT3Dot5Turbo,
-            Messages: []openai.ChatCompletionMessage{
-                {
-                    Role: openai.ChatMessageRoleSystem,
-                    Content: "You are a content moderator. Your task is to check the input text and:\n1. If it contains profanity or offensive language - replace those words with neutral alternatives\n2. If the text is clean - return it exactly as is\nNEVER add any comments or explanations about moderation. DO NOT modify any placeholders with format __HTML_TAG_X__.",
-                },
-                {
-                    Role: openai.ChatMessageRoleUser,
-                    Content: fmt.Sprintf("Moderate this text. DO NOT change placeholders like __HTML_TAG_0__:\n\n%s", processedText),
-                },
-            },
-            Temperature: 0,
-        },
-    )
-    if err != nil {
-        return "", err
-    }
-    
-    moderatedText := strings.TrimSpace(resp.Choices[0].Message.Content)
-    
-    // Восстанавливаем HTML-теги
-    for placeholder, htmlTag := range tagReplacements {
-        moderatedText = strings.Replace(moderatedText, placeholder, htmlTag, 1)
-    }
-    
-    return moderatedText, nil
+	// Обрабатываем HTML-теги перед модерацией
+	htmlTagRegex := regexp.MustCompile(`<[^>]+>`)
+
+	// Словарь для сохранения тегов
+	tagReplacements := make(map[string]string)
+
+	// Заменяем HTML-теги плейсхолдерами
+	tagCounter := 0
+	processedText := htmlTagRegex.ReplaceAllStringFunc(decodedText, func(match string) string {
+		placeholder := fmt.Sprintf("__HTML_TAG_%d__", tagCounter)
+		tagReplacements[placeholder] = match
+		tagCounter++
+		return placeholder
+	})
+
+	resp, err := s.client.CreateChatCompletion(
+		ctx,
+		openai.ChatCompletionRequest{
+			Model: openai.GPT3Dot5Turbo,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: "You are a content moderator. Your task is to check the input text and:\n1. If it contains profanity or offensive language - replace those words with neutral alternatives\n2. If the text is clean - return it exactly as is\nNEVER add any comments or explanations about moderation. DO NOT modify any placeholders with format __HTML_TAG_X__.",
+				},
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: fmt.Sprintf("Moderate this text. DO NOT change placeholders like __HTML_TAG_0__:\n\n%s", processedText),
+				},
+			},
+			Temperature: 0,
+		},
+	)
+	if err != nil {
+		return "", err
+	}
+
+	moderatedText := strings.TrimSpace(resp.Choices[0].Message.Content)
+
+	// Восстанавливаем HTML-теги
+	for placeholder, htmlTag := range tagReplacements {
+		moderatedText = strings.Replace(moderatedText, placeholder, htmlTag, 1)
+	}
+
+	return moderatedText, nil
 }

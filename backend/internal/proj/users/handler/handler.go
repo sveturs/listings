@@ -1,8 +1,10 @@
 // backend/internal/proj/users/handler/handler.go
 package handler
+
 import (
-    globalService "backend/internal/proj/global/service"
+	globalService "backend/internal/proj/global/service"
 )
+
 type Handler struct {
 	Auth *AuthHandler
 	User *UserHandler

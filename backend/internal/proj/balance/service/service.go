@@ -3,15 +3,15 @@
 package balance
 
 import (
-    "backend/internal/storage"
+	"backend/internal/storage"
 )
 
 type Service struct {
-    Balance BalanceServiceInterface
+	Balance BalanceServiceInterface
 }
 
 func NewService(storage storage.Storage) *Service {
-    return &Service{
-        Balance: NewBalanceService(storage),
-    }
+	return &Service{
+		Balance: NewBalanceService(storage),
+	}
 }

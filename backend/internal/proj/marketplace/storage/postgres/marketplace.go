@@ -1567,7 +1567,7 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
 		}
 
 		// Установка разумных шагов в зависимости от диапазона
-		var step float64 = 1.0
+		var step = 1.0
 		if attrName == "engine_capacity" {
 			step = 0.1
 		} else if attrName == "area" || attrName == "land_area" {
@@ -1837,14 +1837,14 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
 
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
 	log.Printf("GetCategories: starting to fetch categories")
-	
+
 	// Сначала проверим подключение к базе данных
 	if err := s.pool.Ping(ctx); err != nil {
 		log.Printf("GetCategories: Database ping failed: %v", err)
 		return nil, err
 	}
 	log.Printf("GetCategories: Database ping successful")
-	
+
 	query := `
         WITH category_translations AS (
             SELECT 

@@ -1,3 +1,4 @@
+// Package utils
 // backend/pkg/utils/utils.go
 package utils
 
@@ -43,6 +44,7 @@ func SuccessResponse(c *fiber.Ctx, data interface{}) error {
 		"data":    data,
 	})
 }
+
 func StringToInt(str string, defaultValue int) int {
 	if str == "" {
 		return defaultValue

@@ -1,20 +1,22 @@
+// Package handler
 // backend/internal/proj/marketplace/handler/chat.go
-
 package handler
 
 import (
+	"context"
+	"encoding/json"
+	"strconv"
+	"sync"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/websocket/v2"
+
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
-	"context"
-	"encoding/json"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/websocket/v2"
-	"strconv"
-	"sync"
-	"time"
 )
 
 type ChatHandler struct {
@@ -35,7 +37,7 @@ func NewChatHandler(services globalService.ServicesInterface, config *config.Con
 // @Tags marketplace-chat
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceChat} "List of chats"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceChat}
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getChatsError"
 // @Security BearerAuth
@@ -65,7 +67,7 @@ func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
 // @Param receiver_id query string false "Receiver ID for direct messages"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} object{data=[]models.MarketplaceMessage,meta=object{page=int,limit=int,hasMore=bool,total=int}} "Chat messages"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ChatMessagesResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidChatId or marketplace.invalidListingId or marketplace.chatParamsRequired"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getMessagesError"
@@ -165,7 +167,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	}
 
 	// Получаем общее количество сообщений, если есть chat_id
-	var total int = -1 // По умолчанию -1 означает, что количество неизвестно
+	var total = -1 // По умолчанию -1 означает, что количество неизвестно
 	if chatIDStr := c.Query("chat_id"); chatIDStr != "" {
 		if _, err := strconv.Atoi(chatIDStr); err == nil {
 			// TODO: добавить метод в сервис для получения общего количества
@@ -174,11 +176,11 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	}
 
 	// Возвращаем структурированный ответ
-	response := fiber.Map{
-		"messages": messages,
-		"total":    total,
-		"page":     page,
-		"limit":    limit,
+	response := ChatMessagesResponse{
+		Messages: messages,
+		Total:    total,
+		Page:     page,
+		Limit:    limit,
 	}
 
 	return utils.SuccessResponse(c, response)
@@ -190,7 +192,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 // @Tags marketplace-chat
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{count=int}} "Unread count"
+// @Success 200 {object} utils.SuccessResponseSwag{data=UnreadCountData}
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getUnreadCountError"
 // @Security BearerAuth
@@ -203,8 +205,8 @@ func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getUnreadCountError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"count": count,
+	return utils.SuccessResponse(c, UnreadCountData{
+		Count: count,
 	})
 }
 
@@ -215,7 +217,7 @@ func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param body body models.CreateMessageRequest true "Message data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceMessage} "Sent message"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceMessage}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest or marketplace.receiverRequired"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.sendMessageError"
@@ -266,7 +268,7 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param body body models.MarkAsReadRequest true "Message IDs to mark as read"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Messages marked as read"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.markAsReadError"
@@ -284,8 +286,9 @@ func (h *ChatHandler) MarkAsRead(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.markAsReadError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "marketplace.messagesMarkedAsRead"})
+	return utils.SuccessResponse(c, MessageResponse{Message: "marketplace.messagesMarkedAsRead"})
 }
+
 // ArchiveChat архивирует чат
 // @Summary Archive chat
 // @Description Archives a chat for the user
@@ -293,7 +296,7 @@ func (h *ChatHandler) MarkAsRead(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param chat_id path int true "Chat ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Chat archived"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidChatId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.archiveChatError"
@@ -311,8 +314,8 @@ func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.archiveChatError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.chatArchived",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.chatArchived",
 	})
 }
 
@@ -323,8 +326,8 @@ func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
 // @Accept multipart/form-data
 // @Produce json
 // @Param id path int true "Message ID"
-// @Param files formData file true "Files to upload" 
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ChatAttachment} "Uploaded attachments"
+// @Param files formData file true "Files to upload"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.ChatAttachment}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidMessageId or marketplace.noFilesUploaded or marketplace.tooManyFiles"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.messageNotFound"
@@ -409,7 +412,7 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attachment ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ChatAttachment} "Attachment info"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.ChatAttachment}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.accessDenied"
@@ -450,7 +453,7 @@ func (h *ChatHandler) GetAttachment(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attachment ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Attachment deleted"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.deleteAttachmentForbidden"
@@ -471,8 +474,8 @@ func (h *ChatHandler) DeleteAttachment(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteAttachmentError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attachmentDeleted",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attachmentDeleted",
 	})
 }
 
@@ -646,7 +649,7 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 				// Валидация входных данных
 				if msg.ReceiverID == 0 {
 					logger.Error().Msg("Error: ReceiverID is 0 in WebSocket message")
-					errMsg := fiber.Map{
+					errMsg := map[string]interface{}{
 						"error": "ReceiverID is required",
 					}
 					if errBytes, err := json.Marshal(errMsg); err == nil {
@@ -658,7 +661,7 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 				msg.SenderID = userID
 				if err := h.services.Chat().SendMessage(ctx, &msg); err != nil {
 					logger.Error().Err(err).Msg("Error sending message via WebSocket")
-					errMsg := fiber.Map{
+					errMsg := map[string]interface{}{
 						"error":      err.Error(),
 						"chat_id":    msg.ChatID,
 						"listing_id": msg.ListingID,

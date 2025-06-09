@@ -32,7 +32,7 @@ func NewIndexingHandler(services globalService.ServicesInterface) *IndexingHandl
 // @Tags marketplace-admin-indexing
 // @Accept json
 // @Produce json
-// @Success 200 {object} object{message=string} "Reindexing started"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Reindexing started"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
@@ -71,8 +71,8 @@ func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 	}()
 
 	// Возвращаем успешный результат
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.reindexStarted",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.reindexStarted",
 	})
 }
 
@@ -82,7 +82,7 @@ func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 // @Tags marketplace-admin-indexing
 // @Accept json
 // @Produce json
-// @Success 200 {object} object{success=bool,message=string} "Reindexing with translations started"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ReindexStartedResponse} "Reindexing with translations started"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
@@ -163,9 +163,9 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 	}()
 
 	// Возвращаем успешный результат
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "marketplace.reindexWithTranslationsStarted",
+	return utils.SuccessResponse(c, ReindexStartedResponse{
+		Success: true,
+		Message: "marketplace.reindexWithTranslationsStarted",
 	})
 }
 
@@ -175,7 +175,7 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 // @Tags marketplace-admin-indexing
 // @Accept json
 // @Produce json
-// @Success 200 {object} object{success=bool,message=string} "Reindexing started"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ReindexStartedResponse} "Reindexing started"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
@@ -212,9 +212,9 @@ func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 	}()
 
 	// Возвращаем успешный результат
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "marketplace.reindexStarted",
+	return utils.SuccessResponse(c, ReindexStartedResponse{
+		Success: true,
+		Message: "marketplace.reindexStarted",
 	})
 }
 
@@ -224,7 +224,7 @@ func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 // @Tags marketplace-admin-indexing
 // @Accept json
 // @Produce json
-// @Success 200 {object} object{success=bool,message=string} "Rating reindexing started"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ReindexStartedResponse} "Rating reindexing started"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
@@ -337,8 +337,8 @@ func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 	}()
 
 	// Возвращаем успешный результат
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "marketplace.ratingsReindexStarted",
+	return utils.SuccessResponse(c, ReindexStartedResponse{
+		Success: true,
+		Message: "marketplace.ratingsReindexStarted",
 	})
 }

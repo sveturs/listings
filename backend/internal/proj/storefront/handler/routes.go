@@ -1,3 +1,4 @@
+// Package handler
 // backend/internal/proj/storefront/handler/routes.go
 package handler
 
@@ -14,7 +15,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	// Защищенные маршруты с CSRF защитой
 	authedAPIGroup := app.Group("/api/v1", mw.AuthRequiredJWT, mw.CSRFProtection())
-	
+
 	storefronts := authedAPIGroup.Group("/storefronts")
 	storefronts.Get("/", h.Storefront.GetUserStorefronts)
 	storefronts.Post("/", h.Storefront.CreateStorefront)

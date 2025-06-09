@@ -2,15 +2,15 @@
 package service
 
 import (
-    "backend/internal/storage"
+	"backend/internal/storage"
 )
 
 type Service struct {
-    Notification NotificationServiceInterface
+	Notification NotificationServiceInterface
 }
 
 func NewService(storage storage.Storage) *Service {
-    return &Service{
-        Notification: NewNotificationService(storage),
-    }
+	return &Service{
+		Notification: NewNotificationService(storage),
+	}
 }

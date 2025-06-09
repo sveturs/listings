@@ -109,6 +109,7 @@ type PriceHistoryServiceInterface interface {
 	AnalyzeDiscount(ctx context.Context, listingID int) (*models.DiscountInfo, error)
 	RecordPriceChange(ctx context.Context, listingID int, oldPrice, newPrice float64, source string) error
 }
+
 // ApplyCategoryMappings применяет настроенные сопоставления категорий ко всем товарам,
 // которые были импортированы из указанного источника
 func (s *StorefrontService) ApplyCategoryMappings(ctx context.Context, sourceID int, userID int) (int, error) {
@@ -228,6 +229,7 @@ func (s *StorefrontService) ApplyCategoryMappings(ctx context.Context, sourceID 
 
 	return updatedCount, nil
 }
+
 // GetImportedCategories возвращает список категорий, которые были импортированы этим источником
 func (s *StorefrontService) GetImportedCategories(ctx context.Context, sourceID int, userID int) ([]string, error) {
 	// Проверяем права доступа
@@ -420,7 +422,7 @@ func (s *StorefrontService) DeleteStorefront(ctx context.Context, id int, userID
 	return s.storage.DeleteStorefront(ctx, id)
 }
 func (s *StorefrontService) findOrCreateCategory(ctx context.Context, sourceID int, cat1, cat2, cat3 string) (int, error) {
-	var categoryID int = 9999 // По умолчанию категория "Прочее"
+	var categoryID = 9999 // По умолчанию категория "Прочее"
 
 	// Получаем источник импорта, чтобы прочитать пользовательские сопоставления
 	source, err := s.storage.GetImportSourceByID(ctx, sourceID)
@@ -575,7 +577,6 @@ func (s *StorefrontService) findOrCreateCategory(ctx context.Context, sourceID i
 
 	return categoryID, nil
 }
-
 
 // CreateImportSource создает новый источник импорта
 func (s *StorefrontService) CreateImportSource(ctx context.Context, source *models.ImportSourceCreate, userID int) (*models.ImportSource, error) {
@@ -1626,6 +1627,7 @@ func isSimilarAttributeName(attrName, importName string) bool {
 		strings.Contains(attrName, importName) ||
 		strings.Contains(importName, attrName)
 }
+
 // Модифицированная функция processXMLContentStream, добавляющая поддержку атрибутов недвижимости
 func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader io.Reader, storefrontID int, sourceID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
 	var itemsTotal, itemsImported, itemsFailed, itemsUpdated int
@@ -1655,7 +1657,7 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 		naAkciji    string
 		slike       []string
 		inSlike     bool
-		
+
 		// Добавляем атрибуты для недвижимости
 		propertyType string
 		rooms        string
@@ -1668,14 +1670,14 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 		hasElevator  string
 		hasParking   string
 		yearBuilt    string
-		
+
 		// Местоположение
-		location      string
-		addressCity   string
+		location       string
+		addressCity    string
 		addressCountry string
-		latitude      string
-		longitude     string
-		showOnMap     string
+		latitude       string
+		longitude      string
+		showOnMap      string
 	)
 
 	for {
@@ -1702,7 +1704,7 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 				dostupan = ""
 				naAkciji = ""
 				slike = nil
-				
+
 				// Сбрасываем атрибуты недвижимости
 				propertyType = ""
 				rooms = ""
@@ -1715,7 +1717,7 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 				hasElevator = ""
 				hasParking = ""
 				yearBuilt = ""
-				
+
 				// Сбрасываем атрибуты местоположения
 				location = ""
 				addressCity = ""
@@ -1743,7 +1745,7 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					continue
 				}
 
-				var price float64 = 0.0
+				var price = 0.0
 				mpCenaClean := strings.TrimSpace(mpCena)
 				if mpCenaClean != "" && mpCenaClean != ".0000" && mpCenaClean != "0.0000" {
 					price, err = s.parsePrice(mpCena)
@@ -1858,7 +1860,7 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					} else {
 						existingListing.Status = "inactive"
 					}
-					
+
 					// Обновляем поля местоположения, если они есть в XML
 					if location != "" {
 						existingListing.Location = location
@@ -1912,12 +1914,12 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 
 					itemsUpdated++
 					log.Printf("Successfully updated listing %d for item %s", existingListing.ID, id)
-					
+
 					// Добавляем атрибуты недвижимости, если они есть
 					if categoryID >= 1000 && categoryID < 2000 {
 						s.savePropertyAttributes(ctx, existingListing.ID, propertyType, rooms, floor, totalFloors, area, landArea, buildingType, hasBalcony, hasElevator, hasParking, yearBuilt)
 					}
-					
+
 					if len(slike) > 0 {
 						imagesStr := strings.Join(slike, ",")
 						go func(listID int, imgs string) {
@@ -2020,7 +2022,7 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 						errorLog.WriteString(fmt.Sprintf("Error creating listing for item %s: %v\n", id, err))
 						continue
 					}
-					
+
 					// Добавляем атрибуты недвижимости, если категория относится к недвижимости
 					if categoryID >= 1000 && categoryID < 2000 {
 						s.savePropertyAttributes(ctx, listingID, propertyType, rooms, floor, totalFloors, area, landArea, buildingType, hasBalcony, hasElevator, hasParking, yearBuilt)
@@ -2093,7 +2095,7 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					if text = strings.TrimSpace(text); text != "" {
 						slike = append(slike, text)
 					}
-				
+
 				// Обработка атрибутов недвижимости
 				case "property_type":
 					propertyType = strings.TrimSpace(text)
@@ -2117,7 +2119,7 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 					hasParking = strings.TrimSpace(text)
 				case "year_built":
 					yearBuilt = strings.TrimSpace(text)
-				
+
 				// Обработка данных о местоположении
 				case "location":
 					location = strings.TrimSpace(text)
@@ -2146,341 +2148,341 @@ func (s *StorefrontService) processXMLContentStream(ctx context.Context, reader 
 
 // Улучшенная функция для сохранения атрибутов недвижимости
 func (s *StorefrontService) savePropertyAttributes(ctx context.Context, listingID int, propertyType, rooms, floor, totalFloors, area, landArea, buildingType, hasBalcony, hasElevator, hasParking, yearBuilt string) {
-    log.Printf("Сохранение атрибутов недвижимости для листинга ID=%d", listingID)
-    
-    // Получаем атрибуты категории "Недвижимость"
-    var attributeValues []models.ListingAttributeValue
-    
-    // Обрабатываем тип недвижимости
-    if propertyType != "" {
-        var propTypeAttrID int
-        err := s.storage.QueryRow(ctx, `
+	log.Printf("Сохранение атрибутов недвижимости для листинга ID=%d", listingID)
+
+	// Получаем атрибуты категории "Недвижимость"
+	var attributeValues []models.ListingAttributeValue
+
+	// Обрабатываем тип недвижимости
+	if propertyType != "" {
+		var propTypeAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'property_type' LIMIT 1
         `).Scan(&propTypeAttrID)
-        
-        if err == nil {
-            textVal := propertyType
-            attributeValues = append(attributeValues, models.ListingAttributeValue{
-                ListingID:    listingID,
-                AttributeID:  propTypeAttrID,
-                TextValue:    &textVal,
-                DisplayValue: textVal,
-                AttributeName: "property_type",
-                AttributeType: "select",
-            })
-        }
-    }
-    
-    // Обрабатываем количество комнат
-    if rooms != "" {
-        var roomsAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			textVal := propertyType
+			attributeValues = append(attributeValues, models.ListingAttributeValue{
+				ListingID:     listingID,
+				AttributeID:   propTypeAttrID,
+				TextValue:     &textVal,
+				DisplayValue:  textVal,
+				AttributeName: "property_type",
+				AttributeType: "select",
+			})
+		}
+	}
+
+	// Обрабатываем количество комнат
+	if rooms != "" {
+		var roomsAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'rooms' LIMIT 1
         `).Scan(&roomsAttrID)
-        
-        if err == nil {
-            // Улучшенная валидация
-            roomsInt, err := strconv.Atoi(strings.TrimSpace(rooms))
-            if err == nil && roomsInt >= 0 && roomsInt < 100 { // Разумное ограничение
-                roomsFloat := float64(roomsInt)
-                textVal := rooms
-                attributeValues = append(attributeValues, models.ListingAttributeValue{
-                    ListingID:     listingID,
-                    AttributeID:   roomsAttrID,
-                    NumericValue:  &roomsFloat,
-                    TextValue:     &textVal,
-                    DisplayValue:  textVal,
-                    AttributeName: "rooms",
-                    AttributeType: "number",
-                    Unit:          "soba",
-                })
-            } else {
-                log.Printf("Invalid rooms value ignored: %s", rooms)
-            }
-        }
-    }
-    
-    // Обрабатываем этаж
-    if floor != "" {
-        var floorAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			// Улучшенная валидация
+			roomsInt, err := strconv.Atoi(strings.TrimSpace(rooms))
+			if err == nil && roomsInt >= 0 && roomsInt < 100 { // Разумное ограничение
+				roomsFloat := float64(roomsInt)
+				textVal := rooms
+				attributeValues = append(attributeValues, models.ListingAttributeValue{
+					ListingID:     listingID,
+					AttributeID:   roomsAttrID,
+					NumericValue:  &roomsFloat,
+					TextValue:     &textVal,
+					DisplayValue:  textVal,
+					AttributeName: "rooms",
+					AttributeType: "number",
+					Unit:          "soba",
+				})
+			} else {
+				log.Printf("Invalid rooms value ignored: %s", rooms)
+			}
+		}
+	}
+
+	// Обрабатываем этаж
+	if floor != "" {
+		var floorAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'floor' LIMIT 1
         `).Scan(&floorAttrID)
-        
-        if err == nil {
-            // Улучшенная валидация
-            floorInt, err := strconv.Atoi(strings.TrimSpace(floor))
-            if err == nil && floorInt >= -2 && floorInt < 200 { // Разумное ограничение
-                floorFloat := float64(floorInt)
-                textVal := floor
-                attributeValues = append(attributeValues, models.ListingAttributeValue{
-                    ListingID:     listingID,
-                    AttributeID:   floorAttrID,
-                    NumericValue:  &floorFloat,
-                    TextValue:     &textVal,
-                    DisplayValue:  textVal,
-                    AttributeName: "floor",
-                    AttributeType: "number",
-                    Unit:          "sprat",
-                })
-            } else {
-                log.Printf("Invalid floor value ignored: %s", floor)
-            }
-        }
-    }
-    
-    // Обрабатываем всего этажей в доме
-    if totalFloors != "" {
-        var totalFloorsAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			// Улучшенная валидация
+			floorInt, err := strconv.Atoi(strings.TrimSpace(floor))
+			if err == nil && floorInt >= -2 && floorInt < 200 { // Разумное ограничение
+				floorFloat := float64(floorInt)
+				textVal := floor
+				attributeValues = append(attributeValues, models.ListingAttributeValue{
+					ListingID:     listingID,
+					AttributeID:   floorAttrID,
+					NumericValue:  &floorFloat,
+					TextValue:     &textVal,
+					DisplayValue:  textVal,
+					AttributeName: "floor",
+					AttributeType: "number",
+					Unit:          "sprat",
+				})
+			} else {
+				log.Printf("Invalid floor value ignored: %s", floor)
+			}
+		}
+	}
+
+	// Обрабатываем всего этажей в доме
+	if totalFloors != "" {
+		var totalFloorsAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'total_floors' LIMIT 1
         `).Scan(&totalFloorsAttrID)
-        
-        if err == nil {
-            // Улучшенная валидация
-            floorsInt, err := strconv.Atoi(strings.TrimSpace(totalFloors))
-            if err == nil && floorsInt > 0 && floorsInt < 200 { // Разумное ограничение
-                floorsFloat := float64(floorsInt)
-                textVal := totalFloors
-                attributeValues = append(attributeValues, models.ListingAttributeValue{
-                    ListingID:     listingID,
-                    AttributeID:   totalFloorsAttrID,
-                    NumericValue:  &floorsFloat,
-                    TextValue:     &textVal,
-                    DisplayValue:  textVal,
-                    AttributeName: "total_floors",
-                    AttributeType: "number",
-                    Unit:          "sprat",
-                })
-            } else {
-                log.Printf("Invalid total_floors value ignored: %s", totalFloors)
-            }
-        }
-    }
-    
-    // Обрабатываем площадь
-    if area != "" {
-        var areaAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			// Улучшенная валидация
+			floorsInt, err := strconv.Atoi(strings.TrimSpace(totalFloors))
+			if err == nil && floorsInt > 0 && floorsInt < 200 { // Разумное ограничение
+				floorsFloat := float64(floorsInt)
+				textVal := totalFloors
+				attributeValues = append(attributeValues, models.ListingAttributeValue{
+					ListingID:     listingID,
+					AttributeID:   totalFloorsAttrID,
+					NumericValue:  &floorsFloat,
+					TextValue:     &textVal,
+					DisplayValue:  textVal,
+					AttributeName: "total_floors",
+					AttributeType: "number",
+					Unit:          "sprat",
+				})
+			} else {
+				log.Printf("Invalid total_floors value ignored: %s", totalFloors)
+			}
+		}
+	}
+
+	// Обрабатываем площадь
+	if area != "" {
+		var areaAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'area' LIMIT 1
         `).Scan(&areaAttrID)
-        
-        if err == nil {
-            // Улучшенная валидация
-            areaFloat, err := strconv.ParseFloat(strings.TrimSpace(area), 64)
-            if err == nil && areaFloat >= 0 && areaFloat < 10000 { // Разумное ограничение
-                textVal := area
-                displayVal := fmt.Sprintf("%s м²", area)
-                attributeValues = append(attributeValues, models.ListingAttributeValue{
-                    ListingID:     listingID,
-                    AttributeID:   areaAttrID,
-                    NumericValue:  &areaFloat,
-                    TextValue:     &textVal,
-                    DisplayValue:  displayVal,
-                    AttributeName: "area",
-                    AttributeType: "number",
-                    Unit:          "m²",
-                })
-            } else {
-                log.Printf("Invalid area value ignored: %s", area)
-            }
-        }
-    }
-    
-    // Обрабатываем площадь участка
-    if landArea != "" {
-        var landAreaAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			// Улучшенная валидация
+			areaFloat, err := strconv.ParseFloat(strings.TrimSpace(area), 64)
+			if err == nil && areaFloat >= 0 && areaFloat < 10000 { // Разумное ограничение
+				textVal := area
+				displayVal := fmt.Sprintf("%s м²", area)
+				attributeValues = append(attributeValues, models.ListingAttributeValue{
+					ListingID:     listingID,
+					AttributeID:   areaAttrID,
+					NumericValue:  &areaFloat,
+					TextValue:     &textVal,
+					DisplayValue:  displayVal,
+					AttributeName: "area",
+					AttributeType: "number",
+					Unit:          "m²",
+				})
+			} else {
+				log.Printf("Invalid area value ignored: %s", area)
+			}
+		}
+	}
+
+	// Обрабатываем площадь участка
+	if landArea != "" {
+		var landAreaAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'land_area' LIMIT 1
         `).Scan(&landAreaAttrID)
-        
-        if err == nil {
-            // Улучшенная валидация
-            landAreaFloat, err := strconv.ParseFloat(strings.TrimSpace(landArea), 64)
-            if err == nil && landAreaFloat >= 0 && landAreaFloat < 10000 { // Разумное ограничение
-                textVal := landArea
-                displayVal := fmt.Sprintf("%s сот.", landArea)
-                attributeValues = append(attributeValues, models.ListingAttributeValue{
-                    ListingID:     listingID,
-                    AttributeID:   landAreaAttrID,
-                    NumericValue:  &landAreaFloat,
-                    TextValue:     &textVal,
-                    DisplayValue:  displayVal,
-                    AttributeName: "land_area",
-                    AttributeType: "number",
-                    Unit:          "ar",
-                })
-            } else {
-                log.Printf("Invalid land_area value ignored: %s", landArea)
-            }
-        }
-    }
-    
-    // Обрабатываем тип здания
-    if buildingType != "" {
-        var buildingTypeAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			// Улучшенная валидация
+			landAreaFloat, err := strconv.ParseFloat(strings.TrimSpace(landArea), 64)
+			if err == nil && landAreaFloat >= 0 && landAreaFloat < 10000 { // Разумное ограничение
+				textVal := landArea
+				displayVal := fmt.Sprintf("%s сот.", landArea)
+				attributeValues = append(attributeValues, models.ListingAttributeValue{
+					ListingID:     listingID,
+					AttributeID:   landAreaAttrID,
+					NumericValue:  &landAreaFloat,
+					TextValue:     &textVal,
+					DisplayValue:  displayVal,
+					AttributeName: "land_area",
+					AttributeType: "number",
+					Unit:          "ar",
+				})
+			} else {
+				log.Printf("Invalid land_area value ignored: %s", landArea)
+			}
+		}
+	}
+
+	// Обрабатываем тип здания
+	if buildingType != "" {
+		var buildingTypeAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'building_type' LIMIT 1
         `).Scan(&buildingTypeAttrID)
-        
-        if err == nil {
-            // Ограничим длину текста для безопасности
-            textVal := buildingType
-            if len(textVal) > 100 {
-                textVal = textVal[:100]
-                log.Printf("Building type value truncated to 100 chars")
-            }
-            attributeValues = append(attributeValues, models.ListingAttributeValue{
-                ListingID:    listingID,
-                AttributeID:  buildingTypeAttrID,
-                TextValue:    &textVal,
-                DisplayValue: textVal,
-                AttributeName: "building_type",
-                AttributeType: "select",
-            })
-        }
-    }
-    
-    // Обрабатываем булевы атрибуты (с переработкой отображения и обработки)
-    // Добавляем наличие балкона
-    if hasBalcony != "" {
-        var balconyAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			// Ограничим длину текста для безопасности
+			textVal := buildingType
+			if len(textVal) > 100 {
+				textVal = textVal[:100]
+				log.Printf("Building type value truncated to 100 chars")
+			}
+			attributeValues = append(attributeValues, models.ListingAttributeValue{
+				ListingID:     listingID,
+				AttributeID:   buildingTypeAttrID,
+				TextValue:     &textVal,
+				DisplayValue:  textVal,
+				AttributeName: "building_type",
+				AttributeType: "select",
+			})
+		}
+	}
+
+	// Обрабатываем булевы атрибуты (с переработкой отображения и обработки)
+	// Добавляем наличие балкона
+	if hasBalcony != "" {
+		var balconyAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'has_balcony' LIMIT 1
         `).Scan(&balconyAttrID)
-        
-        if err == nil {
-            boolVal := hasBalcony == "1" || strings.ToLower(hasBalcony) == "true"
-            var displayVal string
-            if boolVal {
-                displayVal = "Да"
-            } else {
-                displayVal = "Нет"
-            }
-            attributeValues = append(attributeValues, models.ListingAttributeValue{
-                ListingID:     listingID,
-                AttributeID:   balconyAttrID,
-                BooleanValue:  &boolVal,
-                DisplayValue:  displayVal,
-                AttributeName: "has_balcony",
-                AttributeType: "boolean",
-            })
-        }
-    }
-    
-    // Обрабатываем наличие лифта
-    if hasElevator != "" {
-        var elevatorAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			boolVal := hasBalcony == "1" || strings.ToLower(hasBalcony) == "true"
+			var displayVal string
+			if boolVal {
+				displayVal = "Да"
+			} else {
+				displayVal = "Нет"
+			}
+			attributeValues = append(attributeValues, models.ListingAttributeValue{
+				ListingID:     listingID,
+				AttributeID:   balconyAttrID,
+				BooleanValue:  &boolVal,
+				DisplayValue:  displayVal,
+				AttributeName: "has_balcony",
+				AttributeType: "boolean",
+			})
+		}
+	}
+
+	// Обрабатываем наличие лифта
+	if hasElevator != "" {
+		var elevatorAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'has_elevator' LIMIT 1
         `).Scan(&elevatorAttrID)
-        
-        if err == nil {
-            boolVal := hasElevator == "1" || strings.ToLower(hasElevator) == "true"
-            textVal := hasElevator
-            var displayVal string
-            if boolVal {
-                displayVal = "Да"
-            } else {
-                displayVal = "Нет"
-            }
-            attributeValues = append(attributeValues, models.ListingAttributeValue{
-                ListingID:     listingID,
-                AttributeID:   elevatorAttrID,
-                BooleanValue:  &boolVal,
-                TextValue:     &textVal,
-                DisplayValue:  displayVal,
-                AttributeName: "has_elevator",
-                AttributeType: "boolean",
-            })
-        }
-    }
-    
-    // Обрабатываем наличие парковки
-    if hasParking != "" {
-        var parkingAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			boolVal := hasElevator == "1" || strings.ToLower(hasElevator) == "true"
+			textVal := hasElevator
+			var displayVal string
+			if boolVal {
+				displayVal = "Да"
+			} else {
+				displayVal = "Нет"
+			}
+			attributeValues = append(attributeValues, models.ListingAttributeValue{
+				ListingID:     listingID,
+				AttributeID:   elevatorAttrID,
+				BooleanValue:  &boolVal,
+				TextValue:     &textVal,
+				DisplayValue:  displayVal,
+				AttributeName: "has_elevator",
+				AttributeType: "boolean",
+			})
+		}
+	}
+
+	// Обрабатываем наличие парковки
+	if hasParking != "" {
+		var parkingAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'has_parking' LIMIT 1
         `).Scan(&parkingAttrID)
-        
-        if err == nil {
-            boolVal := hasParking == "1" || strings.ToLower(hasParking) == "true"
-            textVal := hasParking
-            var displayVal string
-            if boolVal {
-                displayVal = "Да"
-            } else {
-                displayVal = "Нет"
-            }
-            attributeValues = append(attributeValues, models.ListingAttributeValue{
-                ListingID:     listingID,
-                AttributeID:   parkingAttrID,
-                BooleanValue:  &boolVal,
-                TextValue:     &textVal,
-                DisplayValue:  displayVal,
-                AttributeName: "has_parking",
-                AttributeType: "boolean",
-            })
-        }
-    }
-    
-    if yearBuilt != "" {
-        var yearBuiltAttrID int
-        err := s.storage.QueryRow(ctx, `
+
+		if err == nil {
+			boolVal := hasParking == "1" || strings.ToLower(hasParking) == "true"
+			textVal := hasParking
+			var displayVal string
+			if boolVal {
+				displayVal = "Да"
+			} else {
+				displayVal = "Нет"
+			}
+			attributeValues = append(attributeValues, models.ListingAttributeValue{
+				ListingID:     listingID,
+				AttributeID:   parkingAttrID,
+				BooleanValue:  &boolVal,
+				TextValue:     &textVal,
+				DisplayValue:  displayVal,
+				AttributeName: "has_parking",
+				AttributeType: "boolean",
+			})
+		}
+	}
+
+	if yearBuilt != "" {
+		var yearBuiltAttrID int
+		err := s.storage.QueryRow(ctx, `
             SELECT id FROM category_attributes WHERE name = 'year_built' LIMIT 1
         `).Scan(&yearBuiltAttrID)
-        
-        if err == nil {
-            // Улучшенная валидация года
-            yearInt, err := strconv.Atoi(strings.TrimSpace(yearBuilt))
-            if err == nil && yearInt >= 1800 && yearInt <= time.Now().Year() + 5 { // Разумное ограничение
-                yearFloat := float64(yearInt)
-                textVal := yearBuilt
-                attributeValues = append(attributeValues, models.ListingAttributeValue{
-                    ListingID:     listingID,
-                    AttributeID:   yearBuiltAttrID,
-                    NumericValue:  &yearFloat,
-                    TextValue:     &textVal,
-                    DisplayValue:  yearBuilt,
-                    AttributeName: "year_built",
-                    AttributeType: "number",
-                })
-            } else {
-                log.Printf("Invalid year_built value ignored: %s", yearBuilt)
-            }
-        }
-    }
-    
-    // Сохраняем все атрибуты в базу данных
-    if len(attributeValues) > 0 {
-        log.Printf("Сохранение %d атрибутов для объявления ID=%d", len(attributeValues), listingID)
-        
-        // Очищаем существующие атрибуты для данного объявления
-        _, err := s.storage.Exec(ctx, `
+
+		if err == nil {
+			// Улучшенная валидация года
+			yearInt, err := strconv.Atoi(strings.TrimSpace(yearBuilt))
+			if err == nil && yearInt >= 1800 && yearInt <= time.Now().Year()+5 { // Разумное ограничение
+				yearFloat := float64(yearInt)
+				textVal := yearBuilt
+				attributeValues = append(attributeValues, models.ListingAttributeValue{
+					ListingID:     listingID,
+					AttributeID:   yearBuiltAttrID,
+					NumericValue:  &yearFloat,
+					TextValue:     &textVal,
+					DisplayValue:  yearBuilt,
+					AttributeName: "year_built",
+					AttributeType: "number",
+				})
+			} else {
+				log.Printf("Invalid year_built value ignored: %s", yearBuilt)
+			}
+		}
+	}
+
+	// Сохраняем все атрибуты в базу данных
+	if len(attributeValues) > 0 {
+		log.Printf("Сохранение %d атрибутов для объявления ID=%d", len(attributeValues), listingID)
+
+		// Очищаем существующие атрибуты для данного объявления
+		_, err := s.storage.Exec(ctx, `
             DELETE FROM listing_attribute_values WHERE listing_id = $1
         `, listingID)
-        
-        if err != nil {
-            log.Printf("Ошибка при очистке существующих атрибутов для объявления ID=%d: %v", listingID, err)
-        }
-        
-        // Вставляем новые атрибуты с учетом unit
-        for _, attr := range attributeValues {
-            var valueText, valueNum, valueBool interface{}
-            
-            if attr.TextValue != nil {
-                valueText = *attr.TextValue
-            }
-            
-            if attr.NumericValue != nil {
-                valueNum = *attr.NumericValue
-            }
-            
-            if attr.BooleanValue != nil {
-                valueBool = *attr.BooleanValue
-            }
-            
-            _, err := s.storage.Exec(ctx, `
+
+		if err != nil {
+			log.Printf("Ошибка при очистке существующих атрибутов для объявления ID=%d: %v", listingID, err)
+		}
+
+		// Вставляем новые атрибуты с учетом unit
+		for _, attr := range attributeValues {
+			var valueText, valueNum, valueBool interface{}
+
+			if attr.TextValue != nil {
+				valueText = *attr.TextValue
+			}
+
+			if attr.NumericValue != nil {
+				valueNum = *attr.NumericValue
+			}
+
+			if attr.BooleanValue != nil {
+				valueBool = *attr.BooleanValue
+			}
+
+			_, err := s.storage.Exec(ctx, `
                 INSERT INTO listing_attribute_values (
                     listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit
                 ) VALUES ($1, $2, $3, $4, $5, NULL, $6)
@@ -2490,21 +2492,19 @@ func (s *StorefrontService) savePropertyAttributes(ctx context.Context, listingI
                     boolean_value = $5,
                     unit = $6
             `, listingID, attr.AttributeID, valueText, valueNum, valueBool, attr.Unit)
-            
-            if err != nil {
-                log.Printf("Ошибка при сохранении атрибута ID=%d для объявления ID=%d: %v", 
-                    attr.AttributeID, listingID, err)
-            } else {
-                log.Printf("Успешно сохранен атрибут ID=%d для объявления ID=%d", 
-                    attr.AttributeID, listingID)
-            }
-        }
-    } else {
-        log.Printf("Нет атрибутов для сохранения для объявления ID=%d", listingID)
-    }
+
+			if err != nil {
+				log.Printf("Ошибка при сохранении атрибута ID=%d для объявления ID=%d: %v",
+					attr.AttributeID, listingID, err)
+			} else {
+				log.Printf("Успешно сохранен атрибут ID=%d для объявления ID=%d",
+					attr.AttributeID, listingID)
+			}
+		}
+	} else {
+		log.Printf("Нет атрибутов для сохранения для объявления ID=%d", listingID)
+	}
 }
-
-
 
 func (s *StorefrontService) saveImportedCategory(ctx context.Context, sourceID int, sourceCategory string, categoryID int) {
 	// Пропускаем пустые категории
@@ -2526,6 +2526,7 @@ func (s *StorefrontService) saveImportedCategory(ctx context.Context, sourceID i
 		log.Printf("Ошибка при сохранении информации о категории: %v", err)
 	}
 }
+
 // processXMLContent обрабатывает содержимое XML и создает товары
 func (s *StorefrontService) processXMLContent(ctx context.Context, xmlContent string, storefrontID int, sourceID int, userID int, errorLog *strings.Builder) (int, int, int, error) {
 	var itemsTotal, itemsImported, itemsFailed int
@@ -2619,7 +2620,7 @@ func (s *StorefrontService) processXMLContent(ctx context.Context, xmlContent st
 		}
 
 		// Определяем метку скидки, если товар на акции
-		var discountLabel string = ""
+		var discountLabel = ""
 		if naAkciji == "1" {
 			discountLabel = "🔥 SALE! 🔥\n\n"
 		}

@@ -3,7 +3,6 @@ package handler
 
 import (
 	"backend/internal/domain/models"
-	//"backend/internal/domain/models"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
@@ -34,7 +33,7 @@ func NewFavoritesHandler(services globalService.ServicesInterface) *FavoritesHan
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Added to favorites"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Added to favorites"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
@@ -68,16 +67,16 @@ func (h *FavoritesHandler) AddToFavorites(c *fiber.Ctx) error {
 		logger.Error().Err(err).Int("listingId", listingID).Int("userId", userID).Msg("Failed to add listing to favorites")
 		// Проверяем, было ли объявление уже в избранном
 		if strings.Contains(err.Error(), "already in favorites") {
-			return utils.SuccessResponse(c, fiber.Map{
-				"message": "marketplace.alreadyInFavorites",
+			return utils.SuccessResponse(c, MessageResponse{
+				Message: "marketplace.alreadyInFavorites",
 			})
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.addToFavoritesError")
 	}
 
 	// Возвращаем успешный результат
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.addedToFavorites",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.addedToFavorites",
 	})
 }
 
@@ -88,7 +87,7 @@ func (h *FavoritesHandler) AddToFavorites(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Removed from favorites"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Removed from favorites"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.removeFromFavoritesError"
@@ -114,16 +113,16 @@ func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 		logger.Error().Err(err).Int("listingId", listingID).Int("userId", userID).Msg("Failed to remove listing from favorites")
 		// Проверяем, было ли объявление в избранном
 		if strings.Contains(err.Error(), "not in favorites") {
-			return utils.SuccessResponse(c, fiber.Map{
-				"message": "marketplace.notInFavorites",
+			return utils.SuccessResponse(c, MessageResponse{
+				Message: "marketplace.notInFavorites",
 			})
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.removeFromFavoritesError")
 	}
 
 	// Возвращаем успешный результат
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.removedFromFavorites",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.removedFromFavorites",
 	})
 }
 
@@ -133,7 +132,7 @@ func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 // @Tags marketplace-favorites
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "List of favorite listings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "List of favorite listings"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getFavoritesError"
 // @Security BearerAuth
@@ -169,7 +168,7 @@ func (h *FavoritesHandler) GetFavorites(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} object{success=bool,data=object{is_in_favorites=bool}} "Favorite status"
+// @Success 200 {object} utils.SuccessResponseSwag{data=FavoriteStatusData} "Favorite status"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.checkFavoritesError"
@@ -206,11 +205,8 @@ func (h *FavoritesHandler) IsInFavorites(c *fiber.Ctx) error {
 	}
 
 	// Возвращаем результат проверки
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"is_in_favorites": isInFavorites,
-		},
+	return utils.SuccessResponse(c, FavoriteStatusData{
+		IsInFavorites: isInFavorites,
 	})
 }
 
@@ -220,7 +216,7 @@ func (h *FavoritesHandler) IsInFavorites(c *fiber.Ctx) error {
 // @Tags marketplace-favorites
 // @Accept json
 // @Produce json
-// @Success 200 {object} object{success=bool,data=object{count=int}} "Favorites count"
+// @Success 200 {object} utils.SuccessResponseSwag{data=FavoritesCountData} "Favorites count"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getFavoritesCountError"
 // @Security BearerAuth
@@ -242,10 +238,7 @@ func (h *FavoritesHandler) GetFavoritesCount(c *fiber.Ctx) error {
 	count := len(favorites)
 
 	// Возвращаем количество
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"count": count,
-		},
+	return utils.SuccessResponse(c, FavoritesCountData{
+		Count: count,
 	})
 }

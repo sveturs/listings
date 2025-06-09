@@ -49,7 +49,7 @@ func NewHandler(service service.NotificationServiceInterface) *Handler {
 // @Produce json
 // @Param limit query int false "Количество записей" default(20)
 // @Param offset query int false "Смещение" default(0)
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Список уведомлений"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Notification} "Список уведомлений"
 // @Failure 500 {object} utils.ErrorResponseSwag "notifications.getError"
 // @Security BearerAuth
 // @Router /api/v1/notifications [get]
@@ -63,9 +63,7 @@ func (h *Handler) GetNotifications(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "notifications.getError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": notifications, // Изменено с notifications на data
-	})
+	return utils.SuccessResponse(c, notifications)
 }
 
 func (h *Handler) ConnectTelegramWebhook() {
@@ -103,7 +101,7 @@ func (h *Handler) ConnectTelegramWebhook() {
 // @Accept json
 // @Produce json
 // @Param update body tgbotapi.Update true "Telegram update"
-// @Success 200 {string} string "OK"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TelegramWebhookResponse} "OK"
 // @Router /api/v1/notifications/telegram/webhook [post]
 func (h *Handler) HandleTelegramWebhook(c *fiber.Ctx) error {
 	logger.Info().Str("body", string(c.Body())).Msg("Received webhook request")
@@ -124,7 +122,7 @@ func (h *Handler) HandleTelegramWebhook(c *fiber.Ctx) error {
 			}
 		}
 	}
-	return nil
+	return c.JSON(TelegramWebhookResponse{Status: "OK"})
 }
 func (h *Handler) handleStartCommand(c *fiber.Ctx, message *tgbotapi.Message, args string) error {
 	if args == "" {
@@ -207,7 +205,7 @@ func (h *Handler) handleStartCommand(c *fiber.Ctx, message *tgbotapi.Message, ar
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Токен для подключения"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TelegramTokenResponse} "Токен для подключения"
 // @Failure 500 {object} utils.ErrorResponseSwag "notifications.tokenGenerateError"
 // @Security BearerAuth
 // @Router /api/v1/notifications/telegram/token [get]
@@ -218,10 +216,9 @@ func (h *Handler) GetTelegramToken(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "notifications.tokenGenerateError")
 	}
 
-	// Изменяем структуру ответа для соответствия ожиданиям фронтенда
-	return utils.SuccessResponse(c, fiber.Map{
-		"token":        token, // упрощаем структуру
-		"generated_at": time.Now(),
+	return utils.SuccessResponse(c, TelegramTokenResponse{
+		Token:       token,
+		GeneratedAt: time.Now(),
 	})
 }
 
@@ -265,7 +262,7 @@ func (h *Handler) validateUserToken(token string) (int, error) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string][]models.NotificationSettings} "Настройки уведомлений"
+// @Success 200 {object} utils.SuccessResponseSwag{data=NotificationSettingsResponse} "Настройки уведомлений"
 // @Security BearerAuth
 // @Router /api/v1/notifications/settings [get]
 func (h *Handler) GetSettings(c *fiber.Ctx) error {
@@ -322,8 +319,8 @@ func (h *Handler) GetSettings(c *fiber.Ctx) error {
 		settings = baseSettings
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"data": settings,
+	return utils.SuccessResponse(c, NotificationSettingsResponse{
+		Data: settings,
 	})
 }
 
@@ -334,7 +331,7 @@ func (h *Handler) GetSettings(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body map[string]string true "Данные формы" example({"name":"Имя","email":"email@example.com","message":"Сообщение","source":"website"})
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Email отправлен"
+// @Success 200 {object} utils.SuccessResponseSwag{data=PublicEmailSendResponse} "Email отправлен"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidDataFormat или validation.allFieldsRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "email.sendError"
 // @Router /api/v1/notifications/email/public [post]
@@ -433,9 +430,9 @@ func (h *Handler) SendPublicEmail(c *fiber.Ctx) error {
 	}
 
 	logger.Info().Str("recipient", to).Msg("Email успешно отправлен")
-	return utils.SuccessResponse(c, fiber.Map{
-		"success": true,
-		"message": "email.sentSuccessfully",
+	return utils.SuccessResponse(c, PublicEmailSendResponse{
+		Success: true,
+		Message: "email.sentSuccessfully",
 	})
 }
 
@@ -446,7 +443,7 @@ func (h *Handler) SendPublicEmail(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body map[string]interface{} true "Настройки" example({"notification_type":"new_message","telegram_enabled":true,"email_enabled":false})
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Настройки обновлены"
+// @Success 200 {object} utils.SuccessResponseSwag{data=NotificationSettingsUpdateResponse} "Настройки обновлены"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidDataFormat"
 // @Failure 500 {object} utils.ErrorResponseSwag "notifications.updateError"
 // @Security BearerAuth
@@ -524,9 +521,9 @@ func (h *Handler) UpdateSettings(c *fiber.Ctx) error {
 	}
 
 	// Возвращаем обновленные настройки в ответе
-	return utils.SuccessResponse(c, fiber.Map{
-		"message":  "notifications.settingsUpdated",
-		"settings": updatedSettings,
+	return utils.SuccessResponse(c, NotificationSettingsUpdateResponse{
+		Message:  "notifications.settingsUpdated",
+		Settings: updatedSettings,
 	})
 }
 
@@ -536,7 +533,7 @@ func (h *Handler) UpdateSettings(c *fiber.Ctx) error {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Статус подключения"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TelegramStatusResponse} "Статус подключения"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.unauthorized"
 // @Router /api/v1/notifications/telegram/status [get]
 func (h *Handler) GetTelegramStatus(c *fiber.Ctx) error {
@@ -551,22 +548,22 @@ func (h *Handler) GetTelegramStatus(c *fiber.Ctx) error {
 		}
 	} else {
 		// Для неавторизованных запросов просто возвращаем отсутствие подключения
-		return utils.SuccessResponse(c, fiber.Map{
-			"connected": false,
+		return utils.SuccessResponse(c, TelegramStatusResponse{
+			Connected: false,
 		})
 	}
 
 	connection, err := h.notificationService.GetTelegramConnection(c.Context(), userID)
 
 	if err != nil {
-		return utils.SuccessResponse(c, fiber.Map{
-			"connected": false,
+		return utils.SuccessResponse(c, TelegramStatusResponse{
+			Connected: false,
 		})
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"connected": true,
-		"username":  connection.TelegramUsername,
+	return utils.SuccessResponse(c, TelegramStatusResponse{
+		Connected: true,
+		Username:  connection.TelegramUsername,
 	})
 }
 
@@ -577,7 +574,7 @@ func (h *Handler) GetTelegramStatus(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body map[string]string true "Данные для подключения" example({"chat_id":"123456789","username":"username"})
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]string} "Telegram подключен"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TelegramConnectResponse} "Telegram подключен"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidDataFormat"
 // @Failure 500 {object} utils.ErrorResponseSwag "telegram.connectionError"
 // @Security BearerAuth
@@ -599,8 +596,8 @@ func (h *Handler) ConnectTelegram(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "telegram.connectionError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "telegram.connected",
+	return utils.SuccessResponse(c, TelegramConnectResponse{
+		Message: "telegram.connected",
 	})
 }
 
@@ -611,7 +608,7 @@ func (h *Handler) ConnectTelegram(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "ID уведомления"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]string} "Уведомление отмечено как прочитанное"
+// @Success 200 {object} utils.SuccessResponseSwag{data=NotificationMarkReadResponse} "Уведомление отмечено как прочитанное"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidNotificationId"
 // @Failure 500 {object} utils.ErrorResponseSwag "notifications.updateError"
 // @Security BearerAuth
@@ -627,7 +624,7 @@ func (h *Handler) MarkAsRead(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "notifications.updateError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "notifications.markedAsRead",
+	return utils.SuccessResponse(c, NotificationMarkReadResponse{
+		Message: "notifications.markedAsRead",
 	})
 }

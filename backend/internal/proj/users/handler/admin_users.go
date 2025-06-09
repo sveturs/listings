@@ -2,12 +2,13 @@
 package handler
 
 import (
-	"backend/internal/domain/models"
-	"backend/pkg/utils"
 	"context"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/domain/models"
+	"backend/internal/logger"
+	"backend/pkg/utils"
 )
 
 // GetAllAdmins returns list of all administrators
@@ -16,7 +17,7 @@ import (
 // @Tags admin-management
 // @Accept json
 // @Produce json
-// @Success 200 {array} models.AdminUser "List of administrators"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.AdminUser} "List of administrators"
 // @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.fetch_failed"
 // @Security BearerAuth
@@ -32,11 +33,11 @@ func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
 	// Получаем список администраторов
 	admins, err := h.userService.GetAllAdmins(ctx)
 	if err != nil {
-		log.Printf("Error getting admin users: %v", err)
+		logger.Error().Err(err).Msg("Error getting admin users")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.admins.error.fetch_failed")
 	}
 
-	return c.JSON(admins)
+	return utils.SuccessResponse(c, admins)
 }
 
 // AddAdmin adds a new administrator
@@ -46,7 +47,7 @@ func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param admin body models.AdminUser true "Administrator data"
-// @Success 200 {object} models.AdminUser "Created administrator"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.AdminUser} "Created administrator"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.invalid_format or admin.admins.error.email_required"
 // @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.add_failed"
@@ -77,11 +78,11 @@ func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
 	// Добавляем администратора
 	err := h.userService.AddAdmin(ctx, admin)
 	if err != nil {
-		log.Printf("Error adding admin user: %v", err)
+		logger.Error().Err(err).Msg("Error adding admin user")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.admins.error.add_failed")
 	}
 
-	return c.JSON(admin)
+	return utils.SuccessResponse(c, admin)
 }
 
 // RemoveAdmin removes an administrator
@@ -91,7 +92,7 @@ func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param email path string true "Administrator email"
-// @Success 200 {object} AdminMessageResponse "Administrator removed"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Administrator removed"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.email_required"
 // @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.remove_failed"
@@ -114,14 +115,14 @@ func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
 	// Удаляем администратора
 	err := h.userService.RemoveAdmin(ctx, email)
 	if err != nil {
-		log.Printf("Error removing admin user: %v", err)
+		logger.Error().Err(err).Msg("Error removing admin user")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.admins.error.remove_failed")
 	}
 
 	response := AdminMessageResponse{
 		Message: "admin.admins.success.removed",
 	}
-	return c.JSON(response)
+	return utils.SuccessResponse(c, response)
 }
 
 // IsAdmin checks if user is an administrator
@@ -131,7 +132,7 @@ func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param email path string true "User email"
-// @Success 200 {object} AdminAdminsResponse "Admin status"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminAdminsResponse} "Admin status"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.email_required"
 // @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.check_failed"
@@ -154,7 +155,7 @@ func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	isAdmin, err := h.userService.IsUserAdmin(ctx, email)
 	if err != nil {
-		log.Printf("Error checking admin status: %v", err)
+		logger.Error().Err(err).Msg("Error checking admin status")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.admins.error.check_failed")
 	}
 
@@ -162,7 +163,7 @@ func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
 		Email:   email,
 		IsAdmin: isAdmin,
 	}
-	return c.JSON(response)
+	return utils.SuccessResponse(c, response)
 }
 
 // IsAdminPublic checks if user is an administrator (public method)
@@ -172,7 +173,7 @@ func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param email path string true "User email"
-// @Success 200 {object} AdminAdminsResponse "Admin status"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminAdminsResponse} "Admin status"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.email_required"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.check_failed"
 // @Router /api/v1/admin-check/{email} [get]
@@ -188,7 +189,7 @@ func (h *UserHandler) IsAdminPublic(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	isAdmin, err := h.userService.IsUserAdmin(ctx, email)
 	if err != nil {
-		log.Printf("Error checking admin status: %v", err)
+		logger.Error().Err(err).Msg("Error checking admin status")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.admins.error.check_failed")
 	}
 
@@ -196,5 +197,5 @@ func (h *UserHandler) IsAdminPublic(c *fiber.Ctx) error {
 		Email:   email,
 		IsAdmin: isAdmin,
 	}
-	return c.JSON(response)
+	return utils.SuccessResponse(c, response)
 }

@@ -29,37 +29,38 @@ func NewPriceHistoryService(storage storage.Storage) PriceHistoryServiceInterfac
 	}
 }
 
- // RecordPriceChange записывает изменение цены в историю
- func (s *PriceHistoryService) RecordPriceChange(ctx context.Context, listingID int, oldPrice, newPrice float64, source string) error {
-    // Если цена не изменилась, ничего не делаем
-    if oldPrice == newPrice {
-        return nil
-    }
+// RecordPriceChange записывает изменение цены в историю
+func (s *PriceHistoryService) RecordPriceChange(ctx context.Context, listingID int, oldPrice, newPrice float64, source string) error {
+	// Если цена не изменилась, ничего не делаем
+	if oldPrice == newPrice {
+		return nil
+	}
 
-    // Вычисляем процент изменения цены
-    var changePercentage float64
-    if oldPrice > 0 {
-        changePercentage = ((newPrice - oldPrice) / oldPrice) * 100
-    }
+	// Вычисляем процент изменения цены
+	var changePercentage float64
+	if oldPrice > 0 {
+		changePercentage = ((newPrice - oldPrice) / oldPrice) * 100
+	}
 
-    // Закрываем текущую активную запись
-    if err := s.storage.ClosePriceHistoryEntry(ctx, listingID); err != nil {
-        log.Printf("Ошибка при закрытии активной записи истории цен: %v", err)
-        // Продолжаем выполнение, не прерываем операцию
-    }
+	// Закрываем текущую активную запись
+	if err := s.storage.ClosePriceHistoryEntry(ctx, listingID); err != nil {
+		log.Printf("Ошибка при закрытии активной записи истории цен: %v", err)
+		// Продолжаем выполнение, не прерываем операцию
+	}
 
-    // Создаем новую запись
-    entry := &models.PriceHistoryEntry{
-        ListingID:        listingID,
-        Price:            newPrice,
-        EffectiveFrom:    time.Now().UTC(),
-        ChangeSource:     source,
-        ChangePercentage: changePercentage,
-    }
+	// Создаем новую запись
+	entry := &models.PriceHistoryEntry{
+		ListingID:        listingID,
+		Price:            newPrice,
+		EffectiveFrom:    time.Now().UTC(),
+		ChangeSource:     source,
+		ChangePercentage: changePercentage,
+	}
 
-    // Сохраняем запись в базу
-    return s.storage.AddPriceHistoryEntry(ctx, entry)
+	// Сохраняем запись в базу
+	return s.storage.AddPriceHistoryEntry(ctx, entry)
 }
+
 // GetPriceHistory возвращает историю изменения цен объявления
 func (s *PriceHistoryService) GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error) {
 	// Сначала мы должны расширить интерфейс Storage
@@ -128,7 +129,7 @@ func (s *PriceHistoryService) AnalyzeDiscount(ctx context.Context, listingID int
 
 		// Определяем, насколько давно была установлена предыдущая цена
 		daysSincePrevious := time.Since(previousEffectiveFrom).Hours() / 24
-		
+
 		// Проверяем, является ли скидка реальной:
 		// 1. Скидка должна быть значительной (более 5%)
 		// 2. Предыдущая цена должна быть установлена не менее 7 дней назад
@@ -137,16 +138,16 @@ func (s *PriceHistoryService) AnalyzeDiscount(ctx context.Context, listingID int
 
 		// Создаем объект с информацией о скидке
 		discountInfo := &models.DiscountInfo{
-			CurrentPrice:       currentPrice,
-			PreviousPrice:      previousPrice,
-			MaxPrice:           maxPrice,
-			DiscountPercent:    int(discountPercent),
-			MaxDiscountPercent: int(maxDiscountPercent),
-			EffectiveFrom:      currentEffectiveFrom,
+			CurrentPrice:          currentPrice,
+			PreviousPrice:         previousPrice,
+			MaxPrice:              maxPrice,
+			DiscountPercent:       int(discountPercent),
+			MaxDiscountPercent:    int(maxDiscountPercent),
+			EffectiveFrom:         currentEffectiveFrom,
 			PreviousEffectiveFrom: previousEffectiveFrom,
 			MaxPriceEffectiveFrom: maxPriceEffectiveFrom,
-			IsRealDiscount:     isRealDiscount,
-			IsSuspicious:       isSuspicious,
+			IsRealDiscount:        isRealDiscount,
+			IsSuspicious:          isSuspicious,
 		}
 
 		return discountInfo, nil

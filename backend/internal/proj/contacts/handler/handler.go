@@ -1,12 +1,15 @@
+// Package handler
+// backend/internal/proj/contacts/handler/handler.go
 package handler
 
 import (
-	"backend/internal/domain/models"
-	globalService "backend/internal/proj/global/service"
-	"backend/pkg/utils"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/domain/models"
+	globalService "backend/internal/proj/global/service"
+	"backend/pkg/utils"
 )
 
 type Handler struct {
@@ -72,7 +75,7 @@ func (h *Handler) AddContact(c *fiber.Ctx) error {
 // @Produce json
 // @Param contact_user_id path int true "ID контакта"
 // @Param request body models.UpdateContactRequest true "Новый статус контакта"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]string} "Статус обновлен"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ContactStatusUpdateResponse} "Статус обновлен"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidContactUserId или validation.invalidStatus"
 // @Failure 500 {object} utils.ErrorResponseSwag "contacts.updateError"
 // @Security BearerAuth
@@ -100,7 +103,7 @@ func (h *Handler) UpdateContactStatus(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.updateError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "contacts.statusUpdated"})
+	return utils.SuccessResponse(c, ContactStatusUpdateResponse{Message: "contacts.statusUpdated"})
 }
 
 // GetContacts возвращает список контактов пользователя
@@ -145,7 +148,7 @@ func (h *Handler) GetContacts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param contact_user_id path int true "ID контакта для удаления"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]string} "Контакт удален"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ContactRemoveResponse} "Контакт удален"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidContactUserId"
 // @Failure 500 {object} utils.ErrorResponseSwag "contacts.removeError"
 // @Security BearerAuth
@@ -163,7 +166,7 @@ func (h *Handler) RemoveContact(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.removeError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "contacts.removed"})
+	return utils.SuccessResponse(c, ContactRemoveResponse{Message: "contacts.removed"})
 }
 
 // GetPrivacySettings возвращает настройки приватности пользователя
@@ -222,7 +225,7 @@ func (h *Handler) UpdatePrivacySettings(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param contact_user_id path int true "ID пользователя для проверки"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Статус контакта"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ContactStatusCheckResponse} "Статус контакта"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidContactUserId"
 // @Failure 500 {object} utils.ErrorResponseSwag "contacts.checkError"
 // @Security BearerAuth
@@ -242,10 +245,10 @@ func (h *Handler) GetContactStatus(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.checkError")
 	}
 
-	response := fiber.Map{
-		"are_contacts": areContacts,
-		"user_id":      userID,
-		"contact_id":   contactUserID,
+	response := ContactStatusCheckResponse{
+		AreContacts: areContacts,
+		UserID:      userID,
+		ContactID:   contactUserID,
 	}
 
 	return utils.SuccessResponse(c, response)

@@ -121,11 +121,11 @@ func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string)
 	}
 
 	categories := []unsafeCategory{
-		{"adult", "эротический контент", safe.Adult, visionpb.Likelihood_LIKELY},                        
-		{"violence", "насильственный контент", safe.Violence, visionpb.Likelihood_POSSIBLE},             
-		{"racy", "провокационный контент", safe.Racy, visionpb.Likelihood_VERY_LIKELY},                  
-		{"medical", "медицинский (шокирующий) контент", safe.Medical, visionpb.Likelihood_VERY_LIKELY},  
-		{"spoof", "фальшивый или пародийный контент", safe.Spoof, visionpb.Likelihood_LIKELY},           
+		{"adult", "эротический контент", safe.Adult, visionpb.Likelihood_LIKELY},
+		{"violence", "насильственный контент", safe.Violence, visionpb.Likelihood_POSSIBLE},
+		{"racy", "провокационный контент", safe.Racy, visionpb.Likelihood_VERY_LIKELY},
+		{"medical", "медицинский (шокирующий) контент", safe.Medical, visionpb.Likelihood_VERY_LIKELY},
+		{"spoof", "фальшивый или пародийный контент", safe.Spoof, visionpb.Likelihood_LIKELY},
 	}
 
 	for _, cat := range categories {

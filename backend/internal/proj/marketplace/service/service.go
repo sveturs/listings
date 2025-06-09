@@ -2,34 +2,34 @@
 package service
 
 import (
-    "backend/internal/storage"
-    "backend/internal/proj/notifications/service"
-    "context"
+	"backend/internal/proj/notifications/service"
+	"backend/internal/storage"
+	"context"
 )
 
 type Service struct {
-    Marketplace    MarketplaceServiceInterface
-    Chat          ChatServiceInterface
-    ChatAttachment ChatAttachmentServiceInterface
+	Marketplace    MarketplaceServiceInterface
+	Chat           ChatServiceInterface
+	ChatAttachment ChatAttachmentServiceInterface
 }
 
 func NewService(storage storage.Storage, notifService service.NotificationServiceInterface) *Service {
-    // Create a minimal translation service for internal use
-    // Note: The actual translation service will be injected later by the global service
-    // This is a temporary service to satisfy the interface requirement
-    dummyTranslation := &dummyTranslationService{}
-    
-    return &Service{
-        Marketplace:    NewMarketplaceService(storage, dummyTranslation),
-        Chat:          NewChatService(storage, notifService),
-        ChatAttachment: nil, // Will be set by global service
-    }
+	// Create a minimal translation service for internal use
+	// Note: The actual translation service will be injected later by the global service
+	// This is a temporary service to satisfy the interface requirement
+	dummyTranslation := &dummyTranslationService{}
+
+	return &Service{
+		Marketplace:    NewMarketplaceService(storage, dummyTranslation),
+		Chat:           NewChatService(storage, notifService),
+		ChatAttachment: nil, // Will be set by global service
+	}
 }
 
 // SetChatAttachmentService sets the chat attachment service
 // This is called by the global service after all dependencies are initialized
 func (s *Service) SetChatAttachmentService(attachmentService ChatAttachmentServiceInterface) {
-    s.ChatAttachment = attachmentService
+	s.ChatAttachment = attachmentService
 }
 
 // dummyTranslationService is a minimal implementation that does nothing
@@ -37,27 +37,27 @@ func (s *Service) SetChatAttachmentService(attachmentService ChatAttachmentServi
 type dummyTranslationService struct{}
 
 func (d *dummyTranslationService) Translate(ctx context.Context, text string, sourceLanguage string, targetLanguage string) (string, error) {
-    return text, nil
+	return text, nil
 }
 
 func (d *dummyTranslationService) DetectLanguage(ctx context.Context, text string) (string, float64, error) {
-    return "auto", 1.0, nil
+	return "auto", 1.0, nil
 }
 
 func (d *dummyTranslationService) TranslateToAllLanguages(ctx context.Context, text string) (map[string]string, error) {
-    return map[string]string{"auto": text}, nil
+	return map[string]string{"auto": text}, nil
 }
 
 func (d *dummyTranslationService) TranslateEntityFields(ctx context.Context, sourceLanguage string, targetLanguages []string, fields map[string]string) (map[string]map[string]string, error) {
-    result := make(map[string]map[string]string)
-    result[sourceLanguage] = fields
-    return result, nil
+	result := make(map[string]map[string]string)
+	result[sourceLanguage] = fields
+	return result, nil
 }
 
 func (d *dummyTranslationService) ModerateText(ctx context.Context, text string, language string) (string, error) {
-    return text, nil
+	return text, nil
 }
 
 func (d *dummyTranslationService) TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error) {
-    return text, nil
+	return text, nil
 }

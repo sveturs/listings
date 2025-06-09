@@ -13,12 +13,12 @@ func (s *Storage) IsUserAdmin(ctx context.Context, email string) (bool, error) {
 	err := s.pool.QueryRow(ctx, `
 		SELECT EXISTS(SELECT 1 FROM admin_users WHERE email = $1)
 	`, email).Scan(&exists)
-	
+
 	if err != nil {
 		log.Printf("Error checking admin status for email %s: %v", email, err)
 		return false, err
 	}
-	
+
 	return exists, nil
 }
 
@@ -29,15 +29,15 @@ func (s *Storage) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error)
 		FROM admin_users
 		ORDER BY id
 	`)
-	
+
 	if err != nil {
 		log.Printf("Error getting admin users: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var admins []*models.AdminUser
-	
+
 	for rows.Next() {
 		admin := &models.AdminUser{}
 		err := rows.Scan(&admin.ID, &admin.Email, &admin.CreatedAt, &admin.CreatedBy, &admin.Notes)
@@ -47,12 +47,12 @@ func (s *Storage) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error)
 		}
 		admins = append(admins, admin)
 	}
-	
+
 	if err := rows.Err(); err != nil {
 		log.Printf("Error iterating admin users: %v", err)
 		return nil, err
 	}
-	
+
 	return admins, nil
 }
 
@@ -64,12 +64,12 @@ func (s *Storage) AddAdmin(ctx context.Context, admin *models.AdminUser) error {
 		ON CONFLICT (email) DO NOTHING
 		RETURNING id
 	`, admin.Email, admin.CreatedBy, admin.Notes).Scan(&admin.ID)
-	
+
 	if err != nil {
 		log.Printf("Error adding admin user %s: %v", admin.Email, err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -78,11 +78,11 @@ func (s *Storage) RemoveAdmin(ctx context.Context, email string) error {
 	_, err := s.pool.Exec(ctx, `
 		DELETE FROM admin_users WHERE email = $1
 	`, email)
-	
+
 	if err != nil {
 		log.Printf("Error removing admin user %s: %v", email, err)
 		return err
 	}
-	
+
 	return nil
 }

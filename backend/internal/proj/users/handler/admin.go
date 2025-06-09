@@ -1,12 +1,15 @@
+// Package handler
 // backend/internal/proj/users/handler/admin.go
 package handler
 
 import (
-	"backend/internal/domain/models"
-	"backend/pkg/utils"
-	"github.com/gofiber/fiber/v2"
-	"log"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/domain/models"
+	"backend/internal/logger"
+	"backend/pkg/utils"
 )
 
 // GetAllUsers returns paginated list of all users
@@ -17,12 +20,12 @@ import (
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10) minimum(1) maximum(100)
-// @Success 200 {object} AdminUserListResponse "List of users"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminUserListResponse} "List of users"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.fetch_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users [get]
 func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
-	log.Printf("GetAllUsers handler called with path: %s", c.Path())
+	logger.Debug().Str("path", c.Path()).Msg("GetAllUsers handler called")
 
 	// Получаем параметры пагинации
 	page := utils.StringToInt(c.Query("page", "1"), 1)
@@ -35,17 +38,15 @@ func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-	
+
 	// Вычисляем смещение
 	offset := (page - 1) * limit
 
 	// Получаем пользователей из базы данных
 	users, total, err := h.userService.GetAllUsers(c.Context(), limit, offset)
 	if err != nil {
-		log.Printf("GetAllUsers: error getting users: %v", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "admin.users.error.fetch_failed",
-		})
+		logger.Error().Err(err).Msg("GetAllUsers: error getting users")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.users.error.fetch_failed")
 	}
 
 	// Возвращаем данные напрямую
@@ -56,7 +57,7 @@ func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
 		Limit: limit,
 		Pages: (total + limit - 1) / limit, // Округление вверх
 	}
-	return c.Status(fiber.StatusOK).JSON(response)
+	return utils.SuccessResponse(c, response)
 }
 
 // GetUserByIDAdmin returns user information by ID
@@ -93,7 +94,7 @@ func (h *UserHandler) GetUserByIDAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Param body body models.UserProfileUpdate true "User update data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Update successful"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Profile updated"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.validation_failed"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.update_failed"
 // @Security BearerAuth

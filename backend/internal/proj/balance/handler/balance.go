@@ -2,28 +2,29 @@
 package handler
 
 import (
-    "github.com/gofiber/fiber/v2"
-    "backend/pkg/utils"
-    balance "backend/internal/proj/balance/service"  
-	"backend/internal/domain/models" 
-    "strconv"
 	"log"
-	paymentService "backend/internal/proj/payments/service" 
-	//"strings"  
+	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/domain/models"
+	balance "backend/internal/proj/balance/service"
+	paymentService "backend/internal/proj/payments/service"
+	"backend/pkg/utils"
 )
 
 type BalanceHandler struct {
-    balanceService balance.BalanceServiceInterface
-    paymentService paymentService.PaymentServiceInterface  // Теперь используем импортированный пакет
+	balanceService balance.BalanceServiceInterface
+	paymentService paymentService.PaymentServiceInterface // Теперь используем импортированный пакет
 }
 
 func NewBalanceHandler(balanceService balance.BalanceServiceInterface, paymentService paymentService.PaymentServiceInterface) *BalanceHandler {
-    return &BalanceHandler{
-        balanceService: balanceService,
-        paymentService: paymentService,
-    }
+	return &BalanceHandler{
+		balanceService: balanceService,
+		paymentService: paymentService,
+	}
 }
- 
+
 // GetBalance returns user balance information
 // @Summary Get user balance
 // @Description Returns current balance and frozen balance for authenticated user
@@ -36,32 +37,31 @@ func NewBalanceHandler(balanceService balance.BalanceServiceInterface, paymentSe
 // @Security BearerAuth
 // @Router /api/v1/balance [get]
 func (h *BalanceHandler) GetBalance(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(int)
-    
-    log.Printf("Getting balance for user %d", userID)
+	userID := c.Locals("user_id").(int)
 
-    balance, err := h.balanceService.GetBalance(c.Context(), userID)
-    if err != nil {
-        log.Printf("Error getting balance for user %d: %v", userID, err)
-        // Если записи нет, возвращаем нулевой баланс
-        if err.Error() == "no rows in result set" {
-            return utils.SuccessResponse(c, &models.UserBalance{
-                UserID:    userID,
-                Balance:   0,
-                Currency: "RSD",
-            })
-        }
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getError")
-    }
+	log.Printf("Getting balance for user %d", userID)
 
-    return utils.SuccessResponse(c, balance)
+	balance, err := h.balanceService.GetBalance(c.Context(), userID)
+	if err != nil {
+		log.Printf("Error getting balance for user %d: %v", userID, err)
+		// Если записи нет, возвращаем нулевой баланс
+		if err.Error() == "no rows in result set" {
+			return utils.SuccessResponse(c, &models.UserBalance{
+				UserID:   userID,
+				Balance:  0,
+				Currency: "RSD",
+			})
+		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getError")
+	}
+
+	return utils.SuccessResponse(c, balance)
 }
-
 
 // DepositRequest represents deposit creation request
 type DepositRequest struct {
-    Amount        float64 `json:"amount" example:"1000.50"`
-    PaymentMethod string  `json:"payment_method" example:"card"`
+	Amount        float64 `json:"amount" example:"1000.50"`
+	PaymentMethod string  `json:"payment_method" example:"card"`
 }
 
 // CreateDeposit creates a new deposit payment session
@@ -78,34 +78,33 @@ type DepositRequest struct {
 // @Security BearerAuth
 // @Router /api/v1/balance/deposit [post]
 func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(int)
+	userID := c.Locals("user_id").(int)
 
-    var request DepositRequest
+	var request DepositRequest
 
-    if err := c.BodyParser(&request); err != nil {
-        log.Printf("Error parsing deposit request: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "balance.invalidRequest")
-    }
+	if err := c.BodyParser(&request); err != nil {
+		log.Printf("Error parsing deposit request: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "balance.invalidRequest")
+	}
 
-    log.Printf("Processing deposit request: amount=%f, method=%s", request.Amount, request.PaymentMethod)
+	log.Printf("Processing deposit request: amount=%f, method=%s", request.Amount, request.PaymentMethod)
 
-    // Создаем платежную сессию вместо прямого создания депозита
-    session, err := h.paymentService.CreatePaymentSession(
-        c.Context(), 
-        userID, 
-        request.Amount, 
-        "rsd", 
-        request.PaymentMethod,
-    )
-    if err != nil {
-        log.Printf("Error creating payment session: %v", err)
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.createDepositError")
-    }
+	// Создаем платежную сессию вместо прямого создания депозита
+	session, err := h.paymentService.CreatePaymentSession(
+		c.Context(),
+		userID,
+		request.Amount,
+		"rsd",
+		request.PaymentMethod,
+	)
+	if err != nil {
+		log.Printf("Error creating payment session: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.createDepositError")
+	}
 
-    log.Printf("Created payment session: %+v", session)
-    return utils.SuccessResponse(c, session)
+	log.Printf("Created payment session: %+v", session)
+	return utils.SuccessResponse(c, session)
 }
-
 
 // GetTransactions returns user transaction history
 // @Summary Get transaction history
@@ -121,29 +120,29 @@ func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/balance/transactions [get]
 func (h *BalanceHandler) GetTransactions(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(int)
-    
-    // Заменяем utils.QueryInt на собственную реализацию
-    limit := 20
-    if limitStr := c.Query("limit"); limitStr != "" {
-        if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
-            limit = l
-        }
-    }
+	userID := c.Locals("user_id").(int)
 
-    offset := 0
-    if offsetStr := c.Query("offset"); offsetStr != "" {
-        if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
-            offset = o
-        }
-    }
+	// Заменяем utils.QueryInt на собственную реализацию
+	limit := 20
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
 
-    transactions, err := h.balanceService.GetTransactions(c.Context(), userID, limit, offset)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getTransactionsError")
-    }
+	offset := 0
+	if offsetStr := c.Query("offset"); offsetStr != "" {
+		if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
+			offset = o
+		}
+	}
 
-    return utils.SuccessResponse(c, transactions)
+	transactions, err := h.balanceService.GetTransactions(c.Context(), userID, limit, offset)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getTransactionsError")
+	}
+
+	return utils.SuccessResponse(c, transactions)
 }
 
 // GetPaymentMethods returns available payment methods
@@ -156,10 +155,10 @@ func (h *BalanceHandler) GetTransactions(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "balance.getPaymentMethodsError"
 // @Router /api/v1/balance/payment-methods [get]
 func (h *BalanceHandler) GetPaymentMethods(c *fiber.Ctx) error {
-    methods, err := h.balanceService.GetPaymentMethods(c.Context())
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getPaymentMethodsError")
-    }
+	methods, err := h.balanceService.GetPaymentMethods(c.Context())
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getPaymentMethodsError")
+	}
 
-    return utils.SuccessResponse(c, methods)
+	return utils.SuccessResponse(c, methods)
 }

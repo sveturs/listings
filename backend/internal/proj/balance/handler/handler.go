@@ -3,15 +3,15 @@
 package handler
 
 import (
-    globalService "backend/internal/proj/global/service"
+	globalService "backend/internal/proj/global/service"
 )
 
 type Handler struct {
-    Balance *BalanceHandler
+	Balance *BalanceHandler
 }
 
 func NewHandler(services globalService.ServicesInterface) *Handler {
-    return &Handler{
-        Balance: NewBalanceHandler(services.Balance(), services.Payment()),
-    }
+	return &Handler{
+		Balance: NewBalanceHandler(services.Balance(), services.Payment()),
+	}
 }

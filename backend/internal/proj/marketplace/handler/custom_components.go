@@ -1,3 +1,5 @@
+// Package handler
+// backend/internal/proj/marketplace/handler/custom_components.go
 package handler
 
 import (
@@ -7,7 +9,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	postgres "backend/internal/storage/postgres"
+	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
 )
 
@@ -30,7 +32,7 @@ func NewCustomComponentHandler(storage postgres.CustomComponentStorage) *CustomC
 // @Accept json
 // @Produce json
 // @Param component body models.CreateCustomComponentRequest true "Component data"
-// @Success 201 {object} models.CustomUIComponent
+// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CustomUIComponent}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
@@ -61,7 +63,8 @@ func (h *CustomComponentHandler) CreateComponent(c *fiber.Ctx) error {
 	}
 
 	component.ID = id
-	return c.Status(fiber.StatusCreated).JSON(component)
+	c.Status(fiber.StatusCreated)
+	return utils.SuccessResponse(c, component)
 }
 
 // GetComponent gets a component by ID
@@ -70,7 +73,7 @@ func (h *CustomComponentHandler) CreateComponent(c *fiber.Ctx) error {
 // @Tags marketplace-admin-custom-components
 // @Produce json
 // @Param id path int true "Component ID"
-// @Success 200 {object} models.CustomUIComponent
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CustomUIComponent}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.componentNotFound"
 // @Security BearerAuth
@@ -86,7 +89,7 @@ func (h *CustomComponentHandler) GetComponent(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.componentNotFound")
 	}
 
-	return c.JSON(component)
+	return utils.SuccessResponse(c, component)
 }
 
 // UpdateComponent updates a component
@@ -97,7 +100,7 @@ func (h *CustomComponentHandler) GetComponent(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Component ID"
 // @Param component body models.UpdateCustomComponentRequest true "Component data"
-// @Success 200 {object} models.CustomUIComponent
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CustomUIComponent}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId or marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
@@ -149,7 +152,7 @@ func (h *CustomComponentHandler) UpdateComponent(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.internalServerError")
 	}
 
-	return c.JSON(component)
+	return utils.SuccessResponse(c, component)
 }
 
 // DeleteComponent deletes a component
@@ -181,7 +184,7 @@ func (h *CustomComponentHandler) DeleteComponent(c *fiber.Ctx) error {
 // @Produce json
 // @Param component_type query string false "Filter by component type"
 // @Param active query bool false "Filter by active status"
-// @Success 200 {array} models.CustomUIComponent
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CustomUIComponent}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
 // @Router /api/admin/custom-components [get]
@@ -203,7 +206,7 @@ func (h *CustomComponentHandler) ListComponents(c *fiber.Ctx) error {
 	// Логируем успешный результат
 	logger.Info().Int("componentsCount", len(components)).Msg("Listed components")
 
-	return c.JSON(components)
+	return utils.SuccessResponse(c, components)
 }
 
 // AddComponentUsage adds component usage for a category
@@ -213,7 +216,7 @@ func (h *CustomComponentHandler) ListComponents(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param usage body models.CreateComponentUsageRequest true "Usage data"
-// @Success 201 {object} models.CustomUIComponentUsage
+// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CustomUIComponentUsage}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
@@ -245,7 +248,8 @@ func (h *CustomComponentHandler) AddComponentUsage(c *fiber.Ctx) error {
 	}
 
 	usage.ID = id
-	return c.Status(fiber.StatusCreated).JSON(usage)
+	c.Status(fiber.StatusCreated)
+	return utils.SuccessResponse(c, usage)
 }
 
 // GetComponentUsages gets all component usages
@@ -255,7 +259,7 @@ func (h *CustomComponentHandler) AddComponentUsage(c *fiber.Ctx) error {
 // @Produce json
 // @Param component_id query int false "Component ID"
 // @Param category_id query int false "Category ID"
-// @Success 200 {array} models.CustomUIComponentUsage
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CustomUIComponentUsage}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
 // @Router /api/admin/custom-components/usage [get]
@@ -275,7 +279,7 @@ func (h *CustomComponentHandler) GetComponentUsages(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.internalServerError")
 	}
 
-	return c.JSON(usages)
+	return utils.SuccessResponse(c, usages)
 }
 
 // RemoveComponentUsage removes component usage
@@ -308,7 +312,7 @@ func (h *CustomComponentHandler) RemoveComponentUsage(c *fiber.Ctx) error {
 // @Produce json
 // @Param category_id path int true "Category ID"
 // @Param context query string false "Usage context"
-// @Success 200 {array} models.CustomUIComponentUsage
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CustomUIComponentUsage}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
@@ -325,7 +329,7 @@ func (h *CustomComponentHandler) GetCategoryComponents(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.internalServerError")
 	}
 
-	return c.JSON(components)
+	return utils.SuccessResponse(c, components)
 }
 
 // CreateTemplate creates a component template
@@ -335,7 +339,7 @@ func (h *CustomComponentHandler) GetCategoryComponents(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param template body models.CreateTemplateRequest true "Template data"
-// @Success 201 {object} models.CustomUITemplate
+// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.ComponentTemplate}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
@@ -362,7 +366,8 @@ func (h *CustomComponentHandler) CreateTemplate(c *fiber.Ctx) error {
 	}
 
 	template.ID = id
-	return c.Status(fiber.StatusCreated).JSON(template)
+	c.Status(fiber.StatusCreated)
+	return utils.SuccessResponse(c, template)
 }
 
 // ListTemplates returns a list of templates
@@ -370,7 +375,7 @@ func (h *CustomComponentHandler) CreateTemplate(c *fiber.Ctx) error {
 // @Description Returns a list of all component templates
 // @Tags marketplace-admin-custom-components
 // @Produce json
-// @Success 200 {array} models.CustomUITemplate
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.ComponentTemplate}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
 // @Router /api/admin/custom-components/templates [get]
@@ -388,5 +393,5 @@ func (h *CustomComponentHandler) ListTemplates(c *fiber.Ctx) error {
 	// Логируем успешный результат
 	logger.Info().Int("templatesCount", len(templates)).Msg("Listed templates")
 
-	return c.JSON(templates)
+	return utils.SuccessResponse(c, templates)
 }

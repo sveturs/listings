@@ -9,62 +9,62 @@ import (
 )
 
 func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
-    var userID int
+	var userID int
 
-    // Сначала пробуем найти по google_id
-    err := s.pool.QueryRow(ctx, `
+	// Сначала пробуем найти по google_id
+	err := s.pool.QueryRow(ctx, `
         SELECT id FROM users WHERE google_id = $1
     `, user.GoogleID).Scan(&userID)
 
-    if err == nil {
-        // Пользователь найден, обновляем информацию
-        _, err = s.pool.Exec(ctx, `
+	if err == nil {
+		// Пользователь найден, обновляем информацию
+		_, err = s.pool.Exec(ctx, `
             UPDATE users 
             SET name = $1, email = $2, picture_url = $3
             WHERE id = $4
         `, user.Name, user.Email, user.PictureURL, userID)
-        if err != nil {
-            return nil, err
-        }
-        user.ID = userID
-        user.Provider = "google"
-        return user, nil
-    }
+		if err != nil {
+			return nil, err
+		}
+		user.ID = userID
+		user.Provider = "google"
+		return user, nil
+	}
 
-    // Если не нашли по google_id, пробуем найти по email и обновить
-    err = s.pool.QueryRow(ctx, `
+	// Если не нашли по google_id, пробуем найти по email и обновить
+	err = s.pool.QueryRow(ctx, `
         SELECT id FROM users WHERE email = $1
     `, user.Email).Scan(&userID)
 
-    if err == nil {
-        // Нашли пользователя по email, обновляем его данные
-        _, err = s.pool.Exec(ctx, `
+	if err == nil {
+		// Нашли пользователя по email, обновляем его данные
+		_, err = s.pool.Exec(ctx, `
             UPDATE users 
             SET name = $1, google_id = $2, picture_url = $3, provider = 'google'
             WHERE id = $4
         `, user.Name, user.GoogleID, user.PictureURL, userID)
-        if err != nil {
-            return nil, err
-        }
-        user.ID = userID
-        user.Provider = "google"
-        return user, nil
-    }
+		if err != nil {
+			return nil, err
+		}
+		user.ID = userID
+		user.Provider = "google"
+		return user, nil
+	}
 
-    // Если пользователь не найден ни по google_id, ни по email - создаем нового
-    err = s.pool.QueryRow(ctx, `
+	// Если пользователь не найден ни по google_id, ни по email - создаем нового
+	err = s.pool.QueryRow(ctx, `
         INSERT INTO users (name, email, google_id, picture_url, provider)
         VALUES ($1, $2, $3, $4, 'google')
         RETURNING id, created_at
     `, user.Name, user.Email, user.GoogleID, user.PictureURL).Scan(&userID, &user.CreatedAt)
 
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    user.ID = userID
-    user.Provider = "google"
-    return user, nil
+	user.ID = userID
+	user.Provider = "google"
+	return user, nil
 }
 func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
@@ -101,13 +101,13 @@ func (s *Storage) CreateUser(ctx context.Context, user *models.User) (*models.Us
 			user.Provider = "email"
 		}
 	}
-	
+
 	// Для SQL запроса преобразуем *string в интерфейс, который может быть nil
 	var passwordValue interface{}
 	if user.Password != nil {
 		passwordValue = *user.Password
 	}
-	
+
 	err := s.pool.QueryRow(ctx, `
         INSERT INTO users (name, email, google_id, picture_url, phone, password, provider)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -188,7 +188,7 @@ func (s *Storage) GetRefreshToken(ctx context.Context, tokenValue string) (*mode
 		return nil, err
 	}
 
-	s.logger.Info("GetRefreshToken: found token for userID=%d, isRevoked=%v", 
+	s.logger.Info("GetRefreshToken: found token for userID=%d, isRevoked=%v",
 		token.UserID, token.IsRevoked)
 	return token, nil
 }
@@ -300,15 +300,15 @@ func (s *Storage) RevokeRefreshTokenByValue(ctx context.Context, tokenValue stri
 		s.logger.Error("Failed to revoke refresh token: %v", err)
 		return err
 	}
-	
+
 	rowsAffected := result.RowsAffected()
-	s.logger.Info("RevokeRefreshTokenByValue: token=%s..., rowsAffected=%d", 
+	s.logger.Info("RevokeRefreshTokenByValue: token=%s..., rowsAffected=%d",
 		tokenValue[:20], rowsAffected)
-	
+
 	if rowsAffected == 0 {
 		s.logger.Info("Warning: No rows affected when revoking token, token might already be revoked or not exist")
 	}
-	
+
 	return nil
 }
 

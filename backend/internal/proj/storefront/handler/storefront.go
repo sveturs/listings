@@ -1,18 +1,20 @@
+// Package handler
 // backend/internal/proj/storefront/handler/storefront.go
 package handler
 
 import (
-	"backend/internal/domain/models"
-	globalService "backend/internal/proj/global/service"
-	"backend/pkg/utils"
-	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/domain/models"
+	"backend/internal/logger"
+	globalService "backend/internal/proj/global/service"
+	"backend/pkg/utils"
 )
 
 type StorefrontHandler struct {
@@ -112,6 +114,7 @@ func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, storefront)
 }
+
 // GetCategoryMappings возвращает сопоставления категорий для источника импорта
 // @Summary Get category mappings for import source
 // @Description Returns category mappings for a specific import source
@@ -126,18 +129,18 @@ func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/import-sources/{id}/category-mappings [get]
 func (h *StorefrontHandler) GetCategoryMappings(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(int)
-    sourceID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidId")
-    }
-    
-    mappings, err := h.services.Storefront().GetCategoryMappings(c.Context(), sourceID, userID)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.getCategoryMappingsError")
-    }
-    
-    return utils.SuccessResponse(c, mappings)
+	userID := c.Locals("user_id").(int)
+	sourceID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidId")
+	}
+
+	mappings, err := h.services.Storefront().GetCategoryMappings(c.Context(), sourceID, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.getCategoryMappingsError")
+	}
+
+	return utils.SuccessResponse(c, mappings)
 }
 
 // UpdateCategoryMappings обновляет сопоставления категорий для источника импорта
@@ -148,33 +151,34 @@ func (h *StorefrontHandler) GetCategoryMappings(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Import source ID"
 // @Param body body map[string]int true "Category mappings"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Update successful"
+// @Success 200 {object} utils.SuccessResponseSwag{data=CategoryMappingsUpdateResponse} "Update successful"
 // @Failure 400 {object} utils.ErrorResponseSwag "importSource.invalidId,importSource.invalidMappingsFormat"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "importSource.updateCategoryMappingsError"
 // @Security BearerAuth
 // @Router /api/v1/import-sources/{id}/category-mappings [put]
 func (h *StorefrontHandler) UpdateCategoryMappings(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(int)
-    sourceID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidId")
-    }
-    
-    var mappings map[string]int
-    if err := c.BodyParser(&mappings); err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidMappingsFormat")
-    }
-    
-    err = h.services.Storefront().UpdateCategoryMappings(c.Context(), sourceID, userID, mappings)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.updateCategoryMappingsError")
-    }
-    
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "importSource.categoryMappingsUpdated",
-    })
+	userID := c.Locals("user_id").(int)
+	sourceID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidId")
+	}
+
+	var mappings map[string]int
+	if err := c.BodyParser(&mappings); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidMappingsFormat")
+	}
+
+	err = h.services.Storefront().UpdateCategoryMappings(c.Context(), sourceID, userID, mappings)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.updateCategoryMappingsError")
+	}
+
+	return utils.SuccessResponse(c, &CategoryMappingsUpdateResponse{
+		Message: "importSource.categoryMappingsUpdated",
+	})
 }
+
 // GetImportedCategories возвращает список категорий, которые были импортированы этим источником
 // @Summary Get imported categories
 // @Description Returns list of categories that were imported by this source
@@ -189,18 +193,18 @@ func (h *StorefrontHandler) UpdateCategoryMappings(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/import-sources/{id}/imported-categories [get]
 func (h *StorefrontHandler) GetImportedCategories(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(int)
-    sourceID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidId")
-    }
-    
-    categories, err := h.services.Storefront().GetImportedCategories(c.Context(), sourceID, userID)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.getImportedCategoriesError")
-    }
-    
-    return utils.SuccessResponse(c, categories)
+	userID := c.Locals("user_id").(int)
+	sourceID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidId")
+	}
+
+	categories, err := h.services.Storefront().GetImportedCategories(c.Context(), sourceID, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.getImportedCategoriesError")
+	}
+
+	return utils.SuccessResponse(c, categories)
 }
 
 // ApplyCategoryMappings применяет сопоставления категорий к импортированным товарам
@@ -210,28 +214,28 @@ func (h *StorefrontHandler) GetImportedCategories(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Import source ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string,updated_count=int}} "Mappings applied successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ApplyCategoryMappingsResponse} "Mappings applied successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "importSource.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "importSource.applyCategoryMappingsError"
 // @Security BearerAuth
 // @Router /api/v1/import-sources/{id}/apply-mappings [post]
 func (h *StorefrontHandler) ApplyCategoryMappings(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(int)
-    sourceID, err := strconv.Atoi(c.Params("id"))
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidId")
-    }
-    
-    updatedCount, err := h.services.Storefront().ApplyCategoryMappings(c.Context(), sourceID, userID)
-    if err != nil {
-        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.applyCategoryMappingsError")
-    }
-    
-    return utils.SuccessResponse(c, fiber.Map{
-        "message": "importSource.categoriesUpdated",
-        "updated_count": updatedCount,
-    })
+	userID := c.Locals("user_id").(int)
+	sourceID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.invalidId")
+	}
+
+	updatedCount, err := h.services.Storefront().ApplyCategoryMappings(c.Context(), sourceID, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.applyCategoryMappingsError")
+	}
+
+	return utils.SuccessResponse(c, &ApplyCategoryMappingsResponse{
+		Message:      "importSource.categoriesUpdated",
+		UpdatedCount: updatedCount,
+	})
 }
 
 // GetPublicStorefront возвращает публичные данные витрины по ID
@@ -264,7 +268,7 @@ func (h *StorefrontHandler) GetPublicStorefront(c *fiber.Ctx) error {
 		}
 
 		// Логируем детали ошибки для отладки
-		fmt.Printf("Error getting public storefront %d: %v\n", id, err)
+		logger.Error().Err(err).Int("storefront_id", id).Msg("Error getting public storefront")
 
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefront.getError")
 	}
@@ -280,7 +284,7 @@ func (h *StorefrontHandler) GetPublicStorefront(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Param body body models.Storefront true "Updated storefront data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Update successful"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Update successful"
 // @Failure 400 {object} utils.ErrorResponseSwag "storefront.invalidId,storefront.invalidRequest"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "storefront.updateError"
@@ -304,7 +308,7 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefront.updateError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "storefront.updateSuccess"})
+	return utils.SuccessResponse(c, &MessageResponse{Message: "storefront.updateSuccess"})
 }
 
 // DeleteStorefront удаляет витрину
@@ -314,7 +318,7 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Storefront ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Delete successful"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Delete successful"
 // @Failure 400 {object} utils.ErrorResponseSwag "storefront.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "storefront.deleteError"
@@ -332,7 +336,7 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefront.deleteError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "storefront.deleteSuccess"})
+	return utils.SuccessResponse(c, &MessageResponse{Message: "storefront.deleteSuccess"})
 }
 
 // CreateImportSource создаёт новый источник импорта
@@ -400,7 +404,7 @@ func (h *StorefrontHandler) GetImportSources(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Import source ID"
 // @Param body body models.ImportSource true "Updated import source data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Update successful"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Update successful"
 // @Failure 400 {object} utils.ErrorResponseSwag "importSource.invalidId,storefront.invalidRequest"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "importSource.updateError"
@@ -424,7 +428,7 @@ func (h *StorefrontHandler) UpdateImportSource(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.updateError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "importSource.updateSuccess"})
+	return utils.SuccessResponse(c, &MessageResponse{Message: "importSource.updateSuccess"})
 }
 
 // DeleteImportSource удаляет источник импорта
@@ -434,7 +438,7 @@ func (h *StorefrontHandler) UpdateImportSource(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Import source ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}} "Delete successful"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Delete successful"
 // @Failure 400 {object} utils.ErrorResponseSwag "importSource.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "importSource.deleteError"
@@ -452,7 +456,7 @@ func (h *StorefrontHandler) DeleteImportSource(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.deleteError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{"message": "importSource.deleteSuccess"})
+	return utils.SuccessResponse(c, &MessageResponse{Message: "importSource.deleteSuccess"})
 }
 
 // RunImport запускает импорт данных
@@ -479,17 +483,17 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 	}
 
 	// Отладочный лог
-	log.Printf("Running import for source ID: %d, user ID: %d", sourceID, userID)
+	logger.Debug().Int("source_id", sourceID).Int("user_id", userID).Msg("Running import")
 
 	// Сначала проверим, существует ли источник импорта
 	source, err := h.services.Storefront().GetImportSourceByID(c.Context(), sourceID, userID)
 	if err != nil {
-		log.Printf("Error fetching source %d: %v", sourceID, err)
+		logger.Error().Err(err).Int("source_id", sourceID).Msg("Error fetching source")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.notFound")
 	}
 
 	// Отладочный лог
-	log.Printf("Found import source: %+v", source)
+	logger.Debug().Interface("source", source).Msg("Found import source")
 
 	var history *models.ImportHistory
 	var csvFile, zipFile multipart.File
@@ -501,7 +505,7 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 		// Это запрос с файлами
 		form, err := c.MultipartForm()
 		if err != nil && err != fiber.ErrUnprocessableEntity {
-			log.Printf("Error processing form file: %v", err)
+			logger.Error().Err(err).Msg("Error processing form file")
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "importSource.fileProcessingError")
 		}
 
@@ -511,12 +515,12 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 			csvFiles := form.File["file"]
 			if len(csvFiles) > 0 {
 				csvFileHeader := csvFiles[0]
-				log.Printf("Processing uploaded CSV file: %s, size: %d", csvFileHeader.Filename, csvFileHeader.Size)
+				logger.Debug().Str("filename", csvFileHeader.Filename).Int64("size", csvFileHeader.Size).Msg("Processing uploaded CSV file")
 
 				var err error
 				csvFile, err = csvFileHeader.Open()
 				if err != nil {
-					log.Printf("Error opening CSV file: %v", err)
+					logger.Error().Err(err).Msg("Error opening CSV file")
 					return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.csvOpenError")
 				}
 				defer csvFile.Close()
@@ -526,12 +530,12 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 			zipFiles := form.File["images_zip"]
 			if len(zipFiles) > 0 {
 				zipFileHeader := zipFiles[0]
-				log.Printf("Processing uploaded ZIP file: %s, size: %d", zipFileHeader.Filename, zipFileHeader.Size)
+				logger.Debug().Str("filename", zipFileHeader.Filename).Int64("size", zipFileHeader.Size).Msg("Processing uploaded ZIP file")
 
 				var err error
 				zipFile, err = zipFileHeader.Open()
 				if err != nil {
-					log.Printf("Error opening ZIP file: %v", err)
+					logger.Error().Err(err).Msg("Error opening ZIP file")
 					return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.zipOpenError")
 				}
 				defer zipFile.Close()
@@ -541,12 +545,12 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 			zipXmlFiles := form.File["xml_zip"]
 			if len(zipXmlFiles) > 0 {
 				zipXmlHeader := zipXmlFiles[0]
-				log.Printf("Processing uploaded XML ZIP file: %s, size: %d", zipXmlHeader.Filename, zipXmlHeader.Size)
+				logger.Debug().Str("filename", zipXmlHeader.Filename).Int64("size", zipXmlHeader.Size).Msg("Processing uploaded XML ZIP file")
 
 				var err error
 				xmlZipFile, err = zipXmlHeader.Open()
 				if err != nil {
-					log.Printf("Error opening XML ZIP file: %v", err)
+					logger.Error().Err(err).Msg("Error opening XML ZIP file")
 					return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.xmlZipOpenError")
 				}
 				defer xmlZipFile.Close()
@@ -556,7 +560,7 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 				if extension == ".zip" {
 					history, err = h.services.Storefront().ImportXMLFromZip(c.Context(), sourceID, xmlZipFile, userID)
 					if err != nil {
-						log.Printf("Error importing XML from ZIP: %v", err)
+						logger.Error().Err(err).Msg("Error importing XML from ZIP")
 						return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.xmlImportError")
 					}
 					return utils.SuccessResponse(c, history)
@@ -569,36 +573,36 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 		// Если у нас есть CSV, импортируем с ним
 		history, err = h.services.Storefront().ImportCSV(c.Context(), sourceID, csvFile, zipFile, userID)
 		if err != nil {
-			log.Printf("Error importing CSV: %v", err)
+			logger.Error().Err(err).Msg("Error importing CSV")
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.csvImportError")
 		}
 	} else if source.URL != "" {
 		// Если CSV файл не загружен, но есть URL в источнике
 		// Проверяем, если URL оканчивается на .zip, предполагаем, что это XML в ZIP
 		if strings.HasSuffix(strings.ToLower(source.URL), ".zip") {
-			log.Printf("Detected ZIP URL for source ID %d: %s", sourceID, source.URL)
+			logger.Debug().Int("source_id", sourceID).Str("url", source.URL).Msg("Detected ZIP URL")
 			// Загружаем ZIP-архив
 			resp, err := http.Get(source.URL)
 			if err != nil {
-				log.Printf("Error downloading ZIP from URL: %v", err)
+				logger.Error().Err(err).Msg("Error downloading ZIP from URL")
 				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.downloadError")
 			}
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				log.Printf("Bad status when downloading ZIP: %s", resp.Status)
+				logger.Error().Str("status", resp.Status).Msg("Bad status when downloading ZIP")
 				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.downloadError")
 			}
 
 			history, err = h.services.Storefront().ImportXMLFromZip(c.Context(), sourceID, resp.Body, userID)
 			if err != nil {
-				log.Printf("Error importing XML from ZIP URL: %v", err)
+				logger.Error().Err(err).Msg("Error importing XML from ZIP URL")
 				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.xmlImportError")
 			}
 		} else {
 			history, err = h.services.Storefront().RunImport(c.Context(), sourceID, userID)
 			if err != nil {
-				log.Printf("Error running import from URL: %v", err)
+				logger.Error().Err(err).Msg("Error running import from URL")
 				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "importSource.runImportError")
 			}
 		}
@@ -607,10 +611,11 @@ func (h *StorefrontHandler) RunImport(c *fiber.Ctx) error {
 	}
 
 	// Отладочный лог
-	log.Printf("Import completed successfully, history: %+v", history)
+	logger.Debug().Interface("history", history).Msg("Import completed successfully")
 
 	return utils.SuccessResponse(c, history)
 }
+
 // GetImportHistory возвращает историю импорта
 // @Summary Get import history
 // @Description Returns import history for an import source

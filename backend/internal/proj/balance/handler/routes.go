@@ -11,7 +11,7 @@ import (
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Защищенные маршруты с аутентификацией
 	balanceRoutes := app.Group("/api/v1/balance", mw.AuthRequiredJWT)
-	
+
 	balanceRoutes.Get("/", h.Balance.GetBalance)
 	balanceRoutes.Get("/transactions", h.Balance.GetTransactions)
 	balanceRoutes.Get("/payment-methods", h.Balance.GetPaymentMethods)

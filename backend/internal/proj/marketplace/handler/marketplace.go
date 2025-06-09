@@ -6,7 +6,7 @@ import (
 
 	"backend/internal/logger"
 	"backend/internal/proj/marketplace/service"
-	postgres "backend/internal/storage/postgres"
+	"backend/internal/storage/postgres"
 )
 
 // MarketplaceHandler represents the main handler for marketplace operations
@@ -38,5 +38,8 @@ func (h *MarketplaceHandler) respondWithJSON(w http.ResponseWriter, statusCode i
 
 // respondWithError sends an error response in JSON format
 func (h *MarketplaceHandler) respondWithError(w http.ResponseWriter, statusCode int, message string) {
-	h.respondWithJSON(w, statusCode, map[string]string{"error": message})
+	h.respondWithJSON(w, statusCode, ErrorResponse{
+		Success: false,
+		Error:   message,
+	})
 }

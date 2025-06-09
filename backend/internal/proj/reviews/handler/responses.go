@@ -1,4 +1,5 @@
 // Package handler содержит обработчики HTTP запросов для работы с отзывами
+// backend/internal/proj/reviews/handler/responses.go
 package handler
 
 import (
@@ -58,7 +59,7 @@ type RatingResponse struct {
 
 // StatsResponse ответ со статистикой отзывов
 type StatsResponse struct {
-	Success bool               `json:"success" example:"true"`
+	Success bool                `json:"success" example:"true"`
 	Data    *models.ReviewStats `json:"data"`
 }
 
@@ -70,6 +71,6 @@ type UserRatingSummaryResponse struct {
 
 // StorefrontRatingSummaryResponse ответ с рейтингом витрины
 type StorefrontRatingSummaryResponse struct {
-	Success bool                           `json:"success" example:"true"`
+	Success bool                            `json:"success" example:"true"`
 	Data    *models.StorefrontRatingSummary `json:"data"`
 }

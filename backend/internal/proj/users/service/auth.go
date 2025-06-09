@@ -172,7 +172,7 @@ func (s *AuthService) RegisterWithEmailPassword(ctx context.Context, name, email
 		Name:  name,
 		Email: email,
 	}
-	
+
 	// Хешируем пароль
 	if err := user.SetPassword(password); err != nil {
 		return "", nil, err
@@ -257,7 +257,7 @@ func (s *AuthService) RegisterWithRefreshToken(ctx context.Context, name, email,
 		Email:     email,
 		CreatedAt: time.Now(),
 	}
-	
+
 	// Установка пароля (хеширование происходит внутри метода)
 	if err := newUser.SetPassword(password); err != nil {
 		return "", "", nil, err
@@ -305,7 +305,7 @@ func (s *AuthService) RegisterWithRefreshToken(ctx context.Context, name, email,
 // GenerateTokensForOAuth генерирует пару токенов для OAuth авторизации
 func (s *AuthService) GenerateTokensForOAuth(ctx context.Context, userID int, email, ip, userAgent string) (accessToken, refreshToken string, err error) {
 	log.Printf("GenerateTokensForOAuth called for user %d (%s)", userID, email)
-	
+
 	// Генерация access токена
 	accessToken, err = s.GenerateJWT(userID, email)
 	if err != nil {
@@ -364,7 +364,7 @@ func (s *AuthService) RefreshTokens(ctx context.Context, refreshToken, ip, userA
 
 	// Проверка валидности токена
 	if !storedToken.IsValid() {
-		log.Printf("RefreshTokens: Token is not valid (isRevoked=%v, expired=%v)", 
+		log.Printf("RefreshTokens: Token is not valid (isRevoked=%v, expired=%v)",
 			storedToken.IsRevoked, time.Now().After(storedToken.ExpiresAt))
 		return "", "", types.ErrInvalidToken
 	}

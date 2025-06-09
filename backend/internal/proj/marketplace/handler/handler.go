@@ -11,7 +11,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
-	postgres "backend/internal/storage/postgres"
+	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
 )
 
@@ -294,7 +294,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 // @Param condition query string false "Item condition filter"
 // @Param min_price query number false "Minimum price filter"
 // @Param max_price query number false "Maximum price filter"
-// @Success 200 {object} object{listings=[]models.MarketplaceListing,bounds=object{ne=object{lat=number,lng=number},sw=object{lat=number,lng=number}},zoom=int,count=int} "Listings within bounds"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MapBoundsData} "Listings within bounds"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
 // @Router /api/v1/marketplace/map/bounds [get]
@@ -364,15 +364,16 @@ func (h *Handler) GetListingsInBounds(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
 
-	return utils.SuccessResponse(c, map[string]interface{}{
-		"listings": listings,
-		"bounds": map[string]interface{}{
-			"ne": map[string]float64{"lat": neLat64, "lng": neLng64},
-			"sw": map[string]float64{"lat": swLat64, "lng": swLng64},
+	response := MapBoundsData{
+		Listings: listings,
+		Bounds: MapBounds{
+			NE: Coordinates{Lat: neLat64, Lng: neLng64},
+			SW: Coordinates{Lat: swLat64, Lng: swLng64},
 		},
-		"zoom":  zoom,
-		"count": len(listings),
-	})
+		Zoom:  zoom,
+		Count: len(listings),
+	}
+	return utils.SuccessResponse(c, response)
 }
 
 // GetMapClusters returns clustered data for map view
@@ -390,7 +391,7 @@ func (h *Handler) GetListingsInBounds(c *fiber.Ctx) error {
 // @Param condition query string false "Item condition filter"
 // @Param min_price query number false "Minimum price filter"
 // @Param max_price query number false "Maximum price filter"
-// @Success 200 {object} object{clusters=[]models.MarketplaceListing,bounds=object{ne=object{lat=number,lng=number},sw=object{lat=number,lng=number}},zoom=int,count=int} "Map clusters data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MapBoundsData} "Map clusters data"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
 // @Router /api/v1/marketplace/map/clusters [get]
@@ -459,13 +460,15 @@ func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
 
-	return utils.SuccessResponse(c, map[string]interface{}{
-		"clusters": clusters,
-		"bounds": map[string]interface{}{
-			"ne": map[string]float64{"lat": neLat64, "lng": neLng64},
-			"sw": map[string]float64{"lat": swLat64, "lng": swLng64},
+	// Этот метод возвращает listings, а не clusters, поэтому используем MapBoundsData
+	response := MapBoundsData{
+		Listings: clusters, // clusters здесь на самом деле listings
+		Bounds: MapBounds{
+			NE: Coordinates{Lat: neLat64, Lng: neLng64},
+			SW: Coordinates{Lat: swLat64, Lng: swLng64},
 		},
-		"zoom":  zoom,
-		"count": len(clusters),
-	})
+		Zoom:  zoom,
+		Count: len(clusters),
+	}
+	return utils.SuccessResponse(c, response)
 }

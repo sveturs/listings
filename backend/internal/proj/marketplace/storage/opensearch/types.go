@@ -1,27 +1,26 @@
 package opensearch
 
 import (
-    "backend/internal/domain/models"
+	"backend/internal/domain/models"
 )
-
 
 // GeoLocation координаты для геопоиска
 type GeoLocation struct {
-    Lat float64
-    Lon float64
+	Lat float64
+	Lon float64
 }
 
 // SearchResult результаты поиска
 type SearchResult struct {
-    Listings     []*models.MarketplaceListing // Найденные объявления
-    Total        int                         // Общее количество найденных объявлений
-    Took         int64                       // Время выполнения запроса в мс
-    Aggregations map[string][]Bucket        // Фасеты для фильтров
-    Suggestions  []string                    // Подсказки (для исправления опечаток)
+	Listings     []*models.MarketplaceListing // Найденные объявления
+	Total        int                          // Общее количество найденных объявлений
+	Took         int64                        // Время выполнения запроса в мс
+	Aggregations map[string][]Bucket          // Фасеты для фильтров
+	Suggestions  []string                     // Подсказки (для исправления опечаток)
 }
 
 // Bucket для агрегаций
 type Bucket struct {
-    Key   string // Ключ бакета
-    Count int    // Количество документов
+	Key   string // Ключ бакета
+	Count int    // Количество документов
 }

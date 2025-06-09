@@ -14,15 +14,15 @@ type AuthServiceInterface interface {
 	SaveSession(token string, data *types.SessionData)
 	DeleteSession(token string)
 	GetSession(ctx context.Context, token string) (*types.SessionData, error)
-	
+
 	// JWT методы
 	GenerateJWT(userID int, email string) (string, error)
 	ValidateJWT(tokenString string) (*jwt.Claims, error)
-	
+
 	// Email/Password аутентификация
 	LoginWithEmailPassword(ctx context.Context, email, password string) (string, *models.User, error)
 	RegisterWithEmailPassword(ctx context.Context, name, email, password string) (string, *models.User, error)
-	
+
 	// Refresh Token методы
 	LoginWithRefreshToken(ctx context.Context, email, password, ip, userAgent string) (accessToken, refreshToken string, user *models.User, err error)
 	RegisterWithRefreshToken(ctx context.Context, name, email, password, ip, userAgent string) (accessToken, refreshToken string, user *models.User, err error)

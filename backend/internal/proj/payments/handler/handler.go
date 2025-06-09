@@ -1,3 +1,4 @@
+// Package handler
 // backend/internal/proj/payments/handler/handler.go
 package handler
 
@@ -8,6 +9,7 @@ import (
 
 	globalService "backend/internal/proj/global/service"
 	paymentService "backend/internal/proj/payments/service"
+	"backend/pkg/utils"
 )
 
 type Handler struct {
@@ -20,16 +22,16 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 	}
 }
 
-// HandleWebhook обрабатывает webhook от платежной системы (Stripe)
-// @Summary Webhook платежной системы
-// @Description Обрабатывает webhook уведомления от Stripe о статусе платежей
+// HandleWebhook processes webhook from payment system (Stripe)
+// @Summary Process payment webhook
+// @Description Processes webhook notifications from Stripe about payment status
 // @Tags payments
 // @Accept json
 // @Produce json
-// @Param Stripe-Signature header string true "Подпись Stripe для верификации webhook"
-// @Param payload body string true "Тело запроса от Stripe"
-// @Success 200 {string} string "OK"
-// @Failure 400 {string} string "Bad Request"
+// @Param Stripe-Signature header string true "Stripe signature for webhook verification"
+// @Param payload body StripeWebhookRequest true "Stripe webhook payload"
+// @Success 200 {object} utils.SuccessResponseSwag{data=WebhookResponse} "Webhook processed successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "payments.webhook.invalid_signature or payments.webhook.processing_error"
 // @Router /api/v1/payments/stripe/webhook [post]
 func (h *Handler) HandleWebhook(c *fiber.Ctx) error {
 	payload := c.Body()
@@ -38,8 +40,16 @@ func (h *Handler) HandleWebhook(c *fiber.Ctx) error {
 	err := h.payment.HandleWebhook(c.Context(), payload, signature)
 	if err != nil {
 		log.Printf("Webhook error: %v", err)
-		return c.SendStatus(fiber.StatusBadRequest)
+		// Check if it's a signature verification error
+		if err.Error() == "invalid signature" {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "payments.webhook.invalid_signature")
+		}
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "payments.webhook.processing_error")
 	}
 
-	return c.SendStatus(fiber.StatusOK)
+	response := WebhookResponse{
+		Status:  "success",
+		Message: "payments.webhook.processed",
+	}
+	return utils.SuccessResponse(c, response)
 }

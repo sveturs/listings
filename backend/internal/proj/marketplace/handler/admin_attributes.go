@@ -1,3 +1,4 @@
+// Package handler
 // backend/internal/proj/marketplace/handler/admin_attributes.go
 package handler
 
@@ -25,32 +26,6 @@ func NewAdminAttributesHandler(services globalService.ServicesInterface) *AdminA
 	}
 }
 
-// RegisterRoutes регистрирует маршруты для админки атрибутов
-func (h *AdminAttributesHandler) RegisterRoutes(app *fiber.App, adminMiddleware fiber.Handler) {
-	adminGroup := app.Group("/api/admin", adminMiddleware)
-
-	// Маршруты для управления атрибутами
-	adminGroup.Post("/attributes", h.CreateAttribute)
-	adminGroup.Get("/attributes", h.GetAttributes)
-	adminGroup.Get("/attributes/:id", h.GetAttributeByID)
-	adminGroup.Put("/attributes/:id", h.UpdateAttribute)
-	adminGroup.Delete("/attributes/:id", h.DeleteAttribute)
-	adminGroup.Post("/attributes/bulk-update", h.BulkUpdateAttributes)
-
-	// Маршруты для экспорта/импорта настроек атрибутов - регистрируем до других маршрутов категорий и атрибутов
-	// чтобы избежать конфликта маршрутизации
-	adminGroup.Get("/categories/:categoryId/attributes/export", h.ExportCategoryAttributes)
-	adminGroup.Post("/categories/:categoryId/attributes/import", h.ImportCategoryAttributes)
-	
-	// Маршрут для копирования настроек между категориями
-	adminGroup.Post("/categories/:targetCategoryId/attributes/copy", h.CopyAttributesSettings)
-
-	// Маршруты для управления связями атрибутов с категориями
-	adminGroup.Post("/categories/:categoryId/attributes/:attributeId", h.AddAttributeToCategory)
-	adminGroup.Delete("/categories/:categoryId/attributes/:attributeId", h.RemoveAttributeFromCategory)
-	adminGroup.Put("/categories/:categoryId/attributes/:attributeId", h.UpdateAttributeCategory)
-}
-
 // CreateAttribute создает новый атрибут
 // @Summary Create attribute
 // @Description Creates a new attribute for categories
@@ -58,7 +33,7 @@ func (h *AdminAttributesHandler) RegisterRoutes(app *fiber.App, adminMiddleware 
 // @Accept json
 // @Produce json
 // @Param body body models.CategoryAttribute true "Attribute data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object{id=int,message=string}} "marketplace.attributeCreated"
+// @Success 201 {object} utils.SuccessResponseSwag{data=AttributeCreateResponse} "marketplace.attributeCreated"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.requiredFieldsMissing"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createAttributeError"
 // @Security BearerAuth
@@ -90,7 +65,7 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 
 			// Формируем validation_rules из отдельных полей
 			validationRules := make(map[string]interface{})
-			
+
 			// Проверяем и добавляем правила валидации из запроса
 			if minLength, ok := requestData["min_length"]; ok && minLength != nil {
 				if val, ok := minLength.(float64); ok && val > 0 {
@@ -150,9 +125,10 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.createAttributeError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"id":      id,
-		"message": "marketplace.attributeCreated",
+	c.Status(fiber.StatusCreated)
+	return utils.SuccessResponse(c, AttributeCreateResponse{
+		ID:      id,
+		Message: "marketplace.attributeCreated",
 	})
 }
 
@@ -162,7 +138,7 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 // @Tags marketplace-admin-attributes
 // @Accept json
 // @Produce json
-// @Success 200 {array} models.CategoryAttribute "List of attributes"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttribute} "List of attributes"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes [get]
@@ -222,7 +198,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attribute ID"
-// @Success 200 {object} models.CategoryAttribute "Attribute information"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryAttribute} "Attribute information"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
 // @Failure 404 {object} utils.ErrorResponseSwag "Attribute not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -258,7 +234,7 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Attribute ID"
 // @Param attribute body models.CategoryAttribute true "Attribute data"
-// @Success 200 {object} map[string]interface{} "Success message"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -298,7 +274,7 @@ func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 
 			// Формируем validation_rules из отдельных полей
 			validationRules := make(map[string]interface{})
-			
+
 			// Проверяем и добавляем правила валидации из запроса
 			if minLength, ok := requestData["min_length"]; ok && minLength != nil {
 				if val, ok := minLength.(float64); ok && val > 0 {
@@ -358,8 +334,8 @@ func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attributeUpdated",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attributeUpdated",
 	})
 }
 
@@ -370,7 +346,7 @@ func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attribute ID"
-// @Success 200 {object} map[string]interface{} "Success message"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "marketplace.attributeDeleted"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -389,8 +365,8 @@ func (h *AdminAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteAttributeError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attributeDeleted",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attributeDeleted",
 	})
 }
 
@@ -401,8 +377,8 @@ func (h *AdminAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param attributes body object{attributes=[]models.CategoryAttribute} true "List of attributes to update"
-// @Success 200 {object} map[string]interface{} "Update results with success count"
-// @Success 206 {object} map[string]interface{} "Partial update with errors"
+// @Success 200 {object} utils.SuccessResponseSwag{data=BulkUpdateResult} "Update results with success count"
+// @Success 206 {object} PartialOperationResponse{data=BulkUpdateResult} "Partial update with errors"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes/bulk [put]
@@ -441,14 +417,18 @@ func (h *AdminAttributesHandler) BulkUpdateAttributes(c *fiber.Ctx) error {
 		success++
 	}
 
-	result := fiber.Map{
-		"success_count": success,
-		"total_count":   len(input.Attributes),
+	result := BulkUpdateResult{
+		SuccessCount: success,
+		TotalCount:   len(input.Attributes),
 	}
 
 	if len(errors) > 0 {
-		result["errors"] = errors
-		return c.Status(fiber.StatusPartialContent).JSON(result)
+		result.Errors = errors
+		return c.Status(fiber.StatusPartialContent).JSON(PartialOperationResponse{
+			Success: false,
+			Error:   "marketplace.partialUpdateCompleted",
+			Data:    result,
+		})
 	}
 
 	return utils.SuccessResponse(c, result)
@@ -463,7 +443,7 @@ func (h *AdminAttributesHandler) BulkUpdateAttributes(c *fiber.Ctx) error {
 // @Param categoryId path int true "Category ID"
 // @Param attributeId path int true "Attribute ID"
 // @Param settings body object{is_required=bool,sort_order=int} false "Attribute settings for category"
-// @Success 200 {object} map[string]interface{} "Success message"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -506,8 +486,8 @@ func (h *AdminAttributesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.addAttributeToCategoryError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attributeAddedToCategory",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attributeAddedToCategory",
 	})
 }
 
@@ -519,7 +499,7 @@ func (h *AdminAttributesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param categoryId path int true "Category ID"
 // @Param attributeId path int true "Attribute ID"
-// @Success 200 {object} map[string]interface{} "Success message"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -543,8 +523,8 @@ func (h *AdminAttributesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.removeAttributeFromCategoryError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attributeRemovedFromCategory",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attributeRemovedFromCategory",
 	})
 }
 
@@ -557,7 +537,7 @@ func (h *AdminAttributesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error
 // @Param categoryId path int true "Category ID"
 // @Param attributeId path int true "Attribute ID"
 // @Param settings body object{is_required=bool,is_enabled=bool,sort_order=int,custom_component=string} true "Attribute category settings"
-// @Success 200 {object} map[string]interface{} "Success message"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -602,8 +582,8 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeCategoryError")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attributeCategoryUpdated",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attributeCategoryUpdated",
 	})
 }
 
@@ -614,7 +594,7 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param categoryId path int true "Category ID"
-// @Success 200 {array} models.CategoryAttributeMapping "Category attributes with settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttributeMapping} "Category attributes with settings"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -764,8 +744,8 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 // @Produce json
 // @Param categoryId path int true "Category ID"
 // @Param attributes body []models.CategoryAttributeMapping true "List of attribute mappings to import"
-// @Success 200 {object} map[string]interface{} "Import results with success count"
-// @Success 206 {object} map[string]interface{} "Partial import with errors"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ImportAttributesResult} "Import results with success count"
+// @Success 206 {object} PartialOperationResponse{data=ImportAttributesResult} "Partial import with errors"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
 // @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -854,17 +834,21 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 		}
 	}
 
-	result := fiber.Map{
-		"success_count": successCount,
-		"total_count":   len(attributeMappings),
+	result := ImportAttributesResult{
+		SuccessCount: successCount,
+		TotalCount:   len(attributeMappings),
 	}
 
 	if len(errors) > 0 {
-		result["errors"] = errors
+		result.Errors = errors
 		if successCount == 0 {
-			return c.Status(fiber.StatusBadRequest).JSON(result)
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.importAttributesFailed")
 		}
-		return c.Status(fiber.StatusPartialContent).JSON(result)
+		return c.Status(fiber.StatusPartialContent).JSON(PartialOperationResponse{
+			Success: false,
+			Error:   "marketplace.partialImportCompleted",
+			Data:    result,
+		})
 	}
 
 	return utils.SuccessResponse(c, result)
@@ -878,7 +862,7 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 // @Produce json
 // @Param targetCategoryId path int true "Target category ID"
 // @Param source body object{source_category_id=int} true "Source category ID"
-// @Success 200 {object} map[string]interface{} "Success message"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
 // @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -957,7 +941,7 @@ func (h *AdminAttributesHandler) CopyAttributesSettings(c *fiber.Ctx) error {
 		logger.Error().Err(err).Msg("Failed to invalidate attribute cache")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.attributeSettingsCopied",
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.attributeSettingsCopied",
 	})
 }

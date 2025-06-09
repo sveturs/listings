@@ -23,7 +23,7 @@ import (
 // @Param condition query string false "Item condition filter"
 // @Param min_price query number false "Minimum price filter"
 // @Param max_price query number false "Maximum price filter"
-// @Success 200 {object} object{listings=[]models.MarketplaceListing,bounds=object{ne=object{lat=number,lng=number},sw=object{lat=number,lng=number}},zoom=int,count=int} "Listings within bounds"
+// @Success 200 {object} MapBoundsResponse "Listings within bounds"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
 // @Router /api/v1/marketplace/map/bounds [get]
@@ -93,15 +93,19 @@ func (h *MarketplaceHandler) GetListingsInBounds(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
 
-	return utils.SuccessResponse(c, map[string]interface{}{
-		"listings": listings,
-		"bounds": map[string]interface{}{
-			"ne": map[string]float64{"lat": neLat64, "lng": neLng64},
-			"sw": map[string]float64{"lat": swLat64, "lng": swLng64},
+	response := MapBoundsResponse{
+		Success: true,
+		Data: MapBoundsData{
+			Listings: listings,
+			Bounds: MapBounds{
+				NE: Coordinates{Lat: neLat64, Lng: neLng64},
+				SW: Coordinates{Lat: swLat64, Lng: swLng64},
+			},
+			Zoom:  zoom,
+			Count: len(listings),
 		},
-		"zoom":  zoom,
-		"count": len(listings),
-	})
+	}
+	return c.JSON(response)
 }
 
 // GetMapClusters returns clustered data for map view
@@ -119,7 +123,7 @@ func (h *MarketplaceHandler) GetListingsInBounds(c *fiber.Ctx) error {
 // @Param condition query string false "Item condition filter"
 // @Param min_price query number false "Minimum price filter"
 // @Param max_price query number false "Maximum price filter"
-// @Success 200 {object} object{type=string,data=array,zoom=int,count=int} "Map clusters or markers data"
+// @Success 200 {object} MapClustersResponse "Map clusters or markers data"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
 // @Router /api/v1/marketplace/map/clusters [get]
@@ -190,12 +194,13 @@ func (h *MarketplaceHandler) GetMapClusters(c *fiber.Ctx) error {
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 		}
 
-		return utils.SuccessResponse(c, map[string]interface{}{
-			"type":  "markers",
-			"data":  listings,
-			"zoom":  zoom,
-			"count": len(listings),
-		})
+		response := MapClustersData{
+			Type:  "markers",
+			Data:  listings,
+			Zoom:  zoom,
+			Count: len(listings),
+		}
+		return utils.SuccessResponse(c, response)
 	}
 
 	// Для меньших zoom уровней возвращаем кластеры
@@ -206,10 +211,14 @@ func (h *MarketplaceHandler) GetMapClusters(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
 
-	return utils.SuccessResponse(c, map[string]interface{}{
-		"type":  "clusters",
-		"data":  clusters,
-		"zoom":  zoom,
-		"count": len(clusters),
-	})
+	response := MapClustersResponse{
+		Success: true,
+		Data: MapClustersData{
+			Type:  "clusters",
+			Data:  clusters,
+			Zoom:  zoom,
+			Count: len(clusters),
+		},
+	}
+	return c.JSON(response)
 }

@@ -46,7 +46,7 @@ type TokenResponse struct {
 
 // SessionResponse represents session information
 type SessionResponse struct {
-	Authenticated bool              `json:"authenticated" example:"true"`
+	Authenticated bool                 `json:"authenticated" example:"true"`
 	User          *SessionUserResponse `json:"user,omitempty"`
 }
 
@@ -95,7 +95,6 @@ type AdminAdminsResponse struct {
 
 // LoginResponse represents deprecated login response
 type LoginResponse struct {
-	Success bool         `json:"success" example:"true"`
 	Message string       `json:"message" example:"users.login.success.authenticated"`
 	User    *models.User `json:"user"`
 }

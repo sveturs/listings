@@ -1,3 +1,5 @@
+// Package handler
+// backend/internal/proj/storefront/handler/handler.go
 package handler
 
 import (

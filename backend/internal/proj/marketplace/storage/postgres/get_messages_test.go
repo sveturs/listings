@@ -18,7 +18,7 @@ func TestGetMessagesOptimized(t *testing.T) {
 	t.Log("  - Reduced database round trips")
 	t.Log("  - Better performance for chats with many messages containing attachments")
 	t.Log("  - Consistent query time regardless of attachment count")
-	
+
 	// В реальном тесте здесь был бы код для:
 	// 1. Подключения к тестовой БД
 	// 2. Создания тестовых данных (чат, сообщения с вложениями)

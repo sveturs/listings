@@ -48,7 +48,7 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 	}
 
 	var listing *models.MarketplaceListing
-	var listingExists bool = false
+	var listingExists = false
 
 	// Если есть ListingID, пытаемся найти объявление
 	if msg.ListingID > 0 {

@@ -40,7 +40,7 @@ func NewImagesHandler(services globalService.ServicesInterface) *ImagesHandler {
 // @Param id path int true "Listing ID"
 // @Param file formData file true "Image files to upload"
 // @Param main_image_index formData int false "Index of the main image"
-// @Success 200 {object} object{message=string,images=[]models.MarketplaceImage,count=int} "Images uploaded successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ImagesUploadResponse} "Images uploaded successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
@@ -134,7 +134,8 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 
 	var uploadedImages []models.MarketplaceImage
 	for i, file := range files {
-		logger.Info().Int("fileIndex", i).Str("filename", file.Filename).Int64("size", file.Size).Msg("Processing file")
+		contentType := file.Header.Get("Content-Type")
+		logger.Info().Int("fileIndex", i).Str("filename", file.Filename).Int64("size", file.Size).Str("contentType", contentType).Msg("Processing file")
 
 		// Проверка типа файла и размера
 		if file.Size > 10*1024*1024 {
@@ -142,7 +143,7 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 			continue // Пропускаем слишком большие файлы
 		}
 
-		contentType := file.Header.Get("Content-Type")
+		// Уже определена выше
 		if !strings.HasPrefix(contentType, "image/") {
 			logger.Warn().Str("contentType", contentType).Msg("Unsupported file type")
 			continue // Пропускаем файлы не-изображения
@@ -178,11 +179,13 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 	logger.Info().Int("uploadedCount", len(uploadedImages)).Int("totalFiles", len(files)).Msg("Image upload completed")
 
 	// Возвращаем успешный результат с информацией о загруженных изображениях
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.imagesUploaded",
-		"images":  uploadedImages,
-		"count":   len(uploadedImages),
-	})
+	response := ImagesUploadResponse{
+		Success: true,
+		Message: "marketplace.imagesUploaded",
+		Images:  uploadedImages,
+		Count:   len(uploadedImages),
+	}
+	return utils.SuccessResponse(c, response)
 }
 
 // Вспомогательная функция для получения ключей из map
@@ -201,7 +204,7 @@ func getMapKeys(m map[string][]*multipart.FileHeader) []string {
 // @Accept json
 // @Produce json
 // @Param id path int true "Image ID"
-// @Success 200 {object} object{message=string} "Image deleted successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Image deleted successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
@@ -250,9 +253,10 @@ func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 	}
 
 	// Возвращаем успешный результат
-	return utils.SuccessResponse(c, fiber.Map{
-		"message": "marketplace.imageDeleted",
-	})
+	response := MessageResponse{
+		Message: "marketplace.imageDeleted",
+	}
+	return utils.SuccessResponse(c, response)
 }
 
 // ModerateImage checks image for prohibited content
@@ -262,7 +266,7 @@ func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 // @Accept multipart/form-data
 // @Produce json
 // @Param file formData file true "Image file to moderate"
-// @Success 200 {object} object{success=bool,data=object{labels=[]string,prohibited_labels=[]string,has_prohibited=bool}} "Moderation results"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ImageModerationResponse} "Moderation results"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidFile or marketplace.fileTooLarge"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
@@ -322,14 +326,15 @@ func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
 	// TODO: Реализовать проверку с использованием Vision API
 
 	// Возвращаем результаты проверки
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"labels":            []string{"image", "photo"},
-			"prohibited_labels": []string{},
-			"has_prohibited":    false,
+	response := ImageModerationResponse{
+		Success: true,
+		Data: ModerationData{
+			Labels:           []string{"image", "photo"},
+			ProhibitedLabels: []string{},
+			HasProhibited:    false,
 		},
-	})
+	}
+	return utils.SuccessResponse(c, response)
 }
 
 // EnhancePreview creates preview of enhanced image
@@ -340,7 +345,7 @@ func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
 // @Produce json
 // @Param image_id formData int true "Image ID to enhance"
 // @Param enhancement_type formData string false "Enhancement type" default(quality)
-// @Success 200 {object} object{success=bool,data=object{preview_url=string}} "Enhancement preview"
+// @Success 200 {object} utils.SuccessResponseSwag{data=EnhancePreviewResponse} "Enhancement preview"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
@@ -390,12 +395,13 @@ func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
 	// Создаем предпросмотр улучшенного изображения
 	// Здесь должен быть код для обработки изображения и создания предпросмотра
 	// Пока возвращаем заглушку
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"preview_url": fmt.Sprintf("https://example.com/preview/%d/%s", imageID, enhancementType),
+	response := EnhancePreviewResponse{
+		Success: true,
+		Data: EnhancePreviewData{
+			PreviewURL: fmt.Sprintf("https://example.com/preview/%d/%s", imageID, enhancementType),
 		},
-	})
+	}
+	return utils.SuccessResponse(c, response)
 }
 
 // EnhanceImages enhances images for a listing
@@ -406,7 +412,7 @@ func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
 // @Produce json
 // @Param listing_id formData int true "Listing ID"
 // @Param enhancement_type formData string false "Enhancement type" default(quality)
-// @Success 200 {object} object{success=bool,data=object{message=string,job_id=string}} "Enhancement job started"
+// @Success 200 {object} utils.SuccessResponseSwag{data=EnhanceImagesResponse} "Enhancement job started"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId or marketplace.invalidRequest"
 // @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
@@ -468,11 +474,12 @@ func (h *ImagesHandler) EnhanceImages(c *fiber.Ctx) error {
 	// Запускаем процесс улучшения изображений
 	// Здесь должен быть код для обработки изображений
 	// Пока возвращаем заглушку
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"message": "marketplace.imageEnhancementStarted",
-			"job_id":  fmt.Sprintf("enhance_%d_%d", listingID, time.Now().Unix()),
+	response := EnhanceImagesResponse{
+		Success: true,
+		Data: EnhanceImagesData{
+			Message: "marketplace.imageEnhancementStarted",
+			JobID:   fmt.Sprintf("enhance_%d_%d", listingID, time.Now().Unix()),
 		},
-	})
+	}
+	return utils.SuccessResponse(c, response)
 }

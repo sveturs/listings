@@ -1,3 +1,5 @@
+// Package logger
+// backend/internal/logger/logger.go
 package logger
 
 import (
