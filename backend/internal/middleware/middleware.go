@@ -120,6 +120,7 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 	adminEmails := []string{
 		"bevzenko.sergey@gmail.com",
 		"voroshilovdo@gmail.com",
+		"admin@svetu.rs",
 		// Здесь можно добавить дополнительные email-адреса администраторов
 	}
 
