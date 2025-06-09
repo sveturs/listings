@@ -8,11 +8,13 @@ import {
   FolderOpenIcon,
   Bars3Icon,
   XMarkIcon,
+  ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import AdminGuard from '@/components/AdminGuard';
 // import '@/styles/markdown.css';
 
 interface DocFile {
@@ -29,10 +31,41 @@ export default function DocsPage() {
   const [loading, setLoading] = useState(false);
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     fetchDocFiles();
-  }, []);
+
+    // Определяем мобильное устройство
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      // Автоматически открываем сайдбар на мобильных при загрузке
+      if (window.innerWidth < 1024 && !selectedFile) {
+        setSidebarOpen(true);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    // Обработка кнопки назад
+    const handlePopState = (e: PopStateEvent) => {
+      if (selectedFile && isMobile) {
+        e.preventDefault();
+        setSelectedFile(null);
+        setFileContent('');
+        setSidebarOpen(true);
+        window.history.pushState(null, '', window.location.pathname);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [selectedFile, isMobile]);
 
   const fetchDocFiles = async () => {
     try {
@@ -58,6 +91,14 @@ export default function DocsPage() {
         setSelectedFile(path);
         // Закрываем сайдбар на мобильных устройствах после выбора файла
         setSidebarOpen(false);
+        // Добавляем состояние в историю для обработки кнопки назад
+        if (isMobile) {
+          window.history.pushState(
+            { file: path },
+            '',
+            window.location.pathname
+          );
+        }
       }
     } catch (error) {
       console.error('Failed to fetch file content:', error);
@@ -124,25 +165,48 @@ export default function DocsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base-200">
-      {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-between p-4 bg-base-100 shadow-lg">
-        <h1 className="text-xl font-bold">Documentation</h1>
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="btn btn-ghost btn-sm"
-        >
-          {sidebarOpen ? (
-            <XMarkIcon className="w-6 h-6" />
-          ) : (
-            <Bars3Icon className="w-6 h-6" />
+    <AdminGuard>
+      <div className="min-h-screen bg-base-200">
+        {/* Mobile header */}
+        <div className="lg:hidden flex items-center justify-between p-4 bg-base-100 shadow-lg">
+        <div className="flex items-center gap-2">
+          {selectedFile && (
+            <button
+              onClick={() => {
+                setSelectedFile(null);
+                setFileContent('');
+                setSidebarOpen(true);
+              }}
+              className="btn btn-ghost btn-sm btn-circle"
+            >
+              <ArrowLeftIcon className="w-5 h-5" />
+            </button>
           )}
-        </button>
+          <h1 className="text-xl font-bold">
+            {selectedFile ? selectedFile.split('/').pop() : 'Documentation'}
+          </h1>
+        </div>
+        {!selectedFile && (
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="btn btn-ghost btn-sm"
+          >
+            {sidebarOpen ? (
+              <XMarkIcon className="w-6 h-6" />
+            ) : (
+              <Bars3Icon className="w-6 h-6" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Desktop header */}
       <div className="hidden lg:block container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Documentation</h1>
+        <h1 className="text-3xl font-bold mb-6">
+          {selectedFile
+            ? `Documentation: ${selectedFile.split('/').pop()}`
+            : 'Documentation'}
+        </h1>
       </div>
 
       <div className="lg:container lg:mx-auto lg:px-4">
@@ -150,7 +214,7 @@ export default function DocsPage() {
           {/* Sidebar with file tree */}
           <div
             className={`${
-              sidebarOpen ? 'block' : 'hidden'
+              sidebarOpen || (!selectedFile && isMobile) ? 'block' : 'hidden'
             } lg:block fixed inset-0 z-50 lg:relative lg:inset-auto lg:z-auto bg-base-100 lg:bg-transparent`}
           >
             <div className="h-screen lg:h-auto lg:w-80 lg:bg-base-100 lg:rounded-lg lg:shadow-lg p-4 lg:h-[calc(100vh-12rem)] overflow-y-auto">
@@ -193,16 +257,27 @@ export default function DocsPage() {
                       const match = /language-(\w+)/.exec(className || '');
                       const inline = !children?.toString().includes('\n');
                       return !inline && match ? (
-                        <SyntaxHighlighter
-                          style={vscDarkPlus}
-                          language={match[1]}
-                          PreTag="div"
+                        <div className="bg-base-200 rounded-lg p-4 my-4 overflow-x-auto border border-base-300">
+                          <SyntaxHighlighter
+                            style={oneLight}
+                            language={match[1]}
+                            PreTag="div"
+                            customStyle={{
+                              backgroundColor: 'transparent',
+                              padding: '0',
+                              margin: '0',
+                              overflow: 'visible',
+                            }}
+                            {...props}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        </div>
+                      ) : (
+                        <code
+                          className="bg-base-200 text-base-content px-1 py-0.5 rounded text-sm"
                           {...props}
                         >
-                          {String(children).replace(/\n$/, '')}
-                        </SyntaxHighlighter>
-                      ) : (
-                        <code className={className} {...props}>
                           {children}
                         </code>
                       );
@@ -210,7 +285,9 @@ export default function DocsPage() {
                     table({ children }) {
                       return (
                         <div className="overflow-x-auto">
-                          <table className="table table-zebra">{children}</table>
+                          <table className="table table-zebra">
+                            {children}
+                          </table>
                         </div>
                       );
                     },
@@ -222,7 +299,7 @@ export default function DocsPage() {
             ) : (
               <div className="flex items-center justify-center h-full text-base-content/60">
                 <p className="text-center px-4">
-                  {sidebarOpen
+                  {sidebarOpen || (!selectedFile && isMobile)
                     ? 'Select a file from the list'
                     : 'Click the menu button to browse documentation files'}
                 </p>
@@ -232,5 +309,6 @@ export default function DocsPage() {
         </div>
       </div>
     </div>
+    </AdminGuard>
   );
 }
