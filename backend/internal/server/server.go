@@ -17,6 +17,7 @@ import (
 	"backend/internal/middleware"
 	balanceHandler "backend/internal/proj/balance/handler"
 	contactsHandler "backend/internal/proj/contacts/handler"
+	docsHandler "backend/internal/proj/docs/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	globalService "backend/internal/proj/global/service"
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
@@ -224,6 +225,10 @@ func (s *Server) setupRoutes() {
 
 	// CSRF токен - регистрируем ДО проектных роутов чтобы избежать конфликта с AuthRequiredJWT
 	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
+	
+	// Docs handler - доступен без авторизации
+	docs := docsHandler.NewDocsHandler("/data/hostel-booking-system")
+	docs.RegisterRoutes(s.app.Group("/api/v1"))
 	
 	// Регистрируем роуты через новую систему
 	s.registerProjectRoutes()

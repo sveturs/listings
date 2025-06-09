@@ -1,0 +1,137 @@
+/* Custom styles for markdown rendering */
+.prose {
+  @apply text-base-content;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  @apply text-base-content font-bold;
+}
+
+.prose h1 {
+  @apply text-3xl md:text-4xl mb-6 pb-2 border-b border-base-300;
+}
+
+.prose h2 {
+  @apply text-2xl md:text-3xl mt-8 mb-4 pb-2 border-b border-base-300;
+}
+
+.prose h3 {
+  @apply text-xl md:text-2xl mt-6 mb-3;
+}
+
+.prose h4 {
+  @apply text-lg md:text-xl mt-4 mb-2;
+}
+
+.prose p {
+  @apply text-base-content/90 mb-4 leading-relaxed;
+}
+
+.prose a {
+  @apply text-primary hover:text-primary-focus underline;
+}
+
+.prose code {
+  @apply bg-base-200 text-base-content px-1 py-0.5 rounded text-sm;
+}
+
+.prose pre {
+  @apply bg-base-200 rounded-lg p-4 overflow-x-auto;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary pl-4 italic text-base-content/80;
+}
+
+.prose ul {
+  @apply list-disc list-inside mb-4 space-y-1;
+}
+
+.prose ol {
+  @apply list-decimal list-inside mb-4 space-y-1;
+}
+
+.prose li {
+  @apply text-base-content/90;
+}
+
+.prose table {
+  @apply w-full mb-4;
+}
+
+.prose th {
+  @apply bg-base-200 font-semibold text-left p-2 border border-base-300;
+}
+
+.prose td {
+  @apply p-2 border border-base-300;
+}
+
+.prose tr:nth-child(even) {
+  @apply bg-base-100;
+}
+
+.prose tr:nth-child(odd) {
+  @apply bg-base-200/30;
+}
+
+.prose img {
+  @apply rounded-lg shadow-lg my-4 mx-auto;
+}
+
+.prose hr {
+  @apply border-base-300 my-8;
+}
+
+.prose strong {
+  @apply font-bold text-base-content;
+}
+
+.prose em {
+  @apply italic;
+}
+
+/* Syntax highlighting override for dark theme */
+[data-theme='dark'] .prose pre {
+  @apply bg-neutral;
+}
+
+[data-theme='dark'] .prose code {
+  @apply bg-neutral;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .prose {
+    @apply text-sm;
+  }
+  
+  .prose h1 {
+    @apply text-2xl;
+  }
+  
+  .prose h2 {
+    @apply text-xl;
+  }
+  
+  .prose h3 {
+    @apply text-lg;
+  }
+  
+  .prose pre {
+    @apply text-xs p-2;
+  }
+  
+  .prose table {
+    @apply text-xs;
+  }
+}
