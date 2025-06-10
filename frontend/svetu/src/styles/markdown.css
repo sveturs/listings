@@ -41,11 +41,11 @@
 }
 
 .prose pre {
-  @apply bg-base-200 rounded-lg p-4 overflow-x-auto;
+  @apply bg-base-200 rounded-lg p-4 overflow-x-auto border border-base-300;
 }
 
 .prose pre code {
-  @apply bg-transparent p-0;
+  @apply bg-transparent p-0 text-sm;
 }
 
 .prose blockquote {
@@ -114,23 +114,23 @@
   .prose {
     @apply text-sm;
   }
-  
+
   .prose h1 {
     @apply text-2xl;
   }
-  
+
   .prose h2 {
     @apply text-xl;
   }
-  
+
   .prose h3 {
     @apply text-lg;
   }
-  
+
   .prose pre {
     @apply text-xs p-2;
   }
-  
+
   .prose table {
     @apply text-xs;
   }
