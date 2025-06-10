@@ -3866,6 +3866,127 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/docs/content': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get file content
+     * @description Returns the content of a specific markdown file
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description File path relative to docs root */
+          path: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description File content */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_docserver_handler.DocContentResponse'];
+            };
+          };
+        };
+        /** @description docs.pathRequired or docs.invalidPath or docs.onlyMarkdownAllowed */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description docs.fileNotFound */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description docs.readError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/docs/files': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get documentation files
+     * @description Returns the hierarchical list of markdown files in the documentation directory
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of documentation files */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_docserver_handler.DocFilesResponse'];
+            };
+          };
+        };
+        /** @description docs.scanError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/geocode/cities': {
     parameters: {
       query?: never;
@@ -11518,6 +11639,31 @@ export interface components {
        * @example contacts.statusUpdated
        */
       message?: string;
+    };
+    'internal_proj_docserver_handler.DocContentResponse': {
+      /** @example # Documentation
+       *
+       *     This is the content of the markdown file. */
+      content?: string;
+      /** @example docs/README.md */
+      path?: string;
+    };
+    'internal_proj_docserver_handler.DocFile': {
+      children?: components['schemas']['internal_proj_docserver_handler.DocFile'][];
+      /** @example README.md */
+      name?: string;
+      /** @example docs/README.md */
+      path?: string;
+      /**
+       * @example file
+       * @enum {string}
+       */
+      type?: 'file' | 'directory';
+    };
+    'internal_proj_docserver_handler.DocFilesResponse': {
+      files?: components['schemas']['internal_proj_docserver_handler.DocFile'][];
+      /** @example ./docs */
+      rootPath?: string;
     };
     'internal_proj_marketplace_handler.AttributeCreateResponse': {
       /** @example 123 */

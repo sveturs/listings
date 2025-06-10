@@ -26,6 +26,14 @@
     },
     "readMore": "Read more"
   },
+  "docs": {
+    "scanError": "Failed to scan documentation files",
+    "pathRequired": "File path is required",
+    "invalidPath": "Invalid file path",
+    "fileNotFound": "File not found",
+    "onlyMarkdownAllowed": "Only markdown files are allowed",
+    "readError": "Failed to read file"
+  },
   "news": {
     "title": "News",
     "description": "Latest news and events from our company",

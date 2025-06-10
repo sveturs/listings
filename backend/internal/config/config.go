@@ -1,3 +1,4 @@
+// Package config
 // backend/internal/config/config.go
 package config
 
@@ -26,6 +27,7 @@ type Config struct {
 	FileStorage           FileStorageConfig `yaml:"file_storage"`
 	FileUpload            FileUploadConfig  `yaml:"file_upload"`
 	MinIOPublicURL        string
+	Docs                  DocsConfig `yaml:"docs"`
 }
 
 type FileStorageConfig struct {
@@ -55,6 +57,11 @@ type FileUploadConfig struct {
 	AllowedImageTypes    []string // Разрешенные MIME типы для изображений
 	AllowedVideoTypes    []string // Разрешенные MIME типы для видео
 	AllowedDocumentTypes []string // Разрешенные MIME типы для документов
+}
+
+// DocsConfig содержит настройки для модуля документации
+type DocsConfig struct {
+	RootPath string // Корневая директория с документацией
 }
 
 func NewConfig() (*Config, error) {
@@ -203,6 +210,16 @@ func NewConfig() (*Config, error) {
 		},
 	}
 
+	// Настройки модуля документации
+	docsConfig := DocsConfig{
+		RootPath: os.Getenv("DOCS_ROOT_PATH"),
+	}
+
+	// Если путь к документации не указан, используем текущую директорию
+	if docsConfig.RootPath == "" {
+		docsConfig.RootPath = "./docs"
+	}
+
 	return &Config{
 		Port:                  port,
 		DatabaseURL:           dbURL,
@@ -221,6 +238,7 @@ func NewConfig() (*Config, error) {
 		OpenSearch:            config.OpenSearch,
 		FileStorage:           config.FileStorage,
 		FileUpload:            fileUploadConfig,
+		Docs:                  docsConfig,
 	}, nil
 }
 

@@ -4670,6 +4670,123 @@
                 }
             }
         },
+        "/api/v1/docs/content": {
+            "get": {
+                "description": "Returns the content of a specific markdown file",
+                "tags": [
+                    "docs"
+                ],
+                "summary": "Get file content",
+                "parameters": [
+                    {
+                        "description": "File path relative to docs root",
+                        "name": "path",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/internal_proj_docserver_handler.DocContentResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "docs.pathRequired or docs.invalidPath or docs.onlyMarkdownAllowed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "docs.fileNotFound",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "docs.readError",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/docs/files": {
+            "get": {
+                "description": "Returns the hierarchical list of markdown files in the documentation directory",
+                "tags": [
+                    "docs"
+                ],
+                "summary": "Get documentation files",
+                "responses": {
+                    "200": {
+                        "description": "List of documentation files",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/internal_proj_docserver_handler.DocFilesResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "docs.scanError",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/geocode/cities": {
             "get": {
                 "description": "Возвращает список городов по частичному названию для автодополнения",
@@ -15069,6 +15186,61 @@
                         "description": "Сообщение об успешном обновлении",
                         "type": "string",
                         "example": "contacts.statusUpdated"
+                    }
+                }
+            },
+            "internal_proj_docserver_handler.DocContentResponse": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "example": "# Documentation\n\nThis is the content of the markdown file."
+                    },
+                    "path": {
+                        "type": "string",
+                        "example": "docs/README.md"
+                    }
+                }
+            },
+            "internal_proj_docserver_handler.DocFile": {
+                "type": "object",
+                "properties": {
+                    "children": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/internal_proj_docserver_handler.DocFile"
+                        }
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "README.md"
+                    },
+                    "path": {
+                        "type": "string",
+                        "example": "docs/README.md"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "file",
+                            "directory"
+                        ],
+                        "example": "file"
+                    }
+                }
+            },
+            "internal_proj_docserver_handler.DocFilesResponse": {
+                "type": "object",
+                "properties": {
+                    "files": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/internal_proj_docserver_handler.DocFile"
+                        }
+                    },
+                    "rootPath": {
+                        "type": "string",
+                        "example": "./docs"
                     }
                 }
             },

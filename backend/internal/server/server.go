@@ -1,3 +1,4 @@
+// Package server
 // backend/internal/server/server.go
 package server
 
@@ -17,7 +18,7 @@ import (
 	"backend/internal/middleware"
 	balanceHandler "backend/internal/proj/balance/handler"
 	contactsHandler "backend/internal/proj/contacts/handler"
-	docsHandler "backend/internal/proj/docs/handler"
+	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	globalService "backend/internal/proj/global/service"
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
@@ -45,6 +46,7 @@ type Server struct {
 	storefront    *storefrontHandler.Handler
 	geocode       *geocodeHandler.Handler
 	contacts      *contactsHandler.Handler
+	docs          *docsHandler.Handler
 	fileStorage   filestorage.FileStorageInterface
 }
 
@@ -80,6 +82,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	storefrontHandler := storefrontHandler.NewHandler(services)
 	contactsHandler := contactsHandler.NewHandler(services)
 	paymentsHandler := paymentHandler.NewHandler(services)
+	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
 
@@ -122,6 +125,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		payments:      paymentsHandler,
 		geocode:       geocodeHandler,
 		contacts:      contactsHandler,
+		docs:          docsHandlerInstance,
 		fileStorage:   fileStorage,
 	}
 
@@ -225,11 +229,7 @@ func (s *Server) setupRoutes() {
 
 	// CSRF токен - регистрируем ДО проектных роутов чтобы избежать конфликта с AuthRequiredJWT
 	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
-	
-	// Docs handler - доступен без авторизации
-	docs := docsHandler.NewDocsHandler("/data/hostel-booking-system")
-	docs.RegisterRoutes(s.app.Group("/api/v1"))
-	
+
 	// Регистрируем роуты через новую систему
 	s.registerProjectRoutes()
 }
@@ -240,7 +240,8 @@ func (s *Server) registerProjectRoutes() {
 	var registrars []RouteRegistrar
 
 	// Добавляем все проекты, которые реализуют RouteRegistrar
-	registrars = append(registrars, s.notifications, s.users, s.review, s.marketplace, s.balance, s.storefront, s.geocode, s.contacts, s.payments)
+	registrars = append(registrars, s.notifications, s.users, s.review, s.marketplace, s.balance, s.storefront,
+		s.geocode, s.contacts, s.payments, s.docs)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {

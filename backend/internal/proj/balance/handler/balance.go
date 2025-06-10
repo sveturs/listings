@@ -1,3 +1,4 @@
+// Package handler
 // backend/internal/proj/balance/handler/balance.go
 package handler
 
