@@ -180,10 +180,18 @@ const LoginModal: React.FC<LoginModalProps> = ({
           });
 
           // Update user state with login response
-          if (loginResponse.user) {
+          if (
+            loginResponse.user &&
+            loginResponse.user.id &&
+            loginResponse.user.name &&
+            loginResponse.user.email
+          ) {
             updateUser({
-              ...loginResponse.user,
-              provider: loginResponse.user.provider || 'email',
+              id: loginResponse.user.id,
+              name: loginResponse.user.name,
+              email: loginResponse.user.email,
+              provider: 'email', // Email login always uses 'email' provider
+              picture_url: loginResponse.user.picture_url,
             });
           }
 
@@ -201,10 +209,18 @@ const LoginModal: React.FC<LoginModalProps> = ({
           });
 
           // Update user state with register response
-          if (registerResponse.user) {
+          if (
+            registerResponse.user &&
+            registerResponse.user.id &&
+            registerResponse.user.name &&
+            registerResponse.user.email
+          ) {
             updateUser({
-              ...registerResponse.user,
-              provider: registerResponse.user.provider || 'email',
+              id: registerResponse.user.id,
+              name: registerResponse.user.name,
+              email: registerResponse.user.email,
+              provider: 'email', // Email registration always uses 'email' provider
+              picture_url: registerResponse.user.picture_url,
             });
           }
 

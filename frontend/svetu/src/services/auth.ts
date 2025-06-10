@@ -1,11 +1,22 @@
 import configManager from '@/config';
 import { tokenManager } from '@/utils/tokenManager';
 import type {
-  SessionResponse,
-  UserUpdate,
-  UpdateProfileRequest,
   RegisterUserRequest,
+  SessionResponse,
+  UpdateProfileRequest,
+  UserUpdate,
 } from '@/types/auth';
+import type { components } from '@/types/generated/api';
+
+// Type aliases для удобства использования
+type ApiLoginRequest =
+  components['schemas']['internal_proj_users_handler.LoginRequest'];
+type ApiAuthResponse =
+  components['schemas']['internal_proj_users_handler.AuthResponse'];
+type ApiSuccessResponse<T> =
+  components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+    data?: T;
+  };
 
 const API_BASE = configManager.getApiUrl();
 
@@ -24,27 +35,9 @@ class AuthError extends Error {
   }
 }
 
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-interface LoginResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    provider?: string;
-    phone?: string;
-    city?: string;
-    country?: string;
-    picture_url?: string;
-    is_admin?: boolean;
-  };
-}
+// Используем сгенерированные типы вместо дублирования
+type LoginRequest = ApiLoginRequest;
+type LoginResponse = ApiAuthResponse;
 
 export class AuthService {
   private static abortControllers = new Map<string, AbortController>();
@@ -217,11 +210,12 @@ export class AuthService {
         throw new Error('Failed to fetch session');
       }
 
-      const result = await response.json();
+      const result =
+        (await response.json()) as ApiSuccessResponse<SessionResponse>;
       this.abortControllers.delete('session');
 
       // Извлекаем данные из обертки
-      const sessionData = result.data || result;
+      const sessionData = result.data || (result as SessionResponse);
       return sessionData;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
@@ -284,12 +278,11 @@ export class AuthService {
         throw new Error('Failed to update profile');
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as ApiSuccessResponse<UserUpdate>;
       this.abortControllers.delete('updateProfile');
 
       // Извлекаем данные из обертки
-      const profileData = result.data || result;
-      return profileData;
+      return result.data || (result as UserUpdate);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('Update profile request was cancelled');
@@ -329,10 +322,11 @@ export class AuthService {
         throw new AuthError(errorMessage);
       }
 
-      const result = await response.json();
+      const result =
+        (await response.json()) as ApiSuccessResponse<LoginResponse>;
 
       // Извлекаем данные из обертки
-      const registerData = result.data || result;
+      const registerData = result.data || (result as LoginResponse);
 
       // Сохраняем JWT токен после успешной регистрации
       if (registerData.access_token) {
@@ -387,10 +381,11 @@ export class AuthService {
         throw new AuthError(errorMessage);
       }
 
-      const result = await response.json();
+      const result =
+        (await response.json()) as ApiSuccessResponse<LoginResponse>;
 
       // Извлекаем данные из обертки
-      const loginData = result.data || result;
+      const loginData = result.data || (result as LoginResponse);
 
       // Сохраняем JWT токен
       if (loginData.access_token) {
