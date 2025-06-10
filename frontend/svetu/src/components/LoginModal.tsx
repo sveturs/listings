@@ -50,7 +50,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   initialMode = 'login',
 }) => {
   const t = useTranslations('auth');
-  const { updateUser } = useAuth();
+  const { updateUser, refreshSession } = useAuth();
 
   // Form state management
   const {
@@ -196,7 +196,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
           }
 
           // Small delay to ensure cookies are set
-          setTimeout(() => {
+          setTimeout(async () => {
+            // Refresh session to ensure UI updates
+            await refreshSession();
             // Login successful, close modal
             onClose();
           }, 100);
@@ -227,7 +229,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
           setSuccess(t('registerForm.successMessage'));
 
           // Close modal after successful registration
-          setTimeout(() => {
+          setTimeout(async () => {
+            // Refresh session to ensure UI updates
+            await refreshSession();
             onClose();
           }, 1500);
         }
@@ -279,6 +283,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
       onClose,
       t,
       updateUser,
+      refreshSession,
     ]
   );
 

@@ -19,6 +19,13 @@ export default function Header() {
     setMounted(true);
   }, []);
 
+  // Закрываем модалку логина при успешной аутентификации
+  useEffect(() => {
+    if (isAuthenticated && isLoginModalOpen) {
+      setIsLoginModalOpen(false);
+    }
+  }, [isAuthenticated, isLoginModalOpen]);
+
   const navItems = [
     { href: '/blog', label: t('nav.blog') },
     { href: '/news', label: t('nav.news') },
