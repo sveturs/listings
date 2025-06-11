@@ -1,5 +1,3 @@
-import configManager from '@/config';
-
 interface TokenManagerConfig {
   onTokenRefreshed?: (accessToken: string) => void;
   onRefreshFailed?: (error: Error) => void;
@@ -75,16 +73,13 @@ class TokenManager {
   private async performRefresh(): Promise<string> {
     try {
       console.log('[TokenManager] Attempting to refresh token...');
-      const response = await fetch(
-        `${configManager.getApiUrl()}/api/v1/auth/refresh`,
-        {
-          method: 'POST',
-          credentials: 'include', // Важно для отправки httpOnly cookie
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials: 'include', // Важно для отправки httpOnly cookie
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         // Если 401, значит refresh token невалидный или отозван

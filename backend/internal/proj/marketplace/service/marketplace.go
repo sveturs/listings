@@ -895,6 +895,29 @@ func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation 
 	return s.UpdateTranslationWithProvider(ctx, translation, GoogleTranslate)
 }
 
+// SaveTranslation is an alias for UpdateTranslation for compatibility
+func (s *MarketplaceService) SaveTranslation(ctx context.Context, entityType string, entityID int, language, fieldName, translatedText string, metadata map[string]interface{}) error {
+	translation := &models.Translation{
+		EntityType:     entityType,
+		EntityID:       entityID,
+		Language:       language,
+		FieldName:      fieldName,
+		TranslatedText: translatedText,
+		IsVerified:     true,
+		Metadata:       metadata,
+	}
+	return s.UpdateTranslation(ctx, translation)
+}
+
+// TranslateText переводит текст на указанный язык
+func (s *MarketplaceService) TranslateText(ctx context.Context, text, sourceLanguage, targetLanguage string) (string, error) {
+	if s.translationService == nil {
+		return "", fmt.Errorf("translation service not available")
+	}
+	
+	return s.translationService.Translate(ctx, text, sourceLanguage, targetLanguage)
+}
+
 // UpdateTranslationWithProvider обновляет перевод с использованием указанного провайдера
 func (s *MarketplaceService) UpdateTranslationWithProvider(ctx context.Context, translation *models.Translation, provider TranslationProvider) error {
 	// Проверяем, есть ли фабрика сервисов перевода

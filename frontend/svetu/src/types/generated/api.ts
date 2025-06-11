@@ -1757,6 +1757,85 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/marketplace/attributes/{id}/translate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Auto-translate attribute
+     * @description Automatically translates attribute display name and options to all supported languages using Google Translate
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Attribute ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Translation settings */
+      requestBody?: {
+        content: {
+          'application/json': {
+            source_language?: string;
+            target_languages?: string[];
+          };
+        };
+      };
+      responses: {
+        /** @description Translation results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.TranslationResult'];
+            };
+          };
+        };
+        /** @description Invalid attribute ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Attribute not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Translation error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/marketplace/attributes/bulk': {
     parameters: {
       query?: never;
@@ -11979,6 +12058,14 @@ export interface components {
       remaining?: number;
       /** @example 3450 */
       used_today?: number;
+    };
+    'internal_proj_marketplace_handler.TranslationResult': {
+      /** @example 123 */
+      attribute_id?: number;
+      errors?: string[];
+      translations?: {
+        [key: string]: unknown;
+      };
     };
     'internal_proj_marketplace_handler.TranslationUpdateRequest': {
       /** @example false */

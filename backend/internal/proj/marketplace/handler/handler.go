@@ -1,3 +1,4 @@
+// Package handler
 // backend/internal/proj/marketplace/handler/handler.go
 package handler
 
@@ -105,9 +106,6 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/search", h.Search.SearchListingsAdvanced) // маршрут поиска
 	marketplace.Get("/suggestions", h.Search.GetSuggestions)    // маршрут автодополнения
 	marketplace.Get("/category-suggestions", h.Search.GetCategorySuggestions)
-
-	// Временный публичный маршрут для проверки
-	app.Get("/admin-categories-test", h.AdminCategories.GetCategories)
 	marketplace.Get("/categories/:id/attributes", h.Categories.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", h.Search.GetSimilarListings)
@@ -123,7 +121,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	translation.Get("/limits", h.Translations.GetTranslationLimits)
 	translation.Post("/provider", h.Translations.SetTranslationProvider)
 
-	authedAPIGroup := app.Group("/api/v1", mw.AuthRequiredJWT, mw.CSRFProtection())
+	authedAPIGroup := app.Group("/api/v1", mw.AuthRequiredJWT)
 
 	marketplaceProtected := authedAPIGroup.Group("/marketplace")
 	marketplaceProtected.Post("/listings", h.Listings.CreateListing)
@@ -145,7 +143,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplaceProtected.Post("/translations/detect-language", h.Translations.DetectLanguage)
 	marketplaceProtected.Get("/translations/:id", h.Translations.GetTranslations)
 
-	adminRoutes := app.Group("/api/v1/admin", mw.AuthRequiredJWT, mw.AdminRequired, mw.CSRFProtection())
+	adminRoutes := app.Group("/api/v1/admin", mw.AuthRequiredJWT, mw.AdminRequired)
 
 	// Регистрируем маршруты администрирования категорий
 	adminRoutes.Post("/categories", h.AdminCategories.CreateCategory)
@@ -165,58 +163,13 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Get("/attributes/:id", h.AdminAttributes.GetAttributeByID)
 	adminRoutes.Put("/attributes/:id", h.AdminAttributes.UpdateAttribute)
 	adminRoutes.Delete("/attributes/:id", h.AdminAttributes.DeleteAttribute)
+	adminRoutes.Post("/attributes/:id/translate", h.AdminAttributes.TranslateAttribute)
 	adminRoutes.Post("/attributes/bulk-update", h.AdminAttributes.BulkUpdateAttributes)
 
 	// Маршруты для экспорта/импорта настроек атрибутов
 	adminRoutes.Get("/categories/:categoryId/attributes/export", h.AdminAttributes.ExportCategoryAttributes)
 	adminRoutes.Post("/categories/:categoryId/attributes/import", h.AdminAttributes.ImportCategoryAttributes)
 	adminRoutes.Post("/categories/:targetCategoryId/attributes/copy", h.AdminAttributes.CopyAttributesSettings)
-
-	// Для обратной совместимости добавим маршруты без v1
-	legacyAdmin := app.Group("/api/admin", mw.AuthRequiredJWT, mw.AdminRequired, mw.CSRFProtection())
-
-	// Все маршруты для категорий
-	legacyAdmin.Get("/categories", h.AdminCategories.GetCategories)
-	legacyAdmin.Post("/categories", h.AdminCategories.CreateCategory)
-	legacyAdmin.Get("/categories/:id", h.AdminCategories.GetCategoryByID)
-	legacyAdmin.Put("/categories/:id", h.AdminCategories.UpdateCategory)
-	legacyAdmin.Delete("/categories/:id", h.AdminCategories.DeleteCategory)
-	legacyAdmin.Post("/categories/:id/reorder", h.AdminCategories.ReorderCategories)
-	legacyAdmin.Put("/categories/:id/move", h.AdminCategories.MoveCategory)
-	legacyAdmin.Post("/categories/:id/attributes", h.AdminCategories.AddAttributeToCategory)
-	legacyAdmin.Delete("/categories/:id/attributes/:attr_id", h.AdminCategories.RemoveAttributeFromCategory)
-	legacyAdmin.Put("/categories/:id/attributes/:attr_id", h.AdminCategories.UpdateAttributeCategory)
-
-	// Маршруты для атрибутов
-	legacyAdmin.Post("/attributes", h.AdminAttributes.CreateAttribute)
-	legacyAdmin.Get("/attributes", h.AdminAttributes.GetAttributes)
-	legacyAdmin.Get("/attributes/:id", h.AdminAttributes.GetAttributeByID)
-	legacyAdmin.Put("/attributes/:id", h.AdminAttributes.UpdateAttribute)
-	legacyAdmin.Delete("/attributes/:id", h.AdminAttributes.DeleteAttribute)
-	legacyAdmin.Post("/attributes/bulk-update", h.AdminAttributes.BulkUpdateAttributes)
-
-	// Добавляем маршруты для экспорта/импорта настроек атрибутов
-	legacyAdmin.Get("/categories/:categoryId/attributes/export", h.AdminAttributes.ExportCategoryAttributes)
-	legacyAdmin.Post("/categories/:categoryId/attributes/import", h.AdminAttributes.ImportCategoryAttributes)
-	legacyAdmin.Post("/categories/:targetCategoryId/attributes/copy", h.AdminAttributes.CopyAttributesSettings)
-
-	// Маршруты для групп атрибутов
-	legacyAdmin.Get("/attribute-groups", h.MarketplaceHandler.ListAttributeGroups)
-	legacyAdmin.Post("/attribute-groups", h.MarketplaceHandler.CreateAttributeGroup)
-	legacyAdmin.Get("/attribute-groups/:id", h.MarketplaceHandler.GetAttributeGroup)
-	legacyAdmin.Put("/attribute-groups/:id", h.MarketplaceHandler.UpdateAttributeGroup)
-	legacyAdmin.Delete("/attribute-groups/:id", h.MarketplaceHandler.DeleteAttributeGroup)
-	legacyAdmin.Get("/attribute-groups/:id/items", h.MarketplaceHandler.GetAttributeGroupWithItems)
-	legacyAdmin.Post("/attribute-groups/:id/items", h.MarketplaceHandler.AddItemToGroup)
-	legacyAdmin.Delete("/attribute-groups/:id/items/:attributeId", h.MarketplaceHandler.RemoveItemFromGroup)
-
-	// Маршруты для привязки групп к категориям
-	legacyAdmin.Get("/categories/:id/attribute-groups", h.MarketplaceHandler.GetCategoryGroups)
-	legacyAdmin.Post("/categories/:id/attribute-groups", h.MarketplaceHandler.AttachGroupToCategory)
-	legacyAdmin.Delete("/categories/:id/attribute-groups/:groupId", h.MarketplaceHandler.DetachGroupFromCategory)
-
-	// Маршруты для кастомных UI компонентов
-	// ВАЖНО: Более специфичные роуты должны идти раньше параметризованных
 
 	// Маршруты для шаблонов (должны быть перед :id, чтобы не конфликтовать)
 	adminRoutes.Get("/custom-components/templates", h.CustomComponents.ListTemplates)

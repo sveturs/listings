@@ -293,8 +293,8 @@ func (s *MarketplaceService) DeleteAttribute(ctx context.Context, id int) error 
 func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*models.CategoryAttribute, error) {
 	query := `
 		SELECT 
-			id, name, display_name, attribute_type, icon, options, validation_rules, 
-			is_searchable, is_filterable, is_required, sort_order, created_at, custom_component
+			id, name, display_name, attribute_type, COALESCE(icon, '') as icon, options, validation_rules, 
+			is_searchable, is_filterable, is_required, sort_order, created_at, COALESCE(custom_component, '') as custom_component
 		FROM category_attributes
 		WHERE id = $1
 	`

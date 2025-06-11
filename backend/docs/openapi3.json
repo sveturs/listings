@@ -2294,6 +2294,106 @@
                 }
             }
         },
+        "/api/v1/admin/marketplace/attributes/{id}/translate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Automatically translates attribute display name and options to all supported languages using Google Translate",
+                "tags": [
+                    "marketplace-admin-attributes"
+                ],
+                "summary": "Auto-translate attribute",
+                "parameters": [
+                    {
+                        "description": "Attribute ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "source_language": {
+                                        "type": "string"
+                                    },
+                                    "target_languages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "description": "Translation settings"
+                },
+                "responses": {
+                    "200": {
+                        "description": "Translation results",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/internal_proj_marketplace_handler.TranslationResult"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid attribute ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Attribute not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Translation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/marketplace/categories/{categoryId}/attributes/export": {
             "get": {
                 "security": [
@@ -15973,6 +16073,25 @@
                     "used_today": {
                         "type": "integer",
                         "example": 3450
+                    }
+                }
+            },
+            "internal_proj_marketplace_handler.TranslationResult": {
+                "type": "object",
+                "properties": {
+                    "attribute_id": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "errors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "translations": {
+                        "type": "object",
+                        "additionalProperties": true
                     }
                 }
             },

@@ -326,7 +326,8 @@
       "total": "Total",
       "showing": "Showing",
       "of": "of",
-      "items": "items"
+      "items": "items",
+      "translate": "Translate"
     },
     "categories": {
       "title": "Categories",
@@ -358,6 +359,9 @@
       "isFilterable": "Filterable",
       "showInCard": "Show in Card",
       "showInList": "Show in List",
+      "translations": "Translations",
+      "displayNameTranslations": "Attribute Name Translations",
+      "optionTranslations": "Option Translations",
       "unit": "Unit",
       "minValue": "Min Value",
       "maxValue": "Max Value",
@@ -376,13 +380,17 @@
         "text": "Text",
         "number": "Number",
         "select": "Select",
+        "multiselect": "Multi-select",
         "boolean": "Boolean",
         "date": "Date",
         "range": "Range",
         "location": "Location",
         "file": "File",
         "gallery": "Gallery"
-      }
+      },
+      "addOption": "Add Option",
+      "translating": "Translating...",
+      "validation": "Validation"
     },
     "attributeGroups": {
       "title": "Attribute Groups",

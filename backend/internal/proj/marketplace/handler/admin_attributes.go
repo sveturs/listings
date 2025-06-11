@@ -3,16 +3,18 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/gofiber/fiber/v2"
+
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
-	"context"
-	"encoding/json"
-	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"strconv"
-	"strings"
 )
 
 // AdminAttributesHandler обрабатывает запросы админки для управления атрибутами
@@ -209,7 +211,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 
 	// Получаем атрибуты с пагинацией и фильтрами
 	query := fmt.Sprintf(`
-		SELECT id, name, display_name, attribute_type, icon, options, validation_rules, 
+		SELECT id, name, display_name, attribute_type, COALESCE(icon, '') as icon, options, validation_rules, 
 		is_searchable, is_filterable, is_required, sort_order, created_at
 		FROM category_attributes
 		%s
@@ -250,6 +252,46 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 
 		attribute.Options = optionsJSON
 		attribute.ValidRules = validRulesJSON
+
+		// Загружаем переводы для атрибута
+		translationsQuery := `
+			SELECT language, field_name, translated_text
+			FROM translations
+			WHERE entity_type = 'attribute' AND entity_id = $1 AND field_name = 'display_name'
+		`
+		tRows, err := h.marketplaceService.Storage().Query(c.Context(), translationsQuery, attribute.ID)
+		if err == nil {
+			attribute.Translations = make(map[string]string)
+			for tRows.Next() {
+				var lang, field, text string
+				if err := tRows.Scan(&lang, &field, &text); err == nil {
+					attribute.Translations[lang] = text
+				}
+			}
+			tRows.Close()
+		}
+
+		// Загружаем переводы для опций атрибута
+		optionTranslationsQuery := `
+			SELECT language, field_name, translated_text
+			FROM translations
+			WHERE entity_type = 'attribute_option' AND entity_id = $1
+		`
+		oRows, err := h.marketplaceService.Storage().Query(c.Context(), optionTranslationsQuery, attribute.ID)
+		if err == nil {
+			attribute.OptionTranslations = make(map[string]map[string]string)
+			for oRows.Next() {
+				var lang, option, text string
+				if err := oRows.Scan(&lang, &option, &text); err == nil {
+					if attribute.OptionTranslations[lang] == nil {
+						attribute.OptionTranslations[lang] = make(map[string]string)
+					}
+					attribute.OptionTranslations[lang][option] = text
+				}
+			}
+			oRows.Close()
+		}
+
 		attributes = append(attributes, attribute)
 	}
 
@@ -300,6 +342,47 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.attributeNotFound")
 	}
 
+	// Загружаем переводы для атрибута
+	translationsQuery := `
+		SELECT language, field_name, translated_text
+		FROM translations
+		WHERE entity_type = 'attribute' AND entity_id = $1 AND field_name = 'display_name'
+	`
+	tRows, err := h.marketplaceService.Storage().Query(c.Context(), translationsQuery, attribute.ID)
+	if err == nil {
+		attribute.Translations = make(map[string]string)
+		for tRows.Next() {
+			var lang, field, text string
+			if err := tRows.Scan(&lang, &field, &text); err == nil {
+				attribute.Translations[lang] = text
+			}
+		}
+		tRows.Close()
+	}
+
+	// Загружаем переводы опций, если атрибут типа select
+	if attribute.AttributeType == "select" && attribute.Options != nil {
+		optionTranslationsQuery := `
+			SELECT language, field_name, translated_text
+			FROM translations
+			WHERE entity_type = 'attribute_option' AND entity_id = $1
+		`
+		oRows, err := h.marketplaceService.Storage().Query(c.Context(), optionTranslationsQuery, attribute.ID)
+		if err == nil {
+			attribute.OptionTranslations = make(map[string]map[string]string)
+			for oRows.Next() {
+				var lang, option, text string
+				if err := oRows.Scan(&lang, &option, &text); err == nil {
+					if attribute.OptionTranslations[lang] == nil {
+						attribute.OptionTranslations[lang] = make(map[string]string)
+					}
+					attribute.OptionTranslations[lang][option] = text
+				}
+			}
+			oRows.Close()
+		}
+	}
+
 	return utils.SuccessResponse(c, attribute)
 }
 
@@ -317,17 +400,25 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes/{id} [put]
 func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
+	logger.Info().Msg("UpdateAttribute method called")
+
 	// Получаем ID атрибута из параметров URL
 	attributeID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
+		logger.Error().Err(err).Msg("Invalid attribute ID")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
 	}
+
+	logger.Info().Int("attributeID", attributeID).Msg("Updating attribute")
 
 	// Парсим JSON из запроса
 	var attribute models.CategoryAttribute
 	if err := c.BodyParser(&attribute); err != nil {
+		logger.Error().Err(err).Msg("Failed to parse request body")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
+
+	logger.Info().Interface("attribute", attribute).Msg("Parsed attribute data")
 
 	// Устанавливаем ID атрибута
 	attribute.ID = attributeID
@@ -926,6 +1017,144 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 			Error:   "marketplace.partialImportCompleted",
 			Data:    result,
 		})
+	}
+
+	return utils.SuccessResponse(c, result)
+}
+
+// TranslateAttribute automatically translates attribute display name and options
+// @Summary Auto-translate attribute
+// @Description Automatically translates attribute display name and options to all supported languages using Google Translate
+// @Tags marketplace-admin-attributes
+// @Accept json
+// @Produce json
+// @Param id path int true "Attribute ID"
+// @Param languages body object{source_language=string,target_languages=[]string} false "Translation settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TranslationResult} "Translation results"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
+// @Failure 404 {object} utils.ErrorResponseSwag "Attribute not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Translation error"
+// @Security BearerAuth
+// @Router /api/v1/admin/marketplace/attributes/{id}/translate [post]
+func (h *AdminAttributesHandler) TranslateAttribute(c *fiber.Ctx) error {
+	logger.Info().Msg("TranslateAttribute method called")
+
+	// Получаем ID атрибута из параметров URL
+	attributeID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttributeId")
+	}
+
+	// Получаем атрибут по ID
+	attribute, err := h.marketplaceService.GetAttributeByID(c.Context(), attributeID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get attribute by ID")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getAttributeError")
+	}
+
+	if attribute == nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.attributeNotFound")
+	}
+
+	// Парсим настройки перевода
+	var input struct {
+		SourceLanguage  string   `json:"source_language"`
+		TargetLanguages []string `json:"target_languages"`
+	}
+
+	// Значения по умолчанию
+	input.SourceLanguage = "en" // TODO: сделать enums для языков
+	input.TargetLanguages = []string{"ru", "sr"}
+
+	// Если есть тело запроса, парсим его
+	if err := c.BodyParser(&input); err == nil {
+		// Проверяем валидность языков
+		if input.SourceLanguage == "" {
+			input.SourceLanguage = "en"
+		}
+		if len(input.TargetLanguages) == 0 {
+			input.TargetLanguages = []string{"ru", "sr"}
+		}
+	}
+
+	// Результаты перевода
+	translationResults := make(map[string]any)
+	errors := make([]string, 0)
+
+	// Переводим display_name
+	displayNameTranslations := make(map[string]string)
+	for _, targetLang := range input.TargetLanguages {
+		if targetLang == input.SourceLanguage {
+			continue
+		}
+
+		translatedText, err := h.marketplaceService.TranslateText(c.Context(), attribute.DisplayName, input.SourceLanguage, targetLang)
+		if err != nil {
+			logger.Error().Err(err).Str("text", attribute.DisplayName).Str("target_lang", targetLang).Msg("Failed to translate display name")
+			errors = append(errors, fmt.Sprintf("Failed to translate display_name to %s", targetLang))
+			continue
+		}
+		displayNameTranslations[targetLang] = translatedText
+	}
+
+	// Сохраняем переводы display_name
+	for lang, text := range displayNameTranslations {
+		err := h.marketplaceService.SaveTranslation(c.Context(), "attribute", attributeID, lang, "display_name", text, nil)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to save display_name translation")
+			errors = append(errors, fmt.Sprintf("Failed to save display_name translation for %s", lang))
+		}
+	}
+
+	translationResults["display_name"] = displayNameTranslations
+
+	// Переводим опции для select/multiselect атрибутов
+	if attribute.AttributeType == "select" || attribute.AttributeType == "multiselect" {
+		var options []string
+		if err := json.Unmarshal(attribute.Options, &options); err == nil && len(options) > 0 {
+			optionTranslations := make(map[string]map[string]string)
+
+			for _, targetLang := range input.TargetLanguages {
+				if targetLang == input.SourceLanguage {
+					continue
+				}
+				optionTranslations[targetLang] = make(map[string]string)
+
+				for _, option := range options {
+					translatedOption, err := h.marketplaceService.TranslateText(c.Context(), option, input.SourceLanguage, targetLang)
+					if err != nil {
+						logger.Error().Err(err).Str("option", option).Str("target_lang", targetLang).Msg("Failed to translate option")
+						errors = append(errors, fmt.Sprintf("Failed to translate option '%s' to %s", option, targetLang))
+						continue
+					}
+					optionTranslations[targetLang][option] = translatedOption
+				}
+			}
+
+			// Сохраняем переводы опций
+			for lang, options := range optionTranslations {
+				for option, translatedOption := range options {
+					err := h.marketplaceService.SaveTranslation(c.Context(), "attribute_option", attributeID, lang, option, translatedOption, nil)
+					if err != nil {
+						logger.Error().Err(err).Msg("Failed to save option translation")
+						errors = append(errors, fmt.Sprintf("Failed to save option '%s' translation for %s", option, lang))
+					}
+				}
+			}
+
+			translationResults["options"] = optionTranslations
+		}
+	}
+
+	// Формируем результат
+	result := TranslationResult{
+		AttributeID:  attributeID,
+		Translations: translationResults,
+		Errors:       errors,
+	}
+
+	if len(errors) > 0 {
+		c.Status(fiber.StatusPartialContent)
 	}
 
 	return utils.SuccessResponse(c, result)

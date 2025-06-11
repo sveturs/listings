@@ -2035,6 +2035,92 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/marketplace/attributes/{id}/translate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Automatically translates attribute display name and options to all supported languages using Google Translate",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-attributes"
+                ],
+                "summary": "Auto-translate attribute",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Attribute ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Translation settings",
+                        "name": "languages",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "source_language": {
+                                    "type": "string"
+                                },
+                                "target_languages": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Translation results",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.TranslationResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid attribute ID",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Attribute not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Translation error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/marketplace/categories/{categoryId}/attributes/export": {
             "get": {
                 "security": [
@@ -14243,6 +14329,25 @@ const docTemplate = `{
                 "used_today": {
                     "type": "integer",
                     "example": 3450
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.TranslationResult": {
+            "type": "object",
+            "properties": {
+                "attribute_id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "translations": {
+                    "type": "object",
+                    "additionalProperties": true
                 }
             }
         },

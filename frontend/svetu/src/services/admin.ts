@@ -1,6 +1,30 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  // Helper function to get headers with auth and CSRF tokens
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (typeof window !== 'undefined') {
+    // Get auth token
+    try {
+      const { tokenManager } = await import('@/utils/tokenManager');
+      const token = await tokenManager.getAccessToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('[getAuthHeaders] Auth token added');
+      }
+    } catch {
+      console.log('No auth token available');
+    }
+  }
+
+  console.log('[getAuthHeaders] Final headers:', headers);
+  return headers;
+}
+
 // Types
 export interface Category {
   id: number;
@@ -50,6 +74,8 @@ export interface Attribute {
   default_value?: string | number | boolean;
   show_in_card?: boolean;
   show_in_list?: boolean;
+  translations?: Record<string, string>;
+  option_translations?: Record<string, Record<string, string>>;
 }
 
 export interface AttributeGroup {
@@ -123,7 +149,7 @@ export const adminApi = {
           }
         }
 
-        const response = await fetch('/api/admin/categories', {
+        const response = await fetch('/api/v1/admin/categories', {
           method: 'GET',
           headers,
           credentials: 'include',
@@ -174,7 +200,7 @@ export const adminApi = {
         }
       }
 
-      const response = await fetch(`/api/admin/categories/${id}`, {
+      const response = await fetch(`/api/v1/admin/categories/${id}`, {
         method: 'GET',
         headers,
         credentials: 'include',
@@ -192,24 +218,9 @@ export const adminApi = {
     async create(
       category: Partial<Category>
     ): Promise<{ id: number; message: string }> {
-      // Получаем токен если есть
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      const headers = await getAuthHeaders();
 
-      if (typeof window !== 'undefined') {
-        try {
-          const { tokenManager } = await import('@/utils/tokenManager');
-          const token = await tokenManager.getAccessToken();
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-          }
-        } catch {
-          console.log('No token available, proceeding without auth');
-        }
-      }
-
-      const response = await fetch('/api/admin/categories', {
+      const response = await fetch('/api/v1/admin/categories', {
         method: 'POST',
         headers,
         body: JSON.stringify(category),
@@ -220,28 +231,13 @@ export const adminApi = {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data;
+      return await response.json();
     },
 
     async update(id: number, category: Partial<Category>): Promise<any> {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      const headers = await getAuthHeaders();
 
-      if (typeof window !== 'undefined') {
-        try {
-          const { tokenManager } = await import('@/utils/tokenManager');
-          const token = await tokenManager.getAccessToken();
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-          }
-        } catch {
-          console.log('No token available, proceeding without auth');
-        }
-      }
-
-      const response = await fetch(`/api/admin/categories/${id}`, {
+      const response = await fetch(`/api/v1/admin/categories/${id}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(category),
@@ -257,23 +253,9 @@ export const adminApi = {
     },
 
     async delete(id: number): Promise<any> {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      const headers = await getAuthHeaders();
 
-      if (typeof window !== 'undefined') {
-        try {
-          const { tokenManager } = await import('@/utils/tokenManager');
-          const token = await tokenManager.getAccessToken();
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-          }
-        } catch {
-          console.log('No token available, proceeding without auth');
-        }
-      }
-
-      const response = await fetch(`/api/admin/categories/${id}`, {
+      const response = await fetch(`/api/v1/admin/categories/${id}`, {
         method: 'DELETE',
         headers,
         credentials: 'include',
@@ -288,16 +270,22 @@ export const adminApi = {
     },
 
     async reorder(orderedIds: number[]): Promise<any> {
-      const response = await apiClient.post('/api/admin/categories/reorder', {
-        ordered_ids: orderedIds,
-      });
+      const response = await apiClient.post(
+        '/api/v1/admin/categories/reorder',
+        {
+          ordered_ids: orderedIds,
+        }
+      );
       return response.data as any as { message: string };
     },
 
     async move(id: number, newParentId: number): Promise<any> {
-      const response = await apiClient.put(`/api/admin/categories/${id}/move`, {
-        new_parent_id: newParentId,
-      });
+      const response = await apiClient.put(
+        `/api/v1/admin/categories/${id}/move`,
+        {
+          new_parent_id: newParentId,
+        }
+      );
       return response.data as any as { message: string };
     },
 
@@ -343,7 +331,7 @@ export const adminApi = {
       isRequired: boolean = false
     ): Promise<any> {
       const response = await apiClient.post(
-        `/api/admin/categories/${categoryId}/attributes`,
+        `/api/v1/admin/categories/${categoryId}/attributes`,
         {
           attribute_id: attributeId,
           is_required: isRequired,
@@ -357,7 +345,7 @@ export const adminApi = {
       attributeId: number
     ): Promise<any> {
       const response = await apiClient.delete(
-        `/api/admin/categories/${categoryId}/attributes/${attributeId}`
+        `/api/v1/admin/categories/${categoryId}/attributes/${attributeId}`
       );
       return response.data as any;
     },
@@ -368,7 +356,7 @@ export const adminApi = {
       settings: Partial<CategoryAttributeMapping>
     ): Promise<any> {
       const response = await apiClient.put(
-        `/api/admin/categories/${categoryId}/attributes/${attributeId}`,
+        `/api/v1/admin/categories/${categoryId}/attributes/${attributeId}`,
         settings
       );
       return response.data as any;
@@ -420,7 +408,7 @@ export const adminApi = {
         }
 
         const response = await fetch(
-          `/api/admin/attributes?${params.toString()}`,
+          `/api/v1/admin/attributes?${params.toString()}`,
           {
             method: 'GET',
             headers,
@@ -512,7 +500,7 @@ export const adminApi = {
         }
       }
 
-      const response = await fetch(`/api/admin/attributes/${id}`, {
+      const response = await fetch(`/api/v1/admin/attributes/${id}`, {
         method: 'GET',
         headers,
         credentials: 'include',
@@ -530,24 +518,9 @@ export const adminApi = {
     async create(
       attribute: Partial<Attribute>
     ): Promise<{ id: number; message: string }> {
-      // Получаем токен если есть
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      const headers = await getAuthHeaders();
 
-      if (typeof window !== 'undefined') {
-        try {
-          const { tokenManager } = await import('@/utils/tokenManager');
-          const token = await tokenManager.getAccessToken();
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-          }
-        } catch {
-          console.log('No token available, proceeding without auth');
-        }
-      }
-
-      const response = await fetch('/api/admin/attributes', {
+      const response = await fetch('/api/v1/admin/attributes', {
         method: 'POST',
         headers,
         body: JSON.stringify(attribute),
@@ -563,55 +536,43 @@ export const adminApi = {
     },
 
     async update(id: number, attribute: Partial<Attribute>): Promise<any> {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      console.log(
+        '[adminApi.attributes.update] Starting update for attribute:',
+        id,
+        attribute
+      );
+      const headers = await getAuthHeaders();
 
-      if (typeof window !== 'undefined') {
-        try {
-          const { tokenManager } = await import('@/utils/tokenManager');
-          const token = await tokenManager.getAccessToken();
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-          }
-        } catch {
-          console.log('No token available, proceeding without auth');
-        }
-      }
-
-      const response = await fetch(`/api/admin/attributes/${id}`, {
+      const response = await fetch(`/api/v1/admin/attributes/${id}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(attribute),
         credentials: 'include',
       });
 
+      console.log(
+        '[adminApi.attributes.update] Response status:',
+        response.status
+      );
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          '[adminApi.attributes.update] Error response:',
+          errorText
+        );
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('[adminApi.attributes.update] Success response:', data);
       return data;
     },
 
     async delete(id: number): Promise<any> {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      const headers = await getAuthHeaders();
 
-      if (typeof window !== 'undefined') {
-        try {
-          const { tokenManager } = await import('@/utils/tokenManager');
-          const token = await tokenManager.getAccessToken();
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-          }
-        } catch {
-          console.log('No token available, proceeding without auth');
-        }
-      }
-
-      const response = await fetch(`/api/admin/attributes/${id}`, {
+      const response = await fetch(`/api/v1/admin/attributes/${id}`, {
         method: 'DELETE',
         headers,
         credentials: 'include',
@@ -631,7 +592,7 @@ export const adminApi = {
       errors?: string[];
     }> {
       const response = await apiClient.post(
-        '/api/admin/attributes/bulk-update',
+        '/api/v1/admin/attributes/bulk-update',
         { attributes }
       );
       return response.data as any as {
@@ -645,12 +606,14 @@ export const adminApi = {
   // Attribute Groups
   attributeGroups: {
     async getAll(): Promise<AttributeGroup[]> {
-      const response = await apiClient.get('/api/admin/attribute-groups');
+      const response = await apiClient.get('/api/v1/admin/attribute-groups');
       return (response.data as any as any).groups || [];
     },
 
     async getById(id: number): Promise<AttributeGroup> {
-      const response = await apiClient.get(`/api/admin/attribute-groups/${id}`);
+      const response = await apiClient.get(
+        `/api/v1/admin/attribute-groups/${id}`
+      );
       return (response.data as any as any).group;
     },
 
@@ -658,7 +621,7 @@ export const adminApi = {
       group: Partial<AttributeGroup>
     ): Promise<{ id: number; success: boolean }> {
       const response = await apiClient.post(
-        '/api/admin/attribute-groups',
+        '/api/v1/admin/attribute-groups',
         group
       );
       return response.data as any;
@@ -669,7 +632,7 @@ export const adminApi = {
       group: Partial<AttributeGroup>
     ): Promise<{ success: boolean; message: string }> {
       const response = await apiClient.put(
-        `/api/admin/attribute-groups/${id}`,
+        `/api/v1/admin/attribute-groups/${id}`,
         group
       );
       return response.data as any;
@@ -677,7 +640,7 @@ export const adminApi = {
 
     async delete(id: number): Promise<{ success: boolean; message: string }> {
       const response = await apiClient.delete(
-        `/api/admin/attribute-groups/${id}`
+        `/api/v1/admin/attribute-groups/${id}`
       );
       return response.data as any;
     },
@@ -686,7 +649,7 @@ export const adminApi = {
       id: number
     ): Promise<{ group: AttributeGroup; items: AttributeGroupItem[] }> {
       const response = await apiClient.get(
-        `/api/admin/attribute-groups/${id}/items`
+        `/api/v1/admin/attribute-groups/${id}/items`
       );
       return (response.data as any).data;
     },
@@ -696,7 +659,7 @@ export const adminApi = {
       item: Partial<AttributeGroupItem>
     ): Promise<{ id: number; success: boolean }> {
       const response = await apiClient.post(
-        `/api/admin/attribute-groups/${groupId}/items`,
+        `/api/v1/admin/attribute-groups/${groupId}/items`,
         item
       );
       return response.data as any;
@@ -707,7 +670,7 @@ export const adminApi = {
       attributeId: number
     ): Promise<{ success: boolean; message: string }> {
       const response = await apiClient.delete(
-        `/api/admin/attribute-groups/${groupId}/items/${attributeId}`
+        `/api/v1/admin/attribute-groups/${groupId}/items/${attributeId}`
       );
       return response.data as any;
     },
@@ -718,10 +681,51 @@ export const adminApi = {
     text: string,
     targetLanguages: string[] = ['ru', 'en', 'sr']
   ): Promise<Record<string, string>> {
-    const response = await apiClient.post('/api/translate', {
-      text,
-      target_languages: targetLanguages,
-    });
-    return (response.data as any).translations;
+    // Backend принимает только один язык за раз, поэтому делаем несколько запросов
+    const translations: Record<string, string> = {};
+
+    for (const targetLang of targetLanguages) {
+      try {
+        const response = await apiClient.post(
+          '/api/v1/marketplace/translations/translate',
+          {
+            text,
+            source_lang: 'ru', // Предполагаем, что исходный текст на русском
+            target_lang: targetLang,
+            provider: 'google',
+          }
+        );
+
+        const data = response.data as any;
+        if (data && data.data && data.data.translated_text) {
+          translations[targetLang] = data.data.translated_text;
+        }
+      } catch (error) {
+        console.error(`Failed to translate to ${targetLang}:`, error);
+        // Продолжаем с другими языками даже если один не удался
+      }
+    }
+
+    return translations;
+  },
+
+  // Translate Attribute
+  async translateAttribute(
+    attributeId: number,
+    sourceLanguage: string = 'en',
+    targetLanguages: string[] = ['ru', 'sr']
+  ): Promise<{
+    attribute_id: number;
+    translations: Record<string, any>;
+    errors?: string[];
+  }> {
+    const response = await apiClient.post(
+      `/api/v1/admin/attributes/${attributeId}/translate`,
+      {
+        source_language: sourceLanguage,
+        target_languages: targetLanguages,
+      }
+    );
+    return response.data as any;
   },
 };

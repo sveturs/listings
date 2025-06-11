@@ -130,10 +130,18 @@ export default function AttributesPage() {
     setShowForm(true);
   };
 
-  const handleEditAttribute = (attribute: Attribute) => {
-    setSelectedAttribute(attribute);
-    setIsEditing(true);
-    setShowForm(true);
+  const handleEditAttribute = async (attribute: Attribute) => {
+    try {
+      // Загружаем полные данные атрибута с переводами
+      const fullAttribute = await adminApi.attributes.getById(attribute.id);
+      console.log('Loaded full attribute:', fullAttribute);
+      setSelectedAttribute(fullAttribute);
+      setIsEditing(true);
+      setShowForm(true);
+    } catch (error) {
+      toast.error(t('common.error'));
+      console.error('Failed to load attribute details:', error);
+    }
   };
 
   const handleDeleteAttribute = async (attribute: Attribute) => {

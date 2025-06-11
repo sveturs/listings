@@ -69,6 +69,10 @@ type MarketplaceServiceInterface interface {
 	// Карта - геопространственные методы
 	GetListingsInBounds(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapMarker, error)
 	GetMapClusters(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapCluster, error)
+	
+	// Методы перевода
+	TranslateText(ctx context.Context, text, sourceLanguage, targetLanguage string) (string, error)
+	SaveTranslation(ctx context.Context, entityType string, entityID int, language, fieldName, translatedText string, metadata map[string]any) error
 }
 
 type ContactsServiceInterface interface {

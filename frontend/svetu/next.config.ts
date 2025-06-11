@@ -60,9 +60,9 @@ const nextConfig: NextConfig = {
           source: '/chat-files/:path*',
           destination: `${minioUrl}/chat-files/:path*`,
         },
-        // Проксируем API запросы на backend, кроме /api/auth/*
+        // Проксируем все API запросы на backend
         {
-          source: '/api/:path((?!auth).*)',
+          source: '/api/:path*',
           destination: `${apiUrl}/api/:path*`,
         },
         // Проксируем auth запросы (не API)

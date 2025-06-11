@@ -473,3 +473,10 @@ type PartialOperationResponse struct {
 	Error   string      `json:"error" example:"marketplace.partialOperationCompleted"`
 	Data    interface{} `json:"data"`
 }
+
+// TranslationResult результат автоматического перевода атрибута
+type TranslationResult struct {
+	AttributeID  int                    `json:"attribute_id" example:"123"`
+	Translations map[string]interface{} `json:"translations"`
+	Errors       []string               `json:"errors,omitempty"`
+}

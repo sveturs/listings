@@ -49,6 +49,11 @@ export default function AttributeForm({
 
   const [options, setOptions] = useState<SelectOption[]>([]);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [translations, setTranslations] = useState<{
+    display_name?: Record<string, string>;
+    options?: Record<string, Record<string, string>>;
+  }>({});
+  const [isEditingTranslations, setIsEditingTranslations] = useState(false);
 
   useEffect(() => {
     if (attribute) {
@@ -90,6 +95,14 @@ export default function AttributeForm({
         } catch (e) {
           console.error('Failed to parse options:', e);
         }
+      }
+
+      // Загружаем переводы если они есть
+      if (attribute.translations || attribute.option_translations) {
+        setTranslations({
+          display_name: attribute.translations || {},
+          options: attribute.option_translations || {},
+        });
       }
     }
   }, [attribute]);
@@ -142,32 +155,116 @@ export default function AttributeForm({
     setOptions(newOptions);
   };
 
+  const handleTranslationChange = (
+    type: 'display_name' | 'options',
+    lang: string,
+    value: string,
+    optionKey?: string
+  ) => {
+    setTranslations((prev) => {
+      if (type === 'display_name') {
+        return {
+          ...prev,
+          display_name: {
+            ...prev.display_name,
+            [lang]: value,
+          },
+        };
+      } else if (type === 'options' && optionKey) {
+        return {
+          ...prev,
+          options: {
+            ...prev.options,
+            [optionKey]: {
+              ...(prev.options?.[optionKey] || {}),
+              [lang]: value,
+            },
+          },
+        };
+      }
+      return prev;
+    });
+  };
+
   const handleTranslate = async () => {
     if (!formData.display_name) {
       toast.error('Введите отображаемое имя для перевода');
       return;
     }
 
-    setIsTranslating(true);
-    try {
-      const _translations = await adminApi.translate(formData.display_name);
+    // Если атрибут уже существует, используем API для перевода атрибута
+    if (attribute?.id) {
+      setIsTranslating(true);
+      try {
+        const result = await adminApi.translateAttribute(attribute.id);
 
-      // Translate options if select type
-      if (formData.attribute_type === 'select' && options.length > 0) {
-        for (const option of options) {
-          if (option.value) {
-            const _optionTranslations = await adminApi.translate(option.value);
-            // Here we would save option translations
+        if (result.errors && result.errors.length > 0) {
+          toast.error(
+            `Переводы получены с ошибками: ${result.errors.join(', ')}`
+          );
+        } else {
+          toast.success('Переводы успешно получены и сохранены');
+          // Обновляем состояние с переводами
+          if (result.translations) {
+            setTranslations(result.translations);
           }
         }
+      } catch (error) {
+        toast.error('Ошибка при переводе атрибута');
+        console.error('Translation error:', error);
+      } finally {
+        setIsTranslating(false);
       }
+    } else {
+      // Для нового атрибута переводим только текст
+      setIsTranslating(true);
+      try {
+        const translations = await adminApi.translate(formData.display_name);
 
-      toast.success('Переводы получены');
-    } catch (error) {
-      toast.error('Ошибка при переводе');
-      console.error('Translation error:', error);
-    } finally {
-      setIsTranslating(false);
+        // Сохраняем переводы в formData для последующего сохранения
+        setFormData((prev) => ({
+          ...prev,
+          translations: translations,
+        }));
+
+        // Обновляем состояние переводов для отображения
+        setTranslations((prev) => ({
+          ...prev,
+          display_name: translations,
+        }));
+
+        // Translate options if select type
+        if (formData.attribute_type === 'select' && options.length > 0) {
+          const optionTranslations: Record<string, Record<string, string>> = {};
+
+          for (const option of options) {
+            if (option.value) {
+              const optTranslations = await adminApi.translate(option.value);
+              optionTranslations[option.value] = optTranslations;
+            }
+          }
+
+          setFormData((prev) => ({
+            ...prev,
+            option_translations: optionTranslations,
+          }));
+
+          // Обновляем состояние переводов для отображения
+          setTranslations((prev) => ({
+            ...prev,
+            options: optionTranslations,
+          }));
+        }
+
+        toast.success(
+          'Переводы получены. Сохраните атрибут для применения переводов.'
+        );
+      } catch (error) {
+        toast.error('Ошибка при переводе');
+        console.error('Translation error:', error);
+      } finally {
+        setIsTranslating(false);
+      }
     }
   };
 
@@ -187,6 +284,18 @@ export default function AttributeForm({
       dataToSave.options = options
         .filter((opt) => opt.value)
         .map((opt) => opt.value);
+    }
+
+    // Добавляем переводы, если они есть
+    if (
+      translations.display_name &&
+      Object.keys(translations.display_name).length > 0
+    ) {
+      dataToSave.translations = translations.display_name;
+    }
+
+    if (translations.options && Object.keys(translations.options).length > 0) {
+      dataToSave.option_translations = translations.options;
     }
 
     onSave(dataToSave);
@@ -481,7 +590,7 @@ export default function AttributeForm({
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         <button
           type="button"
           onClick={handleTranslate}
@@ -497,7 +606,163 @@ export default function AttributeForm({
             <>🌍 {tCommon('translate')}</>
           )}
         </button>
+        {translations.display_name &&
+          Object.keys(translations.display_name).length > 0 && (
+            <div className="flex items-center gap-2 text-sm text-success">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>Переводы загружены</span>
+            </div>
+          )}
       </div>
+
+      {/* Секция отображения переводов */}
+      {translations.display_name &&
+        Object.keys(translations.display_name).length > 0 && (
+          <div className="mt-6 animate-in slide-in-from-bottom duration-300">
+            <div className="divider">{t('translations')}</div>
+
+            {/* Переводы названия атрибута */}
+            <div className="card bg-base-100 shadow-sm border border-base-300 transition-all duration-300 hover:shadow-md">
+              <div className="card-body">
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                  <h4 className="card-title text-base">
+                    {t('displayNameTranslations')}
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setIsEditingTranslations(!isEditingTranslations)
+                      }
+                      className="btn btn-ghost btn-xs"
+                    >
+                      {isEditingTranslations ? '✓ Готово' : '✏️ Редактировать'}
+                    </button>
+                    {isEditingTranslations && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm('Очистить все переводы?')) {
+                            setTranslations({});
+                            setIsEditingTranslations(false);
+                          }
+                        }}
+                        className="btn btn-ghost btn-xs text-error"
+                      >
+                        🗑️ Очистить
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {Object.entries(translations.display_name).map(
+                    ([lang, text]) => (
+                      <div key={lang} className="flex items-center gap-3">
+                        <div className="badge badge-primary badge-outline font-semibold">
+                          {lang.toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={text}
+                            onChange={(e) =>
+                              handleTranslationChange(
+                                'display_name',
+                                lang,
+                                e.target.value
+                              )
+                            }
+                            readOnly={!isEditingTranslations}
+                            className={`input input-bordered input-sm w-full ${
+                              isEditingTranslations ? '' : 'bg-base-200'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Переводы опций */}
+            {translations.options &&
+              Object.keys(translations.options).length > 0 && (
+                <div className="card bg-base-100 shadow-sm border border-base-300 mt-4 transition-all duration-300 hover:shadow-md">
+                  <div className="card-body">
+                    <h4 className="card-title text-base">
+                      {t('optionTranslations')}
+                    </h4>
+                    <div className="space-y-4">
+                      {Object.entries(translations.options).map(
+                        ([optionValue, langTranslations]) => (
+                          <div
+                            key={optionValue}
+                            className="border border-base-300 rounded-lg p-3 hover:shadow-sm transition-shadow"
+                          >
+                            <div className="font-medium text-sm mb-2 flex items-center gap-2">
+                              <span className="text-base-content/70">
+                                Опция:
+                              </span>
+                              <span className="font-mono bg-base-200 px-2 py-0.5 rounded">
+                                {optionValue}
+                              </span>
+                            </div>
+                            <div className="space-y-2 pl-2">
+                              {Object.entries(langTranslations).map(
+                                ([lang, translation]) => (
+                                  <div
+                                    key={lang}
+                                    className="flex items-center gap-3"
+                                  >
+                                    <div className="badge badge-sm badge-ghost font-semibold min-w-[3rem] justify-center">
+                                      {lang.toUpperCase()}
+                                    </div>
+                                    {isEditingTranslations ? (
+                                      <input
+                                        type="text"
+                                        value={translation}
+                                        onChange={(e) =>
+                                          handleTranslationChange(
+                                            'options',
+                                            lang,
+                                            e.target.value,
+                                            optionValue
+                                          )
+                                        }
+                                        className="input input-bordered input-xs flex-1"
+                                      />
+                                    ) : (
+                                      <div className="text-sm flex-1 px-2">
+                                        {translation}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+          </div>
+        )}
 
       <div className="flex gap-2 pt-4">
         <button type="submit" className="btn btn-primary flex-1">

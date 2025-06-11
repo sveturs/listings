@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useCreateListing } from '@/contexts/CreateListingContext';
 import {
   MarketplaceService,
   CategoryAttributeMapping,
 } from '@/services/marketplace';
+import { getTranslatedAttribute } from '@/utils/translatedAttribute';
 
 interface AttributeFormData {
   attribute_id: number;
@@ -31,6 +32,7 @@ export default function AttributesStep({
   onBack,
 }: AttributesStepProps) {
   const t = useTranslations();
+  const locale = useLocale();
   const { state, dispatch } = useCreateListing();
   const [attributes, setAttributes] = useState<CategoryAttributeMapping[]>([]);
   const [formData, setFormData] = useState<Record<number, AttributeFormData>>(
@@ -71,6 +73,19 @@ export default function AttributesStep({
                 self.findIndex((a) => a.attribute?.id === attr.attribute?.id)
             )
             .sort((a, b) => a.sort_order - b.sort_order);
+
+          // Логируем атрибуты для отладки
+          console.log('Loaded attributes:', uniqueAttributes);
+          console.log('Current locale:', locale);
+          uniqueAttributes.forEach((attr) => {
+            if (attr.attribute) {
+              console.log(`Attribute ${attr.attribute.name}:`, {
+                display_name: attr.attribute.display_name,
+                translations: attr.attribute.translations,
+                option_translations: attr.attribute.option_translations,
+              });
+            }
+          });
 
           setAttributes(uniqueAttributes);
 
@@ -178,7 +193,10 @@ export default function AttributesStep({
     return [];
   };
 
-  const renderAttribute = (mapping: CategoryAttributeMapping) => {
+  const renderAttribute = (
+    mapping: CategoryAttributeMapping,
+    getOptionLabel: (option: string) => string
+  ) => {
     const attribute = mapping.attribute;
     if (!attribute) return null;
 
@@ -250,7 +268,7 @@ export default function AttributesStep({
             <option value="">{t('common.select')}</option>
             {selectOptions.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {getOptionLabel(option)}
               </option>
             ))}
           </select>
@@ -302,7 +320,9 @@ export default function AttributesStep({
                     );
                   }}
                 />
-                <span className="label-text text-sm">{option}</span>
+                <span className="label-text text-sm">
+                  {getOptionLabel(option)}
+                </span>
               </label>
             ))}
           </div>
@@ -373,17 +393,33 @@ export default function AttributesStep({
                 const attribute = mapping.attribute;
                 if (!attribute) return null;
 
+                const { displayName, getOptionLabel } = getTranslatedAttribute(
+                  attribute,
+                  locale
+                );
+
+                // Дополнительное логирование для отладки
+                if (
+                  attribute.name === 'accessories' ||
+                  attribute.name === 'brand'
+                ) {
+                  console.log(
+                    `Attribute ${attribute.name} displayName:`,
+                    displayName
+                  );
+                }
+
                 return (
                   <div key={attribute.id} className="form-control">
                     <label className="label">
                       <span className="label-text font-medium">
-                        {attribute.display_name || attribute.name}
+                        {displayName}
                       </span>
                       {mapping.is_required && (
                         <span className="label-text-alt text-error">*</span>
                       )}
                     </label>
-                    {renderAttribute(mapping)}
+                    {renderAttribute(mapping, getOptionLabel)}
                   </div>
                 );
               })}
