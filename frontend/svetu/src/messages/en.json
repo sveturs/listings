@@ -323,7 +323,10 @@
       "error": "An error occurred",
       "loading": "Loading...",
       "noData": "No data available",
-      "total": "Total"
+      "total": "Total",
+      "showing": "Showing",
+      "of": "of",
+      "items": "items"
     },
     "categories": {
       "title": "Categories",

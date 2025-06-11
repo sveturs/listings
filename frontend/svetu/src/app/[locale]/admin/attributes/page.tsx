@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { adminApi, Attribute } from '@/services/admin';
 import { toast } from '@/utils/toast';
+import { useDebounce } from '@/hooks/useDebounce';
 import AttributeForm from './components/AttributeForm';
 
 export default function AttributesPage() {
@@ -18,6 +19,19 @@ export default function AttributesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Пагинация
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [pageSize] = useState(20);
+
+  // Используем debounce для поиска
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Ref для поля поиска
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const filterSelectRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
     // Ждем инициализации авторизации
@@ -52,13 +66,56 @@ export default function AttributesPage() {
       loadAttributes();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInitialized]);
+  }, [isInitialized, currentPage, debouncedSearchTerm, filterType]);
+
+  // Сбрасываем на первую страницу при изменении поиска или фильтра
+  useEffect(() => {
+    if (isInitialized && currentPage !== 1) {
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, filterType]);
 
   const loadAttributes = async () => {
     try {
       setLoading(true);
-      const data = await adminApi.attributes.getAll();
-      setAttributes(data);
+
+      // Сохраняем текущий активный элемент и позицию курсора
+      const activeElement = document.activeElement as
+        | HTMLInputElement
+        | HTMLSelectElement;
+      const isSearchFocused = activeElement === searchInputRef.current;
+      const isFilterFocused = activeElement === filterSelectRef.current;
+      const cursorPosition =
+        isSearchFocused && searchInputRef.current
+          ? searchInputRef.current.selectionStart
+          : null;
+
+      const response = await adminApi.attributes.getAll(
+        currentPage,
+        pageSize,
+        debouncedSearchTerm,
+        filterType
+      );
+      setAttributes(response.data);
+      setTotalPages(response.total_pages || 0);
+      setTotalItems(response.total || 0);
+
+      // Восстанавливаем фокус после обновления
+      requestAnimationFrame(() => {
+        if (isSearchFocused && searchInputRef.current) {
+          searchInputRef.current.focus();
+          // Восстанавливаем позицию курсора
+          if (cursorPosition !== null) {
+            searchInputRef.current.setSelectionRange(
+              cursorPosition,
+              cursorPosition
+            );
+          }
+        } else if (isFilterFocused && filterSelectRef.current) {
+          filterSelectRef.current.focus();
+        }
+      });
     } catch (error) {
       toast.error(t('common.error'));
       console.error('Failed to load attributes:', error);
@@ -109,15 +166,6 @@ export default function AttributesPage() {
     }
   };
 
-  // Filter attributes based on search and type
-  const filteredAttributes = attributes.filter((attr) => {
-    const matchesSearch =
-      attr.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      attr.display_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = !filterType || attr.attribute_type === filterType;
-    return matchesSearch && matchesType;
-  });
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -157,6 +205,7 @@ export default function AttributesPage() {
               <div className="flex gap-4 mb-4">
                 <div className="form-control flex-1">
                   <input
+                    ref={searchInputRef}
                     type="text"
                     placeholder={t('common.search')}
                     className="input input-bordered"
@@ -166,6 +215,7 @@ export default function AttributesPage() {
                 </div>
                 <div className="form-control">
                   <select
+                    ref={filterSelectRef}
                     className="select select-bordered"
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
@@ -207,14 +257,14 @@ export default function AttributesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredAttributes.length === 0 ? (
+                    {attributes.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="text-center">
                           {t('common.noData')}
                         </td>
                       </tr>
                     ) : (
-                      filteredAttributes.map((attr) => (
+                      attributes.map((attr) => (
                         <tr key={attr.id}>
                           <td>
                             <code className="text-sm">{attr.name}</code>
@@ -328,6 +378,60 @@ export default function AttributesPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-between items-center mt-4">
+                  <div className="text-sm text-base-content/70">
+                    {t('common.showing')} {(currentPage - 1) * pageSize + 1} -{' '}
+                    {Math.min(currentPage * pageSize, totalItems)}{' '}
+                    {t('common.of')} {totalItems} {t('common.items')}
+                  </div>
+                  <div className="join">
+                    <button
+                      className="join-item btn btn-sm"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                    >
+                      «
+                    </button>
+
+                    {/* Показываем страницы */}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNumber;
+                      if (totalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNumber = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNumber = totalPages - 4 + i;
+                      } else {
+                        pageNumber = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <button
+                          key={pageNumber}
+                          className={`join-item btn btn-sm ${
+                            pageNumber === currentPage ? 'btn-active' : ''
+                          }`}
+                          onClick={() => setCurrentPage(pageNumber)}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      className="join-item btn btn-sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                    >
+                      »
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

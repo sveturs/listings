@@ -1534,27 +1534,45 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get all attributes
-     * @description Returns list of all category attributes sorted by sort_order and ID
+     * Get all attributes with pagination, search and filter
+     * @description Returns paginated list of all category attributes sorted by sort_order and ID with optional search and filter
      */
     get: {
       parameters: {
-        query?: never;
+        query?: {
+          /** @description Page number (default: 1) */
+          page?: number;
+          /** @description Page size (default: 20, max: 100) */
+          page_size?: number;
+          /** @description Search term for name or display_name */
+          search?: string;
+          /** @description Filter by attribute type */
+          type?: string;
+        };
         header?: never;
         path?: never;
         cookie?: never;
       };
       requestBody?: never;
       responses: {
-        /** @description List of attributes */
+        /** @description Paginated list of attributes */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CategoryAttribute'][];
+              data?: components['schemas']['backend_internal_domain_models.PaginatedResponse'];
             };
+          };
+        };
+        /** @description Invalid pagination parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11274,6 +11292,13 @@ export interface components {
       telegram_enabled?: boolean;
       updated_at?: string;
       user_id?: number;
+    };
+    'backend_internal_domain_models.PaginatedResponse': {
+      data?: unknown;
+      page?: number;
+      page_size?: number;
+      total?: number;
+      total_pages?: number;
     };
     'backend_internal_domain_models.PaymentMethod': {
       code?: string;

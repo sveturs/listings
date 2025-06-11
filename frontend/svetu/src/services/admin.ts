@@ -1,4 +1,5 @@
 import { apiClient } from './api-client';
+import type { components } from '@/types/generated/api';
 
 // Types
 export interface Category {
@@ -79,6 +80,12 @@ export interface AttributeGroupItem {
   };
   attribute?: Attribute;
 }
+
+// Use generated PaginatedResponse type
+type PaginatedResponse<T> =
+  components['schemas']['backend_internal_domain_models.PaginatedResponse'] & {
+    data: T[];
+  };
 
 export interface CategoryAttributeMapping {
   category_id: number;
@@ -370,10 +377,16 @@ export const adminApi = {
 
   // Attributes
   attributes: {
-    async getAll(): Promise<Attribute[]> {
+    async getAll(
+      page: number = 1,
+      pageSize: number = 20,
+      search?: string,
+      filterType?: string
+    ): Promise<PaginatedResponse<Attribute>> {
       try {
         console.log(
-          'adminApi.attributes.getAll: Making request to admin attributes API'
+          'adminApi.attributes.getAll: Making request to admin attributes API with pagination',
+          { page, pageSize, search, filterType }
         );
 
         // Получаем токен если есть
@@ -393,11 +406,27 @@ export const adminApi = {
           }
         }
 
-        const response = await fetch('/api/admin/attributes', {
-          method: 'GET',
-          headers,
-          credentials: 'include',
+        const params = new URLSearchParams({
+          page: page.toString(),
+          page_size: pageSize.toString(),
         });
+
+        // Добавляем параметры поиска и фильтрации
+        if (search) {
+          params.append('search', search);
+        }
+        if (filterType) {
+          params.append('type', filterType);
+        }
+
+        const response = await fetch(
+          `/api/admin/attributes?${params.toString()}`,
+          {
+            method: 'GET',
+            headers,
+            credentials: 'include',
+          }
+        );
 
         console.log('Response status:', response.status);
 
@@ -407,23 +436,62 @@ export const adminApi = {
             response.status,
             response.statusText
           );
-          return [];
+          return {
+            data: [],
+            page: 1,
+            page_size: pageSize,
+            total: 0,
+            total_pages: 0,
+          };
         }
 
-        const data = await response.json();
-        console.log('Response data:', data);
+        const result = await response.json();
+        console.log('Response data:', result);
 
-        // Backend возвращает данные в поле data
-        const result = data.data || data || [];
-        console.log('Final attributes array:', result);
-        console.log(
-          'Attributes count:',
-          Array.isArray(result) ? result.length : 'not array'
-        );
-        return Array.isArray(result) ? result : [];
+        // Backend возвращает обёрнутый ответ с полем data
+        // Проверяем структуру ответа
+        if (
+          result.data &&
+          result.data.data &&
+          typeof result.data.page !== 'undefined'
+        ) {
+          // Ответ уже содержит структуру пагинации
+          const paginatedData = result.data;
+          return {
+            data: paginatedData.data || [],
+            page: paginatedData.page || page,
+            page_size: paginatedData.page_size || pageSize,
+            total: paginatedData.total || 0,
+            total_pages: paginatedData.total_pages || 0,
+          };
+        } else if (Array.isArray(result.data)) {
+          // Старый формат ответа - простой массив
+          return {
+            data: result.data,
+            page: 1,
+            page_size: result.data.length,
+            total: result.data.length,
+            total_pages: 1,
+          };
+        } else {
+          // Неизвестный формат
+          return {
+            data: [],
+            page: 1,
+            page_size: pageSize,
+            total: 0,
+            total_pages: 0,
+          };
+        }
       } catch (error) {
         console.error('Failed to load attributes:', error);
-        return [];
+        return {
+          data: [],
+          page: 1,
+          page_size: pageSize,
+          total: 0,
+          total_pages: 0,
+        };
       }
     },
 

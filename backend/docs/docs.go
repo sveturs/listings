@@ -1687,7 +1687,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns list of all category attributes sorted by sort_order and ID",
+                "description": "Returns paginated list of all category attributes sorted by sort_order and ID with optional search and filter",
                 "consumes": [
                     "application/json"
                 ],
@@ -1697,10 +1697,36 @@ const docTemplate = `{
                 "tags": [
                     "marketplace-admin-attributes"
                 ],
-                "summary": "Get all attributes",
+                "summary": "Get all attributes with pagination, search and filter",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default: 20, max: 100)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for name or display_name",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by attribute type",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of attributes",
+                        "description": "Paginated list of attributes",
                         "schema": {
                             "allOf": [
                                 {
@@ -1710,14 +1736,17 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/backend_internal_domain_models.CategoryAttribute"
-                                            }
+                                            "$ref": "#/definitions/backend_internal_domain_models.PaginatedResponse"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid pagination parameters",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
@@ -12527,6 +12556,24 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
                     "type": "integer"
                 }
             }

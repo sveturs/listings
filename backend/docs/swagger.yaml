@@ -962,6 +962,18 @@ definitions:
       user_id:
         type: integer
     type: object
+  backend_internal_domain_models.PaginatedResponse:
+    properties:
+      data: {}
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   backend_internal_domain_models.PaymentMethod:
     properties:
       code:
@@ -4204,29 +4216,48 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns list of all category attributes sorted by sort_order and
-        ID
+      description: Returns paginated list of all category attributes sorted by sort_order
+        and ID with optional search and filter
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 20, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      - description: Search term for name or display_name
+        in: query
+        name: search
+        type: string
+      - description: Filter by attribute type
+        in: query
+        name: type
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: List of attributes
+          description: Paginated list of attributes
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/backend_internal_domain_models.CategoryAttribute'
-                  type: array
+                  $ref: '#/definitions/backend_internal_domain_models.PaginatedResponse'
               type: object
+        "400":
+          description: Invalid pagination parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Get all attributes
+      summary: Get all attributes with pagination, search and filter
       tags:
       - marketplace-admin-attributes
   /api/v1/admin/marketplace/attributes/{id}:

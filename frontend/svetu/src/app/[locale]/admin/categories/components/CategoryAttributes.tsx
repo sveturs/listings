@@ -47,9 +47,9 @@ export default function CategoryAttributes({
     try {
       setLoading(true);
 
-      // Load all attributes
-      const attributes = await adminApi.attributes.getAll();
-      setAllAttributes(attributes);
+      // Load all attributes - для категорий загружаем все атрибуты без пагинации
+      const attributesResponse = await adminApi.attributes.getAll(1, 100);
+      setAllAttributes(attributesResponse.data);
 
       // Load attribute groups
       const attributeGroups = await adminApi.attributeGroups.getAll();

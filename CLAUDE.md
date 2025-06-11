@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Используй mcp playwright для работы с браузером Google Chrome
    - ИСПОЛЬЗУЙ ДЕФОЛТНЫЕ КЛАССЫ DAISYUI. Используй mcp context7 для поиска по документации daisyui при работе с версткой
 
-- **Качество кода**: Проверяй `yarn lint` и `yarn build` перед завершением задачи. После успешного `yarn build` выполни `yarn format`
+- **Качество кода**: Перед завершением задачи ОБЯЗАТЕЛЬНО выполни `yarn format && yarn lint && yarn build`. Задача считается выполненной только если все команды прошли успешно
 
 - **Зависимости**: При добавлении ключевых зависимостей указывай их в разделе "Key Dependencies"
 
@@ -255,3 +255,48 @@ func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
 ### Просмотр документации
 
 Swagger UI доступен по адресу: http://localhost:3000/swagger/index.html (в режиме разработки)
+
+## API Contract Management (OpenAPI v3)
+
+Проект использует подход **Contract-First Development** на основе OpenAPI v3 схемы:
+
+### Workflow взаимодействия Backend ↔ Frontend
+
+1. **Backend (первичный источник)**: 
+   - Разработчики пишут Swagger аннотации в Go коде
+   - Аннотации описывают все endpoints, их параметры и типы ответов
+   
+2. **Генерация OpenAPI схемы**:
+   ```bash
+   cd backend && make docs
+   ```
+   - Создается `docs/swagger.json` - OpenAPI v3 спецификация
+   
+3. **Генерация типов для Frontend**:
+   ```bash
+   cd backend && make generate-types
+   ```
+   - Копирует swagger.json в frontend
+   - Запускает генерацию TypeScript типов
+   - Создает типизированные интерфейсы в `frontend/svetu/src/types/generated/api.ts`
+
+### Важно при разработке
+
+- **Backend разработчики**: Всегда документируйте endpoints с помощью Swagger аннотаций
+- **Frontend разработчики**: Используйте сгенерированные типы из `@/types/generated/api`
+- **При изменении API**: Обязательно перегенерируйте типы командой `make generate-types`
+
+### Проверка качества кода
+
+Перед завершением любой задачи на Frontend **ОБЯЗАТЕЛЬНО** выполните:
+
+```bash
+yarn format && yarn lint && yarn build
+```
+
+Эта команда:
+1. `yarn format` - форматирует код согласно правилам Prettier
+2. `yarn lint` - проверяет код на соответствие правилам ESLint
+3. `yarn build` - создает production сборку и проверяет типы TypeScript
+
+Задача считается выполненной только если все три команды выполнились успешно!

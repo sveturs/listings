@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"strconv"
+	"strings"
 )
 
 // AdminAttributesHandler обрабатывает запросы админки для управления атрибутами
@@ -132,27 +133,91 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 	})
 }
 
-// GetAttributes returns list of all attributes
-// @Summary Get all attributes
-// @Description Returns list of all category attributes sorted by sort_order and ID
+// GetAttributes returns paginated list of attributes with search and filter
+// @Summary Get all attributes with pagination, search and filter
+// @Description Returns paginated list of all category attributes sorted by sort_order and ID with optional search and filter
 // @Tags marketplace-admin-attributes
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttribute} "List of attributes"
+// @Param page query int false "Page number (default: 1)"
+// @Param page_size query int false "Page size (default: 20, max: 100)"
+// @Param search query string false "Search term for name or display_name"
+// @Param type query string false "Filter by attribute type"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.PaginatedResponse} "Paginated list of attributes"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid pagination parameters"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes [get]
 func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
-	// В текущей реализации нет метода для получения всех атрибутов,
-	// поэтому можно создать запрос к базе данных напрямую
-	query := `
+	// Получаем параметры пагинации
+	page := c.QueryInt("page", 1)
+	pageSize := c.QueryInt("page_size", 20)
+	searchTerm := c.Query("search", "")
+	filterType := c.Query("type", "")
+
+	// Валидация параметров
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	// Вычисляем offset
+	offset := (page - 1) * pageSize
+
+	// Строим запросы с учетом фильтров
+	whereConditions := []string{}
+	queryParams := []interface{}{}
+	paramCounter := 1
+
+	// Добавляем условие поиска
+	if searchTerm != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("(LOWER(name) LIKE LOWER($%d) OR LOWER(display_name) LIKE LOWER($%d))", paramCounter, paramCounter+1))
+		searchPattern := "%" + searchTerm + "%"
+		queryParams = append(queryParams, searchPattern, searchPattern)
+		paramCounter += 2
+	}
+
+	// Добавляем фильтр по типу
+	if filterType != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("attribute_type = $%d", paramCounter))
+		queryParams = append(queryParams, filterType)
+		paramCounter++
+	}
+
+	// Формируем WHERE часть запроса
+	whereClause := ""
+	if len(whereConditions) > 0 {
+		whereClause = " WHERE " + strings.Join(whereConditions, " AND ")
+	}
+
+	// Получаем общее количество атрибутов с учетом фильтров
+	var total int
+	countQuery := `SELECT COUNT(*) FROM category_attributes` + whereClause
+	err := h.marketplaceService.Storage().QueryRow(c.Context(), countQuery, queryParams...).Scan(&total)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to count attributes")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getAttributesError")
+	}
+
+	// Добавляем параметры для LIMIT и OFFSET
+	queryParams = append(queryParams, pageSize, offset)
+
+	// Получаем атрибуты с пагинацией и фильтрами
+	query := fmt.Sprintf(`
 		SELECT id, name, display_name, attribute_type, icon, options, validation_rules, 
 		is_searchable, is_filterable, is_required, sort_order, created_at
 		FROM category_attributes
+		%s
 		ORDER BY sort_order, id
-	`
+		LIMIT $%d OFFSET $%d
+	`, whereClause, paramCounter, paramCounter+1)
 
-	rows, err := h.marketplaceService.Storage().Query(c.Context(), query)
+	rows, err := h.marketplaceService.Storage().Query(c.Context(), query, queryParams...)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get attributes")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getAttributesError")
@@ -188,7 +253,19 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 		attributes = append(attributes, attribute)
 	}
 
-	return utils.SuccessResponse(c, attributes)
+	// Вычисляем общее количество страниц
+	totalPages := (total + pageSize - 1) / pageSize
+
+	// Формируем пагинированный ответ
+	response := models.PaginatedResponse{
+		Data:       attributes,
+		Page:       page,
+		PageSize:   pageSize,
+		Total:      total,
+		TotalPages: totalPages,
+	}
+
+	return utils.SuccessResponse(c, response)
 }
 
 // GetAttributeByID returns attribute information by ID

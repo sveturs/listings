@@ -40,9 +40,9 @@ export default function GroupAttributes({
     try {
       setLoading(true);
 
-      // Load all attributes
-      const attributes = await adminApi.attributes.getAll();
-      setAllAttributes(attributes);
+      // Load all attributes - для групп загружаем все атрибуты без пагинации
+      const attributesResponse = await adminApi.attributes.getAll(1, 100);
+      setAllAttributes(attributesResponse.data);
 
       // Load group items
       const { items } = await adminApi.attributeGroups.getWithItems(group.id);

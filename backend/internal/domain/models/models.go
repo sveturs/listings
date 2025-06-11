@@ -14,6 +14,15 @@ const (
 	NotificationTypeFavoritePrice  = "favorite_price"
 )
 
+// PaginatedResponse представляет пагинированный ответ
+type PaginatedResponse struct {
+	Data       interface{} `json:"data"`
+	Page       int         `json:"page"`
+	PageSize   int         `json:"page_size"`
+	Total      int         `json:"total"`
+	TotalPages int         `json:"total_pages"`
+}
+
 type User struct {
 	ID         int       `json:"id"`
 	Name       string    `json:"name"`

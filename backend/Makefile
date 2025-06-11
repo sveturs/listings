@@ -1,8 +1,16 @@
 .PHONY: docs docs-fmt docs-clean
 
-build:
+build_migrator:
 	go build -o bin/migrator ./cmd/migrator
+
+build_api:
 	go build -o bin/api ./cmd/api
+
+build_reindex:
+	go build -o bin/reindex ./cmd/reindex
+
+build_all: build_api build_migrator build_reindex
+	@echo "Build DONE"
 
 # Swagger документация
 docs:
@@ -23,7 +31,7 @@ docs-openapi3: docs
 # Generate TypeScript types from OpenAPI spec
 generate-types: docs-openapi3
 	@echo "Generating TypeScript types..."
-	cd ../frontend/svetu && npx openapi-typescript ../../backend/docs/openapi3.yaml -o src/types/generated/api.ts
+	cd ../frontend/svetu && npx openapi-typescript ../../backend/docs/openapi3.yaml -o src/types/generated/api.ts && yarn format
 	@echo "TypeScript types generated in frontend/svetu/src/types/generated/api.ts"
 
 docs-fmt:
