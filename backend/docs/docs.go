@@ -11465,6 +11465,12 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
+                "show_in_card": {
+                    "type": "boolean"
+                },
+                "show_in_list": {
+                    "type": "boolean"
+                },
                 "sort_order": {
                     "type": "integer"
                 },
@@ -11501,6 +11507,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "is_required": {
+                    "type": "boolean"
+                },
+                "show_in_card": {
+                    "type": "boolean"
+                },
+                "show_in_list": {
                     "type": "boolean"
                 },
                 "sort_order": {
@@ -12130,6 +12142,10 @@ const docTemplate = `{
                     "description": "Вспомогательное поле для вывода значения любого типа в строковом виде",
                     "type": "string"
                 },
+                "is_required": {
+                    "description": "Настройки отображения",
+                    "type": "boolean"
+                },
                 "json_value": {
                     "type": "array",
                     "items": {
@@ -12150,6 +12166,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     }
+                },
+                "show_in_card": {
+                    "type": "boolean"
+                },
+                "show_in_list": {
+                    "type": "boolean"
                 },
                 "text_value": {
                     "type": "string"

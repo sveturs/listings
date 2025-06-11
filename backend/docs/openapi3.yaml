@@ -7727,6 +7727,10 @@ components:
           items:
             type: integer
           type: array
+        show_in_card:
+          type: boolean
+        show_in_list:
+          type: boolean
         sort_order:
           type: integer
         translations:
@@ -7751,6 +7755,10 @@ components:
         is_enabled:
           type: boolean
         is_required:
+          type: boolean
+        show_in_card:
+          type: boolean
+        show_in_list:
           type: boolean
         sort_order:
           type: integer
@@ -8178,6 +8186,9 @@ components:
         display_value:
           description: Вспомогательное поле для вывода значения любого типа в строковом виде
           type: string
+        is_required:
+          description: Настройки отображения
+          type: boolean
         json_value:
           items:
             type: integer
@@ -8192,6 +8203,10 @@ components:
               type: string
             type: object
           type: object
+        show_in_card:
+          type: boolean
+        show_in_list:
+          type: boolean
         text_value:
           type: string
         translations:

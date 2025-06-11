@@ -12,6 +12,7 @@ import ImageGallery from '@/components/marketplace/listing/ImageGallery';
 import SellerInfo from '@/components/marketplace/listing/SellerInfo';
 import ListingActions from '@/components/marketplace/listing/ListingActions';
 import SimilarListings from '@/components/marketplace/listing/SimilarListings';
+import { getTranslatedAttribute } from '@/utils/translatedAttribute';
 
 interface User {
   id: number;
@@ -36,6 +37,11 @@ interface Attribute {
   text_value?: string;
   numeric_value?: number;
   display_value: string;
+  translations?: Record<string, string>;
+  option_translations?: Record<string, Record<string, string>>;
+  is_required: boolean;
+  show_in_card: boolean;
+  show_in_list: boolean;
 }
 
 interface ListingImage {
@@ -403,28 +409,122 @@ export default function ListingPage({ params }: Props) {
                 )}
 
                 {/* Attributes */}
-                {listing.attributes && listing.attributes.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-3">
-                      {locale === 'ru' ? 'Характеристики' : 'Specifications'}
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {listing.attributes.map((attr) => (
-                        <div
-                          key={attr.attribute_id}
-                          className="flex justify-between py-2 border-b border-base-300"
-                        >
-                          <span className="text-base-content/60">
-                            {attr.display_name}:
-                          </span>
-                          <span className="font-medium">
-                            {attr.display_value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {listing.attributes &&
+                  listing.attributes.length > 0 &&
+                  (() => {
+                    // Фильтруем атрибуты для отображения в карточке
+                    const cardAttributes = listing.attributes.filter(
+                      (attr) => attr.show_in_card
+                    );
+
+                    // Разделяем на обязательные и дополнительные
+                    const requiredAttributes = cardAttributes.filter(
+                      (attr) => attr.is_required
+                    );
+                    const optionalAttributes = cardAttributes.filter(
+                      (attr) => !attr.is_required
+                    );
+
+                    if (cardAttributes.length === 0) return null;
+
+                    return (
+                      <>
+                        {/* Обязательные характеристики */}
+                        {requiredAttributes.length > 0 && (
+                          <div className="mt-6">
+                            <h3 className="text-lg font-semibold mb-3">
+                              {locale === 'ru'
+                                ? 'Основные характеристики'
+                                : 'Main Specifications'}
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {requiredAttributes.map((attr) => {
+                                const translated = getTranslatedAttribute(
+                                  {
+                                    id: attr.attribute_id,
+                                    name: attr.attribute_name,
+                                    display_name: attr.display_name,
+                                    attribute_type: attr.attribute_type,
+                                    translations: attr.translations,
+                                    option_translations:
+                                      attr.option_translations,
+                                  },
+                                  locale
+                                );
+
+                                const displayValue =
+                                  attr.attribute_type === 'select' &&
+                                  attr.text_value
+                                    ? translated.getOptionLabel(attr.text_value)
+                                    : attr.display_value;
+
+                                return (
+                                  <div
+                                    key={attr.attribute_id}
+                                    className="flex justify-between py-2 border-b border-base-300"
+                                  >
+                                    <span className="text-base-content/70 font-medium">
+                                      {translated.displayName}:
+                                    </span>
+                                    <span className="font-semibold">
+                                      {displayValue}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Дополнительные характеристики */}
+                        {optionalAttributes.length > 0 && (
+                          <div className="mt-6">
+                            <h3 className="text-lg font-semibold mb-3">
+                              {locale === 'ru'
+                                ? 'Дополнительные характеристики'
+                                : 'Additional Specifications'}
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {optionalAttributes.map((attr) => {
+                                const translated = getTranslatedAttribute(
+                                  {
+                                    id: attr.attribute_id,
+                                    name: attr.attribute_name,
+                                    display_name: attr.display_name,
+                                    attribute_type: attr.attribute_type,
+                                    translations: attr.translations,
+                                    option_translations:
+                                      attr.option_translations,
+                                  },
+                                  locale
+                                );
+
+                                const displayValue =
+                                  attr.attribute_type === 'select' &&
+                                  attr.text_value
+                                    ? translated.getOptionLabel(attr.text_value)
+                                    : attr.display_value;
+
+                                return (
+                                  <div
+                                    key={attr.attribute_id}
+                                    className="flex justify-between py-2 border-b border-base-300"
+                                  >
+                                    <span className="text-base-content/60">
+                                      {translated.displayName}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {displayValue}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
               </div>
             </div>
 

@@ -17,6 +17,8 @@ type CategoryAttribute struct {
 	IsSearchable       bool                         `json:"is_searchable"`
 	IsFilterable       bool                         `json:"is_filterable"`
 	IsRequired         bool                         `json:"is_required"`
+	ShowInCard         bool                         `json:"show_in_card"`
+	ShowInList         bool                         `json:"show_in_list"`
 	SortOrder          int                          `json:"sort_order"`
 	CreatedAt          time.Time                    `json:"created_at"`
 	Translations       map[string]string            `json:"translations,omitempty"`
@@ -50,6 +52,10 @@ type ListingAttributeValue struct {
 	Unit               string                       `json:"unit,omitempty"`
 	Translations       map[string]string            `json:"translations,omitempty"`
 	OptionTranslations map[string]map[string]string `json:"option_translations,omitempty"`
+	// Настройки отображения
+	IsRequired bool `json:"is_required"`
+	ShowInCard bool `json:"show_in_card"`
+	ShowInList bool `json:"show_in_list"`
 }
 
 // CategoryAttributeMapping связывает атрибуты с категориями
@@ -58,6 +64,8 @@ type CategoryAttributeMapping struct {
 	AttributeID     int                `json:"attribute_id"`
 	IsEnabled       bool               `json:"is_enabled"`
 	IsRequired      bool               `json:"is_required"`
+	ShowInCard      *bool              `json:"show_in_card,omitempty"`
+	ShowInList      *bool              `json:"show_in_list,omitempty"`
 	SortOrder       int                `json:"sort_order"`
 	CustomComponent string             `json:"custom_component,omitempty"`
 	Attribute       *CategoryAttribute `json:"attribute,omitempty"`
