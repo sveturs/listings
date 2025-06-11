@@ -146,3 +146,8 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 		Msg("AdminRequired: Access denied - user is not an admin")
 	return utils.ErrorResponse(c, fiber.StatusForbidden, "Отказано в доступе")
 }
+
+// RequireAdmin является алиасом для AdminRequired для удобства
+func (m *Middleware) RequireAdmin() fiber.Handler {
+	return m.AdminRequired
+}
