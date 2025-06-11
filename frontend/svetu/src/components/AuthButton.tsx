@@ -28,6 +28,11 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
 
   // Получаем количество непрочитанных сообщений из useChat
   const { unreadCount } = useChat();
+  
+  // Временное логирование для отладки
+  useEffect(() => {
+    console.log('[AuthButton] Unread count:', unreadCount);
+  }, [unreadCount]);
 
   // Ensure component is mounted before rendering dynamic content
   useEffect(() => {

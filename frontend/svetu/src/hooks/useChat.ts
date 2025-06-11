@@ -130,6 +130,7 @@ export function useChat() {
   const hasMoreMessages = useAppSelector((state) => state.chat.hasMoreMessages);
   const userLastSeen = useAppSelector((state) => state.chat.userLastSeen);
   const hasMoreChats = useAppSelector((state) => state.chat.hasMoreChats);
+  const messagesLoaded = useAppSelector((state) => state.chat.messagesLoaded);
 
   return {
     // State
@@ -145,6 +146,7 @@ export function useChat() {
     hasMoreMessages,
     userLastSeen,
     hasMoreChats,
+    messagesLoaded,
 
     // Actions
     loadChats: loadChatsAction,

@@ -10,12 +10,12 @@ import (
 
 // RegisterRoutes регистрирует все маршруты для проекта docs
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
-	// Публичные маршруты документации - без аутентификации
-	docsRoutes := app.Group("/api/v1/docs")
+	// Маршруты документации - требуют авторизации и прав администратора
+	docsRoutes := app.Group("/api/v1/docs", mw.JWTAuth())
 
-	// Документация доступна всем
-	docsRoutes.Get("/files", h.GetDocFiles)
-	docsRoutes.Get("/content", h.GetFileContent)
+	// Документация доступна только администраторам
+	docsRoutes.Get("/files", mw.RequireAdmin(), h.GetDocFiles)
+	docsRoutes.Get("/content", mw.RequireAdmin(), h.GetFileContent)
 
 	return nil
 }
