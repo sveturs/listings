@@ -11,7 +11,7 @@ import (
 // RegisterRoutes регистрирует все маршруты для проекта docs
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Маршруты документации - требуют авторизации и прав администратора
-	docsRoutes := app.Group("/api/v1/docs", mw.JWTAuth())
+	docsRoutes := app.Group("/api/v1/docs", mw.AuthRequiredJWT)
 
 	// Документация доступна только администраторам
 	docsRoutes.Get("/files", mw.RequireAdmin(), h.GetDocFiles)

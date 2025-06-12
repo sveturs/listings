@@ -19,12 +19,16 @@ func NewContactsService(storage storage.Storage) *ContactsService {
 
 // Добавить контакт
 func (s *ContactsService) AddContact(ctx context.Context, userID int, req *models.AddContactRequest) (*models.UserContact, error) {
+	fmt.Printf("[ContactsService] AddContact called: userID=%d, contactUserID=%d\n", userID, req.ContactUserID)
+	
 	// Проверяем, можно ли добавить этого пользователя в контакты
 	canAdd, err := s.storage.CanAddContact(ctx, userID, req.ContactUserID)
 	if err != nil {
+		fmt.Printf("[ContactsService] CanAddContact error: %v\n", err)
 		return nil, fmt.Errorf("error checking if can add contact: %w", err)
 	}
 
+	fmt.Printf("[ContactsService] CanAddContact result: %v\n", canAdd)
 	if !canAdd {
 		return nil, fmt.Errorf("user does not allow contact requests or has blocked you")
 	}
@@ -100,9 +104,19 @@ func (s *ContactsService) UpdateContactStatus(ctx context.Context, userID int, c
 		return fmt.Errorf("contact request not found")
 	}
 
-	// Проверяем, что запрос в статусе pending
-	if existingContact.Status != models.ContactStatusPending {
-		return fmt.Errorf("can only update pending requests")
+	// Проверяем допустимые переходы статусов
+	if existingContact.Status == models.ContactStatusAccepted && req.Status == models.ContactStatusAccepted {
+		return fmt.Errorf("contact is already accepted")
+	}
+	
+	// Разрешаем обновление если:
+	// 1. Статус pending - можно принять или заблокировать
+	// 2. Статус blocked - можно разблокировать (принять)
+	// 3. Статус accepted - можно заблокировать
+	if existingContact.Status != models.ContactStatusPending && 
+	   !(existingContact.Status == models.ContactStatusBlocked && req.Status == models.ContactStatusAccepted) &&
+	   !(existingContact.Status == models.ContactStatusAccepted && req.Status == models.ContactStatusBlocked) {
+		return fmt.Errorf("invalid status transition from %s to %s", existingContact.Status, req.Status)
 	}
 
 	// Обновляем статус запроса от contactUserID к userID

@@ -316,7 +316,7 @@ func (s *Storage) GetUserPrivacySettings(ctx context.Context, userID int) (*mode
 		&settings.UpdatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if err != nil {
 		// Если настроек нет, создаем их с значениями по умолчанию
 		insertQuery := `
 			INSERT INTO user_privacy_settings (user_id, allow_contact_requests, allow_messages_from_contacts_only) 
@@ -335,8 +335,6 @@ func (s *Storage) GetUserPrivacySettings(ctx context.Context, userID int) (*mode
 		if err != nil {
 			return nil, fmt.Errorf("error creating privacy settings: %w", err)
 		}
-	} else if err != nil {
-		return nil, fmt.Errorf("error getting privacy settings: %w", err)
 	}
 
 	return settings, nil
@@ -391,12 +389,17 @@ func (s *Storage) UpdateUserPrivacySettings(ctx context.Context, userID int, set
 
 // Проверить, разрешены ли запросы на добавление в контакты
 func (s *Storage) CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error) {
+	fmt.Printf("[Storage] CanAddContact: userID=%d, targetUserID=%d\n", userID, targetUserID)
+	
 	// Получаем настройки приватности целевого пользователя
 	settings, err := s.GetUserPrivacySettings(ctx, targetUserID)
 	if err != nil {
+		fmt.Printf("[Storage] GetUserPrivacySettings error: %v\n", err)
 		return false, err
 	}
 
+	fmt.Printf("[Storage] Privacy settings for user %d: AllowContactRequests=%v\n", targetUserID, settings.AllowContactRequests)
+	
 	// Проверяем, разрешены ли запросы на добавление
 	if !settings.AllowContactRequests {
 		return false, nil
