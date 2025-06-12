@@ -10976,6 +10976,8 @@ export interface components {
         };
       };
       options?: number[];
+      show_in_card?: boolean;
+      show_in_list?: boolean;
       sort_order?: number;
       translations?: {
         [key: string]: string;
@@ -10989,6 +10991,8 @@ export interface components {
       custom_component?: string;
       is_enabled?: boolean;
       is_required?: boolean;
+      show_in_card?: boolean;
+      show_in_list?: boolean;
       sort_order?: number;
     };
     'backend_internal_domain_models.CategorySuggestion': {
@@ -11193,6 +11197,8 @@ export interface components {
       display_name?: string;
       /** @description Вспомогательное поле для вывода значения любого типа в строковом виде */
       display_value?: string;
+      /** @description Настройки отображения */
+      is_required?: boolean;
       json_value?: number[];
       listing_id?: number;
       numeric_value?: number;
@@ -11201,6 +11207,8 @@ export interface components {
           [key: string]: string;
         };
       };
+      show_in_card?: boolean;
+      show_in_list?: boolean;
       text_value?: string;
       translations?: {
         [key: string]: string;

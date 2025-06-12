@@ -1300,6 +1300,10 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             v.boolean_value,
             v.json_value,
             v.unit,
+            -- Настройки отображения из основной таблицы атрибутов или переопределения в маппинге
+            COALESCE(cam.is_required, a.is_required) as is_required,
+            COALESCE(cam.show_in_card, a.show_in_card) as show_in_card,
+            COALESCE(cam.show_in_list, a.show_in_list) as show_in_list,
             COALESCE(
                 jsonb_object_agg(
                     t.language, 
@@ -1325,6 +1329,10 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             ) as option_translations
         FROM listing_attribute_values v
         JOIN category_attributes a ON v.attribute_id = a.id
+        JOIN marketplace_listings ml ON ml.id = v.listing_id
+        LEFT JOIN category_attribute_mapping cam ON 
+            cam.category_id = ml.category_id AND 
+            cam.attribute_id = a.id
         LEFT JOIN translations t ON 
             t.entity_type = 'attribute' 
             AND t.entity_id = a.id 
@@ -1333,7 +1341,8 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
         GROUP BY 
             v.listing_id, v.attribute_id, a.id, a.name, a.display_name, 
             a.attribute_type, v.text_value, v.numeric_value, v.boolean_value, 
-            v.json_value, v.unit
+            v.json_value, v.unit, a.is_required, a.show_in_card, a.show_in_list,
+            cam.is_required, cam.show_in_card, cam.show_in_list
         ORDER BY a.id, a.sort_order, a.display_name
     `
 
@@ -1370,6 +1379,9 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 			&boolValue,
 			&jsonValue,
 			&unit,
+			&attr.IsRequired,
+			&attr.ShowInCard,
+			&attr.ShowInList,
 			&translationsJson,
 			&optionTranslationsJson,
 		); err != nil {
