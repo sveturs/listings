@@ -73,27 +73,27 @@ export default function ListingActions({ listing }: ListingActionsProps) {
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-    
+
     try {
       const successful = document.execCommand('copy');
       if (successful) {
         toast.success(locale === 'ru' ? 'Ссылка скопирована' : 'Link copied');
       } else {
         toast.error(
-          locale === 'ru' 
-            ? 'Не удалось скопировать ссылку' 
+          locale === 'ru'
+            ? 'Не удалось скопировать ссылку'
             : 'Failed to copy link'
         );
       }
     } catch (err) {
       console.error('Fallback: Oops, unable to copy', err);
       toast.error(
-        locale === 'ru' 
-          ? 'Копирование не поддерживается в вашем браузере' 
+        locale === 'ru'
+          ? 'Копирование не поддерживается в вашем браузере'
           : 'Copy to clipboard is not supported in this browser'
       );
     }
-    
+
     document.body.removeChild(textArea);
     setShareMenuOpen(false);
   };
@@ -116,7 +116,9 @@ export default function ListingActions({ listing }: ListingActionsProps) {
         navigator.clipboard
           .writeText(url)
           .then(() => {
-            toast.success(locale === 'ru' ? 'Ссылка скопирована' : 'Link copied');
+            toast.success(
+              locale === 'ru' ? 'Ссылка скопирована' : 'Link copied'
+            );
             setShareMenuOpen(false);
           })
           .catch(() => {

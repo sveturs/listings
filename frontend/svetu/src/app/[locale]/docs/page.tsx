@@ -75,17 +75,21 @@ export default function DocsPage() {
       // Импортируем AuthService для получения заголовков с токеном
       const { AuthService } = await import('@/services/auth');
       const headers = await AuthService.getAuthHeaders();
-      
+
       const response = await fetch('/api/v1/docs/files', {
         headers,
-        credentials: 'include'
+        credentials: 'include',
       });
-      
+
       if (response.ok) {
         const data: DocFilesResponse = await response.json();
         setFiles(data.data?.files || []);
       } else {
-        console.error('Failed to fetch doc files:', response.status, response.statusText);
+        console.error(
+          'Failed to fetch doc files:',
+          response.status,
+          response.statusText
+        );
       }
     } catch (error) {
       console.error('Failed to fetch doc files:', error);
@@ -98,15 +102,15 @@ export default function DocsPage() {
       // Импортируем AuthService для получения заголовков с токеном
       const { AuthService } = await import('@/services/auth');
       const headers = await AuthService.getAuthHeaders();
-      
+
       const response = await fetch(
         `/api/v1/docs/content?path=${encodeURIComponent(path)}`,
         {
           headers,
-          credentials: 'include'
+          credentials: 'include',
         }
       );
-      
+
       if (response.ok) {
         const data: DocContentResponse = await response.json();
         setFileContent(data.data?.content || '');
@@ -122,7 +126,11 @@ export default function DocsPage() {
           );
         }
       } else {
-        console.error('Failed to fetch file content:', response.status, response.statusText);
+        console.error(
+          'Failed to fetch file content:',
+          response.status,
+          response.statusText
+        );
       }
     } catch (error) {
       console.error('Failed to fetch file content:', error);

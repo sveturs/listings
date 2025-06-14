@@ -58,7 +58,7 @@ export class AuthService {
     this.abortControllers.clear();
   }
 
-  private static getAuthHeaders(): HeadersInit {
+  static getAuthHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
@@ -93,7 +93,10 @@ export class AuthService {
       }
     } catch (error: any) {
       // Обрабатываем специфичные ошибки
-      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+      if (
+        error.message?.includes('429') ||
+        error.message?.includes('Rate limit')
+      ) {
         console.warn('[AuthService] Rate limited, will retry later');
         // Не очищаем токены при rate limit, чтобы использовать текущий токен
         const currentToken = tokenManager.getAccessToken();

@@ -66,7 +66,7 @@ class TokenManager {
     // Проверяем, не слишком ли часто мы пытаемся обновить токен
     const now = Date.now();
     const timeSinceLastAttempt = now - this.lastRefreshAttempt;
-    
+
     if (timeSinceLastAttempt < this.MIN_REFRESH_INTERVAL) {
       console.warn(
         `[TokenManager] Rate limit protection: ${timeSinceLastAttempt}ms since last attempt, waiting...`
@@ -76,7 +76,7 @@ class TokenManager {
         return this.accessToken;
       }
       // Иначе ждем перед повторной попыткой
-      await new Promise(resolve => 
+      await new Promise((resolve) =>
         setTimeout(resolve, this.MIN_REFRESH_INTERVAL - timeSinceLastAttempt)
       );
     }
@@ -124,24 +124,29 @@ class TokenManager {
           this.clearTokens();
           return '';
         }
-        
+
         // Если 429, добавляем экспоненциальную задержку
         if (response.status === 429) {
           const retryAfter = response.headers.get('Retry-After');
-          const delay = retryAfter 
-            ? parseInt(retryAfter) * 1000 
-            : Math.min(this.MIN_REFRESH_INTERVAL * Math.pow(2, this.refreshAttempts), 300000); // макс 5 минут
-          
-          console.warn(`[TokenManager] Rate limited (429), retry after ${delay}ms`);
-          
+          const delay = retryAfter
+            ? parseInt(retryAfter) * 1000
+            : Math.min(
+                this.MIN_REFRESH_INTERVAL * Math.pow(2, this.refreshAttempts),
+                300000
+              ); // макс 5 минут
+
+          console.warn(
+            `[TokenManager] Rate limited (429), retry after ${delay}ms`
+          );
+
           // Планируем повторную попытку после задержки
           setTimeout(() => {
             this.refreshAccessToken().catch(console.error);
           }, delay);
-          
+
           return this.accessToken || '';
         }
-        
+
         throw new Error(`Failed to refresh token: ${response.status}`);
       }
 

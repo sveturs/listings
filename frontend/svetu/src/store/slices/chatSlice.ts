@@ -8,7 +8,6 @@ import {
   UploadingFile,
 } from '@/types/chat';
 import { chatService } from '@/services/chat';
-import { tokenManager } from '@/utils/tokenManager';
 import { fileUploadManager } from '@/utils/fileUploadManager';
 import type { RootState } from '../index';
 
@@ -329,13 +328,13 @@ const chatSlice = createSlice({
       const exists = state.messages[message.chat_id].some(
         (msg) => msg.id === message.id
       );
-      
+
       // Пропускаем сообщение если оно уже существует и от текущего пользователя
       // (было добавлено через sendMessage.fulfilled)
       if (exists && message.sender_id === state.currentUserId) {
         return;
       }
-      
+
       if (!exists) {
         state.messages[message.chat_id].push(message);
       } else if (message.has_attachments) {
@@ -362,7 +361,7 @@ const chatSlice = createSlice({
         if (state.currentUserId && message.sender_id !== state.currentUserId) {
           state.chats[chatIndex].unread_count =
             (state.chats[chatIndex].unread_count || 0) + 1;
-          
+
           // Пересчитываем общий счетчик непрочитанных
           state.unreadCount = state.chats.reduce(
             (sum, chat) => sum + (chat.unread_count || 0),
@@ -400,7 +399,7 @@ const chatSlice = createSlice({
       const chatIndex = state.chats.findIndex((chat) => chat.id === chat_id);
       if (chatIndex !== -1) {
         state.chats[chatIndex].unread_count = 0;
-        
+
         // Пересчитываем общий счетчик непрочитанных
         state.unreadCount = state.chats.reduce(
           (sum, chat) => sum + (chat.unread_count || 0),
@@ -456,8 +455,11 @@ const chatSlice = createSlice({
           0
         );
         console.log('[ChatSlice] Calculating unread count:', {
-          chats: action.payload.chats.map(c => ({ id: c.id, unread: c.unread_count })),
-          total: newUnreadCount
+          chats: action.payload.chats.map((c) => ({
+            id: c.id,
+            unread: c.unread_count,
+          })),
+          total: newUnreadCount,
         });
         state.unreadCount = newUnreadCount;
       })
@@ -509,12 +511,12 @@ const chatSlice = createSlice({
       if (!state.messages[message.chat_id]) {
         state.messages[message.chat_id] = [];
       }
-      
+
       // Проверяем, что сообщение еще не добавлено (на случай race condition)
       const alreadyExists = state.messages[message.chat_id].some(
         (msg) => msg.id === message.id
       );
-      
+
       if (!alreadyExists) {
         state.messages[message.chat_id].push(message);
       }
@@ -542,7 +544,7 @@ const chatSlice = createSlice({
       const chatIndex = state.chats.findIndex((chat) => chat.id === chatId);
       if (chatIndex !== -1) {
         state.chats[chatIndex].unread_count = 0;
-        
+
         // Пересчитываем общий счетчик непрочитанных
         state.unreadCount = state.chats.reduce(
           (sum, chat) => sum + (chat.unread_count || 0),
