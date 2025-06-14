@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/storage"
 	"context"
 	"fmt"
@@ -19,16 +20,23 @@ func NewContactsService(storage storage.Storage) *ContactsService {
 
 // Добавить контакт
 func (s *ContactsService) AddContact(ctx context.Context, userID int, req *models.AddContactRequest) (*models.UserContact, error) {
-	fmt.Printf("[ContactsService] AddContact called: userID=%d, contactUserID=%d\n", userID, req.ContactUserID)
-	
+	logger.Debug().
+		Int("userID", userID).
+		Int("contactUserID", req.ContactUserID).
+		Msg("[ContactsService] AddContact called")
+
 	// Проверяем, можно ли добавить этого пользователя в контакты
 	canAdd, err := s.storage.CanAddContact(ctx, userID, req.ContactUserID)
 	if err != nil {
-		fmt.Printf("[ContactsService] CanAddContact error: %v\n", err)
+		logger.Error().
+			Err(err).
+			Msg("[ContactsService] CanAddContact error")
 		return nil, fmt.Errorf("error checking if can add contact: %w", err)
 	}
 
-	fmt.Printf("[ContactsService] CanAddContact result: %v\n", canAdd)
+	logger.Debug().
+		Bool("canAdd", canAdd).
+		Msg("[ContactsService] CanAddContact result")
 	if !canAdd {
 		return nil, fmt.Errorf("user does not allow contact requests or has blocked you")
 	}
@@ -80,7 +88,9 @@ func (s *ContactsService) AddContact(ctx context.Context, userID int, req *model
 		err = s.storage.UpdateContactStatus(ctx, req.ContactUserID, userID, models.ContactStatusAccepted, reverseContact.Notes)
 		if err != nil {
 			// Логируем, но не прерываем процесс
-			fmt.Printf("Warning: failed to update reverse contact status: %v\n", err)
+			logger.Warn().
+				Err(err).
+				Msg("Failed to update reverse contact status")
 		}
 	}
 
@@ -108,14 +118,14 @@ func (s *ContactsService) UpdateContactStatus(ctx context.Context, userID int, c
 	if existingContact.Status == models.ContactStatusAccepted && req.Status == models.ContactStatusAccepted {
 		return fmt.Errorf("contact is already accepted")
 	}
-	
+
 	// Разрешаем обновление если:
 	// 1. Статус pending - можно принять или заблокировать
 	// 2. Статус blocked - можно разблокировать (принять)
 	// 3. Статус accepted - можно заблокировать
-	if existingContact.Status != models.ContactStatusPending && 
-	   !(existingContact.Status == models.ContactStatusBlocked && req.Status == models.ContactStatusAccepted) &&
-	   !(existingContact.Status == models.ContactStatusAccepted && req.Status == models.ContactStatusBlocked) {
+	if existingContact.Status != models.ContactStatusPending &&
+		!(existingContact.Status == models.ContactStatusBlocked && req.Status == models.ContactStatusAccepted) &&
+		!(existingContact.Status == models.ContactStatusAccepted && req.Status == models.ContactStatusBlocked) {
 		return fmt.Errorf("invalid status transition from %s to %s", existingContact.Status, req.Status)
 	}
 
@@ -145,14 +155,18 @@ func (s *ContactsService) UpdateContactStatus(ctx context.Context, userID int, c
 			err = s.storage.AddContact(ctx, reverseContactData)
 			if err != nil {
 				// Логируем, но не прерываем процесс
-				fmt.Printf("Warning: failed to create reverse contact: %v\n", err)
+				logger.Warn().
+					Err(err).
+					Msg("Failed to create reverse contact")
 			}
 		} else if reverseContact.Status != models.ContactStatusAccepted {
 			// Если обратная связь существует, но не принята, обновляем её статус
 			err = s.storage.UpdateContactStatus(ctx, userID, contactUserID, models.ContactStatusAccepted, req.Notes)
 			if err != nil {
 				// Логируем, но не прерываем процесс
-				fmt.Printf("Warning: failed to update reverse contact status: %v\n", err)
+				logger.Warn().
+					Err(err).
+					Msg("Failed to update reverse contact status")
 			}
 		}
 	}

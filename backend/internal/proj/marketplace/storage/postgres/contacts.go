@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"context"
 	"database/sql"
 	"fmt"
@@ -389,17 +390,25 @@ func (s *Storage) UpdateUserPrivacySettings(ctx context.Context, userID int, set
 
 // Проверить, разрешены ли запросы на добавление в контакты
 func (s *Storage) CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error) {
-	fmt.Printf("[Storage] CanAddContact: userID=%d, targetUserID=%d\n", userID, targetUserID)
-	
+	logger.Debug().
+		Int("userID", userID).
+		Int("targetUserID", targetUserID).
+		Msg("[Storage] CanAddContact")
+
 	// Получаем настройки приватности целевого пользователя
 	settings, err := s.GetUserPrivacySettings(ctx, targetUserID)
 	if err != nil {
-		fmt.Printf("[Storage] GetUserPrivacySettings error: %v\n", err)
+		logger.Error().
+			Err(err).
+			Msg("[Storage] GetUserPrivacySettings error")
 		return false, err
 	}
 
-	fmt.Printf("[Storage] Privacy settings for user %d: AllowContactRequests=%v\n", targetUserID, settings.AllowContactRequests)
-	
+	logger.Debug().
+		Int("targetUserID", targetUserID).
+		Bool("AllowContactRequests", settings.AllowContactRequests).
+		Msg("[Storage] Privacy settings for user")
+
 	// Проверяем, разрешены ли запросы на добавление
 	if !settings.AllowContactRequests {
 		return false, nil
