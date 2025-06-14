@@ -214,7 +214,7 @@ export abstract class ApiClient {
             // Игнорируем ошибки
           }
         }
-        
+
         // Обработка rate limiting
         if (response.status === 429) {
           const retryAfter = response.headers.get('Retry-After');
