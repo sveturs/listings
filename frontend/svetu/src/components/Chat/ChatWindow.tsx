@@ -63,6 +63,7 @@ export default function ChatWindow({
     messages,
     isLoading,
     hasMoreMessages,
+    messagesLoaded,
     loadMessages,
     markMessagesAsRead,
     typingUsers,
@@ -89,7 +90,11 @@ export default function ChatWindow({
 
     if (chat) {
       setIsInitialLoad(true);
-      if (!chatMessages.length) {
+      // Всегда загружаем сообщения при смене чата
+      // Для проверки используем messagesLoaded из Redux store
+      const messagesAlreadyLoaded = messagesLoaded[chat.id];
+
+      if (!messagesAlreadyLoaded) {
         loadMessages({
           chat_id: chat.id,
           page: 1,
@@ -103,7 +108,7 @@ export default function ChatWindow({
     return () => {
       abortController.abort();
     };
-  }, [chat, chatMessages.length, loadMessages]); // loadMessages стабильная функция из useCallback
+  }, [chat, messagesLoaded, loadMessages]);
 
   // Прокрутка к последнему сообщению только при открытии чата или смене чата
   useEffect(() => {

@@ -63,6 +63,41 @@ export default function ListingActions({ listing }: ListingActionsProps) {
     );
   };
 
+  // Fallback функция для копирования в буфер обмена
+  const fallbackCopyToClipboard = (text: string) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        toast.success(locale === 'ru' ? 'Ссылка скопирована' : 'Link copied');
+      } else {
+        toast.error(
+          locale === 'ru'
+            ? 'Не удалось скопировать ссылку'
+            : 'Failed to copy link'
+        );
+      }
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+      toast.error(
+        locale === 'ru'
+          ? 'Копирование не поддерживается в вашем браузере'
+          : 'Copy to clipboard is not supported in this browser'
+      );
+    }
+
+    document.body.removeChild(textArea);
+    setShareMenuOpen(false);
+  };
+
   const handleShare = (platform: string) => {
     const url = window.location.href;
     const text = `${listing.title} - ${listing.price}$`;
@@ -76,9 +111,24 @@ export default function ListingActions({ listing }: ListingActionsProps) {
     };
 
     if (platform === 'copy') {
-      navigator.clipboard.writeText(url);
-      toast.success(locale === 'ru' ? 'Ссылка скопирована' : 'Link copied');
-      setShareMenuOpen(false);
+      // Проверяем поддержку clipboard API
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard
+          .writeText(url)
+          .then(() => {
+            toast.success(
+              locale === 'ru' ? 'Ссылка скопирована' : 'Link copied'
+            );
+            setShareMenuOpen(false);
+          })
+          .catch(() => {
+            // Fallback для старых браузеров
+            fallbackCopyToClipboard(url);
+          });
+      } else {
+        // Fallback для небезопасного контекста
+        fallbackCopyToClipboard(url);
+      }
     } else if (shareUrls[platform]) {
       window.open(shareUrls[platform], '_blank');
       setShareMenuOpen(false);

@@ -58,7 +58,7 @@ export class AuthService {
     this.abortControllers.clear();
   }
 
-  private static getAuthHeaders(): HeadersInit {
+  static getAuthHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
@@ -91,10 +91,28 @@ export class AuthService {
       } else {
         console.log('[AuthService] No access token obtained');
       }
-    } catch (error) {
-      // Если обновление не удалось, очищаем токены
-      tokenManager.clearTokens();
-      console.log('[AuthService] Could not restore session:', error);
+    } catch (error: any) {
+      // Обрабатываем специфичные ошибки
+      if (
+        error.message?.includes('429') ||
+        error.message?.includes('Rate limit')
+      ) {
+        console.warn('[AuthService] Rate limited, will retry later');
+        // Не очищаем токены при rate limit, чтобы использовать текущий токен
+        const currentToken = tokenManager.getAccessToken();
+        if (currentToken && !tokenManager.isTokenExpired(currentToken)) {
+          // Если токен еще валидный, используем его
+          return await this.getSession();
+        }
+      } else if (error.message?.includes('Max refresh attempts')) {
+        // Если достигнут лимит попыток, очищаем токены
+        tokenManager.clearTokens();
+        console.error('[AuthService] Max refresh attempts reached');
+      } else {
+        // Для других ошибок также очищаем токены
+        tokenManager.clearTokens();
+        console.log('[AuthService] Could not restore session:', error);
+      }
     }
 
     return null;

@@ -8,7 +8,6 @@ import {
   UploadingFile,
 } from '@/types/chat';
 import { chatService } from '@/services/chat';
-import { tokenManager } from '@/utils/tokenManager';
 import { fileUploadManager } from '@/utils/fileUploadManager';
 import type { RootState } from '../index';
 
@@ -65,14 +64,20 @@ const initialState: ChatState = {
 export const loadChats = createAsyncThunk(
   'chat/loadChats',
   async (page: number = 1) => {
-    const hasToken = tokenManager.getAccessToken() !== null;
-    if (!hasToken) {
-      console.log('[ChatStore] No access token, skipping chat load');
-      return { chats: [], total: 0, page: 1, limit: 20 };
+    // Пробуем загрузить чаты даже без токена в памяти
+    // так как токен может быть в httpOnly cookie
+    try {
+      const response = await chatService.getChats(page);
+      return response;
+    } catch (error: any) {
+      // Если получили 401, значит действительно не авторизованы
+      if (error.response?.status === 401) {
+        console.log('[ChatStore] Unauthorized, returning empty chats');
+        return { chats: [], total: 0, page: 1, limit: 20 };
+      }
+      // Для других ошибок пробрасываем их дальше
+      throw error;
     }
-
-    const response = await chatService.getChats(page);
-    return response;
   }
 );
 
@@ -323,6 +328,13 @@ const chatSlice = createSlice({
       const exists = state.messages[message.chat_id].some(
         (msg) => msg.id === message.id
       );
+
+      // Пропускаем сообщение если оно уже существует и от текущего пользователя
+      // (было добавлено через sendMessage.fulfilled)
+      if (exists && message.sender_id === state.currentUserId) {
+        return;
+      }
+
       if (!exists) {
         state.messages[message.chat_id].push(message);
       } else if (message.has_attachments) {
@@ -349,6 +361,12 @@ const chatSlice = createSlice({
         if (state.currentUserId && message.sender_id !== state.currentUserId) {
           state.chats[chatIndex].unread_count =
             (state.chats[chatIndex].unread_count || 0) + 1;
+
+          // Пересчитываем общий счетчик непрочитанных
+          state.unreadCount = state.chats.reduce(
+            (sum, chat) => sum + (chat.unread_count || 0),
+            0
+          );
         }
       }
 
@@ -381,6 +399,12 @@ const chatSlice = createSlice({
       const chatIndex = state.chats.findIndex((chat) => chat.id === chat_id);
       if (chatIndex !== -1) {
         state.chats[chatIndex].unread_count = 0;
+
+        // Пересчитываем общий счетчик непрочитанных
+        state.unreadCount = state.chats.reduce(
+          (sum, chat) => sum + (chat.unread_count || 0),
+          0
+        );
       }
     },
 
@@ -426,10 +450,18 @@ const chatSlice = createSlice({
         state.chatsPage = action.payload.page;
         state.hasMoreChats =
           action.payload.chats.length === action.payload.limit;
-        state.unreadCount = action.payload.chats.reduce(
+        const newUnreadCount = action.payload.chats.reduce(
           (sum, chat) => sum + (chat.unread_count || 0),
           0
         );
+        console.log('[ChatSlice] Calculating unread count:', {
+          chats: action.payload.chats.map((c) => ({
+            id: c.id,
+            unread: c.unread_count,
+          })),
+          total: newUnreadCount,
+        });
+        state.unreadCount = newUnreadCount;
       })
       .addCase(loadChats.rejected, (state, action) => {
         state.isLoading = false;
@@ -479,7 +511,15 @@ const chatSlice = createSlice({
       if (!state.messages[message.chat_id]) {
         state.messages[message.chat_id] = [];
       }
-      state.messages[message.chat_id].push(message);
+
+      // Проверяем, что сообщение еще не добавлено (на случай race condition)
+      const alreadyExists = state.messages[message.chat_id].some(
+        (msg) => msg.id === message.id
+      );
+
+      if (!alreadyExists) {
+        state.messages[message.chat_id].push(message);
+      }
 
       // Обновляем чат
       const chatIndex = state.chats.findIndex(
@@ -504,6 +544,12 @@ const chatSlice = createSlice({
       const chatIndex = state.chats.findIndex((chat) => chat.id === chatId);
       if (chatIndex !== -1) {
         state.chats[chatIndex].unread_count = 0;
+
+        // Пересчитываем общий счетчик непрочитанных
+        state.unreadCount = state.chats.reduce(
+          (sum, chat) => sum + (chat.unread_count || 0),
+          0
+        );
       }
     });
 
