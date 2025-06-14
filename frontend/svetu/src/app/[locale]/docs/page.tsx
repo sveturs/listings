@@ -80,7 +80,6 @@ export default function DocsPage() {
         headers,
         credentials: 'include',
       });
-
       if (response.ok) {
         const data: DocFilesResponse = await response.json();
         setFiles(data.data?.files || []);
@@ -110,7 +109,6 @@ export default function DocsPage() {
           credentials: 'include',
         }
       );
-
       if (response.ok) {
         const data: DocContentResponse = await response.json();
         setFileContent(data.data?.content || '');
