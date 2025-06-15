@@ -1,4 +1,4 @@
-# Шаг 5: API client с поддержкой разных контекстов
+# Шаг 4: API client с поддержкой разных контекстов
 
 ## Цель
 Модифицировать API client для правильной работы с разными URL в зависимости от контекста выполнения (сервер/клиент, внутренний/внешний запрос).
@@ -643,3 +643,66 @@ describe('ApiClient', () => {
 3. Client Components будут использовать публичные URL
 4. Добавлена поддержка retry и timeout
 5. Типизированные endpoints для удобства использования
+
+## Критерии приемки
+
+### 1. Обновление api-client.ts
+- [ ] Файл `/src/services/api-client.ts` обновлен
+- [ ] Интерфейс `ApiClientOptions` содержит поля: `internal`, `includeAuth`, `timeout`, `retries`
+- [ ] Интерфейс `ApiResponse` типизирован с generics
+- [ ] Метод `getBaseUrl()` использует `configManager.getApiUrl()` с учетом контекста
+- [ ] Реализована поддержка timeout через `fetchWithTimeout()`
+- [ ] Реализована поддержка retry через `fetchWithRetries()` с экспоненциальной задержкой
+- [ ] Метод `upload()` для загрузки файлов работает с FormData
+
+### 2. Создание typed endpoints
+- [ ] Файл `/src/services/api/endpoints.ts` создан
+- [ ] Базовый класс `ApiEndpoint` с методом `shouldUseInternalUrl()`
+- [ ] Классы `UserApi`, `MarketplaceApi`, `ChatApi` созданы
+- [ ] Каждый класс правильно определяет контекст использования:
+  - UserApi и MarketplaceApi используют internal URL для SSR
+  - ChatApi всегда использует public URL (для WebSocket)
+- [ ] Экспортированы singleton экземпляры: `userApi`, `marketplaceApi`, `chatApi`
+
+### 3. Проверка контекстов
+- [ ] Server Components автоматически используют internal URL:
+  ```typescript
+  // В server component запрос должен идти на http://backend:3000
+  const response = await marketplaceApi.getListings();
+  ```
+- [ ] Client Components используют public URL:
+  ```typescript
+  // В client component запрос должен идти на http://localhost:3000
+  const response = await marketplaceApi.getListings();
+  ```
+- [ ] Заголовок `X-Internal-Request` добавляется для внутренних запросов
+
+### 4. Hook useApi
+- [ ] Файл `/src/hooks/useApi.ts` создан
+- [ ] Hook управляет состояниями: `data`, `error`, `loading`
+- [ ] Метод `execute()` для выполнения запроса
+- [ ] Метод `reset()` для сброса состояния
+- [ ] Опция `immediate` для автоматического запуска при монтировании
+- [ ] Callbacks `onSuccess` и `onError` работают
+
+### 5. Функциональность
+- [ ] Retry логика работает при сетевых ошибках:
+  - 3 попытки по умолчанию
+  - Экспоненциальная задержка между попытками
+  - Не повторяет при 4xx ошибках
+- [ ] Timeout работает (по умолчанию 30 секунд)
+- [ ] Авторизация автоматически добавляется через `tokenManager`
+- [ ] CORS настроен правильно (`credentials: 'include'`)
+
+### 6. Тестирование
+- [ ] Unit тесты для API client написаны (хотя бы базовые)
+- [ ] Проверка использования internal URL в SSR контексте
+- [ ] Проверка retry механизма
+- [ ] Проверка timeout функциональности
+- [ ] Нет CORS ошибок при реальных запросах
+
+### 7. Интеграция
+- [ ] Существующие API вызовы можно мигрировать на новую систему
+- [ ] TypeScript типы из `/types/generated/api` используются
+- [ ] Нет breaking changes для существующего кода
+- [ ] Документация по использованию в комментариях кода

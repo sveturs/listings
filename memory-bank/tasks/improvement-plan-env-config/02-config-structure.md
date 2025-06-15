@@ -466,3 +466,53 @@ function ChatButton() {
 
 ## Результат
 После этого шага система конфигурации будет поддерживать валидацию, runtime обновления и feature flags.
+
+## Критерии приемки
+
+### 1. Обновление типов
+- [ ] Файл `/src/config/types.ts` обновлен
+- [ ] Zod схемы `publicEnvSchema` и `serverEnvSchema` созданы
+- [ ] TypeScript типы `PublicEnvVariables` и `ServerEnvVariables` генерируются из схем
+- [ ] Интерфейс `Config` расширен полем `features`
+- [ ] Интерфейс `ConfigValidationError` добавлен
+- [ ] TypeScript компилируется без ошибок (`yarn tsc --noEmit`)
+
+### 2. Обновление ConfigManager
+- [ ] Файл `/src/config/index.ts` обновлен
+- [ ] Метод `getEnvValue()` использует `next-runtime-env` для клиента
+- [ ] Метод `validateConfig()` проверяет переменные через Zod схемы
+- [ ] Валидация работает в production режиме:
+  ```bash
+  NODE_ENV=production NEXT_PUBLIC_API_URL=invalid-url yarn dev
+  # Должна появиться ошибка валидации
+  ```
+- [ ] Метод `resetConfig()` работает для тестов
+- [ ] Метод `isFeatureEnabled()` добавлен и работает
+- [ ] Обратная совместимость: существующий код с `configManager` продолжает работать
+- [ ] Export `config` объекта сохранен
+
+### 3. Создание хуков
+- [ ] Файл `/src/hooks/useConfig.ts` создан
+- [ ] Hook `useConfig()` возвращает конфигурацию
+- [ ] Hook `useFeature()` проверяет доступность функций
+- [ ] Хуки работают без ошибок гидратации в SSR/CSR
+
+### 4. Проверка функциональности
+- [ ] Тестовая страница `/test-config` создана
+- [ ] Страница отображает конфигурацию в JSON формате
+- [ ] Ошибки валидации отображаются на странице (если есть)
+- [ ] Feature flags корректно определяются:
+  - При наличии `NEXT_PUBLIC_WEBSOCKET_URL` → `enableChat: true`
+  - При `NEXT_PUBLIC_ENABLE_PAYMENTS=true` → `enablePayments: true`
+
+### 5. Миграция и совместимость
+- [ ] Существующие компоненты продолжают работать
+- [ ] Импорты `import configManager from '@/config'` не ломаются
+- [ ] Методы `getApiUrl()`, `getMinioUrl()`, `buildImageUrl()` работают как раньше
+- [ ] Новые компоненты могут использовать `useConfig()` и `useFeature()`
+
+### 6. Производительность и качество
+- [ ] Конфигурация загружается лениво (только при первом обращении)
+- [ ] Нет лишних ре-рендеров при использовании хуков
+- [ ] Код проходит `yarn lint` без ошибок
+- [ ] Bundle size увеличился незначительно (< 5kb)

@@ -10,8 +10,8 @@
 | 1 | Внедрение next-runtime-env | ⏳ Ожидает | [01-runtime-env-setup.md](./01-runtime-env-setup.md) |
 | 2 | Улучшение структуры конфигурации | ⏳ Ожидает | [02-config-structure.md](./02-config-structure.md) |
 | 3 | Создание .env.example | ⏳ Ожидает | [03-env-example.md](./03-env-example.md) |
-| 4 | API client с контекстами | ⏳ Ожидает | [05-api-client-contexts.md](./05-api-client-contexts.md) |
-| 5 | Примеры использования | ⏳ Ожидает | [06-usage-examples.md](./06-usage-examples.md) |
+| 4 | API client с контекстами | ⏳ Ожидает | [04-api-client-contexts.md](./04-api-client-contexts.md) |
+| 5 | Примеры использования | ⏳ Ожидает | [05-usage-examples.md](./05-usage-examples.md) |
 
 ## Легенда
 - ⏳ Ожидает - задача еще не начата
@@ -50,6 +50,10 @@
 - `/frontend/svetu/src/config/index.ts`
 - `/frontend/svetu/src/services/api-client.ts`
 - `/frontend/svetu/.env.example` (новый файл)
+
+## Критерии приемки
+
+Детальные критерии приемки для каждой задачи описаны в соответствующих файлах с задачами.
 
 ## Время выполнения
 
