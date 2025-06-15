@@ -10,9 +10,8 @@
 | 1 | Внедрение next-runtime-env | ⏳ Ожидает | [01-runtime-env-setup.md](./01-runtime-env-setup.md) |
 | 2 | Улучшение структуры конфигурации | ⏳ Ожидает | [02-config-structure.md](./02-config-structure.md) |
 | 3 | Создание .env.example | ⏳ Ожидает | [03-env-example.md](./03-env-example.md) |
-| 4 | Docker с runtime поддержкой | ⏳ Ожидает | [04-docker-runtime.md](./04-docker-runtime.md) |
-| 5 | API client с контекстами | ⏳ Ожидает | [05-api-client-contexts.md](./05-api-client-contexts.md) |
-| 6 | Примеры использования | ⏳ Ожидает | [06-usage-examples.md](./06-usage-examples.md) |
+| 4 | API client с контекстами | ⏳ Ожидает | [05-api-client-contexts.md](./05-api-client-contexts.md) |
+| 5 | Примеры использования | ⏳ Ожидает | [06-usage-examples.md](./06-usage-examples.md) |
 
 ## Легенда
 - ⏳ Ожидает - задача еще не начата
@@ -36,9 +35,8 @@
 1. Сначала установить и настроить `next-runtime-env` (шаг 1)
 2. Затем обновить структуру конфигурации с валидацией (шаг 2)
 3. Создать файл примера переменных окружения (шаг 3)
-4. Обновить Dockerfile для поддержки runtime конфигурации (шаг 4)
-5. Модифицировать API client для работы с разными контекстами (шаг 5)
-6. Протестировать на примерах использования (шаг 6)
+4. Модифицировать API client для работы с разными контекстами (шаг 4)
+5. Протестировать на примерах использования (шаг 5)
 
 ## Зависимости
 
@@ -51,12 +49,11 @@
 - `/frontend/svetu/src/config/types.ts`
 - `/frontend/svetu/src/config/index.ts`
 - `/frontend/svetu/src/services/api-client.ts`
-- `/frontend/svetu/Dockerfile`
 - `/frontend/svetu/.env.example` (новый файл)
 
 ## Время выполнения
 
-Ориентировочное время на полную реализацию: 2-3 часа
+Ориентировочное время на полную реализацию: 1.5-2 часа
 
 ## Риски и митигация
 
