@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
+import { PublicEnvScript } from 'next-runtime-env';
 import { routing } from '@/i18n/routing';
 import Header from '@/components/Header';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -57,6 +58,9 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} data-theme="cupcake">
+      <head>
+        <PublicEnvScript />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
