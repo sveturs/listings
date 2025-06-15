@@ -9,7 +9,7 @@
 |-----|----------|--------|------|
 | 1 | Внедрение next-runtime-env | ✅ Завершено | [01-runtime-env-setup.md](./01-runtime-env-setup.md) |
 | 2 | Улучшение структуры конфигурации | ✅ Завершено | [02-config-structure.md](./02-config-structure.md) |
-| 3 | Создание .env.example | ⏳ Ожидает | [03-env-example.md](./03-env-example.md) |
+| 3 | Создание .env.example | ✅ Завершено | [03-env-example.md](./03-env-example.md) |
 | 4 | API client с контекстами | ⏳ Ожидает | [04-api-client-contexts.md](./04-api-client-contexts.md) |
 | 5 | Примеры использования | ⏳ Ожидает | [05-usage-examples.md](./05-usage-examples.md) |
 

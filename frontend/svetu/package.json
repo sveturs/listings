@@ -10,7 +10,11 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "generate:types": "cd ../../backend && make generate-types"
+    "generate:types": "cd ../../backend && make generate-types",
+    "env:check": "node scripts/check-env.js",
+    "env:create": "cp .env.example .env.local",
+    "predev": "npm run env:check",
+    "prebuild": "npm run env:check"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
