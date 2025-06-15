@@ -721,16 +721,3 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 		}
 	}
 }
-
-// ChatMessagesResponse структура ответа для списка сообщений
-type ChatMessagesResponse struct {
-	Messages []models.MarketplaceMessage `json:"messages"`
-	Total    int                         `json:"total"`
-	Page     int                         `json:"page"`
-	Limit    int                         `json:"limit"`
-}
-
-// UnreadCountData структура для количества непрочитанных сообщений
-type UnreadCountData struct {
-	Count int `json:"count"`
-}

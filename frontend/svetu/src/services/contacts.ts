@@ -49,53 +49,140 @@ export interface UpdatePrivacySettingsRequest {
 
 class ContactsService {
   private baseUrl: string;
+  private cache = new Map<string, { data: any; timestamp: number }>();
+  private cacheTimeout = 5000; // 5 seconds cache
+  private pendingRequests = new Map<string, Promise<any>>();
 
   constructor() {
     this.baseUrl = `${configManager.getApiUrl()}/api/v1/contacts`;
+  }
+
+  private getCacheKey(endpoint: string, options?: RequestInit): string {
+    return `${options?.method || 'GET'}:${endpoint}`;
+  }
+
+  private getFromCache(key: string): any | null {
+    const cached = this.cache.get(key);
+    if (!cached) return null;
+
+    if (Date.now() - cached.timestamp > this.cacheTimeout) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return cached.data;
+  }
+
+  private setCache(key: string, data: any): void {
+    this.cache.set(key, { data, timestamp: Date.now() });
   }
 
   private async request<T>(
     endpoint: string,
     options?: RequestInit
   ): Promise<T> {
-    // Добавляем JWT токен в заголовки через tokenManager
-    const { tokenManager } = await import('@/utils/tokenManager');
-    const token = await tokenManager.getAccessToken();
+    const method = options?.method?.toUpperCase() || 'GET';
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options?.headers as Record<string, string>),
-    };
+    // Проверяем кэш только для GET запросов
+    if (method === 'GET') {
+      const cacheKey = this.getCacheKey(endpoint, options);
+      const cached = this.getFromCache(cacheKey);
+      if (cached) {
+        return cached as T;
+      }
 
-    if (token) {
-      (headers as any)['Authorization'] = `Bearer ${token}`;
-    } else {
-      console.warn('[ContactsService] No access token available');
+      // Проверяем, есть ли уже запрос в процессе
+      const pendingRequest = this.pendingRequests.get(cacheKey);
+      if (pendingRequest) {
+        return pendingRequest as Promise<T>;
+      }
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      credentials: 'include',
-      headers,
-      ...options,
-    });
+    // Создаём promise для запроса
+    const requestPromise = (async () => {
+      // Добавляем JWT токен в заголовки через tokenManager
+      const { tokenManager } = await import('@/utils/tokenManager');
+      const token = await tokenManager.getAccessToken();
 
-    if (!response.ok) {
-      let errorMessage = `HTTP ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorData.message || errorMessage;
-      } catch {
-        const errorText = await response.text();
-        errorMessage = errorText || errorMessage;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(options?.headers as Record<string, string>),
+      };
+
+      if (token) {
+        (headers as any)['Authorization'] = `Bearer ${token}`;
+      } else {
+        console.warn('[ContactsService] No access token available');
       }
-      if (response.status === 401) {
-        errorMessage = 'Unauthorized';
+
+      // Добавляем CSRF токен для небезопасных методов
+      if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+        try {
+          const { AuthService } = await import('./auth');
+          const csrfToken = await AuthService.getCsrfToken();
+          if (csrfToken) {
+            (headers as any)['X-CSRF-Token'] = csrfToken;
+          }
+        } catch (error) {
+          console.warn('[ContactsService] Failed to get CSRF token:', error);
+        }
       }
-      throw new Error(errorMessage);
+
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        credentials: 'include',
+        headers,
+        ...options,
+      });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch {
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
+        }
+        if (response.status === 401) {
+          errorMessage = 'Unauthorized';
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      return data.data || data;
+    })();
+
+    // Сохраняем promise для GET запросов
+    if (method === 'GET') {
+      const cacheKey = this.getCacheKey(endpoint, options);
+      this.pendingRequests.set(cacheKey, requestPromise);
     }
 
-    const data = await response.json();
-    return data.data || data;
+    try {
+      const result = await requestPromise;
+
+      // Кэшируем результат для GET запросов
+      if (method === 'GET') {
+        const cacheKey = this.getCacheKey(endpoint, options);
+        this.setCache(cacheKey, result);
+        this.pendingRequests.delete(cacheKey);
+      }
+
+      // Инвалидируем кэш при изменениях
+      if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+        this.cache.clear();
+      }
+
+      return result;
+    } catch (error) {
+      // Удаляем из pending requests при ошибке
+      if (method === 'GET') {
+        const cacheKey = this.getCacheKey(endpoint, options);
+        this.pendingRequests.delete(cacheKey);
+      }
+      throw error;
+    }
   }
 
   async getContacts(
@@ -122,7 +209,7 @@ class ContactsService {
     contactUserID: number,
     request: UpdateContactRequest
   ): Promise<void> {
-    return this.request<void>(`/${contactUserID}`, {
+    return this.request<void>(`/${contactUserID}/status`, {
       method: 'PUT',
       body: JSON.stringify(request),
     });

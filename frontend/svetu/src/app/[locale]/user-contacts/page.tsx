@@ -85,17 +85,13 @@ export default function UserContactsPage() {
         setContacts(data.contacts || []);
         setError(''); // Очищаем ошибку при успешной загрузке
       } catch (err) {
-        // Не показываем ошибку, если это первая попытка загрузки при старте
-        if (contacts === null) {
-          console.log('Initial fetch failed, will retry after auth');
-        } else {
-          setError(err instanceof Error ? err.message : 'Unknown error');
-        }
+        console.error('Failed to fetch contacts:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
     },
-    [contacts]
+    [] // Убираем зависимость от contacts
   );
 
   const fetchPrivacySettings = useCallback(async () => {
@@ -149,18 +145,20 @@ export default function UserContactsPage() {
     setMounted(true);
   }, []);
 
+  // Загружаем данные при изменении activeTab
   useEffect(() => {
-    if (user && !authLoading) {
-      // Добавляем небольшую задержку, чтобы токен успел обновиться
-      const timer = setTimeout(() => {
-        const status = activeTab === 'all' ? '' : activeTab;
-        fetchContacts(status);
-        fetchPrivacySettings();
-      }, 100);
-
-      return () => clearTimeout(timer);
+    if (user && !authLoading && mounted) {
+      const status = activeTab === 'all' ? '' : activeTab;
+      fetchContacts(status);
     }
-  }, [user, activeTab, authLoading, fetchContacts, fetchPrivacySettings]);
+  }, [activeTab, user, authLoading, mounted, fetchContacts]);
+
+  // Загружаем настройки приватности только один раз при монтировании
+  useEffect(() => {
+    if (user && !authLoading && mounted) {
+      fetchPrivacySettings();
+    }
+  }, [user, authLoading, mounted, fetchPrivacySettings]);
 
   const updateContactStatus = async (
     contactUserID: number,
@@ -180,7 +178,18 @@ export default function UserContactsPage() {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
 
-      const response = await fetch(`/api/v1/contacts/${contactUserID}`, {
+      // Добавляем CSRF токен для PUT запроса
+      try {
+        const { AuthService } = await import('@/services/auth');
+        const csrfToken = await AuthService.getCsrfToken();
+        if (csrfToken) {
+          (headers as any)['X-CSRF-Token'] = csrfToken;
+        }
+      } catch (error) {
+        console.warn('Failed to get CSRF token:', error);
+      }
+
+      const response = await fetch(`/api/v1/contacts/${contactUserID}/status`, {
         method: 'PUT',
         credentials: 'include',
         headers,
@@ -213,6 +222,17 @@ export default function UserContactsPage() {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
 
+      // Добавляем CSRF токен для DELETE запроса
+      try {
+        const { AuthService } = await import('@/services/auth');
+        const csrfToken = await AuthService.getCsrfToken();
+        if (csrfToken) {
+          (headers as any)['X-CSRF-Token'] = csrfToken;
+        }
+      } catch (error) {
+        console.warn('Failed to get CSRF token:', error);
+      }
+
       const response = await fetch(`/api/v1/contacts/${contactUserID}`, {
         method: 'DELETE',
         credentials: 'include',
@@ -243,6 +263,17 @@ export default function UserContactsPage() {
 
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      // Добавляем CSRF токен для PUT запроса
+      try {
+        const { AuthService } = await import('@/services/auth');
+        const csrfToken = await AuthService.getCsrfToken();
+        if (csrfToken) {
+          (headers as any)['X-CSRF-Token'] = csrfToken;
+        }
+      } catch (error) {
+        console.warn('Failed to get CSRF token:', error);
       }
 
       const response = await fetch('/api/v1/contacts/privacy', {

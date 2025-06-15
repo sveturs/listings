@@ -289,6 +289,14 @@ export default function ChatWindow({
   const handleAddToContacts = async () => {
     if (!user || !chat?.other_user?.id || isAddingContact) return;
 
+    console.log('Adding contact:', {
+      chat,
+      other_user: chat.other_user,
+      contact_user_id: chat.other_user.id,
+      chat_id: chat.id,
+      current_user_id: user.id,
+    });
+
     setIsAddingContact(true);
     try {
       await contactsService.addContact({

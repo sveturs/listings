@@ -223,14 +223,6 @@ export abstract class ApiClient {
           );
         }
 
-        // Обработка rate limiting
-        if (response.status === 429) {
-          const retryAfter = response.headers.get('Retry-After');
-          console.warn(
-            `API rate limited (429), retry after: ${retryAfter || 'unknown'} seconds`
-          );
-        }
-
         return {
           success: false,
           data: null as T,
