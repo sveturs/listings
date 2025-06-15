@@ -317,7 +317,7 @@ func (s *Storage) GetUserPrivacySettings(ctx context.Context, userID int) (*mode
 		&settings.UpdatedAt,
 	)
 
-	if err != nil {
+	if err == sql.ErrNoRows {
 		// Если настроек нет, создаем их с значениями по умолчанию
 		insertQuery := `
 			INSERT INTO user_privacy_settings (user_id, allow_contact_requests, allow_messages_from_contacts_only) 
@@ -336,6 +336,8 @@ func (s *Storage) GetUserPrivacySettings(ctx context.Context, userID int) (*mode
 		if err != nil {
 			return nil, fmt.Errorf("error creating privacy settings: %w", err)
 		}
+	} else if err != nil {
+		return nil, fmt.Errorf("error getting privacy settings: %w", err)
 	}
 
 	return settings, nil
