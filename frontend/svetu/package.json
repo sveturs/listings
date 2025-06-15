@@ -14,7 +14,10 @@
     "env:check": "node scripts/check-env.js",
     "env:create": "cp .env.example .env.local",
     "predev": "npm run env:check",
-    "prebuild": "npm run env:check"
+    "prebuild": "npm run env:check",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -38,6 +41,10 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -46,6 +53,8 @@
     "eslint-config-next": "15.3.2",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.0",
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0",
     "openapi-typescript": "^7.8.0",
     "prettier": "^3.5.3",
     "swagger2openapi": "^7.0.8",

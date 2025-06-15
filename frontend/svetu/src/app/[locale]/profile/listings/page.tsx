@@ -56,7 +56,7 @@ export default function MyListingsPage() {
         `/api/v1/marketplace/listings?user_id=${user?.id}`
       );
 
-      if (response.success && response.data) {
+      if (!response.error && response.data) {
         // Проверяем структуру ответа
         if (response.data.data && Array.isArray(response.data.data)) {
           setListings(response.data.data);

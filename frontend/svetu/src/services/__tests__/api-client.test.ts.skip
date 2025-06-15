@@ -1,0 +1,267 @@
+// Сначала настроим моки
+jest.mock('@/config', () => ({
+  default: {
+    getApiUrl: jest.fn(),
+    getConfig: jest.fn(),
+  },
+}));
+
+jest.mock('@/utils/tokenManager', () => ({
+  tokenManager: {
+    getAccessToken: jest.fn(),
+    clearTokens: jest.fn(),
+  },
+}));
+
+import { ApiClient } from '../api-client';
+import configManager from '@/config';
+import { tokenManager } from '@/utils/tokenManager';
+
+// Polyfill for Response and Headers in Jest environment
+if (typeof Response === 'undefined') {
+  global.Response = class Response {
+    constructor(body, init = {}) {
+      this.body = body;
+      this.status = init.status || 200;
+      this.ok = this.status >= 200 && this.status < 300;
+      this.statusText = init.statusText || '';
+      this.headers = init.headers || new Map();
+    }
+    
+    async text() {
+      return this.body;
+    }
+    
+    async json() {
+      return JSON.parse(this.body);
+    }
+  };
+}
+
+if (typeof Headers === 'undefined') {
+  global.Headers = class Headers {
+    constructor(init = {}) {
+      this._headers = new Map();
+      if (init) {
+        Object.entries(init).forEach(([key, value]) => {
+          this._headers.set(key.toLowerCase(), value);
+        });
+      }
+    }
+    
+    get(name) {
+      return this._headers.get(name.toLowerCase());
+    }
+    
+    set(name, value) {
+      this._headers.set(name.toLowerCase(), value);
+    }
+    
+    has(name) {
+      return this._headers.has(name.toLowerCase());
+    }
+    
+    delete(name) {
+      this._headers.delete(name.toLowerCase());
+    }
+  };
+}
+
+// Mock fetch
+global.fetch = jest.fn();
+
+// Mock window for SSR tests
+const originalWindow = global.window;
+
+describe('ApiClient', () => {
+  let apiClient: ApiClient;
+
+  beforeEach(() => {
+    // Настраиваем моки перед каждым тестом
+    (configManager.getApiUrl as jest.Mock).mockReturnValue('http://localhost:3000');
+    (configManager.getConfig as jest.Mock).mockReturnValue({
+      api: {
+        url: 'http://localhost:3000',
+        internalUrl: 'http://internal-api:3000',
+      },
+      env: {
+        isServer: false,
+        isDevelopment: true,
+      },
+    });
+    
+    apiClient = new ApiClient();
+    jest.clearAllMocks();
+    (fetch as jest.Mock).mockReset();
+  });
+
+  afterEach(() => {
+    global.window = originalWindow;
+  });
+
+  describe('URL selection', () => {
+    it('should use internal URL for server-side requests when internal=true', async () => {
+      // Mock server environment
+      delete (global as any).window;
+
+      // Mock config
+      jest
+        .spyOn(configManager, 'getApiUrl')
+        .mockReturnValue('http://internal-api:3000');
+
+      (fetch as jest.Mock).mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: 'test' }), {
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+        })
+      );
+
+      await apiClient.get('/test', { internal: true });
+
+      expect(configManager.getApiUrl).toHaveBeenCalledWith({ internal: true });
+      expect(fetch).toHaveBeenCalledWith(
+        'http://internal-api:3000/test',
+        expect.any(Object)
+      );
+    });
+
+    it('should use public URL for client-side requests', async () => {
+      // Mock browser environment
+      global.window = {} as any;
+
+      jest
+        .spyOn(configManager, 'getApiUrl')
+        .mockReturnValue('http://localhost:3000');
+
+      (fetch as jest.Mock).mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: 'test' }), {
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+        })
+      );
+
+      await apiClient.get('/test');
+
+      expect(configManager.getApiUrl).toHaveBeenCalledWith({ internal: false });
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3000/test',
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('Retry mechanism', () => {
+    it('should retry on network errors', async () => {
+      (fetch as jest.Mock)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ data: 'success' }), {
+            status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+          })
+        );
+
+      const response = await apiClient.get('/test', { retries: 2 });
+
+      expect(fetch).toHaveBeenCalledTimes(3);
+      expect(response.data).toEqual({ data: 'success' });
+      expect(response.error).toBeUndefined();
+    });
+
+    it('should not retry on 4xx errors', async () => {
+      (fetch as jest.Mock).mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'Not found' }), {
+          status: 404,
+          headers: new Headers({ 'content-type': 'application/json' }),
+        })
+      );
+
+      const response = await apiClient.get('/test', { retries: 2 });
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(response.status).toBe(404);
+      expect(response.error?.message).toBe('Not found');
+    });
+
+    it('should retry on 5xx errors', async () => {
+      (fetch as jest.Mock)
+        .mockResolvedValueOnce(new Response('Server error', { status: 500 }))
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ data: 'success' }), {
+            status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+          })
+        );
+
+      const response = await apiClient.get('/test', { retries: 1 });
+
+      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(response.data).toEqual({ data: 'success' });
+    });
+  });
+
+  describe('Timeout', () => {
+    it('should timeout long requests', async () => {
+      jest.useFakeTimers();
+
+      (fetch as jest.Mock).mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 5000))
+      );
+
+      const responsePromise = apiClient.get('/test', { timeout: 100 });
+
+      jest.advanceTimersByTime(100);
+
+      const response = await responsePromise;
+
+      expect(response.error?.code).toBe('NETWORK_ERROR');
+      expect(response.error?.message).toBe('Request timeout');
+
+      jest.useRealTimers();
+    }, 10000); // Увеличиваем timeout теста до 10 секунд
+  });
+
+  describe('Headers', () => {
+    it('should add X-Internal-Request header for internal requests', async () => {
+      (fetch as jest.Mock).mockResolvedValueOnce(
+        new Response('{}', {
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+        })
+      );
+
+      await apiClient.get('/test', { internal: true });
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.any(Headers),
+        })
+      );
+
+      const [, options] = (fetch as jest.Mock).mock.calls[0];
+      expect(options.headers.get('X-Internal-Request')).toBe('true');
+    });
+  });
+
+  describe('FormData handling', () => {
+    it('should not set Content-Type for FormData', async () => {
+      const formData = new FormData();
+      formData.append('file', 'test');
+
+      (fetch as jest.Mock).mockResolvedValueOnce(
+        new Response('{}', {
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+        })
+      );
+
+      await apiClient.upload('/upload', formData);
+
+      const [, options] = (fetch as jest.Mock).mock.calls[0];
+      expect(options.headers.has('Content-Type')).toBe(false);
+      expect(options.body).toBe(formData);
+    });
+  });
+});

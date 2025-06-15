@@ -61,7 +61,7 @@ export default function EditListingPage() {
         `/api/v1/marketplace/listings/${listingId}`
       );
 
-      if (response.success && response.data) {
+      if (!response.error && response.data) {
         // Адаптируем под структуру ответа
         const listingData = response.data.data || response.data;
 
@@ -132,7 +132,7 @@ export default function EditListingPage() {
         updateData
       );
 
-      if (response.success) {
+      if (!response.error) {
         // Redirect back to listings or show success
         router.push('/profile/listings');
       } else {

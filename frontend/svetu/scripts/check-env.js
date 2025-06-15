@@ -4,10 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Required environment variables
-const requiredVars = [
-  'NEXT_PUBLIC_API_URL',
-  'NEXT_PUBLIC_MINIO_URL',
-];
+const requiredVars = ['NEXT_PUBLIC_API_URL', 'NEXT_PUBLIC_MINIO_URL'];
 
 // Optional but recommended
 const recommendedVars = [
@@ -22,7 +19,7 @@ let hasWarnings = false;
 
 // Check required variables
 console.log('Required variables:');
-requiredVars.forEach(varName => {
+requiredVars.forEach((varName) => {
   if (process.env[varName]) {
     console.log(`✅ ${varName}: ${process.env[varName]}`);
   } else {
@@ -32,7 +29,7 @@ requiredVars.forEach(varName => {
 });
 
 console.log('\nRecommended variables:');
-recommendedVars.forEach(varName => {
+recommendedVars.forEach((varName) => {
   if (process.env[varName]) {
     console.log(`✅ ${varName}: ${process.env[varName]}`);
   } else {
@@ -44,7 +41,9 @@ recommendedVars.forEach(varName => {
 // Check for .env.local file
 const envLocalPath = path.join(process.cwd(), '.env.local');
 if (!fs.existsSync(envLocalPath)) {
-  console.log('\n⚠️  No .env.local file found. Using defaults or system environment.');
+  console.log(
+    '\n⚠️  No .env.local file found. Using defaults or system environment.'
+  );
   hasWarnings = true;
 }
 

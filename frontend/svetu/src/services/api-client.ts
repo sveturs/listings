@@ -1,125 +1,94 @@
-import {
-  ApiResponse,
-  RequestOptions,
-  QueryParams,
-  buildQueryString,
-} from '@/types/api';
 import configManager from '@/config';
+import { tokenManager } from '@/utils/tokenManager';
 
-/**
- * Базовый класс для всех API сервисов
- * Обеспечивает единообразную обработку запросов и ошибок
- */
-export abstract class ApiClient {
-  protected baseURL: string;
+export interface ApiClientOptions extends RequestInit {
+  // Использовать внутренний URL для серверных запросов
+  internal?: boolean;
+  // Автоматически добавлять токен авторизации
+  includeAuth?: boolean;
+  // Timeout в миллисекундах
+  timeout?: number;
+  // Повторные попытки при ошибках сети
+  retries?: number;
+}
 
-  constructor(baseURL?: string) {
-    // В development режиме и в браузере используем пустую строку для proxy
-    if (
-      !baseURL &&
-      typeof window !== 'undefined' &&
-      process.env.NODE_ENV === 'development'
-    ) {
-      this.baseURL = '';
-    } else {
-      this.baseURL = baseURL || configManager.getConfig().api.url;
+export interface ApiResponse<T = any> {
+  data?: T;
+  error?: {
+    message: string;
+    code?: string;
+    details?: any;
+  };
+  status: number;
+  headers: Headers;
+}
+
+class ApiClient {
+  private defaultTimeout = 30000; // 30 секунд
+  private defaultRetries = 3;
+
+  /**
+   * Получает базовый URL в зависимости от контекста
+   */
+  private getBaseUrl(isInternal: boolean = false): string {
+    return configManager.getApiUrl({ internal: isInternal });
+  }
+
+  /**
+   * Добавляет timeout к fetch запросу
+   */
+  private fetchWithTimeout(
+    url: string,
+    options: RequestInit,
+    timeout: number
+  ): Promise<Response> {
+    return Promise.race([
+      fetch(url, options),
+      new Promise<Response>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), timeout)
+      ),
+    ]);
+  }
+
+  /**
+   * Выполняет запрос с повторными попытками
+   */
+  private async fetchWithRetries(
+    url: string,
+    options: RequestInit,
+    timeout: number,
+    retries: number
+  ): Promise<Response> {
+    let lastError: Error | null = null;
+
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const response = await this.fetchWithTimeout(url, options, timeout);
+
+        // Если ответ успешный или это клиентская ошибка (4xx), не повторяем
+        if (response.ok || (response.status >= 400 && response.status < 500)) {
+          return response;
+        }
+
+        // Для серверных ошибок (5xx) повторяем запрос
+        if (i < retries) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1))); // Экспоненциальная задержка
+          continue;
+        }
+
+        return response;
+      } catch (error) {
+        lastError = error as Error;
+
+        // Если это не последняя попытка, ждем и повторяем
+        if (i < retries) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+          continue;
+        }
+      }
     }
-  }
 
-  /**
-   * Выполняет GET запрос
-   */
-  protected async get<T>(
-    endpoint: string,
-    params?: QueryParams,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    const url = this.baseURL
-      ? `${this.baseURL}${endpoint}${buildQueryString(params || {})}`
-      : `${endpoint}${buildQueryString(params || {})}`;
-
-    return this.request<T>(url, {
-      method: 'GET',
-      ...options,
-    });
-  }
-
-  /**
-   * Выполняет POST запрос
-   */
-  protected async post<T, D = unknown>(
-    endpoint: string,
-    data?: D,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
-    return this.request<T>(url, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-      ...options,
-    });
-  }
-
-  /**
-   * Выполняет PUT запрос
-   */
-  protected async put<T, D = unknown>(
-    endpoint: string,
-    data?: D,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
-    return this.request<T>(url, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-      ...options,
-    });
-  }
-
-  /**
-   * Выполняет DELETE запрос
-   */
-  protected async delete<T>(
-    endpoint: string,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
-    return this.request<T>(url, {
-      method: 'DELETE',
-      ...options,
-    });
-  }
-
-  /**
-   * Загружает файлы
-   */
-  protected async upload<T>(
-    endpoint: string,
-    formData: FormData,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
-    return this.request<T>(url, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        // Не устанавливаем Content-Type, браузер сам установит с boundary
-        ...options?.headers,
-      },
-    });
-  }
-
-  /**
-   * Получает JWT токен через tokenManager
-   */
-  private async getAuthToken(): Promise<string | null> {
-    if (typeof window === 'undefined') return null;
-    try {
-      const { tokenManager } = await import('@/utils/tokenManager');
-      return await tokenManager.getAccessToken();
-    } catch {
-      return null;
-    }
+    throw lastError || new Error('Request failed after retries');
   }
 
   /**
@@ -136,231 +105,377 @@ export abstract class ApiClient {
   }
 
   /**
-   * Базовый метод для выполнения запросов
+   * Основной метод для выполнения запросов
    */
-  protected async request<T>(
-    url: string,
-    options?: RequestInit
+  async request<T = any>(
+    endpoint: string,
+    options: ApiClientOptions = {}
   ): Promise<ApiResponse<T>> {
-    try {
-      // Добавляем JWT токен в заголовки если есть
-      const headers: Record<string, string> = {
-        ...(options?.headers as Record<string, string>),
-      };
+    const {
+      internal = false,
+      includeAuth = true,
+      timeout = this.defaultTimeout,
+      retries = this.defaultRetries,
+      ...fetchOptions
+    } = options;
 
-      // Устанавливаем Content-Type только если это не FormData
-      if (!(options?.body instanceof FormData)) {
-        headers['Content-Type'] = 'application/json';
-      }
+    // Получаем базовый URL
+    const baseUrl = this.getBaseUrl(internal);
+    const url = `${baseUrl}${endpoint}`;
 
-      const token = await this.getAuthToken();
+    // Подготавливаем заголовки
+    const headers = new Headers(fetchOptions.headers);
+
+    // Добавляем заголовки по умолчанию
+    if (
+      !headers.has('Content-Type') &&
+      fetchOptions.body &&
+      !(fetchOptions.body instanceof FormData)
+    ) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    // Добавляем токен авторизации если нужно
+    if (includeAuth && typeof window !== 'undefined') {
+      const token = await tokenManager.getAccessToken();
       if (token) {
-        (headers as any)['Authorization'] = `Bearer ${token}`;
+        headers.set('Authorization', `Bearer ${token}`);
       }
+    }
 
-      // Добавляем CSRF токен для небезопасных методов
-      const method = options?.method?.toUpperCase();
-      if (method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-        try {
-          const csrfToken = await this.getCsrfToken();
-          if (csrfToken) {
-            (headers as any)['X-CSRF-Token'] = csrfToken;
-          }
-        } catch (error) {
-          // Если не удалось получить CSRF токен, продолжаем без него
-          console.warn('Failed to get CSRF token:', error);
-        }
+    // Добавляем CSRF токен для небезопасных методов
+    const method = fetchOptions.method?.toUpperCase();
+    if (method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      const csrfToken = await this.getCsrfToken();
+      if (csrfToken) {
+        headers.set('X-CSRF-Token', csrfToken);
       }
+    }
 
-      const response = await fetch(url, {
-        credentials: 'include',
-        ...options,
-        headers,
-      });
+    // Добавляем специальный заголовок для внутренних запросов
+    if (internal) {
+      headers.set('X-Internal-Request', 'true');
+    }
 
-      // Обработка пустых ответов (204 No Content)
-      if (response.status === 204) {
-        return {
-          success: true,
-          data: null as T,
-        };
-      }
+    // Финальные опции запроса
+    const finalOptions: RequestInit = {
+      ...fetchOptions,
+      headers,
+      // Добавляем credentials для CORS
+      credentials: fetchOptions.credentials || 'include',
+    };
 
+    try {
+      // Выполняем запрос
+      const response = await this.fetchWithRetries(
+        url,
+        finalOptions,
+        timeout,
+        retries
+      );
+
+      // Парсим ответ
+      let data: T | undefined;
       const contentType = response.headers.get('content-type');
-      let data: unknown;
 
-      if (contentType?.includes('application/json')) {
-        data = await response.json();
-      } else {
-        // Если ответ не JSON, возвращаем как есть
-        data = await response.text();
-      }
-
-      if (!response.ok) {
-        // Обработка ошибок
-        const errorData = data as { error?: string; message?: string };
-        const error =
-          errorData?.error ||
-          errorData?.message ||
-          `HTTP error! status: ${response.status}`;
-        console.error(`API Error [${response.status}]:`, error);
-
-        // Если получили 401, удаляем невалидный токен
-        if (response.status === 401) {
+      if (response.status === 204) {
+        // No content
+        data = undefined;
+      } else if (contentType?.includes('application/json')) {
+        const text = await response.text();
+        if (text) {
           try {
-            const { tokenManager } = await import('@/utils/tokenManager');
-            tokenManager.clearTokens();
-          } catch {
-            // Игнорируем ошибки
+            data = JSON.parse(text);
+          } catch (e) {
+            console.error('Failed to parse JSON response:', e);
           }
         }
+      }
 
-        // Обработка rate limiting
-        if (response.status === 429) {
-          const retryAfter = response.headers.get('Retry-After');
-          console.warn(
-            `API rate limited (429), retry after: ${retryAfter || 'unknown'} seconds`
-          );
+      // Обрабатываем ошибки
+      if (!response.ok) {
+        // Если получили 401, удаляем невалидный токен
+        if (response.status === 401 && typeof window !== 'undefined') {
+          tokenManager.clearTokens();
         }
 
         return {
-          success: false,
-          data: null as T,
-          error,
-          message: errorData?.message,
+          error: {
+            message:
+              (data as any)?.['message'] ||
+              (data as any)?.['error'] ||
+              `Request failed with status ${response.status}`,
+            code: (data as any)?.['code'] || `HTTP_${response.status}`,
+            details: (data as any)?.['details'],
+          },
+          status: response.status,
+          headers: response.headers,
         };
       }
 
-      // Нормализация успешного ответа
-      if (
-        data &&
-        typeof data === 'object' &&
-        'success' in data &&
-        'data' in data
-      ) {
-        return data as ApiResponse<T>;
-      }
-
-      // Если сервер возвращает данные напрямую
       return {
-        success: true,
-        data: data as T,
+        data,
+        status: response.status,
+        headers: response.headers,
       };
     } catch (error) {
       // Обработка сетевых ошибок
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          console.log('Request aborted');
-          throw error; // Пробрасываем для обработки в компонентах
-        }
+      const message = error instanceof Error ? error.message : 'Network error';
 
-        console.error('Network error:', error);
-        return {
-          success: false,
-          data: null as T,
-          error: error.message,
-        };
-      }
-
-      console.error('Unknown error:', error);
       return {
-        success: false,
-        data: null as T,
-        error: 'Unknown error occurred',
+        error: {
+          message,
+          code: 'NETWORK_ERROR',
+        },
+        status: 0,
+        headers: new Headers(),
       };
     }
   }
 
   /**
-   * Проверяет успешность ответа и возвращает данные или выбрасывает ошибку
+   * Удобные методы для разных типов запросов
    */
-  protected unwrap<T>(response: ApiResponse<T>): T {
+  async get<T = any>(
+    endpoint: string,
+    options?: ApiClientOptions
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'GET',
+    });
+  }
+
+  async post<T = any>(
+    endpoint: string,
+    data?: any,
+    options?: ApiClientOptions
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body:
+        data instanceof FormData
+          ? data
+          : data
+            ? JSON.stringify(data)
+            : undefined,
+    });
+  }
+
+  async put<T = any>(
+    endpoint: string,
+    data?: any,
+    options?: ApiClientOptions
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
+      body:
+        data instanceof FormData
+          ? data
+          : data
+            ? JSON.stringify(data)
+            : undefined,
+    });
+  }
+
+  async patch<T = any>(
+    endpoint: string,
+    data?: any,
+    options?: ApiClientOptions
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
+      body:
+        data instanceof FormData
+          ? data
+          : data
+            ? JSON.stringify(data)
+            : undefined,
+    });
+  }
+
+  async delete<T = any>(
+    endpoint: string,
+    options?: ApiClientOptions
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Загрузка файлов
+   */
+  async upload<T = any>(
+    endpoint: string,
+    formData: FormData,
+    options?: ApiClientOptions
+  ): Promise<ApiResponse<T>> {
+    const { headers = {}, ...restOptions } = options || {};
+
+    // Не устанавливаем Content-Type для FormData, браузер сделает это сам
+    const cleanHeaders = new Headers(headers);
+    cleanHeaders.delete('Content-Type');
+
+    return this.request<T>(endpoint, {
+      ...restOptions,
+      method: 'POST',
+      body: formData,
+      headers: cleanHeaders,
+    });
+  }
+}
+
+// Экспортируем singleton instance
+export const apiClient = new ApiClient();
+
+// Для обратной совместимости с существующим кодом
+export abstract class ApiClientLegacy {
+  protected baseURL: string;
+
+  constructor(baseURL?: string) {
+    // В development режиме и в браузере используем пустую строку для proxy
+    if (
+      !baseURL &&
+      typeof window !== 'undefined' &&
+      process.env.NODE_ENV === 'development'
+    ) {
+      this.baseURL = '';
+    } else {
+      this.baseURL = baseURL || configManager.getConfig().api.url;
+    }
+  }
+
+  /**
+   * Преобразует старый формат ответа в новый
+   */
+  private convertResponse<T>(response: ApiResponse<T>): {
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  } {
+    if (response.data !== undefined) {
+      return {
+        success: true,
+        data: response.data,
+      };
+    }
+
+    return {
+      success: false,
+      data: null,
+      error: response.error?.message,
+      message: response.error?.message,
+    };
+  }
+
+  protected async get<T>(
+    endpoint: string,
+    params?: Record<string, any>,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const queryString = params
+      ? '?' + new URLSearchParams(params).toString()
+      : '';
+    const response = await apiClient.get<T>(
+      `${endpoint}${queryString}`,
+      options
+    );
+    return this.convertResponse(response);
+  }
+
+  protected async post<T, D = unknown>(
+    endpoint: string,
+    data?: D,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const response = await apiClient.post<T>(endpoint, data, options);
+    return this.convertResponse(response);
+  }
+
+  protected async put<T, D = unknown>(
+    endpoint: string,
+    data?: D,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const response = await apiClient.put<T>(endpoint, data, options);
+    return this.convertResponse(response);
+  }
+
+  protected async delete<T>(
+    endpoint: string,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const response = await apiClient.delete<T>(endpoint, options);
+    return this.convertResponse(response);
+  }
+
+  protected async upload<T>(
+    endpoint: string,
+    formData: FormData,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const response = await apiClient.upload<T>(endpoint, formData, options);
+    return this.convertResponse(response);
+  }
+
+  protected async request<T>(
+    url: string,
+    options?: RequestInit
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const endpoint = url.startsWith(this.baseURL)
+      ? url.replace(this.baseURL, '')
+      : url;
+    const response = await apiClient.request<T>(endpoint, options);
+    return this.convertResponse(response);
+  }
+
+  protected unwrap<T>(response: {
+    success: boolean;
+    data: T | null;
+    error?: string;
+  }): T {
     if (response.success && response.data !== null) {
       return response.data;
     }
-
     throw new Error(response.error || 'Request failed');
   }
 }
 
-// Создаем базовый экземпляр API клиента для использования в других модулях
-class DefaultApiClient extends ApiClient {
-  // Делаем методы публичными для использования в других сервисах
-  public async get<T>(
-    endpoint: string,
-    params?: QueryParams,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    return super.get<T>(endpoint, params, options);
-  }
-
-  public async post<T, D = unknown>(
-    endpoint: string,
-    data?: D,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    return super.post<T, D>(endpoint, data, options);
-  }
-
-  public async put<T, D = unknown>(
-    endpoint: string,
-    data?: D,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    return super.put<T, D>(endpoint, data, options);
-  }
-
-  public async delete<T>(
-    endpoint: string,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    return super.delete<T>(endpoint, options);
-  }
-
-  public async upload<T>(
-    endpoint: string,
-    formData: FormData,
-    options?: RequestOptions
-  ): Promise<ApiResponse<T>> {
-    return super.upload<T>(endpoint, formData, options);
-  }
-
-  // Добавляем axios-подобные методы для совместимости
-  interceptors = {
-    request: {
-      use: (
-        onFulfilled: (
-          config: Record<string, unknown>
-        ) => Record<string, unknown>,
-        onRejected?: (error: unknown) => unknown
-      ) => {
-        // Простая реализация для совместимости с tokenManager
-        this.requestInterceptor = onFulfilled;
-        this.requestErrorInterceptor = onRejected;
-      },
-    },
-    response: {
-      use: (
-        onFulfilled: (
-          response: Record<string, unknown>
-        ) => Record<string, unknown>,
-        onRejected?: (error: unknown) => unknown
-      ) => {
-        // Простая реализация для совместимости с tokenManager
-        this.responseInterceptor = onFulfilled;
-        this.responseErrorInterceptor = onRejected;
-      },
-    },
-  };
-
-  private requestInterceptor?: (
-    config: Record<string, unknown>
-  ) => Record<string, unknown>;
-  private requestErrorInterceptor?: (error: unknown) => unknown;
-  private responseInterceptor?: (
-    response: Record<string, unknown>
-  ) => Record<string, unknown>;
-  private responseErrorInterceptor?: (error: unknown) => unknown;
-}
-
-export const apiClient = new DefaultApiClient();
+// Экспортируем ApiClientLegacy как ApiClient для обратной совместимости
+export { ApiClientLegacy as ApiClient };

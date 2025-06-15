@@ -111,6 +111,14 @@ export class ListingsService {
       request
     );
 
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
+
+    if (!response.data) {
+      throw new Error('No data received from server');
+    }
+
     return response.data;
   }
 
@@ -143,6 +151,14 @@ export class ListingsService {
       formData
       // Не устанавливаем Content-Type для FormData - браузер сделает это автоматически с boundary
     );
+
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
+
+    if (!response.data) {
+      throw new Error('No data received from server');
+    }
 
     return response.data;
   }

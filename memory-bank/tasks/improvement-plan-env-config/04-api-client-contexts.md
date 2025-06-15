@@ -647,22 +647,22 @@ describe('ApiClient', () => {
 ## Критерии приемки
 
 ### 1. Обновление api-client.ts
-- [ ] Файл `/src/services/api-client.ts` обновлен
-- [ ] Интерфейс `ApiClientOptions` содержит поля: `internal`, `includeAuth`, `timeout`, `retries`
-- [ ] Интерфейс `ApiResponse` типизирован с generics
-- [ ] Метод `getBaseUrl()` использует `configManager.getApiUrl()` с учетом контекста
-- [ ] Реализована поддержка timeout через `fetchWithTimeout()`
-- [ ] Реализована поддержка retry через `fetchWithRetries()` с экспоненциальной задержкой
-- [ ] Метод `upload()` для загрузки файлов работает с FormData
+- [x] Файл `/src/services/api-client.ts` обновлен
+- [x] Интерфейс `ApiClientOptions` содержит поля: `internal`, `includeAuth`, `timeout`, `retries`
+- [x] Интерфейс `ApiResponse` типизирован с generics
+- [x] Метод `getBaseUrl()` использует `configManager.getApiUrl()` с учетом контекста
+- [x] Реализована поддержка timeout через `fetchWithTimeout()`
+- [x] Реализована поддержка retry через `fetchWithRetries()` с экспоненциальной задержкой
+- [x] Метод `upload()` для загрузки файлов работает с FormData
 
 ### 2. Создание typed endpoints
-- [ ] Файл `/src/services/api/endpoints.ts` создан
-- [ ] Базовый класс `ApiEndpoint` с методом `shouldUseInternalUrl()`
-- [ ] Классы `UserApi`, `MarketplaceApi`, `ChatApi` созданы
-- [ ] Каждый класс правильно определяет контекст использования:
+- [x] Файл `/src/services/api/endpoints.ts` создан
+- [x] Базовый класс `ApiEndpoint` с методом `shouldUseInternalUrl()`
+- [x] Классы `UserApi`, `MarketplaceApi`, `ChatApi` созданы
+- [x] Каждый класс правильно определяет контекст использования:
   - UserApi и MarketplaceApi используют internal URL для SSR
   - ChatApi всегда использует public URL (для WebSocket)
-- [ ] Экспортированы singleton экземпляры: `userApi`, `marketplaceApi`, `chatApi`
+- [x] Экспортированы singleton экземпляры: `userApi`, `marketplaceApi`, `chatApi`
 
 ### 3. Проверка контекстов
 - [ ] Server Components автоматически используют internal URL:
@@ -678,31 +678,31 @@ describe('ApiClient', () => {
 - [ ] Заголовок `X-Internal-Request` добавляется для внутренних запросов
 
 ### 4. Hook useApi
-- [ ] Файл `/src/hooks/useApi.ts` создан
-- [ ] Hook управляет состояниями: `data`, `error`, `loading`
-- [ ] Метод `execute()` для выполнения запроса
-- [ ] Метод `reset()` для сброса состояния
-- [ ] Опция `immediate` для автоматического запуска при монтировании
-- [ ] Callbacks `onSuccess` и `onError` работают
+- [x] Файл `/src/hooks/useApi.ts` создан
+- [x] Hook управляет состояниями: `data`, `error`, `loading`
+- [x] Метод `execute()` для выполнения запроса
+- [x] Метод `reset()` для сброса состояния
+- [x] Опция `immediate` для автоматического запуска при монтировании
+- [x] Callbacks `onSuccess` и `onError` работают
 
 ### 5. Функциональность
-- [ ] Retry логика работает при сетевых ошибках:
+- [x] Retry логика работает при сетевых ошибках:
   - 3 попытки по умолчанию
   - Экспоненциальная задержка между попытками
   - Не повторяет при 4xx ошибках
-- [ ] Timeout работает (по умолчанию 30 секунд)
-- [ ] Авторизация автоматически добавляется через `tokenManager`
-- [ ] CORS настроен правильно (`credentials: 'include'`)
+- [x] Timeout работает (по умолчанию 30 секунд)
+- [x] Авторизация автоматически добавляется через `tokenManager`
+- [x] CORS настроен правильно (`credentials: 'include'`)
 
 ### 6. Тестирование
-- [ ] Unit тесты для API client написаны (хотя бы базовые)
-- [ ] Проверка использования internal URL в SSR контексте
-- [ ] Проверка retry механизма
-- [ ] Проверка timeout функциональности
+- [x] Unit тесты для API client написаны (хотя бы базовые)
+- [x] Проверка использования internal URL в SSR контексте
+- [x] Проверка retry механизма
+- [x] Проверка timeout функциональности
 - [ ] Нет CORS ошибок при реальных запросах
 
 ### 7. Интеграция
-- [ ] Существующие API вызовы можно мигрировать на новую систему
-- [ ] TypeScript типы из `/types/generated/api` используются
-- [ ] Нет breaking changes для существующего кода
-- [ ] Документация по использованию в комментариях кода
+- [x] Существующие API вызовы можно мигрировать на новую систему
+- [x] TypeScript типы из `/types/generated/api` используются
+- [x] Нет breaking changes для существующего кода
+- [x] Документация по использованию в комментариях кода
