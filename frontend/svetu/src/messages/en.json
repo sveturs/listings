@@ -5,7 +5,8 @@
     "noItems": "No items found",
     "loadMore": "Load more",
     "loading": "Loading...",
-    "createListing": "Create Listing"
+    "createListing": "Create Listing",
+    "paymentsNowAvailable": "Payments are now available!"
   },
   "header": {
     "nav": {

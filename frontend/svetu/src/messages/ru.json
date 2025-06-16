@@ -5,7 +5,8 @@
     "noItems": "Объявления не найдены",
     "loadMore": "Загрузить еще",
     "loading": "Загрузка...",
-    "createListing": "Подать объявление"
+    "createListing": "Подать объявление",
+    "paymentsNowAvailable": "Платежи теперь доступны!"
   },
   "header": {
     "nav": {

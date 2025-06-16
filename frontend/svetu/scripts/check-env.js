@@ -2,6 +2,13 @@
 
 const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env.local
+const envLocalPath = path.join(process.cwd(), '.env.local');
+if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath });
+}
 
 // Required environment variables
 const requiredVars = ['NEXT_PUBLIC_API_URL', 'NEXT_PUBLIC_MINIO_URL'];
@@ -37,15 +44,6 @@ recommendedVars.forEach((varName) => {
     hasWarnings = true;
   }
 });
-
-// Check for .env.local file
-const envLocalPath = path.join(process.cwd(), '.env.local');
-if (!fs.existsSync(envLocalPath)) {
-  console.log(
-    '\n⚠️  No .env.local file found. Using defaults or system environment.'
-  );
-  hasWarnings = true;
-}
 
 // Summary
 console.log('\n' + '='.repeat(50));
