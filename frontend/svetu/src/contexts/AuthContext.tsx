@@ -13,6 +13,7 @@ import { useRouter } from '@/i18n/routing';
 import { AuthService } from '@/services/auth';
 import { AuthErrorBoundary } from '@/components/ErrorBoundary';
 import type { User, UpdateProfileRequest } from '@/types/auth';
+import { tokenManager } from '@/utils/tokenManager';
 
 interface AuthContextType {
   user: User | null;
@@ -329,6 +330,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await AuthService.logout();
       updateUser(null);
+
+      // Очищаем localStorage и sessionStorage, но сохраняем важные данные
+      const locale = localStorage.getItem('NEXT_LOCALE');
+
+      // Очищаем токен через tokenManager чтобы он удалился из sessionStorage
+      tokenManager.clearTokens();
+
+      localStorage.clear();
+      sessionStorage.clear();
+      if (locale) {
+        localStorage.setItem('NEXT_LOCALE', locale);
+      }
 
       // Устанавливаем флаг в sessionStorage чтобы предотвратить автоматическое восстановление
       sessionStorage.setItem('svetu_logout_flag', 'true');

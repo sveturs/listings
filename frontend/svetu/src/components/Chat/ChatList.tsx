@@ -18,7 +18,7 @@ interface ChatListProps {
 export default function ChatList({ onChatSelect }: ChatListProps) {
   const t = useTranslations('Chat');
   const locale = useLocale();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'chats' | 'contacts'>('chats');
   const [contacts, setContacts] = useState<UserContact[]>([]);
@@ -58,27 +58,31 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
   // Загрузка чатов при монтировании
   useEffect(() => {
     // Загружаем чаты только если пользователь авторизован
-    if (user && chats.length === 0) {
+    if (isAuthenticated && user && chats.length === 0) {
       loadChats(1);
     }
-  }, [user, chats.length, loadChats]);
+  }, [isAuthenticated, user, chats.length, loadChats]);
 
   // Загрузка контактов при переключении на вкладку контактов
   useEffect(() => {
     if (
       activeTab === 'contacts' &&
+      isAuthenticated &&
       user &&
       (!contacts || contacts.length === 0)
     ) {
       loadContacts();
     }
-  }, [activeTab, user, contacts, loadContacts]);
+  }, [activeTab, isAuthenticated, user, contacts, loadContacts]);
 
   // Бесконечная прокрутка
   useEffect(() => {
+    // Не настраиваем observer если пользователь не авторизован
+    if (!user) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMoreChats && !isLoading) {
+        if (entries[0].isIntersecting && hasMoreChats && !isLoading && user) {
           loadChats(chats.length / 20 + 1);
         }
       },
@@ -90,7 +94,7 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
     }
 
     return () => observer.disconnect();
-  }, [hasMoreChats, isLoading, chats.length, loadChats]);
+  }, [hasMoreChats, isLoading, chats.length, loadChats, user]);
 
   // Фильтрация чатов по поиску
   const filteredChats = chats.filter((chat) => {
@@ -202,6 +206,33 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
       onChatSelect(directChat);
     }
   };
+
+  // Если пользователь не авторизован, показываем сообщение
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="flex flex-col h-full bg-base-100 items-center justify-center p-8">
+        <div className="text-center">
+          <svg
+            className="w-24 h-24 mx-auto mb-4 text-base-content/20"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1}
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
+          </svg>
+          <h3 className="text-lg font-semibold text-base-content/70 mb-2">
+            {t('loginRequired')}
+          </h3>
+          <p className="text-base-content/50">{t('loginToViewChats')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-base-100">

@@ -399,18 +399,14 @@ export class AuthService {
         throw new AuthError(errorMessage);
       }
 
-      const result =
-        (await response.json()) as ApiSuccessResponse<LoginResponse>;
+      const result = await response.json();
 
-      // Извлекаем данные из обертки
-      const loginData = result.data || (result as LoginResponse);
+      // Извлекаем данные из обертки - сервер возвращает {data: {...}, success: true}
+      const loginData = result.data as LoginResponse;
 
       // Сохраняем JWT токен
-      if (loginData.access_token) {
+      if (loginData && loginData.access_token) {
         tokenManager.setAccessToken(loginData.access_token);
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[AuthService] Access token saved');
-        }
       } else {
         console.error('[AuthService] No access_token in login response');
       }

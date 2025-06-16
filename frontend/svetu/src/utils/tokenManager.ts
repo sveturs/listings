@@ -10,18 +10,44 @@ class TokenManager {
   private config: TokenManagerConfig;
   private lastRefreshAttempt: number = 0;
   private refreshAttempts: number = 0;
-  private readonly MIN_REFRESH_INTERVAL = 5000; // 5 секунд между попытками (временно уменьшено)
+  private readonly MIN_REFRESH_INTERVAL = 30000; // 30 секунд между попытками
   private readonly MAX_REFRESH_ATTEMPTS = 3;
 
   constructor(config: TokenManagerConfig = {}) {
     this.config = config;
+
+    // Восстанавливаем токен из sessionStorage при инициализации
+    if (typeof window !== 'undefined') {
+      const savedToken = sessionStorage.getItem('svetu_access_token');
+      if (savedToken) {
+        this.accessToken = savedToken;
+        // Проверяем, не истек ли токен
+        if (!this.isTokenExpired()) {
+          this.scheduleTokenRefresh();
+        } else {
+          // Если токен истек, удаляем его
+          sessionStorage.removeItem('svetu_access_token');
+          this.accessToken = null;
+        }
+      }
+    }
   }
 
   /**
-   * Сохраняет access token в памяти
+   * Сохраняет access token в памяти и sessionStorage
    */
   setAccessToken(token: string | null) {
     this.accessToken = token;
+
+    // Сохраняем в sessionStorage для сохранения между перезагрузками
+    if (typeof window !== 'undefined') {
+      if (token) {
+        sessionStorage.setItem('svetu_access_token', token);
+      } else {
+        sessionStorage.removeItem('svetu_access_token');
+      }
+    }
+
     if (process.env.NODE_ENV === 'development') {
       console.log(
         '[TokenManager] Access token set:',
@@ -49,6 +75,9 @@ class TokenManager {
    */
   clearTokens() {
     this.accessToken = null;
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('svetu_access_token');
+    }
     this.clearRefreshTimer();
     this.refreshAttempts = 0;
     this.lastRefreshAttempt = 0;
@@ -226,16 +255,6 @@ class TokenManager {
   }
 
   /**
-   * Очищает таймер обновления
-   */
-  private clearRefreshTimer() {
-    if (this.refreshTimer) {
-      clearTimeout(this.refreshTimer);
-      this.refreshTimer = null;
-    }
-  }
-
-  /**
    * Декодирует JWT токен
    */
   private decodeToken(
@@ -275,6 +294,16 @@ class TokenManager {
   }
 
   /**
+   * Очищает таймер обновления токена
+   */
+  private clearRefreshTimer() {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+
+  /**
    * Сбрасывает счетчики rate limit (для отладки)
    */
   resetRateLimits() {
@@ -298,3 +327,8 @@ export const tokenManager = new TokenManager({
 
 // Экспортируем также класс для тестирования
 export { TokenManager };
+
+// Для отладки в development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  (window as any).tokenManager = tokenManager;
+}

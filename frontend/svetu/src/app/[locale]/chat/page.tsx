@@ -13,7 +13,8 @@ export default function ChatPage() {
   const searchParams = useSearchParams();
   const { user, isLoading: authLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
-  const { loadChats, chats, setCurrentChat, selectLatestChat } = useChat();
+  const { loadChats, chats, setCurrentChat, selectLatestChat, pendingChatId } =
+    useChat();
   const [chatInitialized, setChatInitialized] = useState(false);
 
   // Параметры для создания нового чата
@@ -23,6 +24,17 @@ export default function ChatPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Автоматически выбираем чат после его создания
+  useEffect(() => {
+    if (pendingChatId && chats.length > 0) {
+      const newChat = chats.find((c) => c.id === pendingChatId);
+      if (newChat) {
+        setCurrentChat(newChat);
+        setChatInitialized(true);
+      }
+    }
+  }, [pendingChatId, chats, setCurrentChat]);
 
   useEffect(() => {
     if (!authLoading && !user) {
